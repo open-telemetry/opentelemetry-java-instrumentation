@@ -24,6 +24,8 @@ import spock.lang.Unroll
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboTestUtil.newDubboBootstrap
+import static io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboTestUtil.newFrameworkModel
 
 @Unroll
 abstract class AbstractDubboTest extends InstrumentationSpecification {
@@ -58,7 +60,8 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     def port = PortUtils.findOpenPort()
     protocolConfig.setPort(port)
 
-    DubboBootstrap bootstrap = DubboBootstrap.newInstance()
+    def frameworkModel = newFrameworkModel()
+    DubboBootstrap bootstrap = newDubboBootstrap(frameworkModel)
     bootstrap.application(new ApplicationConfig("dubbo-test-provider"))
       .service(configureServer())
       .protocol(protocolConfig)
@@ -68,7 +71,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     consumerProtocolConfig.setRegister(false)
 
     def reference = configureClient(port)
-    DubboBootstrap consumerBootstrap = DubboBootstrap.newInstance()
+    DubboBootstrap consumerBootstrap = newDubboBootstrap(frameworkModel)
     consumerBootstrap.application(new ApplicationConfig("dubbo-demo-api-consumer"))
       .reference(reference)
       .protocol(consumerProtocolConfig)
@@ -122,6 +125,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     cleanup:
     bootstrap.destroy()
     consumerBootstrap.destroy()
+    frameworkModel?.destroy()
   }
 
   def "test apache dubbo test #dubbo"() {
@@ -129,7 +133,8 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     def port = PortUtils.findOpenPort()
     protocolConfig.setPort(port)
 
-    DubboBootstrap bootstrap = DubboBootstrap.newInstance()
+    def frameworkModel = newFrameworkModel()
+    DubboBootstrap bootstrap = newDubboBootstrap(frameworkModel)
     bootstrap.application(new ApplicationConfig("dubbo-test-async-provider"))
       .service(configureServer())
       .protocol(protocolConfig)
@@ -139,7 +144,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     consumerProtocolConfig.setRegister(false)
 
     def reference = configureClient(port)
-    DubboBootstrap consumerBootstrap = DubboBootstrap.newInstance()
+    DubboBootstrap consumerBootstrap = newDubboBootstrap(frameworkModel)
     consumerBootstrap.application(new ApplicationConfig("dubbo-demo-async-api-consumer"))
       .reference(reference)
       .protocol(consumerProtocolConfig)
@@ -193,5 +198,6 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     cleanup:
     bootstrap.destroy()
     consumerBootstrap.destroy()
+    frameworkModel?.destroy()
   }
 }

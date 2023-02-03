@@ -25,6 +25,8 @@ import spock.lang.Unroll
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboTestUtil.newDubboBootstrap
+import static io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboTestUtil.newFrameworkModel
 
 @Unroll
 abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification {
@@ -76,7 +78,8 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
     def protocolConfig = new ProtocolConfig()
     protocolConfig.setPort(port)
 
-    DubboBootstrap bootstrap = DubboBootstrap.newInstance()
+    def frameworkModel = newFrameworkModel()
+    DubboBootstrap bootstrap = newDubboBootstrap(frameworkModel)
     bootstrap.application(new ApplicationConfig("dubbo-test-provider"))
       .service(configureServer())
       .protocol(protocolConfig)
@@ -86,7 +89,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
     middleProtocolConfig.setPort(middlePort)
 
     def reference = configureClient(port)
-    DubboBootstrap middleBootstrap = DubboBootstrap.newInstance()
+    DubboBootstrap middleBootstrap = newDubboBootstrap(frameworkModel)
     middleBootstrap.application(new ApplicationConfig("dubbo-demo-middle"))
       .reference(reference)
       .service(configureMiddleServer(reference))
@@ -98,7 +101,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
     consumerProtocolConfig.setRegister(false)
 
     def middleReference = configureMiddleClient(middlePort)
-    DubboBootstrap consumerBootstrap = DubboBootstrap.newInstance()
+    DubboBootstrap consumerBootstrap = newDubboBootstrap(frameworkModel)
     consumerBootstrap.application(new ApplicationConfig("dubbo-demo-api-consumer"))
       .reference(middleReference)
       .protocol(consumerProtocolConfig)
