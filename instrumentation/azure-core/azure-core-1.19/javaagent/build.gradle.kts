@@ -28,4 +28,6 @@ dependencies {
 
   // Ensure no cross interference
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.14:javaagent"))
+
+  latestDepTestLibrary("com.azure:azure-core:1.35.0")
 }
