@@ -119,6 +119,8 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
             "org.springframework.context.support.ContextTypeMatchClassLoader$ContextOverridingClassLoader")
         .ignoreClassLoader("sun.misc.Launcher$ExtClassLoader")
         .ignoreClassLoader("org.openjdk.nashorn.internal.runtime.ScriptLoader")
+        .ignoreClassLoader("org.codehaus.janino.ByteArrayClassLoader")
+        .ignoreClassLoader("org.eclipse.persistence.internal.jaxb.JaxbClassLoader")
         .ignoreClassLoader(AgentClassLoader.class.getName())
         .ignoreClassLoader(ExtensionClassLoader.class.getName());
 
