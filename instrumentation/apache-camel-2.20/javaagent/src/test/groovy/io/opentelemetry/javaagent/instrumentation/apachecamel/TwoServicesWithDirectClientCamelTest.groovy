@@ -97,7 +97,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
           }
         }
         it.span(2) {
-          name "/serviceOne"
+          name "POST /serviceOne"
           kind SERVER
           parentSpanId(span(1).spanId)
           attributes {
@@ -119,7 +119,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
           }
         }
         it.span(4) {
-          name "/serviceTwo"
+          name "POST /serviceTwo"
           kind SERVER
           parentSpanId(span(3).spanId)
           attributes {

@@ -23,7 +23,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
   def "should cooperate with existing RabbitMQ instrumentation"() {
     when:
     // simulate the workflow being triggered by HTTP request
-    runWithHttpServerSpan("HTTP GET") {
+    runWithHttpServerSpan("GET") {
       producerContext.getBean("producer", Runnable).run()
     }
 
@@ -31,7 +31,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
     assertTraces(2) {
       trace(0, 7) {
         span(0) {
-          name "HTTP GET"
+          name "GET"
           kind SERVER
           attributes {}
         }

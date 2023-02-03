@@ -87,7 +87,7 @@ class ContextBridgeTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("/test/server/*")
+                    span.hasName("GET /test/server/*")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -106,7 +106,7 @@ class ContextBridgeTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("/test/controller/:id")
+                    span.hasName("GET /test/controller/:id")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(

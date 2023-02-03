@@ -49,7 +49,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   String expectedServerSpanName(ServerEndpoint endpoint, String method) {
     def route = expectedHttpRoute(endpoint)
-    return route == null ? "HTTP $method" : route
+    return route == null ? method : method + " " + route
   }
 
   String expectedHttpRoute(ServerEndpoint endpoint) {

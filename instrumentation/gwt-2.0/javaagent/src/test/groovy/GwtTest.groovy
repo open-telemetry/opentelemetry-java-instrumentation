@@ -90,7 +90,7 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
     // wait for page to load
     driver.findElementByClassName("greeting.button")
     assertTraces(4) {
-      traces.sort(orderByRootSpanName("/*", "HTTP GET"))
+      traces.sort(orderByRootSpanName("/*", "GET"))
 
       // /xyz/greeting.html
       trace(0, 1) {
@@ -106,7 +106,7 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
       }
       // /favicon.ico
       trace(3, 1) {
-        serverSpan(it, 0, "HTTP GET")
+        serverSpan(it, 0, "GET")
       }
     }
     clearExportedData()

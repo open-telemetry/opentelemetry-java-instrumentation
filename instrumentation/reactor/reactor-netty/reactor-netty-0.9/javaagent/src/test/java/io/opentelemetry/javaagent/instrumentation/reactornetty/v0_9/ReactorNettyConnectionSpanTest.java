@@ -88,7 +88,7 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, server.httpPort()),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),
-                span -> span.hasName("HTTP GET").hasKind(CLIENT).hasParent(trace.getSpan(0)),
+                span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(3))));
   }

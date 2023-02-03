@@ -59,7 +59,7 @@ class RatpackServerApplicationTest extends Specification {
 
     new PollingConditions().eventually {
       def spanData = app.spanExporter.finishedSpanItems.find { it.name == "/bar" }
-      def spanDataClient = app.spanExporter.finishedSpanItems.find { it.name == "HTTP GET" }
+      def spanDataClient = app.spanExporter.finishedSpanItems.find { it.name == "GET" }
       def attributes = spanData.attributes.asMap()
 
       spanData.traceId == spanDataClient.traceId

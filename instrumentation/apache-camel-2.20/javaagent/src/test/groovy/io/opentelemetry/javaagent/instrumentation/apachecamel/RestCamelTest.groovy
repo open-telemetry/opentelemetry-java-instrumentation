@@ -84,7 +84,7 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
           }
         }
         it.span(2) {
-          name "/api/{module}/unit/{unitId}"
+          name "GET /api/{module}/unit/{unitId}"
           kind SERVER
           parentSpanId(span(1).spanId)
           attributes {

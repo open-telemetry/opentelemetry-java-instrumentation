@@ -86,11 +86,11 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
   String expectedServerSpanName(ServerEndpoint endpoint, String method) {
     switch (endpoint) {
       case NOT_FOUND:
-        return "HTTP $method"
+        return method
       case PATH_PARAM:
-        return getContextPath() + "/path/:id/param"
+        return method + " " + getContextPath() + "/path/:id/param"
       default:
-        return endpoint.resolvePath(address).path
+        return method + " " + endpoint.resolvePath(address).path
     }
   }
 

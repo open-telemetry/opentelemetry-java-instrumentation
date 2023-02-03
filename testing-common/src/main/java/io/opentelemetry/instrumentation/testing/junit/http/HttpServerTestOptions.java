@@ -27,7 +27,7 @@ public final class HttpServerTestOptions {
                   SemanticAttributes.NET_PEER_PORT)));
 
   public static final BiFunction<ServerEndpoint, String, String>
-      DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER = (uri, method) -> "HTTP " + method;
+      DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER = (uri, method) -> method;
 
   Function<ServerEndpoint, Set<AttributeKey<?>>> httpAttributes = unused -> DEFAULT_HTTP_ATTRIBUTES;
   BiFunction<ServerEndpoint, String, String> expectedServerSpanNameMapper =
