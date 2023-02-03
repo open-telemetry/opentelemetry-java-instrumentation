@@ -11,11 +11,7 @@ import io.opentelemetry.instrumentation.testing.junit.{
   InstrumentationExtension
 }
 import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
-import io.opentelemetry.sdk.testing.assertj.{
-  OpenTelemetryAssertions,
-  SpanDataAssert,
-  TraceAssert
-}
+import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.function.Consumer
 import org.assertj.core.api.Assertions.assertThat
@@ -46,15 +42,20 @@ class ScalaInstrumentationTest {
         tracedChild("goodFuture")
         1
       }
-      goodFuture.onSuccess { case _ => tracedChild("successCallback") }
-      assertThat(Await.result(goodFuture, 10.seconds)).isEqualTo(1)
+      val afterGood = goodFuture.map { x =>
+        tracedChild("successCallback")
+        x
+      }
+      assertThat(Await.result(afterGood, 10.seconds)).isEqualTo(1)
       val badFuture = Future {
         tracedChild("badFuture")
         throw new IllegalStateException("Uh-oh")
       }
-      badFuture.onFailure { case _ => tracedChild("failureCallback") }
+      val afterBad = badFuture.andThen { case _ =>
+        tracedChild("failureCallback")
+      }
       assertThatThrownBy(new ThrowingCallable {
-        override def call(): Unit = Await.result(badFuture, 10.seconds)
+        override def call(): Unit = Await.result(afterBad, 10.seconds)
       }).isInstanceOf(classOf[IllegalStateException])
     } finally {
       parentScope.close()
@@ -243,32 +244,28 @@ class ScalaInstrumentationTest {
     testing.waitAndAssertTraces(
       new Consumer[TraceAssert] {
         override def accept(trace: TraceAssert): Unit =
-          trace.satisfiesExactlyInAnyOrder(
-            new Consumer[SpanData] {
-              override def accept(span: SpanData): Unit =
-                OpenTelemetryAssertions
-                  .assertThat(span)
+          trace.hasSpansSatisfyingExactlyInAnyOrder(
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit =
+                span
                   .hasName("parent")
                   .hasNoParent()
             },
-            new Consumer[SpanData] {
-              override def accept(span: SpanData): Unit =
-                OpenTelemetryAssertions
-                  .assertThat(span)
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit =
+                span
                   .hasName("timeout1")
                   .hasParent(trace.getSpan(0))
             },
-            new Consumer[SpanData] {
-              override def accept(span: SpanData): Unit =
-                OpenTelemetryAssertions
-                  .assertThat(span)
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit =
+                span
                   .hasName("timeout2")
                   .hasParent(trace.getSpan(0))
             },
-            new Consumer[SpanData] {
-              override def accept(span: SpanData): Unit =
-                OpenTelemetryAssertions
-                  .assertThat(span)
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit =
+                span
                   .hasName("timeout3")
                   .hasParent(trace.getSpan(0))
             }
