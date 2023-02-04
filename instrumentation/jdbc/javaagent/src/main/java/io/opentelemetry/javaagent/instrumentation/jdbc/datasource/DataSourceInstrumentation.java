@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc.datasource;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.DataSourceInstrumenterFactory.createInstrumenter;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.dataSourceInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -22,8 +20,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class DataSourceInstrumentation implements TypeInstrumentation {
-  private static final Instrumenter<DataSource, Void> INSTRUMENTER =
-      createInstrumenter(GlobalOpenTelemetry.get());
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -51,7 +47,7 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      context = INSTRUMENTER.start(parentContext, ds);
+      context = dataSourceInstrumenter().start(parentContext, ds);
       scope = context.makeCurrent();
     }
 
@@ -65,7 +61,7 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-      INSTRUMENTER.end(context, ds, null, throwable);
+      dataSourceInstrumenter().end(context, ds, null, throwable);
     }
   }
 }

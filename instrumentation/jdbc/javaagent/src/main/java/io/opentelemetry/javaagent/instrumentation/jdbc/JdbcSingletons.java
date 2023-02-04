@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
+import static io.opentelemetry.instrumentation.jdbc.internal.DataSourceInstrumenterFactory.createDataSourceInstrumenter;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -17,17 +19,20 @@ import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import javax.sql.DataSource;
 
 public final class JdbcSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
-  private static final Instrumenter<DbRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<DbRequest, Void> STATEMENT_INSTRUMENTER;
+  public static final Instrumenter<DataSource, Void> DATASOURCE_INSTRUMENTER =
+      createDataSourceInstrumenter(GlobalOpenTelemetry.get());
 
   static {
     JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
     JdbcNetAttributesGetter netAttributesGetter = new JdbcNetAttributesGetter();
 
-    INSTRUMENTER =
+    STATEMENT_INSTRUMENTER =
         Instrumenter.<DbRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -47,8 +52,12 @@ public final class JdbcSingletons {
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<DbRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+  public static Instrumenter<DbRequest, Void> statementInstrumenter() {
+    return STATEMENT_INSTRUMENTER;
+  }
+
+  public static Instrumenter<DataSource, Void> dataSourceInstrumenter() {
+    return DATASOURCE_INSTRUMENTER;
   }
 
   private JdbcSingletons() {}
