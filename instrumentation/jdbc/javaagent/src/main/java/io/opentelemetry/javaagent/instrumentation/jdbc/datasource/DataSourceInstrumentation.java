@@ -22,6 +22,9 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class DataSourceInstrumentation implements TypeInstrumentation {
+  private static final Instrumenter<DataSource, Void> INSTRUMENTER =
+      createInstrumenter(GlobalOpenTelemetry.get());
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("javax.sql.DataSource"));
@@ -48,8 +51,7 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Instrumenter<DataSource, Void> instrumenter = createInstrumenter(GlobalOpenTelemetry.get());
-      context = instrumenter.start(parentContext, ds);
+      context = INSTRUMENTER.start(parentContext, ds);
       scope = context.makeCurrent();
     }
 
@@ -63,8 +65,7 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-      Instrumenter<DataSource, Void> instrumenter = createInstrumenter(GlobalOpenTelemetry.get());
-      instrumenter.end(context, ds, null, throwable);
+      INSTRUMENTER.end(context, ds, null, throwable);
     }
   }
 }
