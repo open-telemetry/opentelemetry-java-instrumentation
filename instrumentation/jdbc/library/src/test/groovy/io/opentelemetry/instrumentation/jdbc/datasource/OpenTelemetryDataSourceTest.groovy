@@ -21,7 +21,7 @@ class OpenTelemetryDataSourceTest extends Specification {
     then:
     connection != null
     connection instanceof OpenTelemetryConnection
-    connection.openTelemetry == ot
+    connection.statementInstrumenter != null
 
     when:
     def dbInfo = ((OpenTelemetryConnection) connection).dbInfo
@@ -46,7 +46,7 @@ class OpenTelemetryDataSourceTest extends Specification {
     then:
     connection != null
     connection instanceof OpenTelemetryConnection
-    connection.openTelemetry == ot
+    connection.statementInstrumenter != null
 
     when:
     def dbInfo = ((OpenTelemetryConnection) connection).dbInfo
