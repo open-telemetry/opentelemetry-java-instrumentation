@@ -28,7 +28,7 @@ import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-class Slf4jToLog4j2Test {
+class Slf4jToLog4jTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -95,7 +95,7 @@ class Slf4jToLog4j2Test {
                 equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "hello"),
                 satisfies(
                     SemanticAttributes.EXCEPTION_STACKTRACE,
-                    v -> v.contains(Slf4jToLog4j2Test.class.getName())));
+                    v -> v.contains(Slf4jToLog4jTest.class.getName())));
       } else {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
