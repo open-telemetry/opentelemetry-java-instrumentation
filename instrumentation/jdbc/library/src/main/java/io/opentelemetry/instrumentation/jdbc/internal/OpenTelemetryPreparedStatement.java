@@ -20,7 +20,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.io.InputStream;
 import java.io.Reader;
@@ -50,14 +50,9 @@ import java.util.Calendar;
 public class OpenTelemetryPreparedStatement<S extends PreparedStatement>
     extends OpenTelemetryStatement<S> implements PreparedStatement {
 
-  @Deprecated
-  public OpenTelemetryPreparedStatement(S delegate, DbInfo dbInfo, String query) {
-    super(delegate, dbInfo, query);
-  }
-
   public OpenTelemetryPreparedStatement(
-      S delegate, DbInfo dbInfo, String query, OpenTelemetry openTelemetry) {
-    super(delegate, dbInfo, query, openTelemetry);
+      S delegate, DbInfo dbInfo, String query, Instrumenter<DbRequest, Void> instrumenter) {
+    super(delegate, dbInfo, query, instrumenter);
   }
 
   @Override

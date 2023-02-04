@@ -20,10 +20,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createInstrumenter;
-
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -44,31 +40,20 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
   protected final S delegate;
   protected final DbInfo dbInfo;
   protected final String query;
-  protected final OpenTelemetry openTelemetry;
   protected final Instrumenter<DbRequest, Void> instrumenter;
 
   private final ArrayList<String> batchCommands = new ArrayList<>();
 
-  @Deprecated
-  OpenTelemetryStatement(S delegate, DbInfo dbInfo) {
-    this(delegate, dbInfo, null, GlobalOpenTelemetry.get());
+  OpenTelemetryStatement(S delegate, DbInfo dbInfo, Instrumenter<DbRequest, Void> instrumenter) {
+    this(delegate, dbInfo, null, instrumenter);
   }
 
-  @Deprecated
-  OpenTelemetryStatement(S delegate, DbInfo dbInfo, String query) {
-    this(delegate, dbInfo, query, GlobalOpenTelemetry.get());
-  }
-
-  OpenTelemetryStatement(S delegate, DbInfo dbInfo, OpenTelemetry openTelemetry) {
-    this(delegate, dbInfo, null, openTelemetry);
-  }
-
-  OpenTelemetryStatement(S delegate, DbInfo dbInfo, String query, OpenTelemetry openTelemetry) {
+  OpenTelemetryStatement(
+      S delegate, DbInfo dbInfo, String query, Instrumenter<DbRequest, Void> instrumenter) {
     this.delegate = delegate;
     this.dbInfo = dbInfo;
     this.query = query;
-    this.openTelemetry = openTelemetry;
-    this.instrumenter = createInstrumenter(openTelemetry);
+    this.instrumenter = instrumenter;
   }
 
   @Override

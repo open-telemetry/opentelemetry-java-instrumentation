@@ -20,7 +20,8 @@ public final class DataSourceInstrumenterFactory {
   private static final DataSourceCodeAttributesGetter codeAttributesGetter =
       new DataSourceCodeAttributesGetter();
 
-  public static Instrumenter<DataSource, Void> createInstrumenter(OpenTelemetry openTelemetry) {
+  public static Instrumenter<DataSource, Void> createDataSourceInstrumenter(
+      OpenTelemetry openTelemetry) {
     return Instrumenter.<DataSource, Void>builder(
             openTelemetry, INSTRUMENTATION_NAME, CodeSpanNameExtractor.create(codeAttributesGetter))
         .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))

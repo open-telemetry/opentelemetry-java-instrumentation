@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -22,11 +23,12 @@ public final class JdbcInstrumenterFactory {
   private static final JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
   private static final JdbcNetAttributesGetter netAttributesGetter = new JdbcNetAttributesGetter();
 
-  public static Instrumenter<DbRequest, Void> createInstrumenter() {
-    return createInstrumenter(null);
+  public static Instrumenter<DbRequest, Void> createStatementInstrumenter() {
+    return createStatementInstrumenter(GlobalOpenTelemetry.get());
   }
 
-  public static Instrumenter<DbRequest, Void> createInstrumenter(OpenTelemetry openTelemetry) {
+  public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
+      OpenTelemetry openTelemetry) {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
