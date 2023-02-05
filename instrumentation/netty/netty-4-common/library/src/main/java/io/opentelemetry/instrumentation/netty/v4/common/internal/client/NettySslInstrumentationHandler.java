@@ -64,20 +64,20 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
   }
 
   @Override
-  public void channelRegistered(ChannelHandlerContext ctx) {
+  public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
     // this should never happen at this point (since the handler is only registered when SSL classes
     // are on classpath); checking just to be extra safe
     if (SSL_HANDSHAKE_COMPLETION_EVENT == null) {
       ctx.pipeline().remove(this);
       instrumentationHandlerField.set(realHandler, null);
-      ctx.fireChannelRegistered();
+      super.channelRegistered(ctx);
       return;
     }
 
     // remember the parent context from the time of channel registration;
     // this happens inside Bootstrap#connect()
     parentContext = Context.current();
-    ctx.fireChannelRegistered();
+    super.channelRegistered(ctx);
   }
 
   @Override
@@ -85,7 +85,8 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
       ChannelHandlerContext ctx,
       SocketAddress remoteAddress,
       SocketAddress localAddress,
-      ChannelPromise promise) {
+      ChannelPromise promise)
+      throws Exception {
 
     // netty SslHandler starts the handshake after it receives the channelActive() signal; this
     // happens just after the connection is established
@@ -101,11 +102,11 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
             context = instrumenter.start(parentContext, request);
           }
         });
-    ctx.connect(remoteAddress, localAddress, promise);
+    super.connect(ctx, remoteAddress, localAddress, promise);
   }
 
   @Override
-  public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
+  public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
     if (SSL_HANDSHAKE_COMPLETION_EVENT.isInstance(evt)) {
       if (ctx.pipeline().context(this) != null) {
         ctx.pipeline().remove(this);
@@ -117,7 +118,7 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
       }
     }
 
-    ctx.fireUserEventTriggered(evt);
+    super.userEventTriggered(ctx, evt);
   }
 
   private static Throwable getCause(Object evt) {

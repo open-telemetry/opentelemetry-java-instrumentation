@@ -20,9 +20,9 @@ import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
 
   @Override
-  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
+  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) throws Exception {
     if (!(msg instanceof HttpRequest)) {
-      ctx.write(msg, prm);
+      super.write(ctx, msg, prm);
       return;
     }
 
@@ -33,7 +33,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     HttpRequestAndChannel request = HttpRequestAndChannel.create((HttpRequest) msg, ctx.channel());
     if (!instrumenter().shouldStart(parentContext, request)) {
-      ctx.write(msg, prm);
+      super.write(ctx, msg, prm);
       return;
     }
 
@@ -47,7 +47,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     requestAttr.set(request);
 
     try (Scope ignored = context.makeCurrent()) {
-      ctx.write(msg, prm);
+      super.write(ctx, msg, prm);
       // span is ended normally in HttpClientResponseTracingHandler
     } catch (Throwable throwable) {
       instrumenter().end(contextAttr.getAndRemove(), requestAttr.getAndRemove(), null, throwable);
