@@ -87,7 +87,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
     }
 
     try (Scope ignored = context.makeCurrent()) {
-      super.write(ctx, msg, prm);
+      super.write(ctx, msg, writePromise);
     } catch (Throwable throwable) {
       end(ctx.channel(), null, throwable);
       throw throwable;
