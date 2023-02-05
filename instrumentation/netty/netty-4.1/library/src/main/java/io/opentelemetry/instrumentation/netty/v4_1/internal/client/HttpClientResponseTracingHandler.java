@@ -66,6 +66,12 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
       requestAttr.set(null);
     }
 
+    if (msg instanceof FullHttpResponse) {
+      instrumenter.end(context, request, (HttpResponse) msg, null);
+    } else if (msg instanceof LastHttpContent) {
+      instrumenter.end(context, request, ctx.channel().attr(HTTP_RESPONSE).getAndSet(null), null);
+    }
+
     // We want the callback in the scope of the parent, not the client span
     if (parentContext != null) {
       try (Scope ignored = parentContext.makeCurrent()) {
@@ -73,12 +79,6 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
       }
     } else {
       ctx.fireChannelRead(msg);
-    }
-
-    if (msg instanceof FullHttpResponse) {
-      instrumenter.end(context, request, (HttpResponse) msg, null);
-    } else if (msg instanceof LastHttpContent) {
-      instrumenter.end(context, request, ctx.channel().attr(HTTP_RESPONSE).getAndSet(null), null);
     }
   }
 }
