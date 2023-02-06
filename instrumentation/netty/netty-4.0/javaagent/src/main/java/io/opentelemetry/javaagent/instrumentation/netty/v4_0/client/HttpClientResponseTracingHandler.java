@@ -21,11 +21,11 @@ import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapter {
 
   @Override
-  public void channelRead(ChannelHandlerContext ctx, Object msg) {
+  public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     Attribute<Context> contextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
     Context context = contextAttr.get();
     if (context == null) {
-      ctx.fireChannelRead(msg);
+      super.channelRead(ctx, msg);
       return;
     }
 
@@ -53,10 +53,10 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     // We want the callback in the scope of the parent, not the client span
     if (parentContext != null) {
       try (Scope ignored = parentContext.makeCurrent()) {
-        ctx.fireChannelRead(msg);
+        super.channelRead(ctx, msg);
       }
     } else {
-      ctx.fireChannelRead(msg);
+      super.channelRead(ctx, msg);
     }
 
     if (msg instanceof FullHttpResponse) {

@@ -42,11 +42,11 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
   }
 
   @Override
-  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
+  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) throws Exception {
     Attribute<Context> contextAttr = ctx.channel().attr(AttributeKeys.SERVER_CONTEXT);
     Context context = contextAttr.get();
     if (context == null) {
-      ctx.write(msg, prm);
+      super.write(ctx, msg, prm);
       return;
     }
 
@@ -87,7 +87,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
     }
 
     try (Scope ignored = context.makeCurrent()) {
-      ctx.write(msg, writePromise);
+      super.write(ctx, msg, writePromise);
     } catch (Throwable throwable) {
       end(ctx.channel(), null, throwable);
       throw throwable;
