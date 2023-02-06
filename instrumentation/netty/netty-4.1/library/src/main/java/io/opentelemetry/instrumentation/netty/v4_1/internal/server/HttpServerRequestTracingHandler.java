@@ -35,7 +35,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
   }
 
   @Override
-  public void channelRead(ChannelHandlerContext ctx, Object msg) {
+  public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     Channel channel = ctx.channel();
     Attribute<Context> contextAttr = channel.attr(AttributeKeys.SERVER_CONTEXT);
     Attribute<HttpRequestAndChannel> requestAttr = channel.attr(HTTP_REQUEST);
@@ -43,10 +43,10 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     if (!(msg instanceof HttpRequest)) {
       Context serverContext = contextAttr.get();
       if (serverContext == null) {
-        ctx.fireChannelRead(msg);
+        super.channelRead(ctx, msg);
       } else {
         try (Scope ignored = serverContext.makeCurrent()) {
-          ctx.fireChannelRead(msg);
+          super.channelRead(ctx, msg);
         }
       }
       return;
@@ -59,7 +59,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     HttpRequestAndChannel request = HttpRequestAndChannel.create((HttpRequest) msg, channel);
 
     if (!instrumenter.shouldStart(parentContext, request)) {
-      ctx.fireChannelRead(msg);
+      super.channelRead(ctx, msg);
       return;
     }
 
@@ -68,7 +68,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     requestAttr.set(request);
 
     try (Scope ignored = context.makeCurrent()) {
-      ctx.fireChannelRead(msg);
+      super.channelRead(ctx, msg);
       // the span is ended normally in HttpServerResponseTracingHandler
     } catch (Throwable throwable) {
       // make sure to remove the server context on end() call

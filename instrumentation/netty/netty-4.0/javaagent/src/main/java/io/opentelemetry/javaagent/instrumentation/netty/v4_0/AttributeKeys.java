@@ -22,9 +22,6 @@ public class AttributeKeys {
         }
       };
 
-  public static final AttributeKey<Context> WRITE_CONTEXT =
-      attributeKey(AttributeKeys.class.getName() + ".write-context");
-
   // this is the context that has the server span
   public static final AttributeKey<Context> SERVER_CONTEXT =
       attributeKey(AttributeKeys.class.getName() + ".server-context");
