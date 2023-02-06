@@ -90,19 +90,19 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
     // wait for page to load
     driver.findElementByClassName("greeting.button")
     assertTraces(4) {
-      traces.sort(orderByRootSpanName("/*", "GET"))
+      traces.sort(orderByRootSpanName("GET " + getContextPath() + "/*", "GET"))
 
       // /xyz/greeting.html
       trace(0, 1) {
-        serverSpan(it, 0, getContextPath() + "/*")
+        serverSpan(it, 0, "GET " + getContextPath() + "/*")
       }
       // /xyz/greeting/greeting.nocache.js
       trace(1, 1) {
-        serverSpan(it, 0, getContextPath() + "/*")
+        serverSpan(it, 0, "GET " + getContextPath() + "/*")
       }
       // /xyz/greeting/1B105441581A8F41E49D5DF3FB5B55BA.cache.html
       trace(2, 1) {
-        serverSpan(it, 0, getContextPath() + "/*")
+        serverSpan(it, 0, "GET " + getContextPath() + "/*")
       }
       // /favicon.ico
       trace(3, 1) {
@@ -120,7 +120,7 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
     "Hello, Otel" == driver.findElementByClassName("message.received").getText()
     assertTraces(1) {
       trace(0, 2) {
-        serverSpan(it, 0, getContextPath() + "/greeting/greet")
+        serverSpan(it, 0, "POST " + getContextPath() + "/greeting/greet")
         span(1) {
           name "test.gwt.shared.MessageService/sendMessage"
           kind SpanKind.SERVER
@@ -144,7 +144,7 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
     "Error" == driver.findElementByClassName("error.received").getText()
     assertTraces(1) {
       trace(0, 2) {
-        serverSpan(it, 0, getContextPath() + "/greeting/greet")
+        serverSpan(it, 0, "POST " + getContextPath() + "/greeting/greet")
         span(1) {
           name "test.gwt.shared.MessageService/sendMessage"
           kind SpanKind.SERVER

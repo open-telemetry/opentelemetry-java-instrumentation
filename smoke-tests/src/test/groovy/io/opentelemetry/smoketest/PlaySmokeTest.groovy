@@ -35,7 +35,7 @@ class PlaySmokeTest extends SmokeTest {
     response.contentUtf8() == "Welcome 1."
     //Both play and akka-http support produce spans with the same name.
     //One internal, one SERVER
-    countSpansByName(traces, '/welcome') == 2
+    countSpansByName(traces, 'GET /welcome') == 2
 
     cleanup:
     stopTarget()
