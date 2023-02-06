@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.ratpack;
 
-import io.opentelemetry.api.trace.Span;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
+
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import ratpack.error.ServerErrorHandler;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
@@ -38,10 +39,8 @@ public final class OpenTelemetryServerHandler implements Handler {
     context.onClose(
         outcome -> {
           // Route not available in beginning of request so handle it manually here.
-          String route = '/' + context.getPathBinding().getDescription();
-          Span span = Span.fromContext(otelCtx);
-          span.updateName(route);
-          span.setAttribute(SemanticAttributes.HTTP_ROUTE, route);
+          HttpRouteHolder.updateHttpRoute(
+              otelCtx, CONTROLLER, OpenTelemetryServerHandler::getRoute, context);
 
           Throwable error =
               context.getExecution().maybeGet(ErrorHolder.class).map(ErrorHolder::get).orElse(null);
@@ -60,6 +59,10 @@ public final class OpenTelemetryServerHandler implements Handler {
     // has higher precedence.
     context.getExecution().add(ServerErrorHandler.class, OpenTelemetryServerErrorHandler.INSTANCE);
     context.next();
+  }
+
+  private static String getRoute(io.opentelemetry.context.Context otelCtx, Context context) {
+    return '/' + context.getPathBinding().getDescription();
   }
 
   static final class ErrorHolder {
