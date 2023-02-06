@@ -104,7 +104,7 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
       trace(0, 2) {
         span(0) {
           hasNoParent()
-          name "HTTP $method"
+          name "$method"
           kind CLIENT
           status ERROR
           attributes {
