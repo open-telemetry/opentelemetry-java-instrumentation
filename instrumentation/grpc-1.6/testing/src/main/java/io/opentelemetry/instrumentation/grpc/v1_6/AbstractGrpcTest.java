@@ -46,9 +46,12 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
@@ -129,17 +132,19 @@ public abstract class AbstractGrpcTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_PEER_PORT, (long) server.getPort()))
+                                addExtraClientAttributes(
+                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
+                                    equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                    equalTo(
+                                        SemanticAttributes.NET_TRANSPORT,
+                                        SemanticAttributes.NetTransportValues.IP_TCP),
+                                    equalTo(
+                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                        (long) Status.Code.OK.value()),
+                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                    equalTo(
+                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -317,17 +322,19 @@ public abstract class AbstractGrpcTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_PEER_PORT, (long) server.getPort()))
+                                addExtraClientAttributes(
+                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
+                                    equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                    equalTo(
+                                        SemanticAttributes.NET_TRANSPORT,
+                                        SemanticAttributes.NetTransportValues.IP_TCP),
+                                    equalTo(
+                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                        (long) Status.Code.OK.value()),
+                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                    equalTo(
+                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -516,17 +523,19 @@ public abstract class AbstractGrpcTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_PEER_PORT, (long) server.getPort()))
+                                addExtraClientAttributes(
+                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
+                                    equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                    equalTo(
+                                        SemanticAttributes.NET_TRANSPORT,
+                                        SemanticAttributes.NetTransportValues.IP_TCP),
+                                    equalTo(
+                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                        (long) Status.Code.OK.value()),
+                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                    equalTo(
+                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -689,17 +698,19 @@ public abstract class AbstractGrpcTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) status.getCode().value()),
-                                equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_PEER_PORT, (long) server.getPort()))
+                                addExtraClientAttributes(
+                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
+                                    equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                    equalTo(
+                                        SemanticAttributes.NET_TRANSPORT,
+                                        SemanticAttributes.NetTransportValues.IP_TCP),
+                                    equalTo(
+                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                        (long) status.getCode().value()),
+                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                    equalTo(
+                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -851,17 +862,19 @@ public abstract class AbstractGrpcTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.UNKNOWN.getCode().value()),
-                                equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_PEER_PORT, (long) server.getPort()))
+                                addExtraClientAttributes(
+                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
+                                    equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                    equalTo(
+                                        SemanticAttributes.NET_TRANSPORT,
+                                        SemanticAttributes.NetTransportValues.IP_TCP),
+                                    equalTo(
+                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                        (long) Status.UNKNOWN.getCode().value()),
+                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                    equalTo(
+                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1104,17 +1117,19 @@ public abstract class AbstractGrpcTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_PEER_PORT, (long) server.getPort()))
+                                addExtraClientAttributes(
+                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
+                                    equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                    equalTo(
+                                        SemanticAttributes.NET_TRANSPORT,
+                                        SemanticAttributes.NetTransportValues.IP_TCP),
+                                    equalTo(
+                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                        (long) Status.Code.OK.value()),
+                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                    equalTo(
+                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1246,17 +1261,19 @@ public abstract class AbstractGrpcTest {
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayMultipleHello"),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.CANCELLED.value()),
-                                equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_PEER_PORT, (long) server.getPort()))
+                                addExtraClientAttributes(
+                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
+                                    equalTo(SemanticAttributes.RPC_METHOD, "SayMultipleHello"),
+                                    equalTo(
+                                        SemanticAttributes.NET_TRANSPORT,
+                                        SemanticAttributes.NetTransportValues.IP_TCP),
+                                    equalTo(
+                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                        (long) Status.Code.CANCELLED.value()),
+                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                    equalTo(
+                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
                             .hasEventsSatisfying(
                                 events -> {
                                   assertThat(events).hasSize(3);
@@ -1385,19 +1402,21 @@ public abstract class AbstractGrpcTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(
-                                    SemanticAttributes.RPC_SERVICE,
-                                    "grpc.reflection.v1alpha.ServerReflection"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "ServerReflectionInfo"),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_PEER_PORT, (long) server.getPort()))
+                                addExtraClientAttributes(
+                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                    equalTo(
+                                        SemanticAttributes.RPC_SERVICE,
+                                        "grpc.reflection.v1alpha.ServerReflection"),
+                                    equalTo(SemanticAttributes.RPC_METHOD, "ServerReflectionInfo"),
+                                    equalTo(
+                                        SemanticAttributes.NET_TRANSPORT,
+                                        SemanticAttributes.NetTransportValues.IP_TCP),
+                                    equalTo(
+                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                        (long) Status.Code.OK.value()),
+                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                    equalTo(
+                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1516,17 +1535,19 @@ public abstract class AbstractGrpcTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_PEER_PORT, (long) server.getPort()))
+                                addExtraClientAttributes(
+                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
+                                    equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                    equalTo(
+                                        SemanticAttributes.NET_TRANSPORT,
+                                        SemanticAttributes.NetTransportValues.IP_TCP),
+                                    equalTo(
+                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                        (long) Status.Code.OK.value()),
+                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                    equalTo(
+                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1764,5 +1785,14 @@ public abstract class AbstractGrpcTest {
     } catch (NoSuchMethodException unused) {
       channelBuilder.getClass().getMethod("usePlaintext").invoke(channelBuilder);
     }
+  }
+
+  static List<AttributeAssertion> addExtraClientAttributes(AttributeAssertion... assertions) {
+    List<AttributeAssertion> result = new ArrayList<>();
+    result.addAll(Arrays.asList(assertions));
+    if (Boolean.getBoolean("testLatestDeps")) {
+      result.add(equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"));
+    }
+    return result;
   }
 }
