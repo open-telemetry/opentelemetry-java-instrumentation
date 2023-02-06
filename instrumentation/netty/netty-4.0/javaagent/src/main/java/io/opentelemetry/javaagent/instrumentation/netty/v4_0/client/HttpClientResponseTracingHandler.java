@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.Netty
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.Attribute;
@@ -28,7 +27,9 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-    if (!(msg instanceof HttpResponse) && !(msg instanceof HttpContent)) {
+    Attribute<Context> contextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
+    Context context = contextAttr.get();
+    if (context == null) {
       super.channelRead(ctx, msg);
       return;
     }
@@ -36,27 +37,22 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     Attribute<Context> parentContextAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT);
     Context parentContext = parentContextAttr.get();
 
-    Attribute<Context> contextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
-    Context context = contextAttr.get();
-
-    if (context != null) {
-      if (msg instanceof FullHttpResponse) {
-        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
-        instrumenter().end(context, request, (HttpResponse) msg, null);
-        contextAttr.remove();
-        parentContextAttr.remove();
-      } else if (msg instanceof HttpResponse) {
-        // Headers before body have been received, store them to use when finishing the span.
-        ctx.channel().attr(HTTP_CLIENT_RESPONSE).set((HttpResponse) msg);
-      } else if (msg instanceof LastHttpContent) {
-        // Not a FullHttpResponse so this is content that has been received after headers.
-        // Finish the span using what we stored in attrs.
-        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
-        HttpResponse response = ctx.channel().attr(HTTP_CLIENT_RESPONSE).getAndRemove();
-        instrumenter().end(context, request, response, null);
-        contextAttr.remove();
-        parentContextAttr.remove();
-      }
+    if (msg instanceof FullHttpResponse) {
+      HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
+      instrumenter().end(context, request, (HttpResponse) msg, null);
+      contextAttr.remove();
+      parentContextAttr.remove();
+    } else if (msg instanceof HttpResponse) {
+      // Headers before body have been received, store them to use when finishing the span.
+      ctx.channel().attr(HTTP_CLIENT_RESPONSE).set((HttpResponse) msg);
+    } else if (msg instanceof LastHttpContent) {
+      // Not a FullHttpResponse so this is content that has been received after headers.
+      // Finish the span using what we stored in attrs.
+      HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
+      HttpResponse response = ctx.channel().attr(HTTP_CLIENT_RESPONSE).getAndRemove();
+      instrumenter().end(context, request, response, null);
+      contextAttr.remove();
+      parentContextAttr.remove();
     }
 
     // We want the callback in the scope of the parent, not the client span
