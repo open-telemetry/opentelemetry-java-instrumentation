@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1.internal.client;
 
-import static io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler.HTTP_REQUEST;
+import static io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -27,7 +27,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
  */
 public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapter {
 
-  private static final AttributeKey<HttpResponse> HTTP_RESPONSE =
+  private static final AttributeKey<HttpResponse> HTTP_CLIENT_RESPONSE =
       AttributeKey.valueOf(HttpClientResponseTracingHandler.class, "http-client-response");
 
   private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
@@ -52,18 +52,18 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
 
     if (context != null) {
       if (msg instanceof FullHttpResponse) {
-        HttpRequestAndChannel request = ctx.channel().attr(HTTP_REQUEST).getAndSet(null);
+        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
         instrumenter.end(context, request, (HttpResponse) msg, null);
         contextAttr.set(null);
         parentContextAttr.set(null);
       } else if (msg instanceof HttpResponse) {
         // Headers before body have been received, store them to use when finishing the span.
-        ctx.channel().attr(HTTP_RESPONSE).set((HttpResponse) msg);
+        ctx.channel().attr(HTTP_CLIENT_RESPONSE).set((HttpResponse) msg);
       } else if (msg instanceof LastHttpContent) {
         // Not a FullHttpResponse so this is content that has been received after headers.
         // Finish the span using what we stored in attrs.
-        HttpRequestAndChannel request = ctx.channel().attr(HTTP_REQUEST).getAndSet(null);
-        HttpResponse response = ctx.channel().attr(HTTP_RESPONSE).getAndSet(null);
+        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
+        HttpResponse response = ctx.channel().attr(HTTP_CLIENT_RESPONSE).getAndSet(null);
         instrumenter.end(context, request, response, null);
         contextAttr.set(null);
         parentContextAttr.set(null);

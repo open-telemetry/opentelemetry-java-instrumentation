@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientRequestTracingHandler.HTTP_REQUEST;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyClientSingletons.instrumenter;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -23,7 +23,7 @@ import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 
 public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapter {
 
-  private static final AttributeKey<HttpResponse> HTTP_RESPONSE =
+  private static final AttributeKey<HttpResponse> HTTP_CLIENT_RESPONSE =
       AttributeKeys.attributeKey(AttributeKeys.class.getName() + ".http-client-response");
 
   @Override
@@ -41,18 +41,18 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
 
     if (context != null) {
       if (msg instanceof FullHttpResponse) {
-        HttpRequestAndChannel request = ctx.channel().attr(HTTP_REQUEST).getAndSet(null);
+        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
         instrumenter().end(context, request, (HttpResponse) msg, null);
         contextAttr.remove();
         parentContextAttr.remove();
       } else if (msg instanceof HttpResponse) {
         // Headers before body have been received, store them to use when finishing the span.
-        ctx.channel().attr(HTTP_RESPONSE).set((HttpResponse) msg);
+        ctx.channel().attr(HTTP_CLIENT_RESPONSE).set((HttpResponse) msg);
       } else if (msg instanceof LastHttpContent) {
         // Not a FullHttpResponse so this is content that has been received after headers.
         // Finish the span using what we stored in attrs.
-        HttpRequestAndChannel request = ctx.channel().attr(HTTP_REQUEST).getAndSet(null);
-        HttpResponse response = ctx.channel().attr(HTTP_RESPONSE).getAndRemove();
+        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
+        HttpResponse response = ctx.channel().attr(HTTP_CLIENT_RESPONSE).getAndRemove();
         instrumenter().end(context, request, response, null);
         contextAttr.remove();
         parentContextAttr.remove();

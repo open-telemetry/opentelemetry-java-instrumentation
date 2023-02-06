@@ -20,7 +20,7 @@ import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
 
-  public static final AttributeKey<HttpRequestAndChannel> HTTP_REQUEST =
+  public static final AttributeKey<HttpRequestAndChannel> HTTP_CLIENT_REQUEST =
       AttributeKeys.attributeKey(AttributeKeys.class.getName() + ".http-client-request");
 
   @Override
@@ -43,7 +43,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     Attribute<Context> parentContextAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT);
     Attribute<Context> contextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
-    Attribute<HttpRequestAndChannel> requestAttr = ctx.channel().attr(HTTP_REQUEST);
+    Attribute<HttpRequestAndChannel> requestAttr = ctx.channel().attr(HTTP_CLIENT_REQUEST);
 
     Context context = instrumenter().start(parentContext, request);
     parentContextAttr.set(parentContext);
