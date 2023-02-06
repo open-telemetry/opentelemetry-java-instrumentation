@@ -45,7 +45,7 @@ public final class GrizzlySingletons {
                         .init(context))
             .addContextCustomizer(
                 (context, httpRequestPacket, startAttributes) -> GrizzlyErrorHolder.init(context))
-            .addContextCustomizer(HttpRouteHolder.get())
+            .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
             .buildServerInstrumenter(HttpRequestHeadersGetter.INSTANCE);
   }
 

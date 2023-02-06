@@ -47,6 +47,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -463,13 +464,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    Set<AttributeKey<?>> httpAttributes = options.httpAttributes.apply(endpoint);
 
+    Set<AttributeKey<?>> httpAttributes = options.httpAttributes.apply(endpoint);
     String expectedRoute = options.expectedHttpRoute.apply(endpoint);
-    String name =
-        expectedRoute != null
-            ? expectedRoute
-            : options.expectedServerSpanNameMapper.apply(endpoint, method);
+    String name = getString(method, endpoint, expectedRoute);
 
     span.hasName(name).hasKind(SpanKind.SERVER);
     if (endpoint.status >= 500) {
@@ -569,6 +567,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return span;
   }
 
+  private String getString(String method, ServerEndpoint endpoint, String expectedRoute) {
+    String name = options.expectedServerSpanNameMapper.apply(endpoint, method, expectedRoute);
+    return name;
+  }
+
   protected SpanDataAssert assertIndexedServerSpan(SpanDataAssert span, int requestId) {
     ServerEndpoint endpoint = INDEXED_CHILD;
     String method = "GET";
@@ -592,9 +595,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return span;
   }
 
-  public String expectedServerSpanName(ServerEndpoint endpoint, String method) {
-    String route = expectedHttpRoute(endpoint);
-    return route == null ? method : method + " " + route;
+  public String expectedServerSpanName(
+      ServerEndpoint endpoint, String method, @Nullable String route) {
+    return HttpServerTestOptions.DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER.apply(
+        endpoint, method, route);
   }
 
   public String expectedHttpRoute(ServerEndpoint endpoint) {

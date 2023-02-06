@@ -12,9 +12,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import javax.annotation.Nullable;
 
 public final class HttpServerTestOptions {
 
@@ -26,12 +26,11 @@ public final class HttpServerTestOptions {
                   SemanticAttributes.NET_TRANSPORT,
                   SemanticAttributes.NET_PEER_PORT)));
 
-  public static final BiFunction<ServerEndpoint, String, String>
-      DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER = (uri, method) -> method;
+  public static final SpanNameMapper DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER =
+      (uri, method, route) -> route == null ? method : method + " " + route;
 
   Function<ServerEndpoint, Set<AttributeKey<?>>> httpAttributes = unused -> DEFAULT_HTTP_ATTRIBUTES;
-  BiFunction<ServerEndpoint, String, String> expectedServerSpanNameMapper =
-      DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER;
+  SpanNameMapper expectedServerSpanNameMapper = DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER;
   Function<ServerEndpoint, String> expectedHttpRoute = unused -> null;
   Function<ServerEndpoint, String> sockPeerAddr = unused -> "127.0.0.1";
   String contextPath = "";
@@ -63,7 +62,7 @@ public final class HttpServerTestOptions {
 
   @CanIgnoreReturnValue
   public HttpServerTestOptions setExpectedServerSpanNameMapper(
-      BiFunction<ServerEndpoint, String, String> expectedServerSpanNameMapper) {
+      SpanNameMapper expectedServerSpanNameMapper) {
     this.expectedServerSpanNameMapper = expectedServerSpanNameMapper;
     return this;
   }
@@ -165,5 +164,11 @@ public final class HttpServerTestOptions {
       boolean testCaptureRequestParameters) {
     this.testCaptureRequestParameters = testCaptureRequestParameters;
     return this;
+  }
+
+  @FunctionalInterface
+  public interface SpanNameMapper {
+
+    String apply(ServerEndpoint endpoint, String method, @Nullable String route);
   }
 }

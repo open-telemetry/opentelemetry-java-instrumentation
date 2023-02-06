@@ -56,11 +56,13 @@ final class InstrumentationApiContextBridging {
 
   private static final Class<?> AGENT_HTTP_ROUTE_STATE;
   private static final MethodHandle AGENT_CREATE;
+  private static final MethodHandle AGENT_GET_METHOD;
   private static final MethodHandle AGENT_GET_UPDATED_BY_SOURCE_ORDER;
   private static final MethodHandle AGENT_GET_ROUTE;
 
   private static final Class<?> APPLICATION_HTTP_ROUTE_STATE;
   private static final MethodHandle APPLICATION_CREATE;
+  private static final MethodHandle APPLICATION_GET_METHOD;
   private static final MethodHandle APPLICATION_GET_UPDATED_BY_SOURCE_ORDER;
   private static final MethodHandle APPLICATION_GET_ROUTE;
 
@@ -69,10 +71,12 @@ final class InstrumentationApiContextBridging {
 
     Class<?> agentHttpRouteState = null;
     MethodHandle agentCreate = null;
+    MethodHandle agentGetMethod = null;
     MethodHandle agentGetUpdatedBySourceOrder = null;
     MethodHandle agentGetRoute = null;
     Class<?> applicationHttpRouteState = null;
     MethodHandle applicationCreate = null;
+    MethodHandle applicationGetMethod = null;
     MethodHandle applicationGetUpdatedBySourceOrder = null;
     MethodHandle applicationGetRoute = null;
 
@@ -83,7 +87,9 @@ final class InstrumentationApiContextBridging {
           lookup.findStatic(
               agentHttpRouteState,
               "create",
-              MethodType.methodType(agentHttpRouteState, int.class, String.class));
+              MethodType.methodType(agentHttpRouteState, String.class, int.class, String.class));
+      agentGetMethod =
+          lookup.findVirtual(agentHttpRouteState, "getMethod", MethodType.methodType(String.class));
       agentGetUpdatedBySourceOrder =
           lookup.findVirtual(
               agentHttpRouteState, "getUpdatedBySourceOrder", MethodType.methodType(int.class));
@@ -96,7 +102,11 @@ final class InstrumentationApiContextBridging {
           lookup.findStatic(
               applicationHttpRouteState,
               "create",
-              MethodType.methodType(applicationHttpRouteState, int.class, String.class));
+              MethodType.methodType(
+                  applicationHttpRouteState, String.class, int.class, String.class));
+      applicationGetMethod =
+          lookup.findVirtual(
+              applicationHttpRouteState, "getMethod", MethodType.methodType(String.class));
       applicationGetUpdatedBySourceOrder =
           lookup.findVirtual(
               applicationHttpRouteState,
@@ -111,10 +121,12 @@ final class InstrumentationApiContextBridging {
 
     AGENT_HTTP_ROUTE_STATE = agentHttpRouteState;
     AGENT_CREATE = agentCreate;
+    AGENT_GET_METHOD = agentGetMethod;
     AGENT_GET_UPDATED_BY_SOURCE_ORDER = agentGetUpdatedBySourceOrder;
     AGENT_GET_ROUTE = agentGetRoute;
     APPLICATION_HTTP_ROUTE_STATE = applicationHttpRouteState;
     APPLICATION_CREATE = applicationCreate;
+    APPLICATION_GET_METHOD = applicationGetMethod;
     APPLICATION_GET_UPDATED_BY_SOURCE_ORDER = applicationGetUpdatedBySourceOrder;
     APPLICATION_GET_ROUTE = applicationGetRoute;
   }
@@ -135,21 +147,31 @@ final class InstrumentationApiContextBridging {
           "KEY",
           "KEY",
           httpRouteStateConvert(
-              APPLICATION_CREATE, AGENT_GET_UPDATED_BY_SOURCE_ORDER, AGENT_GET_ROUTE),
+              APPLICATION_CREATE,
+              AGENT_GET_METHOD,
+              AGENT_GET_UPDATED_BY_SOURCE_ORDER,
+              AGENT_GET_ROUTE),
           httpRouteStateConvert(
-              AGENT_CREATE, APPLICATION_GET_UPDATED_BY_SOURCE_ORDER, APPLICATION_GET_ROUTE));
+              AGENT_CREATE,
+              APPLICATION_GET_METHOD,
+              APPLICATION_GET_UPDATED_BY_SOURCE_ORDER,
+              APPLICATION_GET_ROUTE));
     } catch (Throwable ignored) {
       return null;
     }
   }
 
   private static Function<Object, Object> httpRouteStateConvert(
-      MethodHandle create, MethodHandle getUpdatedBySourceOrder, MethodHandle getRoute) {
+      MethodHandle create,
+      MethodHandle getMethod,
+      MethodHandle getUpdatedBySourceOrder,
+      MethodHandle getRoute) {
     return httpRouteHolder -> {
       try {
+        String method = (String) getMethod.invoke(httpRouteHolder);
         int updatedBySourceOrder = (int) getUpdatedBySourceOrder.invoke(httpRouteHolder);
         String route = (String) getRoute.invoke(httpRouteHolder);
-        return create.invoke(updatedBySourceOrder, route);
+        return create.invoke(method, updatedBySourceOrder, route);
       } catch (Throwable e) {
         return null;
       }

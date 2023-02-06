@@ -24,6 +24,7 @@ import io.opentelemetry.testing.internal.armeria.common.HttpMethod
 import spock.lang.Shared
 import spock.lang.Unroll
 
+import javax.annotation.Nullable
 import java.util.concurrent.Callable
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
@@ -47,8 +48,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     cleanupServer()
   }
 
-  String expectedServerSpanName(ServerEndpoint endpoint, String method) {
-    def route = expectedHttpRoute(endpoint)
+  String expectedServerSpanName(ServerEndpoint endpoint, String method, @Nullable String route) {
     return route == null ? method : method + " " + route
   }
 
@@ -185,8 +185,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
     @Override
     protected void configure(HttpServerTestOptions options) {
-      options.expectedServerSpanNameMapper = { endpoint, method ->
-        HttpServerTest.this.expectedServerSpanName(endpoint, method)
+      options.expectedServerSpanNameMapper = { endpoint, method, route ->
+        HttpServerTest.this.expectedServerSpanName(endpoint, method, route)
       }
       options.expectedHttpRoute = { endpoint ->
         HttpServerTest.this.expectedHttpRoute(endpoint)
