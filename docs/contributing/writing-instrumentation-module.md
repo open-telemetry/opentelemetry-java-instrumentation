@@ -23,7 +23,7 @@ the javaagent jar. The easiest way to do it is using `@AutoService`:
 ```java
 
 @AutoService(InstrumentationModule.class)
-class MyLibraryInstrumentationModule extends InstrumentationModule {
+public class MyLibraryInstrumentationModule extends InstrumentationModule {
   // ...
 }
 ```
@@ -146,7 +146,7 @@ on the instrumented library, they might only make sense in conjunction with othe
 instrumentations, grouped together in a module.
 
 ```java
-class MyTypeInstrumentation implements TypeInstrumentation {
+public class MyTypeInstrumentation implements TypeInstrumentation {
   // ...
 }
 ```
