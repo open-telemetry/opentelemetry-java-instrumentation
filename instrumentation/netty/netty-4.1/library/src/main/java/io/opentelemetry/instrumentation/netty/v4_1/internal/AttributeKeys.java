@@ -14,9 +14,6 @@ import io.opentelemetry.context.Context;
  */
 public final class AttributeKeys {
 
-  public static final AttributeKey<Context> WRITE_CONTEXT =
-      AttributeKey.valueOf(AttributeKeys.class, "passed-context");
-
   // this is the context that has the server span
   //
   // note: this attribute key is also used by ratpack instrumentation

@@ -26,10 +26,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       return;
     }
 
-    Context parentContext = ctx.channel().attr(AttributeKeys.WRITE_CONTEXT).getAndRemove();
-    if (parentContext == null) {
-      parentContext = Context.current();
-    }
+    Context parentContext = Context.current();
 
     HttpRequestAndChannel request = HttpRequestAndChannel.create((HttpRequest) msg, ctx.channel());
     if (!instrumenter().shouldStart(parentContext, request)) {
