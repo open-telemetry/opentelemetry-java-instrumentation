@@ -9,8 +9,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.concurrent.CompletableFuture;
 
-public final class CompletableFutureWrapper<T> extends CompletableFuture<T>
-    implements PromiseWrapper<T> {
+public class CompletableFutureWrapper<T> extends CompletableFuture<T> implements PromiseWrapper<T> {
+  private static final Class<?> batchPromiseClass = getBatchPromiseClass();
   private volatile EndOperationListener<T> endOperationListener;
 
   private CompletableFutureWrapper(CompletableFuture<T> delegate) {
@@ -36,7 +36,8 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T>
    * span, could be attached to it.
    */
   public static <T> CompletableFuture<T> wrap(CompletableFuture<T> delegate) {
-    if (delegate instanceof CompletableFutureWrapper) {
+    if (delegate instanceof CompletableFutureWrapper
+        || (batchPromiseClass != null && batchPromiseClass.isInstance(delegate))) {
       return delegate;
     }
 
@@ -46,5 +47,15 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T>
   @Override
   public void setEndOperationListener(EndOperationListener<T> endOperationListener) {
     this.endOperationListener = endOperationListener;
+  }
+
+  private static Class<?> getBatchPromiseClass() {
+    try {
+      // using Class.forName because this class is not available in the redisson version we compile
+      // against
+      return Class.forName("org.redisson.command.BatchPromise");
+    } catch (ClassNotFoundException exception) {
+      return null;
+    }
   }
 }
