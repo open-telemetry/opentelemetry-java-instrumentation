@@ -139,7 +139,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
           }
         }
         it.span(5) {
-          name "/serviceTwo"
+          name "POST /serviceTwo"
           kind INTERNAL
           parentSpanId(span(4).spanId)
           attributes {

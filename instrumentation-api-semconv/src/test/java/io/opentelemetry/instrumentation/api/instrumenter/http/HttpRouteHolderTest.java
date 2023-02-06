@@ -156,4 +156,19 @@ class HttpRouteHolderTest {
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("GET /a/pretty/good/route"));
   }
+
+  @Test
+  void shouldNotUpdateSpanName_noMethod() {
+    when(getter.getMethod("test")).thenReturn(null);
+
+    Context context = instrumenter.start(Context.root(), "test");
+    assertNull(HttpRouteHolder.getRoute(context));
+
+    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.SERVLET, "/get/:id");
+
+    instrumenter.end(context, "test", null, null);
+
+    assertEquals("/get/:id", HttpRouteHolder.getRoute(context));
+    assertThat(testing.getSpans()).satisfiesExactly(span -> assertThat(span).hasName("test"));
+  }
 }
