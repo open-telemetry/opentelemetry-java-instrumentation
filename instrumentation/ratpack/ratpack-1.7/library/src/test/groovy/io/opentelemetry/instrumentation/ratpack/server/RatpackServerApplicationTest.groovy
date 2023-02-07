@@ -42,7 +42,7 @@ class RatpackServerApplicationTest extends Specification {
     app.test { httpClient -> "hi-foo" == httpClient.get("foo").body.text }
 
     new PollingConditions().eventually {
-      def spanData = app.spanExporter.finishedSpanItems.find { it.name == "/foo" }
+      def spanData = app.spanExporter.finishedSpanItems.find { it.name == "GET /foo" }
       def attributes = spanData.attributes.asMap()
 
       spanData.kind == SpanKind.SERVER
@@ -58,7 +58,7 @@ class RatpackServerApplicationTest extends Specification {
     app.test { httpClient -> "hi-bar" == httpClient.get("bar").body.text }
 
     new PollingConditions().eventually {
-      def spanData = app.spanExporter.finishedSpanItems.find { it.name == "/bar" }
+      def spanData = app.spanExporter.finishedSpanItems.find { it.name == "GET /bar" }
       def spanDataClient = app.spanExporter.finishedSpanItems.find { it.name == "GET" }
       def attributes = spanData.attributes.asMap()
 
@@ -83,7 +83,7 @@ class RatpackServerApplicationTest extends Specification {
     app.test { httpClient -> "ignored" == httpClient.get("ignore").body.text }
 
     new PollingConditions(initialDelay: 0.1, timeout: 0.3).eventually {
-      !app.spanExporter.finishedSpanItems.any { it.name == "/ignore" }
+      !app.spanExporter.finishedSpanItems.any { it.name == "GET /ignore" }
     }
   }
 }

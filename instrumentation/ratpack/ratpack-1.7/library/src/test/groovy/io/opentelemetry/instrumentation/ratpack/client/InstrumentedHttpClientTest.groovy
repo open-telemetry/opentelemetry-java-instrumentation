@@ -217,7 +217,7 @@ class InstrumentedHttpClientTest extends Specification {
     app.test { httpClient -> "error" == httpClient.get("path-name").body.text }
 
     new PollingConditions().eventually {
-      def spanData = spanExporter.finishedSpanItems.find { it.name == "/path-name" }
+      def spanData = spanExporter.finishedSpanItems.find { it.name == "GET /path-name" }
       def spanClientData = spanExporter.finishedSpanItems.find { it.name == "GET" }
 
       spanData.traceId == spanClientData.traceId

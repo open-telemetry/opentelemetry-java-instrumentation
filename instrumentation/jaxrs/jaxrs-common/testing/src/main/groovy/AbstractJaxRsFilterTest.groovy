@@ -22,7 +22,7 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
       return makeRequest(resource)
     }
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    return runWithHttpServerSpan("test.span") {
+    return runWithHttpServerSpan {
       makeRequest(resource)
     }
   }
@@ -62,7 +62,9 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
     }
 
     def serverRoute = route ?: defaultServerRoute()
-    def expectedServerSpanName = runsOnServer() && serverRoute != null ? "POST " + serverRoute : "test.span"
+    def method = runsOnServer() ? "POST" : "GET"
+    def expectedServerSpanName = serverRoute == null ? method : method + " " + serverRoute
+
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
@@ -119,13 +121,16 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
     responseStatus == 200 // Response.Status.OK.statusCode
     responseText == expectedResponse
 
+    def method = runsOnServer() ? "POST" : "GET"
+
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name runsOnServer() ? "POST " + route : "test.span"
+          name method + " " + route
           kind SERVER
           if (!runsOnServer()) {
             attributes {
+              "$SemanticAttributes.HTTP_METHOD" method
               "$SemanticAttributes.HTTP_ROUTE" route
             }
           }
