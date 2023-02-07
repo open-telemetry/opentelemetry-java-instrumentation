@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.logback.appender.v1_0;
+package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.sdk.testing.assertj.LogAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -17,7 +17,6 @@ import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.stream.Stream;
-import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,13 +28,12 @@ import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-class LogbackTest {
+class Slf4jToLog4jTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final Logger abcLogger = LoggerFactory.getLogger("abc");
-  private static final Logger defLogger = LoggerFactory.getLogger("def");
+  private static final Logger logger = LoggerFactory.getLogger("abc");
 
   private static Stream<Arguments> provideParameters() {
     return Stream.of(
@@ -48,66 +46,17 @@ class LogbackTest {
   @ParameterizedTest
   @MethodSource("provideParameters")
   public void test(boolean logException, boolean withParent) throws InterruptedException {
-    test(abcLogger, Logger::debug, Logger::debug, logException, withParent, null, null, null);
+    test(Logger::debug, Logger::debug, logException, withParent, null, null, null);
     testing.clearData();
-    test(
-        abcLogger,
-        Logger::info,
-        Logger::info,
-        logException,
-        withParent,
-        "abc",
-        Severity.INFO,
-        "INFO");
+    test(Logger::info, Logger::info, logException, withParent, "abc", Severity.INFO, "INFO");
     testing.clearData();
-    test(
-        abcLogger,
-        Logger::warn,
-        Logger::warn,
-        logException,
-        withParent,
-        "abc",
-        Severity.WARN,
-        "WARN");
+    test(Logger::warn, Logger::warn, logException, withParent, "abc", Severity.WARN, "WARN");
     testing.clearData();
-    test(
-        abcLogger,
-        Logger::error,
-        Logger::error,
-        logException,
-        withParent,
-        "abc",
-        Severity.ERROR,
-        "ERROR");
-    testing.clearData();
-    test(defLogger, Logger::debug, Logger::debug, logException, withParent, null, null, null);
-    testing.clearData();
-    test(defLogger, Logger::info, Logger::info, logException, withParent, null, null, null);
-    testing.clearData();
-    test(
-        defLogger,
-        Logger::warn,
-        Logger::warn,
-        logException,
-        withParent,
-        "def",
-        Severity.WARN,
-        "WARN");
-    testing.clearData();
-    test(
-        defLogger,
-        Logger::error,
-        Logger::error,
-        logException,
-        withParent,
-        "def",
-        Severity.ERROR,
-        "ERROR");
+    test(Logger::error, Logger::error, logException, withParent, "abc", Severity.ERROR, "ERROR");
     testing.clearData();
   }
 
   private static void test(
-      Logger logger,
       OneArgLoggerMethod oneArgLoggerMethod,
       TwoArgLoggerMethod twoArgLoggerMethod,
       boolean logException,
@@ -120,10 +69,9 @@ class LogbackTest {
     // when
     if (withParent) {
       testing.runWithSpan(
-          "parent",
-          () -> performLogging(logger, oneArgLoggerMethod, twoArgLoggerMethod, logException));
+          "parent", () -> performLogging(oneArgLoggerMethod, twoArgLoggerMethod, logException));
     } else {
-      performLogging(logger, oneArgLoggerMethod, twoArgLoggerMethod, logException);
+      performLogging(oneArgLoggerMethod, twoArgLoggerMethod, logException);
     }
 
     // then
@@ -143,24 +91,16 @@ class LogbackTest {
             .hasAttributesSatisfyingExactly(
                 equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
                 equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-                equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-                equalTo(SemanticAttributes.CODE_FUNCTION, "performLogging"),
-                satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-                equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"),
                 equalTo(SemanticAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
                 equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "hello"),
                 satisfies(
                     SemanticAttributes.EXCEPTION_STACKTRACE,
-                    v -> v.contains(LogbackTest.class.getName())));
+                    v -> v.contains(Slf4jToLog4jTest.class.getName())));
       } else {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
                 equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-                equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-                equalTo(SemanticAttributes.CODE_FUNCTION, "performLogging"),
-                satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-                equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
+                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()));
       }
 
       if (withParent) {
@@ -180,7 +120,7 @@ class LogbackTest {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
     try {
-      abcLogger.info("xyz: {}", 123);
+      logger.info("xyz: {}", 123);
     } finally {
       MDC.clear();
     }
@@ -192,14 +132,10 @@ class LogbackTest {
         .hasSeverity(Severity.INFO)
         .hasSeverityText("INFO")
         .hasAttributesSatisfyingExactly(
-            equalTo(AttributeKey.stringKey("logback.mdc.key1"), "val1"),
-            equalTo(AttributeKey.stringKey("logback.mdc.key2"), "val2"),
+            equalTo(AttributeKey.stringKey("log4j.context_data.key1"), "val1"),
+            equalTo(AttributeKey.stringKey("log4j.context_data.key2"), "val2"),
             equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-            equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-            equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-            equalTo(SemanticAttributes.CODE_FUNCTION, "testMdc"),
-            satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-            equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
+            equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()));
   }
 
   @Test
@@ -208,22 +144,17 @@ class LogbackTest {
     String markerName = "aMarker";
     Marker marker = MarkerFactory.getMarker(markerName);
 
-    abcLogger.info(marker, "Message");
+    logger.info(marker, "Message");
 
     LogRecordData log = testing.waitForLogRecords(1).get(0);
     assertThat(log)
         .hasAttributesSatisfyingExactly(
             equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
             equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-            equalTo(AttributeKey.stringKey("logback.marker"), markerName),
-            equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-            equalTo(SemanticAttributes.CODE_FUNCTION, "testMarker"),
-            satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-            equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
+            equalTo(AttributeKey.stringKey("log4j.marker"), markerName));
   }
 
   private static void performLogging(
-      Logger logger,
       OneArgLoggerMethod oneArgLoggerMethod,
       TwoArgLoggerMethod twoArgLoggerMethod,
       boolean logException) {
