@@ -24,11 +24,11 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
       VirtualField.find(Channel.class, NettyServerRequestAndContext.class);
 
   @Override
-  public void writeRequested(ChannelHandlerContext ctx, MessageEvent msg) {
+  public void writeRequested(ChannelHandlerContext ctx, MessageEvent msg) throws Exception {
     NettyServerRequestAndContext requestAndContext = requestAndContextField.get(ctx.getChannel());
 
     if (requestAndContext == null || !(msg.getMessage() instanceof HttpResponse)) {
-      ctx.sendDownstream(msg);
+      super.writeRequested(ctx, msg);
       return;
     }
 
@@ -38,7 +38,7 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
 
     Throwable error = null;
     try (Scope ignored = context.makeCurrent()) {
-      ctx.sendDownstream(msg);
+      super.writeRequested(ctx, msg);
     } catch (Throwable t) {
       error = t;
       throw t;

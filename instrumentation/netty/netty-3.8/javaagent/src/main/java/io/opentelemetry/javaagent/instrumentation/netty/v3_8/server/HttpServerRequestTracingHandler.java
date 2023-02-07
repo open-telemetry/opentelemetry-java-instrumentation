@@ -23,15 +23,15 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
       VirtualField.find(Channel.class, NettyServerRequestAndContext.class);
 
   @Override
-  public void messageReceived(ChannelHandlerContext ctx, MessageEvent event) {
+  public void messageReceived(ChannelHandlerContext ctx, MessageEvent event) throws Exception {
     Object message = event.getMessage();
     if (!(message instanceof HttpRequest)) {
       NettyServerRequestAndContext requestAndContext = requestAndContextField.get(ctx.getChannel());
       if (requestAndContext == null) {
-        ctx.sendUpstream(event);
+        super.messageReceived(ctx, event);
       } else {
         try (Scope ignored = requestAndContext.context().makeCurrent()) {
-          ctx.sendUpstream(event);
+          super.messageReceived(ctx, event);
         }
       }
       return;
@@ -41,7 +41,8 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
     HttpRequestAndChannel request =
         HttpRequestAndChannel.create((HttpRequest) message, ctx.getChannel());
     if (!instrumenter().shouldStart(parentContext, request)) {
-      ctx.sendUpstream(event);
+      super.messageReceived(ctx, event);
+      return;
     }
 
     Context context = instrumenter().start(parentContext, request);
@@ -49,7 +50,7 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
         ctx.getChannel(), NettyServerRequestAndContext.create(request, context));
 
     try (Scope ignored = context.makeCurrent()) {
-      ctx.sendUpstream(event);
+      super.messageReceived(ctx, event);
       // the span is ended normally in HttpServerResponseTracingHandler
     } catch (Throwable throwable) {
       instrumenter().end(context, request, null, throwable);

@@ -37,7 +37,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
    * Creates the messaging attributes extractor for the given {@link MessageOperation operation}
    * with default configuration.
    */
-  public static <REQUEST, RESPONSE> MessagingAttributesExtractor<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
     return builder(getter, operation).build();
   }

@@ -12,7 +12,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath "com.diffplug.spotless:spotless-plugin-gradle:6.13.0"
+    classpath "com.diffplug.spotless:spotless-plugin-gradle:6.14.1"
     classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
     classpath "io.opentelemetry.instrumentation:gradle-plugins:1.23.0-alpha-SNAPSHOT"
   }
@@ -33,7 +33,7 @@ subprojects {
       opentelemetryJavaagent     : "1.23.0-SNAPSHOT",
       opentelemetryJavaagentAlpha: "1.23.0-alpha-SNAPSHOT",
 
-      bytebuddy                  : "1.12.22",
+      bytebuddy                  : "1.12.23",
       autoservice                : "1.0.1",
       junit                      : "5.9.2"
     ]
@@ -64,7 +64,7 @@ subprojects {
   }
 
   dependencies {
-    testImplementation("org.mockito:mockito-core:5.0.0")
+    testImplementation("org.mockito:mockito-core:5.1.1")
     testImplementation(enforcedPlatform("org.junit:junit-bom:${versions.junit}"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")

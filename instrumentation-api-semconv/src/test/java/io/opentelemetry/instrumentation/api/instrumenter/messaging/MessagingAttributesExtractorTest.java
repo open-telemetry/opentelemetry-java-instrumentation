@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,7 +51,7 @@ class MessagingAttributesExtractorTest {
     request.put("payloadSize", "100");
     request.put("payloadCompressedSize", "10");
 
-    MessagingAttributesExtractor<Map<String, String>, String> underTest =
+    AttributesExtractor<Map<String, String>, String> underTest =
         MessagingAttributesExtractor.create(TestGetter.INSTANCE, operation);
 
     Context context = Context.root();
@@ -97,7 +98,7 @@ class MessagingAttributesExtractorTest {
   @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // given
-    MessagingAttributesExtractor<Map<String, String>, String> underTest =
+    AttributesExtractor<Map<String, String>, String> underTest =
         MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessageOperation.SEND);
 
     Context context = Context.root();

@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 /**
@@ -29,7 +30,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST>> {
 
   /** Creates the SQL client attributes extractor with default configuration. */
-  public static <REQUEST, RESPONSE> SqlClientAttributesExtractor<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       SqlClientAttributesGetter<REQUEST> getter) {
     return SqlClientAttributesExtractor.<REQUEST, RESPONSE>builder(getter).build();
   }
