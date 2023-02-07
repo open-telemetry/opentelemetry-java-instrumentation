@@ -11,12 +11,11 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- *
- * https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7597
  * Wrapper for OpenTelemetry that can be injected into kafka configuration without breaking
- * serialization.
+ * serialization. https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7597
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public final class OpenTelemetrySupplier implements Supplier<OpenTelemetry>, Serializable {
   private static final long serialVersionUID = 1L;
