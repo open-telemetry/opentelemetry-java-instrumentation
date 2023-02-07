@@ -46,8 +46,9 @@ class AzureSdkTest {
                         .hasAttributesSatisfying(Attributes::isEmpty)));
   }
 
-  private static  com.azure.core.util.tracing.Tracer createAzTracer() {
-    com.azure.core.util.tracing.TracerProvider azProvider = com.azure.core.util.tracing.TracerProvider.getDefaultProvider();
+  private static com.azure.core.util.tracing.Tracer createAzTracer() {
+    com.azure.core.util.tracing.TracerProvider azProvider =
+        com.azure.core.util.tracing.TracerProvider.getDefaultProvider();
     return azProvider.createTracer("test-lib", "test-version", "otel.tests", null);
   }
 }
