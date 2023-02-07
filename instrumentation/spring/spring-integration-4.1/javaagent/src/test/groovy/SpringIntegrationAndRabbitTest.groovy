@@ -9,7 +9,6 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification implements WithRabbitProducerConsumerTrait {
   def setupSpec() {

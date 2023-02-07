@@ -374,7 +374,7 @@ abstract class AppServerTest extends SmokeTest {
         return "GET " + path
       case "/app/hello.txt":
       case "/app/file-that-does-not-exist":
-        return "GET " + "/app/*"
+        return "GET /app/*"
     }
     return "GET"
   }

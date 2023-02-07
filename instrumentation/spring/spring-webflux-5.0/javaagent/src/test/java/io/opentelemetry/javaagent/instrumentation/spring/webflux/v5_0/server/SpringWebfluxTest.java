@@ -109,7 +109,7 @@ public class SpringWebfluxTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(parameter.urlPathWithVariables)
+                    span.hasName("GET " + parameter.urlPathWithVariables)
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -233,7 +233,7 @@ public class SpringWebfluxTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(parameter.urlPathWithVariables)
+                    span.hasName("GET " + parameter.urlPathWithVariables)
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -352,7 +352,7 @@ public class SpringWebfluxTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(parameter.urlPathWithVariables)
+                    span.hasName("GET " + parameter.urlPathWithVariables)
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -554,7 +554,7 @@ public class SpringWebfluxTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(parameter.urlPathWithVariables)
+                    span.hasName("GET " + parameter.urlPathWithVariables)
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
@@ -749,7 +749,7 @@ public class SpringWebfluxTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(parameter.urlPathWithVariables)
+                    span.hasName("GET " + parameter.urlPathWithVariables)
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
