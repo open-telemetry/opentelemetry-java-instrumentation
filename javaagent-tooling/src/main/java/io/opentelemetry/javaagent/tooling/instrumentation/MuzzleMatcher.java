@@ -39,7 +39,7 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
   private final InstrumentationModule instrumentationModule;
   private final Level muzzleLogLevel;
   private final AtomicBoolean initialized = new AtomicBoolean(false);
-  private final Cache<ClassLoader, Boolean> matchCache = Cache.weak();
+  private final Cache<ClassLoader, Boolean> matchCache = Cache.weakBounded(25);
   private volatile ReferenceMatcher referenceMatcher;
 
   MuzzleMatcher(
