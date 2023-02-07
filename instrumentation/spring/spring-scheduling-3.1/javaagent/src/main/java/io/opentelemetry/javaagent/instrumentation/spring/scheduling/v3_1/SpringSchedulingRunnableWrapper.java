@@ -27,7 +27,8 @@ public class SpringSchedulingRunnableWrapper implements Runnable {
 
     Context parentContext = currentContext();
     // Suppress a span that has a parent associated with it
-    if (Span.fromContext(parentContext).getSpanContext().isValid() || !instrumenter().shouldStart(parentContext, runnable)) {
+    if (Span.fromContext(parentContext).getSpanContext().isValid()
+        || !instrumenter().shouldStart(parentContext, runnable)) {
       runnable.run();
       return;
     }
