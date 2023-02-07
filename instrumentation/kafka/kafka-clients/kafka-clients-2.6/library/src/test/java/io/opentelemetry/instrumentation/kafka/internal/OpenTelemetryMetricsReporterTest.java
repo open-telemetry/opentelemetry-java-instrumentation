@@ -10,6 +10,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.instrumentation.kafkaclients.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -37,21 +42,21 @@ class OpenTelemetryMetricsReporterTest extends AbstractOpenTelemetryMetricsRepor
     assertThatThrownBy(
             () -> {
               Map<String, Object> producerConfig = producerConfig();
-              producerConfig.remove(OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE);
+              producerConfig.remove(OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_SUPPLIER);
               new KafkaProducer<>(producerConfig).close();
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
-        .hasRootCauseMessage("Missing required configuration property: opentelemetry.instance");
+        .hasRootCauseMessage("Missing required configuration property: opentelemetry.supplier");
     assertThatThrownBy(
             () -> {
               Map<String, Object> producerConfig = producerConfig();
               producerConfig.put(
-                  OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE, "foo");
+                  OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_SUPPLIER, "foo");
               new KafkaProducer<>(producerConfig).close();
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
         .hasRootCauseMessage(
-            "Configuration property opentelemetry.instance is not instance of OpenTelemetry");
+            "Configuration property opentelemetry.supplier is not instance of OpenTelemetrySupplier");
     assertThatThrownBy(
             () -> {
               Map<String, Object> producerConfig = producerConfig();
@@ -77,21 +82,21 @@ class OpenTelemetryMetricsReporterTest extends AbstractOpenTelemetryMetricsRepor
     assertThatThrownBy(
             () -> {
               Map<String, Object> consumerConfig = consumerConfig();
-              consumerConfig.remove(OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE);
+              consumerConfig.remove(OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_SUPPLIER);
               new KafkaConsumer<>(consumerConfig).close();
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
-        .hasRootCauseMessage("Missing required configuration property: opentelemetry.instance");
+        .hasRootCauseMessage("Missing required configuration property: opentelemetry.supplier");
     assertThatThrownBy(
             () -> {
               Map<String, Object> consumerConfig = consumerConfig();
               consumerConfig.put(
-                  OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE, "foo");
+                  OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_SUPPLIER, "foo");
               new KafkaConsumer<>(consumerConfig).close();
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
         .hasRootCauseMessage(
-            "Configuration property opentelemetry.instance is not instance of OpenTelemetry");
+            "Configuration property opentelemetry.supplier is not instance of OpenTelemetrySupplier");
     assertThatThrownBy(
             () -> {
               Map<String, Object> consumerConfig = consumerConfig();
@@ -112,5 +117,24 @@ class OpenTelemetryMetricsReporterTest extends AbstractOpenTelemetryMetricsRepor
         .hasRootCauseInstanceOf(IllegalStateException.class)
         .hasRootCauseMessage(
             "Configuration property opentelemetry.instrumentation_name is not instance of String");
+  }
+
+  @Test
+  void serializableConfig() throws IOException, ClassNotFoundException {
+    testSerialize(producerConfig());
+    testSerialize(consumerConfig());
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> testSerialize(Map<String, Object> map)
+      throws IOException, ClassNotFoundException {
+    ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+    try (ObjectOutputStream outputStream = new ObjectOutputStream(byteOutputStream)) {
+      outputStream.writeObject(map);
+    }
+    try (ObjectInputStream inputStream =
+        new ObjectInputStream(new ByteArrayInputStream(byteOutputStream.toByteArray()))) {
+      return (Map<String, Object>) inputStream.readObject();
+    }
   }
 }

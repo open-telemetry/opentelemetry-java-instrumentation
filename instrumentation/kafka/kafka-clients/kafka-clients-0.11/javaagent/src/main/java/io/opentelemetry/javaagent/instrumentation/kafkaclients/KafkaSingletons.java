@@ -9,6 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
+import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
 import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
@@ -75,7 +76,8 @@ public final class KafkaSingletons {
         OpenTelemetryMetricsReporter.class.getName(),
         (class1, class2) -> class1 + "," + class2);
     config.put(
-        OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE, GlobalOpenTelemetry.get());
+        OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
+        new OpenTelemetrySupplier(GlobalOpenTelemetry.get()));
     config.put(
         OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME,
         INSTRUMENTATION_NAME);
