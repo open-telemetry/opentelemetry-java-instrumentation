@@ -40,7 +40,7 @@ final class TemporaryMetricsView {
     Set<AttributeKey> view = new HashSet<>(durationAlwaysInclude);
     view.add(SemanticAttributes.NET_PEER_NAME);
     view.add(SemanticAttributes.NET_PEER_PORT);
-    view.add(AttributeKey.stringKey("net.peer.sock.addr"));
+    view.add(SemanticAttributes.NET_SOCK_PEER_ADDR);
     return view;
   }
 
@@ -66,7 +66,7 @@ final class TemporaryMetricsView {
     view.add(SemanticAttributes.HTTP_SCHEME);
     view.add(SemanticAttributes.HTTP_FLAVOR);
     view.add(SemanticAttributes.NET_HOST_NAME);
-    // TODO: net host port?
+    view.add(SemanticAttributes.NET_HOST_PORT);
     return view;
   }
 

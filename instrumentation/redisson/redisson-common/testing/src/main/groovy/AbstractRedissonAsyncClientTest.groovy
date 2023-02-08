@@ -6,7 +6,10 @@
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.junit.Assume
 import org.redisson.Redisson
+import org.redisson.api.BatchOptions
+import org.redisson.api.RBatch
 import org.redisson.api.RBucket
 import org.redisson.api.RFuture
 import org.redisson.api.RScheduledExecutorService
@@ -149,6 +152,87 @@ abstract class AbstractRedissonAsyncClientTest extends AgentInstrumentationSpeci
     @Override
     Object call() throws Exception {
       return null
+    }
+  }
+
+  def "test atomic batch command"() {
+    try {
+      // available since 3.7.2
+      Class.forName('org.redisson.api.BatchOptions$ExecutionMode')
+    } catch (ClassNotFoundException exception) {
+      Assume.assumeNoException(exception)
+    }
+
+    when:
+    CompletionStage<Boolean> result = runWithSpan("parent") {
+      def batchOptions = BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC)
+      RBatch batch = redisson.createBatch(batchOptions)
+      batch.getBucket("batch1").setAsync("v1")
+      batch.getBucket("batch2").setAsync("v2")
+      RFuture<Boolean> future = batch.executeAsync()
+      return future.whenComplete({ res, throwable ->
+        if (!Span.current().getSpanContext().isValid()) {
+          new Exception("Callback should have a parent span.").printStackTrace()
+        }
+        runWithSpan("callback") {
+        }
+      })
+    }
+
+    then:
+    result.toCompletableFuture().get(30, TimeUnit.SECONDS)
+    assertTraces(1) {
+      trace(0, 5) {
+        span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "DB Query"
+          kind CLIENT
+          childOf(span(0))
+          attributes {
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "MULTI;SET batch1 ?"
+            "$SemanticAttributes.DB_OPERATION" null
+          }
+        }
+        span(2) {
+          name "SET"
+          kind CLIENT
+          childOf(span(0))
+          attributes {
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SET batch2 ?"
+            "$SemanticAttributes.DB_OPERATION" "SET"
+          }
+        }
+        span(3) {
+          name "EXEC"
+          kind CLIENT
+          childOf(span(0))
+          attributes {
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "EXEC"
+            "$SemanticAttributes.DB_OPERATION" "EXEC"
+          }
+        }
+        span(4) {
+          name "callback"
+          kind INTERNAL
+          childOf(span(0))
+        }
+      }
     }
   }
 }

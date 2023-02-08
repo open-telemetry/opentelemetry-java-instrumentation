@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.server;
 
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.HttpServerRequestTracingHandler.HTTP_SERVER_REQUEST;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyServerSingletons.instrumenter;
 
 import io.netty.channel.Channel;
@@ -41,7 +42,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
   // make sure to remove the server context on end() call
   private static void end(Channel channel, HttpResponse response, @Nullable Throwable error) {
     Context context = channel.attr(AttributeKeys.SERVER_CONTEXT).getAndRemove();
-    HttpRequestAndChannel request = channel.attr(AttributeKeys.SERVER_REQUEST).getAndRemove();
+    HttpRequestAndChannel request = channel.attr(HTTP_SERVER_REQUEST).getAndRemove();
     error = NettyErrorHolder.getOrDefault(context, error);
     instrumenter().end(context, request, response, error);
   }

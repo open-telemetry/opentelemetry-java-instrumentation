@@ -24,7 +24,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
  */
 public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapter {
 
-  static final AttributeKey<HttpRequestAndChannel> HTTP_REQUEST =
+  static final AttributeKey<HttpRequestAndChannel> HTTP_SERVER_REQUEST =
       AttributeKey.valueOf(HttpServerRequestTracingHandler.class, "http-server-request");
 
   private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
@@ -38,7 +38,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     Channel channel = ctx.channel();
     Attribute<Context> contextAttr = channel.attr(AttributeKeys.SERVER_CONTEXT);
-    Attribute<HttpRequestAndChannel> requestAttr = channel.attr(HTTP_REQUEST);
+    Attribute<HttpRequestAndChannel> requestAttr = channel.attr(HTTP_SERVER_REQUEST);
 
     if (!(msg instanceof HttpRequest)) {
       Context serverContext = contextAttr.get();
