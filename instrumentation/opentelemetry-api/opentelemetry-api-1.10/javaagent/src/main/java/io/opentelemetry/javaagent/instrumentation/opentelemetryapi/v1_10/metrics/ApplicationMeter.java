@@ -11,11 +11,11 @@ import application.io.opentelemetry.api.metrics.LongCounterBuilder;
 import application.io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import application.io.opentelemetry.api.metrics.Meter;
 
-class ApplicationMeter implements Meter {
+public class ApplicationMeter implements Meter {
 
   private final io.opentelemetry.api.metrics.Meter agentMeter;
 
-  ApplicationMeter(io.opentelemetry.api.metrics.Meter agentMeter) {
+  protected ApplicationMeter(io.opentelemetry.api.metrics.Meter agentMeter) {
     this.agentMeter = agentMeter;
   }
 
