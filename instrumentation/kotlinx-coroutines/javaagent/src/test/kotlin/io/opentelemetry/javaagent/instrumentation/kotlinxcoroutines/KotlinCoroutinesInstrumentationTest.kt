@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.extension.kotlin.getOpenTelemetryContext
-import io.opentelemetry.instrumentation.reactor.ContextPropagationOperator
+import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
