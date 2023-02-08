@@ -20,10 +20,9 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcSingletons.instrumenter;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -41,17 +40,20 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
   protected final S delegate;
   protected final DbInfo dbInfo;
   protected final String query;
+  protected final Instrumenter<DbRequest, Void> instrumenter;
 
   private final ArrayList<String> batchCommands = new ArrayList<>();
 
-  OpenTelemetryStatement(S delegate, DbInfo dbInfo) {
-    this(delegate, dbInfo, null);
+  OpenTelemetryStatement(S delegate, DbInfo dbInfo, Instrumenter<DbRequest, Void> instrumenter) {
+    this(delegate, dbInfo, null, instrumenter);
   }
 
-  OpenTelemetryStatement(S delegate, DbInfo dbInfo, String query) {
+  OpenTelemetryStatement(
+      S delegate, DbInfo dbInfo, String query, Instrumenter<DbRequest, Void> instrumenter) {
     this.delegate = delegate;
     this.dbInfo = dbInfo;
     this.query = query;
+    this.instrumenter = instrumenter;
   }
 
   @Override
@@ -282,19 +284,19 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
     Context parentContext = Context.current();
     DbRequest request = DbRequest.create(dbInfo, sql);
 
-    if (!instrumenter().shouldStart(parentContext, request)) {
+    if (!this.instrumenter.shouldStart(parentContext, request)) {
       return callable.call();
     }
 
-    Context context = instrumenter().start(parentContext, request);
+    Context context = this.instrumenter.start(parentContext, request);
     T result;
     try (Scope ignored = context.makeCurrent()) {
       result = callable.call();
     } catch (Throwable t) {
-      instrumenter().end(context, request, null, t);
+      this.instrumenter.end(context, request, null, t);
       throw t;
     }
-    instrumenter().end(context, request, null, null);
+    this.instrumenter.end(context, request, null, null);
     return result;
   }
 

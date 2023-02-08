@@ -20,6 +20,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.io.InputStream;
 import java.io.Reader;
@@ -47,8 +48,9 @@ import java.util.Map;
 public class OpenTelemetryCallableStatement<S extends CallableStatement>
     extends OpenTelemetryPreparedStatement<S> implements CallableStatement {
 
-  public OpenTelemetryCallableStatement(S delegate, DbInfo dbInfo, String query) {
-    super(delegate, dbInfo, query);
+  public OpenTelemetryCallableStatement(
+      S delegate, DbInfo dbInfo, String query, Instrumenter<DbRequest, Void> instrumenter) {
+    super(delegate, dbInfo, query, instrumenter);
   }
 
   @Override

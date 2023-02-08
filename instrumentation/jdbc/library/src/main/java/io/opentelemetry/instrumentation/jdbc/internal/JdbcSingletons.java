@@ -5,44 +5,21 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createStatementInstrumenter;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public final class JdbcSingletons {
-  public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
+  public static final Instrumenter<DbRequest, Void> STATEMENT_INSTRUMENTER =
+      createStatementInstrumenter(GlobalOpenTelemetry.get());
 
-  private static final Instrumenter<DbRequest, Void> INSTRUMENTER;
-
-  static {
-    JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
-    JdbcNetAttributesGetter netAttributesGetter = new JdbcNetAttributesGetter();
-
-    INSTRUMENTER =
-        Instrumenter.<DbRequest, Void>builder(
-                GlobalOpenTelemetry.get(),
-                INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(
-                SqlClientAttributesExtractor.builder(dbAttributesGetter)
-                    .setStatementSanitizationEnabled(
-                        ConfigPropertiesUtil.getBoolean(
-                            "otel.instrumentation.common.db-statement-sanitizer.enabled", true))
-                    .build())
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
-  }
-
-  public static Instrumenter<DbRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+  public static Instrumenter<DbRequest, Void> statementInstrumenter() {
+    return STATEMENT_INSTRUMENTER;
   }
 
   private JdbcSingletons() {}

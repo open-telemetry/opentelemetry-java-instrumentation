@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.statementInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -70,11 +70,11 @@ public class StatementInstrumentation implements TypeInstrumentation {
       Context parentContext = currentContext();
       request = DbRequest.create(statement, sql);
 
-      if (request == null || !instrumenter().shouldStart(parentContext, request)) {
+      if (request == null || !statementInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = instrumenter().start(parentContext, request);
+      context = statementInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -91,7 +91,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
 
       if (scope != null) {
         scope.close();
-        instrumenter().end(context, request, null, throwable);
+        statementInstrumenter().end(context, request, null, throwable);
       }
     }
   }
