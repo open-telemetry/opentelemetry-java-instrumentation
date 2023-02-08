@@ -5,15 +5,15 @@
 
 package io.opentelemetry.instrumentation.jdbc
 
-import io.opentelemetry.api.GlobalOpenTelemetry
+
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.propagation.ContextPropagators
-import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryCallableStatement
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryPreparedStatement
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryStatement
+import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -25,8 +25,7 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
 
   def "verify create statement"() {
     setup:
-    def ot = GlobalOpenTelemetry.get()
-    def instr = createStatementInstrumenter(ot)
+    def instr = createStatementInstrumenter(openTelemetry)
     def dbInfo = getDbInfo()
     def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo, instr)
     String query = "SELECT * FROM users"
@@ -82,8 +81,7 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
 
   def "verify prepare statement"() {
     setup:
-    def ot = GlobalOpenTelemetry.get()
-    def instr = createStatementInstrumenter(ot)
+    def instr = createStatementInstrumenter(openTelemetry)
     def dbInfo = getDbInfo()
     def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo, instr)
     String query = "SELECT * FROM users"
@@ -143,8 +141,7 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
 
   def "verify prepare call"() {
     setup:
-    def ot = GlobalOpenTelemetry.get()
-    def instr = createStatementInstrumenter(ot)
+    def instr = createStatementInstrumenter(openTelemetry)
     def dbInfo = getDbInfo()
     def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo, instr)
     String query = "SELECT * FROM users"
