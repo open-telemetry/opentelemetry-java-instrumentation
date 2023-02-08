@@ -44,6 +44,6 @@ class HttpSpanNameExtractorTest {
   @Test
   void nothing() {
     assertThat(HttpSpanNameExtractor.create(clientGetter).extract(Collections.emptyMap()))
-        .isEqualTo("HTTP request");
+        .isEqualTo("HTTP");
   }
 }
