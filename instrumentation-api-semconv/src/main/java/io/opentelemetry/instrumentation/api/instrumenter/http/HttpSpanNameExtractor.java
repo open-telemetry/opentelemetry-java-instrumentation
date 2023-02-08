@@ -38,7 +38,7 @@ public final class HttpSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
     if (method != null) {
       return route == null ? method : method + " " + route;
     }
-    return "HTTP request";
+    return "HTTP";
   }
 
   @Nullable

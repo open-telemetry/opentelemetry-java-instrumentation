@@ -32,7 +32,7 @@ public abstract class HttpClientTestOptions {
                   SemanticAttributes.HTTP_USER_AGENT)));
 
   public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =
-      (uri, method) -> method != null ? method : "HTTP request";
+      (uri, method) -> method;
 
   public abstract Function<URI, Set<AttributeKey<?>>> getHttpAttributes();
 
