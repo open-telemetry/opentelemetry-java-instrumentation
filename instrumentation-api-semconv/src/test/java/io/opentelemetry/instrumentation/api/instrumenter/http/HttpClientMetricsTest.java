@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
@@ -49,9 +48,9 @@ class HttpClientMetricsTest {
             .put("http.status_code", 200)
             .put("http.response_content_length", 200)
             .put("net.sock.family", "inet")
-            .put("net.peer.sock.addr", "1.2.3.4")
-            .put("net.peer.sock.name", "somehost20")
-            .put("net.peer.sock.port", 8080)
+            .put("net.sock.peer.addr", "1.2.3.4")
+            .put("net.sock.peer.name", "somehost20")
+            .put("net.sock.peer.port", 8080)
             .build();
 
     Context parent =
@@ -92,7 +91,8 @@ class HttpClientMetricsTest {
                                             equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
                                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
-                                            equalTo(stringKey("net.peer.sock.addr"), "1.2.3.4"))
+                                            equalTo(
+                                                SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -114,7 +114,8 @@ class HttpClientMetricsTest {
                                             equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
                                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
-                                            equalTo(stringKey("net.peer.sock.addr"), "1.2.3.4"))
+                                            equalTo(
+                                                SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -136,7 +137,8 @@ class HttpClientMetricsTest {
                                             equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
                                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
-                                            equalTo(stringKey("net.peer.sock.addr"), "1.2.3.4"))
+                                            equalTo(
+                                                SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
