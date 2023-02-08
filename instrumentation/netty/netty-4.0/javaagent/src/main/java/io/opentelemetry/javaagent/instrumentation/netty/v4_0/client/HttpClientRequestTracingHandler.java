@@ -12,12 +12,16 @@ import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
+
+  public static final AttributeKey<HttpRequestAndChannel> HTTP_CLIENT_REQUEST =
+      AttributeKeys.attributeKey(AttributeKeys.class.getName() + ".http-client-request");
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) throws Exception {
@@ -36,7 +40,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     Attribute<Context> parentContextAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT);
     Attribute<Context> contextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
-    Attribute<HttpRequestAndChannel> requestAttr = ctx.channel().attr(AttributeKeys.CLIENT_REQUEST);
+    Attribute<HttpRequestAndChannel> requestAttr = ctx.channel().attr(HTTP_CLIENT_REQUEST);
 
     Context context = instrumenter().start(parentContext, request);
     parentContextAttr.set(parentContext);
