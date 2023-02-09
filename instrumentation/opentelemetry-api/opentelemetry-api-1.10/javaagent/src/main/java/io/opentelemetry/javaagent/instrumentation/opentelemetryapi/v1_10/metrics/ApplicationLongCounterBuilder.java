@@ -54,4 +54,9 @@ final class ApplicationLongCounterBuilder implements LongCounterBuilder {
                 applicationCallback.accept(
                     new ApplicationObservableLongMeasurement(agentMeasurement))));
   }
+
+  // added in 1.15.0
+  public ObservableLongMeasurement buildObserver() {
+    return new ApplicationObservableLongMeasurement(agentBuilder.buildObserver());
+  }
 }
