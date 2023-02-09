@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+  "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+  "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+
+  <session-factory>
+
+    <!--&lt;!&ndash; Use in-memory DB for testing &ndash;&gt;-->
+    <!--<property name="connection.driver_class">org.apache.derby.jdbc.EmbeddedDriver</property>-->
+    <!--<property name="connection.url">jdbc:derby:test;create=true</property>-->
+    <!--<property name="connection.username">root</property>-->
+    <!--<property name="connection.password">root</property>-->
+    <!--<property name="dialect">org.hibernate.dialect.DerbyTenSevenDialect</property>-->
+
+    <!--<property name="connection.pool_size">3</property>-->
+    <!--<property name="cache.provider_class">org.hibernate.cache.internal.NoCacheProvider</property>-->
+    <!--<property name="show_sql">true</property>-->
+
+    <!--&lt;!&ndash; Reset the DB each test &ndash;&gt;-->
+    <!--<property name="hbm2ddl.auto">create</property>-->
+
+    <property name="hibernate.archive.autodetection">class,hbm</property>
+    <property name="hibernate.dialect">org.hibernate.dialect.HSQLDialect</property>
+    <property name="hibernate.show_sql">true</property>
+    <property name="hibernate.connection.driver_class">org.hsqldb.jdbcDriver</property>
+    <property name="hibernate.connection.username">sa</property>
+    <property name="hibernate.connection.password">1</property>
+    <property name="hibernate.connection.url">jdbc:hsqldb:mem:test</property>
+    <property name="hibernate.hbm2ddl.auto">create</property>
+
+    <!-- Objects -->
+    <mapping class="Value"/>
+
+  </session-factory>
+
+</hibernate-configuration>

@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
+package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getOperationNameForQuery;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Hibernate3Singletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Hibernate6Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -25,24 +25,38 @@ import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.hibernate.Query;
+import org.hibernate.query.CommonQueryContract;
+import org.hibernate.query.Query;
+import org.hibernate.query.spi.SqmQuery;
 
 public class QueryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.hibernate.Query");
+    return hasClassesNamed("org.hibernate.query.CommonQueryContract");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("org.hibernate.Query"));
+    return implementsInterface(named("org.hibernate.query.CommonQueryContract"));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(namedOneOf("list", "executeUpdate", "uniqueResult", "iterate", "scroll")),
+        isMethod()
+            .and(
+                namedOneOf(
+                    "list",
+                    "getResultList",
+                    "stream",
+                    "getResultStream",
+                    "uniqueResult",
+                    "getSingleResult",
+                    "getSingleResultOrNull",
+                    "uniqueResultOptional",
+                    "executeUpdate",
+                    "scroll")),
         QueryInstrumentation.class.getName() + "$QueryMethodAdvice");
   }
 
@@ -51,7 +65,7 @@ public class QueryInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void startMethod(
-        @Advice.This Query query,
+        @Advice.This CommonQueryContract query,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
         @Advice.Local("otelContext") Context context,
@@ -62,13 +76,25 @@ public class QueryInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      VirtualField<Query, SessionInfo> queryVirtualField =
-          VirtualField.find(Query.class, SessionInfo.class);
+      String queryString = null;
+      if (query instanceof Query) {
+        queryString = ((Query<?>) query).getQueryString();
+      }
+      if (query instanceof SqmQuery) {
+        try {
+          queryString = ((SqmQuery) query).getSqmStatement().toHqlString();
+        } catch (RuntimeException exception) {
+          // ignore
+        }
+      }
+
+      VirtualField<CommonQueryContract, SessionInfo> queryVirtualField =
+          VirtualField.find(CommonQueryContract.class, SessionInfo.class);
       SessionInfo sessionInfo = queryVirtualField.get(query);
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       hibernateOperation =
-          new HibernateOperation(getOperationNameForQuery(query.getQueryString()), sessionInfo);
+          new HibernateOperation(getOperationNameForQuery(queryString), sessionInfo);
       if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
         return;
       }

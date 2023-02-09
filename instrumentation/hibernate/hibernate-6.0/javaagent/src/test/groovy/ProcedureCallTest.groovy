@@ -5,14 +5,15 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import jakarta.persistence.ParameterMode
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
 import org.hibernate.exception.SQLGrammarException
 import org.hibernate.procedure.ProcedureCall
+import org.junit.jupiter.api.Assumptions
 import spock.lang.Shared
 
-import javax.persistence.ParameterMode
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Statement
@@ -30,7 +31,7 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
   protected List<Value> prepopulated
 
   def setupSpec() {
-    sessionFactory = new Configuration().configure().buildSessionFactory()
+    sessionFactory = new Configuration().configure("procedure-call-hibernate.cfg.xml").buildSessionFactory()
     // Pre-populate the DB, so delete/update can be tested.
     Session writer = sessionFactory.openSession()
     writer.beginTransaction()
@@ -53,6 +54,16 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
   def cleanupSpec() {
     if (sessionFactory != null) {
       sessionFactory.close()
+    }
+  }
+
+  def callProcedure(ProcedureCall call) {
+    try {
+      call.getOutputs()
+    } catch (Exception exception) {
+      // ignore failures on hibernate 6 where this functionality has not been implemented yet
+      Assumptions.assumeFalse("org.hibernate.NotYetImplementedFor6Exception" == exception.getClass().getName())
+      throw exception
     }
   }
 
@@ -126,7 +137,7 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
 
       ProcedureCall call = session.createStoredProcedureCall("TEST_PROC")
       def parameterRegistration = call.registerParameter("nonexistent", Long, ParameterMode.IN)
-      parameterRegistration.bindValue(420L)
+      call.setParameter(parameterRegistration, 420L)
       try {
         call.getOutputs()
       } catch (Exception e) {
