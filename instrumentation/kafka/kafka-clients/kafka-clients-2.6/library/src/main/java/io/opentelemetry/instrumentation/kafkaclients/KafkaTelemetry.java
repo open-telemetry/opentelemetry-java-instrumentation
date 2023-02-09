@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerRecordGetter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaHeadersSetter;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
+import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
@@ -162,7 +163,9 @@ public final class KafkaTelemetry {
     config.put(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
         OpenTelemetryMetricsReporter.class.getName());
-    config.put(OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE, openTelemetry);
+    config.put(
+        OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
+        new OpenTelemetrySupplier(openTelemetry));
     config.put(
         OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME,
         KafkaTelemetryBuilder.INSTRUMENTATION_NAME);
