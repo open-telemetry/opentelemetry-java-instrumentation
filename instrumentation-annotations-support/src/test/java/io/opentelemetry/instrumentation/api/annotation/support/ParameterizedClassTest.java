@@ -49,14 +49,14 @@ class ParameterizedClassTest {
   void reflectsParameterizedType() {
     ParameterizedClass underTest = ParameterizedClass.of(stringArrayListType);
     assertThat(underTest.getRawClass()).isEqualTo(ArrayList.class);
-    assertThat(underTest.getActualTypeArguments()).hasSize(1).allMatch(x -> x == String.class);
+    assertThat(underTest.getActualTypeArguments()).containsExactly(String.class);
   }
 
   @Test
   void getsParameterizedSuperclassWithMappedtypeArguments() {
     ParameterizedClass underTest =
         ParameterizedClass.of(stringArrayListType).getParameterizedSuperclass();
-    assertThat(underTest.getActualTypeArguments()).hasSize(1).allMatch(x -> x == String.class);
+    assertThat(underTest.getActualTypeArguments()).containsExactly(String.class);
   }
 
   @Test
