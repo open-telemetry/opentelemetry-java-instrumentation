@@ -1,17 +1,23 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.kafka.internal;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.Duration;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.Test;
-import java.time.Duration;
 
 @SuppressWarnings("OtelInternalJavadoc")
 public abstract class KafkaClientPropagationBaseTest extends KafkaClientBaseTest {
-  private static final boolean producerPropagationEnabled = Boolean.parseBoolean(
-      System.getProperty("otel.instrumentation.kafka.producer-propagation.enabled", "true"));
+  private static final boolean producerPropagationEnabled =
+      Boolean.parseBoolean(
+          System.getProperty("otel.instrumentation.kafka.producer-propagation.enabled", "true"));
 
   @Test
   public void testClientHeaderPropagationManualConfig() throws InterruptedException {
