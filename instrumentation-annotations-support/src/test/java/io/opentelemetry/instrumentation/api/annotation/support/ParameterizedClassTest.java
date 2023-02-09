@@ -109,7 +109,6 @@ class ParameterizedClassTest {
 
   static class TestFields {
     private TestFields() {}
-    ;
 
     public static List<String> stringListField;
     public static ArrayList<String> stringArrayListField;
