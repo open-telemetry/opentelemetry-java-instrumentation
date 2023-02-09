@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.SpringSchedulingSingletons.instrumenter;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
@@ -26,11 +25,7 @@ public class SpringSchedulingRunnableWrapper implements Runnable {
     }
 
     Context parentContext = currentContext();
-    // Spring scheduling generates lots of InProc dependencies which have a parent associated with
-    // them. Suppressing these kind of InProc dependencies will reduce data usage and cost for
-    // customers.
-    if (Span.fromContext(parentContext).getSpanContext().isValid()
-        || !instrumenter().shouldStart(parentContext, runnable)) {
+    if (!instrumenter().shouldStart(parentContext, runnable)) {
       runnable.run();
       return;
     }

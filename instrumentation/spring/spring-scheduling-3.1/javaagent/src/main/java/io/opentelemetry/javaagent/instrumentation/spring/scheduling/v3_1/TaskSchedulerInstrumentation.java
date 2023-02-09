@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -26,7 +25,8 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        nameStartsWith("schedule").and(takesArgument(0, Runnable.class)),
+        namedOneOf("scheduleAtFixedRate", "scheduleAtFixedDelay")
+            .and(takesArgument(0, Runnable.class)),
         this.getClass().getName() + "$ScheduleMethodAdvice");
   }
 
