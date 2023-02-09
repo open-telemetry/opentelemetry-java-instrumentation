@@ -26,9 +26,7 @@ public class SpringSchedulingRunnableWrapper implements Runnable {
     }
 
     Context parentContext = currentContext();
-    // Spring scheduling generates lots of InProc dependencies which have a parent associated with
-    // them. Suppressing these kind of InProc dependencies will reduce data usage and cost for
-    // customers.
+    // only capture background jobs (not when there is an existing parent already)
     if (Span.fromContext(parentContext).getSpanContext().isValid()
         || !instrumenter().shouldStart(parentContext, runnable)) {
       runnable.run();
