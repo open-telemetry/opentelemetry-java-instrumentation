@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.azurecore.v1_19;
+package io.opentelemetry.javaagent.instrumentation.azurecore.v1_36;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
@@ -22,25 +22,21 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class AzureSdkInstrumentationModule extends InstrumentationModule {
   public AzureSdkInstrumentationModule() {
-    super("azure-core", "azure-core-1.19");
+    super("azure-core", "azure-core-1.36");
   }
 
   @Override
   public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
     helperResourceBuilder.register(
-        "META-INF/services/com.azure.core.http.policy.AfterRetryPolicyProvider",
-        "azure-core-1.19/META-INF/services/com.azure.core.http.policy.AfterRetryPolicyProvider");
-    helperResourceBuilder.register(
-        "META-INF/services/com.azure.core.util.tracing.Tracer",
-        "azure-core-1.19/META-INF/services/com.azure.core.util.tracing.Tracer");
+        "META-INF/services/com.azure.core.util.tracing.TracerProvider",
+        "azure-core-1.36/META-INF/services/com.azure.core.util.tracing.TracerProvider");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // this class was introduced in azure-core 1.19
-    return hasClassesNamed("com.azure.core.util.tracing.StartSpanOptions")
-        .and(not(hasClassesNamed("com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")))
-        .and(not(hasClassesNamed("com.azure.core.util.tracing.TracerProvider")));
+    // this class was introduced in azure-core 1.36
+    return hasClassesNamed("com.azure.core.util.tracing.TracerProvider")
+        .and(not(hasClassesNamed("com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")));
   }
 
   @Override
@@ -51,8 +47,7 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule {
   public static class EmptyTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
-      return named("com.azure.core.http.policy.AfterRetryPolicyProvider")
-          .or(named("com.azure.core.util.tracing.Tracer"));
+      return named("com.azure.core.util.tracing.TracerProvider");
     }
 
     @Override
