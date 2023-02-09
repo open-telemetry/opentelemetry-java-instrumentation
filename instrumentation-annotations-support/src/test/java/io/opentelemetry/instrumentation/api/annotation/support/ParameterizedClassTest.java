@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 
 class ParameterizedClassTest {
 
-  Type stringListType = getGeneric(TestFields.class, "stringListField");
   Type stringArrayListType = getGeneric(TestFields.class, "stringArrayListField");
 
   static Type getGeneric(Class<?> clazz, String fieldName) {
@@ -32,7 +31,7 @@ class ParameterizedClassTest {
       return clazz.getField(fieldName).getGenericType();
     } catch (NoSuchFieldException e) {
       fail("No such field");
-      throw new RuntimeException("No such field");
+      throw new RuntimeException("No such field", e);
     }
   }
 
@@ -96,25 +95,29 @@ class ParameterizedClassTest {
   @Test
   void doesNotFindParameterizedSuperclassThatTypeDoesNotExtend() {
     Optional<ParameterizedClass> underTest =
-        ParameterizedClass.of(stringArrayListType).findParameterizedSuperclass(C.class);
+        ParameterizedClass.of(stringArrayListType)
+            .findParameterizedSuperclass(AbstractTestClass.class);
     assertThat(underTest).isNotPresent();
   }
 
   @Test
   void doesNotFindParameterizedInterfaceThatTypeDoesNotImplement() {
     Optional<ParameterizedClass> underTest =
-        ParameterizedClass.of(stringArrayListType).findParameterizedSuperclass(I.class);
+        ParameterizedClass.of(stringArrayListType).findParameterizedSuperclass(TestInterface.class);
     assertThat(underTest).isNotPresent();
   }
 
   static class TestFields {
+    private TestFields() {}
+    ;
+
     public static List<String> stringListField;
     public static ArrayList<String> stringArrayListField;
   }
 
-  interface I {}
+  interface TestInterface {}
 
-  abstract class C {}
+  abstract static class AbstractTestClass {}
 
   static Matcher<ParameterizedClass> matchesParameterizedClass(
       Class<?> rawClass, Type[] typeArguments) {
