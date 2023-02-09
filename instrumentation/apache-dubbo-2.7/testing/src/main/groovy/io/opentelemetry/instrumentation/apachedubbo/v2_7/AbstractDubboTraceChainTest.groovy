@@ -43,6 +43,14 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
     return reference
   }
 
+  ReferenceConfig<HelloService> configureLocalClient(int port) {
+    ReferenceConfig<HelloService> reference = new ReferenceConfig<>()
+    reference.setInterface(HelloService)
+    reference.setGeneric("true")
+    reference.setUrl("injvm://localhost:" + port + "/?timeout=30000")
+    return reference
+  }
+
   ReferenceConfig<HelloService> configureMiddleClient(int port) {
     ReferenceConfig<MiddleService> reference = new ReferenceConfig<>()
     reference.setInterface(MiddleService)
@@ -169,6 +177,91 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
           attributes {
             "$SemanticAttributes.RPC_SYSTEM" "apache_dubbo"
             "$SemanticAttributes.RPC_SERVICE" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
+            "$SemanticAttributes.RPC_METHOD" "hello"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" String
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
+          }
+        }
+      }
+    }
+
+    cleanup:
+    bootstrap.destroy()
+    middleBootstrap.destroy()
+    consumerBootstrap.destroy()
+  }
+
+  def "test ignore injvm calls"() {
+    setup:
+    def port = PortUtils.findOpenPorts(2)
+    def middlePort = port + 1
+    def protocolConfig = new ProtocolConfig()
+    protocolConfig.setPort(port)
+
+    def frameworkModel = newFrameworkModel()
+    DubboBootstrap bootstrap = newDubboBootstrap(frameworkModel)
+    bootstrap.application(new ApplicationConfig("dubbo-test-provider"))
+      .service(configureServer())
+      .protocol(protocolConfig)
+      .start()
+
+    def middleProtocolConfig = new ProtocolConfig()
+    middleProtocolConfig.setPort(middlePort)
+
+    def reference = configureLocalClient(port)
+    DubboBootstrap middleBootstrap = newDubboBootstrap(frameworkModel)
+    middleBootstrap.application(new ApplicationConfig("dubbo-demo-middle"))
+      .reference(reference)
+      .service(configureMiddleServer(reference))
+      .protocol(middleProtocolConfig)
+      .start()
+
+
+    def consumerProtocolConfig = new ProtocolConfig()
+    consumerProtocolConfig.setRegister(false)
+
+    def middleReference = configureMiddleClient(middlePort)
+    DubboBootstrap consumerBootstrap = newDubboBootstrap(frameworkModel)
+    consumerBootstrap.application(new ApplicationConfig("dubbo-demo-api-consumer"))
+      .reference(middleReference)
+      .protocol(consumerProtocolConfig)
+      .start()
+
+    when:
+    GenericService genericService = middleReference.get()
+    def response = runWithSpan("parent") {
+      genericService.$invoke("hello", [String.getName()] as String[], ["hello"] as Object[])
+    }
+
+    then:
+    response == "hello"
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "org.apache.dubbo.rpc.service.GenericService/\$invoke"
+          kind CLIENT
+          childOf span(0)
+          attributes {
+            "$SemanticAttributes.RPC_SYSTEM" "apache_dubbo"
+            "$SemanticAttributes.RPC_SERVICE" "org.apache.dubbo.rpc.service.GenericService"
+            "$SemanticAttributes.RPC_METHOD" "\$invoke"
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" Long
+          }
+        }
+        span(2) {
+          name "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello"
+          kind SERVER
+          childOf span(1)
+          attributes {
+            "$SemanticAttributes.RPC_SYSTEM" "apache_dubbo"
+            "$SemanticAttributes.RPC_SERVICE" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"
             "$SemanticAttributes.RPC_METHOD" "hello"
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" String
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
