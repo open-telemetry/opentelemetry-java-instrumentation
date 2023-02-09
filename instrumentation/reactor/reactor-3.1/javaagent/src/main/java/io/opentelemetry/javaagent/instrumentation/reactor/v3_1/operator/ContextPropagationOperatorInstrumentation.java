@@ -25,7 +25,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("application.io.opentelemetry.instrumentation.reactor.ContextPropagationOperator");
+    return named(
+        "application.io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator");
   }
 
   @Override
