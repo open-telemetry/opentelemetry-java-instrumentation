@@ -21,9 +21,10 @@ dependencies {
   library("org.springframework:spring-aop:4.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot:1.1.0.RELEASE")
 
-  latestDepTestLibrary("org.springframework:spring-context:5.+")
-  latestDepTestLibrary("org.springframework:spring-aop:5.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot:2.+")
+  // rmi remoting was removed in spring 6
+  latestDepTestLibrary("org.springframework:spring-context:5.+") // documented limitation
+  latestDepTestLibrary("org.springframework:spring-aop:5.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot:2.+") // documented limitation
 }
 
 tasks.withType<Test>().configureEach {
