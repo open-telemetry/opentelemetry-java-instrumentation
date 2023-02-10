@@ -27,8 +27,15 @@ public class DemoSpanProcessor implements SpanProcessor {
     The sole purpose of this attribute is to introduce runtime dependency on some external library.
     We need this to demonstrate how extension can use them.
      */
-    span.setAttribute("random", RandomStringUtils.random(10));
+    span.setAttribute("random", RandomStringUtils.randomAscii(10));
     span.setAttribute("custom", "demo");
+
+    /*
+    Get the data injected in the DemoPropagator and add it to span attributes
+    MUST use the same key in the propagator and span processor
+    */
+    Long start = parentContext.get(DemoPropagator.PROPAGATION_START_KEY);
+    span.setAttribute(DemoPropagator.FIELD, String.valueOf(start));
   }
 
   @Override

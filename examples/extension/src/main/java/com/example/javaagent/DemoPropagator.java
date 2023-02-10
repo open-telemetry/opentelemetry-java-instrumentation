@@ -21,8 +21,8 @@ import java.util.List;
  * @see DemoPropagatorProvider
  */
 public class DemoPropagator implements TextMapPropagator {
-  private static final String FIELD = "X-demo-field";
-  private static final ContextKey<Long> PROPAGATION_START_KEY =
+  public static final String FIELD = "X-demo-field";
+  public static final ContextKey<Long> PROPAGATION_START_KEY =
       ContextKey.named("propagation.start");
 
   @Override

@@ -22,6 +22,13 @@ public class DemoSpanProcessor implements SpanProcessor {
   @Override
   public void onStart(Context parentContext, ReadWriteSpan span) {
     span.setAttribute("custom", "demo");
+
+    /*
+    Get the data injected in the DemoPropagator and add it to span attributes
+    MUST use the same key in the propagator and span processor
+    */
+    Long start = parentContext.get(DemoPropagator.PROPAGATION_START_KEY);
+    span.setAttribute(DemoPropagator.FIELD, String.valueOf(start));
   }
 
   @Override
