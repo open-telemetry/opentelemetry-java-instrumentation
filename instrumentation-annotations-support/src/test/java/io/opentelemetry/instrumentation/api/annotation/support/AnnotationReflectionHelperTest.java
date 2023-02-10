@@ -44,16 +44,12 @@ class AnnotationReflectionHelperTest {
   void returnsBoundFunctionalInterfaceToAnnotationElement() throws Throwable {
     Function<Annotation, String> function =
         AnnotationReflectionHelper.bindAnnotationElementMethod(
-            getLookup(), CustomAnnotation.class, "value", String.class);
+            MethodHandles.lookup(), CustomAnnotation.class, "value", String.class);
     CustomAnnotation annotation = Annotated.class.getDeclaredAnnotation(CustomAnnotation.class);
 
     String result = function.apply(annotation);
 
     assertThat(result).isEqualTo("Value");
-  }
-
-  private static MethodHandles.Lookup getLookup() {
-    return MethodHandles.lookup();
   }
 
   @CustomAnnotation(value = "Value")

@@ -16,6 +16,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -104,7 +105,7 @@ class MethodSpanAttributesExtractorTest {
 
     verify(builder).put(stringKey("x"), "a");
     verify(builder).put(stringKey("z"), "c");
-    verify(builder, never()).put(anyString(), eq("b"));
+    verifyNoMoreInteractions(builder);
   }
 
   @Test
