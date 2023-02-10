@@ -20,7 +20,7 @@ public abstract class KafkaClientPropagationBaseTest extends KafkaClientBaseTest
           System.getProperty("otel.instrumentation.kafka.producer-propagation.enabled", "true"));
 
   @Test
-  public void testClientHeaderPropagationManualConfig() throws InterruptedException {
+  void testClientHeaderPropagationManualConfig() throws InterruptedException {
     String message = "Testing without headers";
     producer.send(new ProducerRecord<>(SHARED_TOPIC, message));
 

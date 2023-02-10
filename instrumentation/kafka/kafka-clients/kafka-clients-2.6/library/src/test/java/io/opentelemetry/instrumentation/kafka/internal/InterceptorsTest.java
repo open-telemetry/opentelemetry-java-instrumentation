@@ -49,7 +49,7 @@ class InterceptorsTest extends KafkaClientBaseTest {
   }
 
   @Test
-  public void testInterceptors() throws InterruptedException {
+  void testInterceptors() throws InterruptedException {
     String greeting = "Hello Kafka!";
     testing.runWithSpan(
         "parent",

@@ -35,7 +35,7 @@ public class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationB
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  public void testKafkaProduceAndConsume() throws InterruptedException {
+  void testKafkaProduceAndConsume() throws InterruptedException {
     String greeting = "Hello Kafka!";
     testing.runWithSpan(
         "parent",
@@ -119,7 +119,7 @@ public class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationB
   }
 
   @Test
-  public void testPassThroughTombstone()
+  void testPassThroughTombstone()
       throws ExecutionException, InterruptedException, TimeoutException {
     producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, TimeUnit.SECONDS);
     awaitUntilConsumerIsReady();
@@ -178,7 +178,7 @@ public class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationB
   }
 
   @Test
-  public void testRecordsWithTopicPartitionKafkaConsume()
+  void testRecordsWithTopicPartitionKafkaConsume()
       throws ExecutionException, InterruptedException, TimeoutException {
     String greeting = "Hello from MockConsumer!";
     producer

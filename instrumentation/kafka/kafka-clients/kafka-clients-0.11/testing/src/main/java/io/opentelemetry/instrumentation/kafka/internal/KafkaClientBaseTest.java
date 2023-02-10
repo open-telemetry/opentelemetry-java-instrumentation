@@ -42,7 +42,7 @@ public abstract class KafkaClientBaseTest {
 
   protected static final String SHARED_TOPIC = "shared.topic";
 
-  public static KafkaContainer kafka;
+  private static KafkaContainer kafka;
   protected Producer<Integer, String> producer;
   protected Consumer<Integer, String> consumer;
   private final CountDownLatch consumerReady = new CountDownLatch(1);
@@ -51,7 +51,7 @@ public abstract class KafkaClientBaseTest {
   public static final TopicPartition topicPartition = new TopicPartition(SHARED_TOPIC, partition);
 
   @BeforeAll
-  public void setupClass() throws ExecutionException, InterruptedException, TimeoutException {
+  void setupClass() throws ExecutionException, InterruptedException, TimeoutException {
     kafka =
         new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"))
             .withLogConsumer(new Slf4jLogConsumer(logger))

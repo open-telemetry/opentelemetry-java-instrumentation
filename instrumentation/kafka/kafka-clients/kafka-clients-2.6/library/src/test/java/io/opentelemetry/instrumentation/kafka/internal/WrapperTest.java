@@ -36,7 +36,7 @@ class WrapperTest extends KafkaClientBaseTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  public void testWrappers(boolean testHeaders) throws InterruptedException {
+  void testWrappers(boolean testHeaders) throws InterruptedException {
     KafkaTelemetry telemetry =
         KafkaTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedHeaders(singletonList("test-message-header"))

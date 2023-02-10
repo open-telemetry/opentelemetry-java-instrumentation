@@ -37,7 +37,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
+class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -45,7 +45,7 @@ public class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
   @DisplayName("test kafka produce and consume")
   @ParameterizedTest(name = "{index} => test headers: {0}")
   @ValueSource(booleans = {true, false})
-  public void testKafkaProducerAndConsumerSpan(boolean testHeaders) throws Exception {
+  void testKafkaProducerAndConsumerSpan(boolean testHeaders) throws Exception {
     String greeting = "Hello Kafka!";
     testing.runWithSpan(
         "parent",
@@ -173,7 +173,7 @@ public class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
 
   @DisplayName("test pass through tombstone")
   @Test
-  public void testPassThroughTombstone()
+  void testPassThroughTombstone()
       throws ExecutionException, InterruptedException, TimeoutException {
     producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, TimeUnit.SECONDS);
     awaitUntilConsumerIsReady();
@@ -249,7 +249,7 @@ public class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
 
   @DisplayName("test records(TopicPartition) kafka consume")
   @Test
-  public void testRecordsWithTopicPartitionKafkaConsume()
+  void testRecordsWithTopicPartitionKafkaConsume()
       throws ExecutionException, InterruptedException, TimeoutException {
     String greeting = "Hello from MockConsumer!";
     producer

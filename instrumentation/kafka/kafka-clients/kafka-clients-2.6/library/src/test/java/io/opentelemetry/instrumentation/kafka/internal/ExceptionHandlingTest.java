@@ -23,7 +23,7 @@ class ExceptionHandlingTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
-  public void testConsumerExceptionPropagatesToCaller() {
+  void testConsumerExceptionPropagatesToCaller() {
     Consumer<?, ?> consumer =
         (Consumer<?, ?>)
             Proxy.newProxyInstance(
@@ -42,7 +42,7 @@ class ExceptionHandlingTest {
   }
 
   @Test
-  public void testProducerExceptionPropagatesToCaller() {
+  void testProducerExceptionPropagatesToCaller() {
     Producer<?, ?> producer =
         (Producer<?, ?>)
             Proxy.newProxyInstance(

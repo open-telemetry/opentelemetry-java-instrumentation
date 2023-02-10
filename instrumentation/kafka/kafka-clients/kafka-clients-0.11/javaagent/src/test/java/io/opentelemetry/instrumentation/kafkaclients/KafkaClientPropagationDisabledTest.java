@@ -32,7 +32,7 @@ public class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBa
 
   @DisplayName("should not read remote context when consuming messages if propagation is disabled")
   @Test
-  public void testReadRemoteContextWhenPropagationIsDisabled() throws InterruptedException {
+  void testReadRemoteContextWhenPropagationIsDisabled() throws InterruptedException {
     String message = "Testing without headers";
     producer.send(new ProducerRecord<>(SHARED_TOPIC, message));
 
