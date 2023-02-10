@@ -1,7 +1,7 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "6.14.1"
+  id("com.diffplug.spotless") version "6.15.0"
 }
 
 spotless {
