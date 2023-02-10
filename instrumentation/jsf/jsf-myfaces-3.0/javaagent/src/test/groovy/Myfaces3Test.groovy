@@ -4,8 +4,4 @@
  */
 
 class Myfaces3Test extends BaseJsfTest {
-  @Override
-  String getJsfVersion() {
-    "3"
-  }
 }

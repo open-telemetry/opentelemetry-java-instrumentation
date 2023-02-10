@@ -16,7 +16,6 @@ import io.opentelemetry.testing.internal.armeria.common.HttpMethod
 import io.opentelemetry.testing.internal.armeria.common.MediaType
 import io.opentelemetry.testing.internal.armeria.common.QueryParams
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders
-import org.eclipse.jetty.annotations.AnnotationConfiguration
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.WebAppContext
@@ -38,23 +37,15 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
 
   @Override
   Server startServer(int port) {
-    String jsfVersion = getJsfVersion()
-
-    List<String> configurationClasses = new ArrayList<>()
-    Collections.addAll(configurationClasses, WebAppContext.getDefaultConfigurationClasses())
-    configurationClasses.add(AnnotationConfiguration.getName())
-
     WebAppContext webAppContext = new WebAppContext()
     webAppContext.setContextPath(getContextPath())
-    webAppContext.setConfigurationClasses(configurationClasses)
     // set up test application
-    webAppContext.setBaseResource(Resource.newSystemResource("test-app-" + jsfVersion))
-    // add additional resources for test app
-    Resource extraResource = Resource.newSystemResource("test-app-" + jsfVersion + "-extra")
+    webAppContext.setBaseResource(Resource.newSystemResource("test-app"))
+
+    Resource extraResource = Resource.newSystemResource("test-app-extra")
     if (extraResource != null) {
-      webAppContext.getMetaData().addWebInfJar(extraResource)
+      webAppContext.getMetaData().addWebInfResource(extraResource)
     }
-    webAppContext.getMetaData().getWebInfClassesDirs().add(Resource.newClassPathResource("/"))
 
     def jettyServer = new Server(port)
     jettyServer.connectors.each {
@@ -66,8 +57,6 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
 
     return jettyServer
   }
-
-  abstract String getJsfVersion();
 
   @Override
   void stopServer(Server server) {
@@ -118,14 +107,14 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
 
     where:
     path                | route
-    "hello.jsf"         | "*.jsf"
+    "hello.xhtml"       | "*.xhtml"
     "faces/hello.xhtml" | "faces/*"
   }
 
   def "test greeting"() {
     // we need to display the page first before posting data to it
     setup:
-    AggregatedHttpResponse response = client.get(address.resolve("greeting.jsf").toString()).aggregate().join()
+    AggregatedHttpResponse response = client.get(address.resolve("greeting.xhtml").toString()).aggregate().join()
     def doc = Jsoup.parse(response.contentUtf8())
 
     expect:
@@ -146,7 +135,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
 
     when:
     // extract parameters needed to post back form
-    def viewState = doc.selectFirst("[name=javax.faces.ViewState]")?.val()
+    def viewState = doc.selectFirst("[name=jakarta.faces.ViewState]")?.val()
     def formAction = doc.selectFirst("#app-form").attr("action")
     def jsessionid = formAction.substring(formAction.indexOf("jsessionid=") + "jsessionid=".length())
 
@@ -162,11 +151,11 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
       .add("app-form:name", "test")
       .add("app-form:submit", "Say hello")
       .add("app-form_SUBMIT", "1") // MyFaces
-      .add("javax.faces.ViewState", viewState)
+      .add("jakarta.faces.ViewState", viewState)
       .build()
     // use the session created for first request
     def request2 = AggregatedHttpRequest.of(
-      RequestHeaders.builder(HttpMethod.POST, address.resolve("greeting.jsf;jsessionid=" + jsessionid).toString())
+      RequestHeaders.builder(HttpMethod.POST, address.resolve("greeting.xhtml;jsessionid=" + jsessionid).toString())
         .contentType(MediaType.FORM_DATA)
         .build(),
       HttpData.ofUtf8(formBody.toQueryString()))
@@ -194,7 +183,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
   def "test exception"() {
     // we need to display the page first before posting data to it
     setup:
-    AggregatedHttpResponse response = client.get(address.resolve("greeting.jsf").toString()).aggregate().join()
+    AggregatedHttpResponse response = client.get(address.resolve("greeting.xhtml").toString()).aggregate().join()
     def doc = Jsoup.parse(response.contentUtf8())
 
     expect:
@@ -215,7 +204,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
 
     when:
     // extract parameters needed to post back form
-    def viewState = doc.selectFirst("[name=javax.faces.ViewState]").val()
+    def viewState = doc.selectFirst("[name=jakarta.faces.ViewState]").val()
     def formAction = doc.selectFirst("#app-form").attr("action")
     def jsessionid = formAction.substring(formAction.indexOf("jsessionid=") + "jsessionid=".length())
 
@@ -231,11 +220,11 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
       .add("app-form:name", "exception")
       .add("app-form:submit", "Say hello")
       .add("app-form_SUBMIT", "1") // MyFaces
-      .add("javax.faces.ViewState", viewState)
+      .add("jakarta.faces.ViewState", viewState)
       .build()
     // use the session created for first request
     def request2 = AggregatedHttpRequest.of(
-      RequestHeaders.builder(HttpMethod.POST, address.resolve("greeting.jsf;jsessionid=" + jsessionid).toString())
+      RequestHeaders.builder(HttpMethod.POST, address.resolve("greeting.xhtml;jsessionid=" + jsessionid).toString())
         .contentType(MediaType.FORM_DATA)
         .build(),
       HttpData.ofUtf8(formBody.toQueryString()))

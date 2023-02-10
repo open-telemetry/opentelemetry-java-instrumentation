@@ -4,8 +4,4 @@
  */
 
 class Mojarra3Test extends BaseJsfTest {
-  @Override
-  String getJsfVersion() {
-    "3"
-  }
 }

@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsf.jakarta;
 
-import java.util.Objects;
 import jakarta.faces.component.ActionSource2;
 import jakarta.faces.event.ActionEvent;
+import java.util.Objects;
 
 public class JsfRequest {
   private final String spanName;
