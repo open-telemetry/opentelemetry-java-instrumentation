@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.webmvc;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.webmvc.v5_3.SpringWebMvcTelemetry;
-import javax.servlet.Filter;
+import io.opentelemetry.instrumentation.spring.webmvc.v6_0.SpringWebMvcTelemetry;
+import jakarta.servlet.Filter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,7 +23,7 @@ import org.springframework.web.servlet.DispatcherServlet;
 @ConditionalOnProperty(prefix = "otel.springboot.web", name = "enabled", matchIfMissing = true)
 @ConditionalOnClass({Filter.class, OncePerRequestFilter.class, DispatcherServlet.class})
 @ConditionalOnBean(OpenTelemetry.class)
-public class WebMvcFilterAutoConfiguration {
+public class WebMvcFilterAutoConfigurationSpring6 {
 
   @Bean
   public Filter otelWebMvcInstrumentationFilter(OpenTelemetry openTelemetry) {

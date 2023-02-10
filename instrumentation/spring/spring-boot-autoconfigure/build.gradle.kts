@@ -19,6 +19,8 @@ dependencies {
   implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))
   implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
   implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-5.3:library"))
+  implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
+  compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
   implementation(project(":instrumentation:spring:spring-webflux-5.0:library"))
   implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
 
