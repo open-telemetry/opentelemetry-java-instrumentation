@@ -121,7 +121,7 @@ class MethodSpanAttributesExtractorTest {
 
     verify(builder).put(stringKey("x"), "a");
     verify(builder).put(stringKey("y"), "b");
-    verify(builder, never()).put(eq("z"), anyString());
+    verifyNoMoreInteractions(builder);
   }
 
   @Test
