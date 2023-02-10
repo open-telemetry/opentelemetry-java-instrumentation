@@ -26,8 +26,15 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("scheduleAtFixedRate", "scheduleAtFixedDelay")
-            .and(takesArgument(0, Runnable.class)),
+        namedOneOf("scheduleAtFixedRate", "scheduleWithFixedDelay")
+            .and(takesArgument(0, Runnable.class))
+            .or(
+                named("schedule")
+                    .and(
+                        takesArgument(0, Runnable.class)
+                            .and(
+                                takesArgument(
+                                    1, named("org.springframework.scheduling.Trigger"))))),
         this.getClass().getName() + "$ScheduleMethodAdvice");
   }
 
