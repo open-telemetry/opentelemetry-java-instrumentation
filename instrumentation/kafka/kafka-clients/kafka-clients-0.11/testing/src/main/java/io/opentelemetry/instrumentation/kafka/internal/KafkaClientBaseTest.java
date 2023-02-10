@@ -43,12 +43,12 @@ public abstract class KafkaClientBaseTest {
   protected static final String SHARED_TOPIC = "shared.topic";
 
   public static KafkaContainer kafka;
-  public static Producer<Integer, String> producer;
-  public static Consumer<Integer, String> consumer;
-  public CountDownLatch consumerReady = new CountDownLatch(1);
+  protected Producer<Integer, String> producer;
+  protected Consumer<Integer, String> consumer;
+  private final CountDownLatch consumerReady = new CountDownLatch(1);
 
   public static final int partition = 0;
-  public static TopicPartition topicPartition = new TopicPartition(SHARED_TOPIC, partition);
+  public static final TopicPartition topicPartition = new TopicPartition(SHARED_TOPIC, partition);
 
   @BeforeAll
   public void setupClass() throws ExecutionException, InterruptedException, TimeoutException {
@@ -112,7 +112,7 @@ public abstract class KafkaClientBaseTest {
   }
 
   @AfterAll
-  public static void cleanupClass() {
+  void cleanupClass() {
     if (producer != null) {
       producer.close();
     }
