@@ -140,6 +140,7 @@ class OpenTelemetryMetricsReporterTest extends AbstractOpenTelemetryMetricsRepor
     try (ObjectOutputStream outputStream = new ObjectOutputStream(byteOutputStream)) {
       outputStream.writeObject(map);
     }
+
     class CustomObjectInputStream extends ObjectInputStream {
       CustomObjectInputStream(InputStream inputStream) throws IOException {
         super(inputStream);
@@ -149,11 +150,13 @@ class OpenTelemetryMetricsReporterTest extends AbstractOpenTelemetryMetricsRepor
       protected Class<?> resolveClass(ObjectStreamClass desc)
           throws IOException, ClassNotFoundException {
         if (desc.getName().startsWith("io.opentelemetry.")) {
-          throw new IllegalStateException("Serial form contains opentelemetry class " + desc.getName());
+          throw new IllegalStateException(
+              "Serial form contains opentelemetry class " + desc.getName());
         }
         return super.resolveClass(desc);
       }
     }
+
     try (ObjectInputStream inputStream =
         new CustomObjectInputStream(new ByteArrayInputStream(byteOutputStream.toByteArray()))) {
       Map<String, Object> result = (Map<String, Object>) inputStream.readObject();
