@@ -109,7 +109,7 @@ class KafkaIntegrationTest {
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                                SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
                                 longKey("messaging.kafka.message.offset"),
@@ -127,7 +127,7 @@ class KafkaIntegrationTest {
                                 SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                                SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
                                 longKey("messaging.kafka.message.offset"),

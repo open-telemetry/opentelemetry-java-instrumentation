@@ -100,7 +100,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
+            "$SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION" { it >= 0 }
             "messaging.kafka.message.offset" 0
           }
         }
@@ -132,7 +132,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
+            "$SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION" { it >= 0 }
             "messaging.kafka.message.offset" 0
             "kafka.record.queue_time_ms" { it >= 0 }
             "asdf" "testing"
@@ -147,7 +147,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
+            "$SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION" { it >= 0 }
             "messaging.kafka.message.offset" 0
           }
         }
@@ -179,7 +179,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
+            "$SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION" { it >= 0 }
             "messaging.kafka.message.offset" 0
             "kafka.record.queue_time_ms" { it >= 0 }
             "testing" 123

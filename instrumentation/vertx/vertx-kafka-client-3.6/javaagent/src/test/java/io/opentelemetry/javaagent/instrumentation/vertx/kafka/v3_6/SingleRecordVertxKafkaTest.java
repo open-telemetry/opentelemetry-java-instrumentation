@@ -72,7 +72,7 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
                               AbstractLongAssert::isNotNegative),
                           satisfies(
                               AttributeKey.longKey("messaging.kafka.message.offset"),
@@ -107,7 +107,7 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                                 SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                                SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
                                 AttributeKey.longKey("messaging.kafka.message.offset"),
@@ -147,7 +147,7 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
                               AbstractLongAssert::isNotNegative),
                           satisfies(
                               AttributeKey.longKey("messaging.kafka.message.offset"),
@@ -184,7 +184,7 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                                 SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                                SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
                                 AttributeKey.longKey("messaging.kafka.message.offset"),

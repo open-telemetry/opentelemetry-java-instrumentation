@@ -44,7 +44,8 @@ final class KafkaProducerAdditionalAttributesExtractor
       @Nullable Throwable error) {
 
     if (recordMetadata != null) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_PARTITION, recordMetadata.partition());
+      attributes.put(
+          SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION, recordMetadata.partition());
       attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, recordMetadata.offset());
     }
   }
