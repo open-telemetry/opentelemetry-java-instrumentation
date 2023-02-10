@@ -83,12 +83,10 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
             assertThat(record.key()).isNull();
           });
     }
-    testing.waitForTraces(2);
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
         trace -> {
-          producerSpan.set(trace.getSpan(1));
           trace.hasSpansSatisfyingExactly(
               span -> {
                 span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent();
@@ -119,6 +117,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     .hasKind(SpanKind.INTERNAL)
                     .hasParent(trace.getSpan(0));
               });
+          producerSpan.set(trace.getSpan(1));
         },
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -187,7 +186,6 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitForTraces(2);
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
         trace -> {
@@ -271,7 +269,6 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitForTraces(2);
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
         trace -> {

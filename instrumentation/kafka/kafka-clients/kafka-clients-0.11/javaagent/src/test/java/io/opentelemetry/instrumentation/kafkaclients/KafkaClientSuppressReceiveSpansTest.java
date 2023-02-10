@@ -63,7 +63,6 @@ public class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationB
           });
     }
 
-    testing.waitForTraces(1);
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
@@ -132,7 +131,6 @@ public class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationB
       assertThat(record.key()).isNull();
     }
 
-    testing.waitForTraces(1);
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
         trace -> {
@@ -199,7 +197,6 @@ public class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationB
       assertThat(record.key()).isNull();
     }
 
-    testing.waitForTraces(1);
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
         trace -> {

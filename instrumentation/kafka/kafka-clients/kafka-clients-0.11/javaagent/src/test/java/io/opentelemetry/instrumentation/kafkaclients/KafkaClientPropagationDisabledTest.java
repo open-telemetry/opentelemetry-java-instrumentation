@@ -36,8 +36,6 @@ public class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBa
     String message = "Testing without headers";
     producer.send(new ProducerRecord<>(SHARED_TOPIC, message));
 
-    testing.waitForTraces(1);
-
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
@@ -68,7 +66,6 @@ public class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBa
       testing.runWithSpan("processing", () -> {});
     }
 
-    testing.waitForTraces(2);
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
