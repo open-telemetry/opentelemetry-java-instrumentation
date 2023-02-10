@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import java.util.List;
 
@@ -67,7 +68,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * Returns a new {@link HttpServerAttributesExtractor} with the settings of this {@link
    * HttpServerAttributesExtractorBuilder}.
    */
-  public HttpServerAttributesExtractor<REQUEST, RESPONSE> build() {
+  public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new HttpServerAttributesExtractor<>(
         httpAttributesGetter, netAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
   }

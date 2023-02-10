@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.messaging;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.List;
 
 /** A builder of {@link MessagingAttributesExtractor}. */
@@ -43,7 +44,7 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * Returns a new {@link MessagingAttributesExtractor} with the settings of this {@link
    * MessagingAttributesExtractorBuilder}.
    */
-  public MessagingAttributesExtractor<REQUEST, RESPONSE> build() {
+  public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new MessagingAttributesExtractor<>(getter, operation, capturedHeaders);
   }
 }

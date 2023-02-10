@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -54,8 +55,7 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
       if (clientContext != null) {
         ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).remove();
         contextAttr.remove();
-        HttpRequestAndChannel request =
-            ctx.channel().attr(AttributeKeys.CLIENT_REQUEST).getAndRemove();
+        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndRemove();
         instrumenter().end(clientContext, request, null, throwable);
         return;
       }

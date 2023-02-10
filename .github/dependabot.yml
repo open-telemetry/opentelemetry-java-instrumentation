@@ -36,6 +36,9 @@ updates:
       - dependency-name: "org.mockito:*"
         # mockito 5 requires Java 11
         versions: [ "[5,)" ]
+      - dependency-name: "org.junit-pioneer:junit-pioneer"
+        # junit-pioneer 2.x requires Java 11
+        versions: [ "[1,)" ]
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"

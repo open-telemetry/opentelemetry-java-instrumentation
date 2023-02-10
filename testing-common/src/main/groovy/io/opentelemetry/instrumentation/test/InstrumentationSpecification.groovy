@@ -94,7 +94,7 @@ abstract class InstrumentationSpecification extends Specification {
    * 20 seconds, then times out.
    */
   List<List<SpanData>> waitForTraces(int numberOfTraces) {
-    TelemetryDataUtil.waitForTraces({ testRunner().getExportedSpans() }, numberOfTraces, true)
+    TelemetryDataUtil.waitForTraces({ testRunner().getExportedSpans() }, numberOfTraces)
   }
 
   void ignoreTracesAndClear(int numberOfTraces) {

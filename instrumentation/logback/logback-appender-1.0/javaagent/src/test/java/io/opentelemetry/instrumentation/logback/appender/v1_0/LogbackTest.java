@@ -6,18 +6,18 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.sdk.testing.assertj.LogAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static org.awaitility.Awaitility.await;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.stream.Stream;
+import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,7 +29,7 @@ import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-class LogbackTest extends AgentInstrumentationSpecification {
+class LogbackTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -121,9 +121,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
     if (withParent) {
       testing.runWithSpan(
           "parent",
-          () -> {
-            performLogging(logger, oneArgLoggerMethod, twoArgLoggerMethod, logException);
-          });
+          () -> performLogging(logger, oneArgLoggerMethod, twoArgLoggerMethod, logException));
     } else {
       performLogging(logger, oneArgLoggerMethod, twoArgLoggerMethod, logException);
     }
@@ -134,9 +132,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
     }
 
     if (expectedSeverity != null) {
-      await().untilAsserted(() -> assertThat(testing.logRecords().size()).isEqualTo(1));
-
-      LogRecordData log = testing.logRecords().get(0);
+      LogRecordData log = testing.waitForLogRecords(1).get(0);
       assertThat(log)
           .hasBody("xyz: 123")
           .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
@@ -144,36 +140,31 @@ class LogbackTest extends AgentInstrumentationSpecification {
           .hasSeverityText(expectedSeverityText);
       if (logException) {
         assertThat(log)
-            .hasAttributesSatisfying(
-                attributes ->
-                    assertThat(attributes)
-                        .hasSize(9)
-                        .containsEntry(
-                            SemanticAttributes.EXCEPTION_TYPE,
-                            IllegalStateException.class.getName())
-                        .containsEntry(SemanticAttributes.EXCEPTION_MESSAGE, "hello")
-                        .hasEntrySatisfying(
-                            SemanticAttributes.EXCEPTION_STACKTRACE,
-                            value -> assertThat(value).contains(LogbackTest.class.getName())));
+            .hasAttributesSatisfyingExactly(
+                equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
+                equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
+                equalTo(SemanticAttributes.CODE_FUNCTION, "performLogging"),
+                satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
+                equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"),
+                equalTo(SemanticAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "hello"),
+                satisfies(
+                    SemanticAttributes.EXCEPTION_STACKTRACE,
+                    v -> v.contains(LogbackTest.class.getName())));
       } else {
-        assertThat(log.getAttributes()).hasSize(6);
+        assertThat(log)
+            .hasAttributesSatisfyingExactly(
+                equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
+                equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
+                equalTo(SemanticAttributes.CODE_FUNCTION, "performLogging"),
+                satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
+                equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
       }
 
-      assertThat(log)
-          .hasAttributesSatisfying(
-              attributes ->
-                  assertThat(attributes)
-                      .containsEntry(
-                          SemanticAttributes.THREAD_NAME, Thread.currentThread().getName())
-                      .containsEntry(SemanticAttributes.THREAD_ID, Thread.currentThread().getId())
-                      .containsEntry(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName())
-                      .containsEntry(SemanticAttributes.CODE_FUNCTION, "performLogging")
-                      .hasEntrySatisfying(
-                          SemanticAttributes.CODE_LINENO, value -> assertThat(value).isPositive())
-                      .containsEntry(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
-
       if (withParent) {
-        assertThat(log.getSpanContext()).isEqualTo(testing.spans().get(0).getSpanContext());
+        assertThat(log).hasSpanContext(testing.spans().get(0).getSpanContext());
       } else {
         assertThat(log.getSpanContext().isValid()).isFalse();
       }
@@ -194,28 +185,21 @@ class LogbackTest extends AgentInstrumentationSpecification {
       MDC.clear();
     }
 
-    await().untilAsserted(() -> assertThat(testing.logRecords().size()).isEqualTo(1));
-
-    LogRecordData log = getLogRecords().get(0);
+    LogRecordData log = testing.waitForLogRecords(1).get(0);
     assertThat(log)
         .hasBody("xyz: 123")
         .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
         .hasSeverity(Severity.INFO)
         .hasSeverityText("INFO")
-        // TODO (trask) convert to hasAttributesSatisfyingExactly once that's available for logs
-        .hasAttributesSatisfying(
-            attributes ->
-                assertThat(attributes)
-                    .hasSize(8)
-                    .containsEntry(AttributeKey.stringKey("logback.mdc.key1"), "val1")
-                    .containsEntry(AttributeKey.stringKey("logback.mdc.key2"), "val2")
-                    .containsEntry(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName())
-                    .containsEntry(SemanticAttributes.THREAD_ID, Thread.currentThread().getId())
-                    .containsEntry(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName())
-                    .containsEntry(SemanticAttributes.CODE_FUNCTION, "testMdc")
-                    .hasEntrySatisfying(
-                        SemanticAttributes.CODE_LINENO, value -> assertThat(value).isPositive())
-                    .containsEntry(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
+        .hasAttributesSatisfyingExactly(
+            equalTo(AttributeKey.stringKey("logback.mdc.key1"), "val1"),
+            equalTo(AttributeKey.stringKey("logback.mdc.key2"), "val2"),
+            equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
+            equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
+            equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
+            equalTo(SemanticAttributes.CODE_FUNCTION, "testMdc"),
+            satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
+            equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
   }
 
   @Test
@@ -226,15 +210,16 @@ class LogbackTest extends AgentInstrumentationSpecification {
 
     abcLogger.info(marker, "Message");
 
-    await().untilAsserted(() -> assertThat(testing.logRecords().size()).isEqualTo(1));
-
-    LogRecordData log = getLogRecords().get(0);
-
+    LogRecordData log = testing.waitForLogRecords(1).get(0);
     assertThat(log)
-        .hasAttributesSatisfying(
-            attributes ->
-                assertThat(attributes)
-                    .containsEntry(AttributeKey.stringKey("logback.marker"), markerName));
+        .hasAttributesSatisfyingExactly(
+            equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
+            equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
+            equalTo(AttributeKey.stringKey("logback.marker"), markerName),
+            equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
+            equalTo(SemanticAttributes.CODE_FUNCTION, "testMarker"),
+            satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
+            equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
   }
 
   private static void performLogging(

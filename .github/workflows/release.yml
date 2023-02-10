@@ -195,7 +195,7 @@ jobs:
         env:
           VERSION: ${{ needs.release.outputs.version }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
         run: |
           if git diff --quiet; then
             if [[ $VERSION == *.0 ]]; then
@@ -224,7 +224,7 @@ jobs:
     with:
       version: ${{ needs.release.outputs.version }}
     secrets:
-      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      OPENTELEMETRYBOT_GITHUB_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
 
   create-website-pull-request:
     needs: release
@@ -232,4 +232,4 @@ jobs:
     with:
       version: ${{ needs.release.outputs.version }}
     secrets:
-      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      OPENTELEMETRYBOT_GITHUB_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}

@@ -9,7 +9,9 @@ import application.io.opentelemetry.api.common.Attributes;
 import application.io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-final class ApplicationObservableLongMeasurement implements ObservableLongMeasurement {
+final class ApplicationObservableLongMeasurement
+    implements ObservableLongMeasurement,
+        ObservableMeasurementWrapper<io.opentelemetry.api.metrics.ObservableLongMeasurement> {
 
   private final io.opentelemetry.api.metrics.ObservableLongMeasurement agentMeasurement;
 
@@ -26,5 +28,10 @@ final class ApplicationObservableLongMeasurement implements ObservableLongMeasur
   @Override
   public void record(long v, Attributes attributes) {
     agentMeasurement.record(v, Bridging.toAgent(attributes));
+  }
+
+  @Override
+  public io.opentelemetry.api.metrics.ObservableLongMeasurement unwrap() {
+    return agentMeasurement;
   }
 }

@@ -5,24 +5,29 @@
 
 package io.opentelemetry.instrumentation.jdbc
 
+
+import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo
+import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryCallableStatement
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryPreparedStatement
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryStatement
+import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createStatementInstrumenter
 
 class OpenTelemetryConnectionTest extends InstrumentationSpecification implements LibraryTestTrait {
 
   def "verify create statement"() {
     setup:
+    def instr = createStatementInstrumenter(openTelemetry)
     def dbInfo = getDbInfo()
-    def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo)
+    def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo, instr)
     String query = "SELECT * FROM users"
     def statement = connection.createStatement()
     runWithSpan("parent") {
@@ -63,18 +68,22 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
 
   def "verify create statement returns otel wrapper"() {
     when:
-    def connection = new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT)
+    def ot = OpenTelemetry.propagating(ContextPropagators.noop())
+    def instr = createStatementInstrumenter(ot)
+    def connection = new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instr)
 
     then:
     connection.createStatement().class == OpenTelemetryStatement
     connection.createStatement(0, 0).class == OpenTelemetryStatement
     connection.createStatement(0, 0, 0).class == OpenTelemetryStatement
+    connection.createStatement().instrumenter == instr
   }
 
   def "verify prepare statement"() {
     setup:
+    def instr = createStatementInstrumenter(openTelemetry)
     def dbInfo = getDbInfo()
-    def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo)
+    def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo, instr)
     String query = "SELECT * FROM users"
     def statement = connection.prepareStatement(query)
     runWithSpan("parent") {
@@ -115,21 +124,26 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
 
   def "verify prepare statement returns otel wrapper"() {
     when:
-    def connection = new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT)
+    def ot = OpenTelemetry.propagating(ContextPropagators.noop())
+    def instr = createStatementInstrumenter(ot)
+    def connection = new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instr)
+    String query = "SELECT * FROM users"
 
     then:
-    connection.prepareStatement("SELECT * FROM users").class == OpenTelemetryPreparedStatement
-    connection.prepareStatement("SELECT * FROM users", [0] as int[]).class == OpenTelemetryPreparedStatement
-    connection.prepareStatement("SELECT * FROM users", ["id"] as String[]).class == OpenTelemetryPreparedStatement
-    connection.prepareStatement("SELECT * FROM users", 0).class == OpenTelemetryPreparedStatement
-    connection.prepareStatement("SELECT * FROM users", 0, 0).class == OpenTelemetryPreparedStatement
-    connection.prepareStatement("SELECT * FROM users", 0, 0, 0).class == OpenTelemetryPreparedStatement
+    connection.prepareStatement(query).class == OpenTelemetryPreparedStatement
+    connection.prepareStatement(query, [0] as int[]).class == OpenTelemetryPreparedStatement
+    connection.prepareStatement(query, ["id"] as String[]).class == OpenTelemetryPreparedStatement
+    connection.prepareStatement(query, 0).class == OpenTelemetryPreparedStatement
+    connection.prepareStatement(query, 0, 0).class == OpenTelemetryPreparedStatement
+    connection.prepareStatement(query, 0, 0, 0).class == OpenTelemetryPreparedStatement
+    connection.prepareStatement(query).instrumenter == instr
   }
 
   def "verify prepare call"() {
     setup:
+    def instr = createStatementInstrumenter(openTelemetry)
     def dbInfo = getDbInfo()
-    def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo)
+    def connection = new OpenTelemetryConnection(new TestConnection(), dbInfo, instr)
     String query = "SELECT * FROM users"
     def statement = connection.prepareCall(query)
     runWithSpan("parent") {
@@ -170,12 +184,16 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
 
   def "verify prepare call returns otel wrapper"() {
     when:
-    def connection = new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT)
+    def ot = OpenTelemetry.propagating(ContextPropagators.noop())
+    def instr = createStatementInstrumenter(ot)
+    def connection = new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instr)
+    String query = "SELECT * FROM users"
 
     then:
-    connection.prepareCall("SELECT * FROM users").class == OpenTelemetryCallableStatement
-    connection.prepareCall("SELECT * FROM users", 0, 0).class == OpenTelemetryCallableStatement
-    connection.prepareCall("SELECT * FROM users", 0, 0, 0).class == OpenTelemetryCallableStatement
+    connection.prepareCall(query).class == OpenTelemetryCallableStatement
+    connection.prepareCall(query, 0, 0).class == OpenTelemetryCallableStatement
+    connection.prepareCall(query, 0, 0, 0).class == OpenTelemetryCallableStatement
+    connection.prepareCall(query).instrumenter == instr
   }
 
   private DbInfo getDbInfo() {

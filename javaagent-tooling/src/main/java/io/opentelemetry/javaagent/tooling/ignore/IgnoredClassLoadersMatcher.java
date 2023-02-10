@@ -46,18 +46,14 @@ public class IgnoredClassLoadersMatcher extends ElementMatcher.Junction.Abstract
         cl,
         c -> {
           // when ClassloadingInstrumentation is active, checking delegatesToBootstrap() below is
-          // not
-          // required, because ClassloadingInstrumentation forces all class loaders to load all of
-          // the
-          // classes in Constants.BOOTSTRAP_PACKAGE_PREFIXES directly from the bootstrap class
+          // not required, because ClassloadingInstrumentation forces all class loaders to load all
+          // the classes in Constants.BOOTSTRAP_PACKAGE_PREFIXES directly from the bootstrap class
           // loader
           //
           // however, at this time we don't want to introduce the concept of a required
-          // instrumentation,
-          // and we don't want to introduce the concept of the tooling code depending on whether or
-          // not
-          // a particular instrumentation is active (mainly because this particular use case doesn't
-          // seem to justify introducing either of these new concepts)
+          // instrumentation, and we don't want to introduce the concept of the tooling code
+          // depending on whether a particular instrumentation is active (mainly because this
+          // particular use case doesn't seem to justify introducing either of these new concepts)
           return !delegatesToBootstrap(cl);
         });
   }

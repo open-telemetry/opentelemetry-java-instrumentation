@@ -43,10 +43,10 @@ class HttpServerMetricsTest {
             .put("net.host.name", "localhost")
             .put("net.host.port", 1234)
             .put("net.sock.family", "inet")
-            .put("net.peer.sock.addr", "1.2.3.4")
-            .put("net.peer.sock.port", 8080)
-            .put("net.host.sock.addr", "4.3.2.1")
-            .put("net.host.sock.port", 9090)
+            .put("net.sock.peer.addr", "1.2.3.4")
+            .put("net.sock.peer.port", 8080)
+            .put("net.sock.host.addr", "4.3.2.1")
+            .put("net.sock.host.port", 9090)
             .build();
 
     Attributes responseAttributes =
@@ -90,7 +90,8 @@ class HttpServerMetricsTest {
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.HTTP_FLAVOR, HTTP_2_0),
-                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"))
+                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234L))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -115,7 +116,8 @@ class HttpServerMetricsTest {
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.HTTP_FLAVOR, HTTP_2_0),
-                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"))
+                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234L))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -139,7 +141,8 @@ class HttpServerMetricsTest {
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.HTTP_FLAVOR, HTTP_2_0),
-                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"))
+                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234L))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar

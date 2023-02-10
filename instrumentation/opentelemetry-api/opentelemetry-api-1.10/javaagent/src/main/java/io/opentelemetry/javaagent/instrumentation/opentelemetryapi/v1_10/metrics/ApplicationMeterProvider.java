@@ -12,14 +12,19 @@ import application.io.opentelemetry.api.metrics.MeterProvider;
 @SuppressWarnings("UnnecessarilyFullyQualified")
 public class ApplicationMeterProvider implements MeterProvider {
 
+  private final ApplicationMeterFactory meterFactory;
   private final io.opentelemetry.api.metrics.MeterProvider agentMeterProvider;
 
-  public ApplicationMeterProvider(io.opentelemetry.api.metrics.MeterProvider agentMeterProvider) {
+  public ApplicationMeterProvider(
+      ApplicationMeterFactory meterFactory,
+      io.opentelemetry.api.metrics.MeterProvider agentMeterProvider) {
+    this.meterFactory = meterFactory;
     this.agentMeterProvider = agentMeterProvider;
   }
 
   @Override
   public MeterBuilder meterBuilder(String instrumentationName) {
-    return new ApplicationMeterBuilder(agentMeterProvider.meterBuilder(instrumentationName));
+    return new ApplicationMeterBuilder(
+        meterFactory, agentMeterProvider.meterBuilder(instrumentationName));
   }
 }

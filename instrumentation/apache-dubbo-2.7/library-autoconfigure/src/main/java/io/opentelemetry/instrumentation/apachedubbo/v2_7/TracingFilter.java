@@ -35,7 +35,7 @@ final class TracingFilter implements Filter {
     }
 
     RpcContext rpcContext = RpcContext.getContext();
-    if (rpcContext.getUrl() == null) {
+    if (rpcContext.getUrl() == null || "injvm".equals(rpcContext.getUrl().getProtocol())) {
       return invoker.invoke(invocation);
     }
 
