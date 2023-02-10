@@ -69,7 +69,7 @@ class MessagingAttributesExtractorTest {
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_NAME, expectedDestination));
     if (temporary) {
-      expectedEntries.add(entry(SemanticAttributes.MESSAGING_TEMP_DESTINATION, true));
+      expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true));
     }
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_PROTOCOL, "AMQP"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_PROTOCOL_VERSION, "1.0.0"));

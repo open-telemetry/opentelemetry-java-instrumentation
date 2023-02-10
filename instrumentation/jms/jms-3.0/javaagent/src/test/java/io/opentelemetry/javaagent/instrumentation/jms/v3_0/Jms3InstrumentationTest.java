@@ -331,8 +331,8 @@ class Jms3InstrumentationTest {
 
   private static AttributeAssertion messagingTempDestination(boolean isTemporary) {
     return isTemporary
-        ? equalTo(SemanticAttributes.MESSAGING_TEMP_DESTINATION, true)
-        : satisfies(SemanticAttributes.MESSAGING_TEMP_DESTINATION, AbstractAssert::isNull);
+        ? equalTo(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true)
+        : satisfies(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull);
   }
 
   static final class EmptyReceiveArgumentsProvider implements ArgumentsProvider {
