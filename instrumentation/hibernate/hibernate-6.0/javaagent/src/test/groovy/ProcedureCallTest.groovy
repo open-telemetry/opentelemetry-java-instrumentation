@@ -11,7 +11,6 @@ import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
 import org.hibernate.exception.SQLGrammarException
 import org.hibernate.procedure.ProcedureCall
-import org.junit.jupiter.api.Assumptions
 import spock.lang.Shared
 
 import java.sql.Connection
@@ -54,16 +53,6 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
   def cleanupSpec() {
     if (sessionFactory != null) {
       sessionFactory.close()
-    }
-  }
-
-  def callProcedure(ProcedureCall call) {
-    try {
-      call.getOutputs()
-    } catch (Exception exception) {
-      // ignore failures on hibernate 6 where this functionality has not been implemented yet
-      Assumptions.assumeFalse("org.hibernate.NotYetImplementedFor6Exception" == exception.getClass().getName())
-      throw exception
     }
   }
 

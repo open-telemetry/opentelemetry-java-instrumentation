@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -32,7 +31,7 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(
-        named("org.hibernate.SessionFactory").or(named("org.hibernate.SessionBuilder")));
+        namedOneOf("org.hibernate.SessionFactory", "org.hibernate.SessionBuilder"));
   }
 
   @Override
