@@ -274,7 +274,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
       }
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
-        "$SemanticAttributes.MESSAGING_DESTINATION" destinationName
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destinationName
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" destinationType
         if (destinationName == "(temporary)") {
           "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
@@ -303,7 +303,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
       }
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
-        "$SemanticAttributes.MESSAGING_DESTINATION" destinationName
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destinationName
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" destinationType
         "$SemanticAttributes.MESSAGING_OPERATION" operation
         if (messageId != null) {

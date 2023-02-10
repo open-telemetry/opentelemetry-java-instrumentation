@@ -7,10 +7,10 @@ package io.opentelemetry.instrumentation.kafkaclients
 
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.nio.charset.StandardCharsets
 import org.apache.kafka.clients.producer.ProducerRecord
 import spock.lang.Unroll
 
+import java.nio.charset.StandardCharsets
 import java.time.Duration
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
@@ -24,7 +24,7 @@ class WrappersTest extends KafkaClientBaseTest implements LibraryTestTrait {
   def "test wrappers, test headers: #testHeaders"() throws Exception {
     KafkaTelemetry telemetry = KafkaTelemetry.builder(getOpenTelemetry())
       .setCapturedHeaders(singletonList("test-message-header"))
-      // TODO run tests both with and without experimental span attributes
+    // TODO run tests both with and without experimental span attributes
       .setCaptureExperimentalSpanAttributes(true)
       .build()
 
@@ -70,7 +70,7 @@ class WrappersTest extends KafkaClientBaseTest implements LibraryTestTrait {
           childOf span(0)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
             "messaging.kafka.message.offset" { it >= 0 }
@@ -85,7 +85,7 @@ class WrappersTest extends KafkaClientBaseTest implements LibraryTestTrait {
           childOf span(1)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long

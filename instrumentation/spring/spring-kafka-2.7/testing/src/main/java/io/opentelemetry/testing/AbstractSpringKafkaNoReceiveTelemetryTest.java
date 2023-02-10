@@ -47,7 +47,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                                 equalTo(
-                                    SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
+                                    SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                    "testSingleTopic"),
                                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                                 satisfies(
                                     SemanticAttributes.MESSAGING_KAFKA_PARTITION,
@@ -62,7 +63,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                                 equalTo(
-                                    SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
+                                    SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                    "testSingleTopic"),
                                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                                 satisfies(
@@ -102,7 +104,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                                 equalTo(
-                                    SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
+                                    SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                    "testSingleTopic"),
                                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                                 satisfies(
                                     SemanticAttributes.MESSAGING_KAFKA_PARTITION,
@@ -119,7 +122,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                                 equalTo(
-                                    SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
+                                    SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                    "testSingleTopic"),
                                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                                 satisfies(
@@ -156,7 +160,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
                               equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                              equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                              equalTo(
+                                  SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                               satisfies(
                                   SemanticAttributes.MESSAGING_KAFKA_PARTITION,
@@ -170,7 +175,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
                               equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                              equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                              equalTo(
+                                  SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                               satisfies(
                                   SemanticAttributes.MESSAGING_KAFKA_PARTITION,
@@ -194,7 +200,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     producer2.get().getSpanContext()))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                                equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                                equalTo(
+                                    SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                    "testBatchTopic"),
                                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process")),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
@@ -227,7 +235,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
                               equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                              equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                              equalTo(
+                                  SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                               satisfies(
                                   SemanticAttributes.MESSAGING_KAFKA_PARTITION,
@@ -249,7 +258,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                                equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                                equalTo(
+                                    SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                    "testBatchTopic"),
                                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process")),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))));

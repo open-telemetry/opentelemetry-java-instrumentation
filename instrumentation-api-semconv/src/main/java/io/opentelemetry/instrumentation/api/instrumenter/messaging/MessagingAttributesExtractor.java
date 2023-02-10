@@ -75,10 +75,12 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     boolean isTemporaryDestination = getter.isTemporaryDestination(request);
     if (isTemporaryDestination) {
       internalSet(attributes, SemanticAttributes.MESSAGING_TEMP_DESTINATION, true);
-      internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION, TEMP_DESTINATION_NAME);
+      internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION_NAME, TEMP_DESTINATION_NAME);
     } else {
       internalSet(
-          attributes, SemanticAttributes.MESSAGING_DESTINATION, getter.getDestination(request));
+          attributes,
+          SemanticAttributes.MESSAGING_DESTINATION_NAME,
+          getter.getDestination(request));
     }
     internalSet(attributes, SemanticAttributes.MESSAGING_PROTOCOL, getter.getProtocol(request));
     internalSet(

@@ -72,7 +72,7 @@ class InterceptorsTest extends KafkaClientBaseTest implements LibraryTestTrait {
           childOf span(0)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
           }
         }
@@ -82,7 +82,7 @@ class InterceptorsTest extends KafkaClientBaseTest implements LibraryTestTrait {
           childOf span(1)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long

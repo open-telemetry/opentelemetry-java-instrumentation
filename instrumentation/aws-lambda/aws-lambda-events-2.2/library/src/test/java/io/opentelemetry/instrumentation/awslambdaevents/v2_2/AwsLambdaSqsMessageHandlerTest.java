@@ -117,7 +117,9 @@ public class AwsLambdaSqsMessageHandlerTest {
                                         entry(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                         entry(SemanticAttributes.MESSAGING_OPERATION, "process"),
                                         entry(SemanticAttributes.MESSAGING_MESSAGE_ID, "message1"),
-                                        entry(SemanticAttributes.MESSAGING_DESTINATION, "queue1")))
+                                        entry(
+                                            SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                            "queue1")))
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -136,7 +138,9 @@ public class AwsLambdaSqsMessageHandlerTest {
                                         entry(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                         entry(SemanticAttributes.MESSAGING_OPERATION, "process"),
                                         entry(SemanticAttributes.MESSAGING_MESSAGE_ID, "message2"),
-                                        entry(SemanticAttributes.MESSAGING_DESTINATION, "queue1")))
+                                        entry(
+                                            SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                            "queue1")))
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(

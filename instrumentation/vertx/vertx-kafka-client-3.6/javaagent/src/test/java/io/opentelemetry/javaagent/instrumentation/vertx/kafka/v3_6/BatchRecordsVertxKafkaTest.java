@@ -69,7 +69,7 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_PARTITION,
@@ -83,7 +83,7 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_PARTITION,
@@ -103,7 +103,8 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                            equalTo(
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive")),
 
@@ -117,7 +118,8 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                             LinkData.create(producer2.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                            equalTo(
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process")),
                 span -> span.hasName("batch consumer").hasParent(trace.getSpan(1)),
@@ -130,7 +132,8 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                         .hasLinks(LinkData.create(producer1.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                            equalTo(
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(
@@ -155,7 +158,8 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                         .hasLinks(LinkData.create(producer2.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                            equalTo(
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(
@@ -196,7 +200,7 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_PARTITION,
@@ -215,7 +219,8 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                            equalTo(
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive")),
 
@@ -229,7 +234,8 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                         .hasException(new IllegalArgumentException("boom"))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                            equalTo(
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process")),
                 span -> span.hasName("batch consumer").hasParent(trace.getSpan(1)),
@@ -241,7 +247,8 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
+                            equalTo(
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(

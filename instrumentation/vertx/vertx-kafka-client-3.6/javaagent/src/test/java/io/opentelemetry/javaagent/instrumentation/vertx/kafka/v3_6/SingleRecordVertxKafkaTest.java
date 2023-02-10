@@ -69,7 +69,7 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_PARTITION,
@@ -88,7 +88,8 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
+                            equalTo(
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive")),
                 span ->
@@ -98,7 +99,8 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                         .hasLinks(LinkData.create(producer.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
+                            equalTo(
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(
@@ -142,7 +144,7 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_PARTITION,
@@ -161,7 +163,8 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
+                            equalTo(
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive")),
                 span ->
@@ -173,7 +176,8 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                         .hasException(new IllegalArgumentException("boom"))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
+                            equalTo(
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(

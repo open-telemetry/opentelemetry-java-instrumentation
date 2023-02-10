@@ -106,7 +106,7 @@ class KafkaIntegrationTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testTopic"),
+                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_PARTITION,
@@ -120,7 +120,7 @@ class KafkaIntegrationTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testTopic"),
+                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(

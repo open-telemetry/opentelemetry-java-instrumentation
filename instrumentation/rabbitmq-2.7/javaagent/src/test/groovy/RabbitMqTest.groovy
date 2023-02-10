@@ -421,7 +421,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
         }
 
         "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
-        "$SemanticAttributes.MESSAGING_DESTINATION" exchange
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" exchange
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
 
         "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" { it == null || it == routingKey || it.startsWith("amq.gen-") }

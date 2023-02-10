@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.kafkaclients
 
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.nio.charset.StandardCharsets
 import org.apache.kafka.clients.producer.ProducerRecord
 
+import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
@@ -66,7 +66,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           childOf span(0)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
             "messaging.kafka.message.offset" { it >= 0 }
@@ -90,7 +90,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           hasNoParent()
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             if (testHeaders) {
@@ -105,7 +105,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           hasLink producerSpan
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
@@ -155,7 +155,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           hasNoParent()
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE" true
             "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
@@ -172,7 +172,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           hasNoParent()
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
           }
@@ -184,7 +184,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           hasLink producerSpan
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
@@ -234,7 +234,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           hasNoParent()
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" partition
             "messaging.kafka.message.offset" { it >= 0 }
@@ -250,7 +250,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           hasNoParent()
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
           }
@@ -262,7 +262,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           hasLink producerSpan
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
