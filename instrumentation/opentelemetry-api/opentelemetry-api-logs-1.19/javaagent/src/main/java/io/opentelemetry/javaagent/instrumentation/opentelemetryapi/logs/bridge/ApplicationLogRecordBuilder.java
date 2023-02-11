@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.logs.bridge;
 
 import application.io.opentelemetry.api.common.AttributeKey;
-import application.io.opentelemetry.api.logs.EventBuilder;
 import application.io.opentelemetry.api.logs.LogRecordBuilder;
 import application.io.opentelemetry.api.logs.Severity;
 import application.io.opentelemetry.context.Context;
@@ -16,7 +15,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridgin
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
-class ApplicationLogRecordBuilder implements EventBuilder {
+class ApplicationLogRecordBuilder implements LogRecordBuilder {
 
   private final io.opentelemetry.api.logs.LogRecordBuilder agentLogRecordBuilder;
 
