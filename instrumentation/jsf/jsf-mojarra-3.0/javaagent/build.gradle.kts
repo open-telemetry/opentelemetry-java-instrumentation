@@ -13,6 +13,10 @@ muzzle {
   }
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
 dependencies {
   compileOnly("jakarta.faces:jakarta.faces-api:3.0.0")
   compileOnly("jakarta.el:jakarta.el-api:4.0.0")
