@@ -364,7 +364,7 @@ hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:jav
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.15:javaagent")
-hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-logs-1.19:javaagent")
+hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-logs-1.23:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
