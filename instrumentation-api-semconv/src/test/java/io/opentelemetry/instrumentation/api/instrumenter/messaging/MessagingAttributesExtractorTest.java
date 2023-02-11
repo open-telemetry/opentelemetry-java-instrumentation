@@ -71,8 +71,8 @@ class MessagingAttributesExtractorTest {
     if (temporary) {
       expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true));
     }
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_PROTOCOL, "AMQP"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_PROTOCOL_VERSION, "1.0.0"));
+    expectedEntries.add(entry(SemanticAttributes.NET_APP_PROTOCOL_NAME, "AMQP"));
+    expectedEntries.add(entry(SemanticAttributes.NET_APP_PROTOCOL_VERSION, "1.0.0"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_URL, "http://broker/topic"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_CONVERSATION_ID, "42"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 100L));

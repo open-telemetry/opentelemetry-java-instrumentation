@@ -82,10 +82,10 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
           SemanticAttributes.MESSAGING_DESTINATION_NAME,
           getter.getDestination(request));
     }
-    internalSet(attributes, SemanticAttributes.MESSAGING_PROTOCOL, getter.getProtocol(request));
+    internalSet(attributes, SemanticAttributes.NET_APP_PROTOCOL_NAME, getter.getProtocol(request));
     internalSet(
         attributes,
-        SemanticAttributes.MESSAGING_PROTOCOL_VERSION,
+        SemanticAttributes.NET_APP_PROTOCOL_VERSION,
         getter.getProtocolVersion(request));
     internalSet(attributes, SemanticAttributes.MESSAGING_URL, getter.getUrl(request));
     internalSet(
