@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_DESTINATION_KIND;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_OPERATION;
@@ -121,7 +122,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                     equalTo(
                                         MESSAGING_DESTINATION_KIND,
                                         SemanticAttributes.MessagingDestinationKindValues.TOPIC),
-                                    equalTo(MESSAGING_DESTINATION, topic)),
+                                    equalTo(MESSAGING_DESTINATION_NAME, topic)),
                         span ->
                             span.hasKind(SpanKind.CONSUMER)
                                 .hasName(topic + " process")
@@ -141,7 +142,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                     equalTo(
                                         MESSAGING_DESTINATION_KIND,
                                         SemanticAttributes.MessagingDestinationKindValues.TOPIC),
-                                    equalTo(MESSAGING_DESTINATION, topic),
+                                    equalTo(MESSAGING_DESTINATION_NAME, topic),
                                     equalTo(MESSAGING_OPERATION, "process")),
                         span ->
                             span.hasName("child")
