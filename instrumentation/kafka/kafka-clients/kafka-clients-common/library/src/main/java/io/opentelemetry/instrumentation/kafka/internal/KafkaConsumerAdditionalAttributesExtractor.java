@@ -33,7 +33,7 @@ public final class KafkaConsumerAdditionalAttributesExtractor
         SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION, (long) consumerRecord.partition());
     attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, consumerRecord.offset());
     if (consumerRecord.value() == null) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true);
+      attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
   }
 

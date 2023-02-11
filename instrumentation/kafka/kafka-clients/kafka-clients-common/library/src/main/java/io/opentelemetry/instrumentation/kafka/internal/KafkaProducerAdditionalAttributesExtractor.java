@@ -31,7 +31,7 @@ final class KafkaProducerAdditionalAttributesExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ProducerRecord<?, ?> producerRecord) {
     if (producerRecord.value() == null) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true);
+      attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
   }
 
