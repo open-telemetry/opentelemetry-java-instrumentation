@@ -23,7 +23,7 @@ dependencies {
   api("org.spockframework:spock-core")
   api(project(":testing-common"))
 
-  implementation(platform("io.grpc:grpc-bom:1.52.1"))
+  implementation(platform("io.grpc:grpc-bom:1.53.0"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry.proto:opentelemetry-proto")

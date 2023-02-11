@@ -1,7 +1,7 @@
 
 #javaagent
 ##Dependency License Report
-_2023-02-10 21:55:34 UTC_
+_2023-02-10 17:34:19 PST_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -159,10 +159,10 @@ _2023-02-10 21:55:34 UTC_
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-2.23.2.jar/META-INF/LICENSE](zipkin-2.23.2.jar/META-INF/LICENSE)
 
-**36** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.12.23`
+**36** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.13.0`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [byte-buddy-dep-1.12.23.jar/META-INF/LICENSE](byte-buddy-dep-1.12.23.jar/META-INF/LICENSE)
-    - [byte-buddy-dep-1.12.23.jar/META-INF/NOTICE](byte-buddy-dep-1.12.23.jar/META-INF/NOTICE)
+> - **Embedded license files**: [byte-buddy-dep-1.13.0.jar/META-INF/LICENSE](byte-buddy-dep-1.13.0.jar/META-INF/LICENSE)
+    - [byte-buddy-dep-1.13.0.jar/META-INF/NOTICE](byte-buddy-dep-1.13.0.jar/META-INF/NOTICE)
 
 **37** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)
