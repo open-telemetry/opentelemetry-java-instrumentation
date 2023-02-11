@@ -106,7 +106,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "<default>"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" String
+            "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
             if (testHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
             }
@@ -125,7 +125,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" String
+            "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
             if (testHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
             }

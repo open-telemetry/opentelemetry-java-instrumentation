@@ -424,7 +424,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" exchange
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
 
-        "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" { it == null || it == routingKey || it.startsWith("amq.gen-") }
+        "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" { it == null || it == routingKey || it.startsWith("amq.gen-") }
         if (operation != null && operation != "send") {
           "$SemanticAttributes.MESSAGING_OPERATION" operation
         }
@@ -438,7 +438,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
         switch (rabbitCommand) {
           case "basic.publish":
             "rabbitmq.command" "basic.publish"
-            "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" {
+            "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" {
               it == null || it == "some-routing-key" || it == "some-routing-queue" || it.startsWith("amq.gen-")
             }
             "rabbitmq.delivery_mode" { it == null || it == 2 }
