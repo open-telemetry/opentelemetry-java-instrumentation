@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.play.v2_6.Play26Singletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.play.v2_6.Play26Singletons.updateSpanNames;
+import static io.opentelemetry.javaagent.instrumentation.play.v2_6.Play26Singletons.updateContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -73,7 +73,7 @@ public class ActionInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
 
-      updateSpanNames(context, req);
+      updateContext(context, req);
       if (throwable == null) {
         // span is finished when future completes
         // not using responseFuture.onComplete() because that doesn't guarantee this handler span
