@@ -88,9 +88,8 @@ not values defined by spec.
 | `messaging.destination.name`                      |         Y          |                +                |
 | `messaging.destination.kind`                      |         Y          |                +                |
 | `messaging.destination.temporary`                 |         N          |                -                |
-| `messaging.protocol`                              |         N          |                -                |
-| `messaging.protocol_version`                      |         N          |                -                |
-| `messaging.url`                                   |         N          |                -                |
+| `net.app.protocol.name`                           |         N          |                -                |
+| `net.app.protocol.version`                        |         N          |                -                |
 | `messaging.message.id`                            |         N          |          only for JMS           |
 | `messaging.message.conversation_id`               |         N          |          only for JMS           |
 | `messaging.message.payload_size_bytes`            |         N          | only for RabbitMQ and Kafka [1] |
