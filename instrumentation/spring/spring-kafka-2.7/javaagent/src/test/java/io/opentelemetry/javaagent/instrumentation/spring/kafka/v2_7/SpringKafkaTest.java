@@ -70,7 +70,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                              SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
                           satisfies(
                               longKey("messaging.kafka.message.offset"),
@@ -144,7 +144,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                              SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
                           satisfies(
                               longKey("messaging.kafka.message.offset"),
@@ -216,7 +216,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                              SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
                           satisfies(
                               longKey("messaging.kafka.message.offset"),
@@ -230,7 +230,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                              SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
                           satisfies(
                               longKey("messaging.kafka.message.offset"),
@@ -295,7 +295,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                              SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
                           satisfies(
                               longKey("messaging.kafka.message.offset"),

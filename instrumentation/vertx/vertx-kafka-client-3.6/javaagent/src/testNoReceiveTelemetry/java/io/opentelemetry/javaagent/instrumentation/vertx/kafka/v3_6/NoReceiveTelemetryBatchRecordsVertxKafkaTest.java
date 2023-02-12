@@ -73,7 +73,7 @@ class NoReceiveTelemetryBatchRecordsVertxKafkaTest extends AbstractVertxKafkaTes
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                              SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
                           satisfies(
                               AttributeKey.longKey("messaging.kafka.message.offset"),
@@ -108,7 +108,7 @@ class NoReceiveTelemetryBatchRecordsVertxKafkaTest extends AbstractVertxKafkaTes
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                              SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
                           satisfies(
                               AttributeKey.longKey("messaging.kafka.message.offset"),
@@ -181,7 +181,7 @@ class NoReceiveTelemetryBatchRecordsVertxKafkaTest extends AbstractVertxKafkaTes
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                              SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
                           satisfies(
                               AttributeKey.longKey("messaging.kafka.message.offset"),

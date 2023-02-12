@@ -72,7 +72,7 @@ class WrappersTest extends KafkaClientBaseTest implements LibraryTestTrait {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION" { it >= 0 }
+            "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
             "messaging.kafka.message.offset" { it >= 0 }
             if (testHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }

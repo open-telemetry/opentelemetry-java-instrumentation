@@ -65,7 +65,11 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
 
     Integer partition = exchange.getIn().getHeader(PARTITION, Integer.class);
     if (partition != null) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION, partition);
+      if (camelDirection == CamelDirection.OUTBOUND) {
+        attributes.put(SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION, partition);
+      } else {
+        attributes.put(SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION, partition);
+      }
     }
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
