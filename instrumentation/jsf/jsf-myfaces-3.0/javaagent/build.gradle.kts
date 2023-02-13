@@ -7,7 +7,6 @@ muzzle {
     group.set("org.apache.myfaces.core")
     module.set("myfaces-impl")
     versions.set("[3,)")
-    extraDependency("jakarta.el:jakarta.el-api:4.0.0")
     assertInverse.set(true)
   }
 }
@@ -28,6 +27,7 @@ dependencies {
   // latestDepTestLibrary("org.apache.myfaces.core:myfaces-impl:4.+")
 
   testImplementation(project(":instrumentation:jsf:jsf-jakarta-common:testing"))
+
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-common:javaagent"))
 }
