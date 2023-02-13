@@ -23,9 +23,9 @@ dependencies {
   implementation(project(":instrumentation:jsf:jsf-jakarta-common:javaagent"))
 
   testLibrary("org.apache.myfaces.core:myfaces-impl:3.0.2")
-  latestDepTestLibrary("org.apache.myfaces.core:myfaces-impl:3+")
+  latestDepTestLibrary("org.apache.myfaces.core:myfaces-impl:3.+")
   // JSF 4+ requires CDI instead of BeanManager, the test should be upgraded first
-  // latestDepTestLibrary("org.apache.myfaces.core:myfaces-impl:4+")
+  // latestDepTestLibrary("org.apache.myfaces.core:myfaces-impl:4.+")
 
   testImplementation(project(":instrumentation:jsf:jsf-jakarta-common:testing"))
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))

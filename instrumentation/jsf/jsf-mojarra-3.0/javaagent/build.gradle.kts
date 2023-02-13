@@ -23,9 +23,9 @@ dependencies {
   implementation(project(":instrumentation:jsf:jsf-jakarta-common:javaagent"))
 
   testLibrary("org.glassfish:jakarta.faces:3.0.4")
-  latestDepTestLibrary("org.glassfish:jakarta.faces:3+")
+  latestDepTestLibrary("org.glassfish:jakarta.faces:3.+")
   // JSF 4+ requires CDI instead of BeanManager, the test should be upgraded first
-  // latestDepTestLibrary("org.glassfish:jakarta.faces:4+")
+  // latestDepTestLibrary("org.glassfish:jakarta.faces:4.+")
 
   testImplementation(project(":instrumentation:jsf:jsf-jakarta-common:testing"))
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
