@@ -2,7 +2,8 @@ name: CodeQL (daily)
 
 on:
   schedule:
-    - cron: '30 1 * * *'
+    # daily at 1:30 UTC
+    - cron: "30 1 * * *"
   workflow_dispatch:
 
 jobs:

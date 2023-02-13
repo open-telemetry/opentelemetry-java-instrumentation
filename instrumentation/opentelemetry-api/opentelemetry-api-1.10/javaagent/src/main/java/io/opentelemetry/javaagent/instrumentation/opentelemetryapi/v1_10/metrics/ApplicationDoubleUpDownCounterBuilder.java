@@ -49,4 +49,9 @@ final class ApplicationDoubleUpDownCounterBuilder implements DoubleUpDownCounter
                 applicationCallback.accept(
                     new ApplicationObservableDoubleMeasurement(agentMeasurement))));
   }
+
+  // added in 1.15.0
+  public ObservableDoubleMeasurement buildObserver() {
+    return new ApplicationObservableDoubleMeasurement(agentBuilder.buildObserver());
+  }
 }

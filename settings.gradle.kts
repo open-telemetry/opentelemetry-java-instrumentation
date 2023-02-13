@@ -6,7 +6,7 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.3.1"
     id("com.gradle.plugin-publish") version "1.1.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
-    id("org.jetbrains.kotlin.jvm") version "1.7.22"
+    id("org.jetbrains.kotlin.jvm") version "1.8.0"
     id("org.unbroken-dome.test-sets") version "4.0.0"
     id("org.xbib.gradle.plugin.jflex") version "1.7.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
@@ -169,6 +169,8 @@ hideFromDependabot(":instrumentation:azure-core:azure-core-1.14:javaagent")
 hideFromDependabot(":instrumentation:azure-core:azure-core-1.14:library-instrumentation-shaded")
 hideFromDependabot(":instrumentation:azure-core:azure-core-1.19:javaagent")
 hideFromDependabot(":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded")
+hideFromDependabot(":instrumentation:azure-core:azure-core-1.36:javaagent")
+hideFromDependabot(":instrumentation:azure-core:azure-core-1.36:library-instrumentation-shaded")
 hideFromDependabot(":instrumentation:cassandra:cassandra-3.0:javaagent")
 hideFromDependabot(":instrumentation:cassandra:cassandra-4.0:javaagent")
 hideFromDependabot(":instrumentation:cdi-testing")
@@ -361,6 +363,7 @@ hideFromDependabot(":instrumentation:okhttp:okhttp-3.0:testing")
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")
+hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.15:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-logs-1.19:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
