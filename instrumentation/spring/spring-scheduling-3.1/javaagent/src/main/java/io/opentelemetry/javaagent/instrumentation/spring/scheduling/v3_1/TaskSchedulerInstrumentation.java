@@ -26,6 +26,8 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
+        // only instrumenting repeating jobs, not one-time scheduled jobs
+        // (same behavior as ScheduledExecutorService)
         namedOneOf("scheduleAtFixedRate", "scheduleWithFixedDelay")
             .and(takesArgument(0, Runnable.class))
             .or(
@@ -34,6 +36,7 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
                         takesArgument(0, Runnable.class)
                             .and(
                                 takesArgument(
+                                    // Trigger represents a repeating job
                                     1, named("org.springframework.scheduling.Trigger"))))),
         this.getClass().getName() + "$ScheduleMethodAdvice");
   }
