@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
 import java.util.Map;
 import java.util.Set;
@@ -19,16 +18,16 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 
-public abstract class AnnotationInstrumentation implements TypeInstrumentation {
+final class AnnotationExcludedMethods {
 
-  protected static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
+  private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
       "otel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods";
 
   /*
   Returns a matcher for all methods that should be excluded from auto-instrumentation by
   annotation-based advices.
   */
-  protected static ElementMatcher.Junction<MethodDescription> configureExcludedMethods() {
+  static ElementMatcher.Junction<MethodDescription> configureExcludedMethods() {
     ElementMatcher.Junction<MethodDescription> result = none();
 
     Map<String, Set<String>> excludedMethods =
@@ -49,4 +48,6 @@ public abstract class AnnotationInstrumentation implements TypeInstrumentation {
 
     return result;
   }
+
+  private AnnotationExcludedMethods() {}
 }

@@ -15,6 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.whereAny;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
@@ -24,7 +25,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class WithCurrentSpanInstrumentation extends AnnotationInstrumentation {
+public class WithCurrentSpanInstrumentation implements TypeInstrumentation {
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   private final ElementMatcher.Junction<MethodDescription> annotatedParametersMatcher;
@@ -47,7 +48,7 @@ public class WithCurrentSpanInstrumentation extends AnnotationInstrumentation {
                 isAnnotatedWith(
                     named(
                         "application.io.opentelemetry.instrumentation.annotations.SpanAttribute"))));
-    excludedMethodsMatcher = configureExcludedMethods();
+    excludedMethodsMatcher = AnnotationExcludedMethods.configureExcludedMethods();
   }
 
   @Override
