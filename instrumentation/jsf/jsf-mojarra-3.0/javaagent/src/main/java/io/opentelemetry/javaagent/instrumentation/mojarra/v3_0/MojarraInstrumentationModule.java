@@ -20,9 +20,6 @@ public class MojarraInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new ActionListenerImplInstrumentation(),
-        new io.opentelemetry.javaagent.instrumentation.mojarra.v3_0
-            .RestoreViewPhaseInstrumentation());
+    return asList(new ActionListenerImplInstrumentation(), new RestoreViewPhaseInstrumentation());
   }
 }
