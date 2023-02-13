@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
@@ -33,7 +34,7 @@ class CamelSpan {
       }
       attributes {
         "apache-camel.uri" "aws-sqs://${queueName}?amazonSQSClient=%23sqsClient&delay=1000"
-        "messaging.destination" queueName
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" queueName
       }
     }
   }
@@ -49,8 +50,8 @@ class CamelSpan {
       }
       attributes {
         "apache-camel.uri" "aws-sqs://${queueName}?amazonSQSClient=%23sqsClient&delay=1000"
-        "messaging.destination" queueName
-        "messaging.message_id" String
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" queueName
+        "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
       }
     }
   }
@@ -62,7 +63,7 @@ class CamelSpan {
       childOf parentSpan
       attributes {
         "apache-camel.uri" "aws-sns://${topicName}?amazonSNSClient=%23snsClient"
-        "messaging.destination" topicName
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topicName
       }
     }
   }
