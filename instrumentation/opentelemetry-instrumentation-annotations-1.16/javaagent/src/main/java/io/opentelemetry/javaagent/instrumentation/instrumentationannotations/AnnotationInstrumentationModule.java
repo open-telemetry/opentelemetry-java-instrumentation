@@ -29,7 +29,7 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
   public int order() {
     // Run first to ensure other automatic intstrumentation is added after and therefore is executed
     // earlier in the instrumented method and create the span to attach attributes to.
-    return Integer.MIN_VALUE;
+    return -1000;
   }
 
   @Override
