@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.api.annotation.support;
 
 import io.opentelemetry.api.common.AttributeKey;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.AbstractList;
 import java.util.Arrays;
@@ -339,43 +337,5 @@ class AttributeBindingFactory {
   private static AttributeBinding defaultBinding(String name) {
     AttributeKey<String> key = AttributeKey.stringKey(name);
     return (setter, arg) -> setter.put(key, arg.toString());
-  }
-
-  /**
-   * Creates a binding of the parameters of the traced method to span attributes.
-   *
-   * @param method the traced method
-   * @return the bindings of the parameters
-   */
-  static AttributeBindings bind(
-      Method method, ParameterAttributeNamesExtractor parameterAttributeNamesExtractor) {
-    AttributeBindings bindings = EmptyAttributeBindings.INSTANCE;
-
-    Parameter[] parameters = method.getParameters();
-    if (parameters.length == 0) {
-      return bindings;
-    }
-
-    String[] attributeNames = parameterAttributeNamesExtractor.extract(method, parameters);
-    if (attributeNames == null || attributeNames.length != parameters.length) {
-      return bindings;
-    }
-
-    for (int i = 0; i < parameters.length; i++) {
-      Parameter parameter = parameters[i];
-      String attributeName = attributeNames[i];
-      if (attributeName == null || attributeName.isEmpty()) {
-        continue;
-      }
-
-      bindings =
-          new CombinedAttributeBindings(
-              bindings,
-              i,
-              AttributeBindingFactory.createBinding(
-                  attributeName, parameter.getParameterizedType()));
-    }
-
-    return bindings;
   }
 }

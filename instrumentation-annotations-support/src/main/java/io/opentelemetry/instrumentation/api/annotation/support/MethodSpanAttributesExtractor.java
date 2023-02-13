@@ -21,7 +21,7 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
   private final Cache<Method, AttributeBindings> cache;
   private final ParameterAttributeNamesExtractor parameterAttributeNamesExtractor;
 
-  public static <REQUEST, RESPONSE> MethodSpanAttributesExtractor<REQUEST, RESPONSE> newInstance(
+  public static <REQUEST, RESPONSE> MethodSpanAttributesExtractor<REQUEST, RESPONSE> create(
       MethodExtractor<REQUEST> methodExtractor,
       ParameterAttributeNamesExtractor parameterAttributeNamesExtractor,
       MethodArgumentsExtractor<REQUEST> methodArgumentsExtractor) {
@@ -49,8 +49,7 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
     Method method = methodExtractor.extract(request);
     AttributeBindings bindings =
         cache.computeIfAbsent(
-            method,
-            (Method m) -> AttributeBindingFactory.bind(m, parameterAttributeNamesExtractor));
+            method, (Method m) -> AttributeBindings.bind(m, parameterAttributeNamesExtractor));
     if (!bindings.isEmpty()) {
       Object[] args = methodArgumentsExtractor.extract(request);
       bindings.apply(attributes, args);

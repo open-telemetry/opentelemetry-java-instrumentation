@@ -58,7 +58,7 @@ public final class AnnotationSingletons {
         .addAttributesExtractor(
             CodeAttributesExtractor.create(MethodRequestCodeAttributesGetter.INSTANCE))
         .addAttributesExtractor(
-            MethodSpanAttributesExtractor.newInstance(
+            MethodSpanAttributesExtractor.create(
                 MethodRequest::method,
                 WithSpanParameterAttributeNamesExtractor.INSTANCE,
                 MethodRequest::args))
@@ -66,7 +66,7 @@ public final class AnnotationSingletons {
   }
 
   private static SpanAttributesExtractor createAttributesExtractor() {
-    return SpanAttributesExtractor.newInstance(WithSpanParameterAttributeNamesExtractor.INSTANCE);
+    return SpanAttributesExtractor.create(WithSpanParameterAttributeNamesExtractor.INSTANCE);
   }
 
   private static SpanKind spanKindFromMethodRequest(MethodRequest request) {

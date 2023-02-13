@@ -16,7 +16,7 @@ public final class SpanAttributesExtractor {
   private final Cache<Method, AttributeBindings> cache;
   private final ParameterAttributeNamesExtractor parameterAttributeNamesExtractor;
 
-  public static SpanAttributesExtractor newInstance(
+  public static SpanAttributesExtractor create(
       ParameterAttributeNamesExtractor parameterAttributeNamesExtractor) {
     return new SpanAttributesExtractor(parameterAttributeNamesExtractor, new MethodCache<>());
   }
@@ -28,12 +28,11 @@ public final class SpanAttributesExtractor {
     this.cache = cache;
   }
 
-  public Attributes getAttributes(Method method, Object[] args) {
+  public Attributes extract(Method method, Object[] args) {
     AttributesBuilder attributes = Attributes.builder();
     AttributeBindings bindings =
         cache.computeIfAbsent(
-            method,
-            (Method m) -> AttributeBindingFactory.bind(m, parameterAttributeNamesExtractor));
+            method, (Method m) -> AttributeBindings.bind(m, parameterAttributeNamesExtractor));
     if (!bindings.isEmpty()) {
       bindings.apply(attributes, args);
     }

@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.whereAny;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
@@ -70,9 +71,9 @@ public class WithCurrentSpanInstrumentation extends AnnotationInstrumentation {
     public static void onEnter(
         @Advice.Origin Method method,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args) {
-      Span otelSpan = Span.current();
-      if (otelSpan != null && otelSpan.isRecording() && otelSpan.getSpanContext().isValid()) {
-        otelSpan.setAllAttributes(attributes().getAttributes(method, args));
+      Span otelSpan = Java8BytecodeBridge.currentSpan();
+      if (otelSpan.isRecording() && otelSpan.getSpanContext().isValid()) {
+        otelSpan.setAllAttributes(attributes().extract(method, args));
       }
     }
   }
