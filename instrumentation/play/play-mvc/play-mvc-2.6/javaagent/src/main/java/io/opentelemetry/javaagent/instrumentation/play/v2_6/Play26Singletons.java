@@ -9,7 +9,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
 import java.lang.reflect.InvocationTargetException;
@@ -60,20 +59,7 @@ public final class Play26Singletons {
       return;
     }
 
-    updateSpanNameByRoute(context, route);
-    updateHttpRoute(context, route);
-  }
-
-  private static void updateSpanNameByRoute(Context context, String route) {
     Span.fromContext(context).updateName(route);
-    // set the span name on the upstream akka/netty span
-    Span serverSpan = LocalRootSpan.fromContextOrNull(context);
-    if (serverSpan != null) {
-      serverSpan.updateName(route);
-    }
-  }
-
-  private static void updateHttpRoute(Context context, String route) {
     HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.CONTROLLER, route);
   }
 
