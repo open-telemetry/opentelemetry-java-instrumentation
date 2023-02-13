@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
+package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getEntityName;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getSessionMethodOperationName;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Hibernate3Singletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Hibernate6Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -26,28 +26,29 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
+import jakarta.persistence.criteria.CriteriaQuery;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.hibernate.Criteria;
-import org.hibernate.Query;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
+import org.hibernate.query.CommonQueryContract;
 
 public class SessionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.hibernate.Session", "org.hibernate.StatelessSession");
+    return hasClassesNamed("org.hibernate.SharedSessionContract");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(
-        namedOneOf("org.hibernate.Session", "org.hibernate.StatelessSession"));
+    return implementsInterface(named("org.hibernate.SharedSessionContract"));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
+
     // Session synchronous methods we want to instrument.
     transformer.applyAdviceToMethod(
         isMethod()
@@ -61,14 +62,17 @@ public class SessionInstrumentation implements TypeInstrumentation {
                     "merge",
                     "persist",
                     "lock",
+                    "fireLock",
                     "refresh",
                     "insert",
                     "delete")),
         SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
-
     // Handle the non-generic 'get' separately.
     transformer.applyAdviceToMethod(
-        isMethod().and(named("get")).and(returns(Object.class)).and(takesArgument(0, String.class)),
+        isMethod()
+            .and(namedOneOf("get", "find"))
+            .and(returns(Object.class))
+            .and(takesArgument(0, String.class).or(takesArgument(0, Class.class))),
         SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
 
     // These methods return some object that we want to instrument, and so the Advice will pin the
@@ -80,12 +84,9 @@ public class SessionInstrumentation implements TypeInstrumentation {
         SessionInstrumentation.class.getName() + "$GetTransactionAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(returns(implementsInterface(named("org.hibernate.Query")))),
+        isMethod()
+            .and(returns(implementsInterface(named("org.hibernate.query.CommonQueryContract")))),
         SessionInstrumentation.class.getName() + "$GetQueryAdvice");
-
-    transformer.applyAdviceToMethod(
-        isMethod().and(returns(implementsInterface(named("org.hibernate.Criteria")))),
-        SessionInstrumentation.class.getName() + "$GetCriteriaAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -93,7 +94,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void startMethod(
-        @Advice.This Object session,
+        @Advice.This SharedSessionContract session,
         @Advice.Origin("#m") String name,
         @Advice.Origin("#d") String descriptor,
         @Advice.Argument(0) Object arg0,
@@ -108,8 +109,11 @@ public class SessionInstrumentation implements TypeInstrumentation {
         return;
       }
 
+      VirtualField<SharedSessionContract, SessionInfo> virtualField =
+          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
+      SessionInfo sessionInfo = virtualField.get(session);
+
       Context parentContext = Java8BytecodeBridge.currentContext();
-      SessionInfo sessionInfo = SessionUtil.getSessionInfo(session);
       String entityName =
           getEntityName(descriptor, arg0, arg1, EntityNameUtil.bestGuessEntityName(session));
       hibernateOperation =
@@ -145,12 +149,15 @@ public class SessionInstrumentation implements TypeInstrumentation {
   public static class GetQueryAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void getQuery(@Advice.This Object session, @Advice.Return Query query) {
+    public static void getQuery(
+        @Advice.This SharedSessionContract session, @Advice.Return CommonQueryContract query) {
 
-      SessionInfo sessionInfo = SessionUtil.getSessionInfo(session);
-      VirtualField<Query, SessionInfo> queryVirtualField =
-          VirtualField.find(Query.class, SessionInfo.class);
-      queryVirtualField.set(query, sessionInfo);
+      VirtualField<SharedSessionContract, SessionInfo> sessionVirtualField =
+          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
+      VirtualField<CommonQueryContract, SessionInfo> queryVirtualField =
+          VirtualField.find(CommonQueryContract.class, SessionInfo.class);
+
+      queryVirtualField.set(query, sessionVirtualField.get(session));
     }
   }
 
@@ -159,12 +166,14 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getTransaction(
-        @Advice.This Object session, @Advice.Return Transaction transaction) {
+        @Advice.This SharedSessionContract session, @Advice.Return Transaction transaction) {
 
-      SessionInfo sessionInfo = SessionUtil.getSessionInfo(session);
+      VirtualField<SharedSessionContract, SessionInfo> sessionVirtualField =
+          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
       VirtualField<Transaction, SessionInfo> transactionVirtualField =
           VirtualField.find(Transaction.class, SessionInfo.class);
-      transactionVirtualField.set(transaction, sessionInfo);
+
+      transactionVirtualField.set(transaction, sessionVirtualField.get(session));
     }
   }
 
@@ -172,12 +181,15 @@ public class SessionInstrumentation implements TypeInstrumentation {
   public static class GetCriteriaAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void getCriteria(@Advice.This Object session, @Advice.Return Criteria criteria) {
+    public static void getCriteria(
+        @Advice.This SharedSessionContract session, @Advice.Return CriteriaQuery<?> criteria) {
 
-      SessionInfo sessionInfo = SessionUtil.getSessionInfo(session);
-      VirtualField<Criteria, SessionInfo> criteriaVirtualField =
-          VirtualField.find(Criteria.class, SessionInfo.class);
-      criteriaVirtualField.set(criteria, sessionInfo);
+      VirtualField<SharedSessionContract, SessionInfo> sessionVirtualField =
+          VirtualField.find(SharedSessionContract.class, SessionInfo.class);
+      VirtualField<CriteriaQuery<?>, SessionInfo> criteriaVirtualField =
+          VirtualField.find(CriteriaQuery.class, SessionInfo.class);
+
+      criteriaVirtualField.set(criteria, sessionVirtualField.get(session));
     }
   }
 }
