@@ -26,7 +26,7 @@ public final class Play24Singletons {
     return INSTRUMENTER;
   }
 
-  public static void updateSpanNames(Context context, Request<?> request) {
+  public static void updateSpan(Context context, Request<?> request) {
     String route = getRoute(request);
     if (route == null) {
       return;

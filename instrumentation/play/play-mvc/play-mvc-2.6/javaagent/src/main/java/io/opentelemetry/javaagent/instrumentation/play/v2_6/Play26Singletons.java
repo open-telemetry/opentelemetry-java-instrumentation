@@ -53,7 +53,7 @@ public final class Play26Singletons {
     return INSTRUMENTER;
   }
 
-  public static void updateContext(Context context, Request<?> request) {
+  public static void updateSpan(Context context, Request<?> request) {
     String route = getRoute(request);
     if (route == null) {
       return;
