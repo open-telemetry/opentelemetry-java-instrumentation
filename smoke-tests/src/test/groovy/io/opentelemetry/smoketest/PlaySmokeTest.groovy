@@ -6,9 +6,14 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
+import io.opentelemetry.proto.common.v1.AnyValue
+import io.opentelemetry.proto.common.v1.KeyValue
+import io.opentelemetry.proto.trace.v1.Span
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.IgnoreIf
 
 import java.time.Duration
+import java.util.stream.Collectors
 
 import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
 
@@ -36,6 +41,9 @@ class PlaySmokeTest extends SmokeTest {
     //Both play and akka-http support produce spans with the same name.
     //One internal, one SERVER
     countSpansByName(traces, '/welcome') == 2
+    def httpRouteAttributes = extractRouteAttributesFrom(traces)
+    httpRouteAttributes.size() == 1
+    httpRouteAttributes.get(0).value.stringValue == "/welcome"
 
     cleanup:
     stopTarget()
@@ -44,5 +52,16 @@ class PlaySmokeTest extends SmokeTest {
     // Play doesn't support Java 16 (or 17) yet
     // https://github.com/playframework/playframework/pull/10819
     jdk << [8, 11, 15]
+  }
+
+  static List<KeyValue> extractRouteAttributesFrom(Collection<ExportTraceServiceRequest> traces) {
+    traces.stream()
+      .flatMap(trace -> trace.getResourceSpansList().stream())
+      .flatMap(resourceSpan -> resourceSpan.getScopeSpansList().stream())
+      .flatMap(scopeSpan -> scopeSpan.getSpansList().stream())
+      .filter(span -> span.getKind() == Span.SpanKind.SPAN_KIND_SERVER)
+      .flatMap(span -> span.attributesList.stream())
+      .filter(attribute -> attribute.getKey() == SemanticAttributes.HTTP_ROUTE.key)
+      .collect(Collectors.toList())
   }
 }
