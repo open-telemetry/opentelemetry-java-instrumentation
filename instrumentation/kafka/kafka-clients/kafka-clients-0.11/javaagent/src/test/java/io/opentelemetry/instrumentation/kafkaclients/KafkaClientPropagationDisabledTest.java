@@ -26,7 +26,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest {
+class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -58,6 +58,7 @@ public class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBa
 
     awaitUntilConsumerIsReady();
 
+    @SuppressWarnings("PreferJavaTimeOverload")
     ConsumerRecords<?, ?> records = consumer.poll(Duration.ofSeconds(5).toMillis());
     assertThat(records.count()).isEqualTo(1);
 

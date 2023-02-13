@@ -42,7 +42,7 @@ public abstract class KafkaClientBaseTest {
 
   protected static final String SHARED_TOPIC = "shared.topic";
 
-  private static KafkaContainer kafka;
+  private KafkaContainer kafka;
   protected Producer<Integer, String> producer;
   protected Consumer<Integer, String> consumer;
   private final CountDownLatch consumerReady = new CountDownLatch(1);
@@ -122,6 +122,7 @@ public abstract class KafkaClientBaseTest {
     kafka.stop();
   }
 
+  @SuppressWarnings("PreferJavaTimeOverload")
   public void awaitUntilConsumerIsReady() throws InterruptedException {
     if (consumerReady.await(0, TimeUnit.SECONDS)) {
       return;

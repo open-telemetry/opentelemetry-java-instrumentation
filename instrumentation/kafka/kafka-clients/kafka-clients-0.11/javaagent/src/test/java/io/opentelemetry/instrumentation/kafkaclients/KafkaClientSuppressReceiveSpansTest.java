@@ -30,7 +30,7 @@ import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest {
+class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -53,6 +53,7 @@ public class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationB
 
     awaitUntilConsumerIsReady();
     // check that the message was received
+    @SuppressWarnings("PreferJavaTimeOverload")
     ConsumerRecords<?, ?> records = consumer.poll(Duration.ofSeconds(5).toMillis());
     for (ConsumerRecord<?, ?> record : records) {
       testing.runWithSpan(
@@ -122,6 +123,7 @@ public class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationB
       throws ExecutionException, InterruptedException, TimeoutException {
     producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, TimeUnit.SECONDS);
     awaitUntilConsumerIsReady();
+    @SuppressWarnings("PreferJavaTimeOverload")
     ConsumerRecords<?, ?> records = consumer.poll(Duration.ofSeconds(5).toMillis());
     assertThat(records.count()).isEqualTo(1);
 
@@ -186,6 +188,7 @@ public class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationB
     testing.waitForTraces(1);
 
     awaitUntilConsumerIsReady();
+    @SuppressWarnings("PreferJavaTimeOverload")
     ConsumerRecords<?, ?> consumerRecords = consumer.poll(Duration.ofSeconds(5).toMillis());
     List<? extends ConsumerRecord<?, ?>> recordsInPartition =
         consumerRecords.records(KafkaClientBaseTest.topicPartition);
