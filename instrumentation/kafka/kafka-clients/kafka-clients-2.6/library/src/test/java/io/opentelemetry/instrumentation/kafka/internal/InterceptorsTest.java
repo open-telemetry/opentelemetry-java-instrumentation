@@ -86,7 +86,7 @@ class InterceptorsTest extends KafkaClientBaseTest {
                     .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfying(
                         equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                        equalTo(SemanticAttributes.MESSAGING_DESTINATION, SHARED_TOPIC),
+                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                         equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"));
               },
               span -> {
@@ -95,14 +95,14 @@ class InterceptorsTest extends KafkaClientBaseTest {
                     .hasParent(trace.getSpan(1))
                     .hasAttributesSatisfying(
                         equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                        equalTo(SemanticAttributes.MESSAGING_DESTINATION, SHARED_TOPIC),
+                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                         equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                         equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                         equalTo(
                             SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                             greeting.getBytes(StandardCharsets.UTF_8).length),
                         satisfies(
-                            SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                            SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
                             AbstractLongAssert::isNotNegative),
                         satisfies(
                             AttributeKey.longKey("messaging.kafka.message.offset"),
