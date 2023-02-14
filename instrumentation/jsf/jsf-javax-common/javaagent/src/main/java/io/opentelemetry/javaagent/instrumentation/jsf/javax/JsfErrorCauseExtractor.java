@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jsf;
+package io.opentelemetry.javaagent.instrumentation.jsf.javax;
 
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import javax.faces.FacesException;
