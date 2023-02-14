@@ -179,7 +179,7 @@ public final class ArmeriaTelemetryBuilder {
                 HttpSpanStatusExtractor.create(serverAttributesGetter)))
         .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
         .addOperationMetrics(HttpServerMetrics.get())
-        .addContextCustomizer(HttpRouteHolder.get());
+        .addContextCustomizer(HttpRouteHolder.create(serverAttributesGetter));
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(

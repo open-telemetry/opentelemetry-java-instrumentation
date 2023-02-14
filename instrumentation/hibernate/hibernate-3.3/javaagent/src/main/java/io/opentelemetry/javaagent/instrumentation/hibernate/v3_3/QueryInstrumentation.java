@@ -62,9 +62,9 @@ public class QueryInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      VirtualField<Query, SessionInfo> criteriaVirtualField =
+      VirtualField<Query, SessionInfo> queryVirtualField =
           VirtualField.find(Query.class, SessionInfo.class);
-      SessionInfo sessionInfo = criteriaVirtualField.get(query);
+      SessionInfo sessionInfo = queryVirtualField.get(query);
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       hibernateOperation =

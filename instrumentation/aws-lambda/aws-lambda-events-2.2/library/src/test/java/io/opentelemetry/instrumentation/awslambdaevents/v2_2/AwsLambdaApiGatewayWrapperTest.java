@@ -92,7 +92,7 @@ public class AwsLambdaApiGatewayWrapperTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("/hello/{param}")
+                    span.hasName("GET /hello/{param}")
                         .hasKind(SpanKind.SERVER)
                         .hasTraceId("4fd0b6131f19f39af59518d127b0cafe")
                         .hasParentSpanId("0000000000000456")

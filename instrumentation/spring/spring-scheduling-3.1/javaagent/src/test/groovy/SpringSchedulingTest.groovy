@@ -11,6 +11,18 @@ import java.util.concurrent.TimeUnit
 
 class SpringSchedulingTest extends AgentInstrumentationSpecification {
 
+  def "schedule one time test"() {
+    setup:
+    def context = new AnnotationConfigApplicationContext(OneTimeTaskConfig)
+    def task = context.getBean(OneTimeTask)
+
+    task.blockUntilExecute()
+
+    expect:
+    assert task != null
+    assertTraces(0) {}
+  }
+
   def "schedule trigger test according to cron expression"() {
     setup:
     def context = new AnnotationConfigApplicationContext(TriggerTaskConfig)

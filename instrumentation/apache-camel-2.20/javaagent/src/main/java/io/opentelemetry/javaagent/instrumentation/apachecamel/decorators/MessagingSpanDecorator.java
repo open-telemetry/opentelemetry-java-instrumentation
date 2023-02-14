@@ -58,7 +58,8 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
       CamelDirection camelDirection) {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
-    attributes.put(SemanticAttributes.MESSAGING_DESTINATION, getDestination(exchange, endpoint));
+    attributes.put(
+        SemanticAttributes.MESSAGING_DESTINATION_NAME, getDestination(exchange, endpoint));
 
     String messageId = getMessageId(exchange);
     if (messageId != null) {

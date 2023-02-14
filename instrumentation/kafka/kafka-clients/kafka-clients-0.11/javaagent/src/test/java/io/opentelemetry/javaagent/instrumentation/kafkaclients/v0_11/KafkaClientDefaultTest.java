@@ -98,10 +98,10 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfying(
                         equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                        equalTo(SemanticAttributes.MESSAGING_DESTINATION, SHARED_TOPIC),
+                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                         equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                         satisfies(
-                            SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                            SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                             AbstractLongAssert::isNotNegative),
                         satisfies(
                             AttributeKey.longKey("messaging.kafka.message.offset"),
@@ -128,7 +128,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                       .hasNoParent()
                       .hasAttributesSatisfying(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION, SHARED_TOPIC),
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"));
                   if (testHeaders) {
@@ -145,14 +145,14 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfying(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION, SHARED_TOPIC),
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                           equalTo(
                               SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                               greeting.getBytes(StandardCharsets.UTF_8).length),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
                               AbstractLongAssert::isNotNegative),
                           satisfies(
                               AttributeKey.longKey("messaging.kafka.message.offset"),
@@ -198,11 +198,11 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     .hasNoParent()
                     .hasAttributesSatisfying(
                         equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                        equalTo(SemanticAttributes.MESSAGING_DESTINATION, SHARED_TOPIC),
-                        equalTo(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true),
+                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                        equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true),
                         equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                         satisfies(
-                            SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                            SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                             AbstractLongAssert::isNotNegative),
                         satisfies(
                             AttributeKey.longKey("messaging.kafka.message.offset"),
@@ -218,7 +218,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     .hasNoParent()
                     .hasAttributesSatisfying(
                         equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                        equalTo(SemanticAttributes.MESSAGING_DESTINATION, SHARED_TOPIC),
+                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                         equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                         equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"));
               },
@@ -229,13 +229,13 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfying(
                         equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                        equalTo(SemanticAttributes.MESSAGING_DESTINATION, SHARED_TOPIC),
+                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                         equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                         equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
-                        equalTo(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true),
+                        equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true),
                         equalTo(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, -1L),
                         satisfies(
-                            SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                            SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
                             AbstractLongAssert::isNotNegative),
                         satisfies(
                             AttributeKey.longKey("messaging.kafka.message.offset"),
@@ -282,9 +282,10 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     .hasNoParent()
                     .hasAttributesSatisfying(
                         equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                        equalTo(SemanticAttributes.MESSAGING_DESTINATION, SHARED_TOPIC),
+                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                         equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                        equalTo(SemanticAttributes.MESSAGING_KAFKA_PARTITION, partition),
+                        equalTo(
+                            SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION, partition),
                         satisfies(
                             AttributeKey.longKey("messaging.kafka.message.offset"),
                             AbstractLongAssert::isNotNegative));
@@ -299,7 +300,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     .hasNoParent()
                     .hasAttributesSatisfying(
                         equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                        equalTo(SemanticAttributes.MESSAGING_DESTINATION, SHARED_TOPIC),
+                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                         equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                         equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"));
               },
@@ -310,13 +311,13 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfying(
                         equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                        equalTo(SemanticAttributes.MESSAGING_DESTINATION, SHARED_TOPIC),
+                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                         equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                         equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                         equalTo(
                             SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                             greeting.getBytes(StandardCharsets.UTF_8).length),
-                        equalTo(SemanticAttributes.MESSAGING_KAFKA_PARTITION, partition),
+                        equalTo(SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION, partition),
                         satisfies(
                             AttributeKey.longKey("messaging.kafka.message.offset"),
                             AbstractLongAssert::isNotNegative),

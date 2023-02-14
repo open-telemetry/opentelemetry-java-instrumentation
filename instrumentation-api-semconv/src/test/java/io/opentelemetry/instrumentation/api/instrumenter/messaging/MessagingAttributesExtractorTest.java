@@ -67,12 +67,12 @@ class MessagingAttributesExtractorTest {
     List<MapEntry<AttributeKey<?>, Object>> expectedEntries = new ArrayList<>();
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_SYSTEM, "myQueue"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION, expectedDestination));
+    expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_NAME, expectedDestination));
     if (temporary) {
-      expectedEntries.add(entry(SemanticAttributes.MESSAGING_TEMP_DESTINATION, true));
+      expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true));
     }
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_PROTOCOL, "AMQP"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_PROTOCOL_VERSION, "1.0.0"));
+    expectedEntries.add(entry(SemanticAttributes.NET_APP_PROTOCOL_NAME, "AMQP"));
+    expectedEntries.add(entry(SemanticAttributes.NET_APP_PROTOCOL_VERSION, "1.0.0"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_URL, "http://broker/topic"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_CONVERSATION_ID, "42"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 100L));

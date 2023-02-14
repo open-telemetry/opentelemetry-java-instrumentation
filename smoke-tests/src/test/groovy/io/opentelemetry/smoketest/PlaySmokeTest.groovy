@@ -6,6 +6,7 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.IgnoreIf
 
 import java.time.Duration
@@ -36,6 +37,8 @@ class PlaySmokeTest extends SmokeTest {
     //Both play and akka-http support produce spans with the same name.
     //One internal, one SERVER
     countSpansByName(traces, '/welcome') == 2
+
+    new TraceInspector(traces).countFilteredAttributes(SemanticAttributes.HTTP_ROUTE.key, "/welcome") == 1
 
     cleanup:
     stopTarget()

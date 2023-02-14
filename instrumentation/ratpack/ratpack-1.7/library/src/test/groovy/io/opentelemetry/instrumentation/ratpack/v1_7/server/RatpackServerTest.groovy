@@ -51,7 +51,7 @@ class RatpackServerTest extends Specification {
 
     then:
     new PollingConditions().eventually {
-      def spanData = spanExporter.finishedSpanItems.find { it.name == "/foo" }
+      def spanData = spanExporter.finishedSpanItems.find { it.name == "GET /foo" }
       def attributes = spanData.attributes.asMap()
 
       spanData.kind == SpanKind.SERVER
@@ -84,7 +84,7 @@ class RatpackServerTest extends Specification {
       "hi-foo" == httpClient.get("foo").body.text
 
       new PollingConditions().eventually {
-        def spanData = spanExporter.finishedSpanItems.find { it.name == "/foo" }
+        def spanData = spanExporter.finishedSpanItems.find { it.name == "GET /foo" }
         def spanDataChild = spanExporter.finishedSpanItems.find { it.name == "a-span" }
 
         spanData.kind == SpanKind.SERVER
@@ -133,10 +133,10 @@ class RatpackServerTest extends Specification {
       "hi-foo" == httpClient.get("foo").body.text
       "hi-bar" == httpClient.get("bar").body.text
       new PollingConditions().eventually {
-        def spanData = spanExporter.finishedSpanItems.find { it.name == "/foo" }
+        def spanData = spanExporter.finishedSpanItems.find { it.name == "GET /foo" }
         def spanDataChild = spanExporter.finishedSpanItems.find { it.name == "a-span" }
 
-        def spanData2 = spanExporter.finishedSpanItems.find { it.name == "/bar" }
+        def spanData2 = spanExporter.finishedSpanItems.find { it.name == "GET /bar" }
         def spanDataChild2 = spanExporter.finishedSpanItems.find { it.name == "another-span" }
 
         spanData.kind == SpanKind.SERVER

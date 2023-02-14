@@ -62,6 +62,7 @@ dependencies {
   implementation("org.slf4j:jcl-over-slf4j")
   implementation("org.slf4j:jul-to-slf4j")
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
+  implementation(project(":instrumentation-api-semconv"))
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service")

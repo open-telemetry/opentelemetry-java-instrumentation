@@ -180,7 +180,7 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span -> span.hasName("HTTP GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+              span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
               span ->
                   span.hasName("test-http-server")
                       .hasKind(SpanKind.SERVER)

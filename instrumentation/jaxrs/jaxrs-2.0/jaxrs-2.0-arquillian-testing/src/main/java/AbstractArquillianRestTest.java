@@ -73,7 +73,9 @@ public abstract class AbstractArquillianRestTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(getContextRoot() + path).hasKind(SpanKind.SERVER).hasNoParent(),
+                    span.hasName("GET " + getContextRoot() + path)
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent(),
                 span -> span.hasName(className + ".hello").hasParent(trace.getSpan(0))));
   }
 }

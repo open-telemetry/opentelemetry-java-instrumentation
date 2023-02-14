@@ -53,7 +53,7 @@ abstract class AbstractServlet5MappingTest<SERVER, CONTEXT> extends AgentInstrum
     assertTraces(1) {
       trace(0, spanCount) {
         span(0) {
-          name getContextPath() + spanName
+          name "GET " + getContextPath() + route
           kind SpanKind.SERVER
           if (!success && response.status().code() >= 500) {
             status ERROR
@@ -67,7 +67,7 @@ abstract class AbstractServlet5MappingTest<SERVER, CONTEXT> extends AgentInstrum
     }
 
     where:
-    path       | spanName    | success
+    path       | route       | success
     'prefix'   | '/prefix/*' | true
     'prefix/'  | '/prefix/*' | true
     'prefix/a' | '/prefix/*' | true

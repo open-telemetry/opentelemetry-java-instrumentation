@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.testing;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -16,9 +18,15 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /** {@link Instrumenter}s to use when executing test code. */
@@ -39,10 +47,14 @@ final class TestInstrumenters {
             .addAttributesExtractor(new SpanKeyAttributesExtractor(SpanKey.KIND_CLIENT))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
     httpServerInstrumenter =
-        Instrumenter.<String, Void>builder(openTelemetry, "test", name -> name)
+        Instrumenter.<String, Void>builder(
+                openTelemetry, "test", HttpSpanNameExtractor.create(HttpServerGetter.INSTANCE))
             // cover both semconv and span-kind strategies
-            .addAttributesExtractor(new SpanKeyAttributesExtractor(SpanKey.HTTP_SERVER))
+            .addAttributesExtractor(
+                HttpServerAttributesExtractor.create(
+                    HttpServerGetter.INSTANCE, NetServerGetter.INSTANCE))
             .addAttributesExtractor(new SpanKeyAttributesExtractor(SpanKey.KIND_SERVER))
+            .addContextCustomizer(HttpRouteHolder.create(HttpServerGetter.INSTANCE))
             .buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
@@ -68,9 +80,8 @@ final class TestInstrumenters {
    * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
    * spanName}.
    */
-  <T, E extends Throwable> T runWithHttpServerSpan(String spanName, ThrowingSupplier<T, E> callback)
-      throws E {
-    return runWithInstrumenter(spanName, httpServerInstrumenter, callback);
+  <T, E extends Throwable> T runWithHttpServerSpan(ThrowingSupplier<T, E> callback) throws E {
+    return runWithInstrumenter("ignored", httpServerInstrumenter, callback);
   }
 
   /** Runs the provided {@code callback} inside the scope of a non-recording span. */
@@ -124,6 +135,77 @@ final class TestInstrumenters {
     @Override
     public SpanKey internalGetSpanKey() {
       return spanKey;
+    }
+  }
+
+  private enum HttpServerGetter implements HttpServerAttributesGetter<String, Void> {
+    INSTANCE;
+
+    @Override
+    public String getMethod(String unused) {
+      return "GET";
+    }
+
+    @Override
+    public List<String> getRequestHeader(String unused, String name) {
+      return emptyList();
+    }
+
+    @Nullable
+    @Override
+    public Integer getStatusCode(String unused, Void unused2, @Nullable Throwable error) {
+      return null;
+    }
+
+    @Override
+    public List<String> getResponseHeader(String unused, Void unused2, String name) {
+      return emptyList();
+    }
+
+    @Nullable
+    @Override
+    public String getFlavor(String unused) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public String getTarget(String unused) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public String getRoute(String unused) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public String getScheme(String unused) {
+      return null;
+    }
+  }
+
+  private enum NetServerGetter implements NetServerAttributesGetter<String> {
+    INSTANCE;
+
+    @Nullable
+    @Override
+    public String getTransport(String unused) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public String getHostName(String unused) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public Integer getHostPort(String unused) {
+      return null;
     }
   }
 }

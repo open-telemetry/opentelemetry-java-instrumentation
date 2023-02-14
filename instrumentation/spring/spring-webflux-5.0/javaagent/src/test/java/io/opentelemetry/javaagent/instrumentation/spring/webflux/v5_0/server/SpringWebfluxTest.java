@@ -109,7 +109,7 @@ public class SpringWebfluxTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(parameter.urlPathWithVariables)
+                    span.hasName("GET " + parameter.urlPathWithVariables)
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -233,7 +233,7 @@ public class SpringWebfluxTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(parameter.urlPathWithVariables)
+                    span.hasName("GET " + parameter.urlPathWithVariables)
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -352,7 +352,7 @@ public class SpringWebfluxTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(parameter.urlPathWithVariables)
+                    span.hasName("GET " + parameter.urlPathWithVariables)
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -435,7 +435,7 @@ public class SpringWebfluxTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("/**")
+                    span.hasName("GET /**")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasStatus(StatusData.unset())
@@ -503,7 +503,7 @@ public class SpringWebfluxTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("/echo")
+                    span.hasName("POST /echo")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -554,7 +554,7 @@ public class SpringWebfluxTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(parameter.urlPathWithVariables)
+                    span.hasName("GET " + parameter.urlPathWithVariables)
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
@@ -646,7 +646,7 @@ public class SpringWebfluxTest {
             // TODO: why order of spans is different in these traces?
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("/double-greet-redirect")
+                    span.hasName("GET /double-greet-redirect")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -686,7 +686,7 @@ public class SpringWebfluxTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("/double-greet")
+                    span.hasName("GET /double-greet")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -749,7 +749,7 @@ public class SpringWebfluxTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(parameter.urlPathWithVariables)
+                    span.hasName("GET " + parameter.urlPathWithVariables)
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(

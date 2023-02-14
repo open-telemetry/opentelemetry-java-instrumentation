@@ -274,10 +274,10 @@ class Jms2Test extends AgentInstrumentationSpecification {
       }
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
-        "$SemanticAttributes.MESSAGING_DESTINATION" destinationName
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destinationName
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" destinationType
         if (destinationName == "(temporary)") {
-          "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
+          "$SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY" true
         }
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
       }
@@ -303,7 +303,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
       }
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
-        "$SemanticAttributes.MESSAGING_DESTINATION" destinationName
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destinationName
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" destinationType
         "$SemanticAttributes.MESSAGING_OPERATION" operation
         if (messageId != null) {
@@ -311,7 +311,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
           "$SemanticAttributes.MESSAGING_MESSAGE_ID" { it == messageId || messageId == "" }
         }
         if (destinationName == "(temporary)") {
-          "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
+          "$SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY" true
         }
       }
     }

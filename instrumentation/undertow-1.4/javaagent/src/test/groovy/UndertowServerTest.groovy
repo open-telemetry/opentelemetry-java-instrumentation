@@ -127,7 +127,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
       trace(0, 2) {
         it.span(0) {
           hasNoParent()
-          name "HTTP GET"
+          name "GET"
           kind SpanKind.SERVER
 
           event(0) {
@@ -179,7 +179,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
       trace(0, 2) {
         it.span(0) {
           hasNoParent()
-          name "HTTP GET"
+          name "GET"
           kind SpanKind.SERVER
           status StatusCode.ERROR
 
