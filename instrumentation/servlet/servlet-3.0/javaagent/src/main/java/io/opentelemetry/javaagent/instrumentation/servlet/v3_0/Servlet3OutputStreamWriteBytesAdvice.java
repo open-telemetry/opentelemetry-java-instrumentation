@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.getSnippetInjectionHelper;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.Injection.getInjectionState;
 
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.InjectionState;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.ServletOutputStreamInjectionHelper;
 import java.io.IOException;
 import javax.servlet.ServletOutputStream;
 import net.bytebuddy.asm.Advice;
@@ -26,7 +26,7 @@ public class Servlet3OutputStreamWriteBytesAdvice {
     // if handleWrite return true, then it means the injection has happened and the 'write'
     // manipulate is done. the function would return false then, meaning skip the original write
     // function
-    return !ServletOutputStreamInjectionHelper.handleWrite(
-        write, 0, write.length, state, servletOutputStream);
+    return !getSnippetInjectionHelper()
+        .handleWrite(write, 0, write.length, state, servletOutputStream);
   }
 }

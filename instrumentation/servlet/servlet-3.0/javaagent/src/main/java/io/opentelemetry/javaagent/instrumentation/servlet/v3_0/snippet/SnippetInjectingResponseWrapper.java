@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.Injection.initializeInjectionStateIfNeeded;
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.invoke.MethodHandle;
@@ -31,20 +30,27 @@ import javax.servlet.http.HttpServletResponseWrapper;
  * written, including the snippet length.
  */
 public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper {
+
   private static final Logger logger = Logger.getLogger(HttpServletResponseWrapper.class.getName());
+
   public static final String FAKE_SNIPPET_HEADER = "FAKE_SNIPPET_HEADER";
-  private static final String SNIPPET = ExperimentalSnippetHolder.getSnippet();
-  private static final int SNIPPET_LENGTH = SNIPPET.length();
 
   private static final int UNSET = -1;
+
+  // this is for Servlet 3.1 support
   @Nullable private static final MethodHandle setContentLengthLongHandler = getMethodHandle();
+
+  private final String snippet;
+  private final int snippetLength;
 
   private long contentLength = UNSET;
 
   private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
 
-  public SnippetInjectingResponseWrapper(HttpServletResponse response) {
+  public SnippetInjectingResponseWrapper(HttpServletResponse response, String snippet) {
     super(response);
+    this.snippet = snippet;
+    snippetLength = snippet.length();
   }
 
   @Override
@@ -67,7 +73,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
     // checking content-type is just an optimization to avoid unnecessary parsing
     if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
       try {
-        contentLength = Long.valueOf(value);
+        contentLength = Long.parseLong(value);
       } catch (NumberFormatException ex) {
         logger.log(FINE, "NumberFormatException", ex);
       }
@@ -80,7 +86,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
     // checking content-type is just an optimization to avoid unnecessary parsing
     if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
       try {
-        contentLength = Long.valueOf(value);
+        contentLength = Long.parseLong(value);
       } catch (NumberFormatException ex) {
         logger.log(FINE, "NumberFormatException", ex);
       }
@@ -127,6 +133,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
     }
   }
 
+  // this is for Servlet 3.1 support
   public void setContentLengthLong(long length) throws Throwable {
     contentLength = length;
     if (setContentLengthLongHandler == null) {
@@ -158,14 +165,14 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
     }
     if (snippetInjectingPrintWriter == null) {
       snippetInjectingPrintWriter =
-          new SnippetInjectingPrintWriter(super.getWriter(), SNIPPET, this);
+          new SnippetInjectingPrintWriter(super.getWriter(), snippet, this);
     }
     return snippetInjectingPrintWriter;
   }
 
   public void updateContentLengthIfPreviouslySet() {
     if (contentLength != UNSET) {
-      setContentLength((int) contentLength + SNIPPET_LENGTH);
+      setContentLength((int) contentLength + snippetLength);
     }
   }
 

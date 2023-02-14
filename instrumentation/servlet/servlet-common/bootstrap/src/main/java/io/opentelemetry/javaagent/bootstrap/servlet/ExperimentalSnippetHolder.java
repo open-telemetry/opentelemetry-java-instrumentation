@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
-import java.io.UnsupportedEncodingException;
-
 public class ExperimentalSnippetHolder {
 
   private static String snippet = "";
@@ -17,10 +15,6 @@ public class ExperimentalSnippetHolder {
 
   public static String getSnippet() {
     return snippet;
-  }
-
-  public static byte[] getSnippetBytes(String encoding) throws UnsupportedEncodingException {
-    return snippet.getBytes(encoding);
   }
 
   private ExperimentalSnippetHolder() {}
