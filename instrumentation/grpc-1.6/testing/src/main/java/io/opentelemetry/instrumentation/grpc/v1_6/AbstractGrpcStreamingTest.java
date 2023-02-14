@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExtraClientAttributes;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -175,17 +176,19 @@ public abstract class AbstractGrpcStreamingTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "Conversation"),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_PEER_PORT, (long) server.getPort()))
+                                addExtraClientAttributes(
+                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
+                                    equalTo(SemanticAttributes.RPC_METHOD, "Conversation"),
+                                    equalTo(
+                                        SemanticAttributes.NET_TRANSPORT,
+                                        SemanticAttributes.NetTransportValues.IP_TCP),
+                                    equalTo(
+                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                        (long) Status.Code.OK.value()),
+                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                    equalTo(
+                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(events.toArray(new Consumer[0])),
                     span ->
                         span.hasName("example.Greeter/Conversation")
