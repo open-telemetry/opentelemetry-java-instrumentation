@@ -7,24 +7,29 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.logging.Logger;
-import javax.servlet.ServletOutputStream;
 
-public class ServletOutputStreamInjectionHelper {
+public class OutputStreamSnippetInjectionHelper {
 
   private static final Logger logger =
-      Logger.getLogger(ServletOutputStreamInjectionHelper.class.getName());
+      Logger.getLogger(OutputStreamSnippetInjectionHelper.class.getName());
+
+  private final String snippet;
+
+  public OutputStreamSnippetInjectionHelper(String snippet) {
+    this.snippet = snippet;
+  }
 
   /**
    * return true means this method performed the injection, return false means it didn't inject
    * anything Servlet3OutputStreamWriteAdvice would skip the write method when the return value is
    * true, and would write the original bytes when the return value is false.
    */
-  public static boolean handleWrite(
-      byte[] original, int off, int length, InjectionState state, ServletOutputStream out)
+  public boolean handleWrite(
+      byte[] original, int off, int length, InjectionState state, OutputStream out)
       throws IOException {
     if (state.isHeadTagWritten()) {
       return false;
@@ -46,7 +51,7 @@ public class ServletOutputStreamInjectionHelper {
     }
     byte[] snippetBytes;
     try {
-      snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
+      snippetBytes = snippet.getBytes(state.getCharacterEncoding());
     } catch (UnsupportedEncodingException e) {
       logger.log(FINE, "UnsupportedEncodingException", e);
       return false;
@@ -59,8 +64,7 @@ public class ServletOutputStreamInjectionHelper {
     return true;
   }
 
-  public static boolean handleWrite(InjectionState state, ServletOutputStream out, int b)
-      throws IOException {
+  public boolean handleWrite(InjectionState state, OutputStream out, int b) throws IOException {
     if (state.isHeadTagWritten()) {
       return false;
     }
@@ -74,7 +78,7 @@ public class ServletOutputStreamInjectionHelper {
     }
     byte[] snippetBytes;
     try {
-      snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
+      snippetBytes = snippet.getBytes(state.getCharacterEncoding());
     } catch (UnsupportedEncodingException e) {
       logger.log(FINE, "UnsupportedEncodingException", e);
       return false;
@@ -85,6 +89,4 @@ public class ServletOutputStreamInjectionHelper {
     out.write(snippetBytes);
     return true;
   }
-
-  private ServletOutputStreamInjectionHelper() {}
 }
