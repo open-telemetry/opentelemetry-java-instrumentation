@@ -7,6 +7,7 @@ muzzle {
     group.set("org.glassfish")
     module.set("jakarta.faces")
     versions.set("[3,)")
+    extraDependency("jakarta.el:jakarta.el-api:4.0.0")
     assertInverse.set(true)
   }
 }
