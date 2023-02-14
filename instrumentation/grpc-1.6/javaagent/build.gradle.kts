@@ -30,6 +30,7 @@ dependencies {
 
 tasks {
   test {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     // The agent context debug mechanism isn't compatible with the bridge approach which may add a
     // gRPC context to the root.
     jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
