@@ -37,7 +37,7 @@ public final class HttpRouteHolder {
       if (HttpRouteState.fromContextOrNull(context) != null) {
         return context;
       }
-      return context.with(HttpRouteState.create(null, 0, null));
+      return context.with(HttpRouteState.create(null, null, 0));
     };
   }
 
@@ -52,7 +52,7 @@ public final class HttpRouteHolder {
         return context;
       }
       String method = getter.getMethod(request);
-      return context.with(HttpRouteState.create(method, 0, null));
+      return context.with(HttpRouteState.create(method, null, 0));
     };
   }
 
