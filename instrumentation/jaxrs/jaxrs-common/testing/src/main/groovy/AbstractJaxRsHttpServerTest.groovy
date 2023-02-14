@@ -40,7 +40,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         span(0) {
           hasNoParent()
           kind SERVER
-          name getContextPath() + "/test-resource-super"
+          name "GET " + getContextPath() + "/test-resource-super"
         }
         span(1) {
           name "controller"
@@ -66,7 +66,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         span(0) {
           hasNoParent()
           kind SERVER
-          name getContextPath() + "/test-resource-interface/call"
+          name "GET " + getContextPath() + "/test-resource-interface/call"
         }
         span(1) {
           name "controller"
@@ -90,7 +90,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         span(0) {
           hasNoParent()
           kind SERVER
-          name getContextPath() + "/test-sub-resource-locator/call/sub"
+          name "GET " + getContextPath() + "/test-sub-resource-locator/call/sub"
         }
         span(1) {
           name "JaxRsSubResourceLocatorTestResource.call"
@@ -256,7 +256,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
                   int statusCode,
                   String query) {
     trace.span(index) {
-      name path
+      name method + " " + path
       kind SERVER
       if (statusCode >= 500) {
         status ERROR

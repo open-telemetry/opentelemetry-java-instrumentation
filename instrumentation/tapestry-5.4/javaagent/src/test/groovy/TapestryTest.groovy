@@ -100,7 +100,7 @@ class TapestryTest extends AgentInstrumentationSpecification implements HttpServ
 
     assertTraces(1) {
       trace(0, 2) {
-        serverSpan(it, 0, getContextPath() + "/Index")
+        serverSpan(it, 0, "GET " + getContextPath() + "/Index")
         span(1) {
           name "activate/Index"
           kind SpanKind.INTERNAL
@@ -122,7 +122,7 @@ class TapestryTest extends AgentInstrumentationSpecification implements HttpServ
 
     assertTraces(2) {
       trace(0, 4) {
-        serverSpan(it, 0, getContextPath() + "/Index")
+        serverSpan(it, 0, "GET " + getContextPath() + "/Index")
         span(1) {
           name "activate/Index"
           kind SpanKind.INTERNAL
@@ -140,7 +140,7 @@ class TapestryTest extends AgentInstrumentationSpecification implements HttpServ
         }
       }
       trace(1, 2) {
-        serverSpan(it, 0, getContextPath() + "/Other")
+        serverSpan(it, 0, "GET " + getContextPath() + "/Other")
         span(1) {
           name "activate/Other"
           kind SpanKind.INTERNAL
@@ -164,7 +164,7 @@ class TapestryTest extends AgentInstrumentationSpecification implements HttpServ
         span(0) {
           hasNoParent()
           kind SpanKind.SERVER
-          name getContextPath() + "/Index"
+          name "GET " + getContextPath() + "/Index"
           status ERROR
         }
         span(1) {

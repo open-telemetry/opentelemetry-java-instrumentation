@@ -32,7 +32,7 @@ public final class AgentSpanTestingInstrumenter {
           .addAttributesExtractor(
               HttpServerAttributesExtractor.create(
                   MockHttpServerAttributesGetter.INSTANCE, MockNetServerAttributesGetter.INSTANCE))
-          .addContextCustomizer(HttpRouteHolder.get())
+          .addContextCustomizer(HttpRouteHolder.create(MockHttpServerAttributesGetter.INSTANCE))
           .addContextCustomizer(
               (context, request, startAttributes) -> context.with(REQUEST_CONTEXT_KEY, request))
           .buildInstrumenter(SpanKindExtractor.alwaysServer());

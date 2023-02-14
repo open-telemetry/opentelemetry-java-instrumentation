@@ -153,7 +153,7 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name getContextPath() + "/dispatch"
+          name "GET " + getContextPath() + "/dispatch"
           kind SpanKind.SERVER
           hasNoParent()
         }

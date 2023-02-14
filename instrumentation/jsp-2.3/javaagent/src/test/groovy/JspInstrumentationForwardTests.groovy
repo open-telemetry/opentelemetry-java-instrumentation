@@ -85,7 +85,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           def route = "/$jspWebappContext/$forwardFromFileName"
 
           hasNoParent()
-          name route
+          name "GET $route"
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
@@ -155,7 +155,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           def route = "/$jspWebappContext/forwards/forwardToHtml.jsp"
 
           hasNoParent()
-          name route
+          name "GET $route"
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
@@ -204,7 +204,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           def route = "/$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
 
           hasNoParent()
-          name route
+          name "GET $route"
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
@@ -301,7 +301,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           def route = "/$jspWebappContext/forwards/forwardToJspForward.jsp"
 
           hasNoParent()
-          name route
+          name "GET $route"
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
@@ -382,7 +382,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           def route = "/$jspWebappContext/forwards/forwardToCompileError.jsp"
 
           hasNoParent()
-          name route
+          name "GET $route"
           kind SERVER
           status ERROR
           errorEvent(JasperException, String)
@@ -445,7 +445,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           def route = "/$jspWebappContext/forwards/forwardToNonExistent.jsp"
 
           hasNoParent()
-          name route
+          name "GET $route"
           kind SERVER
           status UNSET
           attributes {

@@ -9,7 +9,6 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification implements WithRabbitProducerConsumerTrait {
   def setupSpec() {
@@ -22,8 +21,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
 
   def "should cooperate with existing RabbitMQ instrumentation"() {
     when:
-    // simulate the workflow being triggered by HTTP request
-    runWithHttpServerSpan("HTTP GET") {
+    runWithSpan("parent") {
       producerContext.getBean("producer", Runnable).run()
     }
 
@@ -31,8 +29,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
     assertTraces(2) {
       trace(0, 7) {
         span(0) {
-          name "HTTP GET"
-          kind SERVER
+          name "parent"
           attributes {}
         }
         span(1) {

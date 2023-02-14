@@ -90,9 +90,9 @@ class InstrumentedHttpClientTest extends Specification {
     }
 
     new PollingConditions().eventually {
-      def spanData = spanExporter.finishedSpanItems.find { it.name == "/foo" }
-      def spanClientData = spanExporter.finishedSpanItems.find { it.name == "HTTP GET" && it.kind == CLIENT }
-      def spanDataApi = spanExporter.finishedSpanItems.find { it.name == "/bar" && it.kind == SERVER }
+      def spanData = spanExporter.finishedSpanItems.find { it.name == "GET /foo" }
+      def spanClientData = spanExporter.finishedSpanItems.find { it.name == "GET" && it.kind == CLIENT }
+      def spanDataApi = spanExporter.finishedSpanItems.find { it.name == "GET /bar" && it.kind == SERVER }
 
       spanData.traceId == spanClientData.traceId
       spanData.traceId == spanDataApi.traceId
@@ -154,9 +154,9 @@ class InstrumentedHttpClientTest extends Specification {
 
     new PollingConditions().eventually {
       spanExporter.finishedSpanItems.size() == 3
-      def spanData = spanExporter.finishedSpanItems.find { spanData -> spanData.name == "/path-name" }
-      def spanClientData1 = spanExporter.finishedSpanItems.find { s -> s.name == "HTTP GET" && s.attributes.asMap()[HTTP_ROUTE] == "/foo" }
-      def spanClientData2 = spanExporter.finishedSpanItems.find { s -> s.name == "HTTP GET" && s.attributes.asMap()[HTTP_ROUTE] == "/bar" }
+      def spanData = spanExporter.finishedSpanItems.find { spanData -> spanData.name == "GET /path-name" }
+      def spanClientData1 = spanExporter.finishedSpanItems.find { s -> s.name == "GET" && s.attributes.asMap()[HTTP_ROUTE] == "/foo" }
+      def spanClientData2 = spanExporter.finishedSpanItems.find { s -> s.name == "GET" && s.attributes.asMap()[HTTP_ROUTE] == "/bar" }
 
       spanData.traceId == spanClientData1.traceId
       spanData.traceId == spanClientData2.traceId
@@ -217,8 +217,8 @@ class InstrumentedHttpClientTest extends Specification {
     app.test { httpClient -> "error" == httpClient.get("path-name").body.text }
 
     new PollingConditions().eventually {
-      def spanData = spanExporter.finishedSpanItems.find { it.name == "/path-name" }
-      def spanClientData = spanExporter.finishedSpanItems.find { it.name == "HTTP GET" }
+      def spanData = spanExporter.finishedSpanItems.find { it.name == "GET /path-name" }
+      def spanClientData = spanExporter.finishedSpanItems.find { it.name == "GET" }
 
       spanData.traceId == spanClientData.traceId
 

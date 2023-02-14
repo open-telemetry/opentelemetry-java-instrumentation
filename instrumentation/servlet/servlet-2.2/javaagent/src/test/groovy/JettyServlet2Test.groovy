@@ -15,6 +15,7 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
 
+import javax.annotation.Nullable
 import javax.servlet.http.HttpServletRequest
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
@@ -83,14 +84,14 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint, String method) {
+  String expectedServerSpanName(ServerEndpoint endpoint, String method, @Nullable String route) {
     switch (endpoint) {
       case NOT_FOUND:
-        return "HTTP $method"
+        return method
       case PATH_PARAM:
-        return getContextPath() + "/path/:id/param"
+        return method + " " + getContextPath() + "/path/:id/param"
       default:
-        return endpoint.resolvePath(address).path
+        return method + " " + endpoint.resolvePath(address).path
     }
   }
 

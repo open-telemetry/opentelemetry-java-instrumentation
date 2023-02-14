@@ -371,12 +371,12 @@ abstract class AppServerTest extends SmokeTest {
       case "/app/headers":
       case "/app/exception":
       case "/app/asyncgreeting":
-        return path
+        return "GET " + path
       case "/app/hello.txt":
       case "/app/file-that-does-not-exist":
-        return "/app/*"
+        return "GET /app/*"
     }
-    return "HTTP GET"
+    return "GET"
   }
 
   protected List<List<Object>> getTestParams() {

@@ -28,13 +28,31 @@ public final class HttpRouteHolder {
   /**
    * Returns a {@link ContextCustomizer} that initializes a {@link HttpRouteHolder} in the {@link
    * Context} returned from {@link Instrumenter#start(Context, Object)}.
+   *
+   * @deprecated Use {@link #create(HttpServerAttributesGetter)} instead.
    */
+  @Deprecated
   public static <REQUEST> ContextCustomizer<REQUEST> get() {
     return (context, request, startAttributes) -> {
       if (HttpRouteState.fromContextOrNull(context) != null) {
         return context;
       }
-      return context.with(HttpRouteState.create(0, null));
+      return context.with(HttpRouteState.create(null, null, 0));
+    };
+  }
+
+  /**
+   * Returns a {@link ContextCustomizer} that initializes a {@link HttpRouteHolder} in the {@link
+   * Context} returned from {@link Instrumenter#start(Context, Object)}.
+   */
+  public static <REQUEST> ContextCustomizer<REQUEST> create(
+      HttpServerAttributesGetter<REQUEST, ?> getter) {
+    return (context, request, startAttributes) -> {
+      if (HttpRouteState.fromContextOrNull(context) != null) {
+        return context;
+      }
+      String method = getter.getMethod(request);
+      return context.with(HttpRouteState.create(method, null, 0));
     };
   }
 
@@ -103,10 +121,10 @@ public final class HttpRouteHolder {
     }
     HttpRouteState httpRouteState = HttpRouteState.fromContextOrNull(context);
     if (httpRouteState == null) {
+      // TODO: remove this branch?
       String httpRoute = httpRouteGetter.get(context, arg1, arg2);
       if (httpRoute != null && !httpRoute.isEmpty()) {
-        // update both span name and attribute, since there's no HttpRouteHolder in the context
-        serverSpan.updateName(httpRoute);
+        // update just the attribute - without http.method we can't compute a proper span name here
         serverSpan.setAttribute(SemanticAttributes.HTTP_ROUTE, httpRoute);
       }
       return;
@@ -123,7 +141,7 @@ public final class HttpRouteHolder {
 
         // update just the span name - the attribute will be picked up by the
         // HttpServerAttributesExtractor at the end of request processing
-        serverSpan.updateName(route);
+        updateSpanName(serverSpan, httpRouteState, route);
 
         httpRouteState.update(context, source.order, route);
       }
@@ -136,6 +154,15 @@ public final class HttpRouteHolder {
     String route = httpRouteState.getRoute();
     int routeLength = route == null ? 0 : route.length();
     return name.length() > routeLength;
+  }
+
+  private static void updateSpanName(Span serverSpan, HttpRouteState httpRouteState, String route) {
+    String method = httpRouteState.getMethod();
+    // method should never really be null - but in case it for some reason is, we'll rely on the
+    // span name extractor behavior
+    if (method != null) {
+      serverSpan.updateName(method + " " + route);
+    }
   }
 
   /**

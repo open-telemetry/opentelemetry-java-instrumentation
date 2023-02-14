@@ -244,7 +244,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           }
         }
         span(2) {
-          name "HTTP POST"
+          name "POST"
           kind CLIENT
           childOf span(1)
           attributes {
@@ -310,7 +310,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           }
         }
         span(2) {
-          name "HTTP POST"
+          name "POST"
           kind CLIENT
           childOf span(1)
           status ERROR
@@ -324,7 +324,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           }
         }
         span(3) {
-          name "HTTP POST"
+          name "POST"
           kind CLIENT
           childOf span(1)
           attributes {
@@ -397,7 +397,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           }
         }
         span(2) {
-          name "HTTP POST"
+          name "POST"
           kind CLIENT
           childOf span(1)
           status ERROR
@@ -411,7 +411,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           }
         }
         span(3) {
-          name "HTTP POST"
+          name "POST"
           kind CLIENT
           childOf span(1)
           attributes {

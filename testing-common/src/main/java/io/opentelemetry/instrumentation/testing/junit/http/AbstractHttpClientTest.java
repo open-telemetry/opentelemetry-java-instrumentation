@@ -959,7 +959,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   }
 
   protected String expectedClientSpanName(URI uri, String method) {
-    return method != null ? "HTTP " + method : "HTTP request";
+    return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
   }
 
   @Nullable
