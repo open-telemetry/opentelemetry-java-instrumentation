@@ -2,6 +2,119 @@
 
 ## Unreleased
 
+### Migration notes
+
+- HTTP span names are now `"{http.method} {http.route}"` instead of just `"{http.route}"`,
+  reflecting the recent change in the HTTP semantic conventions
+  ([#7730](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7730))
+- Added the base version into library package names to make room for other base versions
+  without breaking backwards compatibility in the future once these artifacts are declared stable
+  ([#7608](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7608),
+  [#7752](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7752),
+  [#7764](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7764))
+  - `io.opentelemetry.instrumentation.spring.web.SpringWebTelemetry`
+    → `io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry`
+  - `io.opentelemetry.instrumentation.spring.webflux.SpringWebfluxTelemetry`
+    → `io.opentelemetry.instrumentation.spring.webflux.v5_0.SpringWebfluxTelemetry`
+  - `io.opentelemetry.instrumentation.spring.integration.SpringIntegrationTelemetry`
+    → `io.opentelemetry.instrumentation.spring.integration.v4_1.SpringIntegrationTelemetry`
+  - `io.opentelemetry.instrumentation.logback.v1_0.OpenTelemetryAppender`
+    → `io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender`
+  - `io.opentelemetry.instrumentation.apachedbcp.ApacheDbcpTelemetry`
+    → `io.opentelemetry.instrumentation.apachedbcp.v2_0.ApacheDbcpTelemetry`
+  - `io.opentelemetry.instrumentation.c3p0.C3p0Telemetry`
+    → `io.opentelemetry.instrumentation.c3p0.v0_9.C3p0Telemetry`
+  - `io.opentelemetry.instrumentation.graphql.GraphQLTelemetry`
+    → `io.opentelemetry.instrumentation.graphql.v12_0.GraphQLTelemetry`
+  - `io.opentelemetry.instrumentation.guava.GuavaAsyncOperationEndStrategy`
+    → `io.opentelemetry.instrumentation.guava.v10_0.GuavaAsyncOperationEndStrategy`
+  - `io.opentelemetry.instrumentation.hikaricp.HikariTelemetry`
+    → `io.opentelemetry.instrumentation.hikaricp.v3_0.HikariTelemetry`
+  - `io.opentelemetry.instrumentation.kafkaclients.KafkaTelemetry`
+    → `io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry`
+  - `io.opentelemetry.instrumentation.oracleucp.OracleUcpTelemetry`
+    → `io.opentelemetry.instrumentation.oracleucp.v11_2.OracleUcpTelemetry`
+  - `io.opentelemetry.instrumentation.ratpack.RatpackTelemetry`
+    → `io.opentelemetry.instrumentation.ratpack.v1_7.RatpackTelemetry`
+  - `io.opentelemetry.instrumentation.reactor.ContextPropagationOperator`
+    →` io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator`
+  - `io.opentelemetry.instrumentation.viburdbcp.ViburTelemetry`
+    → `io.opentelemetry.instrumentation.viburdbcp.v11_0.ViburTelemetry`
+- Several instrumentation scope names have been fixed
+  ([#7632](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7632))
+  - `io.opentelemetry.cxf-jaxrs-3.2` → `io.opentelemetry.jaxrs-2.0-cxf-3.2`
+  - `io.opentelemetry.jersey-2.0` → `io.opentelemetry.jaxrs-2.0-jersey-2.0`
+    or `io.opentelemetry.jaxrs-3.0-jersey-3.0` as appropriate
+  - `io.opentelemetry.resteasy-3.0` → `io.opentelemetry.jaxrs-2.0-resteasy-3.0`
+  - `io.opentelemetry.resteasy-3.1` → `io.opentelemetry.jaxrs-2.0-resteasy-3.1`
+  - `io.opentelemetry.resteasy-6.0` → `io.opentelemetry.jaxrs-3.0-resteasy-6.0`
+  - `io.opentelemetry.jws-1.1` → `io.opentelemetry.jaxws-jws-api-1.1`
+  - `io.opentelemetry.vertx-kafka-client-3.5` → `io.opentelemetry.vertx-kafka-client-3.6`
+  - `io.opentelemetry.hibernate-4.3` → `io.opentelemetry.hibernate-procedure-call-4.3`
+- All methods in all `*Getter` classes in `instrumentation-api-semconv` have been renamed
+  to use the `get*()` naming scheme
+  ([#7619](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7619))
+- Return interfaces instead of concrete implementations in `instrumentation-api-semconv`
+  ([#7658](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7658))
+
+### 📈 Enhancements
+
+- Support Spring Web 6 in library instrumentation
+  ([#7551](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7551))
+- Add gRPC request metadata instrumentation
+  ([#7011](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7011))
+- Pass context to content length http metrics meters
+  ([#7506](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7506))
+- Update SQL span name for procedures
+  ([#7557](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7557))
+- Ratpack services OpenTelemetry
+  ([#7477](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7477))
+- Ignore janino classloader
+  ([#7710](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7710))
+- Improve type resolution cache for classes in java package
+  ([#7714](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7714))
+- End netty client span before callbacks
+  ([#7737](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7737))
+- Support slf4j to log4j2
+  ([#7656](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7656))
+- Add `net.host.port` to the `http.server.active_requests` metric
+  ([#7757](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7757))
+- Allow JDBC library instrumentation to use a custom OpenTelemetry instance to be more DI
+  (e.g. Spring Boot) friendly
+  ([#7697](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7697))
+- Dubbo: don't create spans for calls inside the same jvm
+  ([#7761](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7761))
+- Bridge OpenTelemetry metrics batch API
+  ([#7762](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7762))
+- Support Spring Boot 3 in autoconfigure module
+  ([#7784](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7784))
+- Change Spring Scheduling to not capture span for one-time jobs (only repeated jobs)
+  ([#7760](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7760))
+- Add instrumentation for hibernate 6
+  ([#7773](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7773))
+- Put `http.route` attribute onto `http.server.duration` on Play framework request processing
+  ([#7801](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7801))
+- Add Jakarta JSF 3.0+ instrumentation
+  ([#7786](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7786))
+- Capture `net.sock.peer.addr` more reliably in grpc client instrumentation
+  ([#7742](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7742))
+
+### 🛠️ Bug fixes
+
+- Fix potential startup failure
+  ([#7567](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7567))
+- Fix NoClassDefFoundError happening when snakeyaml is used on a custom JRE
+  ([#7598](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7598))
+- Fix inconsistent handling of `net.peer.port` in HTTP instrumentations
+  ([#7618](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7618))
+- Fix concurrency issue in OpenTelemetryDriver
+  ([#7628](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7628))
+- Fix ClassCastException with redisson batch with atomic write option
+  ([#7743](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7743))
+- Ensure kafka configuration remains serializable
+  ([#7754](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7754),
+  [#7789](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7789))
+
 ## Version 1.22.1 (2023-01-14)
 
 - Fix potential startup failure
@@ -481,7 +594,8 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   ([#6106](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6106))
 - The vertx-http-client instrumentation name has changed from `vertx-client` to `vertx-http-client`
   ([#6106](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6106))
-- The metric `process.runtime.java.memory.max` has been renamed to `process.runtime.java.memory.limit`
+- The metric `process.runtime.java.memory.max` has been renamed
+  to `process.runtime.java.memory.limit`
   ([#6161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6161))
 
 ### 🌟 New javaagent instrumentation
@@ -588,7 +702,7 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   ([#5923](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5923))
 - Add vertx-kafka-client instrumentation
   ([#5973](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5973),
-   [#5982](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5982))
+  [#5982](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5982))
 - Hide the GC runtime metrics behind an experimental config flag
   ([#5990](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5990))
 - Add HikariCP connection pool metrics
@@ -655,15 +769,15 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
 - Micrometer instrumentation is now automatically applied to spring-boot-actuator apps
 - Some configuration properties have been renamed:
   * `otel.instrumentation.common.experimental.suppress-controller-spans`
-    -> `otel.instrumentation.common.experimental.controller-telemetry.enabled`
+    → `otel.instrumentation.common.experimental.controller-telemetry.enabled`
     (important: note that the meaning is inverted)
   * `otel.instrumentation.common.experimental.suppress-view-spans`
-    -> `otel.instrumentation.common.experimental.view-telemetry.enabled`
+    → `otel.instrumentation.common.experimental.view-telemetry.enabled`
     (important: note that the meaning is inverted)
   * `otel.instrumentation.netty.always-create-connect-span`
-    -> `otel.instrumentation.netty.connection-telemetry.enabled`
+    → `otel.instrumentation.netty.connection-telemetry.enabled`
   * `otel.instrumentation.reactor-netty.always-create-connect-span`
-    -> `otel.instrumentation.reactor-netty.connection-telemetry.enabled`
+    → `otel.instrumentation.reactor-netty.connection-telemetry.enabled`
 - Runtime memory metric names were updated to reflect
   [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/runtime-environment-metrics.md#jvm-metrics)
 - Micrometer library instrumentation has been deprecated as it has been moved to the core repo and
@@ -873,20 +987,22 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
 
 ### 🌟 New javaagent instrumentation
 
-- Spring RMI instrumentation ([#5033](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5033))
+- Spring RMI
+  instrumentation ([#5033](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5033))
 
 ### 🌟 New library instrumentation
 
-- Ratpack httpclient ([#4787](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4787))
+- Ratpack
+  httpclient ([#4787](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4787))
 
 ### 📈 Enhancements
 
 - Add `http.route` to server spans where route was already being captured for span name
   ([#5086](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5086),
-   [#5240](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5240),
-   [#5242](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5242),
-   [#5241](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5241),
-   [#5239](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5239))
+  [#5240](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5240),
+  [#5242](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5242),
+  [#5241](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5241),
+  [#5239](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5239))
 - Use RPC attributes from spec for AWS SDK
   ([#5166](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5166))
 - SdkTracerProvider auto closed as separate Context Bean
@@ -975,8 +1091,8 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   ([#5258](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5258))
 - Refactor HTTP attributes extractors to use composition over inheritance
   ([#5030](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5030),
-   [#5194](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5194)
-   [#5267](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5267))
+  [#5194](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5194)
+  [#5267](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5267))
 - Refactor AttributesExtractor so that it extracts route from Context
   ([#5288](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5288))
 - Publish gradle-plugins to Maven Central
@@ -999,7 +1115,8 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
 
 ### Migration notes
 
-- The `opentelemetry-log4j-2.13.2` artifact has been renamed to `opentelemetry-context-data-2.16-autoconfigure`
+- The `opentelemetry-log4j-2.13.2` artifact has been renamed
+  to `opentelemetry-context-data-2.16-autoconfigure`
 - The `opentelemetry-logback-1.0` artifact has been renamed to `opentelemetry-logback-mdc-1.0`
 - The `opentelemetry-ratpack-1.4` artifact has been renamed to `opentelemetry-ratpack-1.7`
   and only supports Ratpack 1.7 and above now
@@ -1008,19 +1125,19 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
 
 - Logback appender instrumentation to send logs through the OpenTelemetry logging pipeline
   ([#4939](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4939),
-   [#4968](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4968))
+  [#4968](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4968))
 - Log4j 2.x appender instrumentation to send logs through the OpenTelemetry logging pipeline
   ([#4944](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4944),
-   [#4959](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4959),
-   [#4966](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4966))
+  [#4959](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4959),
+  [#4966](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4966))
 - Log4j 1.2 appender instrumentation to send logs through the OpenTelemetry logging pipeline
   ([#4943](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4943))
 - java.util.logging instrumentation to send logs through the OpenTelemetry logging pipeline
   ([#4941](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4941))
 - Micrometer instrumentation to send micrometer metrics through the OpenTelemetry metrics pipeline
   ([#4919](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4919),
-   [#5001](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5001),
-   [#5017](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5017))
+  [#5001](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5001),
+  [#5017](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5017))
 
 ### 🌟 New library instrumentation
 
@@ -1028,7 +1145,7 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   ([#4984](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4984))
 - Log4j 2.x appender to send logs through the OpenTelemetry logging pipeline
   ([#4375](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4375),
-   [#4907](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4907))
+  [#4907](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4907))
 - Ktor instrumentation
   ([#4983](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4983))
 - Micrometer instrumentation to send micrometer metrics through the OpenTelemetry metrics pipeline
@@ -1066,7 +1183,7 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   ([#5041](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5041))
 - Add OTLP logs exporters
   ([#5060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5060),
-   [#5088](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5088))
+  [#5088](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5088))
 - End redisson span when the operation actually ends
   ([#5073](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5073))
 - Don't capture high-cardinality http.target as metrics attribute
@@ -1109,7 +1226,8 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   ([#4692](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4692))
 - Move cache implementations to internal package
   ([#4746](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4746))
-- Reorganize shared servlet code (intro to [#4317](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4317))
+- Reorganize shared servlet code (intro
+  to [#4317](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4317))
   ([#4785](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4785))
 - Move `AppServerBridge` and `MappingResolver` to `servlet-common:bootstrap`
   ([#4817](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4817))
@@ -1148,7 +1266,7 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   ([#4403](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4403))
 - Netty instrumentation now captures `http.scheme`
   ([#4446](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4446),
-   [#4576](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4576))
+  [#4576](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4576))
 - Stabilize HTTP headers capturing configuration property names
   ([#4459](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4459))
 - Add metrics to remaining http instrumentation
@@ -1159,7 +1277,7 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   ([#4555](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4555))
 - Trace DNS resolution in Netty 4.1 and reactor-netty
   ([#4587](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4587),
-   [#4627](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4627))
+  [#4627](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4627))
 - Update garbage collector instruments to be async counters
   ([#4600](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4600))
 - Update HTTP metrics view to match the specification
@@ -1172,7 +1290,7 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   ([#4615](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4615))
 - Trace SSL handshakes in netty 4.0 and 4.1
   ([#4635](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4635),
-   [#4604](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4604))
+  [#4604](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4604))
 - Capture exception on finatra controller spans
   ([#4669](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4669))
 - Capture exception on async servlet spans
@@ -1224,8 +1342,8 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   ([#4678](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4678))
 - Fix and enforce Android support
   ([#4671](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4671),
-   [#4667](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4667)
-   [#4505](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4505))
+  [#4667](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4667)
+  [#4505](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4505))
 
 ### 🧰 Tooling
 
@@ -1254,7 +1372,8 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
 
 ## Version 1.8.0 - Bad Release
 
-Due to an issue in the publishing infrastructure, a bad release was published as 1.8.0. Do not use it.
+Due to an issue in the publishing infrastructure, a bad release was published as 1.8.0. Do not use
+it.
 
 ## Version 1.7.0 (2021-10-19)
 
@@ -1282,11 +1401,11 @@ Due to an issue in the publishing infrastructure, a bad release was published as
   ([#4279](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4279))
 - Extract HTTP request/response headers as span attributes
   ([#4237](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4237),
-   [#4309](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4309),
-   [#4320](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4320),
-   [#4321](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4321),
-   [#4328](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4328),
-   [#4395](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4395))
+  [#4309](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4309),
+  [#4320](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4320),
+  [#4321](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4321),
+  [#4328](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4328),
+  [#4395](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4395))
 - Support kafka streams 3
   ([#4236](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4236))
 - AWS lambda - improvements in custom type handling in wrappers, SQS event wrapper added
