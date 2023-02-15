@@ -12,7 +12,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.23.0"
+val otelSdkVersion = "1.23.1"
 
 // Need both BOM and groovy jars
 val groovyVersion = "4.0.9"
