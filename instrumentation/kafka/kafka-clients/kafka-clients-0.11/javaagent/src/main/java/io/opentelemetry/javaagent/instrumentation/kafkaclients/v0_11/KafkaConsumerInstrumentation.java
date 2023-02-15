@@ -18,6 +18,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.kafka.internal.ConsumerAndRecord;
 import io.opentelemetry.instrumentation.kafka.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -28,6 +29,7 @@ import java.util.Properties;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
@@ -83,6 +85,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.Enter Timer timer,
+        @Advice.This Consumer<?, ?> consumer,
         @Advice.Return ConsumerRecords<?, ?> records,
         @Advice.Thrown Throwable error) {
 
@@ -91,8 +94,17 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
         return;
       }
 
+      // we're attaching the consumer to the records to be able to retrieve things like consumer
+      // group or clientId later
+      VirtualField<ConsumerRecords<?, ?>, Consumer<?, ?>> consumerRecordsConsumer =
+          VirtualField.find(ConsumerRecords.class, Consumer.class);
+      consumerRecordsConsumer.set(records, consumer);
+
       Context parentContext = currentContext();
-      if (consumerReceiveInstrumenter().shouldStart(parentContext, records)) {
+      ConsumerAndRecord<ConsumerRecords<?, ?>> request =
+          ConsumerAndRecord.create(consumer, records);
+
+      if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
         // disable process tracing and store the receive span for each individual record too
         boolean previousValue = KafkaClientsConsumerProcessTracing.setEnabled(false);
         try {
@@ -100,15 +112,14 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
               InstrumenterUtil.startAndEnd(
                   consumerReceiveInstrumenter(),
                   parentContext,
-                  records,
+                  request,
                   null,
                   error,
                   timer.startTime(),
                   timer.now());
 
           // we're storing the context of the receive span so that process spans can use it as
-          // parent
-          // context even though the span has ended
+          // parent context even though the span has ended
           // this is the suggested behavior according to the spec batch receive scenario:
           // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#batch-receiving
           VirtualField<ConsumerRecords<?, ?>, Context> consumerRecordsContext =

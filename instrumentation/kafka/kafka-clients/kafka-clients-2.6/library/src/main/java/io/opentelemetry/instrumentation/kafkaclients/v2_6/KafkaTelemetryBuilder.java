@@ -11,6 +11,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.kafka.internal.ConsumerAndRecord;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +26,8 @@ public final class KafkaTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<ProducerRecord<?, ?>, RecordMetadata>>
       producerAttributesExtractors = new ArrayList<>();
-  private final List<AttributesExtractor<ConsumerRecord<?, ?>, Void>> consumerAttributesExtractors =
-      new ArrayList<>();
+  private final List<AttributesExtractor<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void>>
+      consumerAttributesExtractors = new ArrayList<>();
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
@@ -44,7 +45,7 @@ public final class KafkaTelemetryBuilder {
 
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder addConsumerAttributesExtractors(
-      AttributesExtractor<ConsumerRecord<?, ?>, Void> extractor) {
+      AttributesExtractor<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void> extractor) {
     consumerAttributesExtractors.add(extractor);
     return this;
   }

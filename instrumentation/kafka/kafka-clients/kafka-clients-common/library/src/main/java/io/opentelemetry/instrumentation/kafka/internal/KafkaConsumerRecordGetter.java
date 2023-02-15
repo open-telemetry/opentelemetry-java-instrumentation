@@ -13,24 +13,20 @@ import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public enum KafkaConsumerRecordGetter implements TextMapGetter<ConsumerRecord<?, ?>> {
+enum KafkaConsumerRecordGetter implements TextMapGetter<ConsumerAndRecord<ConsumerRecord<?, ?>>> {
   INSTANCE;
 
   @Override
-  public Iterable<String> keys(ConsumerRecord<?, ?> carrier) {
-    return StreamSupport.stream(carrier.headers().spliterator(), false)
+  public Iterable<String> keys(ConsumerAndRecord<ConsumerRecord<?, ?>> carrier) {
+    return StreamSupport.stream(carrier.record().headers().spliterator(), false)
         .map(Header::key)
         .collect(Collectors.toList());
   }
 
   @Nullable
   @Override
-  public String get(@Nullable ConsumerRecord<?, ?> carrier, String key) {
-    Header header = carrier.headers().lastHeader(key);
+  public String get(@Nullable ConsumerAndRecord<ConsumerRecord<?, ?>> carrier, String key) {
+    Header header = carrier.record().headers().lastHeader(key);
     if (header == null) {
       return null;
     }

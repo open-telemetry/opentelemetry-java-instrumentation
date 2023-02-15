@@ -8,14 +8,12 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerRecordGetter;
+import io.opentelemetry.instrumentation.kafka.internal.ConsumerAndRecord;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaHeadersSetter;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
@@ -43,20 +41,18 @@ import org.apache.kafka.common.metrics.MetricsReporter;
 public final class KafkaTelemetry {
   private static final Logger logger = Logger.getLogger(KafkaTelemetry.class.getName());
 
-  private static final TextMapGetter<ConsumerRecord<?, ?>> GETTER =
-      KafkaConsumerRecordGetter.INSTANCE;
-
   private static final TextMapSetter<Headers> SETTER = KafkaHeadersSetter.INSTANCE;
 
   private final OpenTelemetry openTelemetry;
   private final Instrumenter<ProducerRecord<?, ?>, RecordMetadata> producerInstrumenter;
-  private final Instrumenter<ConsumerRecord<?, ?>, Void> consumerProcessInstrumenter;
+  private final Instrumenter<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void>
+      consumerProcessInstrumenter;
   private final boolean producerPropagationEnabled;
 
   KafkaTelemetry(
       OpenTelemetry openTelemetry,
       Instrumenter<ProducerRecord<?, ?>, RecordMetadata> producerInstrumenter,
-      Instrumenter<ConsumerRecord<?, ?>, Void> consumerProcessInstrumenter,
+      Instrumenter<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void> consumerProcessInstrumenter,
       boolean producerPropagationEnabled) {
     this.openTelemetry = openTelemetry;
     this.producerInstrumenter = producerInstrumenter;
@@ -126,7 +122,7 @@ public final class KafkaTelemetry {
               // ConsumerRecords<K, V> poll(long timeout)
               // ConsumerRecords<K, V> poll(Duration duration)
               if ("poll".equals(method.getName()) && result instanceof ConsumerRecords) {
-                buildAndFinishSpan((ConsumerRecords) result);
+                buildAndFinishSpan(consumer, (ConsumerRecords) result);
               }
               return result;
             });
@@ -220,18 +216,16 @@ public final class KafkaTelemetry {
     }
   }
 
-  <K, V> void buildAndFinishSpan(ConsumerRecords<K, V> records) {
-    Context currentContext = Context.current();
+  <K, V> void buildAndFinishSpan(Consumer<K, V> consumer, ConsumerRecords<K, V> records) {
+    Context parentContext = Context.current();
     for (ConsumerRecord<K, V> record : records) {
-      Context linkedContext = propagator().extract(currentContext, record, GETTER);
-      Context newContext = currentContext.with(Span.fromContext(linkedContext));
-
-      if (!consumerProcessInstrumenter.shouldStart(newContext, record)) {
+      ConsumerAndRecord<ConsumerRecord<?, ?>> request = ConsumerAndRecord.create(consumer, record);
+      if (!consumerProcessInstrumenter.shouldStart(parentContext, request)) {
         continue;
       }
 
-      Context current = consumerProcessInstrumenter.start(newContext, record);
-      consumerProcessInstrumenter.end(current, record, null, null);
+      Context context = consumerProcessInstrumenter.start(parentContext, request);
+      consumerProcessInstrumenter.end(context, request, null, null);
     }
   }
 

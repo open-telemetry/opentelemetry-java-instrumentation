@@ -16,9 +16,11 @@ import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTra
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.Handler;
+import io.vertx.kafka.client.consumer.impl.KafkaReadStreamImpl;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
@@ -50,11 +52,13 @@ public class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static <K, V> void onEnter(
+        @Advice.This KafkaReadStreamImpl<K, V> readStream,
         @Advice.Argument(value = 0, readOnly = false) Handler<ConsumerRecord<K, V>> handler) {
 
+      Consumer<K, V> consumer = readStream.unwrap();
       VirtualField<ConsumerRecord<K, V>, Context> receiveContextField =
           VirtualField.find(ConsumerRecord.class, Context.class);
-      handler = new InstrumentedSingleRecordHandler<>(receiveContextField, handler);
+      handler = new InstrumentedSingleRecordHandler<>(receiveContextField, consumer, handler);
     }
   }
 
@@ -63,11 +67,13 @@ public class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static <K, V> void onEnter(
+        @Advice.This KafkaReadStreamImpl<K, V> readStream,
         @Advice.Argument(value = 0, readOnly = false) Handler<ConsumerRecords<K, V>> handler) {
 
+      Consumer<K, V> consumer = readStream.unwrap();
       VirtualField<ConsumerRecords<K, V>, Context> receiveContextField =
           VirtualField.find(ConsumerRecords.class, Context.class);
-      handler = new InstrumentedBatchRecordsHandler<>(receiveContextField, handler);
+      handler = new InstrumentedBatchRecordsHandler<>(receiveContextField, consumer, handler);
     }
   }
 

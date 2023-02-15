@@ -10,28 +10,35 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.kafka.v3_6.VertxK
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.kafka.internal.ConsumerAndRecord;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.vertx.core.Handler;
 import javax.annotation.Nullable;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 public final class InstrumentedBatchRecordsHandler<K, V> implements Handler<ConsumerRecords<K, V>> {
 
   private final VirtualField<ConsumerRecords<K, V>, Context> receiveContextField;
+  private final Consumer<K, V> kafkaConsumer;
   @Nullable private final Handler<ConsumerRecords<K, V>> delegate;
 
   public InstrumentedBatchRecordsHandler(
       VirtualField<ConsumerRecords<K, V>, Context> receiveContextField,
+      Consumer<K, V> kafkaConsumer,
       @Nullable Handler<ConsumerRecords<K, V>> delegate) {
     this.receiveContextField = receiveContextField;
+    this.kafkaConsumer = kafkaConsumer;
     this.delegate = delegate;
   }
 
   @Override
   public void handle(ConsumerRecords<K, V> records) {
     Context parentContext = getParentContext(records);
+    ConsumerAndRecord<ConsumerRecords<?, ?>> request =
+        ConsumerAndRecord.create(kafkaConsumer, records);
 
-    if (!batchProcessInstrumenter().shouldStart(parentContext, records)) {
+    if (!batchProcessInstrumenter().shouldStart(parentContext, request)) {
       callDelegateHandler(records);
       return;
     }
@@ -39,7 +46,7 @@ public final class InstrumentedBatchRecordsHandler<K, V> implements Handler<Cons
     // the instrumenter iterates over records when adding links, we need to suppress that
     boolean previousWrappingEnabled = KafkaClientsConsumerProcessTracing.setEnabled(false);
     try {
-      Context context = batchProcessInstrumenter().start(parentContext, records);
+      Context context = batchProcessInstrumenter().start(parentContext, request);
       Throwable error = null;
       try (Scope ignored = context.makeCurrent()) {
         callDelegateHandler(records);
@@ -47,7 +54,7 @@ public final class InstrumentedBatchRecordsHandler<K, V> implements Handler<Cons
         error = t;
         throw t;
       } finally {
-        batchProcessInstrumenter().end(context, records, null, error);
+        batchProcessInstrumenter().end(context, request, null, error);
       }
     } finally {
       KafkaClientsConsumerProcessTracing.setEnabled(previousWrappingEnabled);

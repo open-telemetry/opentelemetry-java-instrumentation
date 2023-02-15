@@ -14,9 +14,10 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 final class KafkaBatchProcessSpanLinksExtractor
-    implements SpanLinksExtractor<ConsumerRecords<?, ?>> {
+    implements SpanLinksExtractor<ConsumerAndRecord<ConsumerRecords<?, ?>>> {
 
-  private final SpanLinksExtractor<ConsumerRecord<?, ?>> singleRecordLinkExtractor;
+  private final SpanLinksExtractor<ConsumerAndRecord<ConsumerRecord<?, ?>>>
+      singleRecordLinkExtractor;
 
   KafkaBatchProcessSpanLinksExtractor(TextMapPropagator propagator) {
     this.singleRecordLinkExtractor =
@@ -25,12 +26,17 @@ final class KafkaBatchProcessSpanLinksExtractor
 
   @Override
   public void extract(
-      SpanLinksBuilder spanLinks, Context parentContext, ConsumerRecords<?, ?> records) {
+      SpanLinksBuilder spanLinks,
+      Context parentContext,
+      ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
 
-    for (ConsumerRecord<?, ?> record : records) {
+    for (ConsumerRecord<?, ?> record : consumerAndRecords.record()) {
       // explicitly passing root to avoid situation where context propagation is turned off and the
       // parent (CONSUMER receive) span is linked
-      singleRecordLinkExtractor.extract(spanLinks, Context.root(), record);
+      singleRecordLinkExtractor.extract(
+          spanLinks,
+          Context.root(),
+          ConsumerAndRecord.create(consumerAndRecords.consumer(), record));
     }
   }
 }
