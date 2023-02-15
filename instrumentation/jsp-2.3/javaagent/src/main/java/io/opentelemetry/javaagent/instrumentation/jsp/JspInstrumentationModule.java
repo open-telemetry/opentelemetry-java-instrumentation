@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class JspInstrumentationModule extends InstrumentationModule {
   public JspInstrumentationModule() {
-    super("jsp");
+    super("jsp", "jsp-2.3");
   }
 
   @Override

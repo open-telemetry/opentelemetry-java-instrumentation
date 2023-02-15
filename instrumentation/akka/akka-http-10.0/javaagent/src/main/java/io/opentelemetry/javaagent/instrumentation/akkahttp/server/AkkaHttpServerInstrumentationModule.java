@@ -26,7 +26,7 @@ import scala.runtime.AbstractFunction1;
 @AutoService(InstrumentationModule.class)
 public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
   public AkkaHttpServerInstrumentationModule() {
-    super("akka-http", "akka-http-server");
+    super("akka-http", "akka-http-10.0", "akka-http-server");
   }
 
   @Override

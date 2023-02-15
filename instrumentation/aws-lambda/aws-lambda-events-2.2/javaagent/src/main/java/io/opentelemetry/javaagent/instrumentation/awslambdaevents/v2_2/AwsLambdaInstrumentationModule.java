@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class AwsLambdaInstrumentationModule extends InstrumentationModule {
   public AwsLambdaInstrumentationModule() {
-    super("aws-lambda", "aws-lambda-events-2.2");
+    super("aws-lambda-events", "aws-lambda-events-2.2", "aws-lambda");
   }
 
   @Override

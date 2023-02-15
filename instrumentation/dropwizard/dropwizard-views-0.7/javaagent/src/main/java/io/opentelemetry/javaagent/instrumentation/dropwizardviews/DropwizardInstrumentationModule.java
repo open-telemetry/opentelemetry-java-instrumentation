@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class DropwizardInstrumentationModule extends InstrumentationModule {
   public DropwizardInstrumentationModule() {
-    super("dropwizard-views");
+    super("dropwizard-views", "dropwizard-views-0.7");
   }
 
   @Override
