@@ -77,7 +77,7 @@
   ([#7737](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7737))
 - Support slf4j to log4j2
   ([#7656](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7656))
-- Add net.host.port to the http.server.active_requests metric
+- Add `net.host.port` to the `http.server.active_requests` metric
   ([#7757](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7757))
 - Allow JDBC library instrumentation to use a custom OpenTelemetry instance to be more DI
   (e.g. Spring Boot) friendly
