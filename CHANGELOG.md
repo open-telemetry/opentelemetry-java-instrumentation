@@ -13,44 +13,44 @@
   [#7752](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7752),
   [#7764](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7764))
   - `io.opentelemetry.instrumentation.spring.web.SpringWebTelemetry`
-    -> `io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry`
+    → `io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry`
   - `io.opentelemetry.instrumentation.spring.webflux.SpringWebfluxTelemetry`
-    -> `io.opentelemetry.instrumentation.spring.webflux.v5_0.SpringWebfluxTelemetry`
+    → `io.opentelemetry.instrumentation.spring.webflux.v5_0.SpringWebfluxTelemetry`
   - `io.opentelemetry.instrumentation.spring.integration.SpringIntegrationTelemetry`
-    -> `io.opentelemetry.instrumentation.spring.integration.v4_1.SpringIntegrationTelemetry`
+    → `io.opentelemetry.instrumentation.spring.integration.v4_1.SpringIntegrationTelemetry`
   - `io.opentelemetry.instrumentation.logback.v1_0.OpenTelemetryAppender`
-    -> `io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender`
+    → `io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender`
   - `io.opentelemetry.instrumentation.apachedbcp.ApacheDbcpTelemetry`
-    -> `io.opentelemetry.instrumentation.apachedbcp.v2_0.ApacheDbcpTelemetry`
+    → `io.opentelemetry.instrumentation.apachedbcp.v2_0.ApacheDbcpTelemetry`
   - `io.opentelemetry.instrumentation.c3p0.C3p0Telemetry`
-    ->`io.opentelemetry.instrumentation.c3p0.v0_9.C3p0Telemetry`
+    → `io.opentelemetry.instrumentation.c3p0.v0_9.C3p0Telemetry`
   - `io.opentelemetry.instrumentation.graphql.GraphQLTelemetry`
-    ->`io.opentelemetry.instrumentation.graphql.v12_0.GraphQLTelemetry`
+    → `io.opentelemetry.instrumentation.graphql.v12_0.GraphQLTelemetry`
   - `io.opentelemetry.instrumentation.guava.GuavaAsyncOperationEndStrategy`
-    ->`io.opentelemetry.instrumentation.guava.v10_0.GuavaAsyncOperationEndStrategy`
+    → `io.opentelemetry.instrumentation.guava.v10_0.GuavaAsyncOperationEndStrategy`
   - `io.opentelemetry.instrumentation.hikaricp.HikariTelemetry`
-    ->`io.opentelemetry.instrumentation.hikaricp.v3_0.HikariTelemetry`
+    → `io.opentelemetry.instrumentation.hikaricp.v3_0.HikariTelemetry`
   - `io.opentelemetry.instrumentation.kafkaclients.KafkaTelemetry`
-    ->`io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry`
+    → `io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry`
   - `io.opentelemetry.instrumentation.oracleucp.OracleUcpTelemetry`
-    ->`io.opentelemetry.instrumentation.oracleucp.v11_2.OracleUcpTelemetry`
+    → `io.opentelemetry.instrumentation.oracleucp.v11_2.OracleUcpTelemetry`
   - `io.opentelemetry.instrumentation.ratpack.RatpackTelemetry`
-    ->`io.opentelemetry.instrumentation.ratpack.v1_7.RatpackTelemetry`
+    → `io.opentelemetry.instrumentation.ratpack.v1_7.RatpackTelemetry`
   - `io.opentelemetry.instrumentation.reactor.ContextPropagationOperator`
-    ->`io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator`
+    →` io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator`
   - `io.opentelemetry.instrumentation.viburdbcp.ViburTelemetry`
-    ->`io.opentelemetry.instrumentation.viburdbcp.v11_0.ViburTelemetry`
+    → `io.opentelemetry.instrumentation.viburdbcp.v11_0.ViburTelemetry`
 - Several instrumentation scope names have been fixed
   ([#7632](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7632))
-  - `io.opentelemetry.cxf-jaxrs-3.2` -> `io.opentelemetry.jaxrs-2.0-cxf-3.2`
-  - `io.opentelemetry.jersey-2.0` -> `io.opentelemetry.jaxrs-2.0-jersey-2.0`
+  - `io.opentelemetry.cxf-jaxrs-3.2` → `io.opentelemetry.jaxrs-2.0-cxf-3.2`
+  - `io.opentelemetry.jersey-2.0` → `io.opentelemetry.jaxrs-2.0-jersey-2.0`
     or `io.opentelemetry.jaxrs-3.0-jersey-3.0` as appropriate
-  - `io.opentelemetry.resteasy-3.0` -> `io.opentelemetry.jaxrs-2.0-resteasy-3.0`
-  - `io.opentelemetry.resteasy-3.1` -> `io.opentelemetry.jaxrs-2.0-resteasy-3.1`
-  - `io.opentelemetry.resteasy-6.0` -> `io.opentelemetry.jaxrs-3.0-resteasy-6.0`
-  - `io.opentelemetry.jws-1.1` -> `io.opentelemetry.jaxws-jws-api-1.1`
-  - `io.opentelemetry.vertx-kafka-client-3.5` -> `io.opentelemetry.vertx-kafka-client-3.6`
-  - `io.opentelemetry.hibernate-4.3` -> `io.opentelemetry.hibernate-procedure-call-4.3`
+  - `io.opentelemetry.resteasy-3.0` → `io.opentelemetry.jaxrs-2.0-resteasy-3.0`
+  - `io.opentelemetry.resteasy-3.1` → `io.opentelemetry.jaxrs-2.0-resteasy-3.1`
+  - `io.opentelemetry.resteasy-6.0` → `io.opentelemetry.jaxrs-3.0-resteasy-6.0`
+  - `io.opentelemetry.jws-1.1` → `io.opentelemetry.jaxws-jws-api-1.1`
+  - `io.opentelemetry.vertx-kafka-client-3.5` → `io.opentelemetry.vertx-kafka-client-3.6`
+  - `io.opentelemetry.hibernate-4.3` → `io.opentelemetry.hibernate-procedure-call-4.3`
 - All methods in all `*Getter` classes in `instrumentation-api-semconv` have been renamed
   to use the `get*()` naming scheme
   ([#7619](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7619))
@@ -769,15 +769,15 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
 - Micrometer instrumentation is now automatically applied to spring-boot-actuator apps
 - Some configuration properties have been renamed:
   * `otel.instrumentation.common.experimental.suppress-controller-spans`
-    -> `otel.instrumentation.common.experimental.controller-telemetry.enabled`
+    → `otel.instrumentation.common.experimental.controller-telemetry.enabled`
     (important: note that the meaning is inverted)
   * `otel.instrumentation.common.experimental.suppress-view-spans`
-    -> `otel.instrumentation.common.experimental.view-telemetry.enabled`
+    → `otel.instrumentation.common.experimental.view-telemetry.enabled`
     (important: note that the meaning is inverted)
   * `otel.instrumentation.netty.always-create-connect-span`
-    -> `otel.instrumentation.netty.connection-telemetry.enabled`
+    → `otel.instrumentation.netty.connection-telemetry.enabled`
   * `otel.instrumentation.reactor-netty.always-create-connect-span`
-    -> `otel.instrumentation.reactor-netty.connection-telemetry.enabled`
+    → `otel.instrumentation.reactor-netty.connection-telemetry.enabled`
 - Runtime memory metric names were updated to reflect
   [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/runtime-environment-metrics.md#jvm-metrics)
 - Micrometer library instrumentation has been deprecated as it has been moved to the core repo and
