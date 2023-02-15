@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.23.0 (2023-02-15)
+
 ### Migration notes
 
 - HTTP span names are now `"{http.method} {http.route}"` instead of just `"{http.route}"`,
