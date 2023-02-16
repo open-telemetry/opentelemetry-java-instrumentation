@@ -6,6 +6,9 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
+import java.util.Locale;
+import net.bytebuddy.agent.builder.AgentBuilder;
 
 public final class AgentConfig {
 
@@ -29,6 +32,16 @@ public final class AgentConfig {
 
   public static boolean isDebugModeEnabled(ConfigProperties config) {
     return config.getBoolean("otel.javaagent.debug", false);
+  }
+
+  public static AgentBuilder.RedefinitionStrategy redefinitionStrategy(ConfigProperties config) {
+    String strategy = config.getString("otel.redefinition.strategy", "retransformation");
+    try {
+      return AgentBuilder.RedefinitionStrategy.valueOf(strategy.toUpperCase(Locale.ROOT));
+    } catch (IllegalArgumentException e) {
+      throw new ConfigurationException(
+          "Unrecognized value for otel.redefinition.strategy: " + strategy, e);
+    }
   }
 
   private AgentConfig() {}
