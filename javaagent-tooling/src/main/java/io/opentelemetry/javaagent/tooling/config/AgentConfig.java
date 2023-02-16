@@ -38,7 +38,8 @@ public final class AgentConfig {
     try {
       return AgentBuilder.RedefinitionStrategy.valueOf(strategy.toUpperCase());
     } catch (IllegalArgumentException e) {
-      throw new ConfigurationException("Unrecognized value for otel.redefinition.strategy: " + strategy, e);
+      throw new ConfigurationException(
+          "Unrecognized value for otel.redefinition.strategy: " + strategy, e);
     }
   }
 

@@ -13,9 +13,9 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.javaagent.tooling.EmptyConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import java.util.TreeSet;
 import java.util.stream.Stream;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -67,15 +67,16 @@ class AgentConfigTest {
     when(config.getString("otel.redefinition.strategy", "retransformation"))
         .thenReturn("redefinition");
     assertEquals(
-        AgentBuilder.RedefinitionStrategy.REDEFINITION,
-        AgentConfig.redefinitionStrategy(config));
+        AgentBuilder.RedefinitionStrategy.REDEFINITION, AgentConfig.redefinitionStrategy(config));
 
     // miss typo
     when(config.getString("otel.redefinition.strategy", "retransformation"))
         .thenReturn("somethingElse");
-    assertThrows(ConfigurationException.class, () -> {
-      AgentConfig.redefinitionStrategy(config);
-    });
+    assertThrows(
+        ConfigurationException.class,
+        () -> {
+          AgentConfig.redefinitionStrategy(config);
+        });
   }
 
   private static class InstrumentationEnabledParams implements ArgumentsProvider {
