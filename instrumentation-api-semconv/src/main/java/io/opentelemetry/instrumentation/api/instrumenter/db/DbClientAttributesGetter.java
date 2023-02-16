@@ -21,36 +21,8 @@ import javax.annotation.Nullable;
 public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttributesGetter<REQUEST> {
 
   @Nullable
-  default String getStatement(REQUEST request) {
-    return statement(request);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getStatement(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String statement(REQUEST request) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
-  }
+  String getStatement(REQUEST request);
 
   @Nullable
-  default String getOperation(REQUEST request) {
-    return operation(request);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getOperation(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String operation(REQUEST request) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
-  }
+  String getOperation(REQUEST request);
 }

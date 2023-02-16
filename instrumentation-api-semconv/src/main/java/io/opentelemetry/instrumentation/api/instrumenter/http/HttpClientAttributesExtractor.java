@@ -32,35 +32,11 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
         REQUEST, RESPONSE, HttpClientAttributesGetter<REQUEST, RESPONSE>>
     implements SpanKeyProvider {
 
-  /**
-   * Creates the HTTP client attributes extractor with default configuration.
-   *
-   * @deprecated Use {@link #create(HttpClientAttributesGetter, NetClientAttributesGetter)} instead.
-   */
-  @Deprecated
-  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
-    return builder(getter).build();
-  }
-
   /** Creates the HTTP client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
     return builder(httpAttributesGetter, netAttributesGetter).build();
-  }
-
-  /**
-   * Returns a new {@link HttpClientAttributesExtractorBuilder} that can be used to configure the
-   * HTTP client attributes extractor.
-   *
-   * @deprecated Use {@link #builder(HttpClientAttributesGetter, NetClientAttributesGetter)}
-   *     instead.
-   */
-  @Deprecated
-  public static <REQUEST, RESPONSE> HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
-    return builder(httpAttributesGetter, new NoopNetClientAttributesGetter<>());
   }
 
   /**

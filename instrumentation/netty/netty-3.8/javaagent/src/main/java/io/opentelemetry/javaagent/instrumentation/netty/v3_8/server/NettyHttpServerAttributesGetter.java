@@ -52,12 +52,6 @@ final class NettyHttpServerAttributesGetter
   }
 
   @Override
-  @Nullable
-  public String getRoute(HttpRequestAndChannel requestAndChannel) {
-    return null;
-  }
-
-  @Override
   public String getScheme(HttpRequestAndChannel requestAndChannel) {
     return HttpSchemeUtil.getScheme(requestAndChannel);
   }

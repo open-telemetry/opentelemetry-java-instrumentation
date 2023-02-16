@@ -43,10 +43,6 @@ internal enum class KtorHttpServerAttributesGetter :
     return request.uri
   }
 
-  override fun getRoute(request: ApplicationRequest): String? {
-    return null
-  }
-
   override fun getScheme(request: ApplicationRequest): String {
     return request.origin.scheme
   }
