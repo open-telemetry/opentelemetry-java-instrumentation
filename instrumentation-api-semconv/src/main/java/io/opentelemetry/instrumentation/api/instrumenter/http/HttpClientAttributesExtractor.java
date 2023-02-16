@@ -151,26 +151,4 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   public SpanKey internalGetSpanKey() {
     return SpanKey.HTTP_CLIENT;
   }
-
-  private static final class NoopNetClientAttributesGetter<REQUEST, RESPONSE>
-      implements NetClientAttributesGetter<REQUEST, RESPONSE> {
-
-    @Nullable
-    @Override
-    public String getTransport(REQUEST request, @Nullable RESPONSE response) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public String getPeerName(REQUEST request) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public Integer getPeerPort(REQUEST request) {
-      return null;
-    }
-  }
 }
