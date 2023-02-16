@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.InjectionState;
-import net.bytebuddy.asm.Advice;
-import javax.servlet.ServletOutputStream;
-import java.io.IOException;
-
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.getSnippetInjectionHelper;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.Injection.getInjectionState;
+
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.InjectionState;
+import java.io.IOException;
+import javax.servlet.ServletOutputStream;
+import net.bytebuddy.asm.Advice;
 
 public class Servlet3OutputStreamWriteBytesAndOffsetAdvice {
   @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, suppress = Throwable.class)
