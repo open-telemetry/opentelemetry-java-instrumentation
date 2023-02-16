@@ -148,7 +148,7 @@ public class AgentInstaller {
     if (AgentConfig.isDebugModeEnabled(sdkConfig)) {
       agentBuilder =
           agentBuilder
-              .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+              .with(AgentConfig.redefinitionStrategy(sdkConfig))
               .with(new RedefinitionDiscoveryStrategy())
               .with(new RedefinitionLoggingListener())
               .with(new TransformLoggingListener());
