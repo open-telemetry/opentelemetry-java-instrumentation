@@ -271,7 +271,7 @@ The following table explains the used terms with more details.
 | DESCRIPTION | Any string to be used as human-readable [description](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-description) of the metric. If the description is not provided by the rule, an attempt will be made to extract one automatically from the corresponding MBean. |
 | UNIT | A string identifying the [unit](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-unit) of measurements reported by the metric. Enclose the string in single or double quotes if using unit annotations. |
 | STR | Any string to be used directly as the metric attribute value. |
-| BEANATTR | A non-empty string representing the MBean attribute defining the metric value. The attribute value must be a number. Special dot-notation _attributeName.itemName_ can be used to access numerical items within attributes of [CompositeType](https://docs.oracle.com/javase/8/docs/api/javax/management/openmbean/CompositeType.html). |
+| BEANATTR | A non-empty string representing the MBean attribute defining the metric value. The attribute value must be a number. Special dot-notation _attributeName.itemName_ can be used to access numerical items within attributes of [CompositeType](https://docs.oracle.com/javase/8/docs/api/javax/management/openmbean/CompositeType.html). If a dot happens to be an integral part of the MBean attribute name, it must be escaped by backslash (`\`). |
 
 ## Assumptions and Limitations
 
