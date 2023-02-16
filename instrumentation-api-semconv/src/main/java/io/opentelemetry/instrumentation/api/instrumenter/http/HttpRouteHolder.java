@@ -28,22 +28,6 @@ public final class HttpRouteHolder {
   /**
    * Returns a {@link ContextCustomizer} that initializes a {@link HttpRouteHolder} in the {@link
    * Context} returned from {@link Instrumenter#start(Context, Object)}.
-   *
-   * @deprecated Use {@link #create(HttpServerAttributesGetter)} instead.
-   */
-  @Deprecated
-  public static <REQUEST> ContextCustomizer<REQUEST> get() {
-    return (context, request, startAttributes) -> {
-      if (HttpRouteState.fromContextOrNull(context) != null) {
-        return context;
-      }
-      return context.with(HttpRouteState.create(null, null, 0));
-    };
-  }
-
-  /**
-   * Returns a {@link ContextCustomizer} that initializes a {@link HttpRouteHolder} in the {@link
-   * Context} returned from {@link Instrumenter#start(Context, Object)}.
    */
   public static <REQUEST> ContextCustomizer<REQUEST> create(
       HttpServerAttributesGetter<REQUEST, ?> getter) {
