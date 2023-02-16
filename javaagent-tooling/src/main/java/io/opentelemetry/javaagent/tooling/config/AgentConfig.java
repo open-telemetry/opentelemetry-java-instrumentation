@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import net.bytebuddy.agent.builder.AgentBuilder;
 
 public final class AgentConfig {
 
@@ -29,6 +30,11 @@ public final class AgentConfig {
 
   public static boolean isDebugModeEnabled(ConfigProperties config) {
     return config.getBoolean("otel.javaagent.debug", false);
+  }
+
+  public static AgentBuilder.RedefinitionStrategy redefinitionStrategy(ConfigProperties config) {
+    String strategy = config.getString("otel.redefinition.strategy", "retransformation");
+    return AgentBuilder.RedefinitionStrategy.valueOf(strategy.toUpperCase());
   }
 
   private AgentConfig() {}
