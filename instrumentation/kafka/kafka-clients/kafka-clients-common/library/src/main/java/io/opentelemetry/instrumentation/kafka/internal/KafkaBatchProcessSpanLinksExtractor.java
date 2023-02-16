@@ -11,12 +11,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 
-final class KafkaBatchProcessSpanLinksExtractor
-    implements SpanLinksExtractor<ConsumerRecords<?, ?>> {
+final class KafkaBatchProcessSpanLinksExtractor implements SpanLinksExtractor<KafkaBatchRequest> {
 
-  private final SpanLinksExtractor<ConsumerRecord<?, ?>> singleRecordLinkExtractor;
+  private final SpanLinksExtractor<KafkaConsumerRequest> singleRecordLinkExtractor;
 
   KafkaBatchProcessSpanLinksExtractor(TextMapPropagator propagator) {
     this.singleRecordLinkExtractor =
@@ -25,12 +23,13 @@ final class KafkaBatchProcessSpanLinksExtractor
 
   @Override
   public void extract(
-      SpanLinksBuilder spanLinks, Context parentContext, ConsumerRecords<?, ?> records) {
+      SpanLinksBuilder spanLinks, Context parentContext, KafkaBatchRequest request) {
 
-    for (ConsumerRecord<?, ?> record : records) {
+    for (ConsumerRecord<?, ?> record : request.getConsumerRecords()) {
       // explicitly passing root to avoid situation where context propagation is turned off and the
       // parent (CONSUMER receive) span is linked
-      singleRecordLinkExtractor.extract(spanLinks, Context.root(), record);
+      KafkaConsumerRequest consumerRequest = new KafkaConsumerRequest(record, null, null);
+      singleRecordLinkExtractor.extract(spanLinks, Context.root(), consumerRequest);
     }
   }
 }

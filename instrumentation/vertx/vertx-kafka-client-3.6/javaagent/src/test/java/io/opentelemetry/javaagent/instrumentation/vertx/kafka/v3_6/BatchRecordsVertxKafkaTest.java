@@ -71,6 +71,7 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          equalTo(SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID, "producer-1"),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
@@ -85,6 +86,7 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          equalTo(SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID, "producer-1"),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
@@ -202,6 +204,7 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          equalTo(SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID, "producer-1"),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),

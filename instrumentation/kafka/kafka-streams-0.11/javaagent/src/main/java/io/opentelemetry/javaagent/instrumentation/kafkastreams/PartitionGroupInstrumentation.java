@@ -15,6 +15,8 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerRequest;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -56,17 +58,22 @@ public class PartitionGroupInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context receiveContext =
-          VirtualField.find(ConsumerRecord.class, Context.class).get(record.value);
+      KafkaConsumerContext consumerContext =
+          VirtualField.find(ConsumerRecord.class, KafkaConsumerContext.class).get(record.value);
+      Context receiveContext = consumerContext != null ? consumerContext.getContext() : null;
 
       // use the receive CONSUMER span as parent if it's available
       Context parentContext = receiveContext != null ? receiveContext : currentContext();
+      String consumerGroup = consumerContext != null ? consumerContext.getConsumerGroup() : null;
+      String clientId = consumerContext != null ? consumerContext.getClientId() : null;
 
-      if (!instrumenter().shouldStart(parentContext, record.value)) {
+      KafkaConsumerRequest request =
+          new KafkaConsumerRequest(record.value, consumerGroup, clientId);
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
-      Context context = instrumenter().start(parentContext, record.value);
-      holder.set(record.value, context, context.makeCurrent());
+      Context context = instrumenter().start(parentContext, request);
+      holder.set(request, context, context.makeCurrent());
     }
   }
 }

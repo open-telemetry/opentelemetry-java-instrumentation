@@ -109,6 +109,9 @@ class KafkaIntegrationTest {
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             satisfies(
+                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("producer")),
+                            satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
@@ -123,6 +126,9 @@ class KafkaIntegrationTest {
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                            satisfies(
+                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("consumer")),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                                 AbstractLongAssert::isNotNegative),

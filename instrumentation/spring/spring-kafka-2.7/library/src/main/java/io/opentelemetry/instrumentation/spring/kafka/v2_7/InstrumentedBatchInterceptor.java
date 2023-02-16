@@ -9,6 +9,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaBatchRequest;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -16,16 +18,16 @@ import org.springframework.kafka.listener.BatchInterceptor;
 
 final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V> {
 
-  private static final VirtualField<ConsumerRecords<?, ?>, Context> receiveContextField =
-      VirtualField.find(ConsumerRecords.class, Context.class);
-  private static final VirtualField<ConsumerRecords<?, ?>, State<ConsumerRecords<?, ?>>>
-      stateField = VirtualField.find(ConsumerRecords.class, State.class);
+  private static final VirtualField<ConsumerRecords<?, ?>, KafkaConsumerContext>
+      receiveContextField = VirtualField.find(ConsumerRecords.class, KafkaConsumerContext.class);
+  private static final VirtualField<ConsumerRecords<?, ?>, State<KafkaBatchRequest>> stateField =
+      VirtualField.find(ConsumerRecords.class, State.class);
 
-  private final Instrumenter<ConsumerRecords<?, ?>, Void> batchProcessInstrumenter;
+  private final Instrumenter<KafkaBatchRequest, Void> batchProcessInstrumenter;
   @Nullable private final BatchInterceptor<K, V> decorated;
 
   InstrumentedBatchInterceptor(
-      Instrumenter<ConsumerRecords<?, ?>, Void> batchProcessInstrumenter,
+      Instrumenter<KafkaBatchRequest, Void> batchProcessInstrumenter,
       @Nullable BatchInterceptor<K, V> decorated) {
     this.batchProcessInstrumenter = batchProcessInstrumenter;
     this.decorated = decorated;
@@ -33,22 +35,22 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
 
   @Override
   public ConsumerRecords<K, V> intercept(ConsumerRecords<K, V> records, Consumer<K, V> consumer) {
-    Context parentContext = getParentContext(records);
+    KafkaConsumerContext consumerContext = receiveContextField.get(records);
+    Context receiveContext = consumerContext != null ? consumerContext.getContext() : null;
+    // use the receive CONSUMER span as parent if it's available
+    Context parentContext = receiveContext != null ? receiveContext : Context.current();
+    String consumerGroup = consumerContext != null ? consumerContext.getConsumerGroup() : null;
+    // XXX
+    String clientId = consumerContext != null ? consumerContext.getClientId() : null;
 
-    if (batchProcessInstrumenter.shouldStart(parentContext, records)) {
-      Context context = batchProcessInstrumenter.start(parentContext, records);
+    KafkaBatchRequest batchRequest = new KafkaBatchRequest(records, consumerGroup, clientId);
+    if (batchProcessInstrumenter.shouldStart(parentContext, batchRequest)) {
+      Context context = batchProcessInstrumenter.start(parentContext, batchRequest);
       Scope scope = context.makeCurrent();
-      stateField.set(records, State.create(records, context, scope));
+      stateField.set(records, State.create(batchRequest, context, scope));
     }
 
     return decorated == null ? records : decorated.intercept(records, consumer);
-  }
-
-  private Context getParentContext(ConsumerRecords<K, V> records) {
-    Context receiveContext = receiveContextField.get(records);
-
-    // use the receive CONSUMER span as parent if it's available
-    return receiveContext != null ? receiveContext : Context.current();
   }
 
   @Override
@@ -68,7 +70,7 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   }
 
   private void end(ConsumerRecords<K, V> records, @Nullable Throwable error) {
-    State<ConsumerRecords<?, ?>> state = stateField.get(records);
+    State<KafkaBatchRequest> state = stateField.get(records);
     stateField.set(records, null);
     if (state != null) {
       state.scope().close();

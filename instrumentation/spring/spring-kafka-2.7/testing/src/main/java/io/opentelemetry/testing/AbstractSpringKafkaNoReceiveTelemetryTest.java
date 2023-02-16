@@ -51,6 +51,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     "testSingleTopic"),
                                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                                 satisfies(
+                                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                    stringAssert -> stringAssert.startsWith("producer")),
+                                satisfies(
                                     SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                     AbstractLongAssert::isNotNegative),
                                 satisfies(
@@ -67,6 +70,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     "testSingleTopic"),
                                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                                satisfies(
+                                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                    stringAssert -> stringAssert.startsWith("consumer")),
                                 satisfies(
                                     SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                                     AbstractLongAssert::isNotNegative),
@@ -108,6 +114,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     "testSingleTopic"),
                                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                                 satisfies(
+                                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                    stringAssert -> stringAssert.startsWith("producer")),
+                                satisfies(
                                     SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                     AbstractLongAssert::isNotNegative),
                                 satisfies(
@@ -126,6 +135,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     "testSingleTopic"),
                                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                                satisfies(
+                                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                    stringAssert -> stringAssert.startsWith("consumer")),
                                 satisfies(
                                     SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                                     AbstractLongAssert::isNotNegative),
@@ -164,6 +176,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                   SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                               satisfies(
+                                  SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                  stringAssert -> stringAssert.startsWith("producer")),
+                              satisfies(
                                   SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                   AbstractLongAssert::isNotNegative),
                               satisfies(
@@ -178,6 +193,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(
                                   SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                              satisfies(
+                                  SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                  stringAssert -> stringAssert.startsWith("producer")),
                               satisfies(
                                   SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                   AbstractLongAssert::isNotNegative),
@@ -238,6 +256,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(
                                   SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                              satisfies(
+                                  SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                  stringAssert -> stringAssert.startsWith("producer")),
                               satisfies(
                                   SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                   AbstractLongAssert::isNotNegative),

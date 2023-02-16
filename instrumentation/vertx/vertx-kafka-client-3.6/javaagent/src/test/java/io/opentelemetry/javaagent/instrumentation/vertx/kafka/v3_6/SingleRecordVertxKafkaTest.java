@@ -72,6 +72,9 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
+                              SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                              stringAssert -> stringAssert.startsWith("producer")),
+                          satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
                           satisfies(
@@ -146,6 +149,9 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          satisfies(
+                              SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                              stringAssert -> stringAssert.startsWith("producer")),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),

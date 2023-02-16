@@ -13,82 +13,83 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
 
 enum KafkaBatchProcessAttributesGetter
-    implements MessagingAttributesGetter<ConsumerRecords<?, ?>, Void> {
+    implements MessagingAttributesGetter<KafkaBatchRequest, Void> {
   INSTANCE;
 
   @Override
-  public String getSystem(ConsumerRecords<?, ?> records) {
+  public String getSystem(KafkaBatchRequest request) {
     return "kafka";
   }
 
   @Override
-  public String getDestinationKind(ConsumerRecords<?, ?> records) {
+  public String getDestinationKind(KafkaBatchRequest request) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Nullable
   @Override
-  public String getDestination(ConsumerRecords<?, ?> records) {
+  public String getDestination(KafkaBatchRequest request) {
     Set<String> topics =
-        records.partitions().stream().map(TopicPartition::topic).collect(Collectors.toSet());
+        request.getConsumerRecords().partitions().stream()
+            .map(TopicPartition::topic)
+            .collect(Collectors.toSet());
     // only return topic when there's exactly one in the batch
     return topics.size() == 1 ? topics.iterator().next() : null;
   }
 
   @Override
-  public boolean isTemporaryDestination(ConsumerRecords<?, ?> records) {
+  public boolean isTemporaryDestination(KafkaBatchRequest request) {
     return false;
   }
 
   @Nullable
   @Override
-  public String getProtocol(ConsumerRecords<?, ?> records) {
+  public String getProtocol(KafkaBatchRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getProtocolVersion(ConsumerRecords<?, ?> records) {
+  public String getProtocolVersion(KafkaBatchRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getUrl(ConsumerRecords<?, ?> records) {
+  public String getUrl(KafkaBatchRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getConversationId(ConsumerRecords<?, ?> records) {
+  public String getConversationId(KafkaBatchRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long getMessagePayloadSize(ConsumerRecords<?, ?> records) {
+  public Long getMessagePayloadSize(KafkaBatchRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long getMessagePayloadCompressedSize(ConsumerRecords<?, ?> records) {
+  public Long getMessagePayloadCompressedSize(KafkaBatchRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getMessageId(ConsumerRecords<?, ?> records, @Nullable Void unused) {
+  public String getMessageId(KafkaBatchRequest request, @Nullable Void unused) {
     return null;
   }
 
   @Override
-  public List<String> getMessageHeader(ConsumerRecords<?, ?> records, String name) {
-    return StreamSupport.stream(records.spliterator(), false)
+  public List<String> getMessageHeader(KafkaBatchRequest request, String name) {
+    return StreamSupport.stream(request.getConsumerRecords().spliterator(), false)
         .flatMap(
             consumerRecord ->
                 StreamSupport.stream(consumerRecord.headers().headers(name).spliterator(), false))

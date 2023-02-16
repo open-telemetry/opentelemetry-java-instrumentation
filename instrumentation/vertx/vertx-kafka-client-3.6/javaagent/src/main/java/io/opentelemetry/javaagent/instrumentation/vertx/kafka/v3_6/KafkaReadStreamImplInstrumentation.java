@@ -10,8 +10,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -52,8 +52,8 @@ public class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
     public static <K, V> void onEnter(
         @Advice.Argument(value = 0, readOnly = false) Handler<ConsumerRecord<K, V>> handler) {
 
-      VirtualField<ConsumerRecord<K, V>, Context> receiveContextField =
-          VirtualField.find(ConsumerRecord.class, Context.class);
+      VirtualField<ConsumerRecord<K, V>, KafkaConsumerContext> receiveContextField =
+          VirtualField.find(ConsumerRecord.class, KafkaConsumerContext.class);
       handler = new InstrumentedSingleRecordHandler<>(receiveContextField, handler);
     }
   }
@@ -65,8 +65,8 @@ public class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
     public static <K, V> void onEnter(
         @Advice.Argument(value = 0, readOnly = false) Handler<ConsumerRecords<K, V>> handler) {
 
-      VirtualField<ConsumerRecords<K, V>, Context> receiveContextField =
-          VirtualField.find(ConsumerRecords.class, Context.class);
+      VirtualField<ConsumerRecords<K, V>, KafkaConsumerContext> receiveContextField =
+          VirtualField.find(ConsumerRecords.class, KafkaConsumerContext.class);
       handler = new InstrumentedBatchRecordsHandler<>(receiveContextField, handler);
     }
   }

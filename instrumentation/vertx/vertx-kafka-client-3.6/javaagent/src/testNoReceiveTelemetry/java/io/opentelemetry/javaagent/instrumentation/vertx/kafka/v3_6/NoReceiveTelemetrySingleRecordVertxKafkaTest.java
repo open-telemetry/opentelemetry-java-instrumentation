@@ -65,6 +65,9 @@ class NoReceiveTelemetrySingleRecordVertxKafkaTest extends AbstractVertxKafkaTes
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             satisfies(
+                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("producer")),
+                            satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
@@ -118,6 +121,9 @@ class NoReceiveTelemetrySingleRecordVertxKafkaTest extends AbstractVertxKafkaTes
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                            satisfies(
+                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("producer")),
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                 AbstractLongAssert::isNotNegative),

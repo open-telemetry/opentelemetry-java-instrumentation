@@ -13,7 +13,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
@@ -21,7 +20,7 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  * any time.
  */
 final class KafkaProducerAdditionalAttributesExtractor
-    implements AttributesExtractor<ProducerRecord<?, ?>, RecordMetadata> {
+    implements AttributesExtractor<KafkaProducerRequest, RecordMetadata> {
 
   // TODO: remove this constant when this attribute appears in SemanticAttributes
   private static final AttributeKey<Long> MESSAGING_KAFKA_MESSAGE_OFFSET =
@@ -29,17 +28,18 @@ final class KafkaProducerAdditionalAttributesExtractor
 
   @Override
   public void onStart(
-      AttributesBuilder attributes, Context parentContext, ProducerRecord<?, ?> producerRecord) {
-    if (producerRecord.value() == null) {
+      AttributesBuilder attributes, Context parentContext, KafkaProducerRequest request) {
+    if (request.getProducerRecord().value() == null) {
       attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
+    attributes.put(SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID, request.getClientId());
   }
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      ProducerRecord<?, ?> producerRecord,
+      KafkaProducerRequest request,
       @Nullable RecordMetadata recordMetadata,
       @Nullable Throwable error) {
 

@@ -12,80 +12,80 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public enum KafkaConsumerAttributesGetter
-    implements MessagingAttributesGetter<ConsumerRecord<?, ?>, Void> {
+    implements MessagingAttributesGetter<KafkaConsumerRequest, Void> {
   INSTANCE;
 
   @Override
-  public String getSystem(ConsumerRecord<?, ?> consumerRecord) {
+  public String getSystem(KafkaConsumerRequest request) {
     return "kafka";
   }
 
   @Override
-  public String getDestinationKind(ConsumerRecord<?, ?> consumerRecord) {
+  public String getDestinationKind(KafkaConsumerRequest request) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Override
-  public String getDestination(ConsumerRecord<?, ?> consumerRecord) {
-    return consumerRecord.topic();
+  public String getDestination(KafkaConsumerRequest request) {
+    return request.getConsumerRecord().topic();
   }
 
   @Override
-  public boolean isTemporaryDestination(ConsumerRecord<?, ?> consumerRecord) {
+  public boolean isTemporaryDestination(KafkaConsumerRequest request) {
     return false;
   }
 
   @Override
   @Nullable
-  public String getProtocol(ConsumerRecord<?, ?> consumerRecord) {
+  public String getProtocol(KafkaConsumerRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getProtocolVersion(ConsumerRecord<?, ?> consumerRecord) {
+  public String getProtocolVersion(KafkaConsumerRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getUrl(ConsumerRecord<?, ?> consumerRecord) {
+  public String getUrl(KafkaConsumerRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getConversationId(ConsumerRecord<?, ?> consumerRecord) {
+  public String getConversationId(KafkaConsumerRequest request) {
     return null;
   }
 
   @Override
-  public Long getMessagePayloadSize(ConsumerRecord<?, ?> consumerRecord) {
-    return (long) consumerRecord.serializedValueSize();
+  public Long getMessagePayloadSize(KafkaConsumerRequest request) {
+    return (long) request.getConsumerRecord().serializedValueSize();
   }
 
   @Override
   @Nullable
-  public Long getMessagePayloadCompressedSize(ConsumerRecord<?, ?> consumerRecord) {
+  public Long getMessagePayloadCompressedSize(KafkaConsumerRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getMessageId(ConsumerRecord<?, ?> consumerRecord, @Nullable Void unused) {
+  public String getMessageId(KafkaConsumerRequest request, @Nullable Void unused) {
     return null;
   }
 
   @Override
-  public List<String> getMessageHeader(ConsumerRecord<?, ?> consumerRecord, String name) {
-    return StreamSupport.stream(consumerRecord.headers().headers(name).spliterator(), false)
+  public List<String> getMessageHeader(KafkaConsumerRequest request, String name) {
+    return StreamSupport.stream(
+            request.getConsumerRecord().headers().headers(name).spliterator(), false)
         .map(header -> new String(header.value(), StandardCharsets.UTF_8))
         .collect(Collectors.toList());
   }

@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.kafka.internal;
 
-import static io.opentelemetry.api.common.AttributeKey.longKey;
-
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -20,28 +17,29 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
  * any time.
  */
 public final class KafkaConsumerAdditionalAttributesExtractor
-    implements AttributesExtractor<ConsumerRecord<?, ?>, Void> {
-
-  // TODO: remove this constant when this attribute appears in SemanticAttributes
-  private static final AttributeKey<Long> MESSAGING_KAFKA_MESSAGE_OFFSET =
-      longKey("messaging.kafka.message.offset");
+    implements AttributesExtractor<KafkaConsumerRequest, Void> {
 
   @Override
   public void onStart(
-      AttributesBuilder attributes, Context parentContext, ConsumerRecord<?, ?> consumerRecord) {
+      AttributesBuilder attributes, Context parentContext, KafkaConsumerRequest request) {
+    ConsumerRecord<?, ?> consumerRecord = request.getConsumerRecord();
     attributes.put(
         SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION, (long) consumerRecord.partition());
-    attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, consumerRecord.offset());
+    attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, consumerRecord.offset());
     if (consumerRecord.value() == null) {
       attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
+
+    attributes.put(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, request.getConsumerGroup());
+    attributes.put(SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID, request.getClientId());
+    attributes.put(SemanticAttributes.MESSAGING_CONSUMER_ID, request.getConsumerId());
   }
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      ConsumerRecord<?, ?> consumerRecord,
+      KafkaConsumerRequest request,
       @Nullable Void unused,
       @Nullable Throwable error) {}
 }

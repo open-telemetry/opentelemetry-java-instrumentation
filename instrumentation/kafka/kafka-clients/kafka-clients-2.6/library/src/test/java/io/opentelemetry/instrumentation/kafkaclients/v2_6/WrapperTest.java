@@ -87,6 +87,7 @@ class WrapperTest extends KafkaClientBaseTest {
                 span.hasName(SHARED_TOPIC + " send")
                     .hasKind(SpanKind.PRODUCER)
                     .hasParent(trace.getSpan(0))
+                    // XXX hasAttributesSatisfyingExactly
                     .hasAttributesSatisfying(
                         equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                         equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),

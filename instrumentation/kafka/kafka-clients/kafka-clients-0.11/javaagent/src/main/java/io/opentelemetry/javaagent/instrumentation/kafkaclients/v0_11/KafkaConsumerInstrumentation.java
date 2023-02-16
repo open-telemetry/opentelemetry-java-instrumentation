@@ -18,6 +18,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafka.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -82,10 +83,13 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
+        // @Advice.FieldValue("consumerGroup") String consumerGroup,
+        @Advice.FieldValue("clientId") String clientId,
         @Advice.Enter Timer timer,
         @Advice.Return ConsumerRecords<?, ?> records,
         @Advice.Thrown Throwable error) {
 
+      String consumerGroup = null;
       // don't create spans when no records were received
       if (records == null || records.isEmpty()) {
         return;
@@ -106,19 +110,20 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
                   timer.startTime(),
                   timer.now());
 
+          KafkaConsumerContext consumerContext =
+              new KafkaConsumerContext(context, consumerGroup, clientId);
           // we're storing the context of the receive span so that process spans can use it as
-          // parent
-          // context even though the span has ended
+          // parent context even though the span has ended
           // this is the suggested behavior according to the spec batch receive scenario:
           // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#batch-receiving
-          VirtualField<ConsumerRecords<?, ?>, Context> consumerRecordsContext =
-              VirtualField.find(ConsumerRecords.class, Context.class);
-          consumerRecordsContext.set(records, context);
+          VirtualField<ConsumerRecords<?, ?>, KafkaConsumerContext> consumerRecordsContext =
+              VirtualField.find(ConsumerRecords.class, KafkaConsumerContext.class);
+          consumerRecordsContext.set(records, consumerContext);
 
-          VirtualField<ConsumerRecord<?, ?>, Context> consumerRecordContext =
-              VirtualField.find(ConsumerRecord.class, Context.class);
+          VirtualField<ConsumerRecord<?, ?>, KafkaConsumerContext> consumerRecordContext =
+              VirtualField.find(ConsumerRecord.class, KafkaConsumerContext.class);
           for (ConsumerRecord<?, ?> record : records) {
-            consumerRecordContext.set(record, context);
+            consumerRecordContext.set(record, consumerContext);
           }
         } finally {
           KafkaClientsConsumerProcessTracing.setEnabled(previousValue);

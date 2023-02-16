@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaBatchRequest;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerRequest;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.BatchInterceptor;
 import org.springframework.kafka.listener.RecordInterceptor;
@@ -30,12 +30,12 @@ public final class SpringKafkaTelemetry {
     return new SpringKafkaTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<ConsumerRecord<?, ?>, Void> processInstrumenter;
-  private final Instrumenter<ConsumerRecords<?, ?>, Void> batchProcessInstrumenter;
+  private final Instrumenter<KafkaConsumerRequest, Void> processInstrumenter;
+  private final Instrumenter<KafkaBatchRequest, Void> batchProcessInstrumenter;
 
   SpringKafkaTelemetry(
-      Instrumenter<ConsumerRecord<?, ?>, Void> processInstrumenter,
-      Instrumenter<ConsumerRecords<?, ?>, Void> batchProcessInstrumenter) {
+      Instrumenter<KafkaConsumerRequest, Void> processInstrumenter,
+      Instrumenter<KafkaBatchRequest, Void> batchProcessInstrumenter) {
     this.processInstrumenter = processInstrumenter;
     this.batchProcessInstrumenter = batchProcessInstrumenter;
   }
