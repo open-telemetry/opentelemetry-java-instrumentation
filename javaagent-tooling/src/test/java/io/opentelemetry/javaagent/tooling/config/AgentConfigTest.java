@@ -7,12 +7,17 @@ package io.opentelemetry.javaagent.tooling.config;
 
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.javaagent.tooling.EmptyConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import java.util.TreeSet;
 import java.util.stream.Stream;
+import net.bytebuddy.agent.builder.AgentBuilder;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -40,6 +45,38 @@ class AgentConfigTest {
         expected,
         AgentConfig.isInstrumentationEnabled(
             config, new TreeSet<>(asList("first", "second")), defaultEnabled));
+  }
+
+  @Test
+  void testInstrumentationStrategy() {
+    // default
+    assertEquals(
+        AgentBuilder.RedefinitionStrategy.RETRANSFORMATION,
+        AgentConfig.redefinitionStrategy(EmptyConfigProperties.INSTANCE));
+
+    ConfigProperties config = mock(ConfigProperties.class);
+
+    // explicit default
+    when(config.getString("otel.redefinition.strategy", "retransformation"))
+        .thenReturn("retransformation");
+    assertEquals(
+        AgentBuilder.RedefinitionStrategy.RETRANSFORMATION,
+        AgentConfig.redefinitionStrategy(config));
+
+    // explicit redefinition
+    when(config.getString("otel.redefinition.strategy", "retransformation"))
+        .thenReturn("redefinition");
+    assertEquals(
+        AgentBuilder.RedefinitionStrategy.REDEFINITION, AgentConfig.redefinitionStrategy(config));
+
+    // miss typo
+    when(config.getString("otel.redefinition.strategy", "retransformation"))
+        .thenReturn("somethingElse");
+    assertThrows(
+        ConfigurationException.class,
+        () -> {
+          AgentConfig.redefinitionStrategy(config);
+        });
   }
 
   private static class InstrumentationEnabledParams implements ArgumentsProvider {
