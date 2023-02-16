@@ -5,34 +5,35 @@
 
 package io.opentelemetry.instrumentation.kafka.internal;
 
-import static io.opentelemetry.api.common.AttributeKey.longKey;
-
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-final class KafkaProducerAdditionalAttributesExtractor
+final class KafkaProducerAttributesExtractor
     implements AttributesExtractor<ProducerRecord<?, ?>, RecordMetadata> {
-
-  // TODO: remove this constant when this attribute appears in SemanticAttributes
-  private static final AttributeKey<Long> MESSAGING_KAFKA_MESSAGE_OFFSET =
-      longKey("messaging.kafka.message.offset");
 
   @Override
   public void onStart(
-      AttributesBuilder attributes, Context parentContext, ProducerRecord<?, ?> producerRecord) {
-    if (producerRecord.value() == null) {
+      AttributesBuilder attributes, Context parentContext, ProducerRecord<?, ?> record) {
+
+    Object key = record.key();
+    if (key != null && canSerialize(key.getClass())) {
+      attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, key.toString());
+    }
+    if (record.value() == null) {
       attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
+  }
+
+  private static boolean canSerialize(Class<?> keyClass) {
+    // we make a simple assumption here that we can serialize keys by simply calling toString()
+    // and that does not work for byte[] or ByteBuffer
+    return !(keyClass.isArray() || keyClass == ByteBuffer.class);
   }
 
   @Override
@@ -46,7 +47,7 @@ final class KafkaProducerAdditionalAttributesExtractor
     if (recordMetadata != null) {
       attributes.put(
           SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION, recordMetadata.partition());
-      attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, recordMetadata.offset());
+      attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, recordMetadata.offset());
     }
   }
 }

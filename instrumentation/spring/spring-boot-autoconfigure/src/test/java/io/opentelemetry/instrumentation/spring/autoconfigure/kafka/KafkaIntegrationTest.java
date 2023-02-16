@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.kafka;
 
-import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
@@ -47,7 +46,7 @@ class KafkaIntegrationTest {
   @BeforeAll
   static void setUpKafka() {
     kafka =
-        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"))
+        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.1.9"))
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
     kafka.start();
@@ -112,8 +111,9 @@ class KafkaIntegrationTest {
                                 SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                longKey("messaging.kafka.message.offset"),
-                                AbstractLongAssert::isNotNegative)),
+                                SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
+                                AbstractLongAssert::isNotNegative),
+                            equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10")),
                 span ->
                     span.hasName("testTopic process")
                         .hasKind(SpanKind.CONSUMER)
@@ -130,8 +130,11 @@ class KafkaIntegrationTest {
                                 SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                longKey("messaging.kafka.message.offset"),
-                                AbstractLongAssert::isNotNegative)),
+                                SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
+                                AbstractLongAssert::isNotNegative),
+                            equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10"),
+                            equalTo(
+                                SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "testListener")),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 

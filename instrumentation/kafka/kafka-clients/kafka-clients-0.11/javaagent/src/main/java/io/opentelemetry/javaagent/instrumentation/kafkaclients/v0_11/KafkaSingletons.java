@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.kafka.internal.ConsumerAndRecord;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
@@ -34,8 +35,10 @@ public final class KafkaSingletons {
           .getBoolean("otel.instrumentation.kafka.metric-reporter.enabled", true);
 
   private static final Instrumenter<ProducerRecord<?, ?>, RecordMetadata> PRODUCER_INSTRUMENTER;
-  private static final Instrumenter<ConsumerRecords<?, ?>, Void> CONSUMER_RECEIVE_INSTRUMENTER;
-  private static final Instrumenter<ConsumerRecord<?, ?>, Void> CONSUMER_PROCESS_INSTRUMENTER;
+  private static final Instrumenter<ConsumerAndRecord<ConsumerRecords<?, ?>>, Void>
+      CONSUMER_RECEIVE_INSTRUMENTER;
+  private static final Instrumenter<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void>
+      CONSUMER_PROCESS_INSTRUMENTER;
 
   static {
     KafkaInstrumenterFactory instrumenterFactory =
@@ -59,11 +62,13 @@ public final class KafkaSingletons {
     return PRODUCER_INSTRUMENTER;
   }
 
-  public static Instrumenter<ConsumerRecords<?, ?>, Void> consumerReceiveInstrumenter() {
+  public static Instrumenter<ConsumerAndRecord<ConsumerRecords<?, ?>>, Void>
+      consumerReceiveInstrumenter() {
     return CONSUMER_RECEIVE_INSTRUMENTER;
   }
 
-  public static Instrumenter<ConsumerRecord<?, ?>, Void> consumerProcessInstrumenter() {
+  public static Instrumenter<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void>
+      consumerProcessInstrumenter() {
     return CONSUMER_PROCESS_INSTRUMENTER;
   }
 

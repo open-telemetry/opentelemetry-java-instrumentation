@@ -15,6 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.kafka.internal.ConsumerAndRecord;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -61,11 +62,13 @@ public class PartitionGroupInstrumentation implements TypeInstrumentation {
 
       // use the receive CONSUMER span as parent if it's available
       Context parentContext = receiveContext != null ? receiveContext : currentContext();
+      ConsumerAndRecord<ConsumerRecord<?, ?>> request =
+          ConsumerAndRecord.create(null, record.value);
 
-      if (!instrumenter().shouldStart(parentContext, record.value)) {
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
-      Context context = instrumenter().start(parentContext, record.value);
+      Context context = instrumenter().start(parentContext, request);
       holder.set(record.value, context, context.makeCurrent());
     }
   }

@@ -5,18 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka.v3_6;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -42,13 +37,10 @@ class NoReceiveTelemetrySingleRecordVertxKafkaTest extends AbstractVertxKafkaTes
   void shouldCreateSpansForSingleRecordProcess() throws InterruptedException {
     assertTrue(consumerReady.await(30, TimeUnit.SECONDS));
 
+    KafkaProducerRecord<String, String> record =
+        KafkaProducerRecord.create("testSingleTopic", "10", "testSpan");
     CountDownLatch sent = new CountDownLatch(1);
-    testing.runWithSpan(
-        "producer",
-        () ->
-            sendRecord(
-                KafkaProducerRecord.create("testSingleTopic", "10", "testSpan"),
-                result -> sent.countDown()));
+    testing.runWithSpan("producer", () -> sendRecord(record, result -> sent.countDown()));
     assertTrue(sent.await(30, TimeUnit.SECONDS));
 
     testing.waitAndAssertTraces(
@@ -59,36 +51,12 @@ class NoReceiveTelemetrySingleRecordVertxKafkaTest extends AbstractVertxKafkaTes
                     span.hasName("testSingleTopic send")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(
-                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                                AbstractLongAssert::isNotNegative),
-                            satisfies(
-                                AttributeKey.longKey("messaging.kafka.message.offset"),
-                                AbstractLongAssert::isNotNegative)),
+                        .hasAttributesSatisfyingExactly(sendAttributes(record)),
                 span ->
                     span.hasName("testSingleTopic process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(
-                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
-                                AbstractLongAssert::isNotNegative),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
-                                AbstractLongAssert::isNotNegative),
-                            satisfies(
-                                AttributeKey.longKey("messaging.kafka.message.offset"),
-                                AbstractLongAssert::isNotNegative)),
+                        .hasAttributesSatisfyingExactly(processAttributes(record)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
@@ -96,13 +64,10 @@ class NoReceiveTelemetrySingleRecordVertxKafkaTest extends AbstractVertxKafkaTes
   void shouldHandleFailureInSingleRecordHandler() throws InterruptedException {
     assertTrue(consumerReady.await(30, TimeUnit.SECONDS));
 
+    KafkaProducerRecord<String, String> record =
+        KafkaProducerRecord.create("testSingleTopic", "10", "error");
     CountDownLatch sent = new CountDownLatch(1);
-    testing.runWithSpan(
-        "producer",
-        () ->
-            sendRecord(
-                KafkaProducerRecord.create("testSingleTopic", "10", "error"),
-                result -> sent.countDown()));
+    testing.runWithSpan("producer", () -> sendRecord(record, result -> sent.countDown()));
     assertTrue(sent.await(30, TimeUnit.SECONDS));
 
     testing.waitAndAssertTraces(
@@ -113,38 +78,14 @@ class NoReceiveTelemetrySingleRecordVertxKafkaTest extends AbstractVertxKafkaTes
                     span.hasName("testSingleTopic send")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(
-                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                                AbstractLongAssert::isNotNegative),
-                            satisfies(
-                                AttributeKey.longKey("messaging.kafka.message.offset"),
-                                AbstractLongAssert::isNotNegative)),
+                        .hasAttributesSatisfyingExactly(sendAttributes(record)),
                 span ->
                     span.hasName("testSingleTopic process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasStatus(StatusData.error())
                         .hasException(new IllegalArgumentException("boom"))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(
-                                SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
-                                AbstractLongAssert::isNotNegative),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
-                                AbstractLongAssert::isNotNegative),
-                            satisfies(
-                                AttributeKey.longKey("messaging.kafka.message.offset"),
-                                AbstractLongAssert::isNotNegative)),
+                        .hasAttributesSatisfyingExactly(processAttributes(record)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 }

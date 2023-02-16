@@ -23,7 +23,7 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
 
   @Override
   public ConsumerRecords<K, V> onConsume(ConsumerRecords<K, V> records) {
-    telemetry.buildAndFinishSpan(records);
+    telemetry.buildAndFinishSpan(null, records);
     return records;
   }
 

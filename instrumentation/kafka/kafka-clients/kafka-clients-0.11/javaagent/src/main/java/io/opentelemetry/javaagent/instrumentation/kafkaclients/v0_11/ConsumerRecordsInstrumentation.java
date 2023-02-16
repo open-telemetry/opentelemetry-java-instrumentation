@@ -21,6 +21,7 @@ import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
@@ -59,6 +60,7 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class IterableAdvice {
 
+    @SuppressWarnings("unchecked")
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
@@ -69,13 +71,16 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       // case it's important to overwrite the leaked span instead of suppressing the correct span
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
       Context receiveContext = VirtualField.find(ConsumerRecords.class, Context.class).get(records);
-      iterable = TracingIterable.wrap(iterable, receiveContext);
+      Consumer<K, V> consumer =
+          VirtualField.find(ConsumerRecords.class, Consumer.class).get(records);
+      iterable = TracingIterable.wrap(iterable, receiveContext, consumer);
     }
   }
 
   @SuppressWarnings("unused")
   public static class ListAdvice {
 
+    @SuppressWarnings("unchecked")
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
@@ -86,13 +91,16 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       // case it's important to overwrite the leaked span instead of suppressing the correct span
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
       Context receiveContext = VirtualField.find(ConsumerRecords.class, Context.class).get(records);
-      list = TracingList.wrap(list, receiveContext);
+      Consumer<K, V> consumer =
+          VirtualField.find(ConsumerRecords.class, Consumer.class).get(records);
+      list = TracingList.wrap(list, receiveContext, consumer);
     }
   }
 
   @SuppressWarnings("unused")
   public static class IteratorAdvice {
 
+    @SuppressWarnings("unchecked")
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
@@ -103,7 +111,9 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       // case it's important to overwrite the leaked span instead of suppressing the correct span
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
       Context receiveContext = VirtualField.find(ConsumerRecords.class, Context.class).get(records);
-      iterator = TracingIterator.wrap(iterator, receiveContext);
+      Consumer<K, V> consumer =
+          VirtualField.find(ConsumerRecords.class, Consumer.class).get(records);
+      iterator = TracingIterator.wrap(iterator, receiveContext, consumer);
     }
   }
 }

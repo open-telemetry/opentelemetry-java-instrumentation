@@ -16,29 +16,25 @@ import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public enum KafkaReceiveAttributesGetter
-    implements MessagingAttributesGetter<ConsumerRecords<?, ?>, Void> {
+enum KafkaReceiveAttributesGetter
+    implements MessagingAttributesGetter<ConsumerAndRecord<ConsumerRecords<?, ?>>, Void> {
   INSTANCE;
 
   @Override
-  public String getSystem(ConsumerRecords<?, ?> consumerRecords) {
+  public String getSystem(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
     return "kafka";
   }
 
   @Override
-  public String getDestinationKind(ConsumerRecords<?, ?> consumerRecords) {
+  public String getDestinationKind(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Override
   @Nullable
-  public String getDestination(ConsumerRecords<?, ?> consumerRecords) {
+  public String getDestination(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
     Set<String> topics =
-        consumerRecords.partitions().stream()
+        consumerAndRecords.record().partitions().stream()
             .map(TopicPartition::topic)
             .collect(Collectors.toSet());
     // only return topic when there's exactly one in the batch
@@ -46,55 +42,59 @@ public enum KafkaReceiveAttributesGetter
   }
 
   @Override
-  public boolean isTemporaryDestination(ConsumerRecords<?, ?> consumerRecords) {
+  public boolean isTemporaryDestination(
+      ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
     return false;
   }
 
   @Override
   @Nullable
-  public String getProtocol(ConsumerRecords<?, ?> consumerRecords) {
+  public String getProtocol(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getProtocolVersion(ConsumerRecords<?, ?> consumerRecords) {
+  public String getProtocolVersion(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getUrl(ConsumerRecords<?, ?> consumerRecords) {
+  public String getUrl(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getConversationId(ConsumerRecords<?, ?> consumerRecords) {
+  public String getConversationId(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  public Long getMessagePayloadSize(ConsumerRecords<?, ?> consumerRecords) {
+  public Long getMessagePayloadSize(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  public Long getMessagePayloadCompressedSize(ConsumerRecords<?, ?> consumerRecords) {
+  public Long getMessagePayloadCompressedSize(
+      ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getMessageId(ConsumerRecords<?, ?> consumerRecords, @Nullable Void unused) {
+  public String getMessageId(
+      ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords, @Nullable Void unused) {
     return null;
   }
 
   @Override
-  public List<String> getMessageHeader(ConsumerRecords<?, ?> records, String name) {
-    return StreamSupport.stream(records.spliterator(), false)
+  public List<String> getMessageHeader(
+      ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords, String name) {
+    return StreamSupport.stream(consumerAndRecords.record().spliterator(), false)
         .flatMap(
             consumerRecord ->
                 StreamSupport.stream(consumerRecord.headers().headers(name).spliterator(), false))
