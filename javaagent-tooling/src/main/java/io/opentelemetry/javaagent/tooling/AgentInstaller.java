@@ -133,7 +133,7 @@ public class AgentInstaller {
             // disableClassFormatChanges sets type strategy to TypeStrategy.Default.REDEFINE_FROZEN
             // we'll wrap it with our own strategy
             .with(new SafeTypeStrategy(AgentBuilder.TypeStrategy.Default.REDEFINE_FROZEN))
-            .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+            .with(AgentBuilder.RedefinitionStrategy.REDEFINITION)
             .with(new RedefinitionDiscoveryStrategy())
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(AgentTooling.poolStrategy())
