@@ -37,7 +37,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
    * Creates the messaging attributes extractor for the given {@link MessageOperation operation}
    * with default configuration.
    */
-  public static <REQUEST, RESPONSE> MessagingAttributesExtractor<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
     return builder(getter, operation).build();
   }
@@ -74,16 +74,18 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
         getter.getDestinationKind(request));
     boolean isTemporaryDestination = getter.isTemporaryDestination(request);
     if (isTemporaryDestination) {
-      internalSet(attributes, SemanticAttributes.MESSAGING_TEMP_DESTINATION, true);
-      internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION, TEMP_DESTINATION_NAME);
+      internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true);
+      internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION_NAME, TEMP_DESTINATION_NAME);
     } else {
       internalSet(
-          attributes, SemanticAttributes.MESSAGING_DESTINATION, getter.getDestination(request));
+          attributes,
+          SemanticAttributes.MESSAGING_DESTINATION_NAME,
+          getter.getDestination(request));
     }
-    internalSet(attributes, SemanticAttributes.MESSAGING_PROTOCOL, getter.getProtocol(request));
+    internalSet(attributes, SemanticAttributes.NET_APP_PROTOCOL_NAME, getter.getProtocol(request));
     internalSet(
         attributes,
-        SemanticAttributes.MESSAGING_PROTOCOL_VERSION,
+        SemanticAttributes.NET_APP_PROTOCOL_VERSION,
         getter.getProtocolVersion(request));
     internalSet(attributes, SemanticAttributes.MESSAGING_URL, getter.getUrl(request));
     internalSet(

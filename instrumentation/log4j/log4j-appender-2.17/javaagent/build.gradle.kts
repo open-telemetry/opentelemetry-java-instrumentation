@@ -11,6 +11,8 @@ muzzle {
   }
 }
 
+val testLatestDeps = findProperty("testLatestDeps") as Boolean
+
 dependencies {
   library("org.apache.logging.log4j:log4j-core:2.17.0")
 
@@ -21,8 +23,25 @@ dependencies {
 
   testImplementation("org.awaitility:awaitility")
 
+  // this dependency is needed for the slf4j->log4j test
+  if (testLatestDeps) {
+    testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.19.0")
+  } else {
+    // log4j 2.17 doesn't have an slf4j2 bridge
+    testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.0")
+    testImplementation("org.slf4j:slf4j-api") {
+      version {
+        strictly("1.7.36")
+      }
+    }
+  }
+
   // this is needed for the async logging test
   testImplementation("com.lmax:disruptor:3.4.2")
+}
+
+tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", testLatestDeps)
 }
 
 tasks {
@@ -30,7 +49,7 @@ tasks {
     jvmArgs("-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector")
   }
 
-  named<Test>("test") {
+  check {
     dependsOn(testAsync)
   }
 }
@@ -41,4 +60,11 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-context-data-attributes=*")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-marker-attribute=true")
+}
+
+configurations {
+  testImplementation {
+    // this is needed for the slf4j->log4j test
+    exclude("ch.qos.logback", "logback-classic")
+  }
 }

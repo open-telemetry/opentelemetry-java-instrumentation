@@ -24,7 +24,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
  */
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
 
-  public static final AttributeKey<HttpRequestAndChannel> HTTP_REQUEST =
+  public static final AttributeKey<HttpRequestAndChannel> HTTP_CLIENT_REQUEST =
       AttributeKey.valueOf(HttpClientRequestTracingHandler.class, "http-client-request");
 
   private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
@@ -35,26 +35,26 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
   }
 
   @Override
-  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
+  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) throws Exception {
     if (!(msg instanceof HttpRequest)) {
-      ctx.write(msg, prm);
+      super.write(ctx, msg, prm);
       return;
     }
 
-    Context parentContext = ctx.channel().attr(AttributeKeys.WRITE_CONTEXT).getAndSet(null);
+    Context parentContext = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get();
     if (parentContext == null) {
       parentContext = Context.current();
     }
 
     HttpRequestAndChannel request = HttpRequestAndChannel.create((HttpRequest) msg, ctx.channel());
     if (!instrumenter.shouldStart(parentContext, request) || isAwsRequest(request)) {
-      ctx.write(msg, prm);
+      super.write(ctx, msg, prm);
       return;
     }
 
     Attribute<Context> parentContextAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT);
     Attribute<Context> contextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
-    Attribute<HttpRequestAndChannel> requestAttr = ctx.channel().attr(HTTP_REQUEST);
+    Attribute<HttpRequestAndChannel> requestAttr = ctx.channel().attr(HTTP_CLIENT_REQUEST);
 
     Context context = instrumenter.start(parentContext, request);
     parentContextAttr.set(parentContext);
@@ -62,7 +62,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     requestAttr.set(request);
 
     try (Scope ignored = context.makeCurrent()) {
-      ctx.write(msg, prm);
+      super.write(ctx, msg, prm);
       // span is ended normally in HttpClientResponseTracingHandler
     } catch (Throwable throwable) {
       instrumenter.end(contextAttr.getAndSet(null), requestAttr.getAndSet(null), null, throwable);

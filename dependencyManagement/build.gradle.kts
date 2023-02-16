@@ -11,8 +11,11 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
+// this line is managed by .github/scripts/update-sdk-version.sh
+val otelSdkVersion = "1.23.1"
+
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.8"
+val groovyVersion = "4.0.9"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -26,11 +29,11 @@ val groovyVersion = "4.0.8"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.14.1",
+  "com.fasterxml.jackson:jackson-bom:2.14.2",
   "com.google.guava:guava-bom:31.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
-  "io.opentelemetry:opentelemetry-bom:1.22.0",
-  "io.opentelemetry:opentelemetry-bom-alpha:1.22.0-alpha",
+  "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
+  "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkVersion}-alpha",
   "org.junit:junit-bom:5.9.2",
   "org.testcontainers:testcontainers-bom:1.17.6",
   "org.spockframework:spock-bom:2.4-M1-groovy-4.0"
@@ -39,7 +42,7 @@ val DEPENDENCY_BOMS = listOf(
 val autoServiceVersion = "1.0.1"
 val autoValueVersion = "1.10.1"
 val errorProneVersion = "2.18.0"
-val byteBuddyVersion = "1.12.22"
+val byteBuddyVersion = "1.13.0"
 val asmVersion = "9.4"
 val jmhVersion = "1.36"
 val mockitoVersion = "4.11.0"
@@ -79,14 +82,14 @@ val DEPENDENCIES = listOf(
   "ch.qos.logback:logback-classic:1.3.5", // 1.4+ requires Java 11+
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
-  "uk.org.webcompere:system-stubs-jupiter:2.0.1",
-  "com.uber.nullaway:nullaway:0.10.8",
+  "uk.org.webcompere:system-stubs-jupiter:2.0.2",
+  "com.uber.nullaway:nullaway:0.10.9",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
   "commons-codec:commons-codec:1.15",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
-  "commons-fileupload:commons-fileupload:1.4",
+  "commons-fileupload:commons-fileupload:1.5",
   "commons-io:commons-io:2.11.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.2",

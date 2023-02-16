@@ -26,8 +26,12 @@ import org.slf4j.LoggerFactory;
  */
 public final class AgentTestRunner extends InstrumentationTestRunner {
   static {
-    LoggerUtils.setLevel(LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME), Level.WARN);
-    LoggerUtils.setLevel(LoggerFactory.getLogger("io.opentelemetry"), Level.DEBUG);
+    try {
+      LoggerUtils.setLevel(LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME), Level.WARN);
+      LoggerUtils.setLevel(LoggerFactory.getLogger("io.opentelemetry"), Level.DEBUG);
+    } catch (NoClassDefFoundError e) {
+      // this happens when excluding logback in order to test slf4j -> log4j2
+    }
   }
 
   private static final AgentTestRunner INSTANCE = new AgentTestRunner();

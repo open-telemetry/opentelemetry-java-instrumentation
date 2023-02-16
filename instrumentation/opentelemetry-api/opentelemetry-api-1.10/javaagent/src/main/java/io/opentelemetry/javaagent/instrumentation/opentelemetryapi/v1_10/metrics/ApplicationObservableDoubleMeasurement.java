@@ -9,7 +9,9 @@ import application.io.opentelemetry.api.common.Attributes;
 import application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-final class ApplicationObservableDoubleMeasurement implements ObservableDoubleMeasurement {
+final class ApplicationObservableDoubleMeasurement
+    implements ObservableDoubleMeasurement,
+        ObservableMeasurementWrapper<io.opentelemetry.api.metrics.ObservableDoubleMeasurement> {
 
   private final io.opentelemetry.api.metrics.ObservableDoubleMeasurement agentMeasurement;
 
@@ -26,5 +28,10 @@ final class ApplicationObservableDoubleMeasurement implements ObservableDoubleMe
   @Override
   public void record(double v, Attributes attributes) {
     agentMeasurement.record(v, Bridging.toAgent(attributes));
+  }
+
+  @Override
+  public io.opentelemetry.api.metrics.ObservableDoubleMeasurement unwrap() {
+    return agentMeasurement;
   }
 }

@@ -59,7 +59,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          name "/listProducts"
+          name "GET /listProducts"
           kind SERVER
           hasNoParent()
           attributes {
@@ -152,7 +152,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             }
           }
           span(1) {
-            name "/listProducts"
+            name "GET /listProducts"
             kind SERVER
             childOf(span(0))
             attributes {

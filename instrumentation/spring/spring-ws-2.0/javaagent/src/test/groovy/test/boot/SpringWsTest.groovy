@@ -127,10 +127,10 @@ class SpringWsTest extends AgentInstrumentationSpecification implements HttpServ
     methodName << ["hello", "helloSoapAction", "helloWsAction"]
   }
 
-  static serverSpan(TraceAssert trace, int index, String operation, Throwable exception = null) {
+  static serverSpan(TraceAssert trace, int index, String route, Throwable exception = null) {
     trace.span(index) {
       hasNoParent()
-      name operation
+      name "POST " + route
       kind SpanKind.SERVER
       if (exception != null) {
         status ERROR

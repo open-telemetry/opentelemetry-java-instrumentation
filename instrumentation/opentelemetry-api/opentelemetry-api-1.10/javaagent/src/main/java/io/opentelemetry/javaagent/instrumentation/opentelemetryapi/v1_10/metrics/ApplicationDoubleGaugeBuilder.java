@@ -48,4 +48,9 @@ final class ApplicationDoubleGaugeBuilder implements DoubleGaugeBuilder {
                 applicationCallback.accept(
                     new ApplicationObservableDoubleMeasurement(agentMeasurement))));
   }
+
+  // added in 1.15.0
+  public ObservableDoubleMeasurement buildObserver() {
+    return new ApplicationObservableDoubleMeasurement(agentBuilder.buildObserver());
+  }
 }

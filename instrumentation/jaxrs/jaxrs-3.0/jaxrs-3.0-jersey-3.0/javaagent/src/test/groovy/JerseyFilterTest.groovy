@@ -52,7 +52,7 @@ class JerseyFilterTest extends JaxRsFilterTest implements HttpServerTestTrait<Se
   }
 
   @Override
-  String defaultServerSpanName() {
+  String defaultServerRoute() {
     "/*"
   }
 

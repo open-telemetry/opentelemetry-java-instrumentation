@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,7 +51,7 @@ class MessagingAttributesExtractorTest {
     request.put("payloadSize", "100");
     request.put("payloadCompressedSize", "10");
 
-    MessagingAttributesExtractor<Map<String, String>, String> underTest =
+    AttributesExtractor<Map<String, String>, String> underTest =
         MessagingAttributesExtractor.create(TestGetter.INSTANCE, operation);
 
     Context context = Context.root();
@@ -66,12 +67,12 @@ class MessagingAttributesExtractorTest {
     List<MapEntry<AttributeKey<?>, Object>> expectedEntries = new ArrayList<>();
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_SYSTEM, "myQueue"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION, expectedDestination));
+    expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_NAME, expectedDestination));
     if (temporary) {
-      expectedEntries.add(entry(SemanticAttributes.MESSAGING_TEMP_DESTINATION, true));
+      expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true));
     }
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_PROTOCOL, "AMQP"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_PROTOCOL_VERSION, "1.0.0"));
+    expectedEntries.add(entry(SemanticAttributes.NET_APP_PROTOCOL_NAME, "AMQP"));
+    expectedEntries.add(entry(SemanticAttributes.NET_APP_PROTOCOL_VERSION, "1.0.0"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_URL, "http://broker/topic"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_CONVERSATION_ID, "42"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 100L));
@@ -97,7 +98,7 @@ class MessagingAttributesExtractorTest {
   @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // given
-    MessagingAttributesExtractor<Map<String, String>, String> underTest =
+    AttributesExtractor<Map<String, String>, String> underTest =
         MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessageOperation.SEND);
 
     Context context = Context.root();

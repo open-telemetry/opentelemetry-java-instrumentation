@@ -1,12 +1,12 @@
 pluginManagement {
   plugins {
     id("com.bmuschko.docker-remote-api") version "8.1.0"
-    id("com.github.ben-manes.versions") version "0.44.0"
+    id("com.github.ben-manes.versions") version "0.45.0"
     id("com.github.jk1.dependency-license-report") version "2.1"
     id("com.google.cloud.tools.jib") version "3.3.1"
     id("com.gradle.plugin-publish") version "1.1.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
-    id("org.jetbrains.kotlin.jvm") version "1.7.22"
+    id("org.jetbrains.kotlin.jvm") version "1.8.0"
     id("org.unbroken-dome.test-sets") version "4.0.0"
     id("org.xbib.gradle.plugin.jflex") version "1.7.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
@@ -171,6 +171,8 @@ hideFromDependabot(":instrumentation:azure-core:azure-core-1.14:javaagent")
 hideFromDependabot(":instrumentation:azure-core:azure-core-1.14:library-instrumentation-shaded")
 hideFromDependabot(":instrumentation:azure-core:azure-core-1.19:javaagent")
 hideFromDependabot(":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded")
+hideFromDependabot(":instrumentation:azure-core:azure-core-1.36:javaagent")
+hideFromDependabot(":instrumentation:azure-core:azure-core-1.36:library-instrumentation-shaded")
 hideFromDependabot(":instrumentation:cassandra:cassandra-3.0:javaagent")
 hideFromDependabot(":instrumentation:cassandra:cassandra-4.0:javaagent")
 hideFromDependabot(":instrumentation:cdi-testing")
@@ -232,6 +234,8 @@ hideFromDependabot(":instrumentation:guava-10.0:library")
 hideFromDependabot(":instrumentation:gwt-2.0:javaagent")
 hideFromDependabot(":instrumentation:hibernate:hibernate-3.3:javaagent")
 hideFromDependabot(":instrumentation:hibernate:hibernate-4.0:javaagent")
+hideFromDependabot(":instrumentation:hibernate:hibernate-6.0:javaagent")
+hideFromDependabot(":instrumentation:hibernate:hibernate-6.0:spring-testing")
 hideFromDependabot(":instrumentation:hibernate:hibernate-common:javaagent")
 hideFromDependabot(":instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent")
 hideFromDependabot(":instrumentation:hikaricp-3.0:javaagent")
@@ -298,10 +302,14 @@ hideFromDependabot(":instrumentation:jms:jms-common:javaagent")
 hideFromDependabot(":instrumentation:jms:jms-common:javaagent-unit-tests")
 hideFromDependabot(":instrumentation:jmx-metrics:javaagent")
 hideFromDependabot(":instrumentation:jmx-metrics:library")
-hideFromDependabot(":instrumentation:jsf:jsf-common:javaagent")
-hideFromDependabot(":instrumentation:jsf:jsf-common:testing")
+hideFromDependabot(":instrumentation:jsf:jsf-javax-common:javaagent")
+hideFromDependabot(":instrumentation:jsf:jsf-javax-common:testing")
+hideFromDependabot(":instrumentation:jsf:jsf-jakarta-common:javaagent")
+hideFromDependabot(":instrumentation:jsf:jsf-jakarta-common:testing")
 hideFromDependabot(":instrumentation:jsf:jsf-mojarra-1.2:javaagent")
+hideFromDependabot(":instrumentation:jsf:jsf-mojarra-3.0:javaagent")
 hideFromDependabot(":instrumentation:jsf:jsf-myfaces-1.2:javaagent")
+hideFromDependabot(":instrumentation:jsf:jsf-myfaces-3.0:javaagent")
 hideFromDependabot(":instrumentation:jsp-2.3:javaagent")
 hideFromDependabot(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap")
 hideFromDependabot(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent")
@@ -363,7 +371,8 @@ hideFromDependabot(":instrumentation:okhttp:okhttp-3.0:testing")
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")
-hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-logs-1.19:javaagent")
+hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.15:javaagent")
+hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-logs-1.23:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")

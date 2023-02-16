@@ -40,7 +40,7 @@ final class NettyServerSingletons {
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
-            .addContextCustomizer(HttpRouteHolder.get())
+            .addContextCustomizer(HttpRouteHolder.create(httpServerAttributesGetter))
             .buildServerInstrumenter(NettyHeadersGetter.INSTANCE);
   }
 

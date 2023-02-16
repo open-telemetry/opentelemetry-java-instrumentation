@@ -1,0 +1,83 @@
+name: Auto-update OpenTelemetry SDK
+
+on:
+  schedule:
+    # hourly at minute 46
+    - cron: "46 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      current-version: ${{ steps.check-versions.outputs.current-version }}
+      latest-version: ${{ steps.check-versions.outputs.latest-version }}
+      already-opened: ${{ steps.check-versions.outputs.already-opened }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: check-versions
+        name: Check versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          current_version=$(grep -Po "val otelSdkVersion = \"\K[0-9]+.[0-9]+.[0-9]+" \
+                                dependencyManagement/build.gradle.kts)
+          latest_version=$(gh release view \
+                               --repo open-telemetry/opentelemetry-java \
+                               --json tagName \
+                               --jq .tagName \
+                             | sed 's/^v//')
+
+          matches=$(gh pr list \
+                        --author opentelemetrybot \
+                        --state open \
+                        --search "in:title \"Update the OpenTelemetry SDK version to $latest_version\"")
+          if [ ! -z "$matches" ]
+          then
+            already_opened=true
+          fi
+
+          echo "current-version=$current_version" >> $GITHUB_OUTPUT
+          echo "latest-version=$latest_version" >> $GITHUB_OUTPUT
+          echo "already-opened=$already_opened" >> $GITHUB_OUTPUT
+
+  update-otel-sdk:
+    runs-on: ubuntu-latest
+    if: |
+      needs.check-versions.outputs.current-version != needs.check-versions.outputs.latest-version &&
+      needs.check-versions.outputs.already-opened != 'true'
+    needs:
+      - check-versions
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Update version
+        env:
+          VERSION: ${{ needs.check-versions.outputs.latest-version }}
+        run: ./.github/scripts/update-sdk-version.sh $VERSION
+
+      - name: Update license report
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: generateLicenseReport
+
+      - name: Use CLA approved github bot
+        run: .github/scripts/use-cla-approved-github-bot.sh
+
+      - name: Create pull request against main
+        env:
+          VERSION: ${{ needs.check-versions.outputs.latest-version }}
+          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+        run: |
+          message="Update the OpenTelemetry SDK version to $VERSION"
+          body="Update the OpenTelemetry SDK version to \`$VERSION\`."
+          branch="opentelemetrybot/update-opentelemetry-sdk-to-${VERSION}"
+
+          git checkout -b $branch
+          git commit -a -m "$message"
+          git push --set-upstream origin $branch
+          gh pr create --title "$message" \
+                       --body "$body" \
+                       --base main

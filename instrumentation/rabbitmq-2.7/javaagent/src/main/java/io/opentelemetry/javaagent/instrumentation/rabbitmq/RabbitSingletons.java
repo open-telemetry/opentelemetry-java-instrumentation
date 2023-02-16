@@ -104,7 +104,7 @@ public final class RabbitSingletons {
         .buildConsumerInstrumenter(DeliveryRequestGetter.INSTANCE);
   }
 
-  private static <T, V> MessagingAttributesExtractor<T, V> buildMessagingAttributesExtractor(
+  private static <T, V> AttributesExtractor<T, V> buildMessagingAttributesExtractor(
       MessagingAttributesGetter<T, V> getter, MessageOperation operation) {
     return MessagingAttributesExtractor.builder(getter, operation)
         .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())

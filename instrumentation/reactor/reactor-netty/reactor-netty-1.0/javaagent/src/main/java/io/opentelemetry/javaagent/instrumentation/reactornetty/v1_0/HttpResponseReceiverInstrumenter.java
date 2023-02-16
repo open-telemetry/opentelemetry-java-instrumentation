@@ -12,7 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.React
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetry;
-import io.opentelemetry.instrumentation.reactor.ContextPropagationOperator;
+import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.BiConsumer;
 import java.util.function.Function;

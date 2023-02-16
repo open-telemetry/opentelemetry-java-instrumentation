@@ -26,10 +26,10 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
       VirtualField.find(Channel.class, NettyClientRequestAndContexts.class);
 
   @Override
-  public void writeRequested(ChannelHandlerContext ctx, MessageEvent event) {
+  public void writeRequested(ChannelHandlerContext ctx, MessageEvent event) throws Exception {
     Object message = event.getMessage();
     if (!(message instanceof HttpRequest)) {
-      ctx.sendDownstream(event);
+      super.writeRequested(ctx, event);
       return;
     }
 
@@ -45,7 +45,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
     HttpRequestAndChannel request =
         HttpRequestAndChannel.create((HttpRequest) message, ctx.getChannel());
     if (!instrumenter().shouldStart(parentContext, request)) {
-      ctx.sendDownstream(event);
+      super.writeRequested(ctx, event);
       return;
     }
 
@@ -54,7 +54,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
         ctx.getChannel(), NettyClientRequestAndContexts.create(parentContext, context, request));
 
     try (Scope ignored = context.makeCurrent()) {
-      ctx.sendDownstream(event);
+      super.writeRequested(ctx, event);
       // span is ended normally in HttpClientResponseTracingHandler
     } catch (Throwable throwable) {
       instrumenter().end(context, request, null, throwable);

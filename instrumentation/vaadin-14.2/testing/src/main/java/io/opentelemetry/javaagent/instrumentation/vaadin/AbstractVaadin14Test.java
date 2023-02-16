@@ -24,7 +24,7 @@ public class AbstractVaadin14Test extends AbstractVaadinTest {
                   .satisfies(
                       spans -> {
                         OpenTelemetryAssertions.assertThat(spans.get(0))
-                            .hasName(getContextPath() + "/main")
+                            .hasName("GET " + getContextPath() + "/main")
                             .hasNoParent()
                             .hasKind(SpanKind.SERVER);
                         OpenTelemetryAssertions.assertThat(spans.get(1))

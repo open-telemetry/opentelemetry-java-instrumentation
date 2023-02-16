@@ -17,6 +17,9 @@ updates:
     registries:
       - gradle-plugin-portal
     ignore:
+      - dependency-name: "io.opentelemetry:*"
+        # OpenTelemetry SDK updates are handled by auto-update-otel-sdk.yml
+        versions: [ "(,)" ]
       - dependency-name: "ch.qos.logback:logback-classic"
         # logback 1.4+ requires Java 11
         versions: [ "[1.4,)" ]
@@ -33,6 +36,9 @@ updates:
       - dependency-name: "org.mockito:*"
         # mockito 5 requires Java 11
         versions: [ "[5,)" ]
+      - dependency-name: "org.junit-pioneer:junit-pioneer"
+        # junit-pioneer 2.x requires Java 11
+        versions: [ "[1,)" ]
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"

@@ -121,9 +121,7 @@ class LogbackTest {
     if (withParent) {
       testing.runWithSpan(
           "parent",
-          () -> {
-            performLogging(logger, oneArgLoggerMethod, twoArgLoggerMethod, logException);
-          });
+          () -> performLogging(logger, oneArgLoggerMethod, twoArgLoggerMethod, logException));
     } else {
       performLogging(logger, oneArgLoggerMethod, twoArgLoggerMethod, logException);
     }

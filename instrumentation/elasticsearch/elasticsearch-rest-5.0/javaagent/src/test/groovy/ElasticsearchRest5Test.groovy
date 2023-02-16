@@ -83,7 +83,7 @@ class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
           }
         }
         span(1) {
-          name "HTTP GET"
+          name "GET"
           kind CLIENT
           childOf span(0)
           attributes {
@@ -157,7 +157,7 @@ class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
           }
         }
         span(2) {
-          name "HTTP GET"
+          name "GET"
           kind CLIENT
           childOf span(1)
           attributes {
