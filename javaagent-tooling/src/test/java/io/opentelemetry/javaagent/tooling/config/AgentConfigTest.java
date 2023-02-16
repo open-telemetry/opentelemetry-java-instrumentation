@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.tooling.EmptyConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.TreeSet;
 import java.util.stream.Stream;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -72,7 +73,7 @@ class AgentConfigTest {
     // miss typo
     when(config.getString("otel.redefinition.strategy", "retransformation"))
         .thenReturn("somethingElse");
-    assertThrows(IllegalArgumentException.class, () -> {
+    assertThrows(ConfigurationException.class, () -> {
       AgentConfig.redefinitionStrategy(config);
     });
   }
