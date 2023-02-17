@@ -64,7 +64,11 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
       for (int i = 0; i < rawName.length(); ++i) {
         char ch = rawName.charAt(i);
         if (escaped) {
-          // No matter what it is, it becomes a part of the attribute name
+          // Allow only '\' and '.' to be escaped
+          if (ch != '\\' && ch != '.') {
+            throw new IllegalArgumentException(
+                "Invalid escape sequence in attribute name '" + rawName + "'");
+          }
           currentSegment.append(ch);
           escaped = false;
         } else {
