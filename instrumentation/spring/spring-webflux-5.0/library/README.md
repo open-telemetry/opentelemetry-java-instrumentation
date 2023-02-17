@@ -61,7 +61,7 @@ implementation("org.springframework:spring-webflux:SPRING_VERSION")
 
 #### `WebClient` instrumentation
 
-`client.SpringWebfluxTelemetry` emits client span for each request sent using `WebClient` by
+`SpringWebfluxTelemetry` emits client span for each request sent using `WebClient` by
 implementing
 the [ExchangeFilterFunction](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/function/client/ExchangeFilterFunction.html)
 interface. An example is shown below:
@@ -87,21 +87,21 @@ public class WebClientConfig {
 
 #### Webflux server instrumentation
 
-`server.SpringWebfluxTelemetry` emits a server span for each request sent, by implementing
-a `WebFilter` and using the OpenTelemetry reactor instrumentation to ensure context is
+`SpringWebfluxServerTelemetry` emits a server span for each request received, by implementing
+a `WebFilter` and using the OpenTelemetry Reactor instrumentation to ensure context is
 passed around correctly.
 
 #### Usage
 
 ```java
-import io.opentelemetry.instrumentation.spring.webflux.v5_0.server.SpringWebfluxTelemetry;
+import io.opentelemetry.instrumentation.spring.webflux.v5_0.server.SpringWebfluxServerTelemetry;
 
 @Configuration
 public class WebFilterConfig {
 
   @Bean
   public WebFilter webFilter(OpenTelemetry openTelemetry) {
-    return SpringWebfluxTelemetry.builder(openTelemetry).build().createWebFilterAndRegisterReactorHook();
+    return SpringWebfluxServerTelemetry.builder(openTelemetry).build().createWebFilterAndRegisterReactorHook();
   }
 }
 ```

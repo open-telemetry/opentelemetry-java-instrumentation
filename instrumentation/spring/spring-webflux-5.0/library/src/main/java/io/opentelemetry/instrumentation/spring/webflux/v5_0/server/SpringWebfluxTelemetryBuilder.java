@@ -67,7 +67,7 @@ public final class SpringWebfluxTelemetryBuilder {
     return this;
   }
 
-  public SpringWebfluxTelemetry build() {
+  public SpringWebfluxServerTelemetry build() {
     SpringWebfluxHttpAttributesGetter attributesGetter = SpringWebfluxHttpAttributesGetter.INSTANCE;
 
     Instrumenter<ServerHttpRequest, ServerHttpResponse> instrumenter =
@@ -78,6 +78,6 @@ public final class SpringWebfluxTelemetryBuilder {
             .addAttributesExtractors(additionalExtractors)
             .buildServerInstrumenter(SpringWebfluxTextMapGetter.INSTANCE);
 
-    return new SpringWebfluxTelemetry(instrumenter);
+    return new SpringWebfluxServerTelemetry(instrumenter);
   }
 }
