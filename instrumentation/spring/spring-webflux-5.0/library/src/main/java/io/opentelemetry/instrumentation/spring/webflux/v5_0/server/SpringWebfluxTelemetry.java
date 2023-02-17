@@ -11,10 +11,10 @@ import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 
-public final class SpringWebfluxTelemetry {
+public final class SpringWebfluxServerTelemetry {
   private final Instrumenter<ServerHttpRequest, ServerHttpResponse> instrumenter;
 
-  public static SpringWebfluxTelemetry create(OpenTelemetry openTelemetry) {
+  public static SpringWebfluxServerTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
@@ -26,7 +26,7 @@ public final class SpringWebfluxTelemetry {
     ContextPropagationOperator.builder().build().registerOnEachOperator();
   }
 
-  SpringWebfluxTelemetry(Instrumenter<ServerHttpRequest, ServerHttpResponse> instrumenter) {
+  SpringWebfluxServerTelemetry(Instrumenter<ServerHttpRequest, ServerHttpResponse> instrumenter) {
     this.instrumenter = instrumenter;
   }
 
