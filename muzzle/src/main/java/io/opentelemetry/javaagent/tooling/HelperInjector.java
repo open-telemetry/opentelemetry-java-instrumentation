@@ -32,10 +32,10 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder.Transformer;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.utility.JavaModule;
-import net.bytebuddy.utility.StreamDrainer;
 
 /**
  * Injects instrumentation helper classes into the user's class loader.
@@ -109,7 +109,6 @@ public class HelperInjector implements Transformer {
       String requestingName,
       List<String> helperClassNames,
       List<HelperResource> helperResources,
-      // TODO can this be replaced with the context class loader?
       ClassLoader helpersSource,
       Instrumentation instrumentation) {
     this.requestingName = requestingName;
@@ -157,10 +156,8 @@ public class HelperInjector implements Transformer {
         result.put(
             helperClassName,
             () -> {
-              try {
-                return StreamDrainer.DEFAULT.drain(
-                    helpersSource.getResourceAsStream(
-                        helperClassName.replace('.', '/') + ".class"));
+              try (ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(helpersSource)) {
+                return locator.locate(helperClassName).resolve();
               } catch (IOException exception) {
                 if (logger.isLoggable(SEVERE)) {
                   logger.log(
