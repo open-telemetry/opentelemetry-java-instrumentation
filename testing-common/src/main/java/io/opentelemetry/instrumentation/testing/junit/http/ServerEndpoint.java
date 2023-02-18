@@ -32,8 +32,8 @@ public enum ServerEndpoint {
   LOGIN("login", 302, null),
   AUTH_ERROR("basicsecured/endpoint", 401, null),
   INDEXED_CHILD("child", 200, ""),
-  HTML(
-      "html",
+  HTML_PRINT_WRITER(
+      "HTML_PRINT_WRITER",
       200,
       "<!DOCTYPE html>\n"
           + "<html lang=\"en\">\n"
@@ -45,8 +45,8 @@ public enum ServerEndpoint {
           + "<p>test works</p>\n"
           + "</body>\n"
           + "</html>"),
-  HTML2(
-      "html2",
+  HTML_SERVLET_OUTPUT_STREAM(
+      "HTML_SERVLET_OUTPUT_STREAM",
       200,
       "<!DOCTYPE html>\n"
           + "<html lang=\"en\">\n"

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML2;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML_PRINT_WRITER;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML_SERVLET_OUTPUT_STREAM;
 
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;
@@ -41,10 +41,11 @@ public class RequestDispatcherServlet {
       String target = req.getServletPath().replace("/dispatch", "");
       ServletContext context = getServletContext();
       RequestDispatcher dispatcher = context.getRequestDispatcher(target);
-      // for HTML test case, set content type before calling include as
-      // "include" reject modify on resp later
+      // for HTML test case, set the content type before calling include because
+      // setContentType will be rejected if called inside of include
       // check https://statics.teams.cdn.office.net/evergreen-assets/safelinks/1/atp-safelinks.html
-      if (ServerEndpoint.forPath(target) == HTML || ServerEndpoint.forPath(target) == HTML2) {
+      if (ServerEndpoint.forPath(target) == HTML_PRINT_WRITER
+          || ServerEndpoint.forPath(target) == HTML_SERVLET_OUTPUT_STREAM) {
         resp.setContentType("text/html");
       }
       dispatcher.include(req, resp);

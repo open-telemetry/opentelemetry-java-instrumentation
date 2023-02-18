@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
  * occurs and the content length was set previously.
  *
  * <p>If the Content-Length is set after snippet injection occurs (either for the first time or is
- * set again for some reason),we intentionally do not add the snippet length, because the
+ * set again for some reason), we intentionally do not add the snippet length, because the
  * application server may be making that call at the end of a request when it sees the request has
  * not been submitted, in which case it is likely using the real length of content that has been
  * written, including the snippet length.

@@ -17,8 +17,8 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML2
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML_PRINT_WRITER
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML_SERVLET_OUTPUT_STREAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
@@ -53,8 +53,8 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     addServlet(context, INDEXED_CHILD.path, servlet)
     addServlet(context, CAPTURE_HEADERS.path, servlet)
     addServlet(context, CAPTURE_PARAMETERS.path, servlet)
-    addServlet(context, HTML.path, servlet)
-    addServlet(context, HTML2.path, servlet)
+    addServlet(context, HTML_PRINT_WRITER.path, servlet)
+    addServlet(context, HTML_SERVLET_OUTPUT_STREAM.path, servlet)
   }
 
   protected ServerEndpoint lastRequest
@@ -104,11 +104,11 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   def "snippet injection with ServletOutPutStream"() {
     setup:
     ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
-    def request = request(HTML2, "GET")
+    def request = request(HTML_SERVLET_OUTPUT_STREAM, "GET")
     def response = client.execute(request).aggregate().join()
 
     expect:
-    response.status().code() == HTML2.status
+    response.status().code() == HTML_SERVLET_OUTPUT_STREAM.status
     // check response content-length header
     String result = "<!DOCTYPE html>\n" +
       "<html lang=\"en\">\n" +
@@ -128,11 +128,11 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   def "snippet injection with PrintWriter"() {
     setup:
     ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
-    def request = request(HTML, "GET")
+    def request = request(HTML_PRINT_WRITER, "GET")
     def response = client.execute(request).aggregate().join()
 
     expect:
-    response.status().code() == HTML.status
+    response.status().code() == HTML_PRINT_WRITER.status
     String result = "<!DOCTYPE html>\n" +
       "<html lang=\"en\">\n" +
       "<head>\n" +

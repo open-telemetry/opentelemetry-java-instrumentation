@@ -18,8 +18,8 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML2
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML_PRINT_WRITER
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML_SERVLET_OUTPUT_STREAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
@@ -73,13 +73,13 @@ class TestServlet3 {
             break
           case EXCEPTION:
             throw new ServletException(endpoint.body)
-          case HTML:
+          case HTML_PRINT_WRITER:
             resp.contentType = "text/html"
             resp.status = endpoint.status
             resp.setContentLengthLong(endpoint.body.length())
             resp.writer.print(endpoint.body)
             break
-          case HTML2:
+          case HTML_SERVLET_OUTPUT_STREAM:
             resp.contentType = "text/html"
             resp.status = endpoint.status
             resp.setContentLength(endpoint.body.length())
@@ -158,14 +158,14 @@ class TestServlet3 {
                 }
                 throw new ServletException(endpoint.body)
                 break
-              case HTML:
+              case HTML_PRINT_WRITER:
                 resp.contentType = "text/html"
                 resp.status = endpoint.status
                 resp.setContentLength(endpoint.body.length())
                 resp.writer.print(endpoint.body)
                 context.complete()
                 break
-              case HTML2:
+              case HTML_SERVLET_OUTPUT_STREAM:
                 resp.contentType = "text/html"
                 resp.status = endpoint.status
                 resp.getOutputStream().print(endpoint.body)
@@ -227,12 +227,14 @@ class TestServlet3 {
               resp.status = endpoint.status
               resp.writer.print(endpoint.body)
               throw new ServletException(endpoint.body)
-            case HTML:
+            case HTML_PRINT_WRITER:
+              // intentionally testing HTML_PRINT_WRITER and HTML_SERVLET_OUTPUT_STREAM with different order of setting status and contentType
               resp.status = endpoint.status
               resp.contentType = "text/html"
               resp.writer.print(endpoint.body)
               break
-            case HTML2:
+            case HTML_SERVLET_OUTPUT_STREAM:
+              // intentionally testing HTML_PRINT_WRITER and HTML_SERVLET_OUTPUT_STREAM with different order of setting status and contentType
               resp.contentType = "text/html"
               resp.status = endpoint.status
               resp.getOutputStream().print(endpoint.body)
