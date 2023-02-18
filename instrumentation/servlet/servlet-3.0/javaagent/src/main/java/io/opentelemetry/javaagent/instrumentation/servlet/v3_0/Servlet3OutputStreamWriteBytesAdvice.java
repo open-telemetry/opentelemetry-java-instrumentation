@@ -23,9 +23,11 @@ public class Servlet3OutputStreamWriteBytesAdvice {
     if (state == null) {
       return true;
     }
-    // if handleWrite return true, then it means the injection has happened and the 'write'
-    // manipulate is done. the function would return false then, meaning skip the original write
-    // function
+    // if handleWrite returns true, then it means the original bytes + the snippet were written
+    // to the servletOutputStream, and so we no longer need to execute the original method
+    // call (see skipOn above)
+    // if it returns false, then it means nothing was written to the servletOutputStream and the
+    // original method call should be executed
     return !getSnippetInjectionHelper()
         .handleWrite(write, 0, write.length, state, servletOutputStream);
   }
