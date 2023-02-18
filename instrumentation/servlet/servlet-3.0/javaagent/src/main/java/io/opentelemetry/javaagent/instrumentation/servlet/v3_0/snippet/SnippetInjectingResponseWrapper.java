@@ -178,7 +178,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   public boolean isNotSafeToInject() {
     // if content-length was set and response was already committed (headers sent to the client),
-    // then not safe to inject because the content-length header cannot be updated to account for
+    // then it is not safe to inject because the content-length header cannot be updated to account for
     // the snippet length
     return isCommitted() && (contentLength != UNSET);
   }
