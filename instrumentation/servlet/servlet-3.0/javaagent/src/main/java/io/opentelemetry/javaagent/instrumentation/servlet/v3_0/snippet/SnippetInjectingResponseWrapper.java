@@ -58,9 +58,9 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
     // this function is overridden in order to make sure the response is wrapped
     // but not wrapped twice
     // we don't use req.setAttribute
-    // because async would set the original request attribute but didn't pass down the wrapped
-    // response
-    // then the response would never be wrapped again
+    // because async requests pass down their attributes, but don't pass down our wrapped response
+    // and so we would see the presence of the attribute and think the response was already wrapped
+    // when it really is not
     // see also https://docs.oracle.com/javaee/7/api/javax/servlet/AsyncContext.html
     if (name.equals(FAKE_SNIPPET_HEADER)) {
       return true;
