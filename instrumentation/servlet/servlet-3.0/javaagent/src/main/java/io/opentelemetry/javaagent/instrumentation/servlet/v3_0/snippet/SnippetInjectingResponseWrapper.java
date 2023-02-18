@@ -57,7 +57,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   public boolean containsHeader(String name) {
     // this function is overridden in order to make sure the response is wrapped
     // but not wrapped twice
-    // we didn't use the traditional method req.setAttribute
+    // we don't use req.setAttribute
     // because async would set the original request attribute but didn't pass down the wrapped
     // response
     // then the response would never be wrapped again
