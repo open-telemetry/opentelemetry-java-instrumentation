@@ -35,6 +35,11 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
       - name: Spotless
         uses: gradle/gradle-build-action@v2
         env:
