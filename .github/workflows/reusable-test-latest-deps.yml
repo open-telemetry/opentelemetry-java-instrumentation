@@ -37,6 +37,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      # vaadin 14 tests fail with node 18
       - name: Set up Node
         uses: actions/setup-node@v3
         with:
