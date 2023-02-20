@@ -17,8 +17,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.instrumentation.kafka.internal.ConsumerAndRecord;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
 import io.opentelemetry.instrumentation.kafka.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -94,21 +94,15 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      // we're attaching the consumer to the records to be able to retrieve things like consumer
-      // group or clientId later
-      VirtualField<ConsumerRecords<?, ?>, Consumer<?, ?>> consumerRecordsConsumer =
-          VirtualField.find(ConsumerRecords.class, Consumer.class);
-      consumerRecordsConsumer.set(records, consumer);
-
       Context parentContext = currentContext();
-      ConsumerAndRecord<ConsumerRecords<?, ?>> request =
-          ConsumerAndRecord.create(consumer, records);
+      KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
 
-      if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
-        // disable process tracing and store the receive span for each individual record too
-        boolean previousValue = KafkaClientsConsumerProcessTracing.setEnabled(false);
-        try {
-          Context context =
+      // disable process tracing and store the receive span for each individual record too
+      boolean previousValue = KafkaClientsConsumerProcessTracing.setEnabled(false);
+      try {
+        Context context = null;
+        if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
+          context =
               InstrumenterUtil.startAndEnd(
                   consumerReceiveInstrumenter(),
                   parentContext,
@@ -117,23 +111,21 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
                   error,
                   timer.startTime(),
                   timer.now());
-
-          // we're storing the context of the receive span so that process spans can use it as
-          // parent context even though the span has ended
-          // this is the suggested behavior according to the spec batch receive scenario:
-          // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#batch-receiving
-          VirtualField<ConsumerRecords<?, ?>, Context> consumerRecordsContext =
-              VirtualField.find(ConsumerRecords.class, Context.class);
-          consumerRecordsContext.set(records, context);
-
-          VirtualField<ConsumerRecord<?, ?>, Context> consumerRecordContext =
-              VirtualField.find(ConsumerRecord.class, Context.class);
-          for (ConsumerRecord<?, ?> record : records) {
-            consumerRecordContext.set(record, context);
-          }
-        } finally {
-          KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
         }
+
+        // we're storing the context of the receive span so that process spans can use it as
+        // parent context even though the span has ended
+        // this is the suggested behavior according to the spec batch receive scenario:
+        // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#batch-receiving
+        // we're attaching the consumer to the records to be able to retrieve things like consumer
+        // group or clientId later
+        KafkaConsumerContextUtil.set(records, context, consumer);
+
+        for (ConsumerRecord<?, ?> record : records) {
+          KafkaConsumerContextUtil.set(record, context, consumer);
+        }
+      } finally {
+        KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
       }
     }
   }

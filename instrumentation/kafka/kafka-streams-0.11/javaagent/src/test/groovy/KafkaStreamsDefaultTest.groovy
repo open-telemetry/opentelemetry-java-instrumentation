@@ -100,6 +100,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.startsWith("producer") }
             "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
@@ -119,8 +120,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
+            "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.endsWith("consumer") }
             if (Boolean.getBoolean("testLatestDeps")) {
               "$SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test-application"
+              "$SemanticAttributes.MESSAGING_CONSUMER_ID" { it.startsWith("test-application - ") }
             }
           }
         }
@@ -135,6 +138,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.endsWith("consumer") }
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION" { it >= 0 }
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
@@ -152,6 +156,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.endsWith("producer") }
             "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
           }
@@ -170,6 +175,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
+            "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.startsWith("consumer") }
             if (Boolean.getBoolean("testLatestDeps")) {
               "$SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test"
             }
@@ -186,12 +192,14 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.startsWith("consumer") }
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION" { it >= 0 }
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
             if (Boolean.getBoolean("testLatestDeps")) {
               "$SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test"
+              "$SemanticAttributes.MESSAGING_CONSUMER_ID" { it.startsWith("test - consumer") }
             }
             "kafka.record.queue_time_ms" { it >= 0 }
             "testing" 123

@@ -14,15 +14,13 @@ import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 final class KafkaConsumerAttributesExtractor
-    implements AttributesExtractor<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void> {
+    implements AttributesExtractor<KafkaProcessRequest, Void> {
 
   @Override
   public void onStart(
-      AttributesBuilder attributes,
-      Context parentContext,
-      ConsumerAndRecord<ConsumerRecord<?, ?>> consumerAndRecord) {
+      AttributesBuilder attributes, Context parentContext, KafkaProcessRequest request) {
 
-    ConsumerRecord<?, ?> record = consumerAndRecord.record();
+    ConsumerRecord<?, ?> record = request.getRecord();
 
     attributes.put(SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION, (long) record.partition());
     attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, record.offset());
@@ -35,9 +33,19 @@ final class KafkaConsumerAttributesExtractor
       attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
 
-    String consumerGroup = consumerAndRecord.consumerGroup();
+    String consumerGroup = request.getConsumerGroup();
     if (consumerGroup != null) {
       attributes.put(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, consumerGroup);
+    }
+
+    String clientId = request.getClientId();
+    if (clientId != null) {
+      attributes.put(SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID, clientId);
+    }
+
+    String consumerId = request.getConsumerId();
+    if (consumerId != null) {
+      attributes.put(SemanticAttributes.MESSAGING_CONSUMER_ID, consumerId);
     }
   }
 
@@ -51,7 +59,7 @@ final class KafkaConsumerAttributesExtractor
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      ConsumerAndRecord<ConsumerRecord<?, ?>> consumerAndRecord,
+      KafkaProcessRequest request,
       @Nullable Void unused,
       @Nullable Throwable error) {}
 }

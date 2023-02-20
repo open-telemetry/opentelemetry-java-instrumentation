@@ -9,34 +9,29 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.kafka.v3_6.VertxK
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.instrumentation.kafka.internal.ConsumerAndRecord;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
 import io.vertx.core.Handler;
 import javax.annotation.Nullable;
-import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public final class InstrumentedSingleRecordHandler<K, V> implements Handler<ConsumerRecord<K, V>> {
 
-  private final VirtualField<ConsumerRecord<K, V>, Context> receiveContextField;
-  private final Consumer<K, V> kafkaConsumer;
   @Nullable private final Handler<ConsumerRecord<K, V>> delegate;
 
-  public InstrumentedSingleRecordHandler(
-      VirtualField<ConsumerRecord<K, V>, Context> receiveContextField,
-      Consumer<K, V> kafkaConsumer,
-      @Nullable Handler<ConsumerRecord<K, V>> delegate) {
-    this.receiveContextField = receiveContextField;
-    this.kafkaConsumer = kafkaConsumer;
+  public InstrumentedSingleRecordHandler(@Nullable Handler<ConsumerRecord<K, V>> delegate) {
     this.delegate = delegate;
   }
 
   @Override
   public void handle(ConsumerRecord<K, V> record) {
-    Context parentContext = getParentContext(record);
-    ConsumerAndRecord<ConsumerRecord<?, ?>> request =
-        ConsumerAndRecord.create(kafkaConsumer, record);
+    KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(record);
+    Context receiveContext = consumerContext.getContext();
+    // use the receive CONSUMER span as parent if it's available
+    Context parentContext = receiveContext != null ? receiveContext : Context.current();
 
+    KafkaProcessRequest request = KafkaProcessRequest.create(consumerContext, record);
     if (!processInstrumenter().shouldStart(parentContext, request)) {
       callDelegateHandler(record);
       return;
@@ -52,13 +47,6 @@ public final class InstrumentedSingleRecordHandler<K, V> implements Handler<Cons
     } finally {
       processInstrumenter().end(context, request, null, error);
     }
-  }
-
-  private Context getParentContext(ConsumerRecord<K, V> record) {
-    Context receiveContext = receiveContextField.get(record);
-
-    // use the receive CONSUMER span as parent if it's available
-    return receiveContext != null ? receiveContext : Context.current();
   }
 
   private void callDelegateHandler(ConsumerRecord<K, V> record) {

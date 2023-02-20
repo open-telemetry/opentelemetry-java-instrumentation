@@ -15,10 +15,14 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -87,44 +91,13 @@ class WrapperTest extends KafkaClientBaseTest {
                 span.hasName(SHARED_TOPIC + " send")
                     .hasKind(SpanKind.PRODUCER)
                     .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfying(
-                        equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                        satisfies(
-                            SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                            AbstractLongAssert::isNotNegative));
-                if (testHeaders) {
-                  span.hasAttributesSatisfying(
-                      equalTo(
-                          AttributeKey.stringArrayKey("messaging.header.test_message_header"),
-                          Collections.singletonList("test")));
-                }
+                    .hasAttributesSatisfyingExactly(sendAttributes(testHeaders));
               },
               span -> {
                 span.hasName(SHARED_TOPIC + " receive")
                     .hasKind(SpanKind.CONSUMER)
                     .hasParent(trace.getSpan(1))
-                    .hasAttributesSatisfying(
-                        equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                        equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
-                        equalTo(
-                            SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
-                            greeting.getBytes(StandardCharsets.UTF_8).length),
-                        satisfies(
-                            SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
-                            AbstractLongAssert::isNotNegative),
-                        satisfies(
-                            AttributeKey.longKey("messaging.kafka.message.offset"),
-                            AbstractLongAssert::isNotNegative));
-                if (testHeaders) {
-                  span.hasAttributesSatisfying(
-                      equalTo(
-                          AttributeKey.stringArrayKey("messaging.header.test_message_header"),
-                          Collections.singletonList("test")));
-                }
+                    .hasAttributesSatisfyingExactly(receiveAttributes(greeting, testHeaders));
               },
               span -> {
                 span.hasName("producer callback")
@@ -132,5 +105,66 @@ class WrapperTest extends KafkaClientBaseTest {
                     .hasParent(trace.getSpan(0));
               });
         });
+  }
+
+  protected static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
+                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                    stringAssert -> stringAssert.startsWith("producer")),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
+                    AbstractLongAssert::isNotNegative),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
+                    AbstractLongAssert::isNotNegative)));
+    if (testHeaders) {
+      assertions.add(
+          equalTo(
+              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              Collections.singletonList("test")));
+    }
+    return assertions;
+  }
+
+  private static List<AttributeAssertion> receiveAttributes(String greeting, boolean testHeaders) {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
+                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
+                equalTo(
+                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                    greeting.getBytes(StandardCharsets.UTF_8).length),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                    AbstractLongAssert::isNotNegative),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
+                    AbstractLongAssert::isNotNegative),
+                satisfies(
+                    AttributeKey.longKey("kafka.record.queue_time_ms"),
+                    AbstractLongAssert::isNotNegative),
+                equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                    stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(
+                    SemanticAttributes.MESSAGING_CONSUMER_ID,
+                    stringAssert -> stringAssert.startsWith("test - consumer"))));
+    if (testHeaders) {
+      assertions.add(
+          equalTo(
+              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              Collections.singletonList("test")));
+    }
+    return assertions;
   }
 }
