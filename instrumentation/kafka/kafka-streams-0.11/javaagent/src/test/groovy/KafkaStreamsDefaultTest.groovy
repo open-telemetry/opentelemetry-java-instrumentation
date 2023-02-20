@@ -145,6 +145,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
             "kafka.record.queue_time_ms" { it >= 0 }
             "asdf" "testing"
+            if (Boolean.getBoolean("testLatestDeps")) {
+              "$SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test-application"
+              "$SemanticAttributes.MESSAGING_CONSUMER_ID" { it.startsWith("test-application - ") }
+            }
           }
         }
         // kafka-clients PRODUCER
@@ -178,6 +182,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.startsWith("consumer") }
             if (Boolean.getBoolean("testLatestDeps")) {
               "$SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test"
+              "$SemanticAttributes.MESSAGING_CONSUMER_ID" { it.startsWith("test - ") }
             }
           }
         }
