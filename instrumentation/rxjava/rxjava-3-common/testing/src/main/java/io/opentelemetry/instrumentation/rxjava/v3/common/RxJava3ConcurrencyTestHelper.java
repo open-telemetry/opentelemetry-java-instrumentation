@@ -23,6 +23,8 @@ import java.util.concurrent.TimeUnit;
  * from different traces.
  */
 public class RxJava3ConcurrencyTestHelper {
+  private RxJava3ConcurrencyTestHelper() {}
+
   public static void launchAndWait(
       Scheduler scheduler, int iterations, long timeoutMillis, InstrumentationTestRunner runner) {
     CountDownLatch latch = new CountDownLatch(iterations);

@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attri
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.google.common.primitives.Ints;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -105,6 +106,22 @@ public abstract class AbstractReactorCoreTest {
         testing.runWithSpan(
             "parent",
             () -> Flux.fromStream(Stream.of(5, 6)).map(this::addOne).collectList().block());
+    assertThat(result).containsExactly(6, 7);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+                span -> span.hasName("add one").hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void basicFluxIterable() {
+    List<Integer> result =
+        testing.runWithSpan(
+            "parent",
+            () -> Flux.fromIterable(Ints.asList(5, 6)).map(this::addOne).collectList().block());
     assertThat(result).containsExactly(6, 7);
 
     testing.waitAndAssertTraces(
