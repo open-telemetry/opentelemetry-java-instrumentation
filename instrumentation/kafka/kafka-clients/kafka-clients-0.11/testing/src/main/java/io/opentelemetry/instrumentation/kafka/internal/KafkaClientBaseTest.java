@@ -196,6 +196,10 @@ public abstract class KafkaClientBaseTest {
     // consumer group id is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
       assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+      assertions.add(
+          satisfies(
+              SemanticAttributes.MESSAGING_CONSUMER_ID,
+              stringAssert -> stringAssert.startsWith("test - consumer")));
     }
     if (testHeaders) {
       assertions.add(
