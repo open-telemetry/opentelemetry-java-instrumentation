@@ -24,3 +24,12 @@ if (latestDepTest) {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }
 }
+
+if (!latestDepTest) {
+  // Spring Boot 2.0 requires StaticLoggerBinder which is removed in logback-classic 1.3
+  configurations.testRuntimeClasspath {
+    resolutionStrategy {
+      force("ch.qos.logback:logback-classic:1.2.3")
+    }
+  }
+}
