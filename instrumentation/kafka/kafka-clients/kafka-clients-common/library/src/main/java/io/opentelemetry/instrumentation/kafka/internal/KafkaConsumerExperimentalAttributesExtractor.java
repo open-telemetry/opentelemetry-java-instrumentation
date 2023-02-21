@@ -16,20 +16,19 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.record.TimestampType;
 
 final class KafkaConsumerExperimentalAttributesExtractor
-    implements AttributesExtractor<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void> {
+    implements AttributesExtractor<KafkaProcessRequest, Void> {
 
   private static final AttributeKey<Long> KAFKA_RECORD_QUEUE_TIME_MS =
       longKey("kafka.record.queue_time_ms");
 
   @Override
   public void onStart(
-      AttributesBuilder attributes,
-      Context parentContext,
-      ConsumerAndRecord<ConsumerRecord<?, ?>> consumerAndRecord) {
+      AttributesBuilder attributes, Context parentContext, KafkaProcessRequest request) {
 
+    ConsumerRecord<?, ?> record = request.getRecord();
     // don't record a duration if the message was sent from an old Kafka client
-    if (consumerAndRecord.record().timestampType() != TimestampType.NO_TIMESTAMP_TYPE) {
-      long produceTime = consumerAndRecord.record().timestamp();
+    if (record.timestampType() != TimestampType.NO_TIMESTAMP_TYPE) {
+      long produceTime = record.timestamp();
       // this attribute shows how much time elapsed between the producer and the consumer of this
       // message, which can be helpful for identifying queue bottlenecks
       attributes.put(
@@ -41,7 +40,7 @@ final class KafkaConsumerExperimentalAttributesExtractor
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      ConsumerAndRecord<ConsumerRecord<?, ?>> consumerAndRecord,
+      KafkaProcessRequest request,
       @Nullable Void unused,
       @Nullable Throwable error) {}
 }

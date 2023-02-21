@@ -12,8 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Iterator;
@@ -21,7 +21,6 @@ import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
@@ -70,10 +69,8 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       // leak the context and so there may be a leaked consumer span in the context, in which
       // case it's important to overwrite the leaked span instead of suppressing the correct span
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
-      Context receiveContext = VirtualField.find(ConsumerRecords.class, Context.class).get(records);
-      Consumer<K, V> consumer =
-          VirtualField.find(ConsumerRecords.class, Consumer.class).get(records);
-      iterable = TracingIterable.wrap(iterable, receiveContext, consumer);
+      KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
+      iterable = TracingIterable.wrap(iterable, consumerContext);
     }
   }
 
@@ -90,10 +87,8 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       // leak the context and so there may be a leaked consumer span in the context, in which
       // case it's important to overwrite the leaked span instead of suppressing the correct span
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
-      Context receiveContext = VirtualField.find(ConsumerRecords.class, Context.class).get(records);
-      Consumer<K, V> consumer =
-          VirtualField.find(ConsumerRecords.class, Consumer.class).get(records);
-      list = TracingList.wrap(list, receiveContext, consumer);
+      KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
+      list = TracingList.wrap(list, consumerContext);
     }
   }
 
@@ -110,10 +105,8 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       // leak the context and so there may be a leaked consumer span in the context, in which
       // case it's important to overwrite the leaked span instead of suppressing the correct span
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
-      Context receiveContext = VirtualField.find(ConsumerRecords.class, Context.class).get(records);
-      Consumer<K, V> consumer =
-          VirtualField.find(ConsumerRecords.class, Consumer.class).get(records);
-      iterator = TracingIterator.wrap(iterator, receiveContext, consumer);
+      KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
+      iterator = TracingIterator.wrap(iterator, consumerContext);
     }
   }
 }

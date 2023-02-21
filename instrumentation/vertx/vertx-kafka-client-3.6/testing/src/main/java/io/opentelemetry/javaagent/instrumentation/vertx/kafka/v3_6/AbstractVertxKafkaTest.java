@@ -202,6 +202,9 @@ public abstract class AbstractVertxKafkaTest {
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                 satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                    stringAssert -> stringAssert.startsWith("producer")),
+                satisfies(
                     SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                     AbstractLongAssert::isNotNegative),
                 satisfies(
@@ -229,10 +232,17 @@ public abstract class AbstractVertxKafkaTest {
                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, topic),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, operation)));
+                equalTo(SemanticAttributes.MESSAGING_OPERATION, operation),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                    stringAssert -> stringAssert.startsWith("consumer"))));
     // consumer group id is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
       assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+      assertions.add(
+          satisfies(
+              SemanticAttributes.MESSAGING_CONSUMER_ID,
+              stringAssert -> stringAssert.startsWith("test - consumer")));
     }
     return assertions;
   }
@@ -246,6 +256,9 @@ public abstract class AbstractVertxKafkaTest {
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                    stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(
                     SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
                     AbstractLongAssert::isNotNegative),
@@ -261,6 +274,10 @@ public abstract class AbstractVertxKafkaTest {
     // consumer group id is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
       assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+      assertions.add(
+          satisfies(
+              SemanticAttributes.MESSAGING_CONSUMER_ID,
+              stringAssert -> stringAssert.startsWith("test - consumer")));
     }
     String messageKey = record.key();
     if (messageKey != null) {
