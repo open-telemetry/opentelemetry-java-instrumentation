@@ -58,7 +58,7 @@ public class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.enableTestReadTimeout();
     optionsBuilder.disableTestCallback();
-    // Circular Redirects are not explicitely handled by jodd-http
+    // Circular Redirects are not explicitly handled by jodd-http
     optionsBuilder.disableTestCircularRedirects();
   }
 }
