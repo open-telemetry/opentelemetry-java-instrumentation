@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -32,13 +31,5 @@ public final class SpringWebfluxServerInstrumentationTest
   @Override
   protected void configure(HttpServerTestOptions options) {
     options.setTestPathParam(true);
-
-    options.setExpectedHttpRoute(
-        endpoint -> {
-          if (endpoint == ServerEndpoint.PATH_PARAM) {
-            return "/path/{id}/param";
-          }
-          return expectedHttpRoute(endpoint);
-        });
   }
 }

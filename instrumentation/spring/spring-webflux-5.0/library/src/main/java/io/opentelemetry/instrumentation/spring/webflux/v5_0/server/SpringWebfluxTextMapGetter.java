@@ -7,22 +7,22 @@ package io.opentelemetry.instrumentation.spring.webflux.v5_0.server;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
-import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.web.server.ServerWebExchange;
 
-enum SpringWebfluxTextMapGetter implements TextMapGetter<ServerHttpRequest> {
+enum SpringWebfluxTextMapGetter implements TextMapGetter<ServerWebExchange> {
   INSTANCE;
 
   @Override
-  public Iterable<String> keys(ServerHttpRequest request) {
-    return request.getHeaders().keySet();
+  public Iterable<String> keys(ServerWebExchange exchange) {
+    return exchange.getRequest().getHeaders().keySet();
   }
 
   @Nullable
   @Override
-  public String get(@Nullable ServerHttpRequest request, String key) {
-    if (request == null) {
+  public String get(@Nullable ServerWebExchange exchange, String key) {
+    if (exchange == null) {
       return null;
     }
-    return request.getHeaders().getFirst(key);
+    return exchange.getRequest().getHeaders().getFirst(key);
   }
 }

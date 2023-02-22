@@ -9,26 +9,31 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.web.server.ServerWebExchange;
 
 public final class SpringWebfluxTelemetryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.0";
 
   private final OpenTelemetry openTelemetry;
-  private final HttpServerAttributesExtractorBuilder<ServerHttpRequest, ServerHttpResponse>
+  private final HttpServerAttributesExtractorBuilder<ServerWebExchange, ServerWebExchange>
       httpAttributesExtractorBuilder =
           HttpServerAttributesExtractor.builder(
               SpringWebfluxHttpAttributesGetter.INSTANCE,
               SpringWebfluxNetAttributesGetter.INSTANCE);
-  private final List<AttributesExtractor<ServerHttpRequest, ServerHttpResponse>>
+  private final List<AttributesExtractor<ServerWebExchange, ServerWebExchange>>
       additionalExtractors = new ArrayList<>();
+
+  private static final SpringWebfluxHttpAttributesGetter attributesGetter =
+      SpringWebfluxHttpAttributesGetter.INSTANCE;
+  static final SpanNameExtractor<ServerWebExchange> spanNameExtractor =
+      HttpSpanNameExtractor.create(attributesGetter);
 
   SpringWebfluxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -40,7 +45,7 @@ public final class SpringWebfluxTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebfluxTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<ServerHttpRequest, ServerHttpResponse> attributesExtractor) {
+      AttributesExtractor<ServerWebExchange, ServerWebExchange> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
     return this;
   }
@@ -69,10 +74,12 @@ public final class SpringWebfluxTelemetryBuilder {
 
   public SpringWebfluxServerTelemetry build() {
     SpringWebfluxHttpAttributesGetter attributesGetter = SpringWebfluxHttpAttributesGetter.INSTANCE;
+    SpanNameExtractor<ServerWebExchange> spanNameExtractor =
+        HttpSpanNameExtractor.create(attributesGetter);
 
-    Instrumenter<ServerHttpRequest, ServerHttpResponse> instrumenter =
-        Instrumenter.<ServerHttpRequest, ServerHttpResponse>builder(
-                openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(attributesGetter))
+    Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter =
+        Instrumenter.<ServerWebExchange, ServerWebExchange>builder(
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(attributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)

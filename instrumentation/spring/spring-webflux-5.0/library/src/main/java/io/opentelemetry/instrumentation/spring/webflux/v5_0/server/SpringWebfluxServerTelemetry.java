@@ -8,11 +8,12 @@ package io.opentelemetry.instrumentation.spring.webflux.v5_0.server;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.web.server.ServerWebExchange;
 
 public final class SpringWebfluxServerTelemetry {
-  private final Instrumenter<ServerHttpRequest, ServerHttpResponse> instrumenter;
+  // We use ServerWebExchange (which holds both the request and response)
+  // because we need it to get the HTTP route while instrumenting.
+  private final Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter;
 
   public static SpringWebfluxServerTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
@@ -26,7 +27,7 @@ public final class SpringWebfluxServerTelemetry {
     ContextPropagationOperator.builder().build().registerOnEachOperator();
   }
 
-  SpringWebfluxServerTelemetry(Instrumenter<ServerHttpRequest, ServerHttpResponse> instrumenter) {
+  SpringWebfluxServerTelemetry(Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter) {
     this.instrumenter = instrumenter;
   }
 

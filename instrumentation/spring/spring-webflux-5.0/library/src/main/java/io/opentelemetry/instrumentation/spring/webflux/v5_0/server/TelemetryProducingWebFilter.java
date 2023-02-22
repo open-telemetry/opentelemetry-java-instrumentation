@@ -5,11 +5,14 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_0.server;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import org.reactivestreams.Subscription;
-import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.core.Ordered;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
@@ -18,11 +21,11 @@ import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.util.annotation.NonNull;
 
-final class TelemetryProducingWebFilter implements WebFilter {
+final class TelemetryProducingWebFilter implements WebFilter, Ordered {
 
-  private final Instrumenter<ServerHttpRequest, ServerHttpResponse> instrumenter;
+  private final Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter;
 
-  TelemetryProducingWebFilter(Instrumenter<ServerHttpRequest, ServerHttpResponse> instrumenter) {
+  TelemetryProducingWebFilter(Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter) {
     this.instrumenter = instrumenter;
   }
 
@@ -34,16 +37,21 @@ final class TelemetryProducingWebFilter implements WebFilter {
     return new TelemetryWrappedMono(source, instrumenter, parentContext, exchange);
   }
 
+  @Override
+  public int getOrder() {
+    return Ordered.HIGHEST_PRECEDENCE + 1;
+  }
+
   private static class TelemetryWrappedMono extends Mono<Void> {
 
     private final Mono<Void> source;
-    private final Instrumenter<ServerHttpRequest, ServerHttpResponse> instrumenter;
+    private final Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter;
     private final Context parentContext;
     private final ServerWebExchange exchange;
 
     TelemetryWrappedMono(
         Mono<Void> source,
-        Instrumenter<ServerHttpRequest, ServerHttpResponse> instrumenter,
+        Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter,
         Context parentContext,
         ServerWebExchange exchange) {
       this.source = source;
@@ -54,11 +62,11 @@ final class TelemetryProducingWebFilter implements WebFilter {
 
     @Override
     public void subscribe(CoreSubscriber<? super Void> actual) {
-      if (!instrumenter.shouldStart(parentContext, exchange.getRequest())) {
+      if (!instrumenter.shouldStart(parentContext, exchange)) {
         source.subscribe(actual);
         return;
       }
-      Context currentContext = instrumenter.start(parentContext, exchange.getRequest());
+      Context currentContext = instrumenter.start(parentContext, exchange);
       try (Scope ignored = currentContext.makeCurrent()) {
         this.source.subscribe(
             new TelemetryWrappedSubscriber(actual, currentContext, instrumenter, exchange));
@@ -68,15 +76,18 @@ final class TelemetryProducingWebFilter implements WebFilter {
 
   private static class TelemetryWrappedSubscriber implements CoreSubscriber<Void> {
 
+    private static final SpanNameExtractor<ServerWebExchange> spanNameExtractor =
+        HttpSpanNameExtractor.create(SpringWebfluxHttpAttributesGetter.INSTANCE);
+
     private final CoreSubscriber<? super Void> actual;
-    private final Instrumenter<ServerHttpRequest, ServerHttpResponse> instrumenter;
+    private final Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter;
     private final Context currentOtelContext;
     private final ServerWebExchange exchange;
 
     TelemetryWrappedSubscriber(
         CoreSubscriber<? super Void> actual,
         Context currentOtelContext,
-        Instrumenter<ServerHttpRequest, ServerHttpResponse> instrumenter,
+        Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter,
         ServerWebExchange exchange) {
       this.actual = actual;
       this.instrumenter = instrumenter;
@@ -94,27 +105,34 @@ final class TelemetryProducingWebFilter implements WebFilter {
 
     @Override
     public void onError(Throwable t) {
-      onTerminal(currentOtelContext, exchange, t);
+      onTerminal(currentOtelContext, t);
       actual.onError(t);
     }
 
     @Override
     public void onComplete() {
-      onTerminal(currentOtelContext, exchange, null);
+      onTerminal(currentOtelContext, null);
       actual.onComplete();
     }
 
-    private void onTerminal(Context currentContext, ServerWebExchange exchange, Throwable t) {
+    private void onTerminal(Context currentContext, Throwable t) {
       ServerHttpResponse response = exchange.getResponse();
       if (response.isCommitted()) {
-        instrumenter.end(currentContext, exchange.getRequest(), exchange.getResponse(), t);
+        end(currentContext, t);
       } else {
         response.beforeCommit(
             () -> {
-              instrumenter.end(currentContext, exchange.getRequest(), exchange.getResponse(), t);
+              end(currentContext, t);
               return Mono.empty();
             });
       }
+    }
+
+    private void end(Context currentContext, Throwable t) {
+      // Update span name now, because during instrumenter.start() the HTTP route isn't
+      // available from the exchange attributes, but is afterwards
+      Span.fromContext(currentContext).updateName(spanNameExtractor.extract(exchange));
+      instrumenter.end(currentContext, exchange, exchange, t);
     }
   }
 }

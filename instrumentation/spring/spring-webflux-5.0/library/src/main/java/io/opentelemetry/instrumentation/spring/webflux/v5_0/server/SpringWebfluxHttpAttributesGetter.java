@@ -11,66 +11,80 @@ import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.web.reactive.HandlerMapping;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.util.pattern.PathPattern;
 
 enum SpringWebfluxHttpAttributesGetter
-    implements HttpServerAttributesGetter<ServerHttpRequest, ServerHttpResponse> {
+    implements HttpServerAttributesGetter<ServerWebExchange, ServerWebExchange> {
   INSTANCE;
 
   @Override
-  public String getMethod(ServerHttpRequest request) {
-    return request.getMethodValue();
+  public String getMethod(ServerWebExchange request) {
+    return request.getRequest().getMethodValue();
   }
 
   @Override
-  public List<String> getRequestHeader(ServerHttpRequest request, String name) {
-    return request.getHeaders().getOrDefault(name, Collections.emptyList());
+  public List<String> getRequestHeader(ServerWebExchange request, String name) {
+    return request.getRequest().getHeaders().getOrDefault(name, Collections.emptyList());
   }
 
   @Nullable
   @Override
   public Integer getStatusCode(
-      ServerHttpRequest request, ServerHttpResponse response, @Nullable Throwable error) {
-    HttpStatus status = response.getStatusCode();
+      ServerWebExchange request, ServerWebExchange response, @Nullable Throwable error) {
+    HttpStatus status = response.getResponse().getStatusCode();
     return status == null ? null : status.value();
   }
 
   @Override
   public List<String> getResponseHeader(
-      ServerHttpRequest request, ServerHttpResponse response, String name) {
-    return response.getHeaders().getOrDefault(name, Collections.emptyList());
+      ServerWebExchange request, ServerWebExchange response, String name) {
+    return response.getResponse().getHeaders().getOrDefault(name, Collections.emptyList());
   }
 
   @Nullable
   @Override
-  public String getFlavor(ServerHttpRequest request) {
+  public String getFlavor(ServerWebExchange request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getTarget(ServerHttpRequest request) {
-    String path = request.getURI().getPath();
-    String query = request.getURI().getQuery();
+  public String getTarget(ServerWebExchange request) {
+    String path = request.getRequest().getURI().getPath();
+    String query = request.getRequest().getURI().getQuery();
     if (path == null && query == null) {
       return null;
     }
     if (query != null) {
       query = "?" + query;
     }
-    return Optional.ofNullable(query).orElse("") + Optional.ofNullable(query).orElse("");
+    return Optional.ofNullable(path).orElse("") + Optional.ofNullable(query).orElse("");
   }
 
   @Nullable
   @Override
-  public String getRoute(ServerHttpRequest request) {
-    return null;
+  public String getRoute(ServerWebExchange request) {
+    Object bestPatternObj = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+    if (bestPatternObj == null) {
+      return null;
+    }
+    String route;
+    if (bestPatternObj instanceof PathPattern) {
+      route = ((PathPattern) bestPatternObj).getPatternString();
+    } else {
+      route = bestPatternObj.toString();
+    }
+    if (route.equals("/**")) {
+      return null; // 404
+    }
+    return route;
   }
 
   @Nullable
   @Override
-  public String getScheme(ServerHttpRequest request) {
-    return request.getURI().getScheme();
+  public String getScheme(ServerWebExchange request) {
+    return request.getRequest().getURI().getScheme();
   }
 }
