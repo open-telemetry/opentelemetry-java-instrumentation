@@ -18,7 +18,6 @@ import java.util.List;
 import jodd.http.HttpBase;
 import jodd.http.HttpRequest;
 import jodd.http.HttpResponse;
-import jodd.util.net.HttpMethod;
 import org.junit.jupiter.api.Test;
 
 class JoddHttpHttpAttributesGetterTest {
@@ -28,8 +27,8 @@ class JoddHttpHttpAttributesGetterTest {
 
   @Test
   void getMethod() {
-    for (HttpMethod method : HttpMethod.values()) {
-      assertEquals(method.name(), attributesGetter.getMethod(new HttpRequest().method(method)));
+    for (String method : Arrays.asList("GET", "PUT", "POST", "PATCH")) {
+      assertEquals(method, attributesGetter.getMethod(new HttpRequest().method(method)));
     }
   }
 

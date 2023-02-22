@@ -23,7 +23,7 @@ public class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
   @Nullable
   @Override
   protected String userAgent() {
-    return "joddhttp";
+    return "Jodd HTTP";
   }
 
   @Override
