@@ -15,6 +15,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
+  // caching is disabled for build time muzzle checks
+  // this field is set via reflection from ClassLoaderMatcher
+  static boolean useCache = true;
   private static final AtomicInteger counter = new AtomicInteger();
 
   private final String[] resources;
@@ -25,7 +28,9 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
     for (int i = 0; i < resources.length; i++) {
       resources[i] = resources[i].replace(".", "/") + ".class";
     }
-    Manager.INSTANCE.add(this);
+    if (useCache) {
+      Manager.INSTANCE.add(this);
+    }
   }
 
   @Override
@@ -34,7 +39,11 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
       // Can't match the bootstrap class loader.
       return false;
     }
-    return Manager.INSTANCE.match(this, cl);
+    if (useCache) {
+      return Manager.INSTANCE.match(this, cl);
+    } else {
+      return hasResources(cl, resources);
+    }
   }
 
   private static boolean hasResources(ClassLoader cl, String... resources) {
