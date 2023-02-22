@@ -60,7 +60,7 @@ public final class Servlet3Singletons {
     return null;
   }
 
-  static OutputStreamSnippetInjectionHelper getSnippetInjectionHelper() {
+  public static OutputStreamSnippetInjectionHelper getSnippetInjectionHelper() {
     return SNIPPET_INJECTION_HELPER;
   }
 
