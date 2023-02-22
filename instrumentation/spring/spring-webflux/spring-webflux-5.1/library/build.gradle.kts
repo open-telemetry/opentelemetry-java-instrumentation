@@ -3,17 +3,17 @@ plugins {
 }
 
 dependencies {
-  library("org.springframework:spring-webflux:5.0.0.RELEASE")
+  library("org.springframework:spring-webflux:5.1.3.RELEASE")
 
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   compileOnly("io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE")
 
-  testImplementation(project(":instrumentation:spring:spring-webflux-5.0:testing"))
+  testImplementation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing"))
 
-  testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.0.0.RELEASE")
-  testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
-  testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.0.0.RELEASE")
+  testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.1.0.RELEASE")
+  testLibrary("org.springframework.boot:spring-boot-starter-test:2.1.0.RELEASE")
+  testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.1.0.RELEASE")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
