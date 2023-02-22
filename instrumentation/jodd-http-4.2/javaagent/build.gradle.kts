@@ -13,4 +13,7 @@ muzzle {
 dependencies {
   // 4.2 is the first version with java 8, follow-redirects and HttpRequest#headerOverwrite method
   library("org.jodd:jodd-http:4.2.0")
+
+  testImplementation(project(":instrumentation:jodd-http-4.2:javaagent"))
+  testImplementation(project(":instrumentation-api-semconv"))
 }

@@ -6,10 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2.JoddHttpSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.hasGenericSuperClass;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -32,8 +30,7 @@ class JoddHttpInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("jodd.http.HttpBase"))
-        .and(hasGenericSuperClass(named("jodd.http.HttpRequest")));
+    return named("jodd.http.HttpRequest");
   }
 
   @Override
@@ -62,16 +59,19 @@ class JoddHttpInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.This HttpRequest request,
-        @Advice.Return HttpResponse result,
+        @Advice.Return HttpResponse response,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
-
       scope.close();
-      JoddHttpHelper.doMethodExit(context, request, result, throwable);
+      if (throwable != null) {
+        instrumenter().end(context, request, null, throwable);
+      } else {
+        instrumenter().end(context, request, response, null);
+      }
     }
   }
 }

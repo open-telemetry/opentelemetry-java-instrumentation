@@ -5,9 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2;
 
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_1_0;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_1_1;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_2_0;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_3_0;
+
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -18,6 +25,8 @@ final class JoddHttpHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, HttpResponse> {
   private static final Logger logger =
       Logger.getLogger(JoddHttpHttpAttributesGetter.class.getName());
+  private static final Set<String> ALLOWED_HTTP_FLAVORS =
+      new HashSet<>(Arrays.asList(HTTP_1_0, HTTP_1_1, HTTP_2_0, HTTP_3_0));
 
   @Override
   public String getMethod(HttpRequest request) {
@@ -52,17 +61,8 @@ final class JoddHttpHttpAttributesGetter
         httpVersion = httpVersion.substring(httpVersion.lastIndexOf("/") + 1);
       }
 
-      if (httpVersion.equals(SemanticAttributes.HttpFlavorValues.HTTP_1_0)) {
-        return SemanticAttributes.HttpFlavorValues.HTTP_1_0;
-      }
-      if (httpVersion.equals(SemanticAttributes.HttpFlavorValues.HTTP_1_1)) {
-        return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
-      }
-      if (httpVersion.equals(SemanticAttributes.HttpFlavorValues.HTTP_2_0)) {
-        return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
-      }
-      if (httpVersion.equals(SemanticAttributes.HttpFlavorValues.HTTP_3_0)) {
-        return SemanticAttributes.HttpFlavorValues.HTTP_3_0;
+      if (ALLOWED_HTTP_FLAVORS.contains(httpVersion)) {
+        return httpVersion;
       }
     }
     logger.log(Level.FINE, "unexpected http protocol version: {0}", httpVersion);
