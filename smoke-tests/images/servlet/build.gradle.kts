@@ -34,8 +34,6 @@ val targets = mapOf(
   "liberty" to listOf(
     ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11"), mapOf("release" to "2020-11-11_0736")),
     // running configure.sh is failing while building the image with Java 19
-    ImageTarget(listOf("21.0.0.10"), listOf("hotspot"), listOf("8", "11", "17"), mapOf("release" to "2021-09-20_1900")),
-    ImageTarget(listOf("21.0.0.10"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "2021-09-20_1900")),
     ImageTarget(listOf("21.0.0.12"), listOf("hotspot"), listOf("8", "11", "17"), mapOf("release" to "2021-11-17_1256")),
     ImageTarget(listOf("21.0.0.12"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "2021-11-17_1256")),
     ImageTarget(listOf("22.0.0.12"), listOf("hotspot"), listOf("8", "11", "17"), mapOf("release" to "22.0.0.12")),
