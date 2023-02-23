@@ -1,7 +1,7 @@
 ---
 rules:
  - bean: Hadoop:service=NameNode,name=FSNamesystem
-   unit: 1
+   unit: "1"
    prefix: hadoop.
    metricAttribute:
      node_name: param(tag.Hostname)
