@@ -72,16 +72,11 @@ class AgentConfigTest {
     // miss typo
     when(config.getString("otel.redefinition.strategy", "retransformation"))
         .thenReturn("somethingElse");
-    assertThrows(
-        ConfigurationException.class,
-        () -> AgentConfig.redefinitionStrategy(config));
+    assertThrows(ConfigurationException.class, () -> AgentConfig.redefinitionStrategy(config));
 
     // passing value is disabled
-    when(config.getString("otel.redefinition.strategy", "retransformation"))
-        .thenReturn("disabled");
-    assertThrows(
-        ConfigurationException.class,
-        () -> AgentConfig.redefinitionStrategy(config));
+    when(config.getString("otel.redefinition.strategy", "retransformation")).thenReturn("disabled");
+    assertThrows(ConfigurationException.class, () -> AgentConfig.redefinitionStrategy(config));
   }
 
   private static class InstrumentationEnabledParams implements ArgumentsProvider {
