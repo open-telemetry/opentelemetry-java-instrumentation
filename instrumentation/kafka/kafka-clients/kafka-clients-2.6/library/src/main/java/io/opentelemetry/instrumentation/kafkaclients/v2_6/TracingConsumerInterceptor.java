@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.util.Map;
+import java.util.Objects;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
@@ -21,9 +23,12 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
 
   private static final KafkaTelemetry telemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());
 
+  private String consumerGroup;
+  private String clientId;
+
   @Override
   public ConsumerRecords<K, V> onConsume(ConsumerRecords<K, V> records) {
-    telemetry.buildAndFinishSpan(records);
+    telemetry.buildAndFinishSpan(records, consumerGroup, clientId);
     return records;
   }
 
@@ -35,6 +40,9 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
 
   @Override
   public void configure(Map<String, ?> configs) {
+    consumerGroup = Objects.toString(configs.get(ConsumerConfig.GROUP_ID_CONFIG), null);
+    clientId = Objects.toString(configs.get(ConsumerConfig.CLIENT_ID_CONFIG), null);
+
     // TODO: support experimental attributes config
   }
 }

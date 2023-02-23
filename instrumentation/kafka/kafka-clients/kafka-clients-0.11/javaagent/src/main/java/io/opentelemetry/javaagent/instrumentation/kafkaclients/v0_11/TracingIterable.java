@@ -5,27 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
-import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import java.util.Iterator;
-import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public class TracingIterable<K, V> implements Iterable<ConsumerRecord<K, V>> {
   private final Iterable<ConsumerRecord<K, V>> delegate;
-  @Nullable private final Context receiveContext;
+  private final KafkaConsumerContext consumerContext;
   private boolean firstIterator = true;
 
   protected TracingIterable(
-      Iterable<ConsumerRecord<K, V>> delegate, @Nullable Context receiveContext) {
+      Iterable<ConsumerRecord<K, V>> delegate, KafkaConsumerContext consumerContext) {
     this.delegate = delegate;
-    this.receiveContext = receiveContext;
+    this.consumerContext = consumerContext;
   }
 
   public static <K, V> Iterable<ConsumerRecord<K, V>> wrap(
-      Iterable<ConsumerRecord<K, V>> delegate, @Nullable Context receiveContext) {
+      Iterable<ConsumerRecord<K, V>> delegate, KafkaConsumerContext consumerContext) {
     if (KafkaClientsConsumerProcessTracing.wrappingEnabled()) {
-      return new TracingIterable<>(delegate, receiveContext);
+      return new TracingIterable<>(delegate, consumerContext);
     }
     return delegate;
   }
@@ -37,7 +36,7 @@ public class TracingIterable<K, V> implements Iterable<ConsumerRecord<K, V>> {
     // However, this is not thread-safe, but usually the first (hopefully only) traversal of
     // ConsumerRecords is performed in the same thread that called poll()
     if (firstIterator) {
-      it = TracingIterator.wrap(delegate.iterator(), receiveContext);
+      it = TracingIterator.wrap(delegate.iterator(), consumerContext);
       firstIterator = false;
     } else {
       it = delegate.iterator();

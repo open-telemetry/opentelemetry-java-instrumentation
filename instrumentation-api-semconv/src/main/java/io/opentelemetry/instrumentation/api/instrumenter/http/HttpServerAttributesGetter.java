@@ -20,70 +20,16 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
   // Attributes that always exist in a request
 
   @Nullable
-  default String getFlavor(REQUEST request) {
-    return flavor(request);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getFlavor(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String flavor(REQUEST request) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
-  }
+  String getFlavor(REQUEST request);
 
   @Nullable
-  default String getTarget(REQUEST request) {
-    return target(request);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getTarget(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String target(REQUEST request) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
-  }
+  String getTarget(REQUEST request);
 
   @Nullable
   default String getRoute(REQUEST request) {
-    return route(request);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getRoute(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String route(REQUEST request) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
+    return null;
   }
 
   @Nullable
-  default String getScheme(REQUEST request) {
-    return scheme(request);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getScheme(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String scheme(REQUEST request) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
-  }
+  String getScheme(REQUEST request);
 }

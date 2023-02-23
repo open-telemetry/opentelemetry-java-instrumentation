@@ -5,26 +5,25 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
-import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
-import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public class TracingList<K, V> extends TracingIterable<K, V> implements List<ConsumerRecord<K, V>> {
   private final List<ConsumerRecord<K, V>> delegate;
 
-  private TracingList(List<ConsumerRecord<K, V>> delegate, @Nullable Context receiveContext) {
-    super(delegate, receiveContext);
+  private TracingList(List<ConsumerRecord<K, V>> delegate, KafkaConsumerContext consumerContext) {
+    super(delegate, consumerContext);
     this.delegate = delegate;
   }
 
   public static <K, V> List<ConsumerRecord<K, V>> wrap(
-      List<ConsumerRecord<K, V>> delegate, @Nullable Context receiveContext) {
+      List<ConsumerRecord<K, V>> delegate, KafkaConsumerContext consumerContext) {
     if (KafkaClientsConsumerProcessTracing.wrappingEnabled()) {
-      return new TracingList<>(delegate, receiveContext);
+      return new TracingList<>(delegate, consumerContext);
     }
     return delegate;
   }

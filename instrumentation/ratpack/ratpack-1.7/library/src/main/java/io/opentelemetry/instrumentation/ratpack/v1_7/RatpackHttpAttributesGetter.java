@@ -30,13 +30,6 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
 
   @Override
   @Nullable
-  public String getRoute(Request request) {
-    // Ratpack route not available at the beginning of request.
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String getScheme(Request request) {
     Context ratpackContext = request.get(Context.class);
     if (ratpackContext == null) {

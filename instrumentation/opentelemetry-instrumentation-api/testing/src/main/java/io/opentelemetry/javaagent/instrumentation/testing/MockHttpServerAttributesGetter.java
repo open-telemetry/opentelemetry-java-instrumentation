@@ -51,12 +51,6 @@ enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String
 
   @Nullable
   @Override
-  public String getRoute(String s) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getScheme(String s) {
     return null;
   }

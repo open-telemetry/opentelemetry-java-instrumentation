@@ -15,7 +15,7 @@ otelJava {
   maxJavaVersionForTests.set(JavaVersion.VERSION_11)
 }
 
-val dockerJavaVersion = "3.2.14"
+val dockerJavaVersion = "3.3.0"
 dependencies {
   testCompileOnly("com.google.auto.value:auto-value-annotations")
   testAnnotationProcessor("com.google.auto.value:auto-value")
@@ -29,7 +29,7 @@ dependencies {
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("com.google.protobuf:protobuf-java-util:3.21.12")
+  implementation("com.google.protobuf:protobuf-java-util:3.22.0")
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")

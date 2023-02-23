@@ -40,12 +40,6 @@ public enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
 
   @Override
   @Nullable
-  public String getRoute(Request request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String getScheme(Request request) {
     return request.getOriginalRef().getScheme();
   }

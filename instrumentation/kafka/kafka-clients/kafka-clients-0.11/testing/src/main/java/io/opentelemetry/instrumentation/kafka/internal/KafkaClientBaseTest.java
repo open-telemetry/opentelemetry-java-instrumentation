@@ -5,10 +5,20 @@
 
 package io.opentelemetry.instrumentation.kafka.internal;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +35,7 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
@@ -137,5 +148,116 @@ public abstract class KafkaClientBaseTest {
       throw new AssertionError("Consumer wasn't assigned any partitions!");
     }
     consumer.seekToBeginning(Collections.emptyList());
+  }
+
+  protected static List<AttributeAssertion> sendAttributes(
+      String messageKey, String messageValue, boolean testHeaders) {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
+                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                    stringAssert -> stringAssert.startsWith("producer")),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
+                    AbstractLongAssert::isNotNegative),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
+                    AbstractLongAssert::isNotNegative)));
+    if (messageKey != null) {
+      assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
+    }
+    if (messageValue == null) {
+      assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true));
+    }
+    if (testHeaders) {
+      assertions.add(
+          equalTo(
+              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              Collections.singletonList("test")));
+    }
+    return assertions;
+  }
+
+  protected static List<AttributeAssertion> receiveAttributes(boolean testHeaders) {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
+                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                    stringAssert -> stringAssert.startsWith("consumer"))));
+    // consumer group id is not available in version 0.11
+    if (Boolean.getBoolean("testLatestDeps")) {
+      assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+      assertions.add(
+          satisfies(
+              SemanticAttributes.MESSAGING_CONSUMER_ID,
+              stringAssert -> stringAssert.startsWith("test - consumer")));
+    }
+    if (testHeaders) {
+      assertions.add(
+          equalTo(
+              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              Collections.singletonList("test")));
+    }
+    return assertions;
+  }
+
+  protected static List<AttributeAssertion> processAttributes(
+      String messageKey, String messageValue, boolean testHeaders) {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
+                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                    stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                    AbstractLongAssert::isNotNegative),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
+                    AbstractLongAssert::isNotNegative),
+                satisfies(
+                    AttributeKey.longKey("kafka.record.queue_time_ms"),
+                    AbstractLongAssert::isNotNegative)));
+    // consumer group id is not available in version 0.11
+    if (Boolean.getBoolean("testLatestDeps")) {
+      assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+      assertions.add(
+          satisfies(
+              SemanticAttributes.MESSAGING_CONSUMER_ID,
+              stringAssert -> stringAssert.startsWith("test - consumer")));
+    }
+    if (messageKey != null) {
+      assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
+    }
+    if (messageValue == null) {
+      assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true));
+      // TODO shouldn't set -1 in this case
+      assertions.add(equalTo(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, -1L));
+    } else {
+      assertions.add(
+          equalTo(
+              SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+              messageValue.getBytes(StandardCharsets.UTF_8).length));
+    }
+    if (testHeaders) {
+      assertions.add(
+          equalTo(
+              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              Collections.singletonList("test")));
+    }
+    return assertions;
   }
 }
