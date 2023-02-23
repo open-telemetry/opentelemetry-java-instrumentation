@@ -33,7 +33,7 @@ subprojects {
       opentelemetryJavaagent     : "1.24.0-SNAPSHOT",
       opentelemetryJavaagentAlpha: "1.24.0-alpha-SNAPSHOT",
 
-      bytebuddy                  : "1.13.0",
+      bytebuddy                  : "1.14.0",
       autoservice                : "1.0.1",
       junit                      : "5.9.2"
     ]

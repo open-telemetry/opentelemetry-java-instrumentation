@@ -21,9 +21,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpan
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.Collections;
 import java.util.List;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
@@ -81,17 +78,17 @@ public final class KafkaInstrumenterFactory {
     return this;
   }
 
-  public Instrumenter<ProducerRecord<?, ?>, RecordMetadata> createProducerInstrumenter() {
+  public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter() {
     return createProducerInstrumenter(Collections.emptyList());
   }
 
-  public Instrumenter<ProducerRecord<?, ?>, RecordMetadata> createProducerInstrumenter(
-      Iterable<AttributesExtractor<ProducerRecord<?, ?>, RecordMetadata>> extractors) {
+  public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter(
+      Iterable<AttributesExtractor<KafkaProducerRequest, RecordMetadata>> extractors) {
 
     KafkaProducerAttributesGetter getter = KafkaProducerAttributesGetter.INSTANCE;
     MessageOperation operation = MessageOperation.SEND;
 
-    return Instrumenter.<ProducerRecord<?, ?>, RecordMetadata>builder(
+    return Instrumenter.<KafkaProducerRequest, RecordMetadata>builder(
             openTelemetry,
             instrumentationName,
             MessagingSpanNameExtractor.create(getter, operation))
@@ -103,12 +100,11 @@ public final class KafkaInstrumenterFactory {
         .buildInstrumenter(SpanKindExtractor.alwaysProducer());
   }
 
-  public Instrumenter<ConsumerAndRecord<ConsumerRecords<?, ?>>, Void>
-      createConsumerReceiveInstrumenter() {
+  public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInstrumenter() {
     KafkaReceiveAttributesGetter getter = KafkaReceiveAttributesGetter.INSTANCE;
     MessageOperation operation = MessageOperation.RECEIVE;
 
-    return Instrumenter.<ConsumerAndRecord<ConsumerRecords<?, ?>>, Void>builder(
+    return Instrumenter.<KafkaReceiveRequest, Void>builder(
             openTelemetry,
             instrumentationName,
             MessagingSpanNameExtractor.create(getter, operation))
@@ -120,20 +116,18 @@ public final class KafkaInstrumenterFactory {
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
-  public Instrumenter<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void>
-      createConsumerProcessInstrumenter() {
+  public Instrumenter<KafkaProcessRequest, Void> createConsumerProcessInstrumenter() {
     return createConsumerOperationInstrumenter(MessageOperation.PROCESS, Collections.emptyList());
   }
 
-  public Instrumenter<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void>
-      createConsumerOperationInstrumenter(
-          MessageOperation operation,
-          Iterable<AttributesExtractor<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void>> extractors) {
+  public Instrumenter<KafkaProcessRequest, Void> createConsumerOperationInstrumenter(
+      MessageOperation operation,
+      Iterable<AttributesExtractor<KafkaProcessRequest, Void>> extractors) {
 
     KafkaConsumerAttributesGetter getter = KafkaConsumerAttributesGetter.INSTANCE;
 
-    InstrumenterBuilder<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void> builder =
-        Instrumenter.<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void>builder(
+    InstrumenterBuilder<KafkaProcessRequest, Void> builder =
+        Instrumenter.<KafkaProcessRequest, Void>builder(
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operation))
@@ -157,12 +151,11 @@ public final class KafkaInstrumenterFactory {
     }
   }
 
-  public Instrumenter<ConsumerAndRecord<ConsumerRecords<?, ?>>, Void>
-      createBatchProcessInstrumenter() {
+  public Instrumenter<KafkaReceiveRequest, Void> createBatchProcessInstrumenter() {
     KafkaReceiveAttributesGetter getter = KafkaReceiveAttributesGetter.INSTANCE;
     MessageOperation operation = MessageOperation.PROCESS;
 
-    return Instrumenter.<ConsumerAndRecord<ConsumerRecords<?, ?>>, Void>builder(
+    return Instrumenter.<KafkaReceiveRequest, Void>builder(
             openTelemetry,
             instrumentationName,
             MessagingSpanNameExtractor.create(getter, operation))

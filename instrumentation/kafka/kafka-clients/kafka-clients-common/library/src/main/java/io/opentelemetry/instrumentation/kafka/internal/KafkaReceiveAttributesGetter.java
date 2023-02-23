@@ -13,28 +13,26 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
 
-enum KafkaReceiveAttributesGetter
-    implements MessagingAttributesGetter<ConsumerAndRecord<ConsumerRecords<?, ?>>, Void> {
+enum KafkaReceiveAttributesGetter implements MessagingAttributesGetter<KafkaReceiveRequest, Void> {
   INSTANCE;
 
   @Override
-  public String getSystem(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
+  public String getSystem(KafkaReceiveRequest request) {
     return "kafka";
   }
 
   @Override
-  public String getDestinationKind(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
+  public String getDestinationKind(KafkaReceiveRequest request) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Override
   @Nullable
-  public String getDestination(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
+  public String getDestination(KafkaReceiveRequest request) {
     Set<String> topics =
-        consumerAndRecords.record().partitions().stream()
+        request.getRecords().partitions().stream()
             .map(TopicPartition::topic)
             .collect(Collectors.toSet());
     // only return topic when there's exactly one in the batch
@@ -42,59 +40,55 @@ enum KafkaReceiveAttributesGetter
   }
 
   @Override
-  public boolean isTemporaryDestination(
-      ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
+  public boolean isTemporaryDestination(KafkaReceiveRequest request) {
     return false;
   }
 
   @Override
   @Nullable
-  public String getProtocol(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
+  public String getProtocol(KafkaReceiveRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getProtocolVersion(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
+  public String getProtocolVersion(KafkaReceiveRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getUrl(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
+  public String getUrl(KafkaReceiveRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getConversationId(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
+  public String getConversationId(KafkaReceiveRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public Long getMessagePayloadSize(ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
+  public Long getMessagePayloadSize(KafkaReceiveRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public Long getMessagePayloadCompressedSize(
-      ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
+  public Long getMessagePayloadCompressedSize(KafkaReceiveRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getMessageId(
-      ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords, @Nullable Void unused) {
+  public String getMessageId(KafkaReceiveRequest request, @Nullable Void unused) {
     return null;
   }
 
   @Override
-  public List<String> getMessageHeader(
-      ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords, String name) {
-    return StreamSupport.stream(consumerAndRecords.record().spliterator(), false)
+  public List<String> getMessageHeader(KafkaReceiveRequest request, String name) {
+    return StreamSupport.stream(request.getRecords().spliterator(), false)
         .flatMap(
             consumerRecord ->
                 StreamSupport.stream(consumerRecord.headers().headers(name).spliterator(), false))
