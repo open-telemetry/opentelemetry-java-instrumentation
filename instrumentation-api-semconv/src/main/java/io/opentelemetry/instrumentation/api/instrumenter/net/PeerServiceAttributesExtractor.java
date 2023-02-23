@@ -62,6 +62,13 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     if (peerService != null) {
       attributes.put(SemanticAttributes.PEER_SERVICE, peerService);
     }
+    else 
+    {
+      String sockPeerName = attributesGetter.sockPeerName(request, response);
+      String sockPeerService = mapToPeerService(sockPeerName);
+      if (sockPeerService != null) {
+        attributes.put(SemanticAttributes.PEER_SERVICE, sockPeerService);
+      }
   }
 
   @Nullable
