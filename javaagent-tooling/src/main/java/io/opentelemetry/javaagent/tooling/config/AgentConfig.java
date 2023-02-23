@@ -35,17 +35,12 @@ public final class AgentConfig {
   }
 
   public static AgentBuilder.RedefinitionStrategy redefinitionStrategy(ConfigProperties config) {
-    String strategyKey = config.getString("otel.redefinition.strategy", "retransformation").toUpperCase(
-        Locale.ROOT);
+    String strategy = config.getString("otel.redefinition.strategy", "retransformation");
     try {
-      AgentBuilder.RedefinitionStrategy strategy = AgentBuilder.RedefinitionStrategy.valueOf(strategyKey);
-      if (strategy == AgentBuilder.RedefinitionStrategy.DISABLED) {
-        throw new ConfigurationException("disabled strategy is not allowed. Set either retransformation or redefinition");
-      }
-      return strategy;
+      return AgentBuilder.RedefinitionStrategy.valueOf(strategy.toUpperCase(Locale.ROOT));
     } catch (IllegalArgumentException e) {
       throw new ConfigurationException(
-          "Unrecognized value for otel.redefinition.strategy: " + strategyKey, e);
+          "Unrecognized value for otel.redefinition.strategy: " + strategy, e);
     }
   }
 

@@ -74,14 +74,9 @@ class AgentConfigTest {
         .thenReturn("somethingElse");
     assertThrows(
         ConfigurationException.class,
-        () -> AgentConfig.redefinitionStrategy(config));
-
-    // passing value is disabled
-    when(config.getString("otel.redefinition.strategy", "retransformation"))
-        .thenReturn("disabled");
-    assertThrows(
-        ConfigurationException.class,
-        () -> AgentConfig.redefinitionStrategy(config));
+        () -> {
+          AgentConfig.redefinitionStrategy(config);
+        });
   }
 
   private static class InstrumentationEnabledParams implements ArgumentsProvider {
