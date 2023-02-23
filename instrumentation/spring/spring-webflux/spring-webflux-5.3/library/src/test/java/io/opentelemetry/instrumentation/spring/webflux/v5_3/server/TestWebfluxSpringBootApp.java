@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_0.server;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3.server;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
@@ -18,6 +18,7 @@ import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
+import java.net.URI;
 import java.util.Properties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -25,14 +26,13 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.reactive.result.view.RedirectView;
 import org.springframework.web.server.WebFilter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -40,9 +40,10 @@ import reactor.core.publisher.Mono;
 @SpringBootApplication
 class TestWebfluxSpringBootApp {
 
-  static ConfigurableApplicationContext start(int port) {
+  static ConfigurableApplicationContext start(int port, String contextPath) {
     Properties props = new Properties();
     props.put("server.port", port);
+    props.put("spring.webflux.base-path", contextPath);
 
     SpringApplication app = new SpringApplication(TestWebfluxSpringBootApp.class);
     app.setDefaultProperties(props);
@@ -75,24 +76,22 @@ class TestWebfluxSpringBootApp {
 
     @RequestMapping("/redirect")
     @ResponseBody
-    RedirectView redirect() {
-      return controller(REDIRECT, () -> new RedirectView(REDIRECT.getBody()));
+    Mono<Void> redirect(ServerHttpResponse response) {
+      response.setStatusCode(HttpStatus.FOUND);
+      response.getHeaders().setLocation(URI.create("/redirected"));
+      return controller(REDIRECT, response::setComplete);
     }
 
     @RequestMapping("/error-status")
-    Flux<ResponseEntity<String>> error() {
-      return Flux.defer(
-          () ->
-              Flux.just(
-                  controller(
-                      ERROR,
-                      () ->
-                          new ResponseEntity<>(
-                              ERROR.getBody(), HttpStatus.valueOf(ERROR.getStatus())))));
+    Mono<ResponseEntity<String>> error() {
+      return Mono.just(
+          controller(
+              ERROR,
+              () -> new ResponseEntity<>(ERROR.getBody(), HttpStatus.valueOf(ERROR.getStatus()))));
     }
 
     @RequestMapping("/exception")
-    Flux<ResponseEntity<String>> exception() {
+    Flux<ResponseEntity<String>> exception() throws Exception {
       return Flux.just(
           controller(
               EXCEPTION,
@@ -128,11 +127,6 @@ class TestWebfluxSpringBootApp {
                 INDEXED_CHILD.collectSpanAttributes(name -> name.equals("id") ? id : null);
                 return INDEXED_CHILD.getBody();
               }));
-    }
-
-    @ExceptionHandler
-    ResponseEntity<String> handleException(Throwable throwable) {
-      return new ResponseEntity<>(throwable.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

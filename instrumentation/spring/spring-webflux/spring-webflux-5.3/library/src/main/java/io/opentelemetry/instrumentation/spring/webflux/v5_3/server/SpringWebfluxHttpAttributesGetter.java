@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_0.server;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3.server;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import java.util.Collections;
@@ -79,7 +79,8 @@ enum SpringWebfluxHttpAttributesGetter
     if (route.equals("/**")) {
       return null; // 404
     }
-    return route;
+    String contextPath = request.getRequest().getPath().contextPath().value();
+    return contextPath + (route.startsWith("/") ? route : ("/" + route));
   }
 
   @Nullable

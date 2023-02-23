@@ -7,8 +7,6 @@ dependencies {
 
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
-  compileOnly("io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE")
-
   testImplementation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing"))
 
   testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.4.0")

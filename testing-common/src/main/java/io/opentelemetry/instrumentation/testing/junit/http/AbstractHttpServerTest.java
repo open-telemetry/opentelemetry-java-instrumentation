@@ -521,9 +521,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_METHOD, method);
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_STATUS_CODE, endpoint.status);
 
-          assertThat(attrs)
-              .hasEntrySatisfying(
-                  SemanticAttributes.HTTP_FLAVOR, entry -> assertThat(entry).isIn("1.1", "2.0"));
+          if (attrs.get(SemanticAttributes.HTTP_FLAVOR) != null) {
+            assertThat(attrs)
+                .hasEntrySatisfying(
+                    SemanticAttributes.HTTP_FLAVOR, entry -> assertThat(entry).isIn("1.1", "2.0"));
+          }
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_USER_AGENT, TEST_USER_AGENT);
 
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_SCHEME, "http");

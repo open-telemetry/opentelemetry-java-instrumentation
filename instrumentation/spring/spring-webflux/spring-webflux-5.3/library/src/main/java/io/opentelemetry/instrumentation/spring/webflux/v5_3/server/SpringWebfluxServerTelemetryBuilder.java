@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_0.server;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3.server;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -19,14 +19,14 @@ import java.util.List;
 import org.springframework.web.server.ServerWebExchange;
 
 public final class SpringWebfluxServerTelemetryBuilder {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.1";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.3";
 
   private final OpenTelemetry openTelemetry;
   private final HttpServerAttributesExtractorBuilder<ServerWebExchange, ServerWebExchange>
       httpAttributesExtractorBuilder =
-      HttpServerAttributesExtractor.builder(
-          SpringWebfluxHttpAttributesGetter.INSTANCE,
-          SpringWebfluxNetAttributesGetter.INSTANCE);
+          HttpServerAttributesExtractor.builder(
+              SpringWebfluxHttpAttributesGetter.INSTANCE,
+              SpringWebfluxNetAttributesGetter.INSTANCE);
   private final List<AttributesExtractor<ServerWebExchange, ServerWebExchange>>
       additionalExtractors = new ArrayList<>();
 

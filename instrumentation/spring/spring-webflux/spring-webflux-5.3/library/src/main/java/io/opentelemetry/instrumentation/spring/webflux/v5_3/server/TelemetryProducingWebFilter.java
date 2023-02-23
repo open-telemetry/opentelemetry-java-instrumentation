@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_0.server;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3.server;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -78,8 +78,8 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
 
   private static class TelemetryWrappedSubscriber implements CoreSubscriber<Void> {
 
-    private static final HttpServerAttributesGetter<ServerWebExchange, ServerWebExchange> attributesGetter =
-        SpringWebfluxHttpAttributesGetter.INSTANCE;
+    private static final HttpServerAttributesGetter<ServerWebExchange, ServerWebExchange>
+        attributesGetter = SpringWebfluxHttpAttributesGetter.INSTANCE;
     private static final SpanNameExtractor<ServerWebExchange> spanNameExtractor =
         HttpSpanNameExtractor.create(SpringWebfluxHttpAttributesGetter.INSTANCE);
 
