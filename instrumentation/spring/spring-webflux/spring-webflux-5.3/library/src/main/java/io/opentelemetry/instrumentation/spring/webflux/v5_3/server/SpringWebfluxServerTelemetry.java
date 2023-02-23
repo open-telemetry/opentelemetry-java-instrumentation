@@ -19,8 +19,8 @@ public final class SpringWebfluxServerTelemetry {
     return builder(openTelemetry).build();
   }
 
-  public static SpringWebfluxTelemetryBuilder builder(OpenTelemetry openTelemetry) {
-    return new SpringWebfluxTelemetryBuilder(openTelemetry);
+  public static SpringWebfluxServerTelemetryBuilder builder(OpenTelemetry openTelemetry) {
+    return new SpringWebfluxServerTelemetryBuilder(openTelemetry);
   }
 
   private static void registerReactorHook() {

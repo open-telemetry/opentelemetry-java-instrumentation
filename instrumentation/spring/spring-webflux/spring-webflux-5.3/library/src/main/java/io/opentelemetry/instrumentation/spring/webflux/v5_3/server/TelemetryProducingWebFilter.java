@@ -10,7 +10,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.reactivestreams.Subscription;
 import org.springframework.core.Ordered;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -76,6 +78,8 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
 
   private static class TelemetryWrappedSubscriber implements CoreSubscriber<Void> {
 
+    private static final HttpServerAttributesGetter<ServerWebExchange, ServerWebExchange> attributesGetter =
+        SpringWebfluxHttpAttributesGetter.INSTANCE;
     private static final SpanNameExtractor<ServerWebExchange> spanNameExtractor =
         HttpSpanNameExtractor.create(SpringWebfluxHttpAttributesGetter.INSTANCE);
 
@@ -93,6 +97,11 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
       this.instrumenter = instrumenter;
       this.currentOtelContext = currentOtelContext;
       this.exchange = exchange;
+    }
+
+    @Override
+    public reactor.util.context.Context currentContext() {
+      return actual.currentContext();
     }
 
     @Override
@@ -129,9 +138,15 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
     }
 
     private void end(Context currentContext, Throwable t) {
-      // Update span name now, because during instrumenter.start() the HTTP route isn't
-      // available from the exchange attributes, but is afterwards
-      Span.fromContext(currentContext).updateName(spanNameExtractor.extract(exchange));
+      // Update span name and HTTP route now, because during instrumenter.start()
+      // the HTTP route isn't available from the exchange attributes, but is afterwards
+      String spanName = spanNameExtractor.extract(exchange);
+      String route = attributesGetter.getRoute(exchange);
+      Span span = Span.fromContext(currentContext);
+      span.updateName(spanName);
+      if (route != null) {
+        span.setAttribute(SemanticAttributes.HTTP_ROUTE, route);
+      }
       instrumenter.end(currentContext, exchange, exchange, t);
     }
   }

@@ -31,5 +31,6 @@ public final class SpringWebfluxServerInstrumentationTest
   @Override
   protected void configure(HttpServerTestOptions options) {
     options.setTestPathParam(true);
+    //options.setHttpFlavor()
   }
 }

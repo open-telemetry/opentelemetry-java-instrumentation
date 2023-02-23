@@ -18,24 +18,19 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.web.server.ServerWebExchange;
 
-public final class SpringWebfluxTelemetryBuilder {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.0";
+public final class SpringWebfluxServerTelemetryBuilder {
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.1";
 
   private final OpenTelemetry openTelemetry;
   private final HttpServerAttributesExtractorBuilder<ServerWebExchange, ServerWebExchange>
       httpAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(
-              SpringWebfluxHttpAttributesGetter.INSTANCE,
-              SpringWebfluxNetAttributesGetter.INSTANCE);
+      HttpServerAttributesExtractor.builder(
+          SpringWebfluxHttpAttributesGetter.INSTANCE,
+          SpringWebfluxNetAttributesGetter.INSTANCE);
   private final List<AttributesExtractor<ServerWebExchange, ServerWebExchange>>
       additionalExtractors = new ArrayList<>();
 
-  private static final SpringWebfluxHttpAttributesGetter attributesGetter =
-      SpringWebfluxHttpAttributesGetter.INSTANCE;
-  static final SpanNameExtractor<ServerWebExchange> spanNameExtractor =
-      HttpSpanNameExtractor.create(attributesGetter);
-
-  SpringWebfluxTelemetryBuilder(OpenTelemetry openTelemetry) {
+  SpringWebfluxServerTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
 
@@ -44,7 +39,7 @@ public final class SpringWebfluxTelemetryBuilder {
    * items.
    */
   @CanIgnoreReturnValue
-  public SpringWebfluxTelemetryBuilder addAttributesExtractor(
+  public SpringWebfluxServerTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<ServerWebExchange, ServerWebExchange> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
     return this;
@@ -56,7 +51,8 @@ public final class SpringWebfluxTelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public SpringWebfluxTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+  public SpringWebfluxServerTelemetryBuilder setCapturedRequestHeaders(
+      List<String> requestHeaders) {
     httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -67,7 +63,8 @@ public final class SpringWebfluxTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public SpringWebfluxTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+  public SpringWebfluxServerTelemetryBuilder setCapturedResponseHeaders(
+      List<String> responseHeaders) {
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }

@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.reactive.result.view.RedirectView;
 import org.springframework.web.server.WebFilter;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @SpringBootApplication
 class TestWebfluxSpringBootApp {
@@ -119,13 +120,14 @@ class TestWebfluxSpringBootApp {
 
     @RequestMapping("/child")
     @ResponseBody
-    String indexed_child(@RequestParam("id") String id) {
-      return controller(
-          INDEXED_CHILD,
-          () -> {
-            INDEXED_CHILD.collectSpanAttributes(name -> name.equals("id") ? id : null);
-            return INDEXED_CHILD.getBody();
-          });
+    Mono<String> indexed_child(@RequestParam("id") String id) {
+      return Mono.just(
+          controller(
+              INDEXED_CHILD,
+              () -> {
+                INDEXED_CHILD.collectSpanAttributes(name -> name.equals("id") ? id : null);
+                return INDEXED_CHILD.getBody();
+              }));
     }
 
     @ExceptionHandler
