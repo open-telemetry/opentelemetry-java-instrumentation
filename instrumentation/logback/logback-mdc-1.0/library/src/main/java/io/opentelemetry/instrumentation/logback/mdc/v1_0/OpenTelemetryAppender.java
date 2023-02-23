@@ -14,8 +14,10 @@ import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -23,6 +25,13 @@ import java.util.Map;
 
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     implements AppenderAttachable<ILoggingEvent> {
+  private static boolean addBaggage =
+      ConfigPropertiesUtil.getBoolean("otel.instrumentation.logback.mdc.add-baggage", false);
+
+  // to aid testing
+  public static void setAddBaggage(boolean addBaggage) {
+    OpenTelemetryAppender.addBaggage = addBaggage;
+  }
 
   private final AppenderAttachableImpl<ILoggingEvent> aai = new AppenderAttachableImpl<>();
 
@@ -43,6 +52,11 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     contextData.put(TRACE_ID, spanContext.getTraceId());
     contextData.put(SPAN_ID, spanContext.getSpanId());
     contextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
+
+    if (addBaggage) {
+      Baggage baggage = Baggage.current();
+      baggage.forEach((key, value) -> contextData.put(key, value.getValue()));
+    }
 
     if (eventContext == null) {
       eventContext = contextData;
