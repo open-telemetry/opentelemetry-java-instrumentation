@@ -23,10 +23,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class JoddHttpInstrumentation implements TypeInstrumentation {
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("jodd.http.HttpRequest");
-  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -67,11 +63,7 @@ class JoddHttpInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-      if (throwable != null) {
-        instrumenter().end(context, request, null, throwable);
-      } else {
-        instrumenter().end(context, request, response, null);
-      }
+      instrumenter().end(context, request, response, throwable);
     }
   }
 }
