@@ -8,11 +8,8 @@ otelJava {
 }
 
 dependencies {
-//  implementation(project(":instrumentation-api"))
-//  implementation("io.opentelemetry:opentelemetry-api")
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-metrics")
-//  testImplementation(project(":testing-common"))
   testImplementation("io.github.netmikey.logunit:logunit-jul:1.1.3")
   testImplementation(testFixtures(project))
 
