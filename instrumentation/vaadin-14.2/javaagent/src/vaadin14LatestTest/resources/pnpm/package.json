@@ -127,7 +127,6 @@
       "webpack-cli": "3.3.11",
       "webpack-dev-server": "3.11.0",
       "webpack-merge": "4.2.2"
-    },
-    "hash": "e33468a75510aa4d87c26c76975acce96b207f92830636e032cca63e23b973a4"
+    }
   }
 }

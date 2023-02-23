@@ -24,7 +24,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +70,7 @@ public abstract class AbstractVaadinTest
   }
 
   @BeforeAll
-  void setup() throws URISyntaxException {
+  protected void setup() throws URISyntaxException {
     startServer();
 
     Testcontainers.exposeHostPorts(port);
@@ -99,10 +98,12 @@ public abstract class AbstractVaadinTest
     int lastSlash = resource.lastIndexOf('/');
     String fileName = lastSlash == -1 ? resource : resource.substring(lastSlash + 1);
     Path destination = Paths.get(destinationDirectory.toURI()).resolve(fileName);
-    try (InputStream inputStream = AbstractVaadinTest.class.getResourceAsStream(resource)) {
-      Files.copy(inputStream, destination, StandardCopyOption.REPLACE_EXISTING);
-    } catch (IOException e) {
-      throw new IllegalStateException(e);
+    if (!Files.exists(destination)) {
+      try (InputStream inputStream = AbstractVaadinTest.class.getResourceAsStream(resource)) {
+        Files.copy(inputStream, destination);
+      } catch (IOException e) {
+        throw new IllegalStateException(e);
+      }
     }
   }
 
