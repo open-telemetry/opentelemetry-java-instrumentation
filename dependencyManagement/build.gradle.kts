@@ -107,7 +107,7 @@ val DEPENDENCIES = listOf(
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.3",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
-  "org.springframework.boot:spring-boot-dependencies:2.7.5",
+  "org.springframework.boot:spring-boot-dependencies:3.0.3",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.6"
 )
