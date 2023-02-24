@@ -11,24 +11,22 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 final class KafkaProducerAttributesExtractor
-    implements AttributesExtractor<KafkaProducerRequest, RecordMetadata> {
+    implements AttributesExtractor<ProducerRecord<?, ?>, RecordMetadata> {
 
   @Override
   public void onStart(
-      AttributesBuilder attributes, Context parentContext, KafkaProducerRequest request) {
+      AttributesBuilder attributes, Context parentContext, ProducerRecord<?, ?> record) {
 
-    Object key = request.getRecord().key();
+    Object key = record.key();
     if (key != null && canSerialize(key.getClass())) {
       attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, key.toString());
     }
-    if (request.getRecord().value() == null) {
+    if (record.value() == null) {
       attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
-    }
-    if (request.getClientId() != null) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID, request.getClientId());
     }
   }
 
@@ -42,7 +40,7 @@ final class KafkaProducerAttributesExtractor
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      KafkaProducerRequest request,
+      ProducerRecord<?, ?> producerRecord,
       @Nullable RecordMetadata recordMetadata,
       @Nullable Throwable error) {
 

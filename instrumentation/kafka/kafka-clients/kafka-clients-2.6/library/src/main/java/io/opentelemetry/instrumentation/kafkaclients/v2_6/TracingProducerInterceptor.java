@@ -7,9 +7,6 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.util.Map;
-import java.util.Objects;
-import javax.annotation.Nullable;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -23,11 +20,9 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
 
   private static final KafkaTelemetry telemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());
 
-  @Nullable private String clientId;
-
   @Override
   public ProducerRecord<K, V> onSend(ProducerRecord<K, V> producerRecord) {
-    telemetry.buildAndInjectSpan(producerRecord, clientId);
+    telemetry.buildAndInjectSpan(producerRecord);
     return producerRecord;
   }
 
@@ -39,8 +34,6 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
 
   @Override
   public void configure(Map<String, ?> map) {
-    clientId = Objects.toString(map.get(ProducerConfig.CLIENT_ID_CONFIG), null);
-
     // TODO: support experimental attributes config
   }
 }

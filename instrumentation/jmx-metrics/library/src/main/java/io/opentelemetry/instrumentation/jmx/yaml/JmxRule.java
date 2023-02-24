@@ -143,21 +143,19 @@ public class JmxRule extends MetricStructure {
     MetricExtractor[] metricExtractors = new MetricExtractor[attrNames.size()];
     int n = 0;
     for (String attributeName : attrNames) {
-      BeanAttributeExtractor attrExtractor = BeanAttributeExtractor.fromName(attributeName);
-      // This is essentially the same as 'attributeName' but with escape characters removed
-      String niceAttributeName = attrExtractor.getAttributeName();
       MetricInfo metricInfo;
       Metric m = mapping.get(attributeName);
       if (m == null) {
         metricInfo =
             new MetricInfo(
-                prefix == null ? niceAttributeName : (prefix + niceAttributeName),
+                prefix == null ? attributeName : (prefix + attributeName),
                 null,
                 getUnit(),
                 getMetricType());
       } else {
-        metricInfo = m.buildMetricInfo(prefix, niceAttributeName, getUnit(), getMetricType());
+        metricInfo = m.buildMetricInfo(prefix, attributeName, getUnit(), getMetricType());
       }
+      BeanAttributeExtractor attrExtractor = BeanAttributeExtractor.fromName(attributeName);
 
       List<MetricAttribute> attributeList;
       List<MetricAttribute> ownAttributes = getAttributeList();

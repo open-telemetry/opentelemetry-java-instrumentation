@@ -281,37 +281,6 @@ class RuleParserTest {
 
   private static final String EMPTY_CONF = "---\n";
 
-  private static final String CONF8 = // a dot in attribute name
-      "---                                   # keep stupid spotlessJava at bay\n"
-          + "rules:\n"
-          + "  - bean: my-test:type=8\n"
-          + "    mapping:\n"
-          + "      Attr.with\\.dot:\n";
-
-  @Test
-  void testConf8() throws Exception {
-    InputStream is = new ByteArrayInputStream(CONF8.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
-
-    List<JmxRule> defs = config.getRules();
-    assertThat(defs).hasSize(1);
-
-    MetricDef metricDef = defs.get(0).buildMetricDef();
-    assertThat(metricDef).isNotNull();
-    assertThat(metricDef.getMetricExtractors()).hasSize(1);
-
-    MetricExtractor m1 = metricDef.getMetricExtractors()[0];
-    assertThat(m1.getMetricValueExtractor().getAttributeName()).isEqualTo("Attr.with.dot");
-    assertThat(m1.getAttributes()).isEmpty();
-
-    MetricInfo mb1 = m1.getInfo();
-    // Make sure the metric name has no backslash
-    assertThat(mb1.getMetricName()).isEqualTo("Attr.with.dot");
-    assertThat(mb1.getType()).isEqualTo(MetricInfo.Type.GAUGE);
-    assertThat(mb1.getUnit()).isNull();
-  }
-
   @Test
   void testEmptyConf() {
     InputStream is = new ByteArrayInputStream(EMPTY_CONF.getBytes(StandardCharsets.UTF_8));

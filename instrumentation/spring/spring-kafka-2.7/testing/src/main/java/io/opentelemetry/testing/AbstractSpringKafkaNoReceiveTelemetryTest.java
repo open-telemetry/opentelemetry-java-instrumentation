@@ -50,9 +50,6 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     "testSingleTopic"),
                                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                                 satisfies(
-                                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                    stringAssert -> stringAssert.startsWith("producer")),
-                                satisfies(
                                     SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                     AbstractLongAssert::isNotNegative),
                                 satisfies(
@@ -82,14 +79,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                                 equalTo(
                                     SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
-                                    "testSingleListener"),
-                                satisfies(
-                                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                    stringAssert -> stringAssert.startsWith("consumer")),
-                                satisfies(
-                                    SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                    stringAssert ->
-                                        stringAssert.startsWith("testSingleListener - consumer"))),
+                                    "testSingleListener")),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
@@ -122,9 +112,6 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     "testSingleTopic"),
                                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                                 satisfies(
-                                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                    stringAssert -> stringAssert.startsWith("producer")),
-                                satisfies(
                                     SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                     AbstractLongAssert::isNotNegative),
                                 satisfies(
@@ -156,14 +143,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                                 equalTo(
                                     SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
-                                    "testSingleListener"),
-                                satisfies(
-                                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                    stringAssert -> stringAssert.startsWith("consumer")),
-                                satisfies(
-                                    SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                    stringAssert ->
-                                        stringAssert.startsWith("testSingleListener - consumer"))),
+                                    "testSingleListener")),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
@@ -193,9 +173,6 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                   SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                               satisfies(
-                                  SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                  stringAssert -> stringAssert.startsWith("producer")),
-                              satisfies(
                                   SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                   AbstractLongAssert::isNotNegative),
                               satisfies(
@@ -211,9 +188,6 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(
                                   SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                              satisfies(
-                                  SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                  stringAssert -> stringAssert.startsWith("producer")),
                               satisfies(
                                   SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                   AbstractLongAssert::isNotNegative),
@@ -244,14 +218,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                                 equalTo(
                                     SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
-                                    "testBatchListener"),
-                                satisfies(
-                                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                    stringAssert -> stringAssert.startsWith("consumer")),
-                                satisfies(
-                                    SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                    stringAssert ->
-                                        stringAssert.startsWith("testBatchListener - consumer"))),
+                                    "testBatchListener")),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
   }
 
@@ -286,9 +253,6 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                   SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                               satisfies(
-                                  SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                  stringAssert -> stringAssert.startsWith("producer")),
-                              satisfies(
                                   SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                   AbstractLongAssert::isNotNegative),
                               satisfies(
@@ -316,14 +280,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                                 equalTo(
                                     SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
-                                    "testBatchListener"),
-                                satisfies(
-                                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                    stringAssert -> stringAssert.startsWith("consumer")),
-                                satisfies(
-                                    SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                    stringAssert ->
-                                        stringAssert.startsWith("testBatchListener - consumer"))),
+                                    "testBatchListener")),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
   }
 }

@@ -14,14 +14,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContextUtil;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.kafka.internal.ConsumerAndRecord;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.streams.processor.internals.StampedRecord;
 
 // the advice applied by this instrumentation actually starts the span
@@ -57,18 +57,19 @@ public class PartitionGroupInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(record.value);
-      Context receiveContext = consumerContext.getContext();
+      Context receiveContext =
+          VirtualField.find(ConsumerRecord.class, Context.class).get(record.value);
 
       // use the receive CONSUMER span as parent if it's available
       Context parentContext = receiveContext != null ? receiveContext : currentContext();
-      KafkaProcessRequest request = KafkaProcessRequest.create(consumerContext, record.value);
+      ConsumerAndRecord<ConsumerRecord<?, ?>> request =
+          ConsumerAndRecord.create(null, record.value);
 
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
       Context context = instrumenter().start(parentContext, request);
-      holder.set(request, context, context.makeCurrent());
+      holder.set(record.value, context, context.makeCurrent());
     }
   }
 }

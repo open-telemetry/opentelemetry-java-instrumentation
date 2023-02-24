@@ -9,18 +9,18 @@ import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.Kafk
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProducerRequest;
 import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 public class ProducerCallback implements Callback {
   private final Callback callback;
   private final Context parentContext;
   private final Context context;
-  private final KafkaProducerRequest request;
+  private final ProducerRecord<?, ?> request;
 
   public ProducerCallback(
-      Callback callback, Context parentContext, Context context, KafkaProducerRequest request) {
+      Callback callback, Context parentContext, Context context, ProducerRecord<?, ?> request) {
     this.callback = callback;
     this.parentContext = parentContext;
     this.context = context;

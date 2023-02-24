@@ -10,27 +10,21 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 
-enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceiveRequest, Void> {
+enum KafkaReceiveAttributesExtractor
+    implements AttributesExtractor<ConsumerAndRecord<ConsumerRecords<?, ?>>, Void> {
   INSTANCE;
 
   @Override
   public void onStart(
-      AttributesBuilder attributes, Context parentContext, KafkaReceiveRequest request) {
+      AttributesBuilder attributes,
+      Context parentContext,
+      ConsumerAndRecord<ConsumerRecords<?, ?>> consumerAndRecords) {
 
-    String consumerGroup = request.getConsumerGroup();
+    String consumerGroup = consumerAndRecords.consumerGroup();
     if (consumerGroup != null) {
       attributes.put(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, consumerGroup);
-    }
-
-    String clientId = request.getClientId();
-    if (clientId != null) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID, clientId);
-    }
-
-    String consumerId = request.getConsumerId();
-    if (consumerId != null) {
-      attributes.put(SemanticAttributes.MESSAGING_CONSUMER_ID, consumerId);
     }
   }
 
@@ -38,7 +32,7 @@ enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceive
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      KafkaReceiveRequest request,
+      ConsumerAndRecord<ConsumerRecords<?, ?>> request,
       @Nullable Void unused,
       @Nullable Throwable error) {}
 }

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.logback.mdc.v1_0
 
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
-import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import org.slf4j.Logger
@@ -36,7 +35,6 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
 
   def setup() {
     listAppender.list.clear()
-    setBaggageFlag()
   }
 
   def "no ids when no span"() {
@@ -61,16 +59,16 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
 
   def "ids when span"() {
     when:
-    Baggage baggage = Baggage.empty().toBuilder().put("baggage_key", "baggage_value").build()
-
-    Span span1 = runWithSpanAndBaggage("test", baggage) {
+    Span span1 = runWithSpan("test") {
       AbstractLogbackTest.logger.info("log message 1")
+      Span.current()
     }
 
     logger.info("log message 2")
 
-    Span span2 = runWithSpanAndBaggage("test 2", baggage) {
+    Span span2 = runWithSpan("test 2") {
       AbstractLogbackTest.logger.info("log message 3")
+      Span.current()
     }
 
     def events = listAppender.list
@@ -81,34 +79,15 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
     events[0].getMDCPropertyMap().get("trace_id") == span1.spanContext.traceId
     events[0].getMDCPropertyMap().get("span_id") == span1.spanContext.spanId
     events[0].getMDCPropertyMap().get("trace_flags") == "01"
-    events[0].getMDCPropertyMap().get("baggage_key") == (expectBaggage() ? "baggage_value" : null)
 
     events[1].message == "log message 2"
     events[1].getMDCPropertyMap().get("trace_id") == null
     events[1].getMDCPropertyMap().get("span_id") == null
     events[1].getMDCPropertyMap().get("trace_flags") == null
-    events[1].getMDCPropertyMap().get("baggage_key") == null
 
     events[2].message == "log message 3"
     events[2].getMDCPropertyMap().get("trace_id") == span2.spanContext.traceId
     events[2].getMDCPropertyMap().get("span_id") == span2.spanContext.spanId
     events[2].getMDCPropertyMap().get("trace_flags") == "01"
-    events[2].getMDCPropertyMap().get("baggage_key") == (expectBaggage() ? "baggage_value" : null)
-  }
-
-  Span runWithSpanAndBaggage(String spanName, Baggage baggage, Closure callback) {
-    return runWithSpan(spanName) {
-      try (var unusedScope = baggage.makeCurrent()) {
-        callback.call()
-      }
-
-      Span.current()
-    }
-  }
-
-  abstract void setBaggageFlag()
-
-  boolean expectBaggage() {
-    return false
   }
 }

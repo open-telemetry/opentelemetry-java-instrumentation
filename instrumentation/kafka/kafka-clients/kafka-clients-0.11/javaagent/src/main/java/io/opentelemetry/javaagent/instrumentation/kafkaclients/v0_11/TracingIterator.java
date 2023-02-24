@@ -9,41 +9,44 @@ import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.Kafk
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
+import io.opentelemetry.instrumentation.kafka.internal.ConsumerAndRecord;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import java.util.Iterator;
 import javax.annotation.Nullable;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
 
   private final Iterator<ConsumerRecord<K, V>> delegateIterator;
   private final Context parentContext;
-  private final KafkaConsumerContext consumerContext;
+  private final Consumer<K, V> consumer;
 
   /*
    * Note: this may potentially create problems if this iterator is used from different threads. But
    * at the moment we cannot do much about this.
    */
-  @Nullable private KafkaProcessRequest currentRequest;
+  @Nullable private ConsumerAndRecord<ConsumerRecord<?, ?>> currentRequest;
   @Nullable private Context currentContext;
   @Nullable private Scope currentScope;
 
   private TracingIterator(
-      Iterator<ConsumerRecord<K, V>> delegateIterator, KafkaConsumerContext consumerContext) {
+      Iterator<ConsumerRecord<K, V>> delegateIterator,
+      @Nullable Context receiveContext,
+      Consumer<K, V> consumer) {
     this.delegateIterator = delegateIterator;
 
-    Context receiveContext = consumerContext.getContext();
     // use the receive CONSUMER as parent if it's available
     this.parentContext = receiveContext != null ? receiveContext : Context.current();
-    this.consumerContext = consumerContext;
+    this.consumer = consumer;
   }
 
   public static <K, V> Iterator<ConsumerRecord<K, V>> wrap(
-      Iterator<ConsumerRecord<K, V>> delegateIterator, KafkaConsumerContext consumerContext) {
+      Iterator<ConsumerRecord<K, V>> delegateIterator,
+      @Nullable Context receiveContext,
+      Consumer<K, V> consumer) {
     if (KafkaClientsConsumerProcessTracing.wrappingEnabled()) {
-      return new TracingIterator<>(delegateIterator, consumerContext);
+      return new TracingIterator<>(delegateIterator, receiveContext, consumer);
     }
     return delegateIterator;
   }
@@ -66,7 +69,7 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
     // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
     ConsumerRecord<K, V> next = delegateIterator.next();
     if (next != null && KafkaClientsConsumerProcessTracing.wrappingEnabled()) {
-      currentRequest = KafkaProcessRequest.create(consumerContext, next);
+      currentRequest = ConsumerAndRecord.create(consumer, next);
       currentContext = consumerProcessInstrumenter().start(parentContext, currentRequest);
       currentScope = currentContext.makeCurrent();
     }

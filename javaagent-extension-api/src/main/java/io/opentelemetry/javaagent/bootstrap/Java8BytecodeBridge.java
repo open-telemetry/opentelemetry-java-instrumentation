@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 
@@ -36,10 +35,6 @@ public final class Java8BytecodeBridge {
   /** Calls {@link Span#fromContext(Context)}. */
   public static Span spanFromContext(Context context) {
     return Span.fromContext(context);
-  }
-
-  public static Baggage baggageFromContext(Context context) {
-    return Baggage.fromContext(context);
   }
 
   private Java8BytecodeBridge() {}

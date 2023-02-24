@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -82,19 +83,16 @@ class InterceptorsTest extends KafkaClientBaseTest {
                 span.hasName(SHARED_TOPIC + " send")
                     .hasKind(SpanKind.PRODUCER)
                     .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
+                    .hasAttributesSatisfying(
                         equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                         equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                        satisfies(
-                            SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                            stringAssert -> stringAssert.startsWith("producer")));
+                        equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"));
               },
               span -> {
                 span.hasName(SHARED_TOPIC + " receive")
                     .hasKind(SpanKind.CONSUMER)
                     .hasParent(trace.getSpan(1))
-                    .hasAttributesSatisfyingExactly(
+                    .hasAttributesSatisfying(
                         equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                         equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                         equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
@@ -106,15 +104,8 @@ class InterceptorsTest extends KafkaClientBaseTest {
                             SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
                             AbstractLongAssert::isNotNegative),
                         satisfies(
-                            SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
-                            AbstractLongAssert::isNotNegative),
-                        equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                        satisfies(
-                            SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                            stringAssert -> stringAssert.startsWith("consumer")),
-                        satisfies(
-                            SemanticAttributes.MESSAGING_CONSUMER_ID,
-                            stringAssert -> stringAssert.startsWith("test - consumer")));
+                            AttributeKey.longKey("messaging.kafka.message.offset"),
+                            AbstractLongAssert::isNotNegative));
               });
         },
         trace -> {

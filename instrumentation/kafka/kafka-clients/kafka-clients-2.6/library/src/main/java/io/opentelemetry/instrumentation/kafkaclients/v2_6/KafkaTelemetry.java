@@ -13,10 +13,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.kafka.internal.ConsumerAndRecord;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaHeadersSetter;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProducerRequest;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaUtil;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
 import java.lang.reflect.InvocationTargetException;
@@ -46,14 +44,15 @@ public final class KafkaTelemetry {
   private static final TextMapSetter<Headers> SETTER = KafkaHeadersSetter.INSTANCE;
 
   private final OpenTelemetry openTelemetry;
-  private final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
-  private final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
+  private final Instrumenter<ProducerRecord<?, ?>, RecordMetadata> producerInstrumenter;
+  private final Instrumenter<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void>
+      consumerProcessInstrumenter;
   private final boolean producerPropagationEnabled;
 
   KafkaTelemetry(
       OpenTelemetry openTelemetry,
-      Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter,
-      Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
+      Instrumenter<ProducerRecord<?, ?>, RecordMetadata> producerInstrumenter,
+      Instrumenter<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void> consumerProcessInstrumenter,
       boolean producerPropagationEnabled) {
     this.openTelemetry = openTelemetry;
     this.producerInstrumenter = producerInstrumenter;
@@ -96,7 +95,7 @@ public final class KafkaTelemetry {
                             && method.getParameterTypes()[1] == Callback.class
                         ? (Callback) args[1]
                         : null;
-                return buildAndInjectSpan(record, producer, callback, producer::send);
+                return buildAndInjectSpan(record, callback, producer::send);
               }
               try {
                 return method.invoke(producer, args);
@@ -123,7 +122,7 @@ public final class KafkaTelemetry {
               // ConsumerRecords<K, V> poll(long timeout)
               // ConsumerRecords<K, V> poll(Duration duration)
               if ("poll".equals(method.getName()) && result instanceof ConsumerRecords) {
-                buildAndFinishSpan((ConsumerRecords) result, consumer);
+                buildAndFinishSpan(consumer, (ConsumerRecords) result);
               }
               return result;
             });
@@ -174,15 +173,14 @@ public final class KafkaTelemetry {
    *
    * @param record the producer record to inject span info.
    */
-  <K, V> void buildAndInjectSpan(ProducerRecord<K, V> record, String clientId) {
+  <K, V> void buildAndInjectSpan(ProducerRecord<K, V> record) {
     Context parentContext = Context.current();
 
-    KafkaProducerRequest request = KafkaProducerRequest.create(record, clientId);
-    if (!producerInstrumenter.shouldStart(parentContext, request)) {
+    if (!producerInstrumenter.shouldStart(parentContext, record)) {
       return;
     }
 
-    Context context = producerInstrumenter.start(parentContext, request);
+    Context context = producerInstrumenter.start(parentContext, record);
     if (producerPropagationEnabled) {
       try {
         propagator().inject(context, record.headers(), SETTER);
@@ -191,7 +189,7 @@ public final class KafkaTelemetry {
         logger.log(WARNING, "failed to inject span context. sending record second time?", t);
       }
     }
-    producerInstrumenter.end(context, request, null, null);
+    producerInstrumenter.end(context, record, null, null);
   }
 
   /**
@@ -203,34 +201,25 @@ public final class KafkaTelemetry {
    */
   <K, V> Future<RecordMetadata> buildAndInjectSpan(
       ProducerRecord<K, V> record,
-      Producer<K, V> producer,
       Callback callback,
       BiFunction<ProducerRecord<K, V>, Callback, Future<RecordMetadata>> sendFn) {
     Context parentContext = Context.current();
-
-    KafkaProducerRequest request = KafkaProducerRequest.create(record, producer);
-    if (!producerInstrumenter.shouldStart(parentContext, request)) {
+    if (!producerInstrumenter.shouldStart(parentContext, record)) {
       return sendFn.apply(record, callback);
     }
 
-    Context context = producerInstrumenter.start(parentContext, request);
+    Context context = producerInstrumenter.start(parentContext, record);
     try (Scope ignored = context.makeCurrent()) {
       propagator().inject(context, record.headers(), SETTER);
-      callback = new ProducerCallback(callback, parentContext, context, request);
+      callback = new ProducerCallback(callback, parentContext, context, record);
       return sendFn.apply(record, callback);
     }
   }
 
-  private <K, V> void buildAndFinishSpan(ConsumerRecords<K, V> records, Consumer<K, V> consumer) {
-    buildAndFinishSpan(
-        records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
-  }
-
-  <K, V> void buildAndFinishSpan(
-      ConsumerRecords<K, V> records, String consumerGroup, String clientId) {
+  <K, V> void buildAndFinishSpan(Consumer<K, V> consumer, ConsumerRecords<K, V> records) {
     Context parentContext = Context.current();
     for (ConsumerRecord<K, V> record : records) {
-      KafkaProcessRequest request = KafkaProcessRequest.create(record, consumerGroup, clientId);
+      ConsumerAndRecord<ConsumerRecord<?, ?>> request = ConsumerAndRecord.create(consumer, record);
       if (!consumerProcessInstrumenter.shouldStart(parentContext, request)) {
         continue;
       }
@@ -244,10 +233,10 @@ public final class KafkaTelemetry {
     private final Callback callback;
     private final Context parentContext;
     private final Context context;
-    private final KafkaProducerRequest request;
+    private final ProducerRecord<?, ?> request;
 
     public ProducerCallback(
-        Callback callback, Context parentContext, Context context, KafkaProducerRequest request) {
+        Callback callback, Context parentContext, Context context, ProducerRecord<?, ?> request) {
       this.callback = callback;
       this.parentContext = parentContext;
       this.context = context;

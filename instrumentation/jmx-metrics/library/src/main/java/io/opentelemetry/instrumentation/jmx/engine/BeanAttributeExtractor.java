@@ -8,8 +8,6 @@ package io.opentelemetry.instrumentation.jmx.engine;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -44,63 +42,31 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
    * @throws IllegalArgumentException if the attribute name is malformed
    */
   public static BeanAttributeExtractor fromName(String rawName) {
-    List<String> segments = splitByDot(rawName);
-    String baseName = segments.remove(0);
-    if (segments.isEmpty()) {
-      return new BeanAttributeExtractor(baseName);
+    if (rawName.isEmpty()) {
+      throw new IllegalArgumentException("Empty attribute name");
     }
-    return new BeanAttributeExtractor(baseName, segments.toArray(new String[segments.size()]));
-  }
 
-  /*
-   * Split a given name into segments, assuming that a dot is used to separate the segments.
-   * However, a dot preceded by a backslash is not a separator.
-   */
-  private static List<String> splitByDot(String rawName) {
-    List<String> components = new ArrayList<>();
-    try {
-      StringBuilder currentSegment = new StringBuilder();
-      boolean escaped = false;
-      for (int i = 0; i < rawName.length(); ++i) {
-        char ch = rawName.charAt(i);
-        if (escaped) {
-          // Allow only '\' and '.' to be escaped
-          if (ch != '\\' && ch != '.') {
-            throw new IllegalArgumentException(
-                "Invalid escape sequence in attribute name '" + rawName + "'");
-          }
-          currentSegment.append(ch);
-          escaped = false;
-        } else {
-          if (ch == '\\') {
-            escaped = true;
-          } else if (ch == '.') {
-            // this is a segment separator
-            verifyAndAddNameSegment(components, currentSegment);
-            currentSegment = new StringBuilder();
-          } else {
-            currentSegment.append(ch);
-          }
-        }
-      }
+    // Check if a CompositeType value is expected
+    int k = rawName.indexOf('.');
+    if (k < 0) {
+      return new BeanAttributeExtractor(rawName);
+    }
 
-      // The returned list is never empty ...
-      verifyAndAddNameSegment(components, currentSegment);
+    // Set up extraction from CompositeType values
+    String baseName = rawName.substring(0, k).trim();
+    String[] components = rawName.substring(k + 1).split("\\.");
 
-    } catch (IllegalArgumentException unused) {
-      // Drop the original exception. We have more meaningful context here.
+    // sanity check
+    if (baseName.isEmpty()) {
       throw new IllegalArgumentException("Invalid attribute name '" + rawName + "'");
     }
-
-    return components;
-  }
-
-  private static void verifyAndAddNameSegment(List<String> segments, StringBuilder candidate) {
-    String newSegment = candidate.toString().trim();
-    if (newSegment.isEmpty()) {
-      throw new IllegalArgumentException();
+    for (int j = 0; j < components.length; ++j) {
+      components[j] = components[j].trim();
+      if (components[j].isEmpty()) {
+        throw new IllegalArgumentException("Invalid attribute name '" + rawName + "'");
+      }
     }
-    segments.add(newSegment);
+    return new BeanAttributeExtractor(baseName, components);
   }
 
   public BeanAttributeExtractor(String baseName, String... nameChain) {
@@ -111,11 +77,8 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
     this.nameChain = nameChain;
   }
 
-  /**
-   * Get a human readable name of the attribute to extract. Used to form the metric name if none is
-   * provided. Also useful for logging or debugging.
-   */
-  public String getAttributeName() {
+  /** Get a human readable name of the attribute to extract. Useful for logging or debugging. */
+  String getAttributeName() {
     if (nameChain.length > 0) {
       StringBuilder builder = new StringBuilder(baseName);
       for (String component : nameChain) {

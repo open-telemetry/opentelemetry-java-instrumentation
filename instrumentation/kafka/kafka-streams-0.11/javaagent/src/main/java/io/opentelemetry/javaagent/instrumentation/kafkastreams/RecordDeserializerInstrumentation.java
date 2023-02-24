@@ -13,7 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -61,7 +62,9 @@ public class RecordDeserializerInstrumentation implements TypeInstrumentation {
       }
 
       // copy the receive CONSUMER span association
-      KafkaConsumerContextUtil.set(result, KafkaConsumerContextUtil.get(incoming));
+      VirtualField<ConsumerRecord<?, ?>, Context> singleRecordReceiveContext =
+          VirtualField.find(ConsumerRecord.class, Context.class);
+      singleRecordReceiveContext.set(result, singleRecordReceiveContext.get(incoming));
     }
   }
 }

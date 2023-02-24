@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public final class StateHolder {
   public static final ThreadLocal<StateHolder> HOLDER = new ThreadLocal<>();
 
-  private KafkaProcessRequest request;
+  private ConsumerRecord<?, ?> record;
   private Context context;
   private Scope scope;
 
@@ -20,16 +20,16 @@ public final class StateHolder {
     scope.close();
   }
 
-  public KafkaProcessRequest getRequest() {
-    return request;
+  public ConsumerRecord<?, ?> getRecord() {
+    return record;
   }
 
   public Context getContext() {
     return context;
   }
 
-  public void set(KafkaProcessRequest request, Context context, Scope scope) {
-    this.request = request;
+  public void set(ConsumerRecord<?, ?> record, Context context, Scope scope) {
+    this.record = record;
     this.context = context;
     this.scope = scope;
   }

@@ -7,10 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.kafka.internal.ConsumerAndRecord;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProducerRequest;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
 import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
@@ -18,6 +16,9 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.Map;
 import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 public final class KafkaSingletons {
@@ -33,9 +34,11 @@ public final class KafkaSingletons {
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.kafka.metric-reporter.enabled", true);
 
-  private static final Instrumenter<KafkaProducerRequest, RecordMetadata> PRODUCER_INSTRUMENTER;
-  private static final Instrumenter<KafkaReceiveRequest, Void> CONSUMER_RECEIVE_INSTRUMENTER;
-  private static final Instrumenter<KafkaProcessRequest, Void> CONSUMER_PROCESS_INSTRUMENTER;
+  private static final Instrumenter<ProducerRecord<?, ?>, RecordMetadata> PRODUCER_INSTRUMENTER;
+  private static final Instrumenter<ConsumerAndRecord<ConsumerRecords<?, ?>>, Void>
+      CONSUMER_RECEIVE_INSTRUMENTER;
+  private static final Instrumenter<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void>
+      CONSUMER_PROCESS_INSTRUMENTER;
 
   static {
     KafkaInstrumenterFactory instrumenterFactory =
@@ -55,15 +58,17 @@ public final class KafkaSingletons {
     return PRODUCER_PROPAGATION_ENABLED;
   }
 
-  public static Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter() {
+  public static Instrumenter<ProducerRecord<?, ?>, RecordMetadata> producerInstrumenter() {
     return PRODUCER_INSTRUMENTER;
   }
 
-  public static Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter() {
+  public static Instrumenter<ConsumerAndRecord<ConsumerRecords<?, ?>>, Void>
+      consumerReceiveInstrumenter() {
     return CONSUMER_RECEIVE_INSTRUMENTER;
   }
 
-  public static Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter() {
+  public static Instrumenter<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void>
+      consumerProcessInstrumenter() {
     return CONSUMER_PROCESS_INSTRUMENTER;
   }
 

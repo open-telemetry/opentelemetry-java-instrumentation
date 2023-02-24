@@ -15,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaPropagation;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -75,21 +74,19 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
   public static class SendAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static KafkaProducerRequest onEnter(
+    public static void onEnter(
         @Advice.FieldValue("apiVersions") ApiVersions apiVersions,
-        @Advice.FieldValue("clientId") String clientId,
         @Advice.Argument(value = 0, readOnly = false) ProducerRecord<?, ?> record,
         @Advice.Argument(value = 1, readOnly = false) Callback callback,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      KafkaProducerRequest request = KafkaProducerRequest.create(record, clientId);
       Context parentContext = Java8BytecodeBridge.currentContext();
-      if (!producerInstrumenter().shouldStart(parentContext, request)) {
-        return null;
+      if (!producerInstrumenter().shouldStart(parentContext, record)) {
+        return;
       }
 
-      context = producerInstrumenter().start(parentContext, request);
+      context = producerInstrumenter().start(parentContext, record);
       scope = context.makeCurrent();
 
       if (KafkaSingletons.isProducerPropagationEnabled()
@@ -97,13 +94,12 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
         record = KafkaPropagation.propagateContext(context, record);
       }
 
-      callback = new ProducerCallback(callback, parentContext, context, request);
-      return request;
+      callback = new ProducerCallback(callback, parentContext, context, record);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter KafkaProducerRequest request,
+        @Advice.Argument(value = 0, readOnly = false) ProducerRecord<?, ?> record,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -113,7 +109,7 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
       scope.close();
 
       if (throwable != null) {
-        producerInstrumenter().end(context, request, null, throwable);
+        producerInstrumenter().end(context, record, null, throwable);
       }
       // span finished by ProducerCallback
     }

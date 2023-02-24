@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.kafka.internal.ConsumerAndRecord;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -51,7 +52,8 @@ public class StreamTaskInstrumentation implements TypeInstrumentation {
       Context context = holder.getContext();
       if (context != null) {
         holder.closeScope();
-        instrumenter().end(context, holder.getRequest(), null, throwable);
+        instrumenter()
+            .end(context, ConsumerAndRecord.create(null, holder.getRecord()), null, throwable);
       }
     }
   }

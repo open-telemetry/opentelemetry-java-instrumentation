@@ -11,22 +11,23 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.kafka.internal.ConsumerAndRecord;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProducerRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 public final class KafkaTelemetryBuilder {
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-2.6";
 
   private final OpenTelemetry openTelemetry;
-  private final List<AttributesExtractor<KafkaProducerRequest, RecordMetadata>>
+  private final List<AttributesExtractor<ProducerRecord<?, ?>, RecordMetadata>>
       producerAttributesExtractors = new ArrayList<>();
-  private final List<AttributesExtractor<KafkaProcessRequest, Void>> consumerAttributesExtractors =
-      new ArrayList<>();
+  private final List<AttributesExtractor<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void>>
+      consumerAttributesExtractors = new ArrayList<>();
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
@@ -37,14 +38,14 @@ public final class KafkaTelemetryBuilder {
 
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder addProducerAttributesExtractors(
-      AttributesExtractor<KafkaProducerRequest, RecordMetadata> extractor) {
+      AttributesExtractor<ProducerRecord<?, ?>, RecordMetadata> extractor) {
     producerAttributesExtractors.add(extractor);
     return this;
   }
 
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder addConsumerAttributesExtractors(
-      AttributesExtractor<KafkaProcessRequest, Void> extractor) {
+      AttributesExtractor<ConsumerAndRecord<ConsumerRecord<?, ?>>, Void> extractor) {
     consumerAttributesExtractors.add(extractor);
     return this;
   }
