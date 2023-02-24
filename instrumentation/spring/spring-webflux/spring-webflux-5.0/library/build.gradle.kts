@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
   library("org.springframework:spring-webflux:5.0.0.RELEASE")
-  
+
   compileOnly("io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE")
 
   testImplementation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing"))

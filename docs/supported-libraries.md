@@ -8,12 +8,10 @@ or [contributing](../CONTRIBUTING.md).
 
 ## Contents
 
-- [Supported libraries, frameworks, application servers, and JVMs](#supported-libraries-frameworks-application-servers-and-jvms)
-- [Contents](#contents)
-- [Libraries / Frameworks](#libraries--frameworks)
-- [Application Servers](#application-servers)
-- [JVMs and operating systems](#jvms-and-operating-systems)
-- [Disabled instrumentations](#disabled-instrumentations)
+* [Libraries / Frameworks](#libraries--frameworks)
+* [Application Servers](#application-servers)
+* [JVMs and Operating Systems](#jvms-and-operating-systems)
+* [Disabled instrumentations](#disabled-instrumentations)
 
 ## Libraries / Frameworks
 
