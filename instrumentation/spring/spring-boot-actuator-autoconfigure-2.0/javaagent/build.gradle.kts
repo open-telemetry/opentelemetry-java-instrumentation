@@ -17,6 +17,9 @@ dependencies {
   library("io.micrometer:micrometer-core:1.5.0")
 
   implementation(project(":instrumentation:micrometer:micrometer-1.5:javaagent"))
+
+  compileOnly("io.opentelemetry:opentelemetry-sdk-trace")
+  annotationProcessor("com.google.auto.service:auto-service")
 }
 
 tasks.withType<Test>().configureEach {
