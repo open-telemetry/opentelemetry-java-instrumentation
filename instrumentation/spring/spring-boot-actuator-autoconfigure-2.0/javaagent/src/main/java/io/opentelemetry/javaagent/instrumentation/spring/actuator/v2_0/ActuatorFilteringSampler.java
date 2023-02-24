@@ -14,11 +14,14 @@ import io.opentelemetry.sdk.trace.samplers.SamplingResult;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
-public class ActuatorIgnoringSampler implements Sampler {
+public class ActuatorFilteringSampler implements Sampler {
+  private static final Logger logger = Logger.getLogger(ActuatorFilteringSampler.class.getName());
+
   private final Sampler delegate;
 
-  public ActuatorIgnoringSampler(Sampler delegate) {
+  public ActuatorFilteringSampler(Sampler delegate) {
     this.delegate = delegate;
   }
 
@@ -31,15 +34,15 @@ public class ActuatorIgnoringSampler implements Sampler {
       Attributes attributes,
       List<LinkData> parentLinks) {
     // checking the name isn't ideal but there is not a reliable alternative
-    if (name.equals("ReadOperationHandler") || name.equals("OperationHandler")) {
-      System.out.println("FILTERED");
+    if (name.equals("ReadOperationHandler.handle") || name.equals("OperationHandler.handle")) {
+      logger.fine("Span for actuator handler dropped");
       return SamplingResult.drop();
     }
 
     return Optional.ofNullable(attributes.get(SemanticAttributes.HTTP_TARGET))
         .filter(targetAttribute -> targetAttribute.startsWith("/actuator"))
         .map(t -> {
-          System.out.println("FILTERED 2");
+          logger.info("Span for actuator URL " + t + " dropped");
           return SamplingResult.drop();
         })
         .orElseGet(

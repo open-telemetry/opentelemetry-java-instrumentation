@@ -24,8 +24,8 @@ public class ActuatorFilteringTracerProviderConfigurer
   private static SdkTracerProviderBuilder configure(
       SdkTracerProviderBuilder sdkTracerProviderBuilder, ConfigProperties config) {
     if (config.getBoolean(
-        "otel.instrumentation.spring.autoconfigure.actuator.sampler.ignore", false)) {
-      sdkTracerProviderBuilder.setSampler(new ActuatorIgnoringSampler(Sampler.alwaysOn()));
+        "otel.instrumentation.spring.autoconfigure.actuator.sampler.filter", true)) {
+      sdkTracerProviderBuilder.setSampler(new ActuatorFilteringSampler(Sampler.alwaysOn()));
     }
 
     return sdkTracerProviderBuilder;
