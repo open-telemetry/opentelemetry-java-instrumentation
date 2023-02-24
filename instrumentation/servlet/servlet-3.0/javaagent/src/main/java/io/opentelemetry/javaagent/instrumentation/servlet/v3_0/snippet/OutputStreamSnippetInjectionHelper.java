@@ -29,7 +29,7 @@ public class OutputStreamSnippetInjectionHelper {
    * true, and would write the original bytes when the return value is false.
    */
   public boolean handleWrite(
-      byte[] original, int off, int length, InjectionState state, OutputStream out)
+      InjectionState state, OutputStream out, byte[] original, int off, int length)
       throws IOException {
     if (state.isHeadTagWritten()) {
       return false;

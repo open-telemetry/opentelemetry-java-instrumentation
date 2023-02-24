@@ -20,18 +20,18 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 public class ServletOutputStreamInstrumentation implements TypeInstrumentation {
   private final String basePackageName;
-  private final String writeBytesAndOffsetClassName;
-  private final String writeBytesClassName;
+  private final String writeBytesAndOffsetAdviceClassName;
+  private final String writeBytesAdviceClassName;
   private final String writeIntAdviceClassName;
 
   public ServletOutputStreamInstrumentation(
       String basePackageName,
-      String writeBytesAndOffsetClassName,
-      String writeBytesClassName,
+      String writeBytesAndOffsetAdviceClassName,
+      String writeBytesAdviceClassName,
       String writeIntAdviceClassName) {
     this.basePackageName = basePackageName;
-    this.writeBytesAndOffsetClassName = writeBytesAndOffsetClassName;
-    this.writeBytesClassName = writeBytesClassName;
+    this.writeBytesAndOffsetAdviceClassName = writeBytesAndOffsetAdviceClassName;
+    this.writeBytesAdviceClassName = writeBytesAdviceClassName;
     this.writeIntAdviceClassName = writeIntAdviceClassName;
   }
 
@@ -54,10 +54,10 @@ public class ServletOutputStreamInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, int.class))
             .and(takesArgument(2, int.class))
             .and(isPublic()),
-        writeBytesAndOffsetClassName);
+        writeBytesAndOffsetAdviceClassName);
     transformer.applyAdviceToMethod(
         named("write").and(takesArguments(1)).and(takesArgument(0, byte[].class)).and(isPublic()),
-        writeBytesClassName);
+        writeBytesAdviceClassName);
     transformer.applyAdviceToMethod(
         named("write").and(takesArguments(1)).and(takesArgument(0, int.class)).and(isPublic()),
         writeIntAdviceClassName);

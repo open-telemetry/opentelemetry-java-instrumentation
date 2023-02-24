@@ -228,13 +228,11 @@ class TestServlet3 {
               resp.writer.print(endpoint.body)
               throw new ServletException(endpoint.body)
             case HTML_PRINT_WRITER:
-              // intentionally testing HTML_PRINT_WRITER and HTML_SERVLET_OUTPUT_STREAM with different order of setting status and contentType
-              resp.status = endpoint.status
+              // intentionally testing setting status before contentType here to cover that case somewhere              resp.status = endpoint.status
               resp.contentType = "text/html"
               resp.writer.print(endpoint.body)
               break
             case HTML_SERVLET_OUTPUT_STREAM:
-              // intentionally testing HTML_PRINT_WRITER and HTML_SERVLET_OUTPUT_STREAM with different order of setting status and contentType
               resp.contentType = "text/html"
               resp.status = endpoint.status
               resp.getOutputStream().print(endpoint.body)

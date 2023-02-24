@@ -109,7 +109,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
     expect:
     response.status().code() == HTML_SERVLET_OUTPUT_STREAM.status
-    // check response content-length header
     String result = "<!DOCTYPE html>\n" +
       "<html lang=\"en\">\n" +
       "<head>\n" +

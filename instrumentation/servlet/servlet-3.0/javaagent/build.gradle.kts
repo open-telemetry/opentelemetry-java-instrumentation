@@ -27,7 +27,6 @@ dependencies {
 
   testLibrary("org.eclipse.jetty:jetty-server:8.0.0.v20110901")
   testLibrary("org.eclipse.jetty:jetty-servlet:8.0.0.v20110901")
-  // TODO (trask?) test against tomcat 7 (servlet 3.0)
   testLibrary("org.apache.tomcat.embed:tomcat-embed-core:8.0.41")
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:8.0.41")
 

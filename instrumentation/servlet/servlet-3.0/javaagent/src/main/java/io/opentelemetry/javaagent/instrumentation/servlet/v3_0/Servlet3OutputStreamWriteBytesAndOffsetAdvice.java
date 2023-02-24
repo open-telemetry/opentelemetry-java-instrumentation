@@ -30,6 +30,6 @@ public class Servlet3OutputStreamWriteBytesAndOffsetAdvice {
     // call (see skipOn above)
     // if it returns false, then it means nothing was written to the servletOutputStream and the
     // original method call should be executed
-    return !getSnippetInjectionHelper().handleWrite(write, off, len, state, servletOutputStream);
+    return !getSnippetInjectionHelper().handleWrite(state, servletOutputStream, write, off, len);
   }
 }

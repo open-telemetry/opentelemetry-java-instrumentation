@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.bootstrap.servlet;
 
 public class ExperimentalSnippetHolder {
 
-  private static String snippet = "";
+  private static volatile String snippet = "";
 
   public static void setSnippet(String snippet) {
     ExperimentalSnippetHolder.snippet = snippet;

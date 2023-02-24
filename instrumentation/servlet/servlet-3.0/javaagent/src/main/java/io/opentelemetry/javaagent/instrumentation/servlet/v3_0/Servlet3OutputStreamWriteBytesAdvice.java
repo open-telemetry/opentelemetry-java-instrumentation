@@ -29,6 +29,6 @@ public class Servlet3OutputStreamWriteBytesAdvice {
     // if it returns false, then it means nothing was written to the servletOutputStream and the
     // original method call should be executed
     return !getSnippetInjectionHelper()
-        .handleWrite(write, 0, write.length, state, servletOutputStream);
+        .handleWrite(state, servletOutputStream, write, 0, write.length);
   }
 }

@@ -17,13 +17,13 @@ import javax.servlet.ServletOutputStream;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-class InjectionTest {
+class OutputStreamSnippetInjectionHelperTest {
 
   @Test
   void testInjectionForStringContainHeadTag() throws IOException {
     String testSnippet = "\n  <script type=\"text/javascript\"> Test </script>";
-    String original = readFile("staticHtmlOrigin.html");
-    String correct = readFile("staticHtmlAfter.html");
+    String original = readFile("beforeSnippetInjection.html");
+    String correct = readFile("afterSnippetInjection.html");
     byte[] originalBytes = original.getBytes(StandardCharsets.UTF_8);
     SnippetInjectingResponseWrapper response = mock(SnippetInjectingResponseWrapper.class);
     when(response.isCommitted()).thenReturn(false);
@@ -40,7 +40,7 @@ class InjectionTest {
           }
         };
     OutputStreamSnippetInjectionHelper helper = new OutputStreamSnippetInjectionHelper(testSnippet);
-    boolean injected = helper.handleWrite(originalBytes, 0, originalBytes.length, obj, sp);
+    boolean injected = helper.handleWrite(obj, sp, originalBytes, 0, originalBytes.length);
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
     assertThat(injected).isEqualTo(true);
     writer.flush();
@@ -54,8 +54,8 @@ class InjectionTest {
   @Disabled
   void testInjectionForChinese() throws IOException {
     String testSnippet = "\n  <script type=\"text/javascript\"> Test </script>";
-    String original = readFile("staticHtmlChineseOrigin.html");
-    String correct = readFile("staticHtmlChineseAfter.html");
+    String original = readFile("beforeSnippetInjectionChinese.html");
+    String correct = readFile("afterSnippetInjectionChinese.html");
     byte[] originalBytes = original.getBytes(StandardCharsets.UTF_8);
 
     SnippetInjectingResponseWrapper response = mock(SnippetInjectingResponseWrapper.class);
@@ -73,7 +73,7 @@ class InjectionTest {
           }
         };
     OutputStreamSnippetInjectionHelper helper = new OutputStreamSnippetInjectionHelper(testSnippet);
-    boolean injected = helper.handleWrite(originalBytes, 0, originalBytes.length, obj, sp);
+    boolean injected = helper.handleWrite(obj, sp, originalBytes, 0, originalBytes.length);
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
     assertThat(injected).isEqualTo(true);
     writer.flush();
@@ -103,7 +103,7 @@ class InjectionTest {
           }
         };
     OutputStreamSnippetInjectionHelper helper = new OutputStreamSnippetInjectionHelper(testSnippet);
-    boolean injected = helper.handleWrite(originalBytes, 0, originalBytes.length, obj, sp);
+    boolean injected = helper.handleWrite(obj, sp, originalBytes, 0, originalBytes.length);
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(0);
     assertThat(injected).isEqualTo(false);
     writer.flush();
@@ -132,7 +132,7 @@ class InjectionTest {
         };
     OutputStreamSnippetInjectionHelper helper = new OutputStreamSnippetInjectionHelper(testSnippet);
     boolean injected =
-        helper.handleWrite(originalFirstPartBytes, 0, originalFirstPartBytes.length, obj, sp);
+        helper.handleWrite(obj, sp, originalFirstPartBytes, 0, originalFirstPartBytes.length);
 
     writer.flush();
     String result = writer.toString();
@@ -150,7 +150,7 @@ class InjectionTest {
             + "</html>";
     byte[] originalSecondPartBytes = originalSecondPart.getBytes(StandardCharsets.UTF_8);
     injected =
-        helper.handleWrite(originalSecondPartBytes, 0, originalSecondPartBytes.length, obj, sp);
+        helper.handleWrite(obj, sp, originalSecondPartBytes, 0, originalSecondPartBytes.length);
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
     assertThat(injected).isEqualTo(true);
     String correctSecondPart =

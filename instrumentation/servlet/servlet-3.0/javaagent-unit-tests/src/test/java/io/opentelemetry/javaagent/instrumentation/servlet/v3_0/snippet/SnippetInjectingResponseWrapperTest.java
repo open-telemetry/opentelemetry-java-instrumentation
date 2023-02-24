@@ -23,8 +23,8 @@ class SnippetInjectingResponseWrapperTest {
   @Test
   void testInjectToTextHtml() throws IOException {
 
-    String original = readFile("staticHtmlOrigin.html");
-    String correct = readFile("staticHtmlAfter.html");
+    String original = readFile("beforeSnippetInjection.html");
+    String correct = readFile("afterSnippetInjection.html");
     HttpServletResponse response = mock(HttpServletResponse.class);
     when(response.getContentType()).thenReturn("text/html");
     when(response.getStatus()).thenReturn(200);
@@ -47,8 +47,8 @@ class SnippetInjectingResponseWrapperTest {
   @Disabled
   void testInjectToChineseTextHtml() throws IOException {
 
-    String original = readFile("staticHtmlChineseOrigin.html");
-    String correct = readFile("staticHtmlChineseAfter.html");
+    String original = readFile("beforeSnippetInjectionChinese.html");
+    String correct = readFile("afterSnippetInjectionChinese.html");
     HttpServletResponse response = mock(HttpServletResponse.class);
     when(response.getContentType()).thenReturn("text/html");
 
@@ -69,7 +69,7 @@ class SnippetInjectingResponseWrapperTest {
   @Test
   void shouldNotInjectToTextHtml() throws IOException {
 
-    String original = readFile("staticHtmlOrigin.html");
+    String original = readFile("beforeSnippetInjection.html");
 
     StringWriter writer = new StringWriter();
     HttpServletResponse response = mock(HttpServletResponse.class);
@@ -94,8 +94,8 @@ class SnippetInjectingResponseWrapperTest {
   @Test
   void testWriteInt() throws IOException {
 
-    String original = readFile("staticHtmlOrigin.html");
-    String correct = readFile("staticHtmlAfter.html");
+    String original = readFile("beforeSnippetInjection.html");
+    String correct = readFile("afterSnippetInjection.html");
     HttpServletResponse response = mock(HttpServletResponse.class);
     when(response.getContentType()).thenReturn("text/html");
 
@@ -120,8 +120,8 @@ class SnippetInjectingResponseWrapperTest {
   @Test
   void testWriteCharArray() throws IOException {
 
-    String original = readFile("staticHtmlChineseOrigin.html");
-    String correct = readFile("staticHtmlChineseAfter.html");
+    String original = readFile("beforeSnippetInjectionChinese.html");
+    String correct = readFile("afterSnippetInjectionChinese.html");
     HttpServletResponse response = mock(HttpServletResponse.class);
     when(response.getContentType()).thenReturn("text/html");
     when(response.getStatus()).thenReturn(200);
@@ -145,8 +145,8 @@ class SnippetInjectingResponseWrapperTest {
   @Test
   void testWriteWithOffset() throws IOException {
 
-    String original = readFile("staticHtmlChineseOrigin.html");
-    String correct = readFile("staticHtmlChineseAfter.html");
+    String original = readFile("beforeSnippetInjectionChinese.html");
+    String correct = readFile("afterSnippetInjectionChinese.html");
     String extraBuffer = "this buffer should not be print out";
     original = extraBuffer + original;
     HttpServletResponse response = mock(HttpServletResponse.class);
