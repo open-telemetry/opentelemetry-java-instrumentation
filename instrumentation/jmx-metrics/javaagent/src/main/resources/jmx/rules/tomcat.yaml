@@ -1,7 +1,7 @@
 ---
 rules:
  - bean: Catalina:type=GlobalRequestProcessor,name=*
-   unit: 1
+   unit: "1"
    prefix: http.server.tomcat.
    metricAttribute:
      name: param(name)
@@ -39,7 +39,7 @@ rules:
        metricAttribute:
          direction: const(sent)
  - bean: Catalina:type=Manager,host=localhost,context=*
-   unit: 1
+   unit: "1"
    prefix: http.server.tomcat.
    type: updowncounter
    metricAttribute:
