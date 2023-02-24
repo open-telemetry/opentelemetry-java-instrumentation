@@ -13,11 +13,13 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSA
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_CLIENT_GROUP;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_GROUP;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MessagingRocketmqMessageTypeValues.DELAY;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MessagingRocketmqMessageTypeValues.FIFO;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MessagingRocketmqMessageTypeValues.NORMAL;
 
@@ -64,7 +66,7 @@ public abstract class AbstractRocketMqClientTest {
   private static final String fifoTopic = "fifo-topic-0";
   private static final String delayTopic = "delay-topic-0";
   private static final String tag = "tagA";
-  private static final String consumerGroup = "group-normal-topic-0";
+  private static final String consumerGroup = "group-0";
 
   private static final RocketMqProxyContainer container = new RocketMqProxyContainer();
   private final ClientServiceProvider provider = ClientServiceProvider.loadService();
@@ -279,6 +281,60 @@ public abstract class AbstractRocketMqClientTest {
   }
 
   @Test
+  public void testSendAndConsumeDelayMessage() throws Throwable {
+    String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
+    byte[] body = "foobar".getBytes(StandardCharsets.UTF_8);
+    long deliveryTimestamp = System.currentTimeMillis();
+    Message message =
+        provider
+            .newMessageBuilder()
+            .setTopic(delayTopic)
+            .setTag(tag)
+            .setKeys(keys)
+            .setDeliveryTimestamp(deliveryTimestamp)
+            .setBody(body)
+            .build();
+
+    SendReceipt sendReceipt =
+        testing()
+            .runWithSpan(
+                "parent", (ThrowingSupplier<SendReceipt, Throwable>) () -> producer.send(message));
+    AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
+    testing()
+        .waitAndAssertSortedTraces(
+            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+            trace -> {
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                  span ->
+                      assertProducerSpanWithDelayMessage(
+                              span, delayTopic, tag, keys, deliveryTimestamp, body, sendReceipt)
+                          .hasParent(trace.getSpan(0)));
+              sendSpanData.set(trace.getSpan(1));
+            },
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> assertReceiveSpan(span, delayTopic, consumerGroup),
+                    span ->
+                        assertProcessSpanWithDelayMessage(
+                                span,
+                                sendSpanData.get(),
+                                delayTopic,
+                                consumerGroup,
+                                tag,
+                                keys,
+                                deliveryTimestamp,
+                                body,
+                                sendReceipt)
+                            // As the child of receive span.
+                            .hasParent(trace.getSpan(0)),
+                    span ->
+                        span.hasName("messageListener")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(1))));
+  }
+
+  @Test
   public void testCapturedMessageHeaders() throws Throwable {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(StandardCharsets.UTF_8);
@@ -403,6 +459,37 @@ public abstract class AbstractRocketMqClientTest {
         .hasAttributesSatisfyingExactly(attributeAssertions);
   }
 
+  private static SpanDataAssert assertProducerSpanWithDelayMessage(
+      SpanDataAssert span,
+      String topic,
+      String tag,
+      String[] keys,
+      long deliveryTimestamp,
+      byte[] body,
+      SendReceipt sendReceipt,
+      AttributeAssertion... extraAttributes) {
+    List<AttributeAssertion> attributeAssertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
+                equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
+                equalTo(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, deliveryTimestamp),
+                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, DELAY),
+                equalTo(MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
+                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
+                equalTo(
+                    MESSAGING_DESTINATION_KIND,
+                    SemanticAttributes.MessagingDestinationKindValues.TOPIC),
+                equalTo(MESSAGING_DESTINATION_NAME, topic)));
+    attributeAssertions.addAll(Arrays.asList(extraAttributes));
+
+    return span.hasKind(SpanKind.PRODUCER)
+        .hasName(topic + " send")
+        .hasStatus(StatusData.unset())
+        .hasAttributesSatisfyingExactly(attributeAssertions);
+  }
+
   private static SpanDataAssert assertReceiveSpan(
       SpanDataAssert span, String topic, String consumerGroup) {
     return span.hasKind(SpanKind.CONSUMER)
@@ -470,6 +557,42 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_GROUP, messageGroup),
+                equalTo(MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
+                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
+                equalTo(
+                    MESSAGING_DESTINATION_KIND,
+                    SemanticAttributes.MessagingDestinationKindValues.TOPIC),
+                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                equalTo(MESSAGING_OPERATION, "process")));
+    attributeAssertions.addAll(Arrays.asList(extraAttributes));
+
+    return span.hasKind(SpanKind.CONSUMER)
+        .hasName(topic + " process")
+        .hasStatus(StatusData.unset())
+        // Link to send span.
+        .hasLinks(LinkData.create(linkedSpan.getSpanContext()))
+        .hasAttributesSatisfyingExactly(attributeAssertions);
+  }
+
+  private static SpanDataAssert assertProcessSpanWithDelayMessage(
+      SpanDataAssert span,
+      SpanData linkedSpan,
+      String topic,
+      String consumerGroup,
+      String tag,
+      String[] keys,
+      long deliveryTimestamp,
+      byte[] body,
+      SendReceipt sendReceipt,
+      AttributeAssertion... extraAttributes) {
+    List<AttributeAssertion> attributeAssertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup),
+                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
+                equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
+                equalTo(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, deliveryTimestamp),
                 equalTo(MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
