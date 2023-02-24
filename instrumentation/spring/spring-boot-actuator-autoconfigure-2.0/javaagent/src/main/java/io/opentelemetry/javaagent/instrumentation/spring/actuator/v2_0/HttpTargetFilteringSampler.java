@@ -15,14 +15,17 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
-public class ActuatorFilteringSampler implements Sampler {
-  private static final Logger logger = Logger.getLogger(ActuatorFilteringSampler.class.getName());
+public class HttpTargetFilteringSampler implements Sampler {
+  private static final Logger logger = Logger.getLogger(HttpTargetFilteringSampler.class.getName());
 
   private final Sampler delegate;
+  private final Pattern pattern;
 
-  public ActuatorFilteringSampler(Sampler delegate) {
+  public HttpTargetFilteringSampler(Sampler delegate, String regex) {
     this.delegate = delegate;
+    this.pattern = Pattern.compile(regex);
   }
 
   @Override
@@ -33,16 +36,10 @@ public class ActuatorFilteringSampler implements Sampler {
       SpanKind spanKind,
       Attributes attributes,
       List<LinkData> parentLinks) {
-    // checking the name isn't ideal but there is not a reliable alternative
-    if (name.equals("ReadOperationHandler.handle") || name.equals("OperationHandler.handle")) {
-      logger.fine("Span for actuator handler dropped");
-      return SamplingResult.drop();
-    }
-
     return Optional.ofNullable(attributes.get(SemanticAttributes.HTTP_TARGET))
-        .filter(targetAttribute -> targetAttribute.startsWith("/actuator"))
+        .filter(attr -> pattern.matcher(attr).matches())
         .map(t -> {
-          logger.info("Span for actuator URL " + t + " dropped");
+          logger.info("Span for http target " + t + " dropped");
           return SamplingResult.drop();
         })
         .orElseGet(
@@ -54,5 +51,9 @@ public class ActuatorFilteringSampler implements Sampler {
   @Override
   public String getDescription() {
     return this.getClass().getSimpleName();
+  }
+
+  public static void main(String[] args) {
+    System.out.println(Pattern.compile("\\/actuator.*").matcher("/actuator/health").matches());
   }
 }

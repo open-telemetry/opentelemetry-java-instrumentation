@@ -13,19 +13,22 @@ import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 
 @AutoService(AutoConfigurationCustomizerProvider.class)
-public class ActuatorFilteringTracerProviderConfigurer
+public class ConfiguredFilteringTracerProviderConfigurer
     implements AutoConfigurationCustomizerProvider {
   @Override
   public void customize(AutoConfigurationCustomizer autoConfigurationCustomizer) {
     autoConfigurationCustomizer.addTracerProviderCustomizer(
-        ActuatorFilteringTracerProviderConfigurer::configure);
+        ConfiguredFilteringTracerProviderConfigurer::configure);
   }
 
   private static SdkTracerProviderBuilder configure(
       SdkTracerProviderBuilder sdkTracerProviderBuilder, ConfigProperties config) {
-    if (config.getBoolean(
-        "otel.instrumentation.spring.autoconfigure.actuator.sampler.filter", true)) {
-      sdkTracerProviderBuilder.setSampler(new PatternFilteringSampler("(Read)?OperationHandler\\.handle", "\\/actuator.*", Sampler.alwaysOn()));
+    String nameFilterRegex = config.getString("otel.instrumentation.sampler.name.filter.regex");
+    String httpTargetFilterRegex = config.getString("otel.instrumentation.sampler.http.target.filter.regex");
+
+    if (nameFilterRegex != null || httpTargetFilterRegex != null) {
+      sdkTracerProviderBuilder.setSampler(
+          new PatternFilteringSampler(nameFilterRegex, httpTargetFilterRegex, Sampler.alwaysOn()));
     }
 
     return sdkTracerProviderBuilder;

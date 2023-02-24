@@ -1,1 +1,2 @@
 io.opentelemetry.javaagent.instrumentation.spring.actuator.v2_0.ActuatorFilteringTracerProviderConfigurer
+io.opentelemetry.javaagent.instrumentation.spring.actuator.v2_0.ConfiguredFilteringTracerProviderConfigurer
