@@ -4,9 +4,7 @@ plugins {
 
 dependencies {
   library("org.springframework:spring-webflux:5.0.0.RELEASE")
-
-  implementation(project(":instrumentation:reactor:reactor-3.1:library"))
-
+  
   compileOnly("io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE")
 
   testImplementation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing"))
@@ -22,14 +20,5 @@ val latestDepTest = findProperty("testLatestDeps") as Boolean
 if (latestDepTest) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
-  }
-}
-
-if (!latestDepTest) {
-  // Spring Boot 2.0 requires StaticLoggerBinder which is removed in logback-classic 1.3
-  configurations.testRuntimeClasspath {
-    resolutionStrategy {
-      force("ch.qos.logback:logback-classic:1.2.3")
-    }
   }
 }
