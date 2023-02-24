@@ -21,7 +21,6 @@ import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
@@ -57,11 +56,6 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class GetMdcAdvice {
-    // this has to be public otherwise the Advice cannot access it
-    // making this non-final helps greatly with testing
-    public static boolean addBaggage =
-        ConfigPropertiesUtil.getBoolean("otel.instrumentation.logback.mdc.add-baggage", false);
-
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This ILoggingEvent event,
@@ -77,17 +71,17 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         return;
       }
 
+      Map<String, String> spanContextData = new HashMap<>();
+
       SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
-      if (!spanContext.isValid()) {
-        return;
+
+      if (spanContext.isValid()) {
+        spanContextData.put(TRACE_ID, spanContext.getTraceId());
+        spanContextData.put(SPAN_ID, spanContext.getSpanId());
+        spanContextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
       }
 
-      Map<String, String> spanContextData = new HashMap<>();
-      spanContextData.put(TRACE_ID, spanContext.getTraceId());
-      spanContextData.put(SPAN_ID, spanContext.getSpanId());
-      spanContextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
-
-      if (addBaggage) {
+      if (LogbackSingletons.addBaggage()) {
         Baggage baggage = Java8BytecodeBridge.baggageFromContext(context);
 
         // using a lambda here does not play nicely with instrumentation bytecode process

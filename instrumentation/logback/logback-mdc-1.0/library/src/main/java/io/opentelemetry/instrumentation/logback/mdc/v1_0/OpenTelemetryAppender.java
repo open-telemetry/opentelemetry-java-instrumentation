@@ -17,7 +17,6 @@ import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,22 +24,15 @@ import java.util.Map;
 
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     implements AppenderAttachable<ILoggingEvent> {
-  private static boolean addBaggage =
-      ConfigPropertiesUtil.getBoolean("otel.instrumentation.logback.mdc.add-baggage", false);
-
-  // to aid testing
-  public static void setAddBaggage(boolean addBaggage) {
-    OpenTelemetryAppender.addBaggage = addBaggage;
-  }
+  private volatile boolean addBaggage;
 
   private final AppenderAttachableImpl<ILoggingEvent> aai = new AppenderAttachableImpl<>();
 
-  public static ILoggingEvent wrapEvent(ILoggingEvent event) {
-    Span currentSpan = Span.current();
-    if (!currentSpan.getSpanContext().isValid()) {
-      return event;
-    }
+  public void setAddBaggage(boolean addBaggage) {
+    this.addBaggage = addBaggage;
+  }
 
+  public ILoggingEvent wrapEvent(ILoggingEvent event) {
     Map<String, String> eventContext = event.getMDCPropertyMap();
     if (eventContext != null && eventContext.containsKey(TRACE_ID)) {
       // Assume already instrumented event if traceId is present.
@@ -48,10 +40,14 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     }
 
     Map<String, String> contextData = new HashMap<>();
-    SpanContext spanContext = currentSpan.getSpanContext();
-    contextData.put(TRACE_ID, spanContext.getTraceId());
-    contextData.put(SPAN_ID, spanContext.getSpanId());
-    contextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
+    Span currentSpan = Span.current();
+
+    if (currentSpan.getSpanContext().isValid()) {
+      SpanContext spanContext = currentSpan.getSpanContext();
+      contextData.put(TRACE_ID, spanContext.getTraceId());
+      contextData.put(SPAN_ID, spanContext.getSpanId());
+      contextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
+    }
 
     if (addBaggage) {
       Baggage baggage = Baggage.current();

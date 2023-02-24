@@ -9,8 +9,4 @@ package io.opentelemetry.instrumentation.logback.mdc.v1_0
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 
 class LogbackWithBaggageTest extends AbstractLogbackWithBaggageTest implements LibraryTestTrait {
-  @Override
-  void setBaggageFlag() {
-    OpenTelemetryAppender.addBaggage = true
-  }
 }

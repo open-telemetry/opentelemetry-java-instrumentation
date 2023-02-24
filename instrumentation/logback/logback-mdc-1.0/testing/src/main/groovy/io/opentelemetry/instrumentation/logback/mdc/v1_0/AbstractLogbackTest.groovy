@@ -36,13 +36,16 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
 
   def setup() {
     listAppender.list.clear()
-    setBaggageFlag()
   }
 
   def "no ids when no span"() {
     when:
-    logger.info("log message 1")
-    logger.info("log message 2")
+    Baggage baggage = Baggage.empty().toBuilder().put("baggage_key", "baggage_value").build()
+
+    runWithBaggage(baggage) {
+      AbstractLogbackTest.logger.info("log message 1")
+      AbstractLogbackTest.logger.info("log message 2")
+    }
 
     def events = listAppender.list
 
@@ -52,11 +55,13 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
     events[0].getMDCPropertyMap().get("trace_id") == null
     events[0].getMDCPropertyMap().get("span_id") == null
     events[0].getMDCPropertyMap().get("trace_flags") == null
+    events[0].getMDCPropertyMap().get("baggage_key") == (expectBaggage() ? "baggage_value" : null)
 
     events[1].message == "log message 2"
     events[1].getMDCPropertyMap().get("trace_id") == null
     events[1].getMDCPropertyMap().get("span_id") == null
     events[1].getMDCPropertyMap().get("trace_flags") == null
+    events[1].getMDCPropertyMap().get("baggage_key") == (expectBaggage() ? "baggage_value" : null)
   }
 
   def "ids when span"() {
@@ -98,15 +103,16 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
 
   Span runWithSpanAndBaggage(String spanName, Baggage baggage, Closure callback) {
     return runWithSpan(spanName) {
-      try (var unusedScope = baggage.makeCurrent()) {
-        callback.call()
-      }
-
+      runWithBaggage(baggage, callback)
       Span.current()
     }
   }
 
-  abstract void setBaggageFlag()
+  void runWithBaggage(Baggage baggage, Closure callback) {
+    try (var unusedScope = baggage.makeCurrent()) {
+      callback.call()
+    }
+  }
 
   boolean expectBaggage() {
     return false

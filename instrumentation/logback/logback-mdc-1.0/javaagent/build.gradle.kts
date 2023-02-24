@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("org.unbroken-dome.test-sets")
 }
 
 muzzle {
@@ -8,6 +9,10 @@ muzzle {
     module.set("logback-classic")
     versions.set("[1.0.0,1.2.3]")
   }
+}
+
+testSets {
+  create("addBaggageTest")
 }
 
 dependencies {
@@ -41,4 +46,18 @@ dependencies {
   }
 
   testImplementation(project(":instrumentation:logback:logback-mdc-1.0:testing"))
+}
+
+tasks {
+  val addBaggageTest by existing(Test::class) {
+    jvmArgs("-Dotel.instrumentation.logback.mdc.add-baggage=true")
+  }
+
+  test {
+    jvmArgs("-Dotel.instrumentation.logback.mdc.add-baggage=false")
+  }
+
+  named("check") {
+    dependsOn(addBaggageTest)
+  }
 }

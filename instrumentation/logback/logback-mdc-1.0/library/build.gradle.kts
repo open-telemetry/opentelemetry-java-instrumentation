@@ -1,5 +1,10 @@
 plugins {
   id("otel.library-instrumentation")
+  id("org.unbroken-dome.test-sets")
+}
+
+testSets {
+  create("addBaggageTest")
 }
 
 dependencies {
@@ -31,4 +36,12 @@ dependencies {
   }
 
   testImplementation(project(":instrumentation:logback:logback-mdc-1.0:testing"))
+}
+
+tasks {
+  val addBaggageTest by existing
+
+  named("check") {
+    dependsOn(addBaggageTest)
+  }
 }
