@@ -56,7 +56,7 @@ rules:
         metric: my.own.jvm.thread.count
         type: updowncounter
         desc: The current number of threads
-        unit: 1
+        unit: "1"
 ```
 
 MBeans are identified by unique [ObjectNames](https://docs.oracle.com/javase/8/docs/api/javax/management/ObjectName.html). In the example above, the object name `java.lang:type=Threading` identifies one of the standard JVM MBeans, which can be used to access a number of internal JVM statistics related to threads. For that MBean, we specify its attribute `ThreadCount` which reflects the number of currently active (alive) threads. The values of this attribute will be reported by a metric named `my.own.jvm.thread.count`. The declared OpenTelemetry type of the metric is declared as `updowncounter` which indicates that the value is a sum which can go up or down over time. Metric description and/or unit can also be specified.
@@ -186,9 +186,9 @@ rules:
       punctuate-latency-avg:
       punctuate-latency-max:
       poll-records-avg:
-        unit: 1
+        unit: "1"
       poll-records-max:
-        unit: 1
+        unit: "1"
   - bean: kafka.streams:type=stream-thread-metrics,thread-id=*
     metricAttribute:
       threadId: param(thread-id)
@@ -205,7 +205,7 @@ rules:
     metricAttribute:
       threadId: param(thread-id)
     prefix: my.kafka.streams.totals.
-    unit: 1
+    unit: "1"
     type: counter
     mapping:
       commit-total:
