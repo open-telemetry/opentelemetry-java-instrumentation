@@ -87,7 +87,9 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     Set<AttributeKey<?>> extra = [
       SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_TARGET
+      SemanticAttributes.HTTP_TARGET,
+      SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
+      SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
     ]
     super.httpAttributes(uri) + extra
   }
