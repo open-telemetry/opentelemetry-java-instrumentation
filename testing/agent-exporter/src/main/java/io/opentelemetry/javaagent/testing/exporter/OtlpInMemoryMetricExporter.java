@@ -32,6 +32,8 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
   private final AggregationTemporality aggregationTemporality;
 
   OtlpInMemoryMetricExporter() {
+    // this configuration setting is for external users
+    // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7902
     String temporalityProperty = System.getProperty("otel.javaagent.testing.exporter.temporality");
     if (temporalityProperty == null) {
       aggregationTemporality = AggregationTemporality.DELTA;
