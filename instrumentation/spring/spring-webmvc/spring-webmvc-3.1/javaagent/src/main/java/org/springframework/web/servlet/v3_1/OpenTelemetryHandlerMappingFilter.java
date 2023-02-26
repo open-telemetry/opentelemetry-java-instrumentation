@@ -79,6 +79,9 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
       return;
     }
 
+    SomeClass someClass = new SomeClass();
+    System.out.println(someClass);
+
     try {
       filterChain.doFilter(request, response);
     } finally {
@@ -202,4 +205,6 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
       throw new IllegalStateException(throwable);
     }
   }
+
+  private static class SomeClass {}
 }
