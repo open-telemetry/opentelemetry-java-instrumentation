@@ -50,11 +50,11 @@ dependencies {
 
 tasks {
   val addBaggageTest by existing(Test::class) {
-    jvmArgs("-Dotel.instrumentation.logback.mdc.add-baggage=true")
+    jvmArgs("-Dotel.instrumentation.logback-mdc.add-baggage=true")
   }
 
   test {
-    jvmArgs("-Dotel.instrumentation.logback.mdc.add-baggage=false")
+    jvmArgs("-Dotel.instrumentation.logback-mdc.add-baggage=false")
   }
 
   named("check") {

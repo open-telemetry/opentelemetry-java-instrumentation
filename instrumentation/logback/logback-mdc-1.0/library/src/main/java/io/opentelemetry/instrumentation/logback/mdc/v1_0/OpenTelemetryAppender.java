@@ -31,8 +31,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   /**
    * When set to true this will enable addition of all baggage entries to MDC. This can be done by
-   * adding the following to the logback.xml config.
-   * {@code <addBaggage>true</addBaggage>}
+   * adding the following to the logback.xml config for this appender. {@code
+   * <addBaggage>true</addBaggage>}
+   *
    * @param addBaggage True if baggage should be added to MDC
    */
   public void setAddBaggage(boolean addBaggage) {
