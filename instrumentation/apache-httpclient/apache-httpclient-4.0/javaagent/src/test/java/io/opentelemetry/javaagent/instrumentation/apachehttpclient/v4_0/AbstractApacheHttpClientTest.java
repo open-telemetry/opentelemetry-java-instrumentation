@@ -31,19 +31,14 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.setUserAgent(userAgent());
     optionsBuilder.enableTestReadTimeout();
-    optionsBuilder.setHttpAttributes(this::getHttpAttributes);
+    optionsBuilder.setHttpAttributes(AbstractApacheHttpClientTest::getHttpAttributes);
+    optionsBuilder.setResponseCodeOnRedirectError(302);
   }
 
-  protected Set<AttributeKey<?>> getHttpAttributes(URI endpoint) {
-    Set<AttributeKey<?>> attributes = new HashSet<>();
-    attributes.add(SemanticAttributes.NET_PEER_NAME);
-    attributes.add(SemanticAttributes.NET_PEER_PORT);
-    attributes.add(SemanticAttributes.HTTP_URL);
-    attributes.add(SemanticAttributes.HTTP_METHOD);
-    if (endpoint.toString().contains("/success")) {
-      attributes.add(SemanticAttributes.HTTP_FLAVOR);
-    }
-    attributes.add(SemanticAttributes.HTTP_USER_AGENT);
+  private static Set<AttributeKey<?>> getHttpAttributes(URI endpoint) {
+    Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+    attributes.add(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
+    attributes.add(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
     return attributes;
   }
 
@@ -63,7 +58,11 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
 
   @Override
   public void sendRequestWithCallback(
-      T request, String method, URI uri, Map<String, String> headers, HttpClientResult requestResult) {
+      T request,
+      String method,
+      URI uri,
+      Map<String, String> headers,
+      HttpClientResult requestResult) {
     try {
       executeRequestWithCallback(request, uri, requestResult);
     } catch (Throwable throwable) {
