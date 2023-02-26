@@ -17,6 +17,7 @@ import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -28,6 +29,12 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   private final AppenderAttachableImpl<ILoggingEvent> aai = new AppenderAttachableImpl<>();
 
+  /**
+   * When set to true this will enable addition of all baggage entries to MDC. This can be done by
+   * adding the following to the logback.xml config.
+   * {@code <addBaggage>true</addBaggage>}
+   * @param addBaggage True if baggage should be added to MDC
+   */
   public void setAddBaggage(boolean addBaggage) {
     this.addBaggage = addBaggage;
   }
@@ -40,7 +47,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     }
 
     Map<String, String> contextData = new HashMap<>();
-    Span currentSpan = Span.current();
+    Context context = Context.current();
+    Span currentSpan = Span.fromContext(context);
 
     if (currentSpan.getSpanContext().isValid()) {
       SpanContext spanContext = currentSpan.getSpanContext();
@@ -50,7 +58,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     }
 
     if (addBaggage) {
-      Baggage baggage = Baggage.current();
+      Baggage baggage = Baggage.fromContext(context);
       baggage.forEach((key, value) -> contextData.put(key, value.getValue()));
     }
 
