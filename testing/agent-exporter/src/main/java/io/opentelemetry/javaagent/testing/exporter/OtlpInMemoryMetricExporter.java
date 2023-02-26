@@ -29,18 +29,20 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
 
   private final Queue<byte[]> collectedRequests = new ConcurrentLinkedQueue<>();
 
-  private final AggregationTemporality aggregationTemporality;
+  private static final AggregationTemporality aggregationTemporality = initAggregationTemporality();
 
-  OtlpInMemoryMetricExporter() {
+  private static AggregationTemporality initAggregationTemporality() {
     // this configuration setting is for external users
     // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7902
     String temporalityProperty = System.getProperty("otel.javaagent.testing.exporter.temporality");
+    AggregationTemporality aggregationTemporality;
     if (temporalityProperty == null) {
       aggregationTemporality = AggregationTemporality.DELTA;
     } else {
       aggregationTemporality = AggregationTemporality.valueOf(temporalityProperty.toUpperCase());
     }
     logger.log(CONFIG, "Setting aggregation temporality to {0}", aggregationTemporality.toString());
+    return aggregationTemporality;
   }
 
   List<byte[]> getCollectedExportRequests() {
