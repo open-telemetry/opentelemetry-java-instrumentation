@@ -66,8 +66,7 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, futureCallback);
       requestProducer =
-          new WrappedRequestProducer(
-              parentContext, requestProducer, wrappedFutureCallback);
+          new WrappedRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
       futureCallback = wrappedFutureCallback;
     }
   }
