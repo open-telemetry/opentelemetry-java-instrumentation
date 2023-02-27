@@ -46,12 +46,7 @@ public final class ApacheHttpClientRequest implements OtelHttpRequest {
     return ApacheHttpClientAttributesHelper.getHeader(httpRequest, name);
   }
 
-  @Override
-  public String getFirstHeader(String name) {
-    return ApacheHttpClientAttributesHelper.getFirstHeader(httpRequest, name);
-  }
-
-  @Override
+    @Override
   public void setHeader(String key, String value) {
     httpRequest.setHeader(key, value);
   }

@@ -31,8 +31,4 @@ public final class ApacheHttpClientResponse implements OtelHttpResponse {
     return ApacheHttpClientAttributesHelper.getHeader(httpResponse, name);
   }
 
-  @Override
-  public String getFirstHeader(String name) {
-    return ApacheHttpClientAttributesHelper.getFirstHeader(httpResponse, name);
-  }
 }

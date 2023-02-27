@@ -34,14 +34,6 @@ public final class ApacheHttpClientAttributesHelper {
     return headersToList(httpMessage.getHeaders(name));
   }
 
-  public static String getFirstHeader(HttpMessage httpMessage, String name) {
-    Header firstHeader = httpMessage.getFirstHeader(name);
-    if (firstHeader != null) {
-      return firstHeader.getValue();
-    }
-    return null;
-  }
-
   // minimize memory overhead by not using streams
   private static List<String> headersToList(Header[] headers) {
     if (headers == null || headers.length == 0) {

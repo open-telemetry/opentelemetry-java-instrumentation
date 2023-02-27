@@ -20,7 +20,5 @@ public interface OtelHttpRequest {
 
   List<String> getHeader(String name);
 
-  String getFirstHeader(String name);
-
   void setHeader(String key, String value);
 }

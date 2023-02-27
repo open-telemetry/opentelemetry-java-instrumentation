@@ -13,6 +13,4 @@ public interface OtelHttpResponse {
   String getFlavour();
 
   List<String> getHeader(String name);
-
-  String getFirstHeader(String name);
 }
