@@ -221,7 +221,7 @@ public class TracingCqlSession implements CqlSession {
 
   @Override
   public ReactiveResultSet executeReactive(Statement<?> statement) {
-    return new DefaultReactiveResultSet(() -> session.executeAsync(statement));
+    return new DefaultReactiveResultSet(() -> executeAsync(statement));
   }
 
   static <T> CompletableFuture<T> wrap(CompletionStage<T> future, Context context) {

@@ -44,7 +44,7 @@ public abstract class AbstractCassandraTest {
   @SuppressWarnings("rawtypes")
   private static GenericContainer cassandra;
 
-  private static int cassandraPort;
+  protected static int cassandraPort;
 
   protected abstract InstrumentationExtension testing();
 
@@ -267,7 +267,7 @@ public abstract class AbstractCassandraTest {
                     "users"))));
   }
 
-  private static class Parameter {
+  protected static class Parameter {
     public final String keyspace;
     public final String statement;
     public final String expectedStatement;
@@ -291,7 +291,7 @@ public abstract class AbstractCassandraTest {
     }
   }
 
-  CqlSession getSession(String keyspace) {
+  protected CqlSession getSession(String keyspace) {
     DriverConfigLoader configLoader =
         DefaultDriverConfigLoader.builder()
             .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))
