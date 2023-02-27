@@ -185,7 +185,7 @@ class CxfClientTest extends JaxRsClientTest {
 
   @Override
   String userAgent() {
-    "Apache CXF"
+    "Apache"
   }
 
   @Override
