@@ -48,9 +48,7 @@ final class CassandraAttributesExtractor
         SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT,
         executionInfo.getSpeculativeExecutionCount());
 
-    // TODO can this be rewritten using newer API?
-    @SuppressWarnings("deprecation")
-    Statement<?> statement = executionInfo.getStatement();
+    Statement<?> statement = (Statement<?>) executionInfo.getRequest();
     String consistencyLevel;
     DriverExecutionProfile config =
         request.getSession().getContext().getConfig().getDefaultProfile();
