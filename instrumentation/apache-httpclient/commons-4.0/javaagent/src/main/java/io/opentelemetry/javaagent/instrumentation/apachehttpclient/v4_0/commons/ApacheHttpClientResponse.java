@@ -18,7 +18,7 @@ public final class ApacheHttpClientResponse implements OtelHttpResponse {
 
   @Override
   public Integer statusCode() {
-    return httpResponse.getStatusLine().getStatusCode();
+    return ApacheHttpClientAttributesHelper.getStatusCode(httpResponse.getStatusLine());
   }
 
   @Override

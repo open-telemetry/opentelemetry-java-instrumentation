@@ -20,6 +20,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
+import org.apache.http.StatusLine;
 
 public final class ApacheHttpClientAttributesHelper {
   private static final Logger logger;
@@ -44,6 +45,10 @@ public final class ApacheHttpClientAttributesHelper {
       headersList.add(headers[i].getValue());
     }
     return headersList;
+  }
+
+  public static Integer getStatusCode(StatusLine statusLine) {
+    return statusLine != null ? statusLine.getStatusCode() : null;
   }
 
   public static String getFlavor(ProtocolVersion protocolVersion) {
