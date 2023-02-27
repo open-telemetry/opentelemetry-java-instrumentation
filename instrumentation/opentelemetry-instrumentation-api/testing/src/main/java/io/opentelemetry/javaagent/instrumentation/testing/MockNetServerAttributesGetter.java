@@ -14,19 +14,19 @@ enum MockNetServerAttributesGetter implements NetServerAttributesGetter<String> 
 
   @Nullable
   @Override
-  public String transport(String s) {
+  public String getTransport(String s) {
     return null;
   }
 
   @Nullable
   @Override
-  public String hostName(String s) {
+  public String getHostName(String s) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer hostPort(String s) {
+  public Integer getHostPort(String s) {
     return null;
   }
 }

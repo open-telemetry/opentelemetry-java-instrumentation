@@ -33,9 +33,9 @@ class MessagingSpanNameExtractorTest {
     Message message = new Message();
 
     if (isTemporaryQueue) {
-      when(getter.temporaryDestination(message)).thenReturn(true);
+      when(getter.isTemporaryDestination(message)).thenReturn(true);
     } else {
-      when(getter.destination(message)).thenReturn(destinationName);
+      when(getter.getDestination(message)).thenReturn(destinationName);
     }
 
     SpanNameExtractor<Message> underTest = MessagingSpanNameExtractor.create(getter, operation);

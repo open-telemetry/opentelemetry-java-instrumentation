@@ -35,7 +35,7 @@ import org.apache.kafka.common.metrics.MetricsReporter;
  */
 public final class OpenTelemetryMetricsReporter implements MetricsReporter {
 
-  public static final String CONFIG_KEY_OPENTELEMETRY_INSTANCE = "opentelemetry.instance";
+  public static final String CONFIG_KEY_OPENTELEMETRY_SUPPLIER = "opentelemetry.supplier";
   public static final String CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME =
       "opentelemetry.instrumentation_name";
 
@@ -150,8 +150,9 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
 
   @Override
   public void configure(Map<String, ?> configs) {
-    OpenTelemetry openTelemetry =
-        getProperty(configs, CONFIG_KEY_OPENTELEMETRY_INSTANCE, OpenTelemetry.class);
+    OpenTelemetrySupplier openTelemetrySupplier =
+        getProperty(configs, CONFIG_KEY_OPENTELEMETRY_SUPPLIER, OpenTelemetrySupplier.class);
+    OpenTelemetry openTelemetry = openTelemetrySupplier.get();
     String instrumentationName =
         getProperty(configs, CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME, String.class);
     String instrumentationVersion =

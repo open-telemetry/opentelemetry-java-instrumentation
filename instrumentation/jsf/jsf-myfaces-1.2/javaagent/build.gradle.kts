@@ -33,9 +33,9 @@ dependencies {
   compileOnly("org.apache.myfaces.core:myfaces-api:1.2.12")
   compileOnly("javax.el:el-api:1.0")
 
-  implementation(project(":instrumentation:jsf:jsf-common:javaagent"))
+  implementation(project(":instrumentation:jsf:jsf-javax-common:javaagent"))
 
-  testImplementation(project(":instrumentation:jsf:jsf-common:testing"))
+  testImplementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 

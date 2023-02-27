@@ -112,7 +112,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         }
         if (!isHibernate4) {
           span(2) {
-            name "test"
+            name "CALL test"
             kind CLIENT
             childOf span(1)
             attributes {
@@ -121,6 +121,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
               "$SemanticAttributes.DB_USER" "sa"
               "$SemanticAttributes.DB_STATEMENT" "call next value for hibernate_sequence"
               "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+              "$SemanticAttributes.DB_OPERATION" "CALL"
             }
           }
           span(3) {

@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("io.projectreactor")
     module.set("reactor-core")
-    versions.set("[3.1.0.RELEASE,3.5.0)")
+    versions.set("[3.1.0.RELEASE,)")
     extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
     assertInverse.set(true)
     excludeInstrumentationName("opentelemetry-api")

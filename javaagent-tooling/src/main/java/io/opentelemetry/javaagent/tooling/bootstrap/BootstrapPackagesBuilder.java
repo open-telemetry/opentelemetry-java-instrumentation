@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.bootstrap;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.Collection;
 
 /**
@@ -21,6 +22,7 @@ public interface BootstrapPackagesBuilder {
    *
    * @return {@code this}
    */
+  @CanIgnoreReturnValue
   BootstrapPackagesBuilder add(String classNameOrPrefix);
 
   /**
@@ -29,5 +31,6 @@ public interface BootstrapPackagesBuilder {
    *
    * @return {@code this}
    */
+  @CanIgnoreReturnValue
   BootstrapPackagesBuilder addAll(Collection<String> classNamesOrPrefixes);
 }

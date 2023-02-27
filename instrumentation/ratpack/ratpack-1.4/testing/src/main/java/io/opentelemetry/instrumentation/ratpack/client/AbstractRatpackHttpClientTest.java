@@ -9,6 +9,7 @@ import io.netty.channel.ConnectTimeoutException;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.time.Duration;
@@ -58,24 +59,24 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  protected final Void buildRequest(String method, URI uri, Map<String, String> headers) {
+  public Void buildRequest(String method, URI uri, Map<String, String> headers) {
     return null;
   }
 
   @Override
-  protected final int sendRequest(Void request, String method, URI uri, Map<String, String> headers)
+  public int sendRequest(Void request, String method, URI uri, Map<String, String> headers)
       throws Exception {
     return exec.yield(unused -> internalSendRequest(client, method, uri, headers))
         .getValueOrThrow();
   }
 
   @Override
-  protected final void sendRequestWithCallback(
+  public final void sendRequestWithCallback(
       Void request,
       String method,
       URI uri,
       Map<String, String> headers,
-      RequestResult requestResult)
+      HttpClientResult httpClientResult)
       throws Exception {
     exec.execute(
         Operation.of(
@@ -83,7 +84,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
                 internalSendRequest(client, method, uri, headers)
                     .result(
                         result ->
-                            requestResult.complete(result::getValue, result.getThrowable()))));
+                            httpClientResult.complete(result::getValue, result.getThrowable()))));
   }
 
   // overridden in RatpackForkedHttpClientTest
@@ -107,8 +108,8 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.setSingleConnectionFactory(
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.setSingleConnectionFactory(
         (host, port) ->
             (path, headers) -> {
               URI uri = resolveAddress(path);
@@ -117,7 +118,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
                   .getValueOrThrow();
             });
 
-    options.setExpectedClientSpanNameMapper(
+    optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {
           switch (uri.toString()) {
             case "http://localhost:61/": // unopened port
@@ -129,7 +130,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
           }
         });
 
-    options.setClientSpanErrorMapper(
+    optionsBuilder.setClientSpanErrorMapper(
         (uri, exception) -> {
           if (uri.toString().equals("https://192.0.2.1/")) {
             return new ConnectTimeoutException("connection timed out: /192.0.2.1:443");
@@ -141,14 +142,14 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
           return exception;
         });
 
-    options.setHttpAttributes(this::computeHttpAttributes);
+    optionsBuilder.setHttpAttributes(this::computeHttpAttributes);
 
-    options.disableTestRedirects();
+    optionsBuilder.disableTestRedirects();
 
     // these tests will pass, but they don't really test anything since REQUEST is Void
-    options.disableTestReusedRequest();
+    optionsBuilder.disableTestReusedRequest();
 
-    options.enableTestReadTimeout();
+    optionsBuilder.enableTestReadTimeout();
   }
 
   protected Set<AttributeKey<?>> computeHttpAttributes(URI uri) {

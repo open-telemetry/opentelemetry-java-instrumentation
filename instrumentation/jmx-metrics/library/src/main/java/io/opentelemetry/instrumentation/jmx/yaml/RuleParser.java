@@ -5,14 +5,20 @@
 
 package io.opentelemetry.instrumentation.jmx.yaml;
 
+import static java.util.Collections.emptyList;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.instrumentation.jmx.engine.MetricConfiguration;
 import java.io.InputStream;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
+import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import org.snakeyaml.engine.v2.api.Load;
+import org.snakeyaml.engine.v2.api.LoadSettings;
 
 /** Parse a YAML file containing a number of rules. */
 public class RuleParser {
@@ -40,9 +46,103 @@ public class RuleParser {
 
   private RuleParser() {}
 
-  public JmxConfig loadConfig(InputStream is) throws Exception {
-    Yaml yaml = new Yaml(new Constructor(JmxConfig.class));
-    return yaml.load(is);
+  @SuppressWarnings("unchecked")
+  public JmxConfig loadConfig(InputStream is) {
+    LoadSettings settings = LoadSettings.builder().build();
+    Load yaml = new Load(settings);
+
+    Map<String, Object> data = (Map<String, Object>) yaml.loadFromInputStream(is);
+    if (data == null) {
+      return new JmxConfig(emptyList());
+    }
+
+    List<Object> rules = (List<Object>) data.remove("rules");
+    if (rules == null) {
+      return new JmxConfig(emptyList());
+    }
+
+    failOnExtraKeys(data);
+    return new JmxConfig(
+        rules.stream()
+            .map(obj -> (Map<String, Object>) obj)
+            .map(RuleParser::parseJmxRule)
+            .collect(Collectors.toList()));
+  }
+
+  @SuppressWarnings("unchecked")
+  private static JmxRule parseJmxRule(Map<String, Object> ruleYaml) {
+    JmxRule jmxRule = new JmxRule();
+
+    String bean = (String) ruleYaml.remove("bean");
+    if (bean != null) {
+      jmxRule.setBean(bean);
+    }
+    List<String> beans = (List<String>) ruleYaml.remove("beans");
+    if (beans != null) {
+      jmxRule.setBeans(beans);
+    }
+    String prefix = (String) ruleYaml.remove("prefix");
+    if (prefix != null) {
+      jmxRule.setPrefix(prefix);
+    }
+    jmxRule.setMapping(parseMappings((Map<String, Object>) ruleYaml.remove("mapping")));
+    parseMetricStructure(ruleYaml, jmxRule);
+
+    failOnExtraKeys(ruleYaml);
+    return jmxRule;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Map<String, Metric> parseMappings(@Nullable Map<String, Object> mappingYaml) {
+    Map<String, Metric> mappings = new LinkedHashMap<>();
+    if (mappingYaml != null) {
+      mappingYaml.forEach(
+          (name, metricYaml) ->
+              mappings.put(
+                  name, metricYaml == null ? null : parseMetric((Map<String, Object>) metricYaml)));
+    }
+    return mappings;
+  }
+
+  private static Metric parseMetric(Map<String, Object> metricYaml) {
+    Metric metric = new Metric();
+
+    String metricName = (String) metricYaml.remove("metric");
+    if (metricName != null) {
+      metric.setMetric(metricName);
+    }
+    String desc = (String) metricYaml.remove("desc");
+    if (desc != null) {
+      metric.setDesc(desc);
+    }
+    parseMetricStructure(metricYaml, metric);
+
+    failOnExtraKeys(metricYaml);
+    return metric;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static void parseMetricStructure(
+      Map<String, Object> metricStructureYaml, MetricStructure out) {
+    String type = (String) metricStructureYaml.remove("type");
+    if (type != null) {
+      out.setType(type);
+    }
+    Map<String, String> metricAttribute =
+        (Map<String, String>) metricStructureYaml.remove("metricAttribute");
+    if (metricAttribute != null) {
+      out.setMetricAttribute(metricAttribute);
+    }
+    String unit = (String) metricStructureYaml.remove("unit");
+    if (unit != null) {
+      out.setUnit(unit);
+    }
+  }
+
+  private static void failOnExtraKeys(Map<String, Object> yaml) {
+    if (!yaml.isEmpty()) {
+      throw new IllegalArgumentException("Unrecognized keys found: " + yaml.keySet());
+    }
   }
 
   /**
@@ -55,13 +155,9 @@ public class RuleParser {
    */
   public void addMetricDefsTo(MetricConfiguration conf, InputStream is, String id) {
     try {
-
       JmxConfig config = loadConfig(is);
-      if (config != null) {
-        logger.log(
-            INFO, "{0}: found {1} metric rules", new Object[] {id, config.getRules().size()});
-        config.addMetricDefsTo(conf);
-      }
+      logger.log(INFO, "{0}: found {1} metric rules", new Object[] {id, config.getRules().size()});
+      config.addMetricDefsTo(conf);
     } catch (Exception exception) {
       logger.log(
           WARNING,

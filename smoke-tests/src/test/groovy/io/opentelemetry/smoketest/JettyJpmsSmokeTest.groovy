@@ -23,6 +23,10 @@ class Jetty11JpmsJdk11 extends JettyJpmsSmokeTest {
 class Jetty11JpmsJdk17 extends JettyJpmsSmokeTest {
 }
 
-@AppServer(version = "11.0.7", jdk = "18")
-class Jetty11JpmsJdk18 extends JettyJpmsSmokeTest {
+@AppServer(version = "11.0.7", jdk = "19")
+class Jetty11JpmsJdk19 extends JettyJpmsSmokeTest {
+}
+
+@AppServer(version = "11.0.7", jdk = "20")
+class Jetty11JpmsJdk20 extends JettyJpmsSmokeTest {
 }

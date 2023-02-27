@@ -22,11 +22,11 @@ public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandl
       VirtualField.find(Channel.class, NettyClientRequestAndContexts.class);
 
   @Override
-  public void messageReceived(ChannelHandlerContext ctx, MessageEvent msg) {
+  public void messageReceived(ChannelHandlerContext ctx, MessageEvent msg) throws Exception {
     NettyClientRequestAndContexts requestAndContexts = requestContextsField.get(ctx.getChannel());
 
     if (requestAndContexts == null) {
-      ctx.sendUpstream(msg);
+      super.messageReceived(ctx, msg);
       return;
     }
 
@@ -42,7 +42,7 @@ public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandl
 
     // We want the callback in the scope of the parent, not the client span
     try (Scope ignored = requestAndContexts.parentContext().makeCurrent()) {
-      ctx.sendUpstream(msg);
+      super.messageReceived(ctx, msg);
     }
   }
 }

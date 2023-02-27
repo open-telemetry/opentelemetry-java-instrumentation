@@ -8,7 +8,7 @@ package client
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.vertx.core.Vertx
@@ -56,7 +56,7 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
   }
 
   @Override
-  void sendRequestWithCallback(HttpClientRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
+  void sendRequestWithCallback(HttpClientRequest request, String method, URI uri, Map<String, String> headers, HttpClientResult requestResult) {
     sendRequest(request).whenComplete { status, throwable ->
       requestResult.complete({ status }, throwable)
     }

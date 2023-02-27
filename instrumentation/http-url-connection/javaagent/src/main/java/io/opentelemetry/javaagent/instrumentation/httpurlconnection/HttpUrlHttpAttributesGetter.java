@@ -18,34 +18,34 @@ class HttpUrlHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpURLConnection, Integer> {
 
   @Override
-  public String method(HttpURLConnection connection) {
+  public String getMethod(HttpURLConnection connection) {
     return connection.getRequestMethod();
   }
 
   @Override
-  public String url(HttpURLConnection connection) {
+  public String getUrl(HttpURLConnection connection) {
     return connection.getURL().toExternalForm();
   }
 
   @Override
-  public List<String> requestHeader(HttpURLConnection connection, String name) {
+  public List<String> getRequestHeader(HttpURLConnection connection, String name) {
     String value = connection.getRequestProperty(name);
     return value == null ? emptyList() : singletonList(value);
   }
 
   @Override
-  public String flavor(HttpURLConnection connection, @Nullable Integer statusCode) {
+  public String getFlavor(HttpURLConnection connection, @Nullable Integer statusCode) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       HttpURLConnection connection, Integer statusCode, @Nullable Throwable error) {
     return statusCode;
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       HttpURLConnection connection, Integer statusCode, String name) {
     String value = connection.getHeaderField(name);
     return value == null ? emptyList() : singletonList(value);

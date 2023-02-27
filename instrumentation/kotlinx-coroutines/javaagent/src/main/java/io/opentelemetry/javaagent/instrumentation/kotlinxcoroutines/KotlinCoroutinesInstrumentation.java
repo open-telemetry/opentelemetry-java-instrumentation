@@ -25,6 +25,7 @@ public class KotlinCoroutinesInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("newCoroutineContext")
+            .and(takesArgument(0, named("kotlinx.coroutines.CoroutineScope")))
             .and(takesArgument(1, named("kotlin.coroutines.CoroutineContext"))),
         this.getClass().getName() + "$ContextAdvice");
   }

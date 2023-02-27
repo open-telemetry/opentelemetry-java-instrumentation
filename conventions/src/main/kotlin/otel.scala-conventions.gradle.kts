@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-  testImplementation("org.scala-lang:scala-library")
+  testCompileOnly("org.scala-lang:scala-library:2.11.12")
 }
 
 tasks {

@@ -10,8 +10,11 @@ import application.io.opentelemetry.api.metrics.MeterProvider;
 import application.io.opentelemetry.api.trace.TracerProvider;
 import application.io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.propagation.ApplicationContextPropagators;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationMeterFactory;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationMeterFactory14;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationMeterProvider;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4.trace.ApplicationTracerProvider14;
+import java.lang.reflect.InvocationTargetException;
 
 public final class ApplicationOpenTelemetry110 implements OpenTelemetry {
 
@@ -31,7 +34,8 @@ public final class ApplicationOpenTelemetry110 implements OpenTelemetry {
         new ApplicationTracerProvider14(agentOpenTelemetry.getTracerProvider());
     applicationContextPropagators =
         new ApplicationContextPropagators(agentOpenTelemetry.getPropagators());
-    applicationMeterProvider = new ApplicationMeterProvider(agentOpenTelemetry.getMeterProvider());
+    applicationMeterProvider =
+        new ApplicationMeterProvider(getMeterFactory(), agentOpenTelemetry.getMeterProvider());
   }
 
   @Override
@@ -47,5 +51,21 @@ public final class ApplicationOpenTelemetry110 implements OpenTelemetry {
   @Override
   public ContextPropagators getPropagators() {
     return applicationContextPropagators;
+  }
+
+  private static ApplicationMeterFactory getMeterFactory() {
+    try {
+      // this class is defined in opentelemetry-api-1.15
+      Class<?> clazz =
+          Class.forName(
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_15.metrics.ApplicationMeterFactory115");
+      return (ApplicationMeterFactory) clazz.getConstructor().newInstance();
+    } catch (ClassNotFoundException
+        | NoSuchMethodException
+        | InstantiationException
+        | IllegalAccessException
+        | InvocationTargetException exception) {
+      return new ApplicationMeterFactory14();
+    }
   }
 }

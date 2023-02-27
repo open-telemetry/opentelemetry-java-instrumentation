@@ -17,32 +17,32 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Nullable
   @Override
-  public String system(DbRequest request) {
+  public String getSystem(DbRequest request) {
     return request.getDbInfo().getSystem();
   }
 
   @Nullable
   @Override
-  public String user(DbRequest request) {
+  public String getUser(DbRequest request) {
     return request.getDbInfo().getUser();
   }
 
   @Nullable
   @Override
-  public String name(DbRequest request) {
+  public String getName(DbRequest request) {
     DbInfo dbInfo = request.getDbInfo();
     return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
   }
 
   @Nullable
   @Override
-  public String connectionString(DbRequest request) {
+  public String getConnectionString(DbRequest request) {
     return request.getDbInfo().getShortUrl();
   }
 
   @Nullable
   @Override
-  public String rawStatement(DbRequest request) {
+  public String getRawStatement(DbRequest request) {
     return request.getStatement();
   }
 }

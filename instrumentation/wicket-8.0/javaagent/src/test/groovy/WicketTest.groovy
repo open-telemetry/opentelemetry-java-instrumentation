@@ -71,7 +71,7 @@ class WicketTest extends AgentInstrumentationSpecification implements HttpServer
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name getContextPath() + "/wicket-test/hello.HelloPage"
+          name "GET " + getContextPath() + "/wicket-test/hello.HelloPage"
           kind SpanKind.SERVER
           hasNoParent()
         }
@@ -90,7 +90,7 @@ class WicketTest extends AgentInstrumentationSpecification implements HttpServer
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name getContextPath() + "/wicket-test/hello.ExceptionPage"
+          name "GET " + getContextPath() + "/wicket-test/hello.ExceptionPage"
           kind SpanKind.SERVER
           hasNoParent()
           status StatusCode.ERROR

@@ -15,70 +15,70 @@ enum RabbitChannelAttributesGetter implements MessagingAttributesGetter<ChannelA
   INSTANCE;
 
   @Override
-  public String system(ChannelAndMethod channelAndMethod) {
+  public String getSystem(ChannelAndMethod channelAndMethod) {
     return "rabbitmq";
   }
 
   @Override
-  public String destinationKind(ChannelAndMethod channelAndMethod) {
+  public String getDestinationKind(ChannelAndMethod channelAndMethod) {
     return SemanticAttributes.MessagingDestinationKindValues.QUEUE;
   }
 
   @Nullable
   @Override
-  public String destination(ChannelAndMethod channelAndMethod) {
+  public String getDestination(ChannelAndMethod channelAndMethod) {
     return null;
   }
 
   @Override
-  public boolean temporaryDestination(ChannelAndMethod channelAndMethod) {
+  public boolean isTemporaryDestination(ChannelAndMethod channelAndMethod) {
     return false;
   }
 
   @Nullable
   @Override
-  public String protocol(ChannelAndMethod channelAndMethod) {
+  public String getProtocol(ChannelAndMethod channelAndMethod) {
     return null;
   }
 
   @Nullable
   @Override
-  public String protocolVersion(ChannelAndMethod channelAndMethod) {
+  public String getProtocolVersion(ChannelAndMethod channelAndMethod) {
     return null;
   }
 
   @Nullable
   @Override
-  public String url(ChannelAndMethod channelAndMethod) {
+  public String getUrl(ChannelAndMethod channelAndMethod) {
     return null;
   }
 
   @Nullable
   @Override
-  public String conversationId(ChannelAndMethod channelAndMethod) {
+  public String getConversationId(ChannelAndMethod channelAndMethod) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadSize(ChannelAndMethod channelAndMethod) {
+  public Long getMessagePayloadSize(ChannelAndMethod channelAndMethod) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadCompressedSize(ChannelAndMethod channelAndMethod) {
+  public Long getMessagePayloadCompressedSize(ChannelAndMethod channelAndMethod) {
     return null;
   }
 
   @Nullable
   @Override
-  public String messageId(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
+  public String getMessageId(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     return null;
   }
 
   @Override
-  public List<String> header(ChannelAndMethod channelAndMethod, String name) {
+  public List<String> getMessageHeader(ChannelAndMethod channelAndMethod, String name) {
     if (channelAndMethod.getHeaders() != null) {
       Object value = channelAndMethod.getHeaders().get(name);
       if (value != null) {

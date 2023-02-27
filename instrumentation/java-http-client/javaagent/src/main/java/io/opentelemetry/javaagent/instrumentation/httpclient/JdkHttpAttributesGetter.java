@@ -16,28 +16,28 @@ import javax.annotation.Nullable;
 class JdkHttpAttributesGetter implements HttpClientAttributesGetter<HttpRequest, HttpResponse<?>> {
 
   @Override
-  public String method(HttpRequest httpRequest) {
+  public String getMethod(HttpRequest httpRequest) {
     return httpRequest.method();
   }
 
   @Override
-  public String url(HttpRequest httpRequest) {
+  public String getUrl(HttpRequest httpRequest) {
     return httpRequest.uri().toString();
   }
 
   @Override
-  public List<String> requestHeader(HttpRequest httpRequest, String name) {
+  public List<String> getRequestHeader(HttpRequest httpRequest, String name) {
     return httpRequest.headers().allValues(name);
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       HttpRequest httpRequest, HttpResponse<?> httpResponse, @Nullable Throwable error) {
     return httpResponse.statusCode();
   }
 
   @Override
-  public String flavor(HttpRequest httpRequest, @Nullable HttpResponse<?> httpResponse) {
+  public String getFlavor(HttpRequest httpRequest, @Nullable HttpResponse<?> httpResponse) {
     if (httpResponse != null && httpResponse.version() == Version.HTTP_2) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
@@ -45,7 +45,7 @@ class JdkHttpAttributesGetter implements HttpClientAttributesGetter<HttpRequest,
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       HttpRequest httpRequest, HttpResponse<?> httpResponse, String name) {
     return httpResponse.headers().allValues(name);
   }

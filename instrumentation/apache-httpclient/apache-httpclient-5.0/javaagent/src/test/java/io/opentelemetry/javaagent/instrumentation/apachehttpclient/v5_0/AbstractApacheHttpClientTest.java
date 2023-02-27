@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -32,10 +33,10 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.setUserAgent(userAgent());
-    options.enableTestReadTimeout();
-    options.setHttpAttributes(this::getHttpAttributes);
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.setUserAgent(userAgent());
+    optionsBuilder.enableTestReadTimeout();
+    optionsBuilder.setHttpAttributes(this::getHttpAttributes);
   }
 
   protected Set<AttributeKey<?>> getHttpAttributes(URI endpoint) {
@@ -52,7 +53,7 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
   }
 
   @Override
-  protected T buildRequest(String method, URI uri, Map<String, String> headers) {
+  public T buildRequest(String method, URI uri, Map<String, String> headers) {
     T request = createRequest(method, uri);
     request.addHeader("user-agent", userAgent());
     headers.forEach((key, value) -> request.setHeader(new BasicHeader(key, value)));
@@ -60,18 +61,22 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
   }
 
   @Override
-  protected int sendRequest(T request, String method, URI uri, Map<String, String> headers)
+  public int sendRequest(T request, String method, URI uri, Map<String, String> headers)
       throws Exception {
     return getResponseCode(executeRequest(request, uri));
   }
 
   @Override
-  protected void sendRequestWithCallback(
-      T request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+  public void sendRequestWithCallback(
+      T request,
+      String method,
+      URI uri,
+      Map<String, String> headers,
+      HttpClientResult httpClientResult) {
     try {
-      executeRequestWithCallback(request, uri, requestResult);
+      executeRequestWithCallback(request, uri, httpClientResult);
     } catch (Throwable throwable) {
-      requestResult.complete(throwable);
+      httpClientResult.complete(throwable);
     }
   }
 
@@ -105,7 +110,7 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
 
   abstract HttpResponse executeRequest(T request, URI uri) throws Exception;
 
-  abstract void executeRequestWithCallback(T request, URI uri, RequestResult requestResult)
+  abstract void executeRequestWithCallback(T request, URI uri, HttpClientResult httpClientResult)
       throws Exception;
 
   private static int getResponseCode(HttpResponse response) {

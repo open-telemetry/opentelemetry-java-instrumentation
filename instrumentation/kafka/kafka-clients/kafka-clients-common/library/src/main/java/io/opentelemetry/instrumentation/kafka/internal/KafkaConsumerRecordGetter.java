@@ -10,27 +10,22 @@ import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public enum KafkaConsumerRecordGetter implements TextMapGetter<ConsumerRecord<?, ?>> {
+enum KafkaConsumerRecordGetter implements TextMapGetter<KafkaProcessRequest> {
   INSTANCE;
 
   @Override
-  public Iterable<String> keys(ConsumerRecord<?, ?> carrier) {
-    return StreamSupport.stream(carrier.headers().spliterator(), false)
+  public Iterable<String> keys(KafkaProcessRequest carrier) {
+    return StreamSupport.stream(carrier.getRecord().headers().spliterator(), false)
         .map(Header::key)
         .collect(Collectors.toList());
   }
 
   @Nullable
   @Override
-  public String get(@Nullable ConsumerRecord<?, ?> carrier, String key) {
-    Header header = carrier.headers().lastHeader(key);
+  public String get(@Nullable KafkaProcessRequest carrier, String key) {
+    Header header = carrier.getRecord().headers().lastHeader(key);
     if (header == null) {
       return null;
     }

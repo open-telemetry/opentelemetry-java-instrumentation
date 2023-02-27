@@ -86,7 +86,7 @@ class DemoServlet3InstrumentationTest {
                 trace
                     .hasSize(1)
                     .hasSpansSatisfyingExactly(
-                        span -> span.hasName("/servlet").hasKind(SpanKind.SERVER)));
+                        span -> span.hasName("GET /servlet").hasKind(SpanKind.SERVER)));
 
     var traceId = instrumentation.spans().get(0).getTraceId();
     assertEquals(traceId, response.header("X-server-id"));

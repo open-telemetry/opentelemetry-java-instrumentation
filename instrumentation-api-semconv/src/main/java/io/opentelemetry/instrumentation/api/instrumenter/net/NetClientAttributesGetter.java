@@ -18,31 +18,31 @@ import javax.annotation.Nullable;
 public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
-  String transport(REQUEST request, @Nullable RESPONSE response);
+  String getTransport(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
-  String peerName(REQUEST request);
+  String getPeerName(REQUEST request);
 
   @Nullable
-  Integer peerPort(REQUEST request);
+  Integer getPeerPort(REQUEST request);
 
   @Nullable
-  default String sockFamily(REQUEST request, @Nullable RESPONSE response) {
+  default String getSockFamily(REQUEST request, @Nullable RESPONSE response) {
     return null;
   }
 
   @Nullable
-  default String sockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
+  default String getSockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
     return null;
   }
 
   @Nullable
-  default String sockPeerName(REQUEST request, @Nullable RESPONSE response) {
+  default String getSockPeerName(REQUEST request, @Nullable RESPONSE response) {
     return null;
   }
 
   @Nullable
-  default Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response) {
+  default Integer getSockPeerPort(REQUEST request, @Nullable RESPONSE response) {
     return null;
   }
 }

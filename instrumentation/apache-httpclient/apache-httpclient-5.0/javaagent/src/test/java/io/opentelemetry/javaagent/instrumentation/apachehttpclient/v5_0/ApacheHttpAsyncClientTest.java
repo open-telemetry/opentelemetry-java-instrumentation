@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.util.Map;
@@ -88,7 +88,7 @@ class ApacheHttpAsyncClientTest {
 
   abstract class AbstractTest extends AbstractApacheHttpClientTest<SimpleHttpRequest> {
     @Override
-    protected SimpleHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    public SimpleHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       SimpleHttpRequest httpRequest = super.buildRequest(method, uri, headers);
       RequestConfig.Builder configBuilder = RequestConfig.custom();
       configBuilder.setConnectTimeout(getTimeout(connectTimeout()));
@@ -106,37 +106,37 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    void executeRequestWithCallback(SimpleHttpRequest request, URI uri, RequestResult result) {
+    void executeRequestWithCallback(SimpleHttpRequest request, URI uri, HttpClientResult result) {
       client.execute(request, getContext(), new ResponseCallback(result));
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      super.configure(options);
-      options.setResponseCodeOnRedirectError(302);
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      super.configure(optionsBuilder);
+      optionsBuilder.setResponseCodeOnRedirectError(302);
     }
   }
 
   private static class ResponseCallback implements FutureCallback<SimpleHttpResponse> {
-    private final AbstractHttpClientTest.RequestResult requestResult;
+    private final HttpClientResult httpClientResult;
 
-    public ResponseCallback(AbstractHttpClientTest.RequestResult requestResult) {
-      this.requestResult = requestResult;
+    public ResponseCallback(HttpClientResult httpClientResult) {
+      this.httpClientResult = httpClientResult;
     }
 
     @Override
     public void completed(SimpleHttpResponse response) {
-      requestResult.complete(response.getCode());
+      httpClientResult.complete(response.getCode());
     }
 
     @Override
     public void failed(Exception ex) {
-      requestResult.complete(ex);
+      httpClientResult.complete(ex);
     }
 
     @Override
     public void cancelled() {
-      requestResult.complete(new CancellationException());
+      httpClientResult.complete(new CancellationException());
     }
   }
 }

@@ -21,14 +21,14 @@ private val ipv6 = Pattern.compile( // Non Compressed
     "|(?=(?:[A-F0-9]{0,4}:){0,7}[A-F0-9]{0,4}(?![:.\\w]))" + // and at most 1 double colon
     "(([0-9A-F]{1,4}:){1,7}|:)((:[0-9A-F]{1,4}){1,7}|:)" + // Compressed with 8 colons
     "|(?:[A-F0-9]{1,4}:){7}:|:(:[A-F0-9]{1,4}){7})(?![:.\\w])\$",
-  Pattern.CASE_INSENSITIVE
+  Pattern.CASE_INSENSITIVE,
 )
 
 // Source: Regular Expressions Cookbook 2nd edition - 8.16.
 // Matching IPv4 Addresses
 private val ipv4 = Pattern.compile(
   "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}" +
-    "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\$"
+    "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\$",
 )
 
 fun isIpAddress(address: String): Boolean {

@@ -22,7 +22,7 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
   // Attributes that always exist in a request
 
   @Nullable
-  String url(REQUEST request);
+  String getUrl(REQUEST request);
 
   // Attributes which are not always available when the request is ready.
 
@@ -33,5 +33,5 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
    * {@code response} is {@code null} or not.
    */
   @Nullable
-  String flavor(REQUEST request, @Nullable RESPONSE response);
+  String getFlavor(REQUEST request, @Nullable RESPONSE response);
 }

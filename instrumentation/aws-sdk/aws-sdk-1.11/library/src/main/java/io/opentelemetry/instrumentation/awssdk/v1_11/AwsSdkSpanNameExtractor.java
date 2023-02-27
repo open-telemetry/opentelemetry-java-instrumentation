@@ -17,8 +17,8 @@ class AwsSdkSpanNameExtractor implements SpanNameExtractor<Request<?>> {
   @Override
   public String extract(Request<?> request) {
     return qualifiedOperation(
-        rpcAttributes.service(request),
-        rpcAttributes.method(request),
+        rpcAttributes.getService(request),
+        rpcAttributes.getMethod(request),
         request.getOriginalRequest().getClass());
   }
 

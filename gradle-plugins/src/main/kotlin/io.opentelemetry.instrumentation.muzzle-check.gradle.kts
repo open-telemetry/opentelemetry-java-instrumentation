@@ -130,9 +130,7 @@ tasks.register("printMuzzleReferences") {
   dependsOn(shadowModule)
   doLast {
     val instrumentationCL = createInstrumentationClassloader()
-    withContextClassLoader(instrumentationCL) {
-      MuzzleGradlePluginUtil.printMuzzleReferences(instrumentationCL)
-    }
+    MuzzleGradlePluginUtil.printMuzzleReferences(instrumentationCL)
   }
 }
 
@@ -293,19 +291,8 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     doLast {
       val instrumentationCL = createInstrumentationClassloader()
       val userCL = createClassLoaderForTask(config)
-      withContextClassLoader(instrumentationCL) {
-        MuzzleGradlePluginUtil.assertInstrumentationMuzzled(instrumentationCL, userCL,
-          muzzleDirective.excludedInstrumentationNames.get(), muzzleDirective.assertPass.get())
-      }
-
-      for (thread in Thread.getAllStackTraces().keys) {
-        if (thread.contextClassLoader === instrumentationCL
-          || thread.contextClassLoader === userCL) {
-          throw GradleException(
-            "Task ${taskName} has spawned a thread: ${thread} with class loader ${thread.contextClassLoader}. " +
-              "This will prevent GC of dynamic muzzle classes. Aborting muzzle run.")
-        }
-      }
+      MuzzleGradlePluginUtil.assertInstrumentationMuzzled(instrumentationCL, userCL,
+        muzzleDirective.excludedInstrumentationNames.get(), muzzleDirective.assertPass.get())
     }
   }
 
@@ -413,14 +400,4 @@ fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: Reposit
   }
 
   yieldAll(allVersionArtifacts)
-}
-
-fun withContextClassLoader(classLoader: ClassLoader, action: () -> Unit) {
-  val currentClassLoader = Thread.currentThread().contextClassLoader
-  Thread.currentThread().contextClassLoader = classLoader
-  try {
-    action()
-  } finally {
-    Thread.currentThread().contextClassLoader = currentClassLoader
-  }
 }

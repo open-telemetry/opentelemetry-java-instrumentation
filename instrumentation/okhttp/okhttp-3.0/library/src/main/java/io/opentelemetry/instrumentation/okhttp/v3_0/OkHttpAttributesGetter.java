@@ -16,24 +16,24 @@ enum OkHttpAttributesGetter implements HttpClientAttributesGetter<Request, Respo
   INSTANCE;
 
   @Override
-  public String method(Request request) {
+  public String getMethod(Request request) {
     return request.method();
   }
 
   @Override
-  public String url(Request request) {
+  public String getUrl(Request request) {
     return request.url().toString();
   }
 
   @Override
-  public List<String> requestHeader(Request request, String name) {
+  public List<String> getRequestHeader(Request request, String name) {
     return request.headers(name);
   }
 
   @Override
   @SuppressWarnings("UnnecessaryDefaultInEnumSwitch")
   @Nullable
-  public String flavor(Request request, @Nullable Response response) {
+  public String getFlavor(Request request, @Nullable Response response) {
     if (response == null) {
       return null;
     }
@@ -53,12 +53,12 @@ enum OkHttpAttributesGetter implements HttpClientAttributesGetter<Request, Respo
   }
 
   @Override
-  public Integer statusCode(Request request, Response response, @Nullable Throwable error) {
+  public Integer getStatusCode(Request request, Response response, @Nullable Throwable error) {
     return response.code();
   }
 
   @Override
-  public List<String> responseHeader(Request request, Response response, String name) {
+  public List<String> getResponseHeader(Request request, Response response, String name) {
     return response.headers(name);
   }
 }

@@ -32,7 +32,7 @@ abstract class PayaraSmokeTest extends AppServerTest {
   protected String getSpanName(String path) {
     switch (path) {
       case "/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless":
-        return "/*"
+        return "GET /*"
     }
     return super.getSpanName(path)
   }
@@ -42,12 +42,12 @@ abstract class PayaraSmokeTest extends AppServerTest {
 class Payara52020Jdk8 extends PayaraSmokeTest {
 }
 
-@AppServer(version = "5.2020.6", jdk = "8-openj9")
-class Payara52020Jdk8Openj9 extends PayaraSmokeTest {
-}
-
 @AppServer(version = "5.2020.6", jdk = "11")
 class Payara52020Jdk11 extends PayaraSmokeTest {
+}
+
+@AppServer(version = "5.2020.6", jdk = "8-openj9")
+class Payara52020Jdk8Openj9 extends PayaraSmokeTest {
 }
 
 @AppServer(version = "5.2020.6", jdk = "11-openj9")
@@ -58,12 +58,12 @@ class Payara52020Jdk11Openj9 extends PayaraSmokeTest {
 class Payara52021Jdk8 extends PayaraSmokeTest {
 }
 
-@AppServer(version = "5.2021.8", jdk = "8-openj9")
-class Payara52021Jdk8Openj9 extends PayaraSmokeTest {
-}
-
 @AppServer(version = "5.2021.8", jdk = "11")
 class Payara52021Jdk11 extends PayaraSmokeTest {
+}
+
+@AppServer(version = "5.2021.8", jdk = "8-openj9")
+class Payara52021Jdk8Openj9 extends PayaraSmokeTest {
 }
 
 @AppServer(version = "5.2021.8", jdk = "11-openj9")

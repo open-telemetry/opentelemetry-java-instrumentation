@@ -9,12 +9,15 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHtt
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.requestAttributeKey;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.responseAttributeKey;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -25,6 +28,8 @@ import javax.annotation.Nullable;
 abstract class HttpCommonAttributesExtractor<
         REQUEST, RESPONSE, GETTER extends HttpCommonAttributesGetter<REQUEST, RESPONSE>>
     implements AttributesExtractor<REQUEST, RESPONSE> {
+
+  private static final Logger logger = Logger.getLogger(HttpCommonAttributesGetter.class.getName());
 
   final GETTER getter;
   private final List<String> capturedRequestHeaders;
@@ -39,11 +44,11 @@ abstract class HttpCommonAttributesExtractor<
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, SemanticAttributes.HTTP_METHOD, getter.method(request));
+    internalSet(attributes, SemanticAttributes.HTTP_METHOD, getter.getMethod(request));
     internalSet(attributes, SemanticAttributes.HTTP_USER_AGENT, userAgent(request));
 
     for (String name : capturedRequestHeaders) {
-      List<String> values = getter.requestHeader(request, name);
+      List<String> values = getter.getRequestHeader(request, name);
       if (!values.isEmpty()) {
         internalSet(attributes, requestAttributeKey(name), values);
       }
@@ -62,7 +67,7 @@ abstract class HttpCommonAttributesExtractor<
         attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestContentLength(request));
 
     if (response != null) {
-      Integer statusCode = getter.statusCode(request, response, error);
+      Integer statusCode = getter.getStatusCode(request, response, error);
       if (statusCode != null && statusCode > 0) {
         internalSet(attributes, SemanticAttributes.HTTP_STATUS_CODE, (long) statusCode);
       }
@@ -73,7 +78,7 @@ abstract class HttpCommonAttributesExtractor<
           responseContentLength(request, response));
 
       for (String name : capturedResponseHeaders) {
-        List<String> values = getter.responseHeader(request, response, name);
+        List<String> values = getter.getResponseHeader(request, response, name);
         if (!values.isEmpty()) {
           internalSet(attributes, responseAttributeKey(name), values);
         }
@@ -83,18 +88,18 @@ abstract class HttpCommonAttributesExtractor<
 
   @Nullable
   private String userAgent(REQUEST request) {
-    return firstHeaderValue(getter.requestHeader(request, "user-agent"));
+    return firstHeaderValue(getter.getRequestHeader(request, "user-agent"));
   }
 
   @Nullable
   private Long requestContentLength(REQUEST request) {
-    return parseNumber(firstHeaderValue(getter.requestHeader(request, "content-length")));
+    return parseNumber(firstHeaderValue(getter.getRequestHeader(request, "content-length")));
   }
 
   @Nullable
   private Long responseContentLength(REQUEST request, RESPONSE response) {
     return parseNumber(
-        firstHeaderValue(getter.responseHeader(request, response, "content-length")));
+        firstHeaderValue(getter.getResponseHeader(request, response, "content-length")));
   }
 
   @Nullable
@@ -111,6 +116,45 @@ abstract class HttpCommonAttributesExtractor<
       return Long.parseLong(number);
     } catch (NumberFormatException e) {
       // not a number
+      return null;
+    }
+  }
+
+  static final class HttpNetNamePortGetter<REQUEST> implements FallbackNamePortGetter<REQUEST> {
+
+    private final HttpCommonAttributesGetter<REQUEST, ?> getter;
+
+    HttpNetNamePortGetter(HttpCommonAttributesGetter<REQUEST, ?> getter) {
+      this.getter = getter;
+    }
+
+    @Nullable
+    @Override
+    public String name(REQUEST request) {
+      String host = firstHeaderValue(getter.getRequestHeader(request, "host"));
+      if (host == null) {
+        return null;
+      }
+      int hostHeaderSeparator = host.indexOf(':');
+      return hostHeaderSeparator == -1 ? host : host.substring(0, hostHeaderSeparator);
+    }
+
+    @Nullable
+    @Override
+    public Integer port(REQUEST request) {
+      String host = firstHeaderValue(getter.getRequestHeader(request, "host"));
+      if (host == null) {
+        return null;
+      }
+      int hostHeaderSeparator = host.indexOf(':');
+      if (hostHeaderSeparator == -1) {
+        return null;
+      }
+      try {
+        return Integer.parseInt(host.substring(hostHeaderSeparator + 1));
+      } catch (NumberFormatException e) {
+        logger.log(FINE, e.getMessage(), e);
+      }
       return null;
     }
   }

@@ -17,32 +17,32 @@ final class AsyncHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<Request, Response> {
 
   @Override
-  public String method(Request request) {
+  public String getMethod(Request request) {
     return request.getMethod();
   }
 
   @Override
-  public String url(Request request) {
+  public String getUrl(Request request) {
     return request.getUri().toUrl();
   }
 
   @Override
-  public List<String> requestHeader(Request request, String name) {
+  public List<String> getRequestHeader(Request request, String name) {
     return request.getHeaders().getOrDefault(name, Collections.emptyList());
   }
 
   @Override
-  public Integer statusCode(Request request, Response response, @Nullable Throwable error) {
+  public Integer getStatusCode(Request request, Response response, @Nullable Throwable error) {
     return response.getStatusCode();
   }
 
   @Override
-  public String flavor(Request request, @Nullable Response response) {
+  public String getFlavor(Request request, @Nullable Response response) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override
-  public List<String> responseHeader(Request request, Response response, String name) {
+  public List<String> getResponseHeader(Request request, Response response, String name) {
     return response.getHeaders().getOrDefault(name, Collections.emptyList());
   }
 }

@@ -43,7 +43,7 @@ class SparkJavaBasedTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "/param/:param"
+          name "GET /param/:param"
           kind SERVER
           hasNoParent()
           attributes {

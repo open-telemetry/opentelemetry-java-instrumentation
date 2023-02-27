@@ -34,13 +34,13 @@ extra["testLatestDeps"] = testLatestDeps
 abstract class TestLatestDepsRule : ComponentMetadataRule {
   override fun execute(context: ComponentMetadataContext) {
     val version = context.details.id.version
-    if (version.contains("-alpha", true)
-      || version.contains("-beta", true)
-      || version.contains("-rc", true)
-      || version.contains("-m", true) // e.g. spring milestones are published to grails repo
-      || version.contains(".alpha", true) // e.g. netty
-      || version.contains(".beta", true) // e.g. hibernate
-      || version.contains(".cr", true) // e.g. hibernate
+    if (version.contains("-alpha", true) ||
+      version.contains("-beta", true) ||
+      version.contains("-rc", true) ||
+      version.contains("-m", true) || // e.g. spring milestones are published to grails repo
+      version.contains(".alpha", true) || // e.g. netty
+      version.contains(".beta", true) || // e.g. hibernate
+      version.contains(".cr", true) // e.g. hibernate
     ) {
       context.details.status = "milestone"
     }
@@ -115,6 +115,22 @@ if (testLatestDeps) {
       val latestDepTest by tasks.existing
       tasks.named("test").configure {
         dependsOn(latestDepTest)
+      }
+    }
+  }
+} else {
+  afterEvaluate {
+    // Disable compiling latest dep tests for non latest dep builds in CI. This is needed to avoid
+    // breaking build because of a new library version which could force backporting latest dep
+    // fixes to release branches.
+    // This is only needed for modules where base version and latest dep tests use a different
+    // source directory.
+    var latestDepCompileTaskNames = arrayOf("compileLatestDepTestJava", "compileLatestDepTestGroovy", "compileLatestDepTestScala")
+    for (compileTaskName in latestDepCompileTaskNames) {
+      if (tasks.names.contains(compileTaskName)) {
+        tasks.named(compileTaskName).configure {
+          enabled = false
+        }
       }
     }
   }

@@ -26,5 +26,5 @@ public interface SqlClientAttributesGetter<REQUEST>
    * SqlClientAttributesExtractor} before being set as span attribute.
    */
   @Nullable
-  String rawStatement(REQUEST request);
+  String getRawStatement(REQUEST request);
 }

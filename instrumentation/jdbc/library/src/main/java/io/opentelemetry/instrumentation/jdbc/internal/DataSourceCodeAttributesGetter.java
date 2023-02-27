@@ -11,12 +11,12 @@ import javax.sql.DataSource;
 final class DataSourceCodeAttributesGetter implements CodeAttributesGetter<DataSource> {
 
   @Override
-  public Class<?> codeClass(DataSource dataSource) {
+  public Class<?> getCodeClass(DataSource dataSource) {
     return dataSource.getClass();
   }
 
   @Override
-  public String methodName(DataSource dataSource) {
+  public String getMethodName(DataSource dataSource) {
     return "getConnection";
   }
 }

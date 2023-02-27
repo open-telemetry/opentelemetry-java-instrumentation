@@ -34,7 +34,7 @@ abstract class WildflySmokeTest extends AppServerTest {
 
     traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
 
-    traces.countSpansByName('/app/jsp') == 1
+    traces.countSpansByName('GET /app/jsp') == 1
 
     where:
     [appServer, jdk] << getTestParams()
@@ -72,13 +72,28 @@ class Wildfly17Jdk11 extends WildflySmokeTest {
 class Wildfly17Jdk17 extends WildflySmokeTest {
 }
 
-// TODO (trask) remove Java 18 test once Java 19 is GA
-@AppServer(version = "17.0.1.Final", jdk = "18")
-class Wildfly17Jdk18 extends WildflyJdk8SmokeTest {
+@AppServer(version = "17.0.1.Final", jdk = "19")
+class Wildfly17Jdk19 extends WildflyJdk8SmokeTest {
 }
 
-@AppServer(version = "17.0.1.Final", jdk = "19")
-class Wildfly17Jdk19 extends WildflySmokeTest {
+@AppServer(version = "17.0.1.Final", jdk = "20")
+class Wildfly17Jdk20 extends WildflySmokeTest {
+}
+
+@AppServer(version = "17.0.1.Final", jdk = "8-openj9")
+class Wildfly17Jdk8Openj9 extends WildflySmokeTest {
+}
+
+@AppServer(version = "17.0.1.Final", jdk = "11-openj9")
+class Wildfly17Jdk11Openj9 extends WildflySmokeTest {
+}
+
+@AppServer(version = "17.0.1.Final", jdk = "17-openj9")
+class Wildfly17Jdk17Openj9 extends WildflySmokeTest {
+}
+
+@AppServer(version = "17.0.1.Final", jdk = "18-openj9")
+class Wildfly17Jdk18Openj9 extends WildflySmokeTest {
 }
 
 @AppServer(version = "21.0.0.Final", jdk = "8")
@@ -93,13 +108,28 @@ class Wildfly21Jdk11 extends WildflySmokeTest {
 class Wildfly21Jdk17 extends WildflySmokeTest {
 }
 
-// TODO (trask) remove Java 18 test once Java 19 is GA
-@AppServer(version = "21.0.0.Final", jdk = "18")
-class Wildfly21Jdk18 extends WildflyJdk8SmokeTest {
+@AppServer(version = "21.0.0.Final", jdk = "19")
+class Wildfly21Jdk19 extends WildflyJdk8SmokeTest {
 }
 
-@AppServer(version = "21.0.0.Final", jdk = "19")
-class Wildfly21Jdk19 extends WildflySmokeTest {
+@AppServer(version = "21.0.0.Final", jdk = "20")
+class Wildfly21Jdk20 extends WildflySmokeTest {
+}
+
+@AppServer(version = "21.0.0.Final", jdk = "8-openj9")
+class Wildfly21Jdk8Openj9 extends WildflySmokeTest {
+}
+
+@AppServer(version = "21.0.0.Final", jdk = "11-openj9")
+class Wildfly21Jdk11Openj9 extends WildflySmokeTest {
+}
+
+@AppServer(version = "21.0.0.Final", jdk = "17-openj9")
+class Wildfly21Jdk17Openj9 extends WildflySmokeTest {
+}
+
+@AppServer(version = "21.0.0.Final", jdk = "18-openj9")
+class Wildfly21Jdk18Openj9 extends WildflySmokeTest {
 }
 
 @AppServer(version = "25.0.1.Final", jdk = "8")
@@ -114,37 +144,12 @@ class Wildfly25Jdk11 extends WildflySmokeTest {
 class Wildfly25Jdk17 extends WildflySmokeTest {
 }
 
-// TODO (trask) remove Java 18 test once Java 19 is GA
-@AppServer(version = "25.0.1.Final", jdk = "18")
-class Wildfly25Jdk18 extends WildflyJdk8SmokeTest {
-}
-
 @AppServer(version = "25.0.1.Final", jdk = "19")
-class Wildfly25Jdk19 extends WildflySmokeTest {
+class Wildfly25Jdk19 extends WildflyJdk8SmokeTest {
 }
 
-@AppServer(version = "17.0.1.Final", jdk = "8-openj9")
-class Wildfly17Jdk8Openj9 extends WildflySmokeTest {
-}
-
-@AppServer(version = "17.0.1.Final", jdk = "11-openj9")
-class Wildfly17Jdk11Openj9 extends WildflySmokeTest {
-}
-
-@AppServer(version = "17.0.1.Final", jdk = "16-openj9")
-class Wildfly17Jdk16Openj9 extends WildflySmokeTest {
-}
-
-@AppServer(version = "21.0.0.Final", jdk = "8-openj9")
-class Wildfly21Jdk8Openj9 extends WildflySmokeTest {
-}
-
-@AppServer(version = "21.0.0.Final", jdk = "11-openj9")
-class Wildfly21Jdk11Openj9 extends WildflySmokeTest {
-}
-
-@AppServer(version = "21.0.0.Final", jdk = "16-openj9")
-class Wildfly21Jdk16Openj9 extends WildflySmokeTest {
+@AppServer(version = "25.0.1.Final", jdk = "20")
+class Wildfly25Jdk20 extends WildflySmokeTest {
 }
 
 @AppServer(version = "25.0.1.Final", jdk = "8-openj9")
@@ -155,6 +160,10 @@ class Wildfly25Jdk8Openj9 extends WildflySmokeTest {
 class Wildfly25Jdk11Openj9 extends WildflySmokeTest {
 }
 
-@AppServer(version = "25.0.1.Final", jdk = "16-openj9")
-class Wildfly25Jdk16Openj9 extends WildflySmokeTest {
+@AppServer(version = "25.0.1.Final", jdk = "17-openj9")
+class Wildfly25Jdk17Openj9 extends WildflySmokeTest {
+}
+
+@AppServer(version = "25.0.1.Final", jdk = "18-openj9")
+class Wildfly25Jdk18Openj9 extends WildflySmokeTest {
 }

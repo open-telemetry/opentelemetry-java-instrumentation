@@ -15,6 +15,7 @@ import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.RequestHeaders;
 import com.linecorp.armeria.common.util.Exceptions;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.util.Map;
@@ -54,7 +55,7 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  protected final HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+  public HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     return HttpRequest.of(
         RequestHeaders.builder(HttpMethod.valueOf(method), uri.toString())
             .set(headers.entrySet())
@@ -62,8 +63,7 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  protected final int sendRequest(
-      HttpRequest request, String method, URI uri, Map<String, String> headers) {
+  public int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers) {
     try {
       return getClient(uri).execute(request).aggregate().join().status().code();
     } catch (CompletionException e) {
@@ -72,18 +72,18 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  protected final void sendRequestWithCallback(
+  public final void sendRequestWithCallback(
       HttpRequest request,
       String method,
       URI uri,
       Map<String, String> headers,
-      RequestResult requestResult) {
+      HttpClientResult httpClientResult) {
     getClient(uri)
         .execute(request)
         .aggregate()
         .whenComplete(
             (response, throwable) ->
-                requestResult.complete(() -> response.status().code(), throwable));
+                httpClientResult.complete(() -> response.status().code(), throwable));
   }
 
   private WebClient getClient(URI uri) {
@@ -94,12 +94,12 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     // Not supported yet: https://github.com/line/armeria/issues/2489
-    options.disableTestRedirects();
+    optionsBuilder.disableTestRedirects();
     // armeria requests can't be reused
-    options.disableTestReusedRequest();
-    options.enableTestReadTimeout();
+    optionsBuilder.disableTestReusedRequest();
+    optionsBuilder.enableTestReadTimeout();
   }
 
   @Test

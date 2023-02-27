@@ -15,8 +15,8 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    * Returns a {@link SpanNameExtractor} that constructs the span name according to DB semantic
    * conventions: {@code <db.operation> <db.name>}.
    *
-   * @see DbClientAttributesGetter#operation(Object) used to extract {@code <db.operation>}.
-   * @see DbClientAttributesGetter#name(Object) used to extract {@code <db.name>}.
+   * @see DbClientAttributesGetter#getOperation(Object) used to extract {@code <db.operation>}.
+   * @see DbClientAttributesGetter#getName(Object) used to extract {@code <db.name>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       DbClientAttributesGetter<REQUEST> getter) {
@@ -25,11 +25,12 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
   /**
    * Returns a {@link SpanNameExtractor} that constructs the span name according to DB semantic
-   * conventions: {@code <db.operation> <db.name>.<table>}.
+   * conventions: {@code <db.operation> <db.name>.<identifier>}.
    *
    * @see SqlStatementInfo#getOperation() used to extract {@code <db.operation>}.
-   * @see DbClientAttributesGetter#name(Object) used to extract {@code <db.name>}.
-   * @see SqlStatementInfo#getTable() used to extract {@code <db.table>}.
+   * @see DbClientAttributesGetter#getName(Object) used to extract {@code <db.name>}.
+   * @see SqlStatementInfo#getMainIdentifier() used to extract {@code <db.table>} or stored
+   *     procedure name.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       SqlClientAttributesGetter<REQUEST> getter) {
@@ -40,24 +41,24 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
   private DbClientSpanNameExtractor() {}
 
-  protected String computeSpanName(String dbName, String operation, String table) {
+  protected String computeSpanName(String dbName, String operation, String mainIdentifier) {
     if (operation == null) {
       return dbName == null ? DEFAULT_SPAN_NAME : dbName;
     }
 
     StringBuilder name = new StringBuilder(operation);
-    if (dbName != null || table != null) {
+    if (dbName != null || mainIdentifier != null) {
       name.append(' ');
     }
-    // skip db name if table already has a db name prefixed to it
-    if (dbName != null && (table == null || table.indexOf('.') == -1)) {
+    // skip db name if identifier already has a db name prefixed to it
+    if (dbName != null && (mainIdentifier == null || mainIdentifier.indexOf('.') == -1)) {
       name.append(dbName);
-      if (table != null) {
+      if (mainIdentifier != null) {
         name.append('.');
       }
     }
-    if (table != null) {
-      name.append(table);
+    if (mainIdentifier != null) {
+      name.append(mainIdentifier);
     }
     return name.toString();
   }
@@ -73,8 +74,8 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     @Override
     public String extract(REQUEST request) {
-      String dbName = getter.name(request);
-      String operation = getter.operation(request);
+      String dbName = getter.getName(request);
+      String operation = getter.getOperation(request);
       return computeSpanName(dbName, operation, null);
     }
   }
@@ -82,7 +83,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
   private static final class SqlClientSpanNameExtractor<REQUEST>
       extends DbClientSpanNameExtractor<REQUEST> {
 
-    // a dedicated sanitizer just for extracting the operation and table name
+    // a dedicated sanitizer just for extracting the operation and identifier name
     private static final SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
 
     private final SqlClientAttributesGetter<REQUEST> getter;
@@ -93,10 +94,10 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     @Override
     public String extract(REQUEST request) {
-      String dbName = getter.name(request);
-      SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.rawStatement(request));
+      String dbName = getter.getName(request);
+      SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.getRawStatement(request));
       return computeSpanName(
-          dbName, sanitizedStatement.getOperation(), sanitizedStatement.getTable());
+          dbName, sanitizedStatement.getOperation(), sanitizedStatement.getMainIdentifier());
     }
   }
 }

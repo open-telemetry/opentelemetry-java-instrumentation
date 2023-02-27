@@ -17,6 +17,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
@@ -37,34 +38,34 @@ class HttpClientAttributesExtractorTest {
       implements HttpClientAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Override
-    public String method(Map<String, String> request) {
+    public String getMethod(Map<String, String> request) {
       return request.get("method");
     }
 
     @Override
-    public String url(Map<String, String> request) {
+    public String getUrl(Map<String, String> request) {
       return request.get("url");
     }
 
     @Override
-    public List<String> requestHeader(Map<String, String> request, String name) {
+    public List<String> getRequestHeader(Map<String, String> request, String name) {
       String value = request.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
     }
 
     @Override
-    public Integer statusCode(
+    public Integer getStatusCode(
         Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
       return Integer.parseInt(response.get("statusCode"));
     }
 
     @Override
-    public String flavor(Map<String, String> request, Map<String, String> response) {
+    public String getFlavor(Map<String, String> request, Map<String, String> response) {
       return request.get("flavor");
     }
 
     @Override
-    public List<String> responseHeader(
+    public List<String> getResponseHeader(
         Map<String, String> request, Map<String, String> response, String name) {
       String value = response.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
@@ -76,19 +77,20 @@ class HttpClientAttributesExtractorTest {
 
     @Nullable
     @Override
-    public String transport(Map<String, String> request, @Nullable Map<String, String> response) {
+    public String getTransport(
+        Map<String, String> request, @Nullable Map<String, String> response) {
       return response.get("transport");
     }
 
     @Nullable
     @Override
-    public String peerName(Map<String, String> request) {
+    public String getPeerName(Map<String, String> request) {
       return request.get("peerName");
     }
 
     @Nullable
     @Override
-    public Integer peerPort(Map<String, String> request) {
+    public Integer getPeerPort(Map<String, String> request) {
       String statusCode = request.get("peerPort");
       return statusCode == null ? null : Integer.parseInt(statusCode);
     }
@@ -112,7 +114,7 @@ class HttpClientAttributesExtractorTest {
     response.put("header.custom-response-header", "654,321");
     response.put("transport", IP_TCP);
 
-    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.builder(
                 new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
             .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
@@ -152,7 +154,7 @@ class HttpClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("url", url);
 
-    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.builder(
                 new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
             .build();
@@ -188,7 +190,7 @@ class HttpClientAttributesExtractorTest {
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "0");
 
-    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.builder(
                 new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
@@ -203,6 +205,44 @@ class HttpClientAttributesExtractorTest {
     assertThat(attributes.build()).isEmpty();
   }
 
+  @Test
+  void extractNetPeerNameAndPortFromHostHeader() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.host", "thehost:777");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(
+            new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.NET_PEER_NAME, "thehost"),
+            entry(SemanticAttributes.NET_PEER_PORT, 777L));
+  }
+
+  @Test
+  void extractNetHostAndPortFromNetAttributesGetter() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.host", "notthehost:77777"); // this should have lower precedence
+    request.put("peerName", "thehost");
+    request.put("peerPort", "777");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(
+            new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.NET_PEER_NAME, "thehost"),
+            entry(SemanticAttributes.NET_PEER_PORT, 777L));
+  }
+
   @ParameterizedTest
   @ArgumentsSource(DefaultPeerPortArgumentSource.class)
   void defaultPeerPort(int peerPort, String url) {
@@ -210,7 +250,7 @@ class HttpClientAttributesExtractorTest {
     request.put("url", url);
     request.put("peerPort", String.valueOf(peerPort));
 
-    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.builder(
                 new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
             .build();

@@ -23,15 +23,15 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    super.configure(options);
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    super.configure(optionsBuilder);
 
     // library instrumentation doesn't have a good way of suppressing nested CLIENT spans yet
-    options.disableTestWithClientParent();
+    optionsBuilder.disableTestWithClientParent();
 
     // Agent users have automatic propagation through executor instrumentation, but library users
     // should do manually using Armeria patterns.
-    options.disableTestCallbackWithParent();
-    options.disableTestErrorWithCallback();
+    optionsBuilder.disableTestCallbackWithParent();
+    optionsBuilder.disableTestErrorWithCallback();
   }
 }

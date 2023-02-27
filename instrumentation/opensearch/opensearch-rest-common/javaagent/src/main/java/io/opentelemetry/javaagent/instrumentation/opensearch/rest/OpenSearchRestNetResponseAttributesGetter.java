@@ -15,25 +15,25 @@ final class OpenSearchRestNetResponseAttributesGetter
     implements NetClientAttributesGetter<OpenSearchRestRequest, Response> {
 
   @Override
-  public String transport(OpenSearchRestRequest request, Response response) {
+  public String getTransport(OpenSearchRestRequest request, Response response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   @Nullable
-  public String peerName(OpenSearchRestRequest request) {
+  public String getPeerName(OpenSearchRestRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public Integer peerPort(OpenSearchRestRequest request) {
+  public Integer getPeerPort(OpenSearchRestRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String sockFamily(
+  public String getSockFamily(
       OpenSearchRestRequest elasticsearchRestRequest, @Nullable Response response) {
     if (response != null && response.getHost().getAddress() instanceof Inet6Address) {
       return "inet6";
@@ -43,7 +43,7 @@ final class OpenSearchRestNetResponseAttributesGetter
 
   @Override
   @Nullable
-  public String sockPeerAddr(OpenSearchRestRequest request, @Nullable Response response) {
+  public String getSockPeerAddr(OpenSearchRestRequest request, @Nullable Response response) {
     if (response != null && response.getHost().getAddress() != null) {
       return response.getHost().getAddress().getHostAddress();
     }

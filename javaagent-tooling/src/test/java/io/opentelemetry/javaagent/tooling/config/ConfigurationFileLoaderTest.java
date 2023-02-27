@@ -10,6 +10,7 @@ import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.events.GlobalEventEmitterProvider;
 import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -33,6 +34,7 @@ class ConfigurationFileLoaderTest {
   static void cleanUp() {
     GlobalOpenTelemetry.resetForTest();
     GlobalLoggerProvider.resetForTest();
+    GlobalEventEmitterProvider.resetForTest();
   }
 
   // regression for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6696
@@ -46,7 +48,7 @@ class ConfigurationFileLoaderTest {
 
     // when
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        OpenTelemetryInstaller.installOpenTelemetrySdk();
+        OpenTelemetryInstaller.installOpenTelemetrySdk(this.getClass().getClassLoader());
 
     // then
     assertThat(autoConfiguredSdk.getConfig().getString("custom.key")).isEqualTo("42");

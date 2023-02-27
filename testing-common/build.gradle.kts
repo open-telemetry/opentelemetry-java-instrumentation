@@ -51,6 +51,9 @@ dependencies {
 
   compileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   implementation("io.opentelemetry.proto:opentelemetry-proto")
 
   implementation("net.bytebuddy:byte-buddy")
@@ -59,6 +62,7 @@ dependencies {
   implementation("org.slf4j:jcl-over-slf4j")
   implementation("org.slf4j:jul-to-slf4j")
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
+  implementation(project(":instrumentation-api-semconv"))
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service")

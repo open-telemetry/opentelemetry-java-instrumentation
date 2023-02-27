@@ -15,3 +15,9 @@ dependencies {
 
   testImplementation(project(":instrumentation:grpc-1.6:testing"))
 }
+
+tasks {
+  test {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  }
+}

@@ -11,7 +11,8 @@ jobs:
   common:
     uses: ./.github/workflows/build-common.yml
     with:
-      # windows smoke tests are slower, and it's rare for only the windows smoke tests to break
+      # it's rare for only the openj9 tests or the windows smoke tests to break
+      skip-openj9-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
       skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
       cache-read-only: true
 
@@ -21,39 +22,24 @@ jobs:
       cache-read-only: true
 
   muzzle:
-    # release branch PRs are excluded
-    # because any time a new library version is released to maven central it can fail
-    # which requires unnecessary release branch maintenance, especially for patches
-    if: "!startsWith(github.base_ref, 'release/')"
     uses: ./.github/workflows/reusable-muzzle.yml
     with:
       cache-read-only: true
 
-  # this is not a required check to avoid blocking pull requests if new shell checks are added
   shell-script-check:
-    # release branches are excluded to avoid unnecessary maintenance if new shell checks are added
-    if: "!startsWith(github.ref_name, 'release/')"
     uses: ./.github/workflows/reusable-shell-script-check.yml
 
   # this is not a required check to avoid blocking pull requests if external links break
   markdown-link-check:
-    # release branches are excluded to avoid unnecessary maintenance if external links break
-    # (and also because the README.md javaagent download link has to be updated on release branches
-    #  before the release download has been published)
-    if: "!startsWith(github.ref_name, 'release/')"
+    # release branches are excluded because the README.md javaagent download link has to be updated
+    # on release branches before the release download has been published
+    if: "!startsWith(github.ref_name, 'release/') && !startsWith(github.base_ref, 'release/')"
     uses: ./.github/workflows/reusable-markdown-link-check.yml
 
-  # this is a required check to avoid illegal markdown format
   markdown-lint-check:
-    # release branches are excluded to avoid unnecessary maintenance
-    if: ${{ !startsWith(github.ref_name, 'release/') }}
     uses: ./.github/workflows/reusable-markdown-lint-check.yml
 
-  # this is not a required check to avoid blocking pull requests if new misspellings are added
-  # to the misspell dictionary
   misspell-check:
-    # release branches are excluded to avoid unnecessary maintenance
-    if: "!startsWith(github.ref_name, 'release/')"
     uses: ./.github/workflows/reusable-misspell-check.yml
 
   required-status-check:
@@ -63,13 +49,27 @@ jobs:
     # or due to slight changes in emitted telemetry
     # (muzzle can also fail when a new library version is released to maven central
     # but that happens much less often)
+    #
+    # only the "common" checks are required for release branch PRs in order to avoid any unnecessary
+    # release branch maintenance (especially for patches)
     needs:
       - common
       - muzzle
+      - shell-script-check
+      - markdown-lint-check
+      - misspell-check
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - if: >
+      - if: |
           needs.common.result != 'success' ||
-          (!startsWith(github.base_ref, 'release/') && needs.muzzle.result != 'success')
-        run: exit 1
+          (
+            !startsWith(github.base_ref, 'release/') &&
+            (
+              needs.muzzle.result != 'success' ||
+              needs.shell-script-check.result != 'success' ||
+              needs.markdown-lint-check.result != 'success' ||
+              needs.misspell-check.result != 'success'
+            )
+          )
+        run: exit 1 # fail

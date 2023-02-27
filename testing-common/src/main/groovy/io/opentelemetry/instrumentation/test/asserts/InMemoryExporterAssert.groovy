@@ -32,10 +32,14 @@ class InMemoryExporterAssert {
 
   static void assertTraces(Supplier<List<SpanData>> spanSupplier, int expectedSize,
                            @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.ListWriterAssert'])
-                           @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+                           @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec,
+                           boolean verifyScopeVersion) {
     try {
       def traces = TelemetryDataUtil.waitForTraces(spanSupplier, expectedSize)
       assert traces.size() == expectedSize
+      if (verifyScopeVersion) {
+        TelemetryDataUtil.assertScopeVersion(traces)
+      }
       def asserter = new InMemoryExporterAssert(traces, spanSupplier)
       def clone = (Closure) spec.clone()
       clone.delegate = asserter

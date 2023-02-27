@@ -232,12 +232,13 @@ public class SqlStatementSanitizerTest {
 
   static class SimplifyArgs implements ArgumentsProvider {
 
-    static Function<String, SqlStatementInfo> expect(String operation, String table) {
-      return sql -> SqlStatementInfo.create(sql, operation, table);
+    static Function<String, SqlStatementInfo> expect(String operation, String identifier) {
+      return sql -> SqlStatementInfo.create(sql, operation, identifier);
     }
 
-    static Function<String, SqlStatementInfo> expect(String sql, String operation, String table) {
-      return ignored -> SqlStatementInfo.create(sql, operation, table);
+    static Function<String, SqlStatementInfo> expect(
+        String sql, String operation, String identifier) {
+      return ignored -> SqlStatementInfo.create(sql, operation, identifier);
     }
 
     @Override
@@ -275,6 +276,7 @@ public class SqlStatementSanitizerTest {
           Arguments.of("/* update comment */ select * from table1", expect("SELECT", "table1")),
           Arguments.of("select /*((*/abc from table", expect("SELECT", "table")),
           Arguments.of("SeLeCT * FrOm TAblE", expect("SELECT", "table")),
+          Arguments.of("select next value in hibernate_sequence", expect("SELECT", null)),
 
           // hibernate/jpa
           Arguments.of("FROM schema.table", expect("SELECT", "schema.table")),
@@ -307,6 +309,12 @@ public class SqlStatementSanitizerTest {
               "update \"my table\" set answer=42",
               expect("update \"my table\" set answer=?", "UPDATE", "my table")),
           Arguments.of("update /*table", expect("UPDATE", null)),
+
+          // Call
+          Arguments.of("call test_proc()", expect("CALL", "test_proc")),
+          Arguments.of("call test_proc", expect("CALL", "test_proc")),
+          Arguments.of("call next value in hibernate_sequence", expect("CALL", null)),
+          Arguments.of("call db.test_proc", expect("CALL", "db.test_proc")),
 
           // Merge
           Arguments.of("merge into table", expect("MERGE", "table")),

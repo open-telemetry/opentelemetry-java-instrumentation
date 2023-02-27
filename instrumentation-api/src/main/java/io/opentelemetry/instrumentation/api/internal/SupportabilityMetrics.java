@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -84,15 +85,24 @@ public final class SupportabilityMetrics {
   @SuppressWarnings("CanIgnoreReturnValueSuggester")
   private SupportabilityMetrics start() {
     if (agentDebugEnabled) {
-      Executors.newScheduledThreadPool(
+      ScheduledExecutorService executor =
+          Executors.newScheduledThreadPool(
               1,
               runnable -> {
                 Thread result = new Thread(runnable, "supportability_metrics_reporter");
                 result.setDaemon(true);
                 result.setContextClassLoader(null);
                 return result;
-              })
-          .scheduleAtFixedRate(this::report, 5, 5, TimeUnit.SECONDS);
+              });
+      executor.scheduleAtFixedRate(this::report, 5, 5, TimeUnit.SECONDS);
+      // the condition below will always be false, but by referencing the executor it ensures the
+      // executor can't become unreachable in the middle of the scheduleAtFixedRate() method
+      // execution above (and prior to the task being registered), which can lead to the executor
+      // being terminated and scheduleAtFixedRate throwing a RejectedExecutionException
+      // (see https://bugs.openjdk.org/browse/JDK-8145304)
+      if (executor.isTerminated()) {
+        throw new AssertionError();
+      }
     }
     return this;
   }

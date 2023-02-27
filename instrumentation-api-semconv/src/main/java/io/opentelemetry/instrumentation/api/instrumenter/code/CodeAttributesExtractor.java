@@ -22,7 +22,7 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   /** Creates the code attributes extractor. */
-  public static <REQUEST, RESPONSE> CodeAttributesExtractor<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       CodeAttributesGetter<REQUEST> getter) {
     return new CodeAttributesExtractor<>(getter);
   }
@@ -35,11 +35,11 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    Class<?> cls = getter.codeClass(request);
+    Class<?> cls = getter.getCodeClass(request);
     if (cls != null) {
       internalSet(attributes, SemanticAttributes.CODE_NAMESPACE, cls.getName());
     }
-    internalSet(attributes, SemanticAttributes.CODE_FUNCTION, getter.methodName(request));
+    internalSet(attributes, SemanticAttributes.CODE_FUNCTION, getter.getMethodName(request));
   }
 
   @Override

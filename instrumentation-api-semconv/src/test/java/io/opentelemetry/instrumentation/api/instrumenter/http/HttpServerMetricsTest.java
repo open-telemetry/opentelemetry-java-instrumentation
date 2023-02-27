@@ -43,10 +43,10 @@ class HttpServerMetricsTest {
             .put("net.host.name", "localhost")
             .put("net.host.port", 1234)
             .put("net.sock.family", "inet")
-            .put("net.peer.sock.addr", "1.2.3.4")
-            .put("net.peer.sock.port", 8080)
-            .put("net.host.sock.addr", "4.3.2.1")
-            .put("net.host.sock.port", 9090)
+            .put("net.sock.peer.addr", "1.2.3.4")
+            .put("net.sock.peer.port", 8080)
+            .put("net.sock.host.addr", "4.3.2.1")
+            .put("net.sock.host.port", 9090)
             .build();
 
     Attributes responseAttributes =
@@ -90,7 +90,8 @@ class HttpServerMetricsTest {
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.HTTP_FLAVOR, HTTP_2_0),
-                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"))
+                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234L))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -115,7 +116,8 @@ class HttpServerMetricsTest {
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.HTTP_FLAVOR, HTTP_2_0),
-                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"))
+                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234L))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -139,7 +141,8 @@ class HttpServerMetricsTest {
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.HTTP_FLAVOR, HTTP_2_0),
-                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"))
+                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234L))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -183,7 +186,12 @@ class HttpServerMetricsTest {
                                             equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234)))),
+                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234))
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId(spanContext1.getTraceId())
+                                                    .hasSpanId(spanContext1.getSpanId())))),
             metric ->
                 assertThat(metric)
                     .hasName("http.server.response.size")
@@ -200,7 +208,12 @@ class HttpServerMetricsTest {
                                             equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234)))));
+                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234))
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId(spanContext1.getTraceId())
+                                                    .hasSpanId(spanContext1.getSpanId())))));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
@@ -210,7 +223,16 @@ class HttpServerMetricsTest {
                 assertThat(metric)
                     .hasName("http.server.active_requests")
                     .hasLongSumSatisfying(
-                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(0))),
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(0)
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId(spanContext2.getTraceId())
+                                                    .hasSpanId(spanContext2.getSpanId())))),
             metric ->
                 assertThat(metric)
                     .hasName("http.server.duration")
@@ -230,13 +252,29 @@ class HttpServerMetricsTest {
                     .hasName("http.server.request.size")
                     .hasHistogramSatisfying(
                         histogram ->
-                            histogram.hasPointsSatisfying(point -> point.hasSum(200 /* bytes */))),
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(200 /* bytes */)
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId(spanContext2.getTraceId())
+                                                    .hasSpanId(spanContext2.getSpanId())))),
             metric ->
                 assertThat(metric)
                     .hasName("http.server.response.size")
                     .hasHistogramSatisfying(
                         histogram ->
-                            histogram.hasPointsSatisfying(point -> point.hasSum(400 /* bytes */))));
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(400 /* bytes */)
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId(spanContext2.getTraceId())
+                                                    .hasSpanId(spanContext2.getSpanId())))));
   }
 
   @Test

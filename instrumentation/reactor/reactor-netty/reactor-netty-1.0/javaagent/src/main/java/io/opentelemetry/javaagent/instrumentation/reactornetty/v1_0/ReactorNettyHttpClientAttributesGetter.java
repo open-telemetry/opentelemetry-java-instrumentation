@@ -17,7 +17,7 @@ final class ReactorNettyHttpClientAttributesGetter
     implements HttpClientAttributesGetter<HttpClientConfig, HttpClientResponse> {
 
   @Override
-  public String url(HttpClientConfig request) {
+  public String getUrl(HttpClientConfig request) {
     String uri = request.uri();
     if (isAbsolute(uri)) {
       return uri;
@@ -25,6 +25,12 @@ final class ReactorNettyHttpClientAttributesGetter
 
     // use the baseUrl if it was configured
     String baseUrl = request.baseUrl();
+
+    if (uri == null) {
+      // internally reactor netty appends "/" to the baseUrl
+      return baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
+    }
+
     if (baseUrl != null) {
       if (baseUrl.endsWith("/") && uri.startsWith("/")) {
         baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
@@ -48,12 +54,12 @@ final class ReactorNettyHttpClientAttributesGetter
   }
 
   private static boolean isAbsolute(String uri) {
-    return uri.startsWith("http://") || uri.startsWith("https://");
+    return uri != null && !uri.isEmpty() && !uri.startsWith("/");
   }
 
   @Nullable
   @Override
-  public String flavor(HttpClientConfig request, @Nullable HttpClientResponse response) {
+  public String getFlavor(HttpClientConfig request, @Nullable HttpClientResponse response) {
     if (response != null) {
       String flavor = response.version().text();
       if (flavor.startsWith("HTTP/")) {
@@ -65,23 +71,23 @@ final class ReactorNettyHttpClientAttributesGetter
   }
 
   @Override
-  public String method(HttpClientConfig request) {
+  public String getMethod(HttpClientConfig request) {
     return request.method().name();
   }
 
   @Override
-  public List<String> requestHeader(HttpClientConfig request, String name) {
+  public List<String> getRequestHeader(HttpClientConfig request, String name) {
     return request.headers().getAll(name);
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       HttpClientConfig request, HttpClientResponse response, @Nullable Throwable error) {
     return response.status().code();
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       HttpClientConfig request, HttpClientResponse response, String name) {
     return response.responseHeaders().getAll(name);
   }

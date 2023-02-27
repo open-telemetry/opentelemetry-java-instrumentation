@@ -6,11 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines
 
 import io.opentelemetry.context.Context
+import io.opentelemetry.context.ContextKey
+import io.opentelemetry.context.Scope
 import io.opentelemetry.extension.kotlin.asContextElement
-import io.opentelemetry.instrumentation.reactor.ContextPropagationOperator
+import io.opentelemetry.extension.kotlin.getOpenTelemetryContext
+import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -19,6 +21,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.ThreadContextElement
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -38,7 +41,7 @@ import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
-import org.awaitility.Awaitility.await
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -53,6 +56,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import java.util.stream.Stream
+import kotlin.coroutines.CoroutineContext
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExperimentalCoroutinesApi
@@ -92,45 +96,37 @@ class KotlinCoroutinesInstrumentationTest {
 
     testing.waitAndAssertTraces(
       { trace ->
-        // TODO(anuraaga): Need hasSpansSatisfyingExactlyInAnyOrder sometimes
-        trace.satisfiesExactlyInAnyOrder(
-          Consumer {
-            assertThat(it)
-              .hasName("parent")
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+          {
+            it.hasName("parent")
               .hasNoParent()
           },
-          Consumer {
-            assertThat(it)
-              .hasName("produce_0")
+          {
+            it.hasName("produce_0")
               .hasParent(trace.getSpan(0))
           },
-          Consumer {
-            assertThat(it)
-              .hasName("consume_0")
+          {
+            it.hasName("consume_0")
               .hasParent(trace.getSpan(0))
           },
-          Consumer {
-            assertThat(it)
-              .hasName("produce_1")
+          {
+            it.hasName("produce_1")
               .hasParent(trace.getSpan(0))
           },
-          Consumer {
-            assertThat(it)
-              .hasName("consume_1")
+          {
+            it.hasName("consume_1")
               .hasParent(trace.getSpan(0))
           },
-          Consumer {
-            assertThat(it)
-              .hasName("produce_2")
+          {
+            it.hasName("produce_2")
               .hasParent(trace.getSpan(0))
           },
-          Consumer {
-            assertThat(it)
-              .hasName("consume_2")
+          {
+            it.hasName("consume_2")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -161,9 +157,9 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("preLaunch")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -189,9 +185,9 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("nested")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -225,29 +221,29 @@ class KotlinCoroutinesInstrumentationTest {
 
     testing.waitAndAssertTraces(
       { trace ->
-        trace.satisfiesExactlyInAnyOrder(
-          Consumer {
-            assertThat(it).hasName("parent")
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+          {
+            it.hasName("parent")
               .hasNoParent()
           },
-          Consumer {
-            assertThat(it).hasName("future1")
+          {
+            it.hasName("future1")
               .hasParent(trace.getSpan(0))
           },
-          Consumer {
-            assertThat(it).hasName("keptPromise")
+          {
+            it.hasName("keptPromise")
               .hasParent(trace.getSpan(0))
           },
-          Consumer {
-            assertThat(it).hasName("keptPromise2")
+          {
+            it.hasName("keptPromise2")
               .hasParent(trace.getSpan(0))
           },
-          Consumer {
-            assertThat(it).hasName("brokenPromise")
+          {
+            it.hasName("brokenPromise")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -266,7 +262,7 @@ class KotlinCoroutinesInstrumentationTest {
         async {
           tracedChild("timeout3")
           true
-        }
+        },
       )
 
       withTimeout(TimeUnit.SECONDS.toMillis(30)) {
@@ -280,30 +276,29 @@ class KotlinCoroutinesInstrumentationTest {
 
     testing.waitAndAssertTraces(
       { trace ->
-        // TODO(anuraaga): Need hasSpansSatisfyingExactlyInAnyOrder sometimes
-        trace.satisfiesExactlyInAnyOrder(
-          Consumer {
-            assertThat(it)
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+          {
+            it
               .hasName("parent")
               .hasNoParent()
           },
-          Consumer {
-            assertThat(it)
+          {
+            it
               .hasName("timeout1")
               .hasParent(trace.getSpan(0))
           },
-          Consumer {
-            assertThat(it)
+          {
+            it
               .hasName("timeout2")
               .hasParent(trace.getSpan(0))
           },
-          Consumer {
-            assertThat(it)
+          {
+            it
               .hasName("timeout3")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -337,7 +332,7 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("a2")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
       }
     }
@@ -351,14 +346,14 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("b2")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
       }
     }
 
     testing.waitAndAssertSortedTraces(
       orderByRootSpanName("a", "b"),
-      *assertions.toTypedArray()
+      *assertions.toTypedArray(),
     )
   }
 
@@ -381,9 +376,9 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("child")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -416,9 +411,9 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("child")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -453,9 +448,48 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("child_2")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
+      },
+    )
+  }
+
+  private val ANIMAL: ContextKey<String> = ContextKey.named("animal")
+
+  @ParameterizedTest
+  @ArgumentsSource(DispatchersSource::class)
+  fun `context contains expected value`(dispatcher: DispatcherWrapper) {
+    runTest(dispatcher) {
+      val context1 = Context.current().with(ANIMAL, "cat")
+      runBlocking(context1.asContextElement()) {
+        assertThat(Context.current().get(ANIMAL)).isEqualTo("cat")
+        assertThat(coroutineContext.getOpenTelemetryContext().get(ANIMAL)).isEqualTo("cat")
+        tracedChild("nested1")
+        withContext(context1.with(ANIMAL, "dog").asContextElement()) {
+          assertThat(Context.current().get(ANIMAL)).isEqualTo("dog")
+          assertThat(coroutineContext.getOpenTelemetryContext().get(ANIMAL)).isEqualTo("dog")
+          tracedChild("nested2")
+        }
       }
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          {
+            it.hasName("parent")
+              .hasNoParent()
+          },
+          {
+            it.hasName("nested1")
+              .hasParent(trace.getSpan(0))
+          },
+          {
+            it.hasName("nested2")
+              .hasParent(trace.getSpan(0))
+          },
+        )
+      },
     )
   }
 
@@ -525,11 +559,47 @@ class KotlinCoroutinesInstrumentationTest {
         arguments(DispatcherWrapper(Dispatchers.IO)),
         arguments(DispatcherWrapper(Dispatchers.Unconfined)),
         arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
-        arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher()))
+        arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
       )
   }
 
   class DispatcherWrapper(val dispatcher: CoroutineDispatcher) {
     override fun toString(): String = dispatcher.toString()
+  }
+
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7837
+  // tests that a custom ThreadContextElement runs after KotlinContextElement that is used for
+  // context propagation in coroutines
+  @Test
+  fun `test custom context element`() {
+    val testValue = "test-value"
+    val contextKey = ContextKey.named<String>("test-key")
+    val scope = Context.current().with(contextKey, "wrong value").makeCurrent()
+    scope.use {
+      runBlocking {
+        val context = Context.current().with(contextKey, testValue)
+        withContext(TestContextElement(context)) {
+          delay(10)
+          val result = Context.current().get(contextKey)
+          assertThat(result).isEqualTo(testValue)
+        }
+      }
+    }
+  }
+
+  class TestContextElement(private val otelContext: Context) : ThreadContextElement<Scope> {
+    companion object Key : CoroutineContext.Key<TestContextElement> {
+    }
+
+    override val key: CoroutineContext.Key<TestContextElement>
+      get() = Key
+
+    override fun restoreThreadContext(context: CoroutineContext, oldState: Scope) {
+      oldState.close()
+    }
+
+    override fun updateThreadContext(context: CoroutineContext): Scope {
+      return otelContext.makeCurrent()
+    }
   }
 }

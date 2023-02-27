@@ -36,7 +36,7 @@ public final class AkkaHttpServerSingletons {
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .build())
             .addOperationMetrics(HttpServerMetrics.get())
-            .addContextCustomizer(HttpRouteHolder.get())
+            .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
             .buildServerInstrumenter(AkkaHttpServerHeaders.INSTANCE);
   }
 

@@ -24,7 +24,7 @@ public final class JaxrsContextPath {
 
   @Nullable
   public static Context init(Context context, String path) {
-    if (path == null || path.isEmpty() || "/".equals(path)) {
+    if (path == null || path.isEmpty() || path.equals("/")) {
       return null;
     }
     // normalize path to have a leading slash and no trailing slash

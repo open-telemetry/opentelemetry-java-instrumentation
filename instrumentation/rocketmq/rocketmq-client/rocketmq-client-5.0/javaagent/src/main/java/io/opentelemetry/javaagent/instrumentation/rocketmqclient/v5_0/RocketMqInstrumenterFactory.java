@@ -53,7 +53,7 @@ final class RocketMqInstrumenterFactory {
     RocketMqConsumerReceiveAttributeGetter getter = RocketMqConsumerReceiveAttributeGetter.INSTANCE;
     MessageOperation operation = MessageOperation.RECEIVE;
 
-    MessagingAttributesExtractor<ReceiveMessageRequest, List<MessageView>> attributesExtractor =
+    AttributesExtractor<ReceiveMessageRequest, List<MessageView>> attributesExtractor =
         buildMessagingAttributesExtractor(getter, operation, capturedHeaders);
 
     InstrumenterBuilder<ReceiveMessageRequest, List<MessageView>> instrumenterBuilder =
@@ -74,7 +74,7 @@ final class RocketMqInstrumenterFactory {
     RocketMqConsumerProcessAttributeGetter getter = RocketMqConsumerProcessAttributeGetter.INSTANCE;
     MessageOperation operation = MessageOperation.PROCESS;
 
-    MessagingAttributesExtractor<MessageView, ConsumeResult> attributesExtractor =
+    AttributesExtractor<MessageView, ConsumeResult> attributesExtractor =
         buildMessagingAttributesExtractor(getter, operation, capturedHeaders);
 
     InstrumenterBuilder<MessageView, ConsumeResult> instrumenterBuilder =
@@ -86,7 +86,7 @@ final class RocketMqInstrumenterFactory {
             .addAttributesExtractor(RocketMqConsumerProcessAttributeExtractor.INSTANCE)
             .setSpanStatusExtractor(
                 (spanStatusBuilder, messageView, consumeResult, error) -> {
-                  if (error != null || ConsumeResult.FAILURE.equals(consumeResult)) {
+                  if (error != null || consumeResult == ConsumeResult.FAILURE) {
                     spanStatusBuilder.setStatus(StatusCode.ERROR);
                   }
                 });
@@ -101,7 +101,7 @@ final class RocketMqInstrumenterFactory {
     return instrumenterBuilder.buildConsumerInstrumenter(MessageMapGetter.INSTANCE);
   }
 
-  private static <T, R> MessagingAttributesExtractor<T, R> buildMessagingAttributesExtractor(
+  private static <T, R> AttributesExtractor<T, R> buildMessagingAttributesExtractor(
       MessagingAttributesGetter<T, R> getter,
       MessageOperation operation,
       List<String> capturedHeaders) {

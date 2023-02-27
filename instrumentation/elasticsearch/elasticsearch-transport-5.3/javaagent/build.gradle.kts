@@ -9,7 +9,8 @@ muzzle {
     versions.set("[5.3.0,6.0.0)")
     // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
     // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
-    skip("7.11.0")
+    // version 7.17.8 has broken module metadata
+    skip("7.11.0", "7.17.8")
     assertInverse.set(true)
   }
   pass {
@@ -36,7 +37,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
-  testInstrumentation(project(":instrumentation:spring:spring-data-1.8:javaagent"))
+  testInstrumentation(project(":instrumentation:spring:spring-data:spring-data-1.8:javaagent"))
 
   testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")

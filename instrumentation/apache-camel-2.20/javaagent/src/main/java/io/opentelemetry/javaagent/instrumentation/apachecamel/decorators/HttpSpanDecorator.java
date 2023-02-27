@@ -74,11 +74,11 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   public String getOperationName(
       Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
     // Based on HTTP component documentation:
-    String spanName = null;
-    if (shouldSetPathAsName(camelDirection)) {
-      spanName = getPath(exchange, endpoint);
+    String spanName = getHttpMethod(exchange, endpoint);
+    if (shouldAppendHttpRoute(camelDirection)) {
+      spanName = spanName + " " + getPath(exchange, endpoint);
     }
-    return (spanName == null ? getHttpMethod(exchange, endpoint) : spanName);
+    return spanName;
   }
 
   @Override
@@ -97,8 +97,8 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     attributes.put(SemanticAttributes.HTTP_METHOD, getHttpMethod(exchange, endpoint));
   }
 
-  static boolean shouldSetPathAsName(CamelDirection camelDirection) {
-    return CamelDirection.INBOUND.equals(camelDirection);
+  private static boolean shouldAppendHttpRoute(CamelDirection camelDirection) {
+    return camelDirection == CamelDirection.INBOUND;
   }
 
   @Nullable
@@ -119,7 +119,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
       Exchange camelExchange,
       Endpoint camelEndpoint,
       CamelDirection camelDirection) {
-    if (!shouldSetPathAsName(camelDirection)) {
+    if (!shouldAppendHttpRoute(camelDirection)) {
       return;
     }
     HttpRouteHolder.updateHttpRoute(

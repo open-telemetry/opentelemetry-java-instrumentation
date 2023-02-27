@@ -22,47 +22,13 @@ final class ApacheHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpMethod, HttpMethod> {
 
   @Override
-  public String method(HttpMethod request) {
+  public String getMethod(HttpMethod request) {
     return request.getName();
   }
 
-  @Override
-  public String url(HttpMethod request) {
-    return getUrl(request);
-  }
-
-  @Override
-  public List<String> requestHeader(HttpMethod request, String name) {
-    Header header = request.getRequestHeader(name);
-    return header == null ? emptyList() : singletonList(header.getValue());
-  }
-
-  @Override
-  @Nullable
-  public Integer statusCode(HttpMethod request, HttpMethod response, @Nullable Throwable error) {
-    StatusLine statusLine = response.getStatusLine();
-    return statusLine == null ? null : statusLine.getStatusCode();
-  }
-
-  @Override
-  @Nullable
-  public String flavor(HttpMethod request, @Nullable HttpMethod response) {
-    if (request instanceof HttpMethodBase) {
-      return ((HttpMethodBase) request).isHttp11()
-          ? SemanticAttributes.HttpFlavorValues.HTTP_1_1
-          : SemanticAttributes.HttpFlavorValues.HTTP_1_0;
-    }
-    return null;
-  }
-
-  @Override
-  public List<String> responseHeader(HttpMethod request, HttpMethod response, String name) {
-    Header header = response.getResponseHeader(name);
-    return header == null ? emptyList() : singletonList(header.getValue());
-  }
-
   // mirroring implementation HttpMethodBase.getURI(), to avoid converting to URI and back to String
-  private static String getUrl(HttpMethod request) {
+  @Override
+  public String getUrl(HttpMethod request) {
     HostConfiguration hostConfiguration = request.getHostConfiguration();
     if (hostConfiguration == null || hostConfiguration.getProtocol() == null) {
       String queryString = request.getQueryString();
@@ -89,5 +55,35 @@ final class ApacheHttpClientHttpAttributesGetter
       }
       return url.toString();
     }
+  }
+
+  @Override
+  public List<String> getRequestHeader(HttpMethod request, String name) {
+    Header header = request.getRequestHeader(name);
+    return header == null ? emptyList() : singletonList(header.getValue());
+  }
+
+  @Override
+  @Nullable
+  public Integer getStatusCode(HttpMethod request, HttpMethod response, @Nullable Throwable error) {
+    StatusLine statusLine = response.getStatusLine();
+    return statusLine == null ? null : statusLine.getStatusCode();
+  }
+
+  @Override
+  @Nullable
+  public String getFlavor(HttpMethod request, @Nullable HttpMethod response) {
+    if (request instanceof HttpMethodBase) {
+      return ((HttpMethodBase) request).isHttp11()
+          ? SemanticAttributes.HttpFlavorValues.HTTP_1_1
+          : SemanticAttributes.HttpFlavorValues.HTTP_1_0;
+    }
+    return null;
+  }
+
+  @Override
+  public List<String> getResponseHeader(HttpMethod request, HttpMethod response, String name) {
+    Header header = response.getResponseHeader(name);
+    return header == null ? emptyList() : singletonList(header.getValue());
   }
 }

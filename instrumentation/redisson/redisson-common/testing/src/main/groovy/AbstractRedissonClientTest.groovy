@@ -5,7 +5,9 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.junit.Assume
 import org.redisson.Redisson
+import org.redisson.api.BatchOptions
 import org.redisson.api.RAtomicLong
 import org.redisson.api.RBatch
 import org.redisson.api.RBucket
@@ -21,6 +23,7 @@ import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static java.util.regex.Pattern.compile
 import static java.util.regex.Pattern.quote
 
@@ -123,6 +126,74 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "SET batch1 ?;SET batch2 ?"
             "$SemanticAttributes.DB_OPERATION" null
+          }
+        }
+      }
+    }
+  }
+
+  def "test atomic batch command"() {
+    try {
+      // available since 3.7.2
+      Class.forName('org.redisson.api.BatchOptions$ExecutionMode')
+    } catch (ClassNotFoundException exception) {
+      Assume.assumeNoException(exception)
+    }
+
+    when:
+    runWithSpan("parent") {
+      def batchOptions = BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC)
+      RBatch batch = redisson.createBatch(batchOptions)
+      batch.getBucket("batch1").setAsync("v1")
+      batch.getBucket("batch2").setAsync("v2")
+      batch.execute()
+    }
+
+    then:
+    assertTraces(1) {
+      trace(0, 4) {
+        span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "DB Query"
+          kind CLIENT
+          childOf(span(0))
+          attributes {
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "MULTI;SET batch1 ?"
+            "$SemanticAttributes.DB_OPERATION" null
+          }
+        }
+        span(2) {
+          name "SET"
+          kind CLIENT
+          childOf(span(0))
+          attributes {
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "SET batch2 ?"
+            "$SemanticAttributes.DB_OPERATION" "SET"
+          }
+        }
+        span(3) {
+          name "EXEC"
+          kind CLIENT
+          childOf(span(0))
+          attributes {
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+            "$SemanticAttributes.DB_SYSTEM" "redis"
+            "$SemanticAttributes.DB_STATEMENT" "EXEC"
+            "$SemanticAttributes.DB_OPERATION" "EXEC"
           }
         }
       }

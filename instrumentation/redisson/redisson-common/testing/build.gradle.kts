@@ -10,5 +10,5 @@ dependencies {
   implementation("org.spockframework:spock-core")
   implementation("org.testcontainers:testcontainers")
 
-  compileOnly("org.redisson:redisson:3.0.0")
+  compileOnly("org.redisson:redisson:3.7.2")
 }

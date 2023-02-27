@@ -24,9 +24,9 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, SemanticAttributes.RPC_SYSTEM, getter.system(request));
-    internalSet(attributes, SemanticAttributes.RPC_SERVICE, getter.service(request));
-    internalSet(attributes, SemanticAttributes.RPC_METHOD, getter.method(request));
+    internalSet(attributes, SemanticAttributes.RPC_SYSTEM, getter.getSystem(request));
+    internalSet(attributes, SemanticAttributes.RPC_SERVICE, getter.getService(request));
+    internalSet(attributes, SemanticAttributes.RPC_METHOD, getter.getMethod(request));
   }
 
   @Override

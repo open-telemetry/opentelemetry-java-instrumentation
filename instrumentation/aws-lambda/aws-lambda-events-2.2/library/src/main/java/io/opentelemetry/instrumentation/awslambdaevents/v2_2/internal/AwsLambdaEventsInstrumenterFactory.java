@@ -32,11 +32,15 @@ public final class AwsLambdaEventsInstrumenterFactory {
   }
 
   private static String spanName(AwsLambdaRequest input) {
-    String name = null;
     if (input.getInput() instanceof APIGatewayProxyRequestEvent) {
-      name = ((APIGatewayProxyRequestEvent) input.getInput()).getResource();
+      APIGatewayProxyRequestEvent request = (APIGatewayProxyRequestEvent) input.getInput();
+      String method = request.getHttpMethod();
+      String route = request.getResource();
+      if (method != null && route != null) {
+        return method + " " + route;
+      }
     }
-    return name == null ? input.getAwsContext().getFunctionName() : name;
+    return input.getAwsContext().getFunctionName();
   }
 
   private AwsLambdaEventsInstrumenterFactory() {}

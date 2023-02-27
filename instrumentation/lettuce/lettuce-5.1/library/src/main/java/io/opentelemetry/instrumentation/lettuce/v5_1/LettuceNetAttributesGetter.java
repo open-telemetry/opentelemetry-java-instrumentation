@@ -16,19 +16,19 @@ final class LettuceNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<OpenTelemetryEndpoint, Void> {
 
   @Override
-  public String transport(OpenTelemetryEndpoint endpoint, @Nullable Void unused) {
+  public String getTransport(OpenTelemetryEndpoint endpoint, @Nullable Void unused) {
     return IP_TCP;
   }
 
   @Nullable
   @Override
-  public String peerName(OpenTelemetryEndpoint openTelemetryEndpoint) {
+  public String getPeerName(OpenTelemetryEndpoint openTelemetryEndpoint) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(OpenTelemetryEndpoint openTelemetryEndpoint) {
+  public Integer getPeerPort(OpenTelemetryEndpoint openTelemetryEndpoint) {
     return null;
   }
 

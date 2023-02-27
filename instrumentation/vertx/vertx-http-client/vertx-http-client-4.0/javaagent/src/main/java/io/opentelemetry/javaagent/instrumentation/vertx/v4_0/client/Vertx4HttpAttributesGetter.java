@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 final class Vertx4HttpAttributesGetter extends AbstractVertxHttpAttributesGetter {
 
   @Override
-  public String url(HttpClientRequest request) {
+  public String getUrl(HttpClientRequest request) {
     String uri = request.getURI();
     if (!isAbsolute(uri)) {
       uri = request.absoluteURI();
@@ -28,13 +28,13 @@ final class Vertx4HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
   }
 
   @Override
-  public String method(HttpClientRequest request) {
+  public String getMethod(HttpClientRequest request) {
     return request.getMethod().name();
   }
 
   @Nullable
   @Override
-  public String flavor(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public String getFlavor(HttpClientRequest request, @Nullable HttpClientResponse response) {
     HttpVersion version = request.version();
     if (version == null) {
       return null;

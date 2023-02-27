@@ -7,7 +7,7 @@ on:
         type: string
         required: true
     secrets:
-      BOT_TOKEN:
+      OPENTELEMETRYBOT_GITHUB_TOKEN:
         required: true
   # to help with partial release build failures
   workflow_dispatch:
@@ -23,7 +23,7 @@ jobs:
       - name: Sync opentelemetry-operator fork
         env:
           # this is the personal access token used for "gh repo sync" below
-          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
         run: |
           # synchronizing the fork is fast, and avoids the need to fetch the full upstream repo
           # (fetching the upstream repo with "--depth 1" would lead to "shallow update not allowed"
@@ -36,7 +36,7 @@ jobs:
         with:
           repository: opentelemetrybot/opentelemetry-operator
           # this is the personal access token used for "git push" below
-          token: ${{ secrets.BOT_TOKEN }}
+          token: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
 
       - name: Update version
         env:
@@ -54,7 +54,7 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
           # this is the personal access token used for "gh pr create" below
-          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
         run: |
           message="Update the javaagent version to $VERSION"
           # note that @open-telemetry/java-instrumentation-approvers cannot be used below

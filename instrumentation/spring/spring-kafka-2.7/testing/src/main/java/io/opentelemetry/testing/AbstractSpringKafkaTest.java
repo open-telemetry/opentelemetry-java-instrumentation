@@ -10,10 +10,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -23,7 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.kafka.core.KafkaOperations;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.util.concurrent.ListenableFuture;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
@@ -82,6 +88,49 @@ public abstract class AbstractSpringKafkaTest {
     }
   }
 
+  static final MethodHandle send;
+
+  static {
+    MethodHandle sendMethod = null;
+    Exception failure = null;
+    try {
+      sendMethod =
+          MethodHandles.lookup()
+              .findVirtual(
+                  KafkaOperations.class,
+                  "send",
+                  MethodType.methodType(
+                      ListenableFuture.class, String.class, Object.class, Object.class));
+    } catch (NoSuchMethodException e) {
+      // spring-kafka 3.0 changed the return type
+      try {
+        sendMethod =
+            MethodHandles.lookup()
+                .findVirtual(
+                    KafkaOperations.class,
+                    "send",
+                    MethodType.methodType(
+                        CompletableFuture.class, String.class, Object.class, Object.class));
+      } catch (NoSuchMethodException | IllegalAccessException ex) {
+        failure = ex;
+      }
+    } catch (IllegalAccessException e) {
+      failure = e;
+    }
+    if (sendMethod == null) {
+      throw new AssertionError("Could not find the KafkaOperations#send() method", failure);
+    }
+    send = sendMethod;
+  }
+
+  protected void send(String topic, String key, String data) {
+    try {
+      send.invoke(kafkaTemplate, topic, key, data);
+    } catch (Throwable e) {
+      throw new AssertionError(e);
+    }
+  }
+
   protected void sendBatchMessages(Map<String, String> keyToData) throws InterruptedException {
     // This test assumes that messages are sent and received as a batch. Occasionally it happens
     // that the messages are not received as a batch, but one by one. This doesn't match what the
@@ -97,7 +146,7 @@ public abstract class AbstractSpringKafkaTest {
               () -> {
                 kafkaTemplate.executeInTransaction(
                     ops -> {
-                      keyToData.forEach((key, data) -> ops.send("testBatchTopic", key, data));
+                      keyToData.forEach((key, data) -> send("testBatchTopic", key, data));
                       return 0;
                     });
               });

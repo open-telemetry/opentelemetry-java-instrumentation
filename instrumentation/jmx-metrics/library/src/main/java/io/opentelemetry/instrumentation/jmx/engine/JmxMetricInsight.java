@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
-import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.logging.Logger;
@@ -36,7 +36,7 @@ public class JmxMetricInsight {
   public void start(MetricConfiguration conf) {
     if (conf.isEmpty()) {
       logger.log(
-          INFO,
+          FINE,
           "Empty JMX configuration, no metrics will be collected for InstrumentationScope "
               + INSTRUMENTATION_SCOPE);
     } else {

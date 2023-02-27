@@ -23,6 +23,7 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-extension-kotlin")
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
+  testInstrumentation(project(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 
   testImplementation("io.opentelemetry:opentelemetry-extension-kotlin")

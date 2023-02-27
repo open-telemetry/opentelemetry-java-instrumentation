@@ -32,7 +32,6 @@ public final class ExceptionHandlers {
             @Override
             public StackManipulation.Size apply(MethodVisitor mv, Implementation.Context context) {
               String name = context.getInstrumentedType().getName();
-              ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
               // writes the following bytecode:
               // try {
@@ -51,11 +50,7 @@ public final class ExceptionHandlers {
 
               // stack: (top) throwable
               mv.visitLabel(logStart);
-              mv.visitLdcInsn(
-                  "Failed to handle exception in instrumentation for "
-                      + name
-                      + " on "
-                      + classLoader);
+              mv.visitLdcInsn("Failed to handle exception in instrumentation for " + name);
               mv.visitInsn(Opcodes.SWAP); // stack: (top) throwable,string
 
               mv.visitMethodInsn(

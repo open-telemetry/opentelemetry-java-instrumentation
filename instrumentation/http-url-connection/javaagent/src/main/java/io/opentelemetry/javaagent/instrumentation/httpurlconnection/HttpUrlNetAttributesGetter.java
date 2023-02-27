@@ -14,17 +14,17 @@ class HttpUrlNetAttributesGetter implements NetClientAttributesGetter<HttpURLCon
 
   @Override
   @Nullable
-  public String transport(HttpURLConnection connection, @Nullable Integer status) {
+  public String getTransport(HttpURLConnection connection, @Nullable Integer status) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
-  public String peerName(HttpURLConnection connection) {
+  public String getPeerName(HttpURLConnection connection) {
     return connection.getURL().getHost();
   }
 
   @Override
-  public Integer peerPort(HttpURLConnection connection) {
+  public Integer getPeerPort(HttpURLConnection connection) {
     return connection.getURL().getPort();
   }
 }

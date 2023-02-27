@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static java.util.Collections.emptyList;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
@@ -48,7 +49,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     return new Builder<B>().asBuilder();
   }
 
-  static class Builder<B extends Builder<B>> extends AbstractAppender.Builder<B>
+  public static class Builder<B extends Builder<B>> extends AbstractAppender.Builder<B>
       implements org.apache.logging.log4j.core.util.Builder<OpenTelemetryAppender> {
 
     @PluginBuilderAttribute private boolean captureExperimentalAttributes;
@@ -61,12 +62,14 @@ public class OpenTelemetryAppender extends AbstractAppender {
      * or removed in the future, so only enable this if you know you do not require attributes
      * filled by this instrumentation to be stable across versions.
      */
+    @CanIgnoreReturnValue
     public B setCaptureExperimentalAttributes(boolean captureExperimentalAttributes) {
       this.captureExperimentalAttributes = captureExperimentalAttributes;
       return asBuilder();
     }
 
     /** Sets whether log4j {@link MapMessage} attributes should be copied to logs. */
+    @CanIgnoreReturnValue
     public B setCaptureMapMessageAttributes(boolean captureMapMessageAttributes) {
       this.captureMapMessageAttributes = captureMapMessageAttributes;
       return asBuilder();
@@ -77,12 +80,14 @@ public class OpenTelemetryAppender extends AbstractAppender {
      *
      * @param captureMarkerAttribute To enable or disable the marker attribute
      */
+    @CanIgnoreReturnValue
     public B setCaptureMarkerAttribute(boolean captureMarkerAttribute) {
       this.captureMarkerAttribute = captureMarkerAttribute;
       return asBuilder();
     }
 
     /** Configures the {@link ThreadContext} attributes that will be copied to logs. */
+    @CanIgnoreReturnValue
     public B setCaptureContextDataAttributes(String captureContextDataAttributes) {
       this.captureContextDataAttributes = captureContextDataAttributes;
       return asBuilder();

@@ -72,7 +72,7 @@ class ReactorNettyWithSpanTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("TracedWithSpan.mono").hasKind(INTERNAL).hasNoParent(),
-                span -> span.hasName("HTTP GET").hasKind(CLIENT).hasParent(trace.getSpan(0)),
+                span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
   }

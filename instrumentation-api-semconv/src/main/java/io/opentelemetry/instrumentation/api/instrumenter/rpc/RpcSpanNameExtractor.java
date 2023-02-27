@@ -27,8 +27,8 @@ public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<RE
 
   @Override
   public String extract(REQUEST request) {
-    String service = getter.service(request);
-    String method = getter.method(request);
+    String service = getter.getService(request);
+    String method = getter.getMethod(request);
     if (service == null || method == null) {
       return "RPC request";
     }

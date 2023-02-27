@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 
@@ -20,7 +21,7 @@ public final class RpcServerAttributesExtractor<REQUEST, RESPONSE>
     extends RpcCommonAttributesExtractor<REQUEST, RESPONSE> implements SpanKeyProvider {
 
   /** Creates the RPC server attributes extractor. */
-  public static <REQUEST, RESPONSE> RpcServerAttributesExtractor<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       RpcAttributesGetter<REQUEST> getter) {
     return new RpcServerAttributesExtractor<>(getter);
   }

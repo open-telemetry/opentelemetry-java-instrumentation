@@ -11,12 +11,12 @@ public class ClientCallableCodeAttributesGetter
     implements CodeAttributesGetter<VaadinClientCallableRequest> {
 
   @Override
-  public Class<?> codeClass(VaadinClientCallableRequest request) {
+  public Class<?> getCodeClass(VaadinClientCallableRequest request) {
     return request.getComponentClass();
   }
 
   @Override
-  public String methodName(VaadinClientCallableRequest request) {
+  public String getMethodName(VaadinClientCallableRequest request) {
     return request.getMethodName();
   }
 }

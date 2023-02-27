@@ -24,7 +24,7 @@ class SdkDisabledSmokeTest extends SmokeTest {
   @Override
   protected Map<String, String> getExtraEnv() {
     return [
-      "OTEL_EXPERIMENTAL_SDK_ENABLED": "false"
+      "OTEL_SDK_DISABLED": "true"
     ]
   }
 

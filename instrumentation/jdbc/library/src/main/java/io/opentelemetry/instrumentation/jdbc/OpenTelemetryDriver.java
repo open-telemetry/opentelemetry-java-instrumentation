@@ -20,7 +20,8 @@
 
 package io.opentelemetry.instrumentation.jdbc;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcSingletons.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcSingletons.statementInstrumenter;
 
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
@@ -32,10 +33,11 @@ import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -51,7 +53,7 @@ public final class OpenTelemetryDriver implements Driver {
 
   private static final String URL_PREFIX = "jdbc:otel:";
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
-  private static final Collection<Driver> DRIVER_CANDIDATES = new ArrayList<>();
+  private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
 
   static {
     try {
@@ -210,7 +212,7 @@ public final class OpenTelemetryDriver implements Driver {
 
     DbInfo dbInfo = JdbcConnectionUrlParser.parse(realUrl, info);
 
-    return new OpenTelemetryConnection(connection, dbInfo);
+    return new OpenTelemetryConnection(connection, dbInfo, statementInstrumenter());
   }
 
   @Override

@@ -34,9 +34,6 @@ public final class Slf4jSimpleLoggingCustomizer implements LoggingCustomizer {
     if (isDebugMode()) {
       setSystemPropertyDefault(SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY, "DEBUG");
       setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "okhttp3.internal.http2", "INFO");
-    } else {
-      // by default muzzle warnings are turned off
-      setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "muzzleMatcher", "OFF");
     }
 
     // trigger loading the provider from the agent CL

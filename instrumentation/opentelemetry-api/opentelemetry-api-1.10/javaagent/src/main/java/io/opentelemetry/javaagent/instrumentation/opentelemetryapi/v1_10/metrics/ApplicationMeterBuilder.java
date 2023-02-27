@@ -11,9 +11,13 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 
 final class ApplicationMeterBuilder implements MeterBuilder {
 
+  private final ApplicationMeterFactory meterFactory;
   private final io.opentelemetry.api.metrics.MeterBuilder agentBuilder;
 
-  ApplicationMeterBuilder(io.opentelemetry.api.metrics.MeterBuilder agentBuilder) {
+  ApplicationMeterBuilder(
+      ApplicationMeterFactory meterFactory,
+      io.opentelemetry.api.metrics.MeterBuilder agentBuilder) {
+    this.meterFactory = meterFactory;
     this.agentBuilder = agentBuilder;
   }
 
@@ -33,6 +37,6 @@ final class ApplicationMeterBuilder implements MeterBuilder {
 
   @Override
   public Meter build() {
-    return new ApplicationMeter(agentBuilder.build());
+    return meterFactory.newMeter(agentBuilder.build());
   }
 }

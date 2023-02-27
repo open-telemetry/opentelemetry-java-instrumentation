@@ -20,13 +20,13 @@ final class NettyConnectNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<NettyConnectionRequest, Channel> {
 
   @Override
-  public String transport(NettyConnectionRequest request, @Nullable Channel channel) {
+  public String getTransport(NettyConnectionRequest request, @Nullable Channel channel) {
     return channel instanceof DatagramChannel ? IP_UDP : IP_TCP;
   }
 
   @Nullable
   @Override
-  public String peerName(NettyConnectionRequest request) {
+  public String getPeerName(NettyConnectionRequest request) {
     SocketAddress requestedAddress = request.remoteAddressOnStart();
     if (requestedAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) requestedAddress).getHostString();
@@ -36,7 +36,7 @@ final class NettyConnectNetAttributesGetter
 
   @Nullable
   @Override
-  public Integer peerPort(NettyConnectionRequest request) {
+  public Integer getPeerPort(NettyConnectionRequest request) {
     SocketAddress requestedAddress = request.remoteAddressOnStart();
     if (requestedAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) requestedAddress).getPort();

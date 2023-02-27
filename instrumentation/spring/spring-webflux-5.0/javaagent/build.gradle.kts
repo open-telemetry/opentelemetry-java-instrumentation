@@ -7,7 +7,7 @@ muzzle {
     name.set("webflux_5.0.0+_with_netty_0.8.0")
     group.set("org.springframework")
     module.set("spring-webflux")
-    versions.set("[5.0.0.RELEASE,6)")
+    versions.set("[5.0.0.RELEASE,)")
     assertInverse.set(true)
     extraDependency("io.projectreactor.netty:reactor-netty:0.8.0.RELEASE")
   }
@@ -16,7 +16,7 @@ muzzle {
     name.set("webflux_5.0.0_with_ipc_0.7.0")
     group.set("org.springframework")
     module.set("spring-webflux")
-    versions.set("[5.0.0.RELEASE,6)")
+    versions.set("[5.0.0.RELEASE,)")
     assertInverse.set(true)
     extraDependency("io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE")
   }
@@ -25,7 +25,7 @@ muzzle {
     name.set("netty_0.8.0+_with_spring-webflux:5.1.0")
     group.set("io.projectreactor.netty")
     module.set("reactor-netty")
-    versions.set("[0.8.0.RELEASE,1.1.0)")
+    versions.set("[0.8.0.RELEASE,)")
     extraDependency("org.springframework:spring-webflux:5.1.0.RELEASE")
   }
 
@@ -44,23 +44,19 @@ dependencies {
   compileOnly("org.springframework:spring-webflux:5.0.0.RELEASE")
   compileOnly("io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE")
 
+  // this is needed to pick up SpringCoreIgnoredTypesConfigurer
+  testInstrumentation(project(":instrumentation:spring:spring-core-2.0:javaagent"))
+
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent"))
 
-  // Compile with both old and new netty packages since our test references both for old and
-  // latest dep tests.
-  testCompileOnly("io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE")
-  testCompileOnly("io.projectreactor.netty:reactor-netty-http:1.0.7")
+  testImplementation(project(":instrumentation:spring:spring-webflux-5.0:testing"))
 
   testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.0.0.RELEASE")
-  testImplementation("org.spockframework:spock-spring:1.1-groovy-2.4")
-
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-webflux:2.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.+")
+  testImplementation("org.spockframework:spock-spring:2.4-M1-groovy-4.0")
 }
 
 tasks.withType<Test>().configureEach {
@@ -73,10 +69,19 @@ tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }
 
-configurations.testRuntimeClasspath {
-  resolutionStrategy {
-    // requires old logback (and therefore also old slf4j)
-    force("ch.qos.logback:logback-classic:1.2.11")
-    force("org.slf4j:slf4j-api:1.7.36")
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+if (latestDepTest) {
+  // spring 6 requires java 17
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_17)
+  }
+} else {
+  // spring 5 requires old logback (and therefore also old slf4j)
+  configurations.testRuntimeClasspath {
+    resolutionStrategy {
+      force("ch.qos.logback:logback-classic:1.2.11")
+      force("org.slf4j:slf4j-api:1.7.36")
+    }
   }
 }

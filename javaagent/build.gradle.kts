@@ -176,7 +176,7 @@ tasks {
         "Agent-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
         "Premain-Class" to "io.opentelemetry.javaagent.OpenTelemetryAgent",
         "Can-Redefine-Classes" to true,
-        "Can-Retransform-Classes" to true
+        "Can-Retransform-Classes" to true,
       )
     }
   }
@@ -269,12 +269,12 @@ licenseReport {
   excludeGroups = arrayOf(
     "io\\.opentelemetry\\.instrumentation",
     "io\\.opentelemetry\\.javaagent",
-    "io\\.opentelemetry\\.dummy\\..*"
+    "io\\.opentelemetry\\.dummy\\..*",
   )
 
   excludes = arrayOf(
     "io.opentelemetry:opentelemetry-bom-alpha",
-    "opentelemetry-java-instrumentation:dependencyManagement"
+    "opentelemetry-java-instrumentation:dependencyManagement",
   )
 
   filters = arrayOf(LicenseBundleNormalizer("$projectDir/license-normalizer-bundle.json", true))
@@ -309,9 +309,9 @@ fun ShadowJar.excludeBootstrapClasses() {
 class JavaagentProvider(
   @InputFile
   @PathSensitive(PathSensitivity.RELATIVE)
-  val agentJar: Provider<RegularFile>
+  val agentJar: Provider<RegularFile>,
 ) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
-    "-javaagent:${file(agentJar).absolutePath}"
+    "-javaagent:${file(agentJar).absolutePath}",
   )
 }

@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 /**
@@ -24,7 +25,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
         REQUEST, RESPONSE, DbClientAttributesGetter<REQUEST>> {
 
   /** Creates the database client attributes extractor with default configuration. */
-  public static <REQUEST, RESPONSE> DbClientAttributesExtractor<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       DbClientAttributesGetter<REQUEST> getter) {
     return new DbClientAttributesExtractor<>(getter);
   }
@@ -37,7 +38,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    internalSet(attributes, SemanticAttributes.DB_STATEMENT, getter.statement(request));
-    internalSet(attributes, SemanticAttributes.DB_OPERATION, getter.operation(request));
+    internalSet(attributes, SemanticAttributes.DB_STATEMENT, getter.getStatement(request));
+    internalSet(attributes, SemanticAttributes.DB_OPERATION, getter.getOperation(request));
   }
 }

@@ -20,43 +20,43 @@ public class ServletNetAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public String transport(ServletRequestContext<REQUEST> requestContext) {
+  public String getTransport(ServletRequestContext<REQUEST> requestContext) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable
   @Override
-  public String hostName(ServletRequestContext<REQUEST> requestContext) {
+  public String getHostName(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestServerName(requestContext.request());
   }
 
   @Nullable
   @Override
-  public Integer hostPort(ServletRequestContext<REQUEST> requestContext) {
+  public Integer getHostPort(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestServerPort(requestContext.request());
   }
 
   @Override
   @Nullable
-  public String sockPeerAddr(ServletRequestContext<REQUEST> requestContext) {
+  public String getSockPeerAddr(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestRemoteAddr(requestContext.request());
   }
 
   @Override
   @Nullable
-  public Integer sockPeerPort(ServletRequestContext<REQUEST> requestContext) {
+  public Integer getSockPeerPort(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestRemotePort(requestContext.request());
   }
 
   @Nullable
   @Override
-  public String sockHostAddr(ServletRequestContext<REQUEST> requestContext) {
+  public String getSockHostAddr(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestLocalAddr(requestContext.request());
   }
 
   @Nullable
   @Override
-  public Integer sockHostPort(ServletRequestContext<REQUEST> requestContext) {
+  public Integer getSockHostPort(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestLocalPort(requestContext.request());
   }
 }

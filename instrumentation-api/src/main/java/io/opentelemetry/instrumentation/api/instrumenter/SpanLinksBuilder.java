@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanContext;
@@ -19,6 +20,7 @@ public interface SpanLinksBuilder {
    * @return this.
    * @see SpanBuilder#addLink(SpanContext)
    */
+  @CanIgnoreReturnValue
   SpanLinksBuilder addLink(SpanContext spanContext);
 
   /**
@@ -29,5 +31,6 @@ public interface SpanLinksBuilder {
    * @return this.
    * @see SpanBuilder#addLink(SpanContext)
    */
+  @CanIgnoreReturnValue
   SpanLinksBuilder addLink(SpanContext spanContext, Attributes attributes);
 }

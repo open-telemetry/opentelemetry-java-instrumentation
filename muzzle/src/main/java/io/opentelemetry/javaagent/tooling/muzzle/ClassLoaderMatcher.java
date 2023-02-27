@@ -33,7 +33,7 @@ public class ClassLoaderMatcher {
   public static Map<String, List<Mismatch>> matchesAll(
       ClassLoader classLoader, boolean injectHelpers, Set<String> excludedInstrumentationNames) {
     Map<String, List<Mismatch>> result = new HashMap<>();
-    ServiceLoader.load(InstrumentationModule.class)
+    ServiceLoader.load(InstrumentationModule.class, ClassLoaderMatcher.class.getClassLoader())
         .forEach(
             module -> {
               if (module.instrumentationNames().stream()
@@ -91,7 +91,7 @@ public class ClassLoaderMatcher {
                 instrumentationModule.instrumentationName(),
                 allHelperClasses,
                 helperResourceBuilder.getResources(),
-                Thread.currentThread().getContextClassLoader(),
+                ClassLoaderMatcher.class.getClassLoader(),
                 null)
             .transform(null, null, classLoader, null, null);
       }

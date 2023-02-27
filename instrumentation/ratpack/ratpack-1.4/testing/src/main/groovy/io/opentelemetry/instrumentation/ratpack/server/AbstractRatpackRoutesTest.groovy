@@ -91,7 +91,7 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
     assertTraces(1) {
       trace(0, 1 + (hasHandlerSpan() ? 1 : 0)) {
         span(0) {
-          name "/$route"
+          name "GET /$route"
           kind SERVER
           hasNoParent()
           attributes {

@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.netty.v4.common.internal.server;
 
-import static io.opentelemetry.instrumentation.netty.v4.common.internal.HttpSchemeUtil.getScheme;
-
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.HttpSchemeUtil;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -17,29 +16,29 @@ final class NettyHttpServerAttributesGetter
     implements HttpServerAttributesGetter<HttpRequestAndChannel, HttpResponse> {
 
   @Override
-  public String method(HttpRequestAndChannel requestAndChannel) {
+  public String getMethod(HttpRequestAndChannel requestAndChannel) {
     return requestAndChannel.request().getMethod().name();
   }
 
   @Override
-  public List<String> requestHeader(HttpRequestAndChannel requestAndChannel, String name) {
+  public List<String> getRequestHeader(HttpRequestAndChannel requestAndChannel, String name) {
     return requestAndChannel.request().headers().getAll(name);
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       HttpRequestAndChannel requestAndChannel, HttpResponse response, @Nullable Throwable error) {
     return response.getStatus().code();
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       HttpRequestAndChannel requestAndChannel, HttpResponse response, String name) {
     return response.headers().getAll(name);
   }
 
   @Override
-  public String flavor(HttpRequestAndChannel requestAndChannel) {
+  public String getFlavor(HttpRequestAndChannel requestAndChannel) {
     String flavor = requestAndChannel.request().getProtocolVersion().toString();
     if (flavor.startsWith("HTTP/")) {
       flavor = flavor.substring("HTTP/".length());
@@ -48,18 +47,12 @@ final class NettyHttpServerAttributesGetter
   }
 
   @Override
-  public String target(HttpRequestAndChannel requestAndChannel) {
+  public String getTarget(HttpRequestAndChannel requestAndChannel) {
     return requestAndChannel.request().getUri();
   }
 
   @Override
-  @Nullable
-  public String route(HttpRequestAndChannel requestAndChannel) {
-    return null;
-  }
-
-  @Override
-  public String scheme(HttpRequestAndChannel requestAndChannel) {
-    return getScheme(requestAndChannel);
+  public String getScheme(HttpRequestAndChannel requestAndChannel) {
+    return HttpSchemeUtil.getScheme(requestAndChannel);
   }
 }

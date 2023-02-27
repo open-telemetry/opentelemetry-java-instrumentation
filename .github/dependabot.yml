@@ -17,6 +17,9 @@ updates:
     registries:
       - gradle-plugin-portal
     ignore:
+      - dependency-name: "io.opentelemetry:*"
+        # OpenTelemetry SDK updates are handled by auto-update-otel-sdk.yml
+        versions: [ "(,)" ]
       - dependency-name: "ch.qos.logback:logback-classic"
         # logback 1.4+ requires Java 11
         versions: [ "[1.4,)" ]
@@ -27,6 +30,15 @@ updates:
         # ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
         # ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
         versions: [ "[9,)" ]
+      - dependency-name: "net.sf.jt400:jt400"
+        # using old version of this obscure artifact to test instrumentation of Java 1.1 bytecode
+        versions: [ "(,)" ]
+      - dependency-name: "org.mockito:*"
+        # mockito 5 requires Java 11
+        versions: [ "[5,)" ]
+      - dependency-name: "org.junit-pioneer:junit-pioneer"
+        # junit-pioneer 2.x requires Java 11
+        versions: [ "[1,)" ]
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
@@ -65,6 +77,13 @@ updates:
         # examples are intentionally compiled and tested against Servlet 3.0
         # "9-alpha" is needed to precede all 9.0.0.v{DATE} versions
         versions: [ "[9-alpha,)" ]
+    rebase-strategy: "disabled"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "gradle"
+    directory: "/benchmark-overhead"
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
