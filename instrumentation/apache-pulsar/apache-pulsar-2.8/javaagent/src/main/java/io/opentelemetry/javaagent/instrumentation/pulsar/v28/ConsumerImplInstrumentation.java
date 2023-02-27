@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -30,8 +31,8 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.pulsar.client.impl.ConsumerImpl")
-        .or(named("org.apache.pulsar.client.impl.MultiTopicsConsumerImpl"));
+    return namedOneOf("org.apache.pulsar.client.impl.ConsumerImpl",
+        "org.apache.pulsar.client.impl.MultiTopicsConsumerImpl");
   }
 
   @Override
@@ -53,7 +54,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod()
             .and(isPublic())
-            .and(named("receive").or(named("batchReceive")))
+            .and(namedOneOf("receive", "batchReceive"))
             .and(takesArguments(0)),
         klassName + "$ConsumerSyncReceiveAdviser");
     // receiveAsync/batchReceiveAsync will apply to
@@ -61,7 +62,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod()
             .and(isPublic())
-            .and(named("receiveAsync").or(named("batchReceiveAsync")))
+            .and(namedOneOf("receiveAsync", "batchReceiveAsync"))
             .and(takesArguments(0)),
         klassName + "$ConsumerAsyncReceiveAdviser");
   }

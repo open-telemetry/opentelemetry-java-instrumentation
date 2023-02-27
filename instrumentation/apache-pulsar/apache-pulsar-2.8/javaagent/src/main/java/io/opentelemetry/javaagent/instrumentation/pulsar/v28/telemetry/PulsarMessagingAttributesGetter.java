@@ -64,7 +64,7 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Messag
   @Nullable
   @Override
   public Long messagePayloadSize(Message<?> message) {
-    if (null != message) {
+    if (message != null) {
       return (long) message.size();
     }
 
@@ -81,7 +81,7 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Messag
   @Override
   public String messageId(Message<?> message, @Nullable Attributes attributes) {
     String messageId0 = null;
-    if (null != message && null != message.getMessageId()) {
+    if (message != null && message.getMessageId() != null) {
       messageId0 = message.getMessageId().toString();
     }
 

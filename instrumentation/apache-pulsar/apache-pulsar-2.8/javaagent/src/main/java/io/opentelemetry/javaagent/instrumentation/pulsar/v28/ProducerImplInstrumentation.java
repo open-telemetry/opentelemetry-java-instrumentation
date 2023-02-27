@@ -115,13 +115,13 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       }
 
       Instrumenter<Message<?>, Attributes> instrumenter = PulsarSingletons.producerInstrumenter();
-      StringTuple2 tuple2 = VirtualFieldStore.extract(producer);
+      ProducerData producerData = VirtualFieldStore.extract(producer);
       Attributes attributes =
           Attributes.of(
               SemanticAttributes.MESSAGING_URL,
-              tuple2.f1,
+              producerData.url,
               SemanticAttributes.MESSAGING_DESTINATION,
-              tuple2.f2);
+              producerData.topic);
 
       try (Scope ignore = context.makeCurrent()) {
         this.delegator.sendComplete(e);

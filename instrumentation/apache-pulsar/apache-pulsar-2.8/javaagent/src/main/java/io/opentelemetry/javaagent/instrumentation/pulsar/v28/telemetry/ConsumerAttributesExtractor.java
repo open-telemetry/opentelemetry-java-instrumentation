@@ -28,7 +28,7 @@ enum ConsumerAttributesExtractor implements AttributesExtractor<Message<?>, Attr
       Message<?> message,
       @Nullable Attributes attributes,
       @Nullable Throwable error) {
-    if (null != attributes && !attributes.isEmpty()) {
+    if (attributes != null && !attributes.isEmpty()) {
       attributesBuilder.putAll(attributes);
     }
 

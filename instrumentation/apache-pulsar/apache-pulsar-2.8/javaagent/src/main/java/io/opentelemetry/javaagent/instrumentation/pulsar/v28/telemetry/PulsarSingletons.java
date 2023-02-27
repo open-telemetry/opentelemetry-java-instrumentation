@@ -24,7 +24,7 @@ import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 
 public final class PulsarSingletons {
-  private static final String INSTRUMENTATION = "io.opentelemetry.pulsar-client-2.8";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-client-2.8";
   private static final OpenTelemetry TELEMETRY = GlobalOpenTelemetry.get();
   private static final TextMapPropagator PROPAGATOR =
       TELEMETRY.getPropagators().getTextMapPropagator();
@@ -60,7 +60,7 @@ public final class PulsarSingletons {
         PulsarMessagingAttributesGetter.INSTANCE;
 
     return Instrumenter.<Message<?>, Attributes>builder(
-            TELEMETRY, INSTRUMENTATION, CONSUMER_RECEIVE)
+            TELEMETRY, INSTRUMENTATION_NAME, CONSUMER_RECEIVE)
         .addAttributesExtractor(ConsumerAttributesExtractor.INSTANCE)
         .addAttributesExtractor(
             MessagingAttributesExtractor.create(getter, MessageOperation.RECEIVE))
@@ -72,7 +72,7 @@ public final class PulsarSingletons {
         PulsarMessagingAttributesGetter.INSTANCE;
 
     return Instrumenter.<Message<?>, Attributes>builder(
-            TELEMETRY, INSTRUMENTATION, CONSUMER_PROCESS)
+            TELEMETRY, INSTRUMENTATION_NAME, CONSUMER_PROCESS)
         .addAttributesExtractor(
             MessagingAttributesExtractor.create(getter, MessageOperation.PROCESS))
         .addAttributesExtractor(ConsumerAttributesExtractor.INSTANCE)
@@ -83,7 +83,7 @@ public final class PulsarSingletons {
     MessagingAttributesGetter<Message<?>, Attributes> getter =
         PulsarMessagingAttributesGetter.INSTANCE;
 
-    return Instrumenter.<Message<?>, Attributes>builder(TELEMETRY, INSTRUMENTATION, PRODUCER_SEND)
+    return Instrumenter.<Message<?>, Attributes>builder(TELEMETRY, INSTRUMENTATION_NAME, PRODUCER_SEND)
         .addAttributesExtractor(ProducerAttributesExtractor.INSTANCE)
         .addAttributesExtractor(MessagingAttributesExtractor.create(getter, MessageOperation.SEND))
         .buildProducerInstrumenter(MessageTextMapSetter.INSTANCE);

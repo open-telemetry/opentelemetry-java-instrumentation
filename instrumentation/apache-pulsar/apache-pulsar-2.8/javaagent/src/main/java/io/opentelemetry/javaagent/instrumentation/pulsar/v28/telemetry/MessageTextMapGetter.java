@@ -20,6 +20,6 @@ enum MessageTextMapGetter implements TextMapGetter<Message<?>> {
   @Nullable
   @Override
   public String get(@Nullable Message<?> message, String key) {
-    return null == message ? null : message.getProperties().get(key);
+    return message == null ? null : message.getProperties().get(key);
   }
 }

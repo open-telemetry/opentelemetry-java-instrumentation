@@ -30,7 +30,7 @@ enum ProducerAttributesExtractor implements AttributesExtractor<Message<?>, Attr
       Message<?> message,
       @Nullable Attributes attributes,
       @Nullable Throwable error) {
-    if (null != attributes) {
+    if (attributes != null) {
       attributesBuilder.putAll(attributes);
     }
 
