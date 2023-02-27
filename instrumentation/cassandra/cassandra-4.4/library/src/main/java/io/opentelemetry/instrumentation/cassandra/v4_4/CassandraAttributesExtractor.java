@@ -24,7 +24,6 @@ final class CassandraAttributesExtractor
       AttributesBuilder attributes, Context parentContext, CassandraRequest request) {}
 
   @Override
-  @SuppressWarnings("deprecation") // used for 4.0 compatibility (TODO trask is this needed?)
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
@@ -49,6 +48,8 @@ final class CassandraAttributesExtractor
         SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT,
         executionInfo.getSpeculativeExecutionCount());
 
+    // TODO can this be rewritten using newer API?
+    @SuppressWarnings("deprecation")
     Statement<?> statement = executionInfo.getStatement();
     String consistencyLevel;
     DriverExecutionProfile config =
