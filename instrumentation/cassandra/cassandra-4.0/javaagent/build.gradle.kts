@@ -7,11 +7,12 @@ muzzle {
     group.set("com.datastax.oss")
     module.set("java-driver-core")
     versions.set("[4.0,4.4)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  implementation(project(":instrumentation:cassandra:cassandra-4.0:library"))
+  implementation(project(":instrumentation:cassandra:cassandra-4.4:library"))
 
   library("com.datastax.oss:java-driver-core:4.0.0")
 
