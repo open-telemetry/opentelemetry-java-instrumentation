@@ -11,11 +11,9 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
@@ -226,16 +224,12 @@ class ApacheHttpAsyncClientTest {
 
   void configureTest(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.setUserAgent("httpasyncclient");
-    optionsBuilder.setResponseCodeOnRedirectError(302);
     optionsBuilder.enableTestReadTimeout();
-    optionsBuilder.setHttpAttributes(
-        endpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.add(SemanticAttributes.HTTP_SCHEME);
-          attributes.add(SemanticAttributes.HTTP_TARGET);
-          return attributes;
-        });
+    optionsBuilder.setHttpAttributes(ApacheHttpAsyncClientTest::getHttpAttributes);
+  }
+
+  private static Set<AttributeKey<?>> getHttpAttributes(URI endpoint) {
+    return HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES;
   }
 
   static String fullPathFromUri(URI uri) {
