@@ -58,10 +58,6 @@ public final class AgentTooling {
         && currentTransform.classLoader == classLoader;
   }
 
-  public static void completeLoadClass() {
-    CURRENT_TRANSFORM.remove();
-  }
-
   private static class ClassTransformListener extends AgentBuilder.Listener.Adapter {
     @Override
     public void onDiscovery(
