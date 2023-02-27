@@ -68,7 +68,7 @@ public class ApacheHttpClientTest {
     @Override
     public ClientConnectionManager newInstance(
         HttpParams httpParams, SchemeRegistry schemeRegistry) {
-      return new ThreadSafeClientConnManager(schemeRegistry);
+      return new ThreadSafeClientConnManager(httpParams, schemeRegistry);
     }
   }
 

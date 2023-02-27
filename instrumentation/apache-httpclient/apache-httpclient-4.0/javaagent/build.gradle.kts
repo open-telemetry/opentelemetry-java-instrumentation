@@ -24,6 +24,6 @@ muzzle {
 }
 
 dependencies {
-  // 4.0.x uses GuardedBy which interferes with compiling tests
-  library("org.apache.httpcomponents:httpclient:4.1")
+  library("org.apache.httpcomponents:httpclient:4.0")
+  testCompileOnly("net.jcip:jcip-annotations:1.0")
 }
