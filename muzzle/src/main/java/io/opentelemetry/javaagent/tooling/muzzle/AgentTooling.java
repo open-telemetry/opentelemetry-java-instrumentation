@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.utility.JavaModule;
 
 /**
  * This class contains class references for objects shared by the agent installer as well as muzzle
@@ -22,12 +23,18 @@ public final class AgentTooling {
   private static final AgentBuilder.PoolStrategy POOL_STRATEGY =
       new AgentCachingPoolStrategy(LOCATION_STRATEGY);
 
+  private static final ThreadLocal<CurrentTransform> CURRENT_TRANSFORM = new ThreadLocal<>();
+
   public static AgentLocationStrategy locationStrategy() {
     return LOCATION_STRATEGY;
   }
 
   public static AgentBuilder.PoolStrategy poolStrategy() {
     return POOL_STRATEGY;
+  }
+
+  public static AgentBuilder.Listener transformListener() {
+    return new ClassTransformListener();
   }
 
   private static ClassLoader getBootstrapProxy() {
@@ -40,6 +47,43 @@ public final class AgentTooling {
     }
 
     return null;
+  }
+
+  public static boolean isTransforming(ClassLoader classLoader, String className) {
+    CurrentTransform currentTransform = CURRENT_TRANSFORM.get();
+    if (currentTransform == null) {
+      return false;
+    }
+    return currentTransform.className.equals(className)
+        && currentTransform.classLoader == classLoader;
+  }
+
+  public static void completeLoadClass() {
+    CURRENT_TRANSFORM.remove();
+  }
+
+  private static class ClassTransformListener extends AgentBuilder.Listener.Adapter {
+    @Override
+    public void onDiscovery(
+        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
+      CURRENT_TRANSFORM.set(new CurrentTransform(classLoader, typeName));
+    }
+
+    @Override
+    public void onComplete(
+        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
+      CURRENT_TRANSFORM.remove();
+    }
+  }
+
+  private static class CurrentTransform {
+    private final ClassLoader classLoader;
+    private final String className;
+
+    CurrentTransform(ClassLoader classLoader, String className) {
+      this.classLoader = classLoader;
+      this.className = className;
+    }
   }
 
   private AgentTooling() {}

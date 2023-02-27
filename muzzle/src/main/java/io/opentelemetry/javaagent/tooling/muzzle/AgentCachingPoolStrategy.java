@@ -275,6 +275,15 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       if (OBJECT_NAME.equals(className)) {
         return OBJECT_RESOLUTION;
       }
+      // Skip cache for the type that is currently being transformed.
+      // If class has been transformed by another agent or by class loader it is possible that the
+      // cached TypeDescription isn't the same as the one built from the actual bytes that are
+      // being defined. For example if another agent adds an interface to the class then returning
+      // the cached description that does not have that interface would result in bytebuddy removing
+      // that interface.
+      if (AgentTooling.isTransforming(loaderRef.get(), className)) {
+        return null;
+      }
 
       TypePool.Resolution existingResolution =
           sharedResolutionCache.get(new TypeCacheKey(loaderHash, loaderRef, className));
