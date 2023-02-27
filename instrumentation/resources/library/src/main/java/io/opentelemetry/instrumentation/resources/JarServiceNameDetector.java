@@ -15,6 +15,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvid
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -99,15 +100,25 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
     while (true) {
       int nextSpace = programArguments.indexOf(' ', next);
       if (nextSpace == -1) {
-        Path candidate = Paths.get(programArguments);
-        return fileExists.test(candidate) ? candidate : null;
+        return pathIfExists(programArguments);
       }
-      Path candidate = Paths.get(programArguments.substring(0, nextSpace));
+      Path path = pathIfExists(programArguments.substring(0, nextSpace));
       next = nextSpace + 1;
-      if (fileExists.test(candidate)) {
-        return candidate;
+      if (path != null) {
+        return path;
       }
     }
+  }
+
+  @Nullable
+  private Path pathIfExists(String programArguments) {
+    Path candidate;
+    try {
+      candidate = Paths.get(programArguments);
+    } catch (InvalidPathException e) {
+      return null;
+    }
+    return fileExists.test(candidate) ? candidate : null;
   }
 
   private static String getServiceName(Path jarPath) {

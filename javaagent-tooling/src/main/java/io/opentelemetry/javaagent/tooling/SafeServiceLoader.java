@@ -30,9 +30,9 @@ public final class SafeServiceLoader {
    */
   // Because we want to catch exception per iteration
   @SuppressWarnings("ForEachIterable")
-  public static <T> List<T> load(Class<T> serviceClass) {
+  public static <T> List<T> load(Class<T> serviceClass, ClassLoader classLoader) {
     List<T> result = new ArrayList<>();
-    ServiceLoader<T> services = ServiceLoader.load(serviceClass);
+    ServiceLoader<T> services = ServiceLoader.load(serviceClass, classLoader);
     for (Iterator<T> iterator = new SafeIterator<>(services.iterator()); iterator.hasNext(); ) {
       T service = iterator.next();
       if (service != null) {
@@ -43,11 +43,12 @@ public final class SafeServiceLoader {
   }
 
   /**
-   * Same as {@link #load(Class)}, but also orders the returned implementations by comparing their
-   * {@link Ordered#order()}.
+   * Same as {@link #load(Class, ClassLoader)}, but also orders the returned implementations by
+   * comparing their {@link Ordered#order()}.
    */
-  public static <T extends Ordered> List<T> loadOrdered(Class<T> serviceClass) {
-    List<T> result = load(serviceClass);
+  public static <T extends Ordered> List<T> loadOrdered(
+      Class<T> serviceClass, ClassLoader classLoader) {
+    List<T> result = load(serviceClass, classLoader);
     result.sort(Comparator.comparing(Ordered::order));
     return result;
   }

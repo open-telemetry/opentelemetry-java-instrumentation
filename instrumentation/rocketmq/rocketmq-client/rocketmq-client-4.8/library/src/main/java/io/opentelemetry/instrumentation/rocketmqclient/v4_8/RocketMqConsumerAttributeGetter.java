@@ -16,70 +16,70 @@ enum RocketMqConsumerAttributeGetter implements MessagingAttributesGetter<Messag
   INSTANCE;
 
   @Override
-  public String system(MessageExt request) {
+  public String getSystem(MessageExt request) {
     return "rocketmq";
   }
 
   @Override
-  public String destinationKind(MessageExt request) {
+  public String getDestinationKind(MessageExt request) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Override
-  public String destination(MessageExt request) {
+  public String getDestination(MessageExt request) {
     return request.getTopic();
   }
 
   @Override
-  public boolean temporaryDestination(MessageExt request) {
+  public boolean isTemporaryDestination(MessageExt request) {
     return false;
   }
 
   @Nullable
   @Override
-  public String protocol(MessageExt request) {
+  public String getProtocol(MessageExt request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String protocolVersion(MessageExt request) {
+  public String getProtocolVersion(MessageExt request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String url(MessageExt request) {
+  public String getUrl(MessageExt request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String conversationId(MessageExt request) {
+  public String getConversationId(MessageExt request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadSize(MessageExt request) {
+  public Long getMessagePayloadSize(MessageExt request) {
     byte[] body = request.getBody();
     return body == null ? null : (long) body.length;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadCompressedSize(MessageExt request) {
+  public Long getMessagePayloadCompressedSize(MessageExt request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String messageId(MessageExt request, @Nullable Void unused) {
+  public String getMessageId(MessageExt request, @Nullable Void unused) {
     return request.getMsgId();
   }
 
   @Override
-  public List<String> header(MessageExt request, String name) {
+  public List<String> getMessageHeader(MessageExt request, String name) {
     String value = request.getProperties().get(name);
     if (value != null) {
       return Collections.singletonList(value);

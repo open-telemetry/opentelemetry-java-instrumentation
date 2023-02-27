@@ -37,7 +37,7 @@ public final class UndertowSingletons {
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .build())
-            .addContextCustomizer(HttpRouteHolder.get())
+            .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
             .addContextCustomizer(
                 (context, request, attributes) -> {
                   // span is ended when counter reaches 0, we start from 2 which accounts for the

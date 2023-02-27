@@ -11,8 +11,11 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
+// this line is managed by .github/scripts/update-sdk-version.sh
+val otelSdkVersion = "1.23.1"
+
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.6"
+val groovyVersion = "4.0.9"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -26,23 +29,24 @@ val groovyVersion = "4.0.6"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.14.1",
+  "com.fasterxml.jackson:jackson-bom:2.14.2",
   "com.google.guava:guava-bom:31.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
-  "io.opentelemetry:opentelemetry-bom:1.20.1",
-  "io.opentelemetry:opentelemetry-bom-alpha:1.20.1-alpha",
-  "org.junit:junit-bom:5.9.1",
+  "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
+  "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkVersion}-alpha",
+  "org.junit:junit-bom:5.9.2",
   "org.testcontainers:testcontainers-bom:1.17.6",
-  "org.spockframework:spock-bom:2.3-groovy-4.0"
+  "org.spockframework:spock-bom:2.4-M1-groovy-4.0"
 )
 
 val autoServiceVersion = "1.0.1"
 val autoValueVersion = "1.10.1"
-val errorProneVersion = "2.16"
-val byteBuddyVersion = "1.12.19"
+val errorProneVersion = "2.18.0"
+val byteBuddyVersion = "1.14.0"
+val asmVersion = "9.4"
 val jmhVersion = "1.36"
-val mockitoVersion = "4.9.0"
-val slf4jVersion = "2.0.5"
+val mockitoVersion = "4.11.0"
+val slf4jVersion = "2.0.6"
 
 val CORE_DEPENDENCIES = listOf(
   "com.google.auto.service:auto-service:${autoServiceVersion}",
@@ -57,6 +61,8 @@ val CORE_DEPENDENCIES = listOf(
   "net.bytebuddy:byte-buddy-dep:${byteBuddyVersion}",
   "net.bytebuddy:byte-buddy-agent:${byteBuddyVersion}",
   "net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}",
+  "org.ow2.asm:asm:${asmVersion}",
+  "org.ow2.asm:asm-tree:${asmVersion}",
   "org.openjdk.jmh:jmh-core:${jmhVersion}",
   "org.openjdk.jmh:jmh-generator-bytecode:${jmhVersion}",
   "org.mockito:mockito-core:${mockitoVersion}",
@@ -76,34 +82,34 @@ val DEPENDENCIES = listOf(
   "ch.qos.logback:logback-classic:1.3.5", // 1.4+ requires Java 11+
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
-  "uk.org.webcompere:system-stubs-jupiter:2.0.1",
-  "com.uber.nullaway:nullaway:0.10.5",
+  "uk.org.webcompere:system-stubs-jupiter:2.0.2",
+  "com.uber.nullaway:nullaway:0.10.9",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
   "commons-codec:commons-codec:1.15",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
-  "commons-fileupload:commons-fileupload:1.4",
+  "commons-fileupload:commons-fileupload:1.5",
   "commons-io:commons-io:2.11.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
-  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.20.1-alpha",
+  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.23.0-alpha",
   "io.opentelemetry.proto:opentelemetry-proto:0.19.0-alpha",
-  "org.assertj:assertj-core:3.23.1",
+  "org.assertj:assertj-core:3.24.2",
   "org.awaitility:awaitility:4.2.0",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
   "org.codehaus.mojo:animal-sniffer-annotations:1.22",
-  "org.junit-pioneer:junit-pioneer:1.9.0",
+  "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.3",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
   "org.springframework.boot:spring-boot-dependencies:2.7.5",
   "javax.validation:validation-api:2.0.1.Final",
-  "org.yaml:snakeyaml:1.33"
+  "org.snakeyaml:snakeyaml-engine:2.6"
 )
 
 javaPlatform {

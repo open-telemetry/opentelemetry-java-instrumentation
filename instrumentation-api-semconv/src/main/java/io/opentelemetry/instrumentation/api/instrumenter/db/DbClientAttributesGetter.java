@@ -21,8 +21,8 @@ import javax.annotation.Nullable;
 public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttributesGetter<REQUEST> {
 
   @Nullable
-  String statement(REQUEST request);
+  String getStatement(REQUEST request);
 
   @Nullable
-  String operation(REQUEST request);
+  String getOperation(REQUEST request);
 }

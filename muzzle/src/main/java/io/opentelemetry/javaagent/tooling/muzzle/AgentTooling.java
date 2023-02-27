@@ -32,7 +32,8 @@ public final class AgentTooling {
 
   private static ClassLoader getBootstrapProxy() {
     Iterator<BootstrapProxyProvider> iterator =
-        ServiceLoader.load(BootstrapProxyProvider.class).iterator();
+        ServiceLoader.load(BootstrapProxyProvider.class, AgentTooling.class.getClassLoader())
+            .iterator();
     if (iterator.hasNext()) {
       BootstrapProxyProvider bootstrapProxyProvider = iterator.next();
       return bootstrapProxyProvider.getBootstrapProxy();

@@ -79,13 +79,13 @@ public final class RestletNetAttributesGetter implements NetServerAttributesGett
   }
 
   @Override
-  public String transport(Request request) {
+  public String getTransport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable
   @Override
-  public String hostName(Request request) {
+  public String getHostName(Request request) {
     if (GET_HOST_DOMAIN == null) {
       return null;
     }
@@ -102,7 +102,7 @@ public final class RestletNetAttributesGetter implements NetServerAttributesGett
 
   @Nullable
   @Override
-  public Integer hostPort(Request request) {
+  public Integer getHostPort(Request request) {
     if (GET_SERVER_PORT == null) {
       return null;
     }
@@ -119,18 +119,18 @@ public final class RestletNetAttributesGetter implements NetServerAttributesGett
 
   @Override
   @Nullable
-  public String sockPeerAddr(Request request) {
+  public String getSockPeerAddr(Request request) {
     return request.getClientInfo().getAddress();
   }
 
   @Override
-  public Integer sockPeerPort(Request request) {
+  public Integer getSockPeerPort(Request request) {
     return request.getClientInfo().getPort();
   }
 
   @Nullable
   @Override
-  public String sockHostAddr(Request request) {
+  public String getSockHostAddr(Request request) {
     if (GET_SERVER_ADDRESS == null) {
       return null;
     }

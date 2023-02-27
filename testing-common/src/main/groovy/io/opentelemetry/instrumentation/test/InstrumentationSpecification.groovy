@@ -109,8 +109,19 @@ abstract class InstrumentationSpecification extends Specification {
       options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
     @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
     final Closure spec) {
-    InMemoryExporterAssert.assertTraces({ testRunner().getExportedSpans() }, size, spec)
+    InMemoryExporterAssert.assertTraces({ testRunner().getExportedSpans() }, size, spec, true)
   }
+
+  void assertTracesWithoutScopeVersionVerification(
+    final int size,
+    @ClosureParams(
+      value = SimpleType,
+      options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
+    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
+    final Closure spec) {
+    InMemoryExporterAssert.assertTraces({ testRunner().getExportedSpans() }, size, spec, false)
+  }
+
 
   /**
    * Runs the provided {@code callback} inside the scope of an INTERNAL span with name {@code
@@ -132,7 +143,7 @@ abstract class InstrumentationSpecification extends Specification {
    * Runs the provided {@code callback} inside the scope of an HTTP CLIENT span with name {@code
    * spanName}.
    */
-  def <T> T runWithHttpServerSpan(String spanName, Closure callback) {
-    return (T) testRunner().runWithHttpServerSpan(spanName, (ThrowingSupplier) callback)
+  def <T> T runWithHttpServerSpan(Closure callback) {
+    return (T) testRunner().runWithHttpServerSpan((ThrowingSupplier) callback)
   }
 }

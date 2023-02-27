@@ -46,7 +46,7 @@ class KafkaIntegrationTest {
   @BeforeAll
   static void setUpKafka() {
     kafka =
-        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"))
+        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.1.9"))
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
     kafka.start();
@@ -105,23 +105,46 @@ class KafkaIntegrationTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testTopic"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")),
+                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testTopic"),
+                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                            satisfies(
+                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("producer")),
+                            satisfies(
+                                SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
+                                AbstractLongAssert::isNotNegative),
+                            satisfies(
+                                SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
+                                AbstractLongAssert::isNotNegative),
+                            equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10")),
                 span ->
                     span.hasName("testTopic process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testTopic"),
+                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_PARTITION,
-                                AbstractLongAssert::isNotNegative)),
+                                SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                                AbstractLongAssert::isNotNegative),
+                            satisfies(
+                                SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
+                                AbstractLongAssert::isNotNegative),
+                            equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10"),
+                            equalTo(
+                                SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "testListener"),
+                            satisfies(
+                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("consumer")),
+                            satisfies(
+                                SemanticAttributes.MESSAGING_CONSUMER_ID,
+                                stringAssert ->
+                                    stringAssert.startsWith("testListener - consumer"))),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 

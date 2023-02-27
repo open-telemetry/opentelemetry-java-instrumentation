@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc.datasource;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.DataSourceSingletons.instrumenter;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.dataSourceInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -20,6 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class DataSourceInstrumentation implements TypeInstrumentation {
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("javax.sql.DataSource"));
@@ -46,7 +47,7 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      context = instrumenter().start(parentContext, ds);
+      context = dataSourceInstrumenter().start(parentContext, ds);
       scope = context.makeCurrent();
     }
 
@@ -60,7 +61,7 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-      instrumenter().end(context, ds, null, throwable);
+      dataSourceInstrumenter().end(context, ds, null, throwable);
     }
   }
 }

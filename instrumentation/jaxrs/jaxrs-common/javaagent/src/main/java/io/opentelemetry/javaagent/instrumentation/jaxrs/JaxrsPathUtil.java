@@ -10,7 +10,7 @@ public final class JaxrsPathUtil {
 
   public static String normalizePath(String path) {
     // ensure that non-empty path starts with /
-    if (path == null || "/".equals(path)) {
+    if (path == null || path.equals("/")) {
       path = "";
     } else if (!path.startsWith("/")) {
       path = "/" + path;

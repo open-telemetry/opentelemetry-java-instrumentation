@@ -61,17 +61,17 @@ public class InstrumenterBenchmark {
     INSTANCE;
 
     @Override
-    public String method(Void unused) {
+    public String getMethod(Void unused) {
       return "GET";
     }
 
     @Override
-    public String url(Void unused) {
+    public String getUrl(Void unused) {
       return "https://opentelemetry.io/benchmark";
     }
 
     @Override
-    public List<String> requestHeader(Void unused, String name) {
+    public List<String> getRequestHeader(Void unused, String name) {
       if (name.equalsIgnoreCase("user-agent")) {
         return Collections.singletonList("OpenTelemetryBot");
       }
@@ -79,17 +79,17 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    public String flavor(Void unused, @Nullable Void unused2) {
+    public String getFlavor(Void unused, @Nullable Void unused2) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
 
     @Override
-    public Integer statusCode(Void unused, Void unused2, @Nullable Throwable error) {
+    public Integer getStatusCode(Void unused, Void unused2, @Nullable Throwable error) {
       return 200;
     }
 
     @Override
-    public List<String> responseHeader(Void unused, Void unused2, String name) {
+    public List<String> getResponseHeader(Void unused, Void unused2, String name) {
       return Collections.emptyList();
     }
   }
@@ -102,19 +102,19 @@ public class InstrumenterBenchmark {
 
     @Nullable
     @Override
-    public String transport(Void request, @Nullable Void response) {
+    public String getTransport(Void request, @Nullable Void response) {
       return SemanticAttributes.NetTransportValues.IP_TCP;
     }
 
     @Nullable
     @Override
-    public String peerName(Void request) {
+    public String getPeerName(Void request) {
       return null;
     }
 
     @Nullable
     @Override
-    public Integer peerPort(Void request) {
+    public Integer getPeerPort(Void request) {
       return null;
     }
 

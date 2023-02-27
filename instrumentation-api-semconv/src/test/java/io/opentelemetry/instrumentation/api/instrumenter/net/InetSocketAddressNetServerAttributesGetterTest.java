@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.entry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
@@ -25,18 +26,18 @@ class InetSocketAddressNetServerAttributesGetterTest {
       new InetSocketAddressNetServerAttributesGetter<Addresses>() {
 
         @Override
-        public String transport(Addresses request) {
+        public String getTransport(Addresses request) {
           return SemanticAttributes.NetTransportValues.IP_TCP;
         }
 
         @Override
-        public String hostName(Addresses request) {
+        public String getHostName(Addresses request) {
           // net.host.name and net.host.port are tested in NetClientAttributesExtractorTest
           return null;
         }
 
         @Override
-        public Integer hostPort(Addresses request) {
+        public Integer getHostPort(Addresses request) {
           // net.host.name and net.host.port are tested in NetClientAttributesExtractorTest
           return null;
         }
@@ -51,7 +52,7 @@ class InetSocketAddressNetServerAttributesGetterTest {
           return request.host;
         }
       };
-  private final NetServerAttributesExtractor<Addresses, Addresses> extractor =
+  private final AttributesExtractor<Addresses, Addresses> extractor =
       NetServerAttributesExtractor.create(getter);
 
   @Test

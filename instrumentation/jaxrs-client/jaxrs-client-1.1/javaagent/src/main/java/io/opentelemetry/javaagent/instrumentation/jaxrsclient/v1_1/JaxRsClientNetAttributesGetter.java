@@ -15,18 +15,18 @@ final class JaxRsClientNetAttributesGetter
     implements NetClientAttributesGetter<ClientRequest, ClientResponse> {
 
   @Override
-  public String transport(ClientRequest request, @Nullable ClientResponse response) {
+  public String getTransport(ClientRequest request, @Nullable ClientResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   @Nullable
-  public String peerName(ClientRequest request) {
+  public String getPeerName(ClientRequest request) {
     return request.getURI().getHost();
   }
 
   @Override
-  public Integer peerPort(ClientRequest request) {
+  public Integer getPeerPort(ClientRequest request) {
     return request.getURI().getPort();
   }
 }

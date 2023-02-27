@@ -15,18 +15,18 @@ final class AsyncHttpClientNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<RequestContext, Response> {
 
   @Override
-  public String transport(RequestContext request, @Nullable Response response) {
+  public String getTransport(RequestContext request, @Nullable Response response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable
   @Override
-  public String peerName(RequestContext requestContext) {
+  public String getPeerName(RequestContext requestContext) {
     return requestContext.getRequest().getUri().getHost();
   }
 
   @Override
-  public Integer peerPort(RequestContext requestContext) {
+  public Integer getPeerPort(RequestContext requestContext) {
     return requestContext.getRequest().getUri().getPort();
   }
 

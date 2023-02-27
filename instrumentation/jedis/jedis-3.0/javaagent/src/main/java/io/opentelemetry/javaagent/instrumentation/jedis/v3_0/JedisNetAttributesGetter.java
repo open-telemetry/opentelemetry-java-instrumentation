@@ -15,18 +15,18 @@ final class JedisNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<JedisRequest, Void> {
 
   @Override
-  public String transport(JedisRequest jedisRequest, @Nullable Void unused) {
+  public String getTransport(JedisRequest jedisRequest, @Nullable Void unused) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable
   @Override
-  public String peerName(JedisRequest jedisRequest) {
+  public String getPeerName(JedisRequest jedisRequest) {
     return jedisRequest.getConnection().getHost();
   }
 
   @Override
-  public Integer peerPort(JedisRequest jedisRequest) {
+  public Integer getPeerPort(JedisRequest jedisRequest) {
     return jedisRequest.getConnection().getPort();
   }
 

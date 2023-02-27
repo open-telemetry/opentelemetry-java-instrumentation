@@ -22,7 +22,7 @@ abstract class TomeeSmokeTest extends AppServerTest {
   protected String getSpanName(String path) {
     switch (path) {
       case "/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless":
-        return "/*"
+        return "GET /*"
     }
     return super.getSpanName(path)
   }
@@ -72,8 +72,12 @@ class Tomee8Jdk8Openj9 extends TomeeSmokeTest {
 class Tomee8Jdk11Openj9 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "8.0.8", jdk = "16-openj9")
-class Tomee8Jdk16Openj9 extends TomeeSmokeTest {
+@AppServer(version = "8.0.8", jdk = "17-openj9")
+class Tomee8Jdk17Openj9 extends TomeeSmokeTest {
+}
+
+@AppServer(version = "8.0.8", jdk = "18-openj9")
+class Tomee8Jdk18Openj9 extends TomeeSmokeTest {
 }
 
 @AppServer(version = "9.0.0-M7", jdk = "8")
@@ -104,6 +108,10 @@ class Tomee9Jdk8Openj9 extends TomeeSmokeTest {
 class Tomee9Jdk11Openj9 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "9.0.0-M7", jdk = "16-openj9")
-class Tomee9Jdk16Openj9 extends TomeeSmokeTest {
+@AppServer(version = "9.0.0-M7", jdk = "17-openj9")
+class Tomee9Jdk17Openj9 extends TomeeSmokeTest {
+}
+
+@AppServer(version = "9.0.0-M7", jdk = "18-openj9")
+class Tomee9Jdk18Openj9 extends TomeeSmokeTest {
 }

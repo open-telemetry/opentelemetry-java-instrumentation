@@ -12,12 +12,12 @@ enum MethodCodeAttributesGetter implements CodeAttributesGetter<Method> {
   INSTANCE;
 
   @Override
-  public Class<?> codeClass(Method method) {
+  public Class<?> getCodeClass(Method method) {
     return method.getDeclaringClass();
   }
 
   @Override
-  public String methodName(Method method) {
+  public String getMethodName(Method method) {
     return method.getName();
   }
 }

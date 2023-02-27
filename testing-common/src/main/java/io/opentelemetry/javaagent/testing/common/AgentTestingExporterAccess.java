@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.testing.common;
 
+import static com.google.common.base.Strings.emptyToNull;
 import static io.opentelemetry.api.common.AttributeKey.booleanArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
@@ -189,7 +190,9 @@ public final class AgentTestingExporterAccess {
                           fromProto(resource.getAttributesList())))
                   .setInstrumentationScopeInfo(
                       InstrumentationScopeInfo.builder(instrumentationScope.getName())
-                          .setVersion(instrumentationScope.getVersion())
+                          // emptyToNull since they are the same at protobuf layer,
+                          // and allows for simpler verification of InstrumentationScope
+                          .setVersion(emptyToNull(instrumentationScope.getVersion()))
                           .build())
                   .setName(span.getName())
                   .setStartEpochNanos(span.getStartTimeUnixNano())
@@ -267,7 +270,9 @@ public final class AgentTestingExporterAccess {
                   io.opentelemetry.sdk.resources.Resource.create(
                       fromProto(resource.getAttributesList())),
                   InstrumentationScopeInfo.builder(instrumentationScope.getName())
-                      .setVersion(instrumentationScope.getVersion())
+                      // emptyToNull since they are the same at protobuf layer,
+                      // and allows for simpler verification of InstrumentationScope
+                      .setVersion(emptyToNull(instrumentationScope.getVersion()))
                       .build()));
         }
       }
@@ -308,7 +313,9 @@ public final class AgentTestingExporterAccess {
                   io.opentelemetry.sdk.resources.Resource.create(
                       fromProto(resource.getAttributesList())),
                   InstrumentationScopeInfo.builder(instrumentationScope.getName())
-                      .setVersion(instrumentationScope.getVersion())
+                      // emptyToNull since they are the same at protobuf layer,
+                      // and allows for simpler verification of InstrumentationScope
+                      .setVersion(emptyToNull(instrumentationScope.getVersion()))
                       .build()));
         }
       }

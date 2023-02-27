@@ -1,6 +1,4 @@
 plugins {
-  id("net.bytebuddy.byte-buddy")
-
   id("io.opentelemetry.instrumentation.javaagent-testing")
 
   id("otel.java-conventions")

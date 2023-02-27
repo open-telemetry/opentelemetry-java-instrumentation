@@ -75,7 +75,19 @@ public abstract class InstrumentationTestRunner {
   @SuppressWarnings("varargs")
   public final void waitAndAssertSortedTraces(
       Comparator<List<SpanData>> traceComparator, Consumer<TraceAssert>... assertions) {
-    waitAndAssertTraces(traceComparator, Arrays.asList(assertions));
+    waitAndAssertTraces(traceComparator, Arrays.asList(assertions), true);
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final void waitAndAssertTracesWithoutScopeVersionVerification(
+      Consumer<TraceAssert>... assertions) {
+    waitAndAssertTracesWithoutScopeVersionVerification(Arrays.asList(assertions));
+  }
+
+  public final <T extends Consumer<TraceAssert>>
+      void waitAndAssertTracesWithoutScopeVersionVerification(Iterable<T> assertions) {
+    waitAndAssertTraces(null, assertions, false);
   }
 
   @SafeVarargs
@@ -85,28 +97,36 @@ public abstract class InstrumentationTestRunner {
   }
 
   public final <T extends Consumer<TraceAssert>> void waitAndAssertTraces(Iterable<T> assertions) {
-    waitAndAssertTraces(null, assertions);
+    waitAndAssertTraces(null, assertions, true);
   }
 
   private <T extends Consumer<TraceAssert>> void waitAndAssertTraces(
-      @Nullable Comparator<List<SpanData>> traceComparator, Iterable<T> assertions) {
+      @Nullable Comparator<List<SpanData>> traceComparator,
+      Iterable<T> assertions,
+      boolean verifyScopeVersion) {
     List<T> assertionsList = new ArrayList<>();
     assertions.forEach(assertionsList::add);
 
     try {
-      await().untilAsserted(() -> doAssertTraces(traceComparator, assertionsList));
+      await()
+          .untilAsserted(() -> doAssertTraces(traceComparator, assertionsList, verifyScopeVersion));
     } catch (ConditionTimeoutException e) {
       // Don't throw this failure since the stack is the awaitility thread, causing confusion.
       // Instead, just assert one more time on the test thread, which will fail with a better stack
       // trace.
       // TODO(anuraaga): There is probably a better way to do this.
-      doAssertTraces(traceComparator, assertionsList);
+      doAssertTraces(traceComparator, assertionsList, verifyScopeVersion);
     }
   }
 
   private <T extends Consumer<TraceAssert>> void doAssertTraces(
-      @Nullable Comparator<List<SpanData>> traceComparator, List<T> assertionsList) {
+      @Nullable Comparator<List<SpanData>> traceComparator,
+      List<T> assertionsList,
+      boolean verifyScopeVersion) {
     List<List<SpanData>> traces = waitForTraces(assertionsList.size());
+    if (verifyScopeVersion) {
+      TelemetryDataUtil.assertScopeVersion(traces);
+    }
     if (traceComparator != null) {
       traces.sort(traceComparator);
     }
@@ -163,10 +183,9 @@ public abstract class InstrumentationTestRunner {
    * Runs the provided {@code callback} inside the scope of an HTTP SERVER span with name {@code
    * spanName}.
    */
-  public final <E extends Throwable> void runWithHttpServerSpan(
-      String spanName, ThrowingRunnable<E> callback) throws E {
+  public final <E extends Throwable> void runWithHttpServerSpan(ThrowingRunnable<E> callback)
+      throws E {
     runWithHttpServerSpan(
-        spanName,
         () -> {
           callback.run();
           return null;
@@ -177,9 +196,9 @@ public abstract class InstrumentationTestRunner {
    * Runs the provided {@code callback} inside the scope of an HTTP SERVER span with name {@code
    * spanName}.
    */
-  public final <T, E extends Throwable> T runWithHttpServerSpan(
-      String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testInstrumenters.runWithHttpServerSpan(spanName, callback);
+  public final <T, E extends Throwable> T runWithHttpServerSpan(ThrowingSupplier<T, E> callback)
+      throws E {
+    return testInstrumenters.runWithHttpServerSpan(callback);
   }
 
   /** Runs the provided {@code callback} inside the scope of a non-recording span. */

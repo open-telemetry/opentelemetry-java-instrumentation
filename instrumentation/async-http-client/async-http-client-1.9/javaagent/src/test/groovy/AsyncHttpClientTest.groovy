@@ -12,7 +12,7 @@ import com.ning.http.client.Response
 import com.ning.http.client.uri.Uri
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import spock.lang.AutoCleanup
 import spock.lang.Shared
@@ -40,7 +40,7 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   }
 
   @Override
-  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, HttpClientResult requestResult) {
     // TODO(anuraaga): Do we also need to test ListenableFuture callback?
     client.executeRequest(request, new AsyncCompletionHandler<Void>() {
       @Override

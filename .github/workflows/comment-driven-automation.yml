@@ -1,7 +1,7 @@
 name: Comment driven automations
 on:
   issue_comment:
-    types: [created]
+    types: [ created ]
 
 jobs:
   comment-driven-automation:
@@ -56,7 +56,7 @@ jobs:
       - name: Run command
         env:
           NUMBER: ${{ github.event.issue.number }}
-          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
         run: |
           available_commands="Available commands:
             * \`@opentelemetrybot spotless\` - runs \`./gradlew spotlessApply\`

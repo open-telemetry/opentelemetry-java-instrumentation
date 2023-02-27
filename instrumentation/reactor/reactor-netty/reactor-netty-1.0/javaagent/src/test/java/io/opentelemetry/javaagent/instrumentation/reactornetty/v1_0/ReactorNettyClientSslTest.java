@@ -82,7 +82,7 @@ class ReactorNettyClientSslTest {
                         .hasStatus(StatusData.error())
                         .hasException(thrown),
                 span ->
-                    span.hasName("HTTP GET")
+                    span.hasName("GET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
@@ -148,7 +148,7 @@ class ReactorNettyClientSslTest {
             trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("HTTP GET")
+                    span.hasName("GET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

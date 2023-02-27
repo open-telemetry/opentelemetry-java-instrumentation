@@ -56,7 +56,7 @@ tasks {
       }
     }
     manifest.attributes(
-      "Multi-Release" to "true"
+      "Multi-Release" to "true",
     )
   }
 }

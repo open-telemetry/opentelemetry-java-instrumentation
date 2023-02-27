@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.hikaricp;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchException;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
@@ -52,6 +54,8 @@ public abstract class AbstractHikariInstrumentationTest {
     hikariDataSource.setPoolName("testPool");
     hikariDataSource.setDataSource(dataSourceMock);
     configure(hikariDataSource, null);
+
+    cleanup.deferCleanup(hikariDataSource);
 
     // when
     Connection hikariConnection = hikariDataSource.getConnection();
@@ -125,5 +129,39 @@ public abstract class AbstractHikariInstrumentationTest {
     verify(userMetricsMock, atLeastOnce()).recordConnectionCreatedMillis(anyLong());
     verify(userMetricsMock, atLeastOnce()).recordConnectionAcquiredNanos(anyLong());
     verify(userMetricsMock, atLeastOnce()).recordConnectionUsageMillis(anyLong());
+  }
+
+  @Test
+  void shouldReportTimeouts() throws SQLException {
+    // given
+    when(dataSourceMock.getConnection())
+        .then(
+            invocation -> {
+              TimeUnit.MILLISECONDS.sleep(2_000);
+              throw new SQLException("timed out!");
+            });
+
+    HikariDataSource hikariDataSource = new HikariDataSource();
+    hikariDataSource.setPoolName("timingOutPool");
+    hikariDataSource.setDataSource(dataSourceMock);
+    hikariDataSource.setConnectionTimeout(250 /* millis */);
+    // start the pool without initializing connections
+    hikariDataSource.setInitializationFailTimeout(-1);
+    configure(hikariDataSource, null);
+
+    cleanup.deferCleanup(hikariDataSource);
+
+    // when
+    Exception thrown = catchException(hikariDataSource::getConnection);
+
+    // then
+    assertThat(thrown).isNotNull();
+
+    DbConnectionPoolMetricsAssertions.create(
+            testing(), "io.opentelemetry.hikaricp-3.0", "timingOutPool")
+        .disableMaxIdleConnections()
+        // the connection is not even acquired
+        .disableUseTime()
+        .assertConnectionPoolEmitsMetrics();
   }
 }

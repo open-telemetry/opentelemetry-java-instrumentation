@@ -12,81 +12,82 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum KafkaProducerAttributesGetter
-    implements MessagingAttributesGetter<ProducerRecord<?, ?>, Void> {
+enum KafkaProducerAttributesGetter
+    implements MessagingAttributesGetter<KafkaProducerRequest, RecordMetadata> {
   INSTANCE;
 
   @Override
-  public String system(ProducerRecord<?, ?> producerRecord) {
+  public String getSystem(KafkaProducerRequest request) {
     return "kafka";
   }
 
   @Override
-  public String destinationKind(ProducerRecord<?, ?> producerRecord) {
+  public String getDestinationKind(KafkaProducerRequest request) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Override
-  public String destination(ProducerRecord<?, ?> producerRecord) {
-    return producerRecord.topic();
+  public String getDestination(KafkaProducerRequest request) {
+    return request.getRecord().topic();
   }
 
   @Override
-  public boolean temporaryDestination(ProducerRecord<?, ?> producerRecord) {
+  public boolean isTemporaryDestination(KafkaProducerRequest request) {
     return false;
   }
 
   @Override
   @Nullable
-  public String protocol(ProducerRecord<?, ?> producerRecord) {
+  public String getProtocol(KafkaProducerRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String protocolVersion(ProducerRecord<?, ?> producerRecord) {
+  public String getProtocolVersion(KafkaProducerRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String url(ProducerRecord<?, ?> producerRecord) {
+  public String getUrl(KafkaProducerRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String conversationId(ProducerRecord<?, ?> producerRecord) {
+  public String getConversationId(KafkaProducerRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public Long messagePayloadSize(ProducerRecord<?, ?> producerRecord) {
+  public Long getMessagePayloadSize(KafkaProducerRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public Long messagePayloadCompressedSize(ProducerRecord<?, ?> producerRecord) {
+  public Long getMessagePayloadCompressedSize(KafkaProducerRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String messageId(ProducerRecord<?, ?> producerRecord, @Nullable Void unused) {
+  public String getMessageId(
+      KafkaProducerRequest request, @Nullable RecordMetadata recordMetadata) {
     return null;
   }
 
   @Override
-  public List<String> header(ProducerRecord<?, ?> producerRecord, String name) {
-    return StreamSupport.stream(producerRecord.headers().headers(name).spliterator(), false)
+  public List<String> getMessageHeader(KafkaProducerRequest request, String name) {
+    return StreamSupport.stream(request.getRecord().headers().headers(name).spliterator(), false)
         .map(header -> new String(header.value(), StandardCharsets.UTF_8))
         .collect(Collectors.toList());
   }

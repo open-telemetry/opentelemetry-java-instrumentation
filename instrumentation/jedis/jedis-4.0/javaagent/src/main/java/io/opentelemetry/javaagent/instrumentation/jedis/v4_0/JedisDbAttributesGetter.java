@@ -12,33 +12,33 @@ import javax.annotation.Nullable;
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest> {
 
   @Override
-  public String system(JedisRequest request) {
+  public String getSystem(JedisRequest request) {
     return SemanticAttributes.DbSystemValues.REDIS;
   }
 
   @Override
   @Nullable
-  public String user(JedisRequest request) {
+  public String getUser(JedisRequest request) {
     return null;
   }
 
   @Override
-  public String name(JedisRequest request) {
+  public String getName(JedisRequest request) {
     return null;
   }
 
   @Override
-  public String connectionString(JedisRequest request) {
+  public String getConnectionString(JedisRequest request) {
     return null;
   }
 
   @Override
-  public String statement(JedisRequest request) {
+  public String getStatement(JedisRequest request) {
     return request.getStatement();
   }
 
   @Override
-  public String operation(JedisRequest request) {
+  public String getOperation(JedisRequest request) {
     return request.getOperation();
   }
 }

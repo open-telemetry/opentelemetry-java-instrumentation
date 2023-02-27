@@ -6,10 +6,10 @@ plugins {
   id("otel.spotless-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("org.gradle.playframework") version "0.12"
+  id("org.gradle.playframework") version "0.13"
 }
 
-val playVer = "2.8.18"
+val playVer = "2.8.19"
 val scalaVer = "2.12"
 
 play {

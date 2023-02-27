@@ -1,18 +1,32 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "6.12.0"
+  id("com.diffplug.spotless") version "6.15.0"
 }
 
 spotless {
   java {
     googleJavaFormat()
-    licenseHeaderFile(rootProject.file("../buildscripts/spotless.license.java"), "(package|import|public)")
+    licenseHeaderFile(
+      rootProject.file("../buildscripts/spotless.license.java"),
+      "(package|import|public)"
+    )
     target("src/**/*.java")
   }
   kotlinGradle {
     // not sure why it's not using the indent settings from .editorconfig
-    ktlint().editorConfigOverride(mapOf("indent_size" to "2", "continuation_indent_size" to "2", "disabled_rules" to "no-wildcard-imports"))
+    ktlint().editorConfigOverride(mapOf(
+      "indent_size" to "2",
+      "continuation_indent_size" to "2",
+      "max_line_length" to "160",
+      "ktlint_standard_no-wildcard-imports" to "disabled",
+      // ktlint does not break up long lines, it just fails on them
+      "ktlint_standard_max-line-length" to "disabled",
+      // ktlint makes it *very* hard to locate where this actually happened
+      "ktlint_standard_trailing-comma-on-call-site" to "disabled",
+      // also very hard to find out where this happens
+      "ktlint_standard_wrapping" to "disabled"
+    ))
     target("**/*.gradle.kts")
   }
 }
@@ -38,26 +52,24 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:6.12.0")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:6.15.0")
   implementation("com.google.guava:guava:31.1-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("gradle.plugin.com.github.johnrengelman:shadow:7.1.2")
-  implementation("org.ow2.asm:asm:9.4")
-  implementation("org.ow2.asm:asm-tree:9.4")
-  implementation("org.apache.httpcomponents:httpclient:4.5.13")
-  implementation("org.gradle:test-retry-gradle-plugin:1.4.1")
-  implementation("org.owasp:dependency-check-gradle:7.3.2")
-  implementation("ru.vyarus:gradle-animalsniffer-plugin:1.6.0")
+  implementation("org.apache.httpcomponents:httpclient:4.5.14")
+  implementation("com.gradle.enterprise:com.gradle.enterprise.gradle.plugin:3.12.1")
+  implementation("org.owasp:dependency-check-gradle:8.1.0")
+  implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.0")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.12.19")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.14.0")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.0")
-  implementation("me.champeau.jmh:jmh-gradle-plugin:0.6.8")
+  implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.0")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:3.0.1")
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:1.5.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.1")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.9.1"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.9.2"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
-  testImplementation("org.assertj:assertj-core:3.23.1")
+  testImplementation("org.assertj:assertj-core:3.24.2")
 }

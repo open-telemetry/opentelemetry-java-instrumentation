@@ -5,7 +5,7 @@ rules:
      deployment: param(deployment)
    prefix: wildfly.session.
    type: counter
-   unit: 1
+   unit: "1"
    mapping:
      sessionsCreated:
      activeSessions:
@@ -18,7 +18,7 @@ rules:
      listener: param(http-listener)
    prefix: wildfly.request.
    type: counter
-   unit: 1
+   unit: "1"
    mapping:
      requestCount:
      processingTime:
@@ -42,7 +42,7 @@ rules:
        metricAttribute:
          direction: const(in)
  - bean: jboss.as:subsystem=datasources,data-source=*,statistics=pool
-   unit: 1
+   unit: "1"
    metricAttribute:
      data_source: param(data-source)
    mapping:

@@ -20,6 +20,7 @@ import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import io.opentelemetry.smoketest.AbstractTestContainerManager;
 import io.opentelemetry.smoketest.ResourceMapping;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
+import io.opentelemetry.smoketest.TestContainerManager;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.io.ByteArrayInputStream;
@@ -216,7 +217,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
   private void copyResourceToContainer(
       String containerId, String resourcePath, String containerPath) throws IOException {
     try (InputStream is =
-        Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath)) {
+        TestContainerManager.class.getClassLoader().getResourceAsStream(resourcePath)) {
       copyFileToContainer(containerId, IOUtils.toByteArray(is), containerPath);
     }
   }

@@ -18,36 +18,36 @@ import javax.annotation.Nullable;
 public interface NetServerAttributesGetter<REQUEST> {
 
   @Nullable
-  String transport(REQUEST request);
+  String getTransport(REQUEST request);
 
   @Nullable
-  String hostName(REQUEST request);
+  String getHostName(REQUEST request);
 
   @Nullable
-  Integer hostPort(REQUEST request);
+  Integer getHostPort(REQUEST request);
 
   @Nullable
-  default String sockFamily(REQUEST request) {
+  default String getSockFamily(REQUEST request) {
     return null;
   }
 
   @Nullable
-  default String sockPeerAddr(REQUEST request) {
+  default String getSockPeerAddr(REQUEST request) {
     return null;
   }
 
   @Nullable
-  default Integer sockPeerPort(REQUEST request) {
+  default Integer getSockPeerPort(REQUEST request) {
     return null;
   }
 
   @Nullable
-  default String sockHostAddr(REQUEST request) {
+  default String getSockHostAddr(REQUEST request) {
     return null;
   }
 
   @Nullable
-  default Integer sockHostPort(REQUEST request) {
+  default Integer getSockHostPort(REQUEST request) {
     return null;
   }
 }

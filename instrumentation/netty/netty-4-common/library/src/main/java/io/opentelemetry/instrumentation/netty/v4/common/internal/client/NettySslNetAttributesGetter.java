@@ -17,19 +17,19 @@ final class NettySslNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<NettySslRequest, Void> {
 
   @Override
-  public String transport(NettySslRequest request, @Nullable Void unused) {
+  public String getTransport(NettySslRequest request, @Nullable Void unused) {
     return request.channel() instanceof DatagramChannel ? IP_UDP : IP_TCP;
   }
 
   @Nullable
   @Override
-  public String peerName(NettySslRequest nettySslRequest) {
+  public String getPeerName(NettySslRequest nettySslRequest) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(NettySslRequest nettySslRequest) {
+  public Integer getPeerPort(NettySslRequest nettySslRequest) {
     return null;
   }
 

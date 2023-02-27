@@ -74,8 +74,12 @@ public final class TelemetryDataUtil {
               + " total trace(s): "
               + allTraces);
     }
-    // TODO (trask) is there a better location for this assertion?
-    for (List<SpanData> trace : completeTraces) {
+    return completeTraces;
+  }
+
+  // TODO: we should probably move that to InstrumentationTestRunner once we get rid of all groovy
+  public static void assertScopeVersion(List<List<SpanData>> traces) {
+    for (List<SpanData> trace : traces) {
       for (SpanData span : trace) {
         if (!span.getInstrumentationScopeInfo().getName().equals("test")) {
           assertThat(span.getInstrumentationScopeInfo().getVersion())
@@ -85,7 +89,6 @@ public final class TelemetryDataUtil {
         }
       }
     }
-    return completeTraces;
   }
 
   private static long elapsedSeconds(long startTime) {

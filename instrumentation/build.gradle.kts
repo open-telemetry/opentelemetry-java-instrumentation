@@ -10,7 +10,7 @@ val instrumentationProjectMuzzle = listOf(
   tasks.create("muzzle1"),
   tasks.create("muzzle2"),
   tasks.create("muzzle3"),
-  tasks.create("muzzle4")
+  tasks.create("muzzle4"),
 )
 
 var counter = 0

@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.entry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,55 +27,55 @@ class NetServerAttributesExtractorTest {
       implements NetServerAttributesGetter<Map<String, String>> {
 
     @Override
-    public String transport(Map<String, String> request) {
+    public String getTransport(Map<String, String> request) {
       return request.get("transport");
     }
 
     @Nullable
     @Override
-    public String hostName(Map<String, String> request) {
+    public String getHostName(Map<String, String> request) {
       return request.get("hostName");
     }
 
     @Nullable
     @Override
-    public Integer hostPort(Map<String, String> request) {
+    public Integer getHostPort(Map<String, String> request) {
       String hostPort = request.get("hostPort");
       return hostPort == null ? null : Integer.valueOf(hostPort);
     }
 
     @Nullable
     @Override
-    public String sockFamily(Map<String, String> request) {
+    public String getSockFamily(Map<String, String> request) {
       return request.get("sockFamily");
     }
 
     @Override
-    public String sockPeerAddr(Map<String, String> request) {
+    public String getSockPeerAddr(Map<String, String> request) {
       return request.get("sockPeerAddr");
     }
 
     @Override
-    public Integer sockPeerPort(Map<String, String> request) {
+    public Integer getSockPeerPort(Map<String, String> request) {
       String sockPeerPort = request.get("sockPeerPort");
       return sockPeerPort == null ? null : Integer.valueOf(sockPeerPort);
     }
 
     @Nullable
     @Override
-    public String sockHostAddr(Map<String, String> request) {
+    public String getSockHostAddr(Map<String, String> request) {
       return request.get("sockHostAddr");
     }
 
     @Nullable
     @Override
-    public Integer sockHostPort(Map<String, String> request) {
+    public Integer getSockHostPort(Map<String, String> request) {
       String sockHostPort = request.get("sockHostPort");
       return sockHostPort == null ? null : Integer.valueOf(sockHostPort);
     }
   }
 
-  NetServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+  AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
       NetServerAttributesExtractor.create(new TestNetServerAttributesGetter());
 
   @Test

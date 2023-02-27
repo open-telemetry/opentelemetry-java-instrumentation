@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.SpringWebfluxTest
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory

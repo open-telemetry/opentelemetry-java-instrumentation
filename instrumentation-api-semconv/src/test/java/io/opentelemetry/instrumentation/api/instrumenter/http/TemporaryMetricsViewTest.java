@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyClientDurationAndSizeView;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerDurationAndSizeView;
@@ -39,10 +38,10 @@ class TemporaryMetricsViewTest {
             .put(SemanticAttributes.NET_TRANSPORT, IP_TCP)
             .put(SemanticAttributes.NET_PEER_NAME, "somehost2")
             .put(SemanticAttributes.NET_PEER_PORT, 443)
-            .put("net.sock.family", "inet")
-            .put("net.peer.sock.addr", "1.2.3.4")
-            .put("net.peer.sock.name", "somehost20")
-            .put("net.peer.sock.port", 8080)
+            .put(SemanticAttributes.NET_SOCK_FAMILY, "inet")
+            .put(SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4")
+            .put(SemanticAttributes.NET_SOCK_PEER_NAME, "somehost20")
+            .put(SemanticAttributes.NET_SOCK_PEER_PORT, 8080)
             .build();
 
     assertThat(applyClientDurationAndSizeView(startAttributes, endAttributes))
@@ -52,7 +51,7 @@ class TemporaryMetricsViewTest {
             entry(SemanticAttributes.HTTP_FLAVOR, HTTP_1_1),
             entry(SemanticAttributes.NET_PEER_NAME, "somehost2"),
             entry(SemanticAttributes.NET_PEER_PORT, 443L),
-            entry(stringKey("net.peer.sock.addr"), "1.2.3.4"));
+            entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"));
   }
 
   @Test
@@ -69,11 +68,11 @@ class TemporaryMetricsViewTest {
             .put(SemanticAttributes.NET_TRANSPORT, IP_TCP)
             .put(SemanticAttributes.NET_HOST_NAME, "somehost")
             .put(SemanticAttributes.NET_HOST_PORT, 443)
-            .put("net.sock.family", "inet")
-            .put("net.peer.sock.addr", "1.2.3.4")
-            .put("net.peer.sock.port", 8080)
-            .put("net.host.sock.addr", "4.3.2.1")
-            .put("net.host.sock.port", 9090)
+            .put(SemanticAttributes.NET_SOCK_FAMILY, "inet")
+            .put(SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4")
+            .put(SemanticAttributes.NET_SOCK_PEER_PORT, 8080)
+            .put(SemanticAttributes.NET_SOCK_HOST_ADDR, "4.3.2.1")
+            .put(SemanticAttributes.NET_SOCK_HOST_PORT, 9090)
             .build();
 
     Attributes endAttributes =
@@ -109,11 +108,11 @@ class TemporaryMetricsViewTest {
             .put(SemanticAttributes.NET_TRANSPORT, IP_TCP)
             .put(SemanticAttributes.NET_HOST_NAME, "somehost")
             .put(SemanticAttributes.NET_HOST_PORT, 443)
-            .put("net.sock.family", "inet")
-            .put("net.peer.sock.addr", "1.2.3.4")
-            .put("net.peer.sock.port", 8080)
-            .put("net.host.sock.addr", "4.3.2.1")
-            .put("net.host.sock.port", 9090)
+            .put(SemanticAttributes.NET_SOCK_FAMILY, "inet")
+            .put(SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4")
+            .put(SemanticAttributes.NET_SOCK_PEER_PORT, 8080)
+            .put(SemanticAttributes.NET_SOCK_HOST_ADDR, "4.3.2.1")
+            .put(SemanticAttributes.NET_SOCK_HOST_PORT, 9090)
             .build();
 
     assertThat(applyActiveRequestsView(attributes))
@@ -121,6 +120,7 @@ class TemporaryMetricsViewTest {
             entry(SemanticAttributes.HTTP_METHOD, "GET"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
             entry(SemanticAttributes.HTTP_FLAVOR, HTTP_1_1),
-            entry(SemanticAttributes.NET_HOST_NAME, "somehost"));
+            entry(SemanticAttributes.NET_HOST_NAME, "somehost"),
+            entry(SemanticAttributes.NET_HOST_PORT, 443L));
   }
 }

@@ -48,25 +48,25 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   }
 
   @Override
-  public String system(CommandStartedEvent event) {
+  public String getSystem(CommandStartedEvent event) {
     return SemanticAttributes.DbSystemValues.MONGODB;
   }
 
   @Override
   @Nullable
-  public String user(CommandStartedEvent event) {
+  public String getUser(CommandStartedEvent event) {
     return null;
   }
 
   @Override
   @Nullable
-  public String name(CommandStartedEvent event) {
+  public String getName(CommandStartedEvent event) {
     return event.getDatabaseName();
   }
 
   @Override
   @Nullable
-  public String connectionString(CommandStartedEvent event) {
+  public String getConnectionString(CommandStartedEvent event) {
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription != null) {
       ServerAddress sa = connectionDescription.getServerAddress();
@@ -83,13 +83,13 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   }
 
   @Override
-  public String statement(CommandStartedEvent event) {
+  public String getStatement(CommandStartedEvent event) {
     return sanitizeStatement(event.getCommand());
   }
 
   @Override
   @Nullable
-  public String operation(CommandStartedEvent event) {
+  public String getOperation(CommandStartedEvent event) {
     return event.getCommandName();
   }
 

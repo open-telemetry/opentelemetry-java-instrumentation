@@ -20,20 +20,20 @@ final class NettyNetClientAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<HttpRequestAndChannel, HttpResponse> {
 
   @Override
-  public String transport(
+  public String getTransport(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return requestAndChannel.channel() instanceof DatagramChannel ? IP_UDP : IP_TCP;
   }
 
   @Nullable
   @Override
-  public String peerName(HttpRequestAndChannel requestAndChannel) {
+  public String getPeerName(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(HttpRequestAndChannel requestAndChannel) {
+  public Integer getPeerPort(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 

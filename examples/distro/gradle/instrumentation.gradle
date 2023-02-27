@@ -13,9 +13,9 @@ configurations {
 }
 
 dependencies {
-  compileOnly("io.opentelemetry:opentelemetry-sdk:${versions.opentelemetry}")
-  compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:${versions.opentelemetryJavaagent}")
-  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
+  compileOnly("io.opentelemetry:opentelemetry-sdk")
+  compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
 
   compileOnly deps.bytebuddy
   annotationProcessor deps.autoservice
@@ -24,8 +24,8 @@ dependencies {
   // the javaagent that is going to be used when running instrumentation unit tests
   testAgent(project(path: ":testing:agent-for-testing", configuration: "shadow"))
   // test dependencies
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common:${versions.opentelemetryJavaagentAlpha}")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:${versions.opentelemetry}")
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.assertj:assertj-core:3.19.0")
 
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")

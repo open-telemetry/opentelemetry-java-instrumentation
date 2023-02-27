@@ -9,6 +9,9 @@ on:
       no-build-cache:
         type: boolean
         required: false
+      skip-openj9-tests:
+        type: boolean
+        required: false
       skip-windows-smoke-tests:
         type: boolean
         required: false
@@ -49,7 +52,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: gradle/wrapper-validation-action@v1.0.5
+      - uses: gradle/wrapper-validation-action@v1.0.6
 
   license-check:
     runs-on: ubuntu-latest
@@ -132,6 +135,7 @@ jobs:
           fi
 
   test:
+    name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -143,7 +147,13 @@ jobs:
         vm:
           - hotspot
           - openj9
+        test-partition:
+          - 0
+          - 1
+          - 2
+          - 3
         exclude:
+          - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
           - test-java-version: 19
             vm: openj9
       fail-fast: false
@@ -163,6 +173,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+
+      # vaadin 14 tests fail with node 18
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules
@@ -189,6 +205,7 @@ jobs:
             -PtestJavaVM=${{ matrix.vm }}
             -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
             -Porg.gradle.java.installations.auto-download=false
+            -PtestPartition=${{ matrix.test-partition }}
             ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
           # only push cache for one matrix option since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}

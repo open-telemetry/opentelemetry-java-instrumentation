@@ -45,7 +45,7 @@ public class TestHelperClasses {
 
     Object clone();
 
-    @SuppressWarnings("checkstyle:NoFinalizer")
+    @SuppressWarnings({"checkstyle:NoFinalizer", "Finalize"})
     void finalize();
   }
 

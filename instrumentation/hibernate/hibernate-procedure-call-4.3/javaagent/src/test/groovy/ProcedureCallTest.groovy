@@ -10,7 +10,6 @@ import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
 import org.hibernate.exception.SQLGrammarException
 import org.hibernate.procedure.ProcedureCall
-import org.junit.jupiter.api.Assumptions
 import spock.lang.Shared
 
 import javax.persistence.ParameterMode
@@ -57,16 +56,6 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
     }
   }
 
-  def callProcedure(ProcedureCall call) {
-    try {
-      call.getOutputs()
-    } catch (Exception exception) {
-      // ignore failures on hibernate 6 where this functionality has not been implemented yet
-      Assumptions.assumeFalse("org.hibernate.NotYetImplementedFor6Exception" == exception.getClass().getName())
-      throw exception
-    }
-  }
-
   def "test ProcedureCall"() {
     setup:
 
@@ -75,7 +64,7 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
       session.beginTransaction()
 
       ProcedureCall call = session.createStoredProcedureCall("TEST_PROC")
-      callProcedure(call)
+      call.getOutputs()
 
       session.getTransaction().commit()
       session.close()
@@ -104,7 +93,7 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
           }
         }
         span(2) {
-          name "test"
+          name "CALL test.TEST_PROC"
           kind CLIENT
           childOf span(1)
           attributes {
@@ -113,6 +102,7 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_USER" "sa"
             "$SemanticAttributes.DB_STATEMENT" "{call TEST_PROC()}"
             "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+            "$SemanticAttributes.DB_OPERATION" "CALL"
           }
         }
         span(3) {
@@ -136,10 +126,9 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
 
       ProcedureCall call = session.createStoredProcedureCall("TEST_PROC")
       def parameterRegistration = call.registerParameter("nonexistent", Long, ParameterMode.IN)
-      Assumptions.assumeTrue(parameterRegistration.metaClass.getMetaMethod("bindValue", Object) != null)
       parameterRegistration.bindValue(420L)
       try {
-        callProcedure(call)
+        call.getOutputs()
       } catch (Exception e) {
         // We expected this.
       }

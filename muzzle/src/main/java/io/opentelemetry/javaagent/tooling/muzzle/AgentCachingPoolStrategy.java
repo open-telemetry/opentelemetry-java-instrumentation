@@ -153,7 +153,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     WeakReference<ClassLoader> loaderRef =
         loaderRefCache.computeIfAbsent(classLoader, WeakReference::new);
 
-    int loaderHash = classLoader.hashCode();
+    int loaderHash = System.identityHashCode(classLoader);
     return new SharedResolutionCacheAdapter(loaderHash, loaderRef, sharedResolutionCache);
   }
 
@@ -168,17 +168,19 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
    */
   private static final class TypeCacheKey {
     private final int loaderHash;
-    private final WeakReference<ClassLoader> loaderRef;
+    @Nullable private final WeakReference<ClassLoader> loaderRef;
     private final String className;
 
     private final int hashCode;
 
     TypeCacheKey(int loaderHash, WeakReference<ClassLoader> loaderRef, String className) {
-      this.loaderHash = loaderHash;
-      this.loaderRef = loaderRef;
+      // classes in java package are always loaded from boot loader
+      // set loader to boot loader to avoid creating multiple cache entries
+      this.loaderHash = className.startsWith("java.") ? BOOTSTRAP_HASH : loaderHash;
+      this.loaderRef = className.startsWith("java.") ? null : loaderRef;
       this.className = className;
 
-      hashCode = 31 * loaderHash + className.hashCode();
+      hashCode = 31 * this.loaderHash + className.hashCode();
     }
 
     @Override
@@ -204,6 +206,8 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       // Also covers the bootstrap null loaderRef case
       if (loaderRef == other.loaderRef) {
         return true;
+      } else if (loaderRef == null || other.loaderRef == null) {
+        return false;
       }
 
       // need to perform a deeper loader check -- requires calling Reference.get
@@ -268,14 +272,14 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
     @Override
     public TypePool.Resolution find(String className) {
+      if (OBJECT_NAME.equals(className)) {
+        return OBJECT_RESOLUTION;
+      }
+
       TypePool.Resolution existingResolution =
           sharedResolutionCache.get(new TypeCacheKey(loaderHash, loaderRef, className));
       if (existingResolution != null) {
         return existingResolution;
-      }
-
-      if (OBJECT_NAME.equals(className)) {
-        return OBJECT_RESOLUTION;
       }
 
       return null;
@@ -666,7 +670,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     @Override
     public boolean isAnnotation() {
       // by default byte-buddy checks whether class modifiers have annotation bit set
-      // as we wish to avoid looking up the class bytes we assume that every that was expected
+      // as we wish to avoid looking up the class bytes we assume that every class that was expected
       // to be an annotation really is an annotation and return true here
       // See TypePool.Default.LazyTypeDescription.LazyAnnotationDescription.asList()
       return true;

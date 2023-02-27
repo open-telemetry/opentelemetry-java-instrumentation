@@ -11,14 +11,14 @@ import javax.annotation.Nullable;
 public interface DbClientCommonAttributesGetter<REQUEST> {
 
   @Nullable
-  String system(REQUEST request);
+  String getSystem(REQUEST request);
 
   @Nullable
-  String user(REQUEST request);
+  String getUser(REQUEST request);
 
   @Nullable
-  String name(REQUEST request);
+  String getName(REQUEST request);
 
   @Nullable
-  String connectionString(REQUEST request);
+  String getConnectionString(REQUEST request);
 }

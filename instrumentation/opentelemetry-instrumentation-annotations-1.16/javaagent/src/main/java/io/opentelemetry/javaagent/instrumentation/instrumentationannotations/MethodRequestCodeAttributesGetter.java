@@ -11,12 +11,12 @@ enum MethodRequestCodeAttributesGetter implements CodeAttributesGetter<MethodReq
   INSTANCE;
 
   @Override
-  public Class<?> codeClass(MethodRequest methodRequest) {
+  public Class<?> getCodeClass(MethodRequest methodRequest) {
     return methodRequest.method().getDeclaringClass();
   }
 
   @Override
-  public String methodName(MethodRequest methodRequest) {
+  public String getMethodName(MethodRequest methodRequest) {
     return methodRequest.method().getName();
   }
 }

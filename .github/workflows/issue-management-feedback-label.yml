@@ -1,0 +1,21 @@
+name: Issue management - remove needs feedback label
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  issue_comment:
+    if: >
+      contains(github.event.issue.labels.*.name, 'needs author feedback') &&
+      github.event.comment.user.login == github.event.issue.user.login
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Remove label
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue edit --remove-label "needs author feedback" $ISSUE_NUMBER

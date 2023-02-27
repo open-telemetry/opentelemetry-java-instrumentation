@@ -46,7 +46,8 @@ public class ContextStorageWrappersInstrumentation implements TypeInstrumentatio
         @Advice.Return(readOnly = false)
             List<Function<? super ContextStorage, ? extends ContextStorage>> wrappers) {
       wrappers = new ArrayList<>(wrappers);
-      wrappers.add(AgentContextStorage.wrap());
+      // AgentContextStorage wrapper doesn't delegate, so needs to be the innermost wrapper
+      wrappers.add(0, AgentContextStorage.wrap());
     }
   }
 }

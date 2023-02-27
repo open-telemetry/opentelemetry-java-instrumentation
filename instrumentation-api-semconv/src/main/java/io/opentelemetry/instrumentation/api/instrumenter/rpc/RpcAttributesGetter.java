@@ -17,11 +17,11 @@ import javax.annotation.Nullable;
 public interface RpcAttributesGetter<REQUEST> {
 
   @Nullable
-  String system(REQUEST request);
+  String getSystem(REQUEST request);
 
   @Nullable
-  String service(REQUEST request);
+  String getService(REQUEST request);
 
   @Nullable
-  String method(REQUEST request);
+  String getMethod(REQUEST request);
 }

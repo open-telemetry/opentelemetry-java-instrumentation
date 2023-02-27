@@ -26,12 +26,12 @@ final class ApacheHttpClientHttpAttributesGetter
       Logger.getLogger(ApacheHttpClientHttpAttributesGetter.class.getName());
 
   @Override
-  public String method(HttpRequest request) {
+  public String getMethod(HttpRequest request) {
     return request.getMethod();
   }
 
   @Override
-  public String url(HttpRequest request) {
+  public String getUrl(HttpRequest request) {
     // similar to org.apache.hc.core5.http.message.BasicHttpRequest.getUri()
     // not calling getUri() to avoid unnecessary conversion
     StringBuilder url = new StringBuilder();
@@ -64,18 +64,19 @@ final class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  public List<String> requestHeader(HttpRequest request, String name) {
+  public List<String> getRequestHeader(HttpRequest request, String name) {
     return getHeader(request, name);
   }
 
   @Override
-  public Integer statusCode(HttpRequest request, HttpResponse response, @Nullable Throwable error) {
+  public Integer getStatusCode(
+      HttpRequest request, HttpResponse response, @Nullable Throwable error) {
     return response.getCode();
   }
 
   @Override
   @Nullable
-  public String flavor(HttpRequest request, @Nullable HttpResponse response) {
+  public String getFlavor(HttpRequest request, @Nullable HttpResponse response) {
     ProtocolVersion protocolVersion = getVersion(request, response);
     if (protocolVersion == null) {
       return null;
@@ -100,7 +101,7 @@ final class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  public List<String> responseHeader(HttpRequest request, HttpResponse response, String name) {
+  public List<String> getResponseHeader(HttpRequest request, HttpResponse response, String name) {
     return getHeader(response, name);
   }
 

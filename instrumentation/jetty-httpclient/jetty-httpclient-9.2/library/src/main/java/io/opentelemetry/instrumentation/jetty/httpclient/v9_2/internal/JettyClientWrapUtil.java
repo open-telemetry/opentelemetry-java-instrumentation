@@ -9,6 +9,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,6 +72,8 @@ public final class JettyClientWrapUtil {
             (proxy, method, args) -> {
               try (Scope ignored = context.makeCurrent()) {
                 return method.invoke(listener, args);
+              } catch (InvocationTargetException exception) {
+                throw exception.getCause();
               }
             });
   }

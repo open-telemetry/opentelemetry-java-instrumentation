@@ -108,7 +108,7 @@ public final class DbConnectionPoolMetrics {
   public LongCounter connectionTimeouts() {
     return meter
         .counterBuilder("db.client.connections.timeouts")
-        .setUnit("timeouts")
+        .setUnit("{timeouts}")
         .setDescription(
             "The number of connection timeouts that have occurred trying to obtain a connection from the pool.")
         .build();

@@ -16,19 +16,19 @@ final class ArmeriaNetServerAttributesGetter
     extends InetSocketAddressNetServerAttributesGetter<RequestContext> {
 
   @Override
-  public String transport(RequestContext ctx) {
+  public String getTransport(RequestContext ctx) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable
   @Override
-  public String hostName(RequestContext ctx) {
+  public String getHostName(RequestContext ctx) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer hostPort(RequestContext ctx) {
+  public Integer getHostPort(RequestContext ctx) {
     return null;
   }
 

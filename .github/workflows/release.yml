@@ -110,10 +110,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          sdk_version=$(grep -Po "val otelSdkVersion = \"\K[0-9]+.[0-9]+.[0-9]+" dependencyManagement/build.gradle.kts)
+
           # conditional blocks not indented because of the heredoc
           if [[ $VERSION == *.0 ]]; then
           cat > /tmp/release-notes.txt << EOF
-          This release targets the OpenTelemetry SDK $VERSION.
+          This release targets the OpenTelemetry SDK $sdk_version.
 
           Note that many artifacts have the \`-alpha\` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
 
@@ -195,7 +197,7 @@ jobs:
         env:
           VERSION: ${{ needs.release.outputs.version }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
         run: |
           if git diff --quiet; then
             if [[ $VERSION == *.0 ]]; then
@@ -224,7 +226,7 @@ jobs:
     with:
       version: ${{ needs.release.outputs.version }}
     secrets:
-      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      OPENTELEMETRYBOT_GITHUB_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
 
   create-website-pull-request:
     needs: release
@@ -232,4 +234,4 @@ jobs:
     with:
       version: ${{ needs.release.outputs.version }}
     secrets:
-      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      OPENTELEMETRYBOT_GITHUB_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}

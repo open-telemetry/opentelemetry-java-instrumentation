@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 /**
@@ -21,7 +22,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
  *
  * <p>It sets the same set of attributes as {@link DbClientAttributesExtractor} plus an additional
  * <code>{@linkplain SemanticAttributes#DB_SQL_TABLE db.sql.table}</code> attribute. The raw SQL
- * statements returned by the {@link SqlClientAttributesGetter#rawStatement(Object)} method are
+ * statements returned by the {@link SqlClientAttributesGetter#getRawStatement(Object)} method are
  * sanitized before use, all statement parameters are removed.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
@@ -29,7 +30,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST>> {
 
   /** Creates the SQL client attributes extractor with default configuration. */
-  public static <REQUEST, RESPONSE> SqlClientAttributesExtractor<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       SqlClientAttributesGetter<REQUEST> getter) {
     return SqlClientAttributesExtractor.<REQUEST, RESPONSE>builder(getter).build();
   }
@@ -42,6 +43,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       SqlClientAttributesGetter<REQUEST> getter) {
     return new SqlClientAttributesExtractorBuilder<>(getter);
   }
+
+  private static final String SQL_CALL = "CALL";
 
   private final AttributeKey<String> dbTableAttribute;
   private final SqlStatementSanitizer sanitizer;
@@ -59,9 +62,12 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.rawStatement(request));
+    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.getRawStatement(request));
+    String operation = sanitizedStatement.getOperation();
     internalSet(attributes, SemanticAttributes.DB_STATEMENT, sanitizedStatement.getFullStatement());
-    internalSet(attributes, SemanticAttributes.DB_OPERATION, sanitizedStatement.getOperation());
-    internalSet(attributes, dbTableAttribute, sanitizedStatement.getTable());
+    internalSet(attributes, SemanticAttributes.DB_OPERATION, operation);
+    if (!SQL_CALL.equals(operation)) {
+      internalSet(attributes, dbTableAttribute, sanitizedStatement.getMainIdentifier());
+    }
   }
 }

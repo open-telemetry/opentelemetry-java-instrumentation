@@ -16,18 +16,18 @@ final class PlayWsClientNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<Request, Response> {
 
   @Override
-  public String transport(Request request, @Nullable Response response) {
+  public String getTransport(Request request, @Nullable Response response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable
   @Override
-  public String peerName(Request request) {
+  public String getPeerName(Request request) {
     return request.getUri().getHost();
   }
 
   @Override
-  public Integer peerPort(Request request) {
+  public Integer getPeerPort(Request request) {
     return request.getUri().getPort();
   }
 

@@ -15,7 +15,7 @@ public class CouchbaseNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<CouchbaseRequestInfo, Void> {
   @Nullable
   @Override
-  public String transport(CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
+  public String getTransport(CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
     return couchbaseRequest.getPeerAddress() != null
         ? SemanticAttributes.NetTransportValues.IP_TCP
         : null;
@@ -23,13 +23,13 @@ public class CouchbaseNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(CouchbaseRequestInfo couchbaseRequest) {
+  public String getPeerName(CouchbaseRequestInfo couchbaseRequest) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(CouchbaseRequestInfo couchbaseRequest) {
+  public Integer getPeerPort(CouchbaseRequestInfo couchbaseRequest) {
     return null;
   }
 

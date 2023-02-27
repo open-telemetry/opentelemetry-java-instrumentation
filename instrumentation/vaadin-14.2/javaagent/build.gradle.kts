@@ -77,7 +77,7 @@ configurations {
     named("vaadin142TestRuntimeClasspath"),
     named("vaadin14LatestTestRuntimeClasspath"),
     named("vaadin16TestRuntimeClasspath"),
-    named("latestDepTestRuntimeClasspath")
+    named("latestDepTestRuntimeClasspath"),
   )
     .forEach {
       it.configure {

@@ -16,24 +16,24 @@ final class Vertx4NetAttributesGetter
     implements NetClientAttributesGetter<HttpClientRequest, HttpClientResponse> {
 
   @Override
-  public String transport(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public String getTransport(HttpClientRequest request, @Nullable HttpClientResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable
   @Override
-  public String peerName(HttpClientRequest request) {
+  public String getPeerName(HttpClientRequest request) {
     return request.getHost();
   }
 
   @Override
-  public Integer peerPort(HttpClientRequest request) {
+  public Integer getPeerPort(HttpClientRequest request) {
     return request.getPort();
   }
 
   @Nullable
   @Override
-  public String sockPeerAddr(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public String getSockPeerAddr(HttpClientRequest request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
     }
@@ -43,7 +43,7 @@ final class Vertx4NetAttributesGetter
 
   @Nullable
   @Override
-  public String sockPeerName(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public String getSockPeerName(HttpClientRequest request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
     }
@@ -53,7 +53,7 @@ final class Vertx4NetAttributesGetter
 
   @Nullable
   @Override
-  public Integer sockPeerPort(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public Integer getSockPeerPort(HttpClientRequest request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
     }

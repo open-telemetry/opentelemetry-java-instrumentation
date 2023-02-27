@@ -8,7 +8,14 @@ plugins {
   id("com.bmuschko.docker-remote-api")
 }
 
-data class ImageTarget(val version: List<String>, val vm: List<String>, val jdk: List<String>, val args: Map<String, String> = emptyMap(), val war: String = "servlet-3.0", val windows: Boolean = true)
+data class ImageTarget(
+  val version: List<String>,
+  val vm: List<String>,
+  val jdk: List<String>,
+  val args: Map<String, String> = emptyMap(),
+  val war: String = "servlet-3.0",
+  val windows: Boolean = true
+)
 
 val extraTag = findProperty("extraTag")
   ?: java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(java.time.LocalDateTime.now())
@@ -22,17 +29,19 @@ val targets = mapOf(
     ImageTarget(listOf("10.0.7"), listOf("hotspot"), listOf("11", "17", "19", "20"), mapOf("sourceVersion" to "10.0.7")),
     ImageTarget(listOf("10.0.7"), listOf("openj9"), listOf("11", "17", "18"), mapOf("sourceVersion" to "10.0.7")),
     ImageTarget(listOf("11.0.7"), listOf("hotspot"), listOf("11", "17", "19", "20"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
-    ImageTarget(listOf("11.0.7"), listOf("openj9"), listOf("11", "17", "18"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0")
+    ImageTarget(listOf("11.0.7"), listOf("openj9"), listOf("11", "17", "18"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
   ),
   "liberty" to listOf(
     ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11"), mapOf("release" to "2020-11-11_0736")),
-    // running configure.sh is failing while building the image with Java 19
-    ImageTarget(listOf("21.0.0.10"), listOf("hotspot"), listOf("8", "11", "17"), mapOf("release" to "2021-09-20_1900")),
-    ImageTarget(listOf("21.0.0.10"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "2021-09-20_1900"))
+    ImageTarget(listOf("21.0.0.12"), listOf("hotspot"), listOf("8", "11", "17"), mapOf("release" to "2021-11-17_1256")),
+    ImageTarget(listOf("21.0.0.12"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "2021-11-17_1256")),
+    // Java 19 is not supported until 22.0.0.10
+    ImageTarget(listOf("22.0.0.12"), listOf("hotspot"), listOf("8", "11", "17", "19"), mapOf("release" to "22.0.0.12")),
+    ImageTarget(listOf("22.0.0.12"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "22.0.0.12")),
   ),
   "payara" to listOf(
     ImageTarget(listOf("5.2020.6"), listOf("hotspot", "openj9"), listOf("8", "11")),
-    ImageTarget(listOf("5.2021.8"), listOf("hotspot", "openj9"), listOf("8", "11"))
+    ImageTarget(listOf("5.2021.8"), listOf("hotspot", "openj9"), listOf("8", "11")),
   ),
   "tomcat" to listOf(
     ImageTarget(listOf("7.0.109"), listOf("hotspot", "openj9"), listOf("8"), mapOf("majorVersion" to "7")),
@@ -41,7 +50,7 @@ val targets = mapOf(
     ImageTarget(listOf("9.0.54"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), mapOf("majorVersion" to "9")),
     ImageTarget(listOf("9.0.54"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "9")),
     ImageTarget(listOf("10.0.12"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), mapOf("majorVersion" to "10"), "servlet-5.0"),
-    ImageTarget(listOf("10.0.12"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "10"), "servlet-5.0")
+    ImageTarget(listOf("10.0.12"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "10"), "servlet-5.0"),
   ),
   "tomee" to listOf(
     ImageTarget(listOf("7.0.9"), listOf("hotspot", "openj9"), listOf("8")),
@@ -49,18 +58,18 @@ val targets = mapOf(
     ImageTarget(listOf("8.0.8"), listOf("hotspot"), listOf("8", "11", "17", "19", "20")),
     ImageTarget(listOf("8.0.8"), listOf("openj9"), listOf("8", "11", "17", "18")),
     ImageTarget(listOf("9.0.0-M7"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), war = "servlet-5.0"),
-    ImageTarget(listOf("9.0.0-M7"), listOf("openj9"), listOf("8", "11", "17", "18"), war = "servlet-5.0")
+    ImageTarget(listOf("9.0.0-M7"), listOf("openj9"), listOf("8", "11", "17", "18"), war = "servlet-5.0"),
   ),
   "websphere" to listOf(
     // TODO (trask) this is a recent change, check back in a while and see if it's been fixed
     // 8.5.5.20 only has linux/ppc64le image
-    ImageTarget(listOf("8.5.5.19", "9.0.5.9"), listOf("openj9"), listOf("8"), windows = false)
+    ImageTarget(listOf("8.5.5.19", "9.0.5.9"), listOf("openj9"), listOf("8"), windows = false),
   ),
   "wildfly" to listOf(
     ImageTarget(listOf("13.0.0.Final"), listOf("hotspot", "openj9"), listOf("8")),
     ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "25.0.1.Final"), listOf("hotspot"), listOf("8", "11", "17", "19", "20")),
-    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "25.0.1.Final"), listOf("openj9"), listOf("8", "11", "17", "18"))
-  )
+    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "25.0.1.Final"), listOf("openj9"), listOf("8", "11", "17", "18")),
+  ),
 )
 
 val matrix = mutableListOf<String>()
@@ -112,7 +121,17 @@ tasks {
   }
 }
 
-fun configureImage(parentTask: TaskProvider<out Task>, server: String, dockerfile: String, version: String, vm: String, jdk: String, warProject: String, args: Map<String, String>, isWindows: Boolean): String {
+fun configureImage(
+  parentTask: TaskProvider<out Task>,
+  server: String,
+  dockerfile: String,
+  version: String,
+  vm: String,
+  jdk: String,
+  warProject: String,
+  args: Map<String, String>,
+  isWindows: Boolean
+): String {
   // Using separate build directory for different image
   val dockerWorkingDir = file("$buildDir/docker-$server-$version-jdk$jdk-$vm-$warProject")
   val dockerFileName = "$dockerfile.${if (isWindows) "windows." else ""}dockerfile"

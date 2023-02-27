@@ -19,19 +19,19 @@ public final class DubboNetServerAttributesGetter
 
   @Override
   @Nullable
-  public String transport(DubboRequest request) {
+  public String getTransport(DubboRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String hostName(DubboRequest request) {
+  public String getHostName(DubboRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer hostPort(DubboRequest request) {
+  public Integer getHostPort(DubboRequest request) {
     return null;
   }
 

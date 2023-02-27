@@ -57,7 +57,7 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
 
     if (response != null) {
-      Integer statusCode = getter.statusCode(request, response, error);
+      Integer statusCode = getter.getStatusCode(request, response, error);
       if (statusCode != null) {
         StatusCode statusCodeObj = statusConverter.statusFromHttpStatus(statusCode);
         if (statusCodeObj == StatusCode.ERROR) {

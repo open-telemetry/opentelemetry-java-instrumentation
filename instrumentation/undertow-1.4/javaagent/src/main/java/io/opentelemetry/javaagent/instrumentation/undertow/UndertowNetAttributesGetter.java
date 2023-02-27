@@ -15,19 +15,19 @@ public class UndertowNetAttributesGetter
     extends InetSocketAddressNetServerAttributesGetter<HttpServerExchange> {
 
   @Override
-  public String transport(HttpServerExchange exchange) {
+  public String getTransport(HttpServerExchange exchange) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable
   @Override
-  public String hostName(HttpServerExchange exchange) {
+  public String getHostName(HttpServerExchange exchange) {
     return exchange.getHostName();
   }
 
   @Nullable
   @Override
-  public Integer hostPort(HttpServerExchange exchange) {
+  public Integer getHostPort(HttpServerExchange exchange) {
     return exchange.getHostPort();
   }
 

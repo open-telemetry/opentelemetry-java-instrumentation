@@ -14,18 +14,18 @@ public class LibertyDispatcherHttpAttributesGetter
 
   @Override
   @Nullable
-  public String method(LibertyRequest libertyRequest) {
+  public String getMethod(LibertyRequest libertyRequest) {
     return libertyRequest.getMethod();
   }
 
   @Override
-  public List<String> requestHeader(LibertyRequest libertyRequest, String name) {
+  public List<String> getRequestHeader(LibertyRequest libertyRequest, String name) {
     return libertyRequest.getHeaderValues(name);
   }
 
   @Override
   @Nullable
-  public String flavor(LibertyRequest libertyRequest) {
+  public String getFlavor(LibertyRequest libertyRequest) {
     String flavor = libertyRequest.getProtocol();
     if (flavor != null) {
       // remove HTTP/ prefix to comply with semantic conventions
@@ -38,20 +38,20 @@ public class LibertyDispatcherHttpAttributesGetter
 
   @Override
   @Nullable
-  public Integer statusCode(
+  public Integer getStatusCode(
       LibertyRequest libertyRequest, LibertyResponse libertyResponse, @Nullable Throwable error) {
     return libertyResponse.getStatus();
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       LibertyRequest libertyRequest, LibertyResponse libertyResponse, String name) {
     return libertyResponse.getHeaderValues(name);
   }
 
   @Override
   @Nullable
-  public String target(LibertyRequest libertyRequest) {
+  public String getTarget(LibertyRequest libertyRequest) {
     String requestUri = libertyRequest.getRequestUri();
     String queryString = libertyRequest.getQueryString();
     if (queryString != null && !queryString.isEmpty()) {
@@ -62,13 +62,7 @@ public class LibertyDispatcherHttpAttributesGetter
 
   @Override
   @Nullable
-  public String scheme(LibertyRequest libertyRequest) {
+  public String getScheme(LibertyRequest libertyRequest) {
     return libertyRequest.getScheme();
-  }
-
-  @Override
-  @Nullable
-  public String route(LibertyRequest libertyRequest) {
-    return null;
   }
 }

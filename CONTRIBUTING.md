@@ -8,7 +8,7 @@ and discuss your ideas or propose the changes you wish to make.
 
 ## Building
 
-In order to build and test this whole repository you need JDK 11+.
+In order to build and test this whole repository you need JDK 17 or higher.
 
 Some instrumentations and tests may put constraints on which java versions they support.
 See [Running the tests](./docs/contributing/running-tests.md) for more details.
@@ -22,7 +22,7 @@ the Sonatype OSS snapshots repository at `https://oss.sonatype.org/content/repos
 
 ### Building from source
 
-Build using Java 11+:
+Build using Java 17+:
 
 ```bash
 java -version

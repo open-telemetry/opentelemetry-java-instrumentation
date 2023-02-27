@@ -75,7 +75,7 @@ class KtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
             call.respondText(
               call.parameters["id"]
                 ?: "",
-              status = HttpStatusCode.fromValue(ServerEndpoint.PATH_PARAM.status)
+              status = HttpStatusCode.fromValue(ServerEndpoint.PATH_PARAM.status),
             )
           }
         }

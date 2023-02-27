@@ -20,14 +20,16 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
   // Attributes that always exist in a request
 
   @Nullable
-  String flavor(REQUEST request);
+  String getFlavor(REQUEST request);
 
   @Nullable
-  String target(REQUEST request);
+  String getTarget(REQUEST request);
 
   @Nullable
-  String route(REQUEST request);
+  default String getRoute(REQUEST request) {
+    return null;
+  }
 
   @Nullable
-  String scheme(REQUEST request);
+  String getScheme(REQUEST request);
 }

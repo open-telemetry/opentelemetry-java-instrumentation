@@ -23,7 +23,7 @@ class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecificat
   @Unroll
   def "span named '#paramName' from annotations on class '#className' when is not root span"() {
     setup:
-    runWithHttpServerSpan("test") {
+    runWithHttpServerSpan {
       obj.call()
     }
 
@@ -31,10 +31,11 @@ class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecificat
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name paramName
+          name "GET " + paramName
           kind SERVER
           hasNoParent()
           attributes {
+            "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_ROUTE" paramName
           }
         }
@@ -50,7 +51,7 @@ class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecificat
     }
 
     when: "multiple calls to the same method"
-    runWithHttpServerSpan("test") {
+    runWithHttpServerSpan {
       (1..10).each {
         obj.call()
       }
@@ -112,7 +113,7 @@ class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecificat
 
   def "no annotations has no effect"() {
     setup:
-    runWithHttpServerSpan("test") {
+    runWithHttpServerSpan {
       obj.call()
     }
 
@@ -120,9 +121,10 @@ class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecificat
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "test"
+          name "GET"
           kind SERVER
           attributes {
+            "$SemanticAttributes.HTTP_METHOD" "GET"
           }
         }
       }

@@ -17,8 +17,8 @@ import javax.annotation.Nullable;
 public interface CodeAttributesGetter<REQUEST> {
 
   @Nullable
-  Class<?> codeClass(REQUEST request);
+  Class<?> getCodeClass(REQUEST request);
 
   @Nullable
-  String methodName(REQUEST request);
+  String getMethodName(REQUEST request);
 }

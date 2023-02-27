@@ -57,7 +57,7 @@ class CouchbaseClient316Test extends AgentInstrumentationSpecification {
     }
 
     then:
-    assertTraces(1) {
+    assertTracesWithoutScopeVersionVerification(1) {
       trace(0, 2) {
         span(0) {
           name(~/.*get/)

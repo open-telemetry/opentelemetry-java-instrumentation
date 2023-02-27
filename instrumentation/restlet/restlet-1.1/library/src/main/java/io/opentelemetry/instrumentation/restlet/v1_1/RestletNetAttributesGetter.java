@@ -15,38 +15,38 @@ import org.restlet.data.Request;
 final class RestletNetAttributesGetter implements NetServerAttributesGetter<Request> {
 
   @Override
-  public String transport(Request request) {
+  public String getTransport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable
   @Override
-  public String hostName(Request request) {
+  public String getHostName(Request request) {
     HttpCall call = httpCall(request);
     return call == null ? null : call.getHostDomain();
   }
 
   @Nullable
   @Override
-  public Integer hostPort(Request request) {
+  public Integer getHostPort(Request request) {
     HttpCall call = httpCall(request);
     return call == null ? null : call.getServerPort();
   }
 
   @Override
   @Nullable
-  public String sockPeerAddr(Request request) {
+  public String getSockPeerAddr(Request request) {
     return request.getClientInfo().getAddress();
   }
 
   @Override
-  public Integer sockPeerPort(Request request) {
+  public Integer getSockPeerPort(Request request) {
     return request.getClientInfo().getPort();
   }
 
   @Nullable
   @Override
-  public String sockHostAddr(Request request) {
+  public String getSockHostAddr(Request request) {
     HttpCall call = httpCall(request);
     return call == null ? null : call.getServerAddress();
   }

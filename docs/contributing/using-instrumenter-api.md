@@ -139,7 +139,7 @@ the `Instrumenter`. You can do this in two ways:
 
 If the `Instrumenter` adheres to a specific OpenTelemetry schema, you can set the schema URL using
 the `setSchemaUrl()` method on the `InstrumenterBuilder`. To learn more about the OpenTelemetry
-schemas [see the Overview](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/schemas/overview.md).
+schemas [see the Overview](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/schemas/README.md).
 
 ### Name the spans using the `SpanNameExtractor`
 

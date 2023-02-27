@@ -71,7 +71,8 @@ public final class NettyClientTelemetry {
    * Propagate the {@link Context} to the {@link Channel}. This MUST be called before each HTTP
    * request executed on a {@link Channel}.
    */
+  // TODO (trask) rename to setParentContext()?
   public static void setChannelContext(Channel channel, Context context) {
-    channel.attr(AttributeKeys.WRITE_CONTEXT).set(context);
+    channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(context);
   }
 }

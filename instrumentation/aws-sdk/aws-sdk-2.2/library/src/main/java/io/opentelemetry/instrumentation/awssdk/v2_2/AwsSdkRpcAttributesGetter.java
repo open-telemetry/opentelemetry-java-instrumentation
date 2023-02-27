@@ -13,17 +13,17 @@ enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<ExecutionAttribute
   INSTANCE;
 
   @Override
-  public String system(ExecutionAttributes request) {
+  public String getSystem(ExecutionAttributes request) {
     return "aws-api";
   }
 
   @Override
-  public String service(ExecutionAttributes request) {
+  public String getService(ExecutionAttributes request) {
     return request.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
   }
 
   @Override
-  public String method(ExecutionAttributes request) {
+  public String getMethod(ExecutionAttributes request) {
     return request.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
   }
 }

@@ -55,6 +55,14 @@ class Tomcat8Jdk8Openj9 extends TomcatSmokeTest {
 class Tomcat8Jdk11Openj9 extends TomcatSmokeTest {
 }
 
+@AppServer(version = "8.5.72", jdk = "17-openj9")
+class Tomcat8Jdk17Openj9 extends TomcatSmokeTest {
+}
+
+@AppServer(version = "8.5.72", jdk = "18-openj9")
+class Tomcat8Jdk18Openj9 extends TomcatSmokeTest {
+}
+
 @AppServer(version = "9.0.54", jdk = "8")
 class Tomcat9Jdk8 extends TomcatSmokeTest {
 }
@@ -83,6 +91,14 @@ class Tomcat9Jdk8Openj9 extends TomcatSmokeTest {
 class Tomcat9Jdk11Openj9 extends TomcatSmokeTest {
 }
 
+@AppServer(version = "9.0.54", jdk = "17-openj9")
+class Tomcat9Jdk17Openj9 extends TomcatSmokeTest {
+}
+
+@AppServer(version = "9.0.54", jdk = "18-openj9")
+class Tomcat9Jdk18Openj9 extends TomcatSmokeTest {
+}
+
 @AppServer(version = "10.0.12", jdk = "8")
 class Tomcat10Jdk8 extends TomcatSmokeTest {
 }
@@ -109,4 +125,12 @@ class Tomcat10Jdk8Openj9 extends TomcatSmokeTest {
 
 @AppServer(version = "10.0.12", jdk = "11-openj9")
 class Tomcat10Jdk11Openj9 extends TomcatSmokeTest {
+}
+
+@AppServer(version = "10.0.12", jdk = "17-openj9")
+class Tomcat10Jdk17Openj9 extends TomcatSmokeTest {
+}
+
+@AppServer(version = "10.0.12", jdk = "18-openj9")
+class Tomcat10Jdk18Openj9 extends TomcatSmokeTest {
 }

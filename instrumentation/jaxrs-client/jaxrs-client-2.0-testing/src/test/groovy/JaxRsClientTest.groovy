@@ -5,7 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
@@ -57,7 +57,7 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
   }
 
   @Override
-  void sendRequestWithCallback(Invocation.Builder request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
+  void sendRequestWithCallback(Invocation.Builder request, String method, URI uri, Map<String, String> headers, HttpClientResult requestResult) {
     def body = BODY_METHODS.contains(method) ? Entity.text("") : null
 
     request.async().method(method, (Entity) body, new InvocationCallback<Response>() {
@@ -104,7 +104,7 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
       trace(0, 2) {
         span(0) {
           hasNoParent()
-          name "HTTP $method"
+          name "$method"
           kind CLIENT
           status ERROR
           attributes {

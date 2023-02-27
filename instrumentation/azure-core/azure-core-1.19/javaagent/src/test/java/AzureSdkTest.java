@@ -46,7 +46,7 @@ class AzureSdkTest {
     Context context = TracerProxy.start("hello", Context.NONE);
     TracerProxy.end(200, null, context);
 
-    testing.waitAndAssertTraces(
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->

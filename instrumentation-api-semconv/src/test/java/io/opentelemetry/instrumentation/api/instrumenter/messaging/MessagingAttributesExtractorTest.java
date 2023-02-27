@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,7 +51,7 @@ class MessagingAttributesExtractorTest {
     request.put("payloadSize", "100");
     request.put("payloadCompressedSize", "10");
 
-    MessagingAttributesExtractor<Map<String, String>, String> underTest =
+    AttributesExtractor<Map<String, String>, String> underTest =
         MessagingAttributesExtractor.create(TestGetter.INSTANCE, operation);
 
     Context context = Context.root();
@@ -66,12 +67,12 @@ class MessagingAttributesExtractorTest {
     List<MapEntry<AttributeKey<?>, Object>> expectedEntries = new ArrayList<>();
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_SYSTEM, "myQueue"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION, expectedDestination));
+    expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_NAME, expectedDestination));
     if (temporary) {
-      expectedEntries.add(entry(SemanticAttributes.MESSAGING_TEMP_DESTINATION, true));
+      expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true));
     }
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_PROTOCOL, "AMQP"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_PROTOCOL_VERSION, "1.0.0"));
+    expectedEntries.add(entry(SemanticAttributes.NET_APP_PROTOCOL_NAME, "AMQP"));
+    expectedEntries.add(entry(SemanticAttributes.NET_APP_PROTOCOL_VERSION, "1.0.0"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_URL, "http://broker/topic"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_CONVERSATION_ID, "42"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 100L));
@@ -97,7 +98,7 @@ class MessagingAttributesExtractorTest {
   @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // given
-    MessagingAttributesExtractor<Map<String, String>, String> underTest =
+    AttributesExtractor<Map<String, String>, String> underTest =
         MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessageOperation.SEND);
 
     Context context = Context.root();
@@ -119,59 +120,59 @@ class MessagingAttributesExtractorTest {
     INSTANCE;
 
     @Override
-    public String system(Map<String, String> request) {
+    public String getSystem(Map<String, String> request) {
       return request.get("system");
     }
 
     @Override
-    public String destinationKind(Map<String, String> request) {
+    public String getDestinationKind(Map<String, String> request) {
       return request.get("destinationKind");
     }
 
     @Override
-    public String destination(Map<String, String> request) {
+    public String getDestination(Map<String, String> request) {
       return request.get("destination");
     }
 
     @Override
-    public boolean temporaryDestination(Map<String, String> request) {
+    public boolean isTemporaryDestination(Map<String, String> request) {
       return request.containsKey("temporaryDestination");
     }
 
     @Override
-    public String protocol(Map<String, String> request) {
+    public String getProtocol(Map<String, String> request) {
       return request.get("protocol");
     }
 
     @Override
-    public String protocolVersion(Map<String, String> request) {
+    public String getProtocolVersion(Map<String, String> request) {
       return request.get("protocolVersion");
     }
 
     @Override
-    public String url(Map<String, String> request) {
+    public String getUrl(Map<String, String> request) {
       return request.get("url");
     }
 
     @Override
-    public String conversationId(Map<String, String> request) {
+    public String getConversationId(Map<String, String> request) {
       return request.get("conversationId");
     }
 
     @Override
-    public Long messagePayloadSize(Map<String, String> request) {
+    public Long getMessagePayloadSize(Map<String, String> request) {
       String payloadSize = request.get("payloadSize");
       return payloadSize == null ? null : Long.valueOf(payloadSize);
     }
 
     @Override
-    public Long messagePayloadCompressedSize(Map<String, String> request) {
+    public Long getMessagePayloadCompressedSize(Map<String, String> request) {
       String payloadSize = request.get("payloadCompressedSize");
       return payloadSize == null ? null : Long.valueOf(payloadSize);
     }
 
     @Override
-    public String messageId(Map<String, String> request, String response) {
+    public String getMessageId(Map<String, String> request, String response) {
       return response;
     }
   }

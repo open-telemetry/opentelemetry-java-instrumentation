@@ -41,7 +41,7 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
   }
 
   @Override
-  protected final HttpRequest buildRequest(String method, URI uri, Map<String, String> headers)
+  public HttpRequest buildRequest(String method, URI uri, Map<String, String> headers)
       throws Exception {
     GenericUrl genericUrl = new GenericUrl(uri);
 
@@ -65,8 +65,8 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
   }
 
   @Override
-  protected final int sendRequest(
-      HttpRequest request, String method, URI uri, Map<String, String> headers) throws Exception {
+  public int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers)
+      throws Exception {
     HttpResponse response = sendRequest(request);
     // read request body to avoid broken pipe errors on the server side
     response.parseAsString();
@@ -113,16 +113,16 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     // executeAsync does not actually allow asynchronous execution since it returns a standard
     // Future which cannot have callbacks attached. We instrument execute and executeAsync
     // differently so test both but do not need to run our normal asynchronous tests, which check
     // context propagation, as there is no possible context propagation.
-    options.disableTestCallback();
+    optionsBuilder.disableTestCallback();
 
-    options.enableTestReadTimeout();
+    optionsBuilder.enableTestReadTimeout();
 
     // Circular redirects don't throw an exception with Google Http Client
-    options.disableTestCircularRedirects();
+    optionsBuilder.disableTestCircularRedirects();
   }
 }

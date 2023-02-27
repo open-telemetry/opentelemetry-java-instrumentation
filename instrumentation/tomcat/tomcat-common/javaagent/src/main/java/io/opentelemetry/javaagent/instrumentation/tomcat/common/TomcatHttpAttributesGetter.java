@@ -18,13 +18,13 @@ import org.apache.tomcat.util.buf.MessageBytes;
 public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
 
   @Override
-  public String method(Request request) {
+  public String getMethod(Request request) {
     return messageBytesToString(request.method());
   }
 
   @Override
   @Nullable
-  public String target(Request request) {
+  public String getTarget(Request request) {
     String target = messageBytesToString(request.requestURI());
     String queryString = messageBytesToString(request.queryString());
     if (queryString != null) {
@@ -35,19 +35,19 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
 
   @Override
   @Nullable
-  public String scheme(Request request) {
+  public String getScheme(Request request) {
     MessageBytes schemeMessageBytes = request.scheme();
     return schemeMessageBytes.isNull() ? "http" : messageBytesToString(schemeMessageBytes);
   }
 
   @Override
-  public List<String> requestHeader(Request request, String name) {
+  public List<String> getRequestHeader(Request request, String name) {
     return Collections.list(request.getMimeHeaders().values(name));
   }
 
   @Override
   @Nullable
-  public String flavor(Request request) {
+  public String getFlavor(Request request) {
     String flavor = messageBytesToString(request.protocol());
     if (flavor != null) {
       // remove HTTP/ prefix to comply with semantic conventions
@@ -60,18 +60,12 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
 
   @Override
   @Nullable
-  public Integer statusCode(Request request, Response response, @Nullable Throwable error) {
+  public Integer getStatusCode(Request request, Response response, @Nullable Throwable error) {
     return response.getStatus();
   }
 
   @Override
-  public List<String> responseHeader(Request request, Response response, String name) {
+  public List<String> getResponseHeader(Request request, Response response, String name) {
     return Collections.list(response.getMimeHeaders().values(name));
-  }
-
-  @Override
-  @Nullable
-  public String route(Request request) {
-    return null;
   }
 }

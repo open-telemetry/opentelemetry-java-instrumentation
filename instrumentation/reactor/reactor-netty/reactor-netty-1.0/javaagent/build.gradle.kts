@@ -6,14 +6,14 @@ muzzle {
   pass {
     group.set("io.projectreactor.netty")
     module.set("reactor-netty")
-    versions.set("[1.0.0,1.1.0)")
+    versions.set("[1.0.0,)")
     assertInverse.set(true)
     excludeInstrumentationName("netty")
   }
   pass {
     group.set("io.projectreactor.netty")
     module.set("reactor-netty-http")
-    versions.set("[1.0.0,1.1.0)")
+    versions.set("[1.0.0,)")
     assertInverse.set(true)
     excludeInstrumentationName("netty")
   }

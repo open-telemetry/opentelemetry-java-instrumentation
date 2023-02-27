@@ -16,7 +16,7 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
   // Attributes that always exist in a request
 
   @Nullable
-  String method(REQUEST request);
+  String getMethod(REQUEST request);
 
   /**
    * Extracts all values of header named {@code name} from the request, or an empty list if there
@@ -25,7 +25,7 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    * <p>Implementations of this method <b>must not</b> return a null value; an empty list should be
    * returned instead.
    */
-  List<String> requestHeader(REQUEST request, String name);
+  List<String> getRequestHeader(REQUEST request, String name);
 
   // Attributes which are not always available when the request is ready.
 
@@ -36,7 +36,7 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    * {@code response} is non-{@code null}.
    */
   @Nullable
-  Integer statusCode(REQUEST request, RESPONSE response, @Nullable Throwable error);
+  Integer getStatusCode(REQUEST request, RESPONSE response, @Nullable Throwable error);
 
   /**
    * Extracts all values of header named {@code name} from the response, or an empty list if there
@@ -48,5 +48,5 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    * <p>Implementations of this method <b>must not</b> return a null value; an empty list should be
    * returned instead.
    */
-  List<String> responseHeader(REQUEST request, RESPONSE response, String name);
+  List<String> getResponseHeader(REQUEST request, RESPONSE response, String name);
 }

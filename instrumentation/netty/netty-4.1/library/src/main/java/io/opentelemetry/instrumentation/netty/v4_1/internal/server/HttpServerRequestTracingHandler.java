@@ -24,7 +24,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
  */
 public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapter {
 
-  static final AttributeKey<HttpRequestAndChannel> HTTP_REQUEST =
+  static final AttributeKey<HttpRequestAndChannel> HTTP_SERVER_REQUEST =
       AttributeKey.valueOf(HttpServerRequestTracingHandler.class, "http-server-request");
 
   private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
@@ -35,18 +35,18 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
   }
 
   @Override
-  public void channelRead(ChannelHandlerContext ctx, Object msg) {
+  public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     Channel channel = ctx.channel();
     Attribute<Context> contextAttr = channel.attr(AttributeKeys.SERVER_CONTEXT);
-    Attribute<HttpRequestAndChannel> requestAttr = channel.attr(HTTP_REQUEST);
+    Attribute<HttpRequestAndChannel> requestAttr = channel.attr(HTTP_SERVER_REQUEST);
 
     if (!(msg instanceof HttpRequest)) {
       Context serverContext = contextAttr.get();
       if (serverContext == null) {
-        ctx.fireChannelRead(msg);
+        super.channelRead(ctx, msg);
       } else {
         try (Scope ignored = serverContext.makeCurrent()) {
-          ctx.fireChannelRead(msg);
+          super.channelRead(ctx, msg);
         }
       }
       return;
@@ -59,7 +59,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     HttpRequestAndChannel request = HttpRequestAndChannel.create((HttpRequest) msg, channel);
 
     if (!instrumenter.shouldStart(parentContext, request)) {
-      ctx.fireChannelRead(msg);
+      super.channelRead(ctx, msg);
       return;
     }
 
@@ -68,7 +68,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     requestAttr.set(request);
 
     try (Scope ignored = context.makeCurrent()) {
-      ctx.fireChannelRead(msg);
+      super.channelRead(ctx, msg);
       // the span is ended normally in HttpServerResponseTracingHandler
     } catch (Throwable throwable) {
       // make sure to remove the server context on end() call

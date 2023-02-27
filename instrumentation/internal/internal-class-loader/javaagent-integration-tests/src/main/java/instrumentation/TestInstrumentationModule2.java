@@ -33,7 +33,7 @@ public class TestInstrumentationModule2 extends InstrumentationModule {
 
   @Override
   public boolean isHelperClass(String className) {
-    return "instrumentation.TestFailableCallable".equals(className);
+    return className.equals("instrumentation.TestFailableCallable");
   }
 
   public static class TestTypeInstrumentation implements TypeInstrumentation {
