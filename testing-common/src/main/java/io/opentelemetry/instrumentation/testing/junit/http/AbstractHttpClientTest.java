@@ -914,11 +914,17 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               }
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_USER_AGENT)) {
                 String userAgent = options.getUserAgent();
-                if (userAgent != null) {
+                if (userAgent != null || attrs.get(SemanticAttributes.HTTP_USER_AGENT) != null) {
                   assertThat(attrs)
                       .hasEntrySatisfying(
                           SemanticAttributes.HTTP_USER_AGENT,
-                          actual -> assertThat(actual).startsWith(userAgent));
+                          actual -> {
+                            if (userAgent != null) {
+                              assertThat(actual).startsWith(userAgent);
+                            } else {
+                              assertThat(actual).isNull();
+                            }
+                          });
                 }
               }
               if (attrs.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH) != null) {

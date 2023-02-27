@@ -12,19 +12,14 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import java.net.URI;
 import java.util.Map;
 import jodd.http.HttpRequest;
-import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
 
+  private static final String USER_AGENT = "Jodd HTTP";
+
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
-
-  @Nullable
-  @Override
-  protected String userAgent() {
-    return "Jodd HTTP";
-  }
 
   @Override
   public HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -34,7 +29,7 @@ public class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
             .set(uri.toString())
             .followRedirects(true)
             .connectionKeepAlive(true)
-            .header("user-agent", userAgent());
+            .header("user-agent", USER_AGENT);
     for (Map.Entry<String, String> header : headers.entrySet()) {
       request.headerOverwrite(header.getKey(), header.getValue());
     }
@@ -45,8 +40,7 @@ public class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
   }
 
   @Override
-  public int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers)
-      throws Exception {
+  public int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers) {
     request.method(method).set(uri.toString());
     for (Map.Entry<String, String> header : headers.entrySet()) {
       request.headerOverwrite(header.getKey(), header.getValue());
@@ -60,5 +54,6 @@ public class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
     optionsBuilder.disableTestCallback();
     // Circular Redirects are not explicitly handled by jodd-http
     optionsBuilder.disableTestCircularRedirects();
+    optionsBuilder.setUserAgent(USER_AGENT);
   }
 }
