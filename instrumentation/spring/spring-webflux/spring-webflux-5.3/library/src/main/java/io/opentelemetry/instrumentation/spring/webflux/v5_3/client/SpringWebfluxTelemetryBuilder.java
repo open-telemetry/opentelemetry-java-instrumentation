@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_0.client;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3.client;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient;
 
@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.spring.webflux.v5_0.client.internal.SpringWebfluxNetAttributesGetter;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.client.internal.SpringWebfluxNetAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -96,7 +96,7 @@ public final class SpringWebfluxTelemetryBuilder {
     InstrumenterBuilder<ClientRequest, ClientResponse> builder =
         Instrumenter.<ClientRequest, ClientResponse>builder(
                 openTelemetry,
-                "io.opentelemetry.spring-webflux-5.0",
+                "io.opentelemetry.spring-webflux-5.3",
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())

@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.webflux.v5_0.client.SpringWebfluxTelemetry;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.client.SpringWebfluxTelemetry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.web.reactive.function.client.WebClient;

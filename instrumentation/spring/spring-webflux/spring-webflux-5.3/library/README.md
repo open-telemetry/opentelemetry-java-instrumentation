@@ -2,34 +2,14 @@
 
 Provides OpenTelemetry instrumentation for Spring's `WebClient` and Webflux server.
 
-For the `WebClient` instrumentation, the minimum supported version of Spring Webflux is 5.0, and
-so this instrumentation can be found in the `opentelemetry-spring-webflux-5.0` module.
-For the Webflux server instrumentation, the minimum supported version is 5.3, and so it can be
-found it the `opentelemetry-spring-webflux-5.3` module.
-You may use one or both of these packages at the same time as you wish.
+For this instrumentation, the minimum supported version of Spring Webflux is 5.3.0.
 
 ## Add dependencies to your project
-
-Replace `SPRING_VERSION` with the version of spring you're using
-(Minimum 5.3, or 5.0 if only using client instrumentation).
-
-Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-spring-webflux-5.0)
-.
 
 For Maven, add to your `pom.xml`:
 
 ```xml
-
 <dependencies>
-  <!-- OpenTelemetry WebClient instrumentation -->
-  <dependency>
-    <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-spring-webflux-5.0</artifactId>
-    <version>OPENTELEMETRY_VERSION</version>
-  </dependency>
-
-  <!-- OpenTelemetry Webflux server instrumentation -->
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-spring-webflux-5.3</artifactId>
@@ -48,10 +28,6 @@ For Maven, add to your `pom.xml`:
 For Gradle, add to your dependencies:
 
 ```groovy
-// OpenTelemetry WebClient instrumentation
-implementation("io.opentelemetry.instrumentation:opentelemetry-spring-webflux-5.0:OPENTELEMETRY_VERSION")
-
-// OpenTelemetry Webflux server instrumentation
 implementation("io.opentelemetry.instrumentation:opentelemetry-spring-webflux-5.3:OPENTELEMETRY_VERSION")
 
 // this artifact should already be present in your application
@@ -69,7 +45,7 @@ interface. An example is shown below:
 ##### Usage
 
 ```java
-import io.opentelemetry.instrumentation.spring.webflux.v5_0.client.SpringWebfluxTelemetry;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.client.SpringWebfluxTelemetry;
 
 @Configuration
 public class WebClientConfig {
