@@ -20,7 +20,10 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation("io.projectreactor:reactor-core:3.4.21")
-  testImplementation(project(":instrumentation:cassandra:testing"))
+  testImplementation(project(":instrumentation:cassandra:cassandra-4.4:testing"))
+
+  testInstrumentation(project(":instrumentation:cassandra:cassandra-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:cassandra:cassandra-4.0:javaagent"))
 }
 
 tasks {

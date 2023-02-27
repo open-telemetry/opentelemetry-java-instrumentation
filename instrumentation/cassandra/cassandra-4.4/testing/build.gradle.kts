@@ -5,6 +5,7 @@ plugins {
 dependencies {
   api(project(":testing-common"))
 
-  implementation("org.testcontainers:testcontainers:1.17.5")
   implementation("com.datastax.oss:java-driver-core:4.4.0")
+
+  api(project(":instrumentation:cassandra:cassandra-4-common:testing"))
 }

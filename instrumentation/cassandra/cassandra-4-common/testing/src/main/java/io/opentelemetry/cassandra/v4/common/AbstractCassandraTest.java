@@ -1,7 +1,4 @@
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
+package io.opentelemetry.cassandra.v4.common;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -26,14 +23,12 @@ import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -42,17 +37,20 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
-public class CassandraClientTest {
+public abstract class AbstractCassandraTest {
 
-  private static final Logger logger = LoggerFactory.getLogger(CassandraClientTest.class);
-
-  @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final Logger logger = LoggerFactory.getLogger(AbstractCassandraTest.class);
 
   @SuppressWarnings("rawtypes")
   private static GenericContainer cassandra;
 
   private static int cassandraPort;
+
+  protected abstract InstrumentationExtension testing();
+
+  protected CqlSession wrap(CqlSession session) {
+    return session;
+  }
 
   @BeforeAll
   static void beforeAll() {
@@ -79,30 +77,33 @@ public class CassandraClientTest {
 
     session.execute(parameter.statement);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(parameter.spanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            equalTo(NET_SOCK_PEER_NAME, "localhost"),
-                            equalTo(NET_SOCK_PEER_PORT, cassandraPort),
-                            equalTo(DB_SYSTEM, "cassandra"),
-                            equalTo(DB_NAME, parameter.keyspace),
-                            equalTo(DB_STATEMENT, parameter.expectedStatement),
-                            equalTo(DB_OPERATION, parameter.operation),
-                            equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                            equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
-                            satisfies(
-                                DB_CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
-                            satisfies(
-                                DB_CASSANDRA_IDEMPOTENCE, val -> val.isInstanceOf(Boolean.class)),
-                            equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
-                            equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
-                            equalTo(DB_CASSANDRA_TABLE, parameter.table))));
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(parameter.spanName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                equalTo(NET_SOCK_PEER_NAME, "localhost"),
+                                equalTo(NET_SOCK_PEER_PORT, cassandraPort),
+                                equalTo(DB_SYSTEM, "cassandra"),
+                                equalTo(DB_NAME, parameter.keyspace),
+                                equalTo(DB_STATEMENT, parameter.expectedStatement),
+                                equalTo(DB_OPERATION, parameter.operation),
+                                equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                                equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                                satisfies(
+                                    DB_CASSANDRA_COORDINATOR_ID,
+                                    val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    DB_CASSANDRA_IDEMPOTENCE,
+                                    val -> val.isInstanceOf(Boolean.class)),
+                                equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
+                                equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
+                                equalTo(DB_CASSANDRA_TABLE, parameter.table))));
 
     session.close();
   }
@@ -112,42 +113,48 @@ public class CassandraClientTest {
   void asyncTest(Parameter parameter) throws Exception {
     CqlSession session = getSession(parameter.keyspace);
 
-    testing.runWithSpan(
-        "parent",
-        () ->
-            session
-                .executeAsync(parameter.statement)
-                .toCompletableFuture()
-                .whenComplete((result, throwable) -> testing.runWithSpan("child", () -> {}))
-                .get());
+    testing()
+        .runWithSpan(
+            "parent",
+            () ->
+                session
+                    .executeAsync(parameter.statement)
+                    .toCompletableFuture()
+                    .whenComplete((result, throwable) -> testing().runWithSpan("child", () -> {}))
+                    .get());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(parameter.spanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            equalTo(NET_SOCK_PEER_NAME, "localhost"),
-                            equalTo(NET_SOCK_PEER_PORT, cassandraPort),
-                            equalTo(DB_SYSTEM, "cassandra"),
-                            equalTo(DB_NAME, parameter.keyspace),
-                            equalTo(DB_STATEMENT, parameter.expectedStatement),
-                            equalTo(DB_OPERATION, parameter.operation),
-                            equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                            equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
-                            satisfies(
-                                DB_CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
-                            satisfies(
-                                DB_CASSANDRA_IDEMPOTENCE, val -> val.isInstanceOf(Boolean.class)),
-                            equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
-                            equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
-                            equalTo(DB_CASSANDRA_TABLE, parameter.table)),
-                span ->
-                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName(parameter.spanName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                equalTo(NET_SOCK_PEER_NAME, "localhost"),
+                                equalTo(NET_SOCK_PEER_PORT, cassandraPort),
+                                equalTo(DB_SYSTEM, "cassandra"),
+                                equalTo(DB_NAME, parameter.keyspace),
+                                equalTo(DB_STATEMENT, parameter.expectedStatement),
+                                equalTo(DB_OPERATION, parameter.operation),
+                                equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                                equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                                satisfies(
+                                    DB_CASSANDRA_COORDINATOR_ID,
+                                    val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    DB_CASSANDRA_IDEMPOTENCE,
+                                    val -> val.isInstanceOf(Boolean.class)),
+                                equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
+                                equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
+                                equalTo(DB_CASSANDRA_TABLE, parameter.table)),
+                    span ->
+                        span.hasName("child")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
 
     session.close();
   }
@@ -289,11 +296,12 @@ public class CassandraClientTest {
         DefaultDriverConfigLoader.builder()
             .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))
             .build();
-    return CqlSession.builder()
-        .addContactPoint(new InetSocketAddress("localhost", cassandraPort))
-        .withConfigLoader(configLoader)
-        .withLocalDatacenter("datacenter1")
-        .withKeyspace(keyspace)
-        .build();
+    return wrap(
+        CqlSession.builder()
+            .addContactPoint(new InetSocketAddress("localhost", cassandraPort))
+            .withConfigLoader(configLoader)
+            .withLocalDatacenter("datacenter1")
+            .withKeyspace(keyspace)
+            .build());
   }
 }
