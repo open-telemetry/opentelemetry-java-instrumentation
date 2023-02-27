@@ -101,7 +101,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     }
   }
 
-  def "snippet injection with ServletOutPutStream"() {
+  def "snippet injection with ServletOutputStream"() {
     setup:
     ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
     def request = request(HTML_SERVLET_OUTPUT_STREAM, "GET")
