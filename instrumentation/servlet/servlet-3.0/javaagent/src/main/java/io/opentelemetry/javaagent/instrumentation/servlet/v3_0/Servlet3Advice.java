@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.helper;
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -45,7 +44,8 @@ public class Servlet3Advice {
 
     String snippet = ExperimentalSnippetHolder.getSnippet();
     if (!snippet.isEmpty()
-        && !((HttpServletResponse) response).containsHeader(FAKE_SNIPPET_HEADER)) {
+        && !((HttpServletResponse) response)
+            .containsHeader(SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
       response = new SnippetInjectingResponseWrapper((HttpServletResponse) response, snippet);
     }
     callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
