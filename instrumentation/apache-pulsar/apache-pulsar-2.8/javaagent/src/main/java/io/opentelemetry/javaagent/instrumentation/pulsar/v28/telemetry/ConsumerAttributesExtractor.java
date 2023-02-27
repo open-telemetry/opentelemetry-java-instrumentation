@@ -33,7 +33,7 @@ enum ConsumerAttributesExtractor implements AttributesExtractor<Message<?>, Attr
     }
 
     if (message.getTopicName() != null) {
-      attributesBuilder.put(SemanticAttributes.MESSAGING_DESTINATION, message.getTopicName());
+      attributesBuilder.put(SemanticAttributes.MESSAGING_DESTINATION_NAME, message.getTopicName());
     }
   }
 }

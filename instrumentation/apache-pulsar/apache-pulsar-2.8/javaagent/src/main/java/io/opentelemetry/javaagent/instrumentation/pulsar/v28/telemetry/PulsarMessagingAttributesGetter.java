@@ -16,54 +16,54 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Messag
 
   @Nullable
   @Override
-  public String system(Message<?> message) {
+  public String getSystem(Message<?> message) {
     return "pulsar";
   }
 
   @Nullable
   @Override
-  public String destinationKind(Message<?> message) {
+  public String getDestinationKind(Message<?> message) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Nullable
   @Override
-  public String destination(Message<?> message) {
+  public String getDestination(Message<?> message) {
     return null;
   }
 
   @Override
-  public boolean temporaryDestination(Message<?> message) {
+  public boolean isTemporaryDestination(Message<?> message) {
     return false;
   }
 
   @Nullable
   @Override
-  public String protocol(Message<?> message) {
+  public String getProtocol(Message<?> message) {
     return null;
   }
 
   @Nullable
   @Override
-  public String protocolVersion(Message<?> message) {
+  public String getProtocolVersion(Message<?> message) {
     return null;
   }
 
   @Nullable
   @Override
-  public String url(Message<?> message) {
+  public String getUrl(Message<?> message) {
     return null;
   }
 
   @Nullable
   @Override
-  public String conversationId(Message<?> message) {
+  public String getConversationId(Message<?> message) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadSize(Message<?> message) {
+  public Long getMessagePayloadSize(Message<?> message) {
     if (message != null) {
       return (long) message.size();
     }
@@ -73,13 +73,13 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Messag
 
   @Nullable
   @Override
-  public Long messagePayloadCompressedSize(Message<?> message) {
+  public Long getMessagePayloadCompressedSize(Message<?> message) {
     return null;
   }
 
   @Nullable
   @Override
-  public String messageId(Message<?> message, @Nullable Attributes attributes) {
+  public String getMessageId(Message<?> message, @Nullable Attributes attributes) {
     String messageId0 = null;
     if (message != null && message.getMessageId() != null) {
       messageId0 = message.getMessageId().toString();

@@ -111,10 +111,10 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       childOf parent
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-        "$SemanticAttributes.MESSAGING_URL" brokerUrl
+        "$SemanticAttributes.NET_SOCK_PEER_ADDR" brokerUrl
         "$SemanticAttributes.MESSAGE_TYPE" "NORMAL"
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-        "$SemanticAttributes.MESSAGING_DESTINATION" topic
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topic
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
       }
@@ -188,8 +188,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-        "$SemanticAttributes.MESSAGING_URL" brokerUrl
-        "$SemanticAttributes.MESSAGING_DESTINATION" topic
+        "$SemanticAttributes.NET_SOCK_PEER_ADDR" brokerUrl
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topic
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
         "$SemanticAttributes.MESSAGE_TYPE" "NORMAL"
@@ -203,8 +203,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-        "$SemanticAttributes.MESSAGING_URL" brokerUrl
-        "$SemanticAttributes.MESSAGING_DESTINATION" topic
+        "$SemanticAttributes.NET_SOCK_PEER_ADDR" brokerUrl
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topic
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
         "$SemanticAttributes.MESSAGING_OPERATION" "receive"
@@ -218,7 +218,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-        "$SemanticAttributes.MESSAGING_DESTINATION" topic
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topic
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         "$SemanticAttributes.MESSAGING_OPERATION" "process"
         "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
@@ -268,8 +268,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-        "$SemanticAttributes.MESSAGING_URL" brokerUrl
-        "$SemanticAttributes.MESSAGING_DESTINATION" {
+        "$SemanticAttributes.NET_SOCK_PEER_ADDR" brokerUrl
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" {
           t ->
             return t.toString().contains(topic)
         }
@@ -350,8 +350,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-        "$SemanticAttributes.MESSAGING_URL" brokerUrl
-        "$SemanticAttributes.MESSAGING_DESTINATION" {
+        "$SemanticAttributes.NET_SOCK_PEER_ADDR" brokerUrl
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" {
           v ->
             return v.toString().contains(topic)
         }
@@ -368,8 +368,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-        "$SemanticAttributes.MESSAGING_URL" brokerUrl
-        "$SemanticAttributes.MESSAGING_DESTINATION" {
+        "$SemanticAttributes.NET_SOCK_PEER_ADDR" brokerUrl
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" {
           v ->
             return v.toString().contains(topic)
         }
@@ -386,7 +386,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-        "$SemanticAttributes.MESSAGING_DESTINATION" {
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" {
           v ->
             return v.toString().contains(topic)
         }

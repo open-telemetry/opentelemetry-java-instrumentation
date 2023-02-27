@@ -118,9 +118,9 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       ProducerData producerData = VirtualFieldStore.extract(producer);
       Attributes attributes =
           Attributes.of(
-              SemanticAttributes.MESSAGING_URL,
+              SemanticAttributes.NET_SOCK_PEER_ADDR,
               producerData.url,
-              SemanticAttributes.MESSAGING_DESTINATION,
+              SemanticAttributes.MESSAGING_DESTINATION_NAME,
               producerData.topic);
 
       try (Scope ignore = context.makeCurrent()) {

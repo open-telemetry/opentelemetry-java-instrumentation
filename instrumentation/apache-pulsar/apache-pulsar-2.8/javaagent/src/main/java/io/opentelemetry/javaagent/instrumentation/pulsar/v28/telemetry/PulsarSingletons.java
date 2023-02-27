@@ -97,7 +97,7 @@ public final class PulsarSingletons {
     }
 
     String brokerUrl = VirtualFieldStore.extract(consumer);
-    Attributes attributes = Attributes.of(SemanticAttributes.MESSAGING_URL, brokerUrl);
+    Attributes attributes = Attributes.of(SemanticAttributes.NET_SOCK_PEER_ADDR, brokerUrl);
     // startAndEnd not supports extract trace context from carrier
     // start not supports custom startTime
     // extract trace context by using TEXT_MAP_PROPAGATOR here.
