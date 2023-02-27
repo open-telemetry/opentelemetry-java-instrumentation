@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.cassandra;
+package io.opentelemetry.instrumentation.cassandra.v4_4;
 
+import com.datastax.dse.driver.api.core.cql.reactive.ReactiveResultSet;
+import com.datastax.dse.driver.internal.core.cql.reactive.DefaultReactiveResultSet;
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.DriverException;
@@ -215,6 +217,11 @@ public class TracingCqlSession implements CqlSession {
                       context, request, getExecutionInfo(asyncResultSet, throwable), throwable)),
           parentContext);
     }
+  }
+
+  @Override
+  public ReactiveResultSet executeReactive(Statement<?> statement) {
+    return new DefaultReactiveResultSet(() -> session.executeAsync(statement));
   }
 
   static <T> CompletableFuture<T> wrap(CompletionStage<T> future, Context context) {

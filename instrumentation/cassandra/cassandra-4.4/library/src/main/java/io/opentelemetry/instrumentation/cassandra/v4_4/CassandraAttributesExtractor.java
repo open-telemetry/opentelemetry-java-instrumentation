@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.cassandra;
+package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
@@ -24,6 +24,7 @@ final class CassandraAttributesExtractor
       AttributesBuilder attributes, Context parentContext, CassandraRequest request) {}
 
   @Override
+  @SuppressWarnings("deprecation") // used for 4.0 compatibility (TODO trask is this needed?)
   public void onEnd(
       AttributesBuilder attributes,
       Context context,

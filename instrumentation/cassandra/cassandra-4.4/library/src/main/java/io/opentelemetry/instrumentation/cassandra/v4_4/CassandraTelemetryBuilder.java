@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.cassandra;
+package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -17,6 +17,8 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 /** A builder of {@link CassandraTelemetry}. */
 public class CassandraTelemetryBuilder {
+
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.cassandra-4.4";
 
   private final OpenTelemetry openTelemetry;
 
@@ -50,9 +52,7 @@ public class CassandraTelemetryBuilder {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
 
     return Instrumenter.<CassandraRequest, ExecutionInfo>builder(
-            openTelemetry,
-            getInstrumenterName(),
-            DbClientSpanNameExtractor.create(attributesGetter))
+            openTelemetry, INSTRUMENTATION_NAME, DbClientSpanNameExtractor.create(attributesGetter))
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(attributesGetter)
                 .setTableAttribute(SemanticAttributes.DB_CASSANDRA_TABLE)
@@ -62,9 +62,5 @@ public class CassandraTelemetryBuilder {
             NetClientAttributesExtractor.create(new CassandraNetAttributesGetter()))
         .addAttributesExtractor(new CassandraAttributesExtractor())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
-  }
-
-  protected String getInstrumenterName() {
-    return "io.opentelemetry.cassandra-4.0";
   }
 }

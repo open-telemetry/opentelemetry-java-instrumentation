@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  library("com.datastax.oss:java-driver-core:4.0.0")
+  library("com.datastax.oss:java-driver-core:4.4.0")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
