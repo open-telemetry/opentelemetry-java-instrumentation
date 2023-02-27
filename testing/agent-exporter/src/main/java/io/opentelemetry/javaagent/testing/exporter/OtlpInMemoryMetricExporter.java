@@ -19,6 +19,7 @@ import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Logger;
@@ -39,7 +40,8 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
     if (temporalityProperty == null) {
       aggregationTemporality = AggregationTemporality.DELTA;
     } else {
-      aggregationTemporality = AggregationTemporality.valueOf(temporalityProperty.toUpperCase());
+      aggregationTemporality =
+          AggregationTemporality.valueOf(temporalityProperty.toUpperCase(Locale.ROOT));
     }
     logger.log(CONFIG, "Setting aggregation temporality to {0}", aggregationTemporality.toString());
     return aggregationTemporality;
