@@ -31,7 +31,8 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return namedOneOf("org.apache.pulsar.client.impl.ConsumerImpl",
+    return namedOneOf(
+        "org.apache.pulsar.client.impl.ConsumerImpl",
         "org.apache.pulsar.client.impl.MultiTopicsConsumerImpl");
   }
 

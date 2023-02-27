@@ -83,7 +83,8 @@ public final class PulsarSingletons {
     MessagingAttributesGetter<Message<?>, Attributes> getter =
         PulsarMessagingAttributesGetter.INSTANCE;
 
-    return Instrumenter.<Message<?>, Attributes>builder(TELEMETRY, INSTRUMENTATION_NAME, PRODUCER_SEND)
+    return Instrumenter.<Message<?>, Attributes>builder(
+            TELEMETRY, INSTRUMENTATION_NAME, PRODUCER_SEND)
         .addAttributesExtractor(ProducerAttributesExtractor.INSTANCE)
         .addAttributesExtractor(MessagingAttributesExtractor.create(getter, MessageOperation.SEND))
         .buildProducerInstrumenter(MessageTextMapSetter.INSTANCE);
