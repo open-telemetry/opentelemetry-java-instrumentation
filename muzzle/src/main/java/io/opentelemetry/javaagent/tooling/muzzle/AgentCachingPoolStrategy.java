@@ -281,7 +281,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       // being defined. For example if another agent adds an interface to the class then returning
       // the cached description that does not have that interface would result in bytebuddy removing
       // that interface.
-      if (AgentTooling.isTransforming(loaderRef.get(), className)) {
+      if (AgentTooling.isTransforming(loaderRef != null ? loaderRef.get() : null, className)) {
         return null;
       }
 
