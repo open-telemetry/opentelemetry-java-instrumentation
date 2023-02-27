@@ -21,7 +21,11 @@ enum SpringWebfluxNetAttributesGetter implements NetServerAttributesGetter<Serve
   @Nullable
   @Override
   public String getHostName(ServerWebExchange request) {
-    return request.getRequest().getURI().getHost();
+    String host = request.getRequest().getURI().getHost();
+    if (host.equals("127.0.0.1")) {
+      return "localhost";
+    }
+    return host;
   }
 
   @Nullable

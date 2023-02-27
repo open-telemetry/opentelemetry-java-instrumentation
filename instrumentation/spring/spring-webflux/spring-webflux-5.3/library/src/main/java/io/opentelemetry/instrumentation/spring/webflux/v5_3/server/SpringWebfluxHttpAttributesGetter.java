@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
@@ -33,8 +32,7 @@ enum SpringWebfluxHttpAttributesGetter
   @Override
   public Integer getStatusCode(
       ServerWebExchange request, ServerWebExchange response, @Nullable Throwable error) {
-    HttpStatus status = response.getResponse().getStatusCode();
-    return status == null ? null : status.value();
+    return response.getResponse().getRawStatusCode();
   }
 
   @Override
