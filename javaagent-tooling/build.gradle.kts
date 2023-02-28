@@ -39,6 +39,7 @@ dependencies {
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-jaeger-remote-sampler")
 
+  implementation("io.opentelemetry.contrib:opentelemetry-aws-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
   api("net.bytebuddy:byte-buddy-dep")
