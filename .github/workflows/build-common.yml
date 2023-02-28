@@ -189,7 +189,7 @@ jobs:
 
       - name: Increase gradle daemon heap size
         run: |
-          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx2g /" gradle.properties
+          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
       - name: Start deadlock detector
         run: .github/scripts/deadlock-detector.sh
