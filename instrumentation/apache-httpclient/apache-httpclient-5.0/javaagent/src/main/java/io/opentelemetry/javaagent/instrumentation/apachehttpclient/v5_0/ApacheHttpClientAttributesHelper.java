@@ -6,12 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.MessageHeaders;
 import org.apache.hc.core5.http.ProtocolVersion;
@@ -28,14 +31,6 @@ public final class ApacheHttpClientAttributesHelper {
 
   public static List<String> getHeader(MessageHeaders messageHeaders, String name) {
     return headersToList(messageHeaders.getHeaders(name));
-  }
-
-  public static String getFirstHeader(MessageHeaders messageHeader, String name) {
-    Header firstHeader = messageHeader.getFirstHeader(name);
-    if (firstHeader != null) {
-      return firstHeader.getValue();
-    }
-    return null;
   }
 
   // minimize memory overhead by not using streams
@@ -111,5 +106,13 @@ public final class ApacheHttpClientAttributesHelper {
 
   public static String getPeerName(HttpRequest httpRequest) {
     return httpRequest.getAuthority().getHostName();
+  }
+
+  public static InetSocketAddress getPeerSocketAddress(HttpHost target) {
+    if (target == null) {
+      return null;
+    }
+    InetAddress inetAddress = target.getAddress();
+    return inetAddress == null ? null : new InetSocketAddress(inetAddress, target.getPort());
   }
 }

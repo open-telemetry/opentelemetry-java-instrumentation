@@ -8,13 +8,26 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.OtelHttpRequest;
 import java.net.InetSocketAddress;
 import java.util.List;
+import javax.annotation.Nullable;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
 
 public final class ApacheHttpClientRequest implements OtelHttpRequest {
+  @Nullable private final HttpHost target;
   private final HttpRequest httpRequest;
 
-  public ApacheHttpClientRequest(HttpRequest httpRequest) {
+  public ApacheHttpClientRequest(@Nullable HttpHost target, HttpRequest httpRequest) {
+    this.target = target;
     this.httpRequest = httpRequest;
+  }
+
+  public ApacheHttpClientRequest(HttpHost target, ClassicHttpRequest httpRequest) {
+    this(target, (HttpRequest) new RequestWithHost(target, httpRequest));
+  }
+
+  public ApacheHttpClientRequest(HttpRequest httpRequest) {
+    this(null, httpRequest);
   }
 
   @Override
@@ -29,7 +42,7 @@ public final class ApacheHttpClientRequest implements OtelHttpRequest {
 
   @Override
   public InetSocketAddress getPeerSocketAddress() {
-    return null;
+    return ApacheHttpClientAttributesHelper.getPeerSocketAddress(target);
   }
 
   @Override

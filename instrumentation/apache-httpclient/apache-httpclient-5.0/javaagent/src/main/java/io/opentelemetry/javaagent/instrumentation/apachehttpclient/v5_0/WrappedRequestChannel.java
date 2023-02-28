@@ -9,8 +9,11 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.A
 
 import io.opentelemetry.context.Context;
 import java.io.IOException;
+import org.apache.hc.client5.http.RouteInfo;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.core5.http.EntityDetails;
 import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.nio.RequestChannel;
 import org.apache.hc.core5.http.protocol.HttpContext;
@@ -32,7 +35,13 @@ public final class WrappedRequestChannel implements RequestChannel {
   @Override
   public void sendRequest(HttpRequest request, EntityDetails entityDetails, HttpContext httpContext)
       throws HttpException, IOException {
-    ApacheHttpClientRequest otelRequest = new ApacheHttpClientRequest(request);
+    HttpClientContext httpClientContext = HttpClientContext.adapt(httpContext);
+    RouteInfo httpRoute = httpClientContext.getHttpRoute();
+    HttpHost targetHost = null;
+    if (httpRoute != null) {
+      targetHost = httpRoute.getTargetHost();
+    }
+    ApacheHttpClientRequest otelRequest = new ApacheHttpClientRequest(targetHost, request);
     Context context = helper().startInstrumentation(parentContext, otelRequest);
 
     if (context != null) {
