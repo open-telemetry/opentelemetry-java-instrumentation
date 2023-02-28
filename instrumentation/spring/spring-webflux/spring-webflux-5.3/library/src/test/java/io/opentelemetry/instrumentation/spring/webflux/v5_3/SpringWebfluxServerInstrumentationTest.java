@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_3.server;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_3.server;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import java.util.Collections;
@@ -14,7 +14,7 @@ import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
 
-enum SpringWebfluxHttpAttributesGetter
+enum WebfluxServerHttpAttributesGetter
     implements HttpServerAttributesGetter<ServerWebExchange, ServerWebExchange> {
   INSTANCE;
 

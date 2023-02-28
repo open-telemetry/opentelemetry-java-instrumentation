@@ -36,50 +36,41 @@ implementation("org.springframework:spring-webflux:SPRING_VERSION")
 
 ## Features
 
-### WebClient Instrumentation
-
-`SpringWebfluxTelemetry` emits a client span for each request sent using `WebClient` by implementing
+`SpringWebfluxTelemetry` can emit a client span for each request sent using `WebClient` by
+implementing
 the [ExchangeFilterFunction](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/function/client/ExchangeFilterFunction.html)
-interface. An example is shown below:
+interface.
 
-##### Usage
-
-```java
-import io.opentelemetry.instrumentation.spring.webflux.v5_3.client.SpringWebfluxTelemetry;
-
-@Configuration
-public class WebClientConfig {
-
-  @Bean
-  public WebClient.Builder webClient(OpenTelemetry openTelemetry) {
-
-    WebClient webClient = WebClient.create();
-    SpringWebfluxTelemetry instrumentation = SpringWebfluxTelemetry.create(openTelemetry);
-
-    return webClient.mutate().filters(instrumentation::addClientTracingFilter);
-  }
-}
-```
-
-### Webflux Server Instrumentation
-
-`SpringWebfluxServerTelemetry` emits a server span for each request received, by implementing
+`SpringWebfluxTelemetry` can also emit a server span for each request received, by implementing
 a `WebFilter` and using the OpenTelemetry Reactor instrumentation to ensure context is
 passed around correctly.
 
-#### Usage
+### Setup
+
+Here is how to set up client and server instrumentation respectively:
 
 ```java
-import io.opentelemetry.instrumentation.spring.webflux.v5_3.server.SpringWebfluxServerTelemetry;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxTelemetry;
 
 @Configuration
-public class WebFilterConfig {
+public class WebClientConfig {
+  private final SpringWebfluxTelemetry webfluxTelemetry;
 
+  public WebClientConfig(OpenTelemetry openTelemetry) {
+    this.webfluxTelemetry = SpringWebfluxTelemetry.builder(openTelemetry).build();
+  }
+
+  // Adds instrumentation to WebClients
+  @Bean
+  public WebClient.Builder webClient(OpenTelemetry openTelemetry) {
+    WebClient webClient = WebClient.create();
+    return webClient.mutate().filters(webfluxTelemetry::addClientTracingFilter);
+  }
+
+  // Adds instrumentation to Webflux server
   @Bean
   public WebFilter webFilter(OpenTelemetry openTelemetry) {
-    return SpringWebfluxServerTelemetry.builder(openTelemetry)
-        .build()
-        .createWebFilterAndRegisterReactorHook();
+    return webfluxTelemetry.createWebFilterAndRegisterReactorHook();
   }
 }
 ```

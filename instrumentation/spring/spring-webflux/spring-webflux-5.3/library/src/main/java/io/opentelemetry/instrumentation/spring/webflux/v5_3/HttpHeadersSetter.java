@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_3.client;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 import org.springframework.web.reactive.function.client.ClientRequest;

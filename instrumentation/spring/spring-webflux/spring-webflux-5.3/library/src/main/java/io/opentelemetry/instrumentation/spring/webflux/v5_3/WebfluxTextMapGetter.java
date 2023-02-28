@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_3.server;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 
-enum SpringWebfluxTextMapGetter implements TextMapGetter<ServerWebExchange> {
+enum WebfluxTextMapGetter implements TextMapGetter<ServerWebExchange> {
   INSTANCE;
 
   @Override

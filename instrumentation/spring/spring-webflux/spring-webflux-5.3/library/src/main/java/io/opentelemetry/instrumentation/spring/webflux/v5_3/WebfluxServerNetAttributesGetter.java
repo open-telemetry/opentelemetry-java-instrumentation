@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_3.server;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 
-enum SpringWebfluxNetAttributesGetter implements NetServerAttributesGetter<ServerWebExchange> {
+enum WebfluxServerNetAttributesGetter implements NetServerAttributesGetter<ServerWebExchange> {
   INSTANCE;
 
   @Override

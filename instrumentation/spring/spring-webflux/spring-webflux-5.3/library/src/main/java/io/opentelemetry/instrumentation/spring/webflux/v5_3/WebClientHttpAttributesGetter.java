@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_3.client;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
 import static java.util.Collections.emptyList;
 
@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
-enum SpringWebfluxHttpAttributesGetter
+enum WebClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ClientRequest, ClientResponse> {
   INSTANCE;
 

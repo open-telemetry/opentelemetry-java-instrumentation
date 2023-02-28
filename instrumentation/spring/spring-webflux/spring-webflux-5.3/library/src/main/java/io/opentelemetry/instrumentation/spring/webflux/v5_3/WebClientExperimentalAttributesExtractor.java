@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_3.client;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
-final class SpringWebfluxExperimentalAttributesExtractor
+final class WebClientExperimentalAttributesExtractor
     implements AttributesExtractor<ClientRequest, ClientResponse> {
 
   private static final AttributeKey<String> SPRING_WEBFLUX_EVENT =
