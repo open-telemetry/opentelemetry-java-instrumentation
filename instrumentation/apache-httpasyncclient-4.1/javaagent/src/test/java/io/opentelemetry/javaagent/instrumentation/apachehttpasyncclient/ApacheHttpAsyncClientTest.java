@@ -224,6 +224,7 @@ class ApacheHttpAsyncClientTest {
 
   void configureTest(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.setUserAgent("httpasyncclient");
+    optionsBuilder.setResponseCodeOnRedirectError(302);
     optionsBuilder.enableTestReadTimeout();
     optionsBuilder.setHttpAttributes(ApacheHttpAsyncClientTest::getHttpAttributes);
   }

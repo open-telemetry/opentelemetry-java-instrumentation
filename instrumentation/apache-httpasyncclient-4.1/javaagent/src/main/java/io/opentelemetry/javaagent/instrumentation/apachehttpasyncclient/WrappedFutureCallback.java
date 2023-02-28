@@ -11,19 +11,26 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.ApacheHttpClientRequest;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
+import org.apache.http.HttpResponse;
 import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpCoreContext;
 
 public final class WrappedFutureCallback<T> implements FutureCallback<T> {
   private static final Logger logger = Logger.getLogger(WrappedFutureCallback.class.getName());
 
   private final Context parentContext;
+  @Nullable private final HttpContext httpContext;
   private final FutureCallback<T> delegate;
 
   volatile Context context;
   volatile ApacheHttpClientRequest otelRequest;
 
-  public WrappedFutureCallback(Context parentContext, FutureCallback<T> delegate) {
+  public WrappedFutureCallback(
+      Context parentContext, HttpContext httpContext, FutureCallback<T> delegate) {
     this.parentContext = parentContext;
+    this.httpContext = httpContext;
     // Note: this can be null in real life, so we have to handle this carefully
     this.delegate = delegate;
   }
@@ -37,7 +44,7 @@ public final class WrappedFutureCallback<T> implements FutureCallback<T> {
       return;
     }
 
-    helper().endInstrumentation(context, otelRequest, result, null);
+    helper().endInstrumentation(context, otelRequest, getResponseFromHttpContext(), null);
 
     if (parentContext == null) {
       completeDelegate(result);
@@ -59,7 +66,7 @@ public final class WrappedFutureCallback<T> implements FutureCallback<T> {
     }
 
     // end span before calling delegate
-    helper().endInstrumentation(context, otelRequest, null, ex);
+    helper().endInstrumentation(context, otelRequest, getResponseFromHttpContext(), ex);
 
     if (parentContext == null) {
       failDelegate(ex);
@@ -82,7 +89,7 @@ public final class WrappedFutureCallback<T> implements FutureCallback<T> {
 
     // TODO (trask) add "canceled" span attribute
     // end span before calling delegate
-    helper().endInstrumentation(context, otelRequest, null, null);
+    helper().endInstrumentation(context, otelRequest, getResponseFromHttpContext(), null);
 
     if (parentContext == null) {
       cancelDelegate();
@@ -110,5 +117,13 @@ public final class WrappedFutureCallback<T> implements FutureCallback<T> {
     if (delegate != null) {
       delegate.cancelled();
     }
+  }
+
+  @Nullable
+  private HttpResponse getResponseFromHttpContext() {
+    if (httpContext == null) {
+      return null;
+    }
+    return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
   }
 }
