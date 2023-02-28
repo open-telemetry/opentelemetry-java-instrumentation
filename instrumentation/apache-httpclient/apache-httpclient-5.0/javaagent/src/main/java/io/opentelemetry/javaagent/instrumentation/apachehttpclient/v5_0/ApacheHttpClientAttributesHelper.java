@@ -50,7 +50,7 @@ public final class ApacheHttpClientAttributesHelper {
       return null;
     }
     String protocol = protocolVersion.getProtocol();
-    if ("HTTP".equals(protocol)) {
+    if (!"HTTP".equals(protocol)) {
       return null;
     }
     int major = protocolVersion.getMajor();
