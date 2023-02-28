@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.OtelHttpRequest;
+import java.net.InetSocketAddress;
 import java.util.List;
 import org.apache.hc.core5.http.HttpRequest;
 
@@ -24,6 +25,11 @@ public final class ApacheHttpClientRequest implements OtelHttpRequest {
   @Override
   public Integer getPeerPort() {
     return ApacheHttpClientAttributesHelper.getPeerPort(httpRequest);
+  }
+
+  @Override
+  public InetSocketAddress getPeerSocketAddress() {
+    return null;
   }
 
   @Override

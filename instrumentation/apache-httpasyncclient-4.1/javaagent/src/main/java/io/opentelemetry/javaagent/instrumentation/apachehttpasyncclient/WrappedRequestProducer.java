@@ -42,8 +42,7 @@ public final class WrappedRequestProducer implements HttpAsyncRequestProducer {
     HttpHost target = delegate.getTarget();
     HttpRequest request = delegate.generateRequest();
 
-    ApacheHttpClientRequest otelRequest;
-    otelRequest = new ApacheHttpClientRequest(target, request);
+    ApacheHttpClientRequest otelRequest = new CustomApacheHttpClientRequest(target, request);
     Context context = helper().startInstrumentation(parentContext, otelRequest);
 
     if (context != null) {
