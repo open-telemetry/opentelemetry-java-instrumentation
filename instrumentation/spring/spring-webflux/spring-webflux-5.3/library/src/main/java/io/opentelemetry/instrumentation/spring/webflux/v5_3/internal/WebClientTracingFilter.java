@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_3;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -19,8 +19,11 @@ import reactor.core.publisher.Mono;
 /**
  * Based on Spring Sleuth's Reactor instrumentation.
  * https://github.com/spring-cloud/spring-cloud-sleuth/blob/master/spring-cloud-sleuth-core/src/main/java/org/springframework/cloud/sleuth/instrument/web/client/TraceWebClientBeanPostProcessor.java
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
-class WebClientTracingFilter implements ExchangeFilterFunction {
+public class WebClientTracingFilter implements ExchangeFilterFunction {
 
   private final Instrumenter<ClientRequest, ClientResponse> instrumenter;
   private final ContextPropagators propagators;
