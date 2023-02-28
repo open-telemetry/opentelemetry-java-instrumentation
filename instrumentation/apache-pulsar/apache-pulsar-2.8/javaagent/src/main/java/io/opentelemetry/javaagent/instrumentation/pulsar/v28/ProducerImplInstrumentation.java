@@ -109,7 +109,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
 
     @Override
     public void sendComplete(Exception e) {
-      if (null == context) {
+      if (context == null) {
         this.delegator.sendComplete(e);
         return;
       }

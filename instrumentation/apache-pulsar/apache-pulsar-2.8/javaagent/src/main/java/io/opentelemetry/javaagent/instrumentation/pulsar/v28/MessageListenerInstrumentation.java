@@ -50,7 +50,7 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
         @Advice.This ConsumerConfigurationData<?> data,
         @Advice.Return(readOnly = false, typing = Assigner.Typing.DYNAMIC)
             MessageListener<?> listener) {
-      if (null == listener) {
+      if (listener == null) {
         return;
       }
 

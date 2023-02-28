@@ -14,13 +14,11 @@ import org.apache.pulsar.client.api.Message;
 enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Message<?>, Attributes> {
   INSTANCE;
 
-  @Nullable
   @Override
   public String getSystem(Message<?> message) {
     return "pulsar";
   }
 
-  @Nullable
   @Override
   public String getDestinationKind(Message<?> message) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
@@ -80,11 +78,10 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Messag
   @Nullable
   @Override
   public String getMessageId(Message<?> message, @Nullable Attributes attributes) {
-    String messageId0 = null;
     if (message != null && message.getMessageId() != null) {
-      messageId0 = message.getMessageId().toString();
+      return message.getMessageId().toString();
     }
 
-    return messageId0;
+    return null;
   }
 }
