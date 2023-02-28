@@ -18,7 +18,7 @@ public final class ApacheHttpClientRequest implements OtelHttpRequest {
 
   @Override
   public String getPeerName() {
-    return httpRequest.getAuthority().getHostName();
+    return ApacheHttpClientAttributesHelper.getPeerName(httpRequest);
   }
 
   @Override
