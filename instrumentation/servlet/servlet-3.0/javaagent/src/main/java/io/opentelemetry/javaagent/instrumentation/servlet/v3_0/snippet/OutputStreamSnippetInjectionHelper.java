@@ -45,7 +45,8 @@ public class OutputStreamSnippetInjectionHelper {
     if (!endOfHeadTagFound) {
       return false;
     }
-    state.setHeadTagWritten(); // set before write to avoid recursive loop
+    // set before write to avoid recursive loop
+    state.setHeadTagWritten();
     if (state.getWrapper().isNotSafeToInject()) {
       return false;
     }
@@ -71,7 +72,8 @@ public class OutputStreamSnippetInjectionHelper {
     if (!state.processByte(b)) {
       return false;
     }
-    state.setHeadTagWritten(); // set before write to avoid recursive loop
+    // set before write to avoid recursive loop
+    state.setHeadTagWritten();
 
     if (state.getWrapper().isNotSafeToInject()) {
       return false;

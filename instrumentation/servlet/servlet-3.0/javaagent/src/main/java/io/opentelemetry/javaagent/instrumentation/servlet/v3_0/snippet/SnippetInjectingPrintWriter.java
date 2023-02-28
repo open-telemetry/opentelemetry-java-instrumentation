@@ -20,6 +20,10 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
 
   @Override
   public void write(String s, int off, int len) {
+    if (state.isHeadTagWritten()) {
+      super.write(s, off, len);
+      return;
+    }
     for (int i = off; i < s.length() && i - off < len; i++) {
       write(s.charAt(i));
     }
@@ -35,7 +39,8 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
     if (!endOfHeadTagFound) {
       return;
     }
-    state.setHeadTagWritten(); // set before write to avoid recursive loop
+    // set before write to avoid recursive loop
+    state.setHeadTagWritten();
     if (state.getWrapper().isNotSafeToInject()) {
       return;
     }
@@ -45,6 +50,10 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
 
   @Override
   public void write(char[] buf, int off, int len) {
+    if (state.isHeadTagWritten()) {
+      super.write(buf, off, len);
+      return;
+    }
     for (int i = off; i < buf.length && i - off < len; i++) {
       write(buf[i]);
     }

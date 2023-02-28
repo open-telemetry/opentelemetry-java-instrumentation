@@ -10,11 +10,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 
 public class TestUtil {
 
-  public static byte[] readFileBytes(String resourceName, Charset charsetName) throws IOException {
+  public static byte[] readFileBytes(String resourceName) throws IOException {
     InputStream in =
         SnippetPrintWriterTest.class.getClassLoader().getResourceAsStream(resourceName);
     ByteArrayOutputStream result = new ByteArrayOutputStream();
@@ -27,7 +26,7 @@ public class TestUtil {
   }
 
   public static String readFile(String resourceName) throws IOException {
-    return new String(readFileBytes(resourceName, UTF_8), UTF_8);
+    return new String(readFileBytes(resourceName), UTF_8);
   }
 
   private TestUtil() {}

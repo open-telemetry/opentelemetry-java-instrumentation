@@ -23,7 +23,7 @@ class SnippetServletOutputStreamTest {
   @Test
   void testInjectionForStringContainHeadTag() throws IOException {
     String snippet = "\n  <script type=\"text/javascript\"> Test </script>";
-    byte[] html = readFileBytes("beforeSnippetInjection.html", UTF_8);
+    byte[] html = readFileBytes("beforeSnippetInjection.html");
 
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
@@ -33,14 +33,14 @@ class SnippetServletOutputStreamTest {
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
     assertThat(injected).isEqualTo(true);
 
-    byte[] expectedHtml = readFileBytes("afterSnippetInjection.html", UTF_8);
+    byte[] expectedHtml = readFileBytes("afterSnippetInjection.html");
     assertThat(out.getBytes()).isEqualTo(expectedHtml);
   }
 
   @Test
   void testInjectionForChinese() throws IOException {
     String snippet = "\n  <script type=\"text/javascript\"> Test </script>";
-    byte[] html = readFileBytes("beforeSnippetInjectionChinese.html", UTF_8);
+    byte[] html = readFileBytes("beforeSnippetInjectionChinese.html");
 
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
@@ -48,7 +48,7 @@ class SnippetServletOutputStreamTest {
     OutputStreamSnippetInjectionHelper helper = new OutputStreamSnippetInjectionHelper(snippet);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
 
-    byte[] expectedHtml = readFileBytes("afterSnippetInjectionChinese.html", UTF_8);
+    byte[] expectedHtml = readFileBytes("afterSnippetInjectionChinese.html");
     assertThat(injected).isTrue();
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
     assertThat(out.getBytes()).isEqualTo(expectedHtml);
@@ -57,7 +57,7 @@ class SnippetServletOutputStreamTest {
   @Test
   void testInjectionForStringWithoutHeadTag() throws IOException {
     String snippet = "\n  <script type=\"text/javascript\"> Test </script>";
-    byte[] html = readFileBytes("htmlWithoutHeadTag.html", UTF_8);
+    byte[] html = readFileBytes("htmlWithoutHeadTag.html");
 
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
