@@ -1,6 +1,5 @@
 plugins {
   id("otel.javaagent-instrumentation")
-  id("org.unbroken-dome.test-sets")
 }
 
 val scalaVersion = "2.11"
@@ -35,11 +34,6 @@ otelJava {
   maxJavaVersionForTests.set(JavaVersion.VERSION_1_8)
 }
 
-testSets {
-  // We need separate test sources to compile against latest Play.
-  create("latestDepTest")
-}
-
 dependencies {
   // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
   // here.
@@ -51,15 +45,19 @@ dependencies {
   testInstrumentation(project(":instrumentation:akka:akka-http-10.0:javaagent"))
 
   testImplementation("com.typesafe.play:play-java_$scalaVersion:$playVersion")
-  testImplementation("com.typesafe.play:play-test_$scalaVersion:$playVersion") {
-    exclude("org.eclipse.jetty.websocket", "websocket-client")
-  }
+  testImplementation("com.typesafe.play:play-test_$scalaVersion:$playVersion")
+}
 
-  add("latestDepTestImplementation", "com.typesafe.play:play-java_2.13:2.8.+")
-  add("latestDepTestImplementation", "com.typesafe.play:play-test_2.13:2.8.+") {
-    exclude("org.eclipse.jetty.websocket", "websocket-client")
+testing {
+  suites {
+    val latestDepTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("com.typesafe.play:play-java_2.13:2.8.+")
+        implementation("com.typesafe.play:play-test_2.13:2.8.+")
+        implementation("com.typesafe.play:play-akka-http-server_2.13:2.8.+")
+      }
+    }
   }
-  add("latestDepTestImplementation", "com.typesafe.play:play-akka-http-server_2.13:2.8.+")
 }
 
 tasks {
@@ -72,14 +70,13 @@ tasks {
       enabled = false
     }
   }
+
+  check {
+    dependsOn(testing.suites)
+  }
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
-  configurations {
-    // play artifact name is different for regular and latest tests
-    testImplementation {
-      exclude("com.typesafe.play", "play-java_2.11")
-      exclude("com.typesafe.play", "play-test_2.11")
-    }
-  }
+// play-test depends on websocket-client
+configurations.configureEach {
+  exclude("org.eclipse.jetty.websocket", "websocket-client")
 }
