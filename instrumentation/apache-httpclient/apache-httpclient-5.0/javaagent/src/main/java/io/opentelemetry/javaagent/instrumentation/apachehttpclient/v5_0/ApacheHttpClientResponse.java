@@ -30,5 +30,4 @@ public final class ApacheHttpClientResponse implements OtelHttpResponse {
   public List<String> getHeader(String name) {
     return ApacheHttpClientAttributesHelper.getHeader(httpResponse, name);
   }
-
 }
