@@ -50,7 +50,7 @@ public final class ApacheHttpClientAttributesHelper {
       return null;
     }
     String protocol = protocolVersion.getProtocol();
-    if (!protocol.equals("HTTP")) {
+    if ("HTTP".equals(protocol)) {
       return null;
     }
     int major = protocolVersion.getMajor();
@@ -101,11 +101,13 @@ public final class ApacheHttpClientAttributesHelper {
   }
 
   public static Integer getPeerPort(HttpRequest httpRequest) {
-    return httpRequest.getAuthority().getPort();
+    URIAuthority uriAuthority = httpRequest.getAuthority();
+    return uriAuthority != null ? uriAuthority.getPort() : null;
   }
 
   public static String getPeerName(HttpRequest httpRequest) {
-    return httpRequest.getAuthority().getHostName();
+    URIAuthority uriAuthority = httpRequest.getAuthority();
+    return uriAuthority != null ? uriAuthority.getHostName() : null;
   }
 
   public static InetSocketAddress getPeerSocketAddress(HttpHost target) {

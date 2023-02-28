@@ -53,7 +53,7 @@ public final class ApacheHttpClientAttributesHelper {
 
   public static String getFlavor(ProtocolVersion protocolVersion) {
     String protocol = protocolVersion.getProtocol();
-    if (!protocol.equals("HTTP")) {
+    if (!"HTTP".equals(protocol)) {
       return null;
     }
     int major = protocolVersion.getMajor();
