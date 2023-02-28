@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientTracingFilter;
 import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
