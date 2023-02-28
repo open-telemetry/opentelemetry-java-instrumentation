@@ -57,7 +57,6 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) AsyncRequestProducer requestProducer,
-        @Advice.Argument(value = 1, readOnly = false) AsyncResponseConsumer<?> responseConsumer,
         @Advice.Argument(value = 3, readOnly = false) HttpContext httpContext,
         @Advice.Argument(value = 4, readOnly = false) FutureCallback<?> futureCallback) {
 

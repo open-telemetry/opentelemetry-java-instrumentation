@@ -49,6 +49,8 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
       attributes.add(SemanticAttributes.HTTP_FLAVOR);
     }
     attributes.add(SemanticAttributes.HTTP_USER_AGENT);
+    attributes.add(SemanticAttributes.HTTP_SCHEME);
+    attributes.add(SemanticAttributes.HTTP_TARGET);
     return attributes;
   }
 
