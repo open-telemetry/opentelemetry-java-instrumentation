@@ -27,29 +27,34 @@ import io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.memory.Para
 import io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.network.NetworkReadHandler;
 import io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.network.NetworkWriteHandler;
 import io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.threads.ThreadCountHandler;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 import java.util.function.Predicate;
+import javax.annotation.Nullable;
+import io.opentelemetry.api.metrics.MeterBuilder;
 
 final class HandlerRegistry {
-  private static final String SCOPE_NAME = "io.opentelemetry.instrumentation.runtimemetricsjfr";
-  private static final String SCOPE_VERSION = readVersion();
+  private static final String SCOPE_NAME = "io.opentelemetry.instrumentation.runtimetelemetryjfr";
+
+  @Nullable
+  private static final String SCOPE_VERSION =
+      EmbeddedInstrumentationProperties.findVersion(SCOPE_NAME);
 
   private HandlerRegistry() {}
 
   static List<RecordedEventHandler> getHandlers(
       OpenTelemetry openTelemetry, Predicate<JfrFeature> featurePredicate) {
-    Meter meter =
-        openTelemetry
-            .getMeterProvider()
-            .meterBuilder(SCOPE_NAME)
-            .setInstrumentationVersion(SCOPE_VERSION)
-            .build();
+
+    MeterBuilder meterBuilder = openTelemetry.meterBuilder(SCOPE_NAME);
+    if (SCOPE_VERSION != null) {
+      meterBuilder.setInstrumentationVersion(SCOPE_VERSION);
+    }
+    Meter meter = meterBuilder.build();
 
     List<RecordedEventHandler> handlers = new ArrayList<RecordedEventHandler>();
     for (GarbageCollectorMXBean bean : ManagementFactory.getGarbageCollectorMXBeans()) {
@@ -113,16 +118,5 @@ final class HandlerRegistry {
     }
 
     return handlers;
-  }
-
-  private static String readVersion() {
-    Properties properties = new Properties();
-    try {
-      properties.load(HandlerRegistry.class.getResourceAsStream("version.properties"));
-    } catch (Exception e) {
-      // we left the attribute empty
-      return "unknown";
-    }
-    return properties.getProperty("contrib.version", "unknown");
   }
 }
