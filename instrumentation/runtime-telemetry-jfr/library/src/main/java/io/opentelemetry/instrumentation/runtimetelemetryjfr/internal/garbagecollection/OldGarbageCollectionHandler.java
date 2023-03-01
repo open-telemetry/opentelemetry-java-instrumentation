@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.GarbageCollection;
+package io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.garbagecollection;
 
 import static io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.Constants.ATTR_ACTION;
 import static io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.Constants.ATTR_GC;
 import static io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.Constants.DURATION;
-import static io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.Constants.END_OF_MINOR_GC;
+import static io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.Constants.END_OF_MAJOR_GC;
 import static io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.Constants.METRIC_DESCRIPTION_GC_DURATION;
 import static io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.Constants.METRIC_NAME_GC_DURATION;
 import static io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.Constants.MILLISECONDS;
@@ -23,15 +23,16 @@ import java.util.Optional;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
  */
-public final class YoungGarbageCollectionHandler implements RecordedEventHandler {
-  private static final String EVENT_NAME = "jdk.YoungGarbageCollection";
+public final class OldGarbageCollectionHandler implements RecordedEventHandler {
+  private static final String EVENT_NAME = "jdk.OldGarbageCollection";
 
   private final LongHistogram histogram;
   private final Attributes attributes;
 
-  public YoungGarbageCollectionHandler(Meter meter, String gc) {
+  public OldGarbageCollectionHandler(Meter meter, String gc) {
     histogram =
         meter
             .histogramBuilder(METRIC_NAME_GC_DURATION)
@@ -40,8 +41,7 @@ public final class YoungGarbageCollectionHandler implements RecordedEventHandler
             .ofLongs()
             .build();
     // Set the attribute's GC based on which GC is being used.
-    // G1 young collection is already handled by G1GarbageCollectionHandler.
-    attributes = Attributes.of(ATTR_GC, gc, ATTR_ACTION, END_OF_MINOR_GC);
+    attributes = Attributes.of(ATTR_GC, gc, ATTR_ACTION, END_OF_MAJOR_GC);
   }
 
   @Override

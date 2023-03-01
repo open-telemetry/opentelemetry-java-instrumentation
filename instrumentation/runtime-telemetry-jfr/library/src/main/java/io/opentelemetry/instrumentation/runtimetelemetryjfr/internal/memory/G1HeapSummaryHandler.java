@@ -27,8 +27,8 @@ import jdk.jfr.consumer.RecordedEvent;
 
 /**
  * This class handles G1HeapSummary JFR events. For GC purposes they come in pairs. Basic heap
- * values are sourced from GCHeapSummary - this is young generational details
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
+ * values are sourced from GCHeapSummary - this is young generational details This class is internal
+ * and is hence not for public use. Its APIs are unstable and can change at any time.
  */
 public final class G1HeapSummaryHandler implements RecordedEventHandler {
   private static final Logger logger = Logger.getLogger(G1HeapSummaryHandler.class.getName());

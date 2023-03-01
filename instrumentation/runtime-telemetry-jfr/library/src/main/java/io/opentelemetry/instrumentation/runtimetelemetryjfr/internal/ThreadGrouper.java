@@ -10,7 +10,8 @@ import jdk.jfr.consumer.RecordedEvent;
 import jdk.jfr.consumer.RecordedThread;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
  */
 public final class ThreadGrouper {
   // FIXME doesn't actually do any grouping, but should be safe for now

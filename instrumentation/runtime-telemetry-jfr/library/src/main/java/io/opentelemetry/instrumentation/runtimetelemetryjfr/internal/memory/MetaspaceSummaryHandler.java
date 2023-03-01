@@ -31,9 +31,11 @@ import java.util.function.Consumer;
 import jdk.jfr.consumer.RecordedEvent;
 import jdk.jfr.consumer.RecordedObject;
 
-/** This class handles GCHeapConfiguration JFR events.
+/**
+ * This class handles GCHeapConfiguration JFR events.
  *
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public final class MetaspaceSummaryHandler implements RecordedEventHandler {
   private static final String EVENT_NAME = "jdk.MetaspaceSummary";

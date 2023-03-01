@@ -23,8 +23,9 @@ import java.util.List;
 import java.util.Optional;
 import jdk.jfr.consumer.RecordedEvent;
 
-/** Handles attributes with pool value CodeCache.
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
+/**
+ * Handles attributes with pool value CodeCache. This class is internal and is hence not for public
+ * use. Its APIs are unstable and can change at any time.
  */
 public final class CodeCacheConfigurationHandler implements RecordedEventHandler {
   private static final String EVENT_NAME = "jdk.CodeCacheConfiguration";

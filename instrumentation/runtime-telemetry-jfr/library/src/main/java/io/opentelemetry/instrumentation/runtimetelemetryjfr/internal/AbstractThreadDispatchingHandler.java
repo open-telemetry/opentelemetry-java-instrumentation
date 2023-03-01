@@ -10,9 +10,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 import jdk.jfr.consumer.RecordedEvent;
 
-
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
  */
 public abstract class AbstractThreadDispatchingHandler implements RecordedEventHandler {
   // Will need pruning code for fast-cycling thread frameworks to prevent memory leaks

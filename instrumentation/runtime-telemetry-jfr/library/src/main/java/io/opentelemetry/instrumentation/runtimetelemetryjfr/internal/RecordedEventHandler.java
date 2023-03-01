@@ -14,9 +14,11 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import jdk.jfr.consumer.RecordedEvent;
 
-/** Convenience/Tag interface for defining how JFR events should turn into metrics.
+/**
+ * Convenience/Tag interface for defining how JFR events should turn into metrics.
  *
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public interface RecordedEventHandler
     extends Consumer<RecordedEvent>, Predicate<RecordedEvent>, Closeable {

@@ -21,17 +21,18 @@ import java.util.function.Consumer;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
- * This class handles TLAB allocation JFR events, and delegates them to the actual per-thread
- * aggregators
+ * This class handles all non-TLAB allocation JFR events, and delegates them to the actual
+ * per-thread aggregators
  *
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
-public final class ObjectAllocationInNewTLABHandler extends AbstractThreadDispatchingHandler {
-  private static final String EVENT_NAME = "jdk.ObjectAllocationInNewTLAB";
+public final class ObjectAllocationOutsideTlabHandler extends AbstractThreadDispatchingHandler {
+  private static final String EVENT_NAME = "jdk.ObjectAllocationOutsideTLAB";
 
   private final LongHistogram histogram;
 
-  public ObjectAllocationInNewTLABHandler(Meter meter, ThreadGrouper grouper) {
+  public ObjectAllocationOutsideTlabHandler(Meter meter, ThreadGrouper grouper) {
     super(grouper);
     histogram =
         meter
@@ -54,28 +55,28 @@ public final class ObjectAllocationInNewTLABHandler extends AbstractThreadDispat
 
   @Override
   public Consumer<RecordedEvent> createPerThreadSummarizer(String threadName) {
-    return new PerThreadObjectAllocationInNewTLABHandler(histogram, threadName);
+    return new PerThreadObjectAllocationOutsideTlabHandler(histogram, threadName);
   }
 
   @Override
   public void close() {}
 
-  /** This class aggregates all TLAB allocation JFR events for a single thread */
-  private static class PerThreadObjectAllocationInNewTLABHandler
+  /** This class aggregates all non-TLAB allocation JFR events for a single thread */
+  private static class PerThreadObjectAllocationOutsideTlabHandler
       implements Consumer<RecordedEvent> {
-    private static final String TLAB_SIZE = "tlabSize";
+    private static final String ALLOCATION_SIZE = "allocationSize";
 
     private final LongHistogram histogram;
     private final Attributes attributes;
 
-    public PerThreadObjectAllocationInNewTLABHandler(LongHistogram histogram, String threadName) {
+    public PerThreadObjectAllocationOutsideTlabHandler(LongHistogram histogram, String threadName) {
       this.histogram = histogram;
-      this.attributes = Attributes.of(ATTR_THREAD_NAME, threadName, ATTR_ARENA_NAME, "TLAB");
+      this.attributes = Attributes.of(ATTR_THREAD_NAME, threadName, ATTR_ARENA_NAME, "Main");
     }
 
     @Override
     public void accept(RecordedEvent ev) {
-      histogram.record(ev.getLong(TLAB_SIZE), attributes);
+      histogram.record(ev.getLong(ALLOCATION_SIZE), attributes);
       // Probably too high a cardinality
       // ev.getClass("objectClass").getName();
     }

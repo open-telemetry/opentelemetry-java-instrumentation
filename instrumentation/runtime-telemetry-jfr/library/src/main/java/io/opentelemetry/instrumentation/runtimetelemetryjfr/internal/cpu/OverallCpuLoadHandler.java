@@ -17,9 +17,10 @@ import java.util.Optional;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
  */
-public final class OverallCPULoadHandler implements RecordedEventHandler {
+public final class OverallCpuLoadHandler implements RecordedEventHandler {
   private static final String METRIC_NAME_PROCESS = "process.runtime.jvm.cpu.utilization";
   private static final String METRIC_NAME_MACHINE = "process.runtime.jvm.system.cpu.utilization";
   private static final String METRIC_DESCRIPTION_PROCESS = "Recent CPU utilization for the process";
@@ -36,7 +37,7 @@ public final class OverallCPULoadHandler implements RecordedEventHandler {
   private volatile double process = 0;
   private volatile double machine = 0;
 
-  public OverallCPULoadHandler(Meter meter) {
+  public OverallCpuLoadHandler(Meter meter) {
     observables.add(
         meter
             .gaugeBuilder(METRIC_NAME_PROCESS)

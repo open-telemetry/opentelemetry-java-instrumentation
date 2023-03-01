@@ -20,7 +20,8 @@ import java.util.Optional;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
  */
 public final class DirectBufferStatisticsHandler implements RecordedEventHandler {
   private static final String METRIC_NAME_USAGE = "process.runtime.jvm.buffer.usage";
