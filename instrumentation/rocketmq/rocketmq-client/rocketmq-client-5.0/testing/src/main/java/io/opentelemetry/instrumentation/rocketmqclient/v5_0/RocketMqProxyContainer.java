@@ -11,7 +11,7 @@ import org.testcontainers.containers.GenericContainer;
 
 public class RocketMqProxyContainer {
   // TODO(aaron-ai): replace it by the official image.
-  private static final String IMAGE_NAME = "aaronai/rocketmq-proxy-it:v1.0.0";
+  private static final String IMAGE_NAME = "aaronai/rocketmq-proxy-it:v1.0.1";
 
   private final GenericContainer<?> container;
   final String endpoints;
