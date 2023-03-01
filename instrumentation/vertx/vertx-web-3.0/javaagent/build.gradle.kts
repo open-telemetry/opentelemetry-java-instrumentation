@@ -1,6 +1,5 @@
 plugins {
   id("otel.javaagent-instrumentation")
-  id("org.unbroken-dome.test-sets")
 }
 
 muzzle {
@@ -12,17 +11,6 @@ muzzle {
   }
 }
 
-testSets {
-  create("version3Test")
-  create("latestDepTest")
-}
-
-tasks {
-  test {
-    dependsOn("version3Test")
-  }
-}
-
 dependencies {
   compileOnly("io.vertx:vertx-web:3.0.0")
 
@@ -30,15 +18,35 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
+}
 
-  testImplementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
+testing {
+  suites {
+    val version3Test by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
 
-  add("version3TestImplementation", "io.vertx:vertx-web:3.0.0")
-  add("version3TestImplementation", "io.vertx:vertx-jdbc-client:3.0.0")
-  add("version3TestImplementation", "io.vertx:vertx-codegen:3.0.0")
-  add("version3TestImplementation", "io.vertx:vertx-docgen:3.0.0")
+        implementation("io.vertx:vertx-web:3.0.0")
+        implementation("io.vertx:vertx-jdbc-client:3.0.0")
+        implementation("io.vertx:vertx-codegen:3.0.0")
+        implementation("io.vertx:vertx-docgen:3.0.0")
+      }
+    }
 
-  add("latestDepTestImplementation", "io.vertx:vertx-web:4.+")
-  add("latestDepTestImplementation", "io.vertx:vertx-jdbc-client:4.+")
-  add("latestDepTestImplementation", "io.vertx:vertx-codegen:4.+")
+    val latestDepTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
+
+        implementation("io.vertx:vertx-web:+")
+        implementation("io.vertx:vertx-jdbc-client:+")
+        implementation("io.vertx:vertx-codegen:+")
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
 }
