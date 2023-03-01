@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 /** Called from {@code ./gradlew generateDocs} to generate the markdown table in README.md. */
 public class GenerateDocs {
 
-  private static final Logger LOGGER = Logger.getLogger(GenerateDocs.class.getName());
+  private static final Logger logger = Logger.getLogger(GenerateDocs.class.getName());
 
   private static final String JFR_README_PATH_KEY = "jfr.readme.path";
   private static final String START = "<!-- generateDocsStart -->";
@@ -45,11 +45,11 @@ public class GenerateDocs {
       throw new IllegalStateException(JFR_README_PATH_KEY + " is required");
     }
 
-    LOGGER.info("Generating JFR docs. Writing to " + jfrReadmePath);
+    logger.info("Generating JFR docs. Writing to " + jfrReadmePath);
     String markdownTable = generateMarkdownTable();
-    LOGGER.info("Markdown table: " + System.lineSeparator() + markdownTable);
+    logger.info("Markdown table: " + System.lineSeparator() + markdownTable);
     writeReadme(markdownTable, jfrReadmePath);
-    LOGGER.info("Done");
+    logger.info("Done");
   }
 
   private static String generateMarkdownTable() throws InterruptedException {

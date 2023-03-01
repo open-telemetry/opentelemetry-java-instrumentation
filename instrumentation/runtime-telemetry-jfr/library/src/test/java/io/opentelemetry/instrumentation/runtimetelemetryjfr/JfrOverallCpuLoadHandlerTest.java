@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.Cons
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JfrOverallCPULoadHandlerTest {
+class JfrOverallCpuLoadHandlerTest {
 
   @RegisterExtension
   JfrExtension jfrExtension =
@@ -19,7 +19,7 @@ class JfrOverallCPULoadHandlerTest {
               builder.disableAllFeatures().enableFeature(JfrFeature.CPU_UTILIZATION_METRICS));
 
   @Test
-  void shouldHaveCPULoadEvents() {
+  void shouldHaveCpuLoadEvents() {
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric

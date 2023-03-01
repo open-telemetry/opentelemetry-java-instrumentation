@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.Cons
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JfrCPULockTest {
+class JfrCpuLockTest {
 
   @RegisterExtension
   JfrExtension jfrExtension =

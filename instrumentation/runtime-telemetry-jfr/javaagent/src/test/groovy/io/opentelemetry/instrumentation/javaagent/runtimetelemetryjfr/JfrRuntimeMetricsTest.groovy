@@ -21,7 +21,7 @@ class JfrRuntimeMetricsTest extends AgentInstrumentationSpecification {
       assert getMetrics().any { it.name == "process.runtime.jvm.cpu.limit" }
       assert getMetrics().any { it.name == "process.runtime.jvm.cpu.context_switch" }
 
-// TODO: need actions to gurantee these metrics are generated
+// TODO: need actions to guarantee these metrics are generated
 //      assert getMetrics().any { it.name == "process.runtime.jvm.memory.allocation" }
 //      assert getMetrics().any { it.name == "process.runtime.jvm.network.io" }
 //      assert getMetrics().any { it.name == "process.runtime.jvm.network.time" }
