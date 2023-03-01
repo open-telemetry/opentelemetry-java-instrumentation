@@ -29,6 +29,7 @@ public class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
             .set(uri.toString())
             .followRedirects(true)
             .connectionKeepAlive(true)
+            .connectionTimeout((int) CONNECTION_TIMEOUT.toMillis())
             .header("user-agent", USER_AGENT);
     for (Map.Entry<String, String> header : headers.entrySet()) {
       request.headerOverwrite(header.getKey(), header.getValue());
