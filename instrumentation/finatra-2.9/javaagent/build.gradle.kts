@@ -1,12 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
-  id("org.unbroken-dome.test-sets")
-}
-
-testSets {
-  // We need separate test sources to compile against latest Finatra.
-  create("latestDepTest")
 }
 
 muzzle {
@@ -26,6 +20,13 @@ muzzle {
   }
 }
 
+// Test suites don't allow excluding transitive dependencies. We use this configuration to declare
+// dependency to latest finatra and exclude netty-transport-native-epoll.
+val finatraLatest by configurations.creating {
+  isCanBeConsumed = false
+  isCanBeResolved = false
+}
+
 dependencies {
   // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
   // here.
@@ -33,10 +34,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
-  if (!(findProperty("testLatestDeps") as Boolean)) {
-    // Requires old version of Jackson
-    testImplementation(enforcedPlatform("com.fasterxml.jackson:jackson-bom:2.9.10"))
-  }
+  testImplementation(enforcedPlatform("com.fasterxml.jackson:jackson-bom:2.9.10"))
   testImplementation("com.twitter:finatra-http_2.11:19.12.0") {
     // Finatra POM references linux-aarch64 version of this which we don't need. Including it
     // prevents us from managing Netty version because the classifier name changed to linux-aarch_64
@@ -47,8 +45,25 @@ dependencies {
   // Required for older versions of finatra on JDKs >= 11
   testImplementation("com.sun.activation:javax.activation:1.2.0")
 
-  add("latestDepTestImplementation", "com.twitter:finatra-http_2.13:+") {
+  finatraLatest("com.twitter:finatra-http_2.13:+") {
     exclude("io.netty", "netty-transport-native-epoll")
+  }
+}
+
+testing {
+  suites {
+    val latestDepTest by registering(JvmTestSuite::class) {
+      dependencies {
+        // finatra is included via finatraLatest configuation
+        implementation("io.netty:netty-transport-native-epoll:4.1.51.Final:linux-x86_64")
+      }
+    }
+  }
+}
+
+configurations {
+  named("latestDepTestImplementation") {
+    extendsFrom(configurations["finatraLatest"])
   }
 }
 
@@ -62,19 +77,14 @@ tasks {
       enabled = false
     }
   }
+
+  check {
+    dependsOn(testing.suites)
+  }
 }
 
 tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-}
-
-if (findProperty("testLatestDeps") as Boolean) {
-  configurations {
-    // finatra artifact name is different for regular and latest tests
-    testImplementation {
-      exclude("com.twitter", "finatra-http_2.11")
-    }
-  }
 }
