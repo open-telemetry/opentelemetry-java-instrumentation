@@ -346,16 +346,6 @@ afterEvaluate {
         )
       }
     }
-
-    if (plugins.hasPlugin("org.unbroken-dome.test-sets") && configurations.findByName("latestDepTestRuntime") != null) {
-      doFirst {
-        val testArtifacts = configurations.testRuntimeClasspath.get().resolvedConfiguration.resolvedArtifacts
-        val latestTestArtifacts = configurations.getByName("latestDepTestRuntimeClasspath").resolvedConfiguration.resolvedArtifacts
-        if (testArtifacts == latestTestArtifacts) {
-          throw IllegalStateException("latestDepTest dependencies are identical to test")
-        }
-      }
-    }
   }
 }
 
