@@ -46,7 +46,17 @@ testing {
 }
 
 tasks {
-  check {
-    dependsOn(testing.suites)
+  if (findProperty("testLatestDeps") as Boolean) {
+    // disable regular test running and compiling tasks when latest dep test task is run
+    named("test") {
+      enabled = false
+    }
+    named("compileTestGroovy") {
+      enabled = false
+    }
+
+    check {
+      dependsOn(testing.suites)
+    }
   }
 }
