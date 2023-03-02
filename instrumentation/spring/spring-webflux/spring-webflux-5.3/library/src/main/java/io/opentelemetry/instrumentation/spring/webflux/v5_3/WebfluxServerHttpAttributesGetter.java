@@ -75,7 +75,7 @@ enum WebfluxServerHttpAttributesGetter
       route = bestPatternObj.toString();
     }
     if (route.equals("/**")) {
-      return null; // 404
+      return null;
     }
     String contextPath = request.getRequest().getPath().contextPath().value();
     return contextPath + (route.startsWith("/") ? route : ("/" + route));

@@ -15,6 +15,7 @@ import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
 
 /** Entrypoint for instrumenting Spring Webflux HTTP clients. */
 public final class SpringWebfluxTelemetry {
@@ -58,11 +59,11 @@ public final class SpringWebfluxTelemetry {
     exchangeFilterFunctions.add(new WebClientTracingFilter(clientInstrumenter, propagators));
   }
 
-  public TelemetryProducingWebFilter createWebFilter() {
+  public WebFilter createWebFilter() {
     return new TelemetryProducingWebFilter(serverInstrumenter);
   }
 
-  public TelemetryProducingWebFilter createWebFilterAndRegisterReactorHook() {
+  public WebFilter createWebFilterAndRegisterReactorHook() {
     registerReactorHook();
     return this.createWebFilter();
   }

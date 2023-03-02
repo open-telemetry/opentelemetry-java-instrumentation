@@ -62,14 +62,14 @@ public class WebClientConfig {
 
   // Adds instrumentation to WebClients
   @Bean
-  public WebClient.Builder webClient(OpenTelemetry openTelemetry) {
+  public WebClient.Builder webClient() {
     WebClient webClient = WebClient.create();
     return webClient.mutate().filters(webfluxTelemetry::addClientTracingFilter);
   }
 
   // Adds instrumentation to Webflux server
   @Bean
-  public WebFilter webFilter(OpenTelemetry openTelemetry) {
+  public WebFilter webFilter() {
     return webfluxTelemetry.createWebFilterAndRegisterReactorHook();
   }
 }
