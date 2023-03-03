@@ -90,6 +90,7 @@ public class ExtensionClassLoader extends URLClassLoader {
 
           File tempFile = new File(tempDirectory, name.substring(prefix.length()));
           // reject extensions that would be extracted outside of temp directory
+          // https://security.snyk.io/research/zip-slip-vulnerability
           if (name.indexOf("..") != -1
               && !tempFile
                   .getCanonicalFile()
