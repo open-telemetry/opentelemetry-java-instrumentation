@@ -57,7 +57,7 @@ dependencies {
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("gradle.plugin.com.github.johnrengelman:shadow:7.1.2")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.enterprise:com.gradle.enterprise.gradle.plugin:3.12.1")
+  implementation("com.gradle.enterprise:com.gradle.enterprise.gradle.plugin:3.12.4")
   implementation("org.owasp:dependency-check-gradle:8.1.2")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.0")
   // When updating, also update dependencyManagement/build.gradle.kts
