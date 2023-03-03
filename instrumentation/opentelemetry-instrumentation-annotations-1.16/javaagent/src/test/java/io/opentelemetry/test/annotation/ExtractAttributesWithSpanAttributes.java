@@ -6,13 +6,13 @@
 package io.opentelemetry.test.annotation;
 
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
-import io.opentelemetry.instrumentation.annotations.WithCurrentSpan;
+import io.opentelemetry.instrumentation.annotations.WithSpanAttributes;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 
-public class SpanAttributesWithCurrentSpan {
+public class ExtractAttributesWithSpanAttributes {
 
-  @WithCurrentSpan
-  public String withCurrentSpanAttributes(
+  @WithSpanAttributes
+  public String withSpanAttributes(
       @SpanAttribute String implicitName,
       @SpanAttribute("explicitName") String parameter,
       @SpanAttribute("nullAttribute") String nullAttribute,
@@ -21,9 +21,19 @@ public class SpanAttributesWithCurrentSpan {
     return "hello!";
   }
 
+  @WithSpanAttributes
+  public String withSpanAttributesParent(
+      @SpanAttribute String implicitName,
+      @SpanAttribute("explicitName") String parameter,
+      @SpanAttribute("nullAttribute") String nullAttribute,
+      String notTraced) {
+
+    return withSpanAttributes("foo", "bar", null, "baz");
+  }
+
   @WithSpan
-  @WithCurrentSpan
-  public String withSpanAttributes(
+  @WithSpanAttributes
+  public String withSpanTakesPrecedence(
       @SpanAttribute String implicitName,
       @SpanAttribute("explicitName") String parameter,
       @SpanAttribute("nullAttribute") String nullAttribute,

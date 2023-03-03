@@ -25,17 +25,17 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class WithCurrentSpanInstrumentation implements TypeInstrumentation {
+public class WithSpanAttributesInstrumentation implements TypeInstrumentation {
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   private final ElementMatcher.Junction<MethodDescription> annotatedParametersMatcher;
   // this matcher matches all methods that should be excluded from transformation
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
-  WithCurrentSpanInstrumentation() {
+  WithSpanAttributesInstrumentation() {
     annotatedMethodMatcher =
         isAnnotatedWith(
-                named("application.io.opentelemetry.instrumentation.annotations.WithCurrentSpan"))
+                named("application.io.opentelemetry.instrumentation.annotations.WithSpanAttributes"))
             // Avoid repeat extraction if method is already annotation with WithSpan
             .and(
                 not(
@@ -61,12 +61,11 @@ public class WithCurrentSpanInstrumentation implements TypeInstrumentation {
     ElementMatcher.Junction<MethodDescription> tracedMethodsWithParameters =
         annotatedMethodMatcher.and(not(excludedMethodsMatcher)).and(annotatedParametersMatcher);
 
-    transformer.applyAdviceToMethod(
-        tracedMethodsWithParameters,
-        WithCurrentSpanInstrumentation.class.getName() + "$WithCurrentSpanAttributesAdvice");
+    transformer.applyAdviceToMethod(tracedMethodsWithParameters,
+        WithSpanAttributesInstrumentation.class.getName() + "$WithSpanAttributesAdvice");
   }
 
-  public static class WithCurrentSpanAttributesAdvice {
+  public static class WithSpanAttributesAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

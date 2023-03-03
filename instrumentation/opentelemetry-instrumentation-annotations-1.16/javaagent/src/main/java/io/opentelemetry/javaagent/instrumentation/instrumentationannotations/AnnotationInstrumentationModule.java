@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationannotations;
 
 import static java.util.Arrays.asList;
 
-import application.io.opentelemetry.instrumentation.annotations.WithCurrentSpan;
+import application.io.opentelemetry.instrumentation.annotations.WithSpanAttributes;
 import application.io.opentelemetry.instrumentation.annotations.WithSpan;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -15,7 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 /**
- * Instrumentation for methods annotated with {@link WithSpan} and {@link WithCurrentSpan}
+ * Instrumentation for methods annotated with {@link WithSpan} and {@link WithSpanAttributes}
  * annotations.
  */
 @AutoService(InstrumentationModule.class)
@@ -34,6 +34,6 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new WithSpanInstrumentation(), new WithCurrentSpanInstrumentation());
+    return asList(new WithSpanInstrumentation(), new WithSpanAttributesInstrumentation());
   }
 }

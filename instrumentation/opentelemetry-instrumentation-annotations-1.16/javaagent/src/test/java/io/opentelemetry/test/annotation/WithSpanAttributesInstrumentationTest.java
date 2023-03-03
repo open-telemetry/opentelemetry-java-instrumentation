@@ -17,18 +17,18 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class WithCurrentSpanInstrumentationTest {
+class WithSpanAttributesInstrumentationTest {
 
   @RegisterExtension
   public static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
 
   @Test
-  void captureInWithSpan() throws Exception {
+  void captureAttributesInNewSpan() throws Exception {
 
     testing.runWithSpan(
         "root",
-        () -> new SpanAttributesWithCurrentSpan().withSpanAttributes("foo", "bar", null, "baz"));
+        () -> new ExtractAttributesWithSpanAttributes().withSpanTakesPrecedence("foo", "bar", null, "baz"));
 
     assertThat(testing.waitForTraces(1))
         .satisfiesExactly(
@@ -42,7 +42,7 @@ class WithCurrentSpanInstrumentationTest {
                                 .hasParentSpanId(SpanId.getInvalid()),
                         span ->
                             assertThat(span)
-                                .hasName("SpanAttributesWithCurrentSpan.withSpanAttributes")
+                                .hasName("ExtractAttributesWithSpanAttributes.withSpanTakesPrecedence")
                                 .hasKind(SpanKind.INTERNAL)
                                 .hasParentSpanId(trace.get(0).getSpanId())
                                 .hasAttributesSatisfying(
@@ -51,10 +51,10 @@ class WithCurrentSpanInstrumentationTest {
                                             .containsOnly(
                                                 entry(
                                                     SemanticAttributes.CODE_NAMESPACE,
-                                                    SpanAttributesWithCurrentSpan.class.getName()),
+                                                    ExtractAttributesWithSpanAttributes.class.getName()),
                                                 entry(
                                                     SemanticAttributes.CODE_FUNCTION,
-                                                    "withSpanAttributes"),
+                                                    "withSpanTakesPrecedence"),
                                                 entry(
                                                     AttributeKey.stringKey("implicitName"), "foo"),
                                                 entry(
@@ -63,13 +63,13 @@ class WithCurrentSpanInstrumentationTest {
   }
 
   @Test
-  void captureInCurrentSpan() throws Exception {
+  void captureAttributesInCurrentSpan() throws Exception {
 
     testing.runWithSpan(
         "root",
         () ->
-            new SpanAttributesWithCurrentSpan()
-                .withCurrentSpanAttributes("foo", "bar", null, "baz"));
+            new ExtractAttributesWithSpanAttributes()
+                .withSpanAttributes("foo", "bar", null, "baz"));
 
     assertThat(testing.waitForTraces(1))
         .satisfiesExactly(
@@ -95,7 +95,7 @@ class WithCurrentSpanInstrumentationTest {
   @Test
   void noExistingSpan() throws Exception {
 
-    new SpanAttributesWithCurrentSpan().withCurrentSpanAttributes("foo", "bar", null, "baz");
+    new ExtractAttributesWithSpanAttributes().withSpanAttributes("foo", "bar", null, "baz");
 
     assertThat(testing.waitForTraces(0));
   }
@@ -108,7 +108,42 @@ class WithCurrentSpanInstrumentationTest {
         () -> {
           Span.current().setAttribute("implicitName", "willbegone");
           Span.current().setAttribute("keep", "willbekept");
-          new SpanAttributesWithCurrentSpan().withCurrentSpanAttributes("foo", "bar", null, "baz");
+          new ExtractAttributesWithSpanAttributes().withSpanAttributes("foo", "bar", null, "baz");
+        });
+
+    assertThat(testing.waitForTraces(1))
+        .satisfiesExactly(
+            trace ->
+                assertThat(trace)
+                    .satisfiesExactly(
+                        span ->
+                            assertThat(span)
+                                .hasName("root")
+                                .hasKind(SpanKind.INTERNAL)
+                                .hasParentSpanId(SpanId.getInvalid())
+                                .hasAttributesSatisfying(
+                                    attributes ->
+                                        assertThat(attributes)
+                                            .containsOnly(
+                                                entry(AttributeKey.stringKey("keep"), "willbekept"),
+                                                entry(
+                                                    AttributeKey.stringKey("implicitName"), "foo"),
+                                                entry(
+                                                    AttributeKey.stringKey("explicitName"),
+                                                    "bar")))));
+  }
+
+  @Test
+  void multiMethodOverwriteAttributes() throws Exception {
+
+    testing.runWithSpan(
+        "root",
+        () -> {
+          Span.current().setAttribute("implicitName", "willbegone");
+          Span.current().setAttribute("keep", "willbekept");
+          new ExtractAttributesWithSpanAttributes()
+              .withSpanAttributesParent(
+                  "parentbegone", "parentbegone", null, "parentbegone");
         });
 
     assertThat(testing.waitForTraces(1))
