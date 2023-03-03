@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -28,6 +30,9 @@ public final class AwsXRayEnvSpanLinksExtractor implements SpanLinksExtractor<Aw
   // lower-case map getter used for extraction
   private static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 
+  private static final Attributes LINK_ATTRIBUTES =
+      Attributes.of(AttributeKey.stringKey("source"), "x-ray-env");
+
   @Override
   public void extract(
       SpanLinksBuilder spanLinks,
@@ -41,16 +46,16 @@ public final class AwsXRayEnvSpanLinksExtractor implements SpanLinksExtractor<Aw
     if (parentTraceHeader == null || parentTraceHeader.isEmpty()) {
       return;
     }
-    Context parentCtx =
+    Context xrayContext =
         AwsXrayPropagator.getInstance()
             .extract(
                 // see BaseTracer#extract() on why we're using root() here
                 Context.root(),
                 Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentTraceHeader),
                 MapGetter.INSTANCE);
-    SpanContext parent = Span.fromContext(parentCtx).getSpanContext();
-    if (parent.isValid()) {
-      spanLinks.addLink(parent);
+    SpanContext envVarSpanCtx = Span.fromContext(xrayContext).getSpanContext();
+    if (envVarSpanCtx.isValid()) {
+      spanLinks.addLink(envVarSpanCtx, LINK_ATTRIBUTES);
     }
   }
 
