@@ -9,7 +9,7 @@ plugins {
 
 dependencies {
   implementation(platform("io.opentelemetry:opentelemetry-bom:1.0.0"))
-  implementation(platform("org.springframework.boot:spring-boot-dependencies:2.6.6"))
+  implementation(platform("org.springframework.boot:spring-boot-dependencies:3.0.4"))
 
   implementation("io.opentelemetry:opentelemetry-api")
   implementation(project(":instrumentation-annotations"))
