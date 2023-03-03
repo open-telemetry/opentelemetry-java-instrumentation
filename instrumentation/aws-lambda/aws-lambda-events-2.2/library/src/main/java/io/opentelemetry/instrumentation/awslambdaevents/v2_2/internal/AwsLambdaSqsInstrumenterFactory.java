@@ -23,7 +23,7 @@ public final class AwsLambdaSqsInstrumenterFactory {
             "io.opentelemetry.aws-lambda-events-2.2",
             AwsLambdaSqsInstrumenterFactory::spanName)
         .addAttributesExtractor(new SqsEventAttributesExtractor())
-        .addSpanLinksExtractor(new SqsEventSpanLinksExtractor())
+        .addSpanLinksExtractor(new SqsEventSpanLinksExtractor(openTelemetry))
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
@@ -33,7 +33,7 @@ public final class AwsLambdaSqsInstrumenterFactory {
             "io.opentelemetry.aws-lambda-events-2.2",
             message -> message.getEventSource() + " process")
         .addAttributesExtractor(new SqsMessageAttributesExtractor())
-        .addSpanLinksExtractor(new SqsMessageSpanLinksExtractor())
+        .addSpanLinksExtractor(new SqsMessageSpanLinksExtractor(openTelemetry))
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 

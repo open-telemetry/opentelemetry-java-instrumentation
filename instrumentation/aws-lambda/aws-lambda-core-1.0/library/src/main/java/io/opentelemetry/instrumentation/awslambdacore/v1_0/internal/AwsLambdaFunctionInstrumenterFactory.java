@@ -23,6 +23,7 @@ public final class AwsLambdaFunctionInstrumenterFactory {
                 openTelemetry,
                 "io.opentelemetry.aws-lambda-core-1.0",
                 AwsLambdaFunctionInstrumenterFactory::spanName)
+            .addSpanLinksExtractor(new AwsXRayEnvSpanLinksExtractor())
             .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
             .buildInstrumenter(SpanKindExtractor.alwaysServer()));
   }
