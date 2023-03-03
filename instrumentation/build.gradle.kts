@@ -36,3 +36,8 @@ subprojects {
     instrumentationProjectMuzzle[counter++ % 4].dependsOn(subProj.tasks.named("muzzle"))
   }
 }
+dependencies {
+  testImplementation("org.testng:testng:7.1.0")
+  testImplementation("org.testng:testng:7.1.0")
+  testImplementation("org.testng:testng:7.1.0")
+}
