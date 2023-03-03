@@ -6,10 +6,13 @@
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import org.junit.jupiter.api.Test;
@@ -25,6 +28,8 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
  */
 @ExtendWith(SystemStubsExtension.class)
 class AwsXrayEnvSpanLinksExtractorTest {
+  private static final Attributes EXPECTED_LINK_ATTRIBUTES =
+      Attributes.of(AttributeKey.stringKey("source"), "x-ray-env");
 
   @SystemStub final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
@@ -52,7 +57,7 @@ class AwsXrayEnvSpanLinksExtractorTest {
     AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
     // then
     ArgumentCaptor<SpanContext> captor = ArgumentCaptor.forClass(SpanContext.class);
-    verify(spanLinksBuilder).addLink(captor.capture());
+    verify(spanLinksBuilder).addLink(captor.capture(), eq(EXPECTED_LINK_ATTRIBUTES));
     SpanContext spanContext = captor.getValue();
     assertThat(spanContext.isValid()).isTrue();
     assertThat(spanContext.isSampled()).isFalse();
@@ -72,7 +77,7 @@ class AwsXrayEnvSpanLinksExtractorTest {
     AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
     // then
     ArgumentCaptor<SpanContext> captor = ArgumentCaptor.forClass(SpanContext.class);
-    verify(spanLinksBuilder).addLink(captor.capture());
+    verify(spanLinksBuilder).addLink(captor.capture(), eq(EXPECTED_LINK_ATTRIBUTES));
     SpanContext spanContext = captor.getValue();
     assertThat(spanContext.isValid()).isTrue();
     assertThat(spanContext.isSampled()).isTrue();
