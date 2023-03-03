@@ -24,7 +24,7 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
  * any time.
  */
 @ExtendWith(SystemStubsExtension.class)
-class AwsXRayEnvSpanLinksExtractorTest {
+class AwsXrayEnvSpanLinksExtractorTest {
 
   @SystemStub final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
@@ -35,7 +35,7 @@ class AwsXRayEnvSpanLinksExtractorTest {
     environmentVariables.set("_X_AMZN_TRACE_ID", "");
 
     // when
-    AwsXRayEnvSpanLinksExtractor.extract(spanLinksBuilder);
+    AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
     // then
     verifyNoInteractions(spanLinksBuilder);
   }
@@ -49,7 +49,7 @@ class AwsXRayEnvSpanLinksExtractorTest {
         "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=0");
 
     // when
-    AwsXRayEnvSpanLinksExtractor.extract(spanLinksBuilder);
+    AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
     // then
     ArgumentCaptor<SpanContext> captor = ArgumentCaptor.forClass(SpanContext.class);
     verify(spanLinksBuilder).addLink(captor.capture());
@@ -69,7 +69,7 @@ class AwsXRayEnvSpanLinksExtractorTest {
         "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=1");
 
     // when
-    AwsXRayEnvSpanLinksExtractor.extract(spanLinksBuilder);
+    AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
     // then
     ArgumentCaptor<SpanContext> captor = ArgumentCaptor.forClass(SpanContext.class);
     verify(spanLinksBuilder).addLink(captor.capture());
