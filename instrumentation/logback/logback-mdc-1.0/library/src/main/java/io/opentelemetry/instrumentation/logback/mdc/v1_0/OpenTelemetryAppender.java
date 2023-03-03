@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.T
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.LoggerContextVO;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
@@ -17,6 +18,7 @@ import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
+import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -49,8 +51,25 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     } else {
       eventContext = new UnionMap<>(eventContext, contextData);
     }
+    Map<String, String> eventContextMap = eventContext;
+    LoggerContextVO oldVo = event.getLoggerContextVO();
+    LoggerContextVO vo =
+        oldVo != null
+            ? new LoggerContextVO(oldVo.getName(), eventContextMap, oldVo.getBirthTime())
+            : null;
 
-    return new LoggingEventWrapper(event, eventContext);
+    return (ILoggingEvent)
+        Proxy.newProxyInstance(
+            ILoggingEvent.class.getClassLoader(),
+            new Class<?>[] {ILoggingEvent.class},
+            (proxy, method, args) -> {
+              if ("getMDCPropertyMap".equals(method.getName())) {
+                return eventContextMap;
+              } else if ("getLoggerContextVO".equals(method.getName())) {
+                return vo;
+              }
+              return method.invoke(event, args);
+            });
   }
 
   @Override
