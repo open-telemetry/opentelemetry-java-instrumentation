@@ -6,8 +6,8 @@
 package io.opentelemetry.test.annotation;
 
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
-import io.opentelemetry.instrumentation.annotations.WithSpanAttributes;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.WithSpanAttributes;
 
 public class ExtractAttributesWithSpanAttributes {
 

@@ -35,7 +35,8 @@ public class WithSpanAttributesInstrumentation implements TypeInstrumentation {
   WithSpanAttributesInstrumentation() {
     annotatedMethodMatcher =
         isAnnotatedWith(
-                named("application.io.opentelemetry.instrumentation.annotations.WithSpanAttributes"))
+                named(
+                    "application.io.opentelemetry.instrumentation.annotations.WithSpanAttributes"))
             // Avoid repeat extraction if method is already annotation with WithSpan
             .and(
                 not(
@@ -61,7 +62,8 @@ public class WithSpanAttributesInstrumentation implements TypeInstrumentation {
     ElementMatcher.Junction<MethodDescription> tracedMethodsWithParameters =
         annotatedMethodMatcher.and(not(excludedMethodsMatcher)).and(annotatedParametersMatcher);
 
-    transformer.applyAdviceToMethod(tracedMethodsWithParameters,
+    transformer.applyAdviceToMethod(
+        tracedMethodsWithParameters,
         WithSpanAttributesInstrumentation.class.getName() + "$WithSpanAttributesAdvice");
   }
 

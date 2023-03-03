@@ -28,7 +28,9 @@ class WithSpanAttributesInstrumentationTest {
 
     testing.runWithSpan(
         "root",
-        () -> new ExtractAttributesWithSpanAttributes().withSpanTakesPrecedence("foo", "bar", null, "baz"));
+        () ->
+            new ExtractAttributesWithSpanAttributes()
+                .withSpanTakesPrecedence("foo", "bar", null, "baz"));
 
     assertThat(testing.waitForTraces(1))
         .satisfiesExactly(
@@ -42,7 +44,8 @@ class WithSpanAttributesInstrumentationTest {
                                 .hasParentSpanId(SpanId.getInvalid()),
                         span ->
                             assertThat(span)
-                                .hasName("ExtractAttributesWithSpanAttributes.withSpanTakesPrecedence")
+                                .hasName(
+                                    "ExtractAttributesWithSpanAttributes.withSpanTakesPrecedence")
                                 .hasKind(SpanKind.INTERNAL)
                                 .hasParentSpanId(trace.get(0).getSpanId())
                                 .hasAttributesSatisfying(
@@ -51,7 +54,8 @@ class WithSpanAttributesInstrumentationTest {
                                             .containsOnly(
                                                 entry(
                                                     SemanticAttributes.CODE_NAMESPACE,
-                                                    ExtractAttributesWithSpanAttributes.class.getName()),
+                                                    ExtractAttributesWithSpanAttributes.class
+                                                        .getName()),
                                                 entry(
                                                     SemanticAttributes.CODE_FUNCTION,
                                                     "withSpanTakesPrecedence"),
@@ -142,8 +146,7 @@ class WithSpanAttributesInstrumentationTest {
           Span.current().setAttribute("implicitName", "willbegone");
           Span.current().setAttribute("keep", "willbekept");
           new ExtractAttributesWithSpanAttributes()
-              .withSpanAttributesParent(
-                  "parentbegone", "parentbegone", null, "parentbegone");
+              .withSpanAttributesParent("parentbegone", "parentbegone", null, "parentbegone");
         });
 
     assertThat(testing.waitForTraces(1))

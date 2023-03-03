@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationannotations;
 
 import static java.util.Arrays.asList;
 
-import application.io.opentelemetry.instrumentation.annotations.WithSpanAttributes;
 import application.io.opentelemetry.instrumentation.annotations.WithSpan;
+import application.io.opentelemetry.instrumentation.annotations.WithSpanAttributes;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
