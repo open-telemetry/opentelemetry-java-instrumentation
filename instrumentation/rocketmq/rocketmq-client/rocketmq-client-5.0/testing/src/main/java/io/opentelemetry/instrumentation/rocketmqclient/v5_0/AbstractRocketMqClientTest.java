@@ -35,6 +35,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -79,7 +80,10 @@ public abstract class AbstractRocketMqClientTest {
   void setUp() throws ClientException {
     container.start();
     ClientConfiguration clientConfiguration =
-        ClientConfiguration.newBuilder().setEndpoints(container.endpoints).build();
+        ClientConfiguration.newBuilder()
+            .setEndpoints(container.endpoints)
+            .setRequestTimeout(Duration.ofSeconds(10))
+            .build();
     FilterExpression filterExpression = new FilterExpression(tag, FilterExpressionType.TAG);
     Map<String, FilterExpression> subscriptionExpressions = new HashMap<>();
     subscriptionExpressions.put(normalTopic, filterExpression);
