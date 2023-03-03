@@ -76,10 +76,10 @@ tasks {
     named("compileTestScala") {
       enabled = false
     }
-  }
 
-  check {
-    dependsOn(testing.suites)
+    check {
+      dependsOn(testing.suites)
+    }
   }
 }
 

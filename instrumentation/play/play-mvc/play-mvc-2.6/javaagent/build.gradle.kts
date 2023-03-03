@@ -69,10 +69,10 @@ tasks {
     named("compileTestGroovy") {
       enabled = false
     }
-  }
 
-  check {
-    dependsOn(testing.suites)
+    check {
+      dependsOn(testing.suites)
+    }
   }
 }
 
