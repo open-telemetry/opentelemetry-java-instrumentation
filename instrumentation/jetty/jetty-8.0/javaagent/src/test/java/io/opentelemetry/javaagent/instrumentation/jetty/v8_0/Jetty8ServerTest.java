@@ -11,8 +11,10 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Sets;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -20,7 +22,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.io.Writer;
@@ -89,19 +90,14 @@ public class Jetty8ServerTest extends AbstractHttpServerTest<Server> {
     super.configure(options);
   }
 
-  @Override
   protected SpanDataAssert assertResponseSpan(
-      SpanDataAssert span, SpanData parent, ServerEndpoint endpoint) {
-    switch (endpoint) {
-      case REDIRECT:
-        span.hasName("Response.sendRedirect").hasKind(SpanKind.INTERNAL).hasParent(parent);
-        break;
-      case ERROR:
-        span.hasName("Response.sendError").hasKind(SpanKind.INTERNAL).hasParent(parent);
-        break;
-      default:
-        break;
+      SpanDataAssert span, String method, ServerEndpoint endpoint) {
+    if (endpoint == REDIRECT) {
+      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"));
+    } else if (endpoint == ERROR) {
+      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
     }
+    span.hasKind(SpanKind.INTERNAL).hasAttributesSatisfying(Attributes::isEmpty);
     return span;
   }
 
