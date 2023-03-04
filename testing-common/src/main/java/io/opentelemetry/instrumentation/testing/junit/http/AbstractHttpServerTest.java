@@ -419,8 +419,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
               int parentIndex = spanAssertions.size() - 1;
               spanAssertions.add(
                   span -> {
-                      SpanData parent = trace.getSpan(parentIndex);
-                      assertResponseSpan(span, parent, endpoint);
+                    SpanData parent = trace.getSpan(parentIndex);
+                    assertResponseSpan(span, parent, endpoint);
                     span.hasParent(parent);
                   });
             }
@@ -452,9 +452,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   protected SpanDataAssert assertResponseSpan(
-          SpanDataAssert span, SpanData parent, ServerEndpoint endpoint) {
+      SpanDataAssert span, SpanData parent, ServerEndpoint endpoint) {
     throw new UnsupportedOperationException(
-            "assertResponseSpan not implemented in " + getClass().getName());
+        "assertResponseSpan not implemented in " + getClass().getName());
   }
 
   protected SpanDataAssert assertResponseSpan(
