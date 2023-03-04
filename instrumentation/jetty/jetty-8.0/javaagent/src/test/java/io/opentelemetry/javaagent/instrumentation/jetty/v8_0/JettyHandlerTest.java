@@ -90,6 +90,7 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
     super.configure(options);
   }
 
+  @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
     if (endpoint == REDIRECT) {
