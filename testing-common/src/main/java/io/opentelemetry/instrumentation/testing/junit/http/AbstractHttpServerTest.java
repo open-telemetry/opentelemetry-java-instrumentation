@@ -419,8 +419,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
               int parentIndex = spanAssertions.size() - 1;
               spanAssertions.add(
                   span -> {
-                    assertResponseSpan(span, method, endpoint);
-                    span.hasParent(trace.getSpan(parentIndex));
+                      SpanData parent = trace.getSpan(parentIndex);
+                      assertResponseSpan(span, parent, endpoint);
+                    span.hasParent(parent);
                   });
             }
 
@@ -448,6 +449,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
     throw new UnsupportedOperationException(
         "assertHandlerSpan not implemented in " + getClass().getName());
+  }
+
+  protected SpanDataAssert assertResponseSpan(
+          SpanDataAssert span, SpanData parent, ServerEndpoint endpoint) {
+    throw new UnsupportedOperationException(
+            "assertResponseSpan not implemented in " + getClass().getName());
   }
 
   protected SpanDataAssert assertResponseSpan(

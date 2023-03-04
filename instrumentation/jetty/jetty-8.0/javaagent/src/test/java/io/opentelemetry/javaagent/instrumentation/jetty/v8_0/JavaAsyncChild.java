@@ -1,4 +1,4 @@
-/*
+package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;/*
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
