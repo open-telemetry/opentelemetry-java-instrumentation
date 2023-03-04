@@ -20,7 +20,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class QueuedThreadPoolTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private QueuedThreadPool pool;
 

@@ -40,7 +40,7 @@ public class Jetty8ServerTest extends AbstractHttpServerTest<Server> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
-  static ErrorHandler errorHandler =
+  private static final ErrorHandler errorHandler =
       new ErrorHandler() {
         @Override
         protected void handleErrorPage(
@@ -54,7 +54,7 @@ public class Jetty8ServerTest extends AbstractHttpServerTest<Server> {
         }
       };
 
-  @Shared static final TestHandler testHandler = new TestHandler();
+  @Shared private static final TestHandler testHandler = new TestHandler();
 
   @Override
   protected Server setupServer() {
@@ -105,7 +105,7 @@ public class Jetty8ServerTest extends AbstractHttpServerTest<Server> {
     return span;
   }
 
-  static void handleRequest(Request request, HttpServletResponse response) {
+  private static void handleRequest(Request request, HttpServletResponse response) {
     ServerEndpoint endpoint = ServerEndpoint.forPath(request.getRequestURI());
     controller(
         endpoint,
