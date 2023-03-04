@@ -36,7 +36,7 @@ import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import spock.lang.Shared;
 
-public class Jetty8ServerTest extends AbstractHttpServerTest<Server> {
+public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
