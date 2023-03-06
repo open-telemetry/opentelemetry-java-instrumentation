@@ -58,8 +58,10 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
   @Test
   void testSendAndConsumeMessage() throws Throwable {
     ClientConfiguration clientConfiguration =
-        ClientConfiguration.newBuilder().setEndpoints(container.endpoints).setRequestTimeout(
-            Duration.ofSeconds(10)).build();
+        ClientConfiguration.newBuilder()
+            .setEndpoints(container.endpoints)
+            .setRequestTimeout(Duration.ofSeconds(10))
+            .build();
     // Inner topic of the container.
     String topic = "normal-topic-0";
     ClientServiceProvider provider = ClientServiceProvider.loadService();
