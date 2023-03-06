@@ -16,8 +16,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
+import java.security.AllPermission;
 import java.security.CodeSource;
 import java.security.Permission;
+import java.security.Permissions;
+import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
@@ -63,6 +66,7 @@ public class AgentClassLoader extends URLClassLoader {
   private final URL jarBase;
   private final String jarEntryPrefix;
   private final CodeSource codeSource;
+  private final ProtectionDomain protectionDomain;
   private final Manifest manifest;
 
   /**
@@ -93,6 +97,9 @@ public class AgentClassLoader extends URLClassLoader {
       jarBase =
           new URL("x-internal-jar", null, 0, "/", new AgentClassLoaderUrlStreamHandler(jarFile));
       codeSource = new CodeSource(javaagentFile.toURI().toURL(), (Certificate[]) null);
+      Permissions permissions = new Permissions();
+      permissions.add(new AllPermission());
+      protectionDomain = new ProtectionDomain(codeSource, permissions);
       manifest = jarFile.getManifest();
     } catch (IOException e) {
       throw new IllegalStateException("Unable to open agent jar", e);
@@ -173,7 +180,7 @@ public class AgentClassLoader extends URLClassLoader {
   }
 
   public Class<?> defineClass(String name, byte[] bytes) {
-    return defineClass(name, bytes, 0, bytes.length, codeSource);
+    return defineClass(name, bytes, 0, bytes.length, protectionDomain);
   }
 
   private byte[] getJarEntryBytes(JarEntry jarEntry) throws IOException {

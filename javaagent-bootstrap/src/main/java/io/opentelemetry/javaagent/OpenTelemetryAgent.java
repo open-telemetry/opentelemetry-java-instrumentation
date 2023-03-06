@@ -11,8 +11,9 @@ import io.opentelemetry.javaagent.bootstrap.JavaagentFileHolder;
 import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
+import java.net.JarURLConnection;
 import java.net.URISyntaxException;
-import java.security.CodeSource;
+import java.net.URL;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
@@ -64,24 +65,30 @@ public final class OpenTelemetryAgent {
 
   private static synchronized File installBootstrapJar(Instrumentation inst)
       throws IOException, URISyntaxException {
-
-    CodeSource codeSource = OpenTelemetryAgent.class.getProtectionDomain().getCodeSource();
-
-    if (codeSource == null) {
-      throw new IllegalStateException("could not get agent jar location");
+    // we are not using OpenTelemetryAgent.class.getProtectionDomain().getCodeSource() to get agent
+    // location because getProtectionDomain does a permission check with security manager
+    URL url =
+        OpenTelemetryAgent.class
+            .getClassLoader()
+            .getResource(OpenTelemetryAgent.class.getName().replace('.', '/') + ".class");
+    if (url == null || !"jar".equals(url.getProtocol())) {
+      throw new IllegalStateException("could not get agent jar location from url " + url);
     }
-
-    File javaagentFile = new File(codeSource.getLocation().toURI());
+    String resourcePath = url.toURI().getSchemeSpecificPart();
+    int protocolSeparatorIndex = resourcePath.indexOf(":");
+    int resourceSeparatorIndex = resourcePath.indexOf("!/");
+    if (protocolSeparatorIndex == -1 || resourceSeparatorIndex == -1) {
+      throw new IllegalStateException("could not get agent location from url " + url);
+    }
+    String agentPath = resourcePath.substring(protocolSeparatorIndex + 1, resourceSeparatorIndex);
+    File javaagentFile = new File(agentPath);
 
     if (!javaagentFile.isFile()) {
       throw new IllegalStateException(
           "agent jar location doesn't appear to be a file: " + javaagentFile.getAbsolutePath());
     }
 
-    // passing verify false for vendors who sign the agent jar, because jar file signature
-    // verification is very slow before the JIT compiler starts up, which on Java 8 is not until
-    // after premain execution completes
-    JarFile agentJar = new JarFile(javaagentFile, false);
+    JarFile agentJar = ((JarURLConnection) url.openConnection()).getJarFile();
     verifyJarManifestMainClassIsThis(javaagentFile, agentJar);
     inst.appendToBootstrapClassLoaderSearch(agentJar);
     return javaagentFile;

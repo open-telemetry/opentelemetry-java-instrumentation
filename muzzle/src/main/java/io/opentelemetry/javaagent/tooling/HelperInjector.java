@@ -35,6 +35,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassInjector;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.utility.JavaModule;
 
 /**
@@ -53,6 +54,8 @@ public class HelperInjector implements Transformer {
 
   private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(HelperInjector.class);
+  private static final ProtectionDomain PROTECTION_DOMAIN =
+      HelperInjector.class.getProtectionDomain();
 
   // a hook for static instrumentation used to save additional classes created by the agent
   // see https://github.com/open-telemetry/opentelemetry-java-contrib/tree/main/static-instrumenter
@@ -308,7 +311,8 @@ public class HelperInjector implements Transformer {
     }
 
     if (ClassInjector.UsingUnsafe.isAvailable()) {
-      return ClassInjector.UsingUnsafe.ofBootLoader().injectRaw(classnameToBytes);
+      return new ClassInjector.UsingUnsafe(ClassLoadingStrategy.BOOTSTRAP_LOADER, PROTECTION_DOMAIN)
+          .injectRaw(classnameToBytes);
     }
 
     // Mar 2020: Since we're proactively cleaning up tempDirs, we cannot share dirs per thread.
@@ -386,7 +390,7 @@ public class HelperInjector implements Transformer {
 
     Class<?> inject(ClassLoader classLoader, String className) {
       Map<String, Class<?>> result =
-          new ClassInjector.UsingReflection(classLoader)
+          new ClassInjector.UsingReflection(classLoader, PROTECTION_DOMAIN)
               .injectRaw(Collections.singletonMap(className, bytes.get()));
       return result.get(className);
     }

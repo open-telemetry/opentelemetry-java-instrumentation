@@ -15,6 +15,10 @@ import java.net.URLClassLoader;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
+import java.security.AllPermission;
+import java.security.CodeSource;
+import java.security.PermissionCollection;
+import java.security.Permissions;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -36,12 +40,14 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 @SuppressWarnings({"unused", "SystemOut"})
 public class ExtensionClassLoader extends URLClassLoader {
   public static final String EXTENSIONS_CONFIG = "otel.javaagent.extensions";
+  private static final Permissions ALL_PERMISSIONS = new Permissions();
 
   // NOTE it's important not to use logging in this class, because this class is used before logging
   // is initialized
 
   static {
     ClassLoader.registerAsParallelCapable();
+    ALL_PERMISSIONS.add(new AllPermission());
   }
 
   public static ClassLoader getInstance(ClassLoader parent, File javaagentFile) {
@@ -177,6 +183,11 @@ public class ExtensionClassLoader extends URLClassLoader {
         FileOutputStream fos = new FileOutputStream(outputFile)) {
       fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
     }
+  }
+
+  @Override
+  protected PermissionCollection getPermissions(CodeSource codesource) {
+    return ALL_PERMISSIONS;
   }
 
   private ExtensionClassLoader(URL[] urls, ClassLoader parent) {

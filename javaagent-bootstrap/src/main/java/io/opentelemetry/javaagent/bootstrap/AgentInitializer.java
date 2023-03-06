@@ -7,7 +7,11 @@ package io.opentelemetry.javaagent.bootstrap;
 
 import java.io.File;
 import java.lang.instrument.Instrumentation;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
+import java.security.PrivilegedExceptionAction;
 import javax.annotation.Nullable;
 
 /**
@@ -29,10 +33,30 @@ public final class AgentInitializer {
       return;
     }
 
-    agentClassLoader = createAgentClassLoader("inst", javaagentFile);
-    agentStarter = createAgentStarter(agentClassLoader, inst, javaagentFile);
-    if (!fromPremain || !delayAgentStart()) {
-      agentStarter.start();
+    // we expect that at this point agent jar has been appended to boot class path and all agent
+    // classes are loaded in boot loader
+    if (AgentInitializer.class.getClassLoader() != null) {
+      throw new IllegalStateException("agent initializer should be loaded in boot loader");
+    }
+
+    execute(
+        () -> {
+          agentClassLoader = createAgentClassLoader("inst", javaagentFile);
+          agentStarter = createAgentStarter(agentClassLoader, inst, javaagentFile);
+          if (!fromPremain || !delayAgentStart()) {
+            agentStarter.start();
+          }
+
+          return null;
+        });
+  }
+
+  @SuppressWarnings("removal")
+  private static void execute(PrivilegedExceptionAction<Void> action) throws Exception {
+    if (System.getSecurityManager() != null && AccessControllerInvoker.canInvoke()) {
+      AccessControllerInvoker.invoke(action);
+    } else {
+      action.run();
     }
   }
 
@@ -81,8 +105,12 @@ public final class AgentInitializer {
    * Call to this method is inserted into {@code sun.launcher.LauncherHelper.checkAndLoadMain()}.
    */
   @SuppressWarnings("unused")
-  public static void delayedStartHook() {
-    agentStarter.start();
+  public static void delayedStartHook() throws Exception {
+    execute(
+        () -> {
+          agentStarter.start();
+          return null;
+        });
   }
 
   public static ClassLoader getExtensionsClassLoader() {
@@ -113,4 +141,35 @@ public final class AgentInitializer {
   }
 
   private AgentInitializer() {}
+
+  // using java.security.AccessController directly causes build to fail due to warnings about
+  // using a terminally deprecated class
+  private static class AccessControllerInvoker {
+    private static final MethodHandle doPrivilegedMethodHandle = getDoPrivilegedMethodHandle();
+
+    private static MethodHandle getDoPrivilegedMethodHandle() {
+      try {
+        Class<?> clazz = Class.forName("java.security.AccessController");
+        return MethodHandles.lookup()
+            .findStatic(
+                clazz,
+                "doPrivileged",
+                MethodType.methodType(Object.class, PrivilegedExceptionAction.class));
+      } catch (Exception exception) {
+        return null;
+      }
+    }
+
+    static boolean canInvoke() {
+      return doPrivilegedMethodHandle != null;
+    }
+
+    static void invoke(PrivilegedExceptionAction<?> action) {
+      try {
+        doPrivilegedMethodHandle.invoke(action);
+      } catch (Throwable exception) {
+        throw new IllegalStateException(exception);
+      }
+    }
+  }
 }
