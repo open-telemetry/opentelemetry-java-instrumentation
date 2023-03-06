@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -21,27 +23,26 @@ class QueuedThreadPoolTest {
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private QueuedThreadPool pool;
-  private Method dispatchMethod;
 
   @BeforeEach
-  void setupSpec() throws Exception {
+  void setup() throws Exception {
     pool = new QueuedThreadPool();
     // run test only if QueuedThreadPool has dispatch method
     // dispatch method was removed in jetty 9.1
-    dispatchMethod = QueuedThreadPool.class.getMethod("dispatch", new Class<?>[] {Runnable.class});
+    Method method = QueuedThreadPool.class.getMethod("dispatch", Runnable.class);
+    assumeTrue(method != null);
     pool.start();
   }
 
   @AfterEach
-  void cleanupSpec() throws Exception {
-    pool.stop();
+  void cleanup() throws Exception {
+    if (pool.isStarted()) {
+      pool.stop();
+    }
   }
 
   @Test
   void dispatchPropagates() throws Exception {
-    if (dispatchMethod == null) {
-      return;
-    }
     testing.runWithSpan(
         "parent",
         () -> {
@@ -66,10 +67,7 @@ class QueuedThreadPoolTest {
   }
 
   @Test
-  void dispatchPropagatesLambda() throws InterruptedException {
-    if (dispatchMethod == null) {
-      return;
-    }
+  void dispatchPropagatesLambda() throws InterruptedException, ReflectiveOperationException {
     JavaAsyncChild child = new JavaAsyncChild(true, true);
     testing.runWithSpan(
         "parent",
