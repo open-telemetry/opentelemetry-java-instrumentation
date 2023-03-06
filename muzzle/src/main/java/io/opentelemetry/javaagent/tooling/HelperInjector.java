@@ -15,8 +15,12 @@ import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.net.URL;
 import java.nio.file.Files;
+import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
 import java.util.Collection;
@@ -389,10 +393,52 @@ public class HelperInjector implements Transformer {
     }
 
     Class<?> inject(ClassLoader classLoader, String className) {
+      // if security manager is present byte buddy calls
+      // checkPermission(new ReflectPermission("suppressAccessChecks"))
       Map<String, Class<?>> result =
-          new ClassInjector.UsingReflection(classLoader, PROTECTION_DOMAIN)
-              .injectRaw(Collections.singletonMap(className, bytes.get()));
+          execute(
+              () ->
+                  new ClassInjector.UsingReflection(classLoader, PROTECTION_DOMAIN)
+                      .injectRaw(Collections.singletonMap(className, bytes.get())));
       return result.get(className);
+    }
+  }
+
+  private static <T> T execute(PrivilegedAction<T> action) {
+    if (System.getSecurityManager() != null && AccessControllerInvoker.canInvoke()) {
+      return AccessControllerInvoker.invoke(action);
+    } else {
+      return action.run();
+    }
+  }
+
+  // using java.security.AccessController directly causes build to fail due to warnings about
+  // using a terminally deprecated class
+  private static class AccessControllerInvoker {
+    private static final MethodHandle doPrivilegedMethodHandle = getDoPrivilegedMethodHandle();
+
+    private static MethodHandle getDoPrivilegedMethodHandle() {
+      try {
+        Class<?> clazz = Class.forName("java.security.AccessController");
+        return MethodHandles.lookup()
+            .findStatic(
+                clazz, "doPrivileged", MethodType.methodType(Object.class, PrivilegedAction.class));
+      } catch (Exception exception) {
+        return null;
+      }
+    }
+
+    static boolean canInvoke() {
+      return doPrivilegedMethodHandle != null;
+    }
+
+    @SuppressWarnings("unchecked")
+    static <T> T invoke(PrivilegedAction<T> action) {
+      try {
+        return (T) doPrivilegedMethodHandle.invoke(action);
+      } catch (Throwable exception) {
+        throw new IllegalStateException(exception);
+      }
     }
   }
 }

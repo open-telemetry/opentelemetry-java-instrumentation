@@ -51,7 +51,6 @@ public final class AgentInitializer {
         });
   }
 
-  @SuppressWarnings("removal")
   private static void execute(PrivilegedExceptionAction<Void> action) throws Exception {
     if (System.getSecurityManager() != null && AccessControllerInvoker.canInvoke()) {
       AccessControllerInvoker.invoke(action);
