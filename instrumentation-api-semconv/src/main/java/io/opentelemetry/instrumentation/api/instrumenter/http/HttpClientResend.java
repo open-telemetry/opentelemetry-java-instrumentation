@@ -40,6 +40,7 @@ public final class HttpClientResend {
     return resendsUpdater.getAndIncrement(resend);
   }
 
+  @SuppressWarnings("unused") // it actually is used by the resendsUpdater
   private volatile int resends = 0;
 
   private HttpClientResend() {}
