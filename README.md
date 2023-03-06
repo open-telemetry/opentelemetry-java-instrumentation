@@ -167,6 +167,7 @@ Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.c
 Emeritus maintainers:
 
 - [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Splunk
+- [Tyler Benson](https://github.com/tylerbenson)
 
 Learn more about roles in
 the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md).
