@@ -7,10 +7,8 @@ package io.opentelemetry.javaagent.bootstrap;
 
 import java.io.File;
 import java.lang.instrument.Instrumentation;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.security.PrivilegedExceptionAction;
 import javax.annotation.Nullable;
 
@@ -39,15 +37,19 @@ public final class AgentInitializer {
       throw new IllegalStateException("agent initializer should be loaded in boot loader");
     }
 
+    // this call deliberately uses anonymous class instead of lambda because using lambdas too
+    // early on early jdk8 (see isEarlyOracle18 method) causes jvm to crash. See CrashEarlyJdk8Test.
     execute(
-        () -> {
-          agentClassLoader = createAgentClassLoader("inst", javaagentFile);
-          agentStarter = createAgentStarter(agentClassLoader, inst, javaagentFile);
-          if (!fromPremain || !delayAgentStart()) {
-            agentStarter.start();
+        new PrivilegedExceptionAction<Void>() {
+          @Override
+          public Void run() throws Exception {
+            agentClassLoader = createAgentClassLoader("inst", javaagentFile);
+            agentStarter = createAgentStarter(agentClassLoader, inst, javaagentFile);
+            if (!fromPremain || !delayAgentStart()) {
+              agentStarter.start();
+            }
+            return null;
           }
-
-          return null;
         });
   }
 
@@ -105,10 +107,15 @@ public final class AgentInitializer {
    */
   @SuppressWarnings("unused")
   public static void delayedStartHook() throws Exception {
+    // this call deliberately uses anonymous class instead of lambda because using lambdas too
+    // early on early jdk8 (see isEarlyOracle18 method) causes jvm to crash. See CrashEarlyJdk8Test.
     execute(
-        () -> {
-          agentStarter.start();
-          return null;
+        new PrivilegedExceptionAction<Void>() {
+          @Override
+          public Void run() {
+            agentStarter.start();
+            return null;
+          }
         });
   }
 
@@ -144,29 +151,25 @@ public final class AgentInitializer {
   // using java.security.AccessController directly causes build to fail due to warnings about
   // using a terminally deprecated class
   private static class AccessControllerInvoker {
-    private static final MethodHandle doPrivilegedMethodHandle = getDoPrivilegedMethodHandle();
+    private static final Method doPrivilegedMethod = getDoPrivilegedMethod();
 
-    private static MethodHandle getDoPrivilegedMethodHandle() {
+    private static Method getDoPrivilegedMethod() {
       try {
         Class<?> clazz = Class.forName("java.security.AccessController");
-        return MethodHandles.lookup()
-            .findStatic(
-                clazz,
-                "doPrivileged",
-                MethodType.methodType(Object.class, PrivilegedExceptionAction.class));
+        return clazz.getMethod("doPrivileged", PrivilegedExceptionAction.class);
       } catch (Exception exception) {
         return null;
       }
     }
 
     static boolean canInvoke() {
-      return doPrivilegedMethodHandle != null;
+      return doPrivilegedMethod != null;
     }
 
     static void invoke(PrivilegedExceptionAction<?> action) {
       try {
-        doPrivilegedMethodHandle.invoke(action);
-      } catch (Throwable exception) {
+        doPrivilegedMethod.invoke(null, action);
+      } catch (Exception exception) {
         throw new IllegalStateException(exception);
       }
     }

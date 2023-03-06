@@ -39,7 +39,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassInjector;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.utility.JavaModule;
 
 /**
@@ -58,6 +57,7 @@ public class HelperInjector implements Transformer {
 
   private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(HelperInjector.class);
+
   private static final ProtectionDomain PROTECTION_DOMAIN =
       HelperInjector.class.getProtectionDomain();
 
@@ -315,8 +315,7 @@ public class HelperInjector implements Transformer {
     }
 
     if (ClassInjector.UsingUnsafe.isAvailable()) {
-      return new ClassInjector.UsingUnsafe(ClassLoadingStrategy.BOOTSTRAP_LOADER, PROTECTION_DOMAIN)
-          .injectRaw(classnameToBytes);
+      return ClassInjector.UsingUnsafe.ofBootLoader().injectRaw(classnameToBytes);
     }
 
     // Mar 2020: Since we're proactively cleaning up tempDirs, we cannot share dirs per thread.
