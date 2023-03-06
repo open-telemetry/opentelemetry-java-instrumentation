@@ -82,7 +82,7 @@ class QueuedThreadPoolTest {
                     span.hasName("asyncChild")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
-    
+
     pool.stop();
   }
 }
