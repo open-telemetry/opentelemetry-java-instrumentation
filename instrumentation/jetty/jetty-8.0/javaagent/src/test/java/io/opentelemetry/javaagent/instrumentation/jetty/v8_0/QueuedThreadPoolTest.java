@@ -12,8 +12,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Method;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -22,27 +20,15 @@ class QueuedThreadPoolTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private QueuedThreadPool pool;
-
-  @BeforeEach
-  void setup() throws Exception {
-    pool = new QueuedThreadPool();
+  @Test
+  void dispatchPropagates() throws Exception {
+    QueuedThreadPool pool = new QueuedThreadPool();
     // run test only if QueuedThreadPool has dispatch method
     // dispatch method was removed in jetty 9.1
     Method method = QueuedThreadPool.class.getMethod("dispatch", Runnable.class);
     assumeTrue(method != null);
     pool.start();
-  }
 
-  @AfterEach
-  void cleanup() throws Exception {
-    if (pool.isStarted()) {
-      pool.stop();
-    }
-  }
-
-  @Test
-  void dispatchPropagates() throws Exception {
     testing.runWithSpan(
         "parent",
         () -> {
@@ -64,10 +50,19 @@ class QueuedThreadPoolTest {
                     span.hasName("asyncChild")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+
+    pool.stop();
   }
 
   @Test
-  void dispatchPropagatesLambda() throws InterruptedException, ReflectiveOperationException {
+  void dispatchPropagatesLambda() throws Exception {
+    QueuedThreadPool pool = new QueuedThreadPool();
+    // run test only if QueuedThreadPool has dispatch method
+    // dispatch method was removed in jetty 9.1
+    Method method = QueuedThreadPool.class.getMethod("dispatch", Runnable.class);
+    assumeTrue(method != null);
+    pool.start();
+
     JavaAsyncChild child = new JavaAsyncChild(true, true);
     testing.runWithSpan(
         "parent",
@@ -87,5 +82,7 @@ class QueuedThreadPoolTest {
                     span.hasName("asyncChild")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+    
+    pool.stop();
   }
 }
