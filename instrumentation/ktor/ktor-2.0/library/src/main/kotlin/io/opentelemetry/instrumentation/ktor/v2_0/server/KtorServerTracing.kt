@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.v2_0
+package io.opentelemetry.instrumentation.ktor.v2_0.server
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor
+import io.opentelemetry.instrumentation.ktor.v2_0.InstrumentationProperties.INSTRUMENTATION_NAME
 import kotlinx.coroutines.withContext
 
 class KtorServerTracing private constructor(
@@ -81,7 +82,6 @@ class KtorServerTracing private constructor(
   }
 
   companion object Feature : BaseApplicationPlugin<Application, Configuration, KtorServerTracing> {
-    private val INSTRUMENTATION_NAME = "io.opentelemetry.ktor-2.0"
 
     private val contextKey = AttributeKey<Context>("OpenTelemetry")
     private val errorKey = AttributeKey<Throwable>("OpenTelemetryException")

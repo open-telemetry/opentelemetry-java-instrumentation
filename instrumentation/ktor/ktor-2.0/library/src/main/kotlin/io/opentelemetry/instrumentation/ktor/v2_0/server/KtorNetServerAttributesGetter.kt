@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.v2_0
+package io.opentelemetry.instrumentation.ktor.v2_0.server
 
 import io.ktor.server.request.*
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter
