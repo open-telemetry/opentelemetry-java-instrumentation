@@ -41,7 +41,9 @@ public final class JfrTelemetry implements Closeable {
             handler.getThreshold().ifPresent(eventSettings::withThreshold);
             recordingStream.onEvent(handler.getEventName(), handler);
           });
-      recordingStream.startAsync();
+      Thread daemonRunner = new Thread(() -> recordingStream.start());
+      daemonRunner.setDaemon(true);
+      daemonRunner.start();
     } catch (Exception e) {
       close();
       throw new IllegalStateException("Error starting JfrTelemetry", e);

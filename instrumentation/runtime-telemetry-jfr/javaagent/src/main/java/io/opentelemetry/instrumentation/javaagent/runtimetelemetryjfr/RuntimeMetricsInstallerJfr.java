@@ -22,14 +22,20 @@ public class RuntimeMetricsInstallerJfr implements AgentListener {
     ConfigProperties config = autoConfiguredSdk.getConfig();
 
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    JfrTelemetry jfrTelemetry = null;
     /*
     By default don't use any JFR metrics. May change this once semantic conventions are updated.
     If enabled, default to only the metrics not already covered by runtime-telemetry-jmx
     */
     if (config.getBoolean("otel.instrumentation.runtime-telemetry-jfr.enable-all", false)) {
-      JfrTelemetry.builder(openTelemetry).enableAllFeatures().build();
+      jfrTelemetry = JfrTelemetry.builder(openTelemetry).enableAllFeatures().build();
     } else if (config.getBoolean("otel.instrumentation.runtime-telemetry-jfr.enabled", false)) {
-      JfrTelemetry.create(openTelemetry);
+      jfrTelemetry = JfrTelemetry.create(openTelemetry);
+    }
+    if (jfrTelemetry != null) {
+      JfrTelemetry finalJfrTelemetry = jfrTelemetry;
+      Thread cleanupTelemetry = new Thread(() -> finalJfrTelemetry.close());
+      Runtime.getRuntime().addShutdownHook(cleanupTelemetry);
     }
   }
 }
