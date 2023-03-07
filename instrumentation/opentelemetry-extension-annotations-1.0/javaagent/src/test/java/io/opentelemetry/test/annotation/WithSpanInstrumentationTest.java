@@ -141,7 +141,7 @@ class WithSpanInstrumentationTest {
                             assertThat(span)
                                 .hasName("TracedWithSpan.otel")
                                 .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(trace.get(0).getSpanId())
+                                .hasParent(trace.get(0))
                                 .hasAttributesSatisfying(
                                     attributes ->
                                         assertThat(attributes)
