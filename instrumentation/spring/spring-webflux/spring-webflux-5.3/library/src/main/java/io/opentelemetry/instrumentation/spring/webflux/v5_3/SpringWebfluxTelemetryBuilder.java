@@ -35,8 +35,7 @@ public final class SpringWebfluxTelemetryBuilder {
   private final HttpServerAttributesExtractorBuilder<ServerWebExchange, ServerWebExchange>
       httpServerAttributesExtractorBuilder =
           HttpServerAttributesExtractor.builder(
-              WebfluxServerHttpAttributesGetter.INSTANCE,
-              WebfluxServerNetAttributesGetter.INSTANCE);
+              WebfluxServerHttpAttributesGetter.INSTANCE, new WebfluxServerNetAttributesGetter());
 
   SpringWebfluxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;

@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 
-enum WebfluxServerNetAttributesGetter implements NetServerAttributesGetter<ServerWebExchange> {
-  INSTANCE;
+final class WebfluxServerNetAttributesGetter
+    extends InetSocketAddressNetServerAttributesGetter<ServerWebExchange> {
 
   @Override
   public String getTransport(ServerWebExchange request) {
@@ -33,31 +34,13 @@ enum WebfluxServerNetAttributesGetter implements NetServerAttributesGetter<Serve
 
   @Nullable
   @Override
-  public String getSockFamily(ServerWebExchange request) {
-    return null;
+  protected InetSocketAddress getPeerSocketAddress(ServerWebExchange request) {
+    return request.getRequest().getRemoteAddress();
   }
 
   @Nullable
   @Override
-  public String getSockPeerAddr(ServerWebExchange request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getSockPeerPort(ServerWebExchange request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getSockHostAddr(ServerWebExchange request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getSockHostPort(ServerWebExchange request) {
-    return null;
+  protected InetSocketAddress getHostSocketAddress(ServerWebExchange request) {
+    return request.getRequest().getLocalAddress();
   }
 }
