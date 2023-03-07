@@ -79,24 +79,27 @@ object ZioTestFixtures {
       } yield ()
     }
 
-  private def run[A](zio: ZIO[Any, Nothing, A]): Unit =
+  private def run[A](zio: ZIO[Any, Nothing, A]): Unit = {
+    val executor = Executors.newSingleThreadExecutor()
     Unsafe.unsafe { implicit unsafe =>
       Runtime.default.unsafe
         .run {
-          ZIO.scoped {
-            for {
-              executor <- ZIO.attempt(
-                Executor.fromJavaExecutor(Executors.newSingleThreadExecutor())
-              )
-              _ <- Runtime.setExecutor(executor).build
-              _ <- Runtime.setBlockingExecutor(executor).build
-              // reschedule current fiber on newly configured executors
-              _ <- ZIO.yieldNow
-              res <- zio
-            } yield res
-          }
+          ZIO
+            .scoped {
+              for {
+                _ <- Runtime
+                  .setExecutor(Executor.fromJavaExecutor(executor))
+                  .build
+                _ <- Runtime
+                  .setBlockingExecutor(Executor.fromJavaExecutor(executor))
+                  .build
+                res <- zio
+              } yield res
+            }
+            .onExecutor(Executor.fromJavaExecutor(executor))
         }
         .getOrThrowFiberFailure()
     }
+  }
 
 }
