@@ -357,6 +357,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   def "test captured HTTP headers"() {
+    assumeTrue(testCapturedHttpHeaders())
     expect:
     junitTest.captureHttpHeaders()
   }
@@ -473,6 +474,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   boolean testReusedRequest() {
+    true
+  }
+
+  boolean testCapturedHttpHeaders() {
     true
   }
 
