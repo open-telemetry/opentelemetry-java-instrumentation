@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.time.Duration
 
 plugins {
@@ -38,7 +39,7 @@ dependencies {
   implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
-  implementation("gradle.plugin.com.github.johnrengelman:shadow:7.1.2")
+  implementation("gradle.plugin.com.github.johnrengelman:shadow:8.0.0")
 
   testImplementation("org.assertj:assertj-core:3.24.2")
 
@@ -58,23 +59,27 @@ tasks {
       release.set(8)
     }
   }
-}
 
-pluginBundle {
-  website = "https://opentelemetry.io"
-  vcsUrl = "https://github.com/open-telemetry/opentelemetry-java-instrumentation"
-  tags = listOf("opentelemetry", "instrumentation", "java")
+  withType(KotlinCompile::class).configureEach {
+    kotlinOptions {
+      jvmTarget = "1.8"
+    }
+  }
 }
 
 gradlePlugin {
+  website.set("https://opentelemetry.io")
+  vcsUrl.set("https://github.com/open-telemetry/opentelemetry-java-instrumentation")
   plugins {
     get("io.opentelemetry.instrumentation.muzzle-generation").apply {
       displayName = "Muzzle safety net generation"
       description = "https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/muzzle.md"
+      tags.set(listOf("opentelemetry", "instrumentation", "java"))
     }
     get("io.opentelemetry.instrumentation.muzzle-check").apply {
       displayName = "Checks instrumented libraries against muzzle safety net"
       description = "https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/muzzle.md"
+      tags.set(listOf("opentelemetry", "instrumentation", "java"))
     }
   }
 }

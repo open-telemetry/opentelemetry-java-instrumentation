@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import java.util.function.ToIntFunction;
 import javax.annotation.Nullable;
 
 /**
@@ -50,18 +51,35 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private final InternalNetClientAttributesExtractor<REQUEST, RESPONSE> internalNetExtractor;
+  private final ToIntFunction<Context> resendCountIncrementer;
 
   HttpClientAttributesExtractor(
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders) {
+    this(
+        httpAttributesGetter,
+        netAttributesGetter,
+        capturedRequestHeaders,
+        capturedResponseHeaders,
+        HttpClientResend::getAndIncrement);
+  }
+
+  // visible for tests
+  HttpClientAttributesExtractor(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
+      NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
+      List<String> capturedRequestHeaders,
+      List<String> capturedResponseHeaders,
+      ToIntFunction<Context> resendCountIncrementer) {
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
     internalNetExtractor =
         new InternalNetClientAttributesExtractor<>(
             netAttributesGetter,
             this::shouldCapturePeerPort,
             new HttpNetNamePortGetter<>(httpAttributesGetter));
+    this.resendCountIncrementer = resendCountIncrementer;
   }
 
   @Override
@@ -141,6 +159,11 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     internalSet(attributes, SemanticAttributes.HTTP_FLAVOR, getter.getFlavor(request, response));
 
     internalNetExtractor.onEnd(attributes, request, response);
+
+    int resendCount = resendCountIncrementer.applyAsInt(context);
+    if (resendCount > 0) {
+      attributes.put(SemanticAttributes.HTTP_RESEND_COUNT, resendCount);
+    }
   }
 
   /**
