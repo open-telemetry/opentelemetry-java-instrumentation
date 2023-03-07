@@ -25,8 +25,8 @@ class QueuedThreadPoolTest {
     QueuedThreadPool pool = new QueuedThreadPool();
     // run test only if QueuedThreadPool has dispatch method
     // dispatch method was removed in jetty 9.1
-    Method method = QueuedThreadPool.class.getMethod("dispatch", Runnable.class);
-    assumeTrue(method != null);
+    Method dispatch = QueuedThreadPool.class.getDeclaredMethod("dispatch", Runnable.class);
+    assumeTrue(dispatch != null);
     pool.start();
 
     testing.runWithSpan(
@@ -36,10 +36,12 @@ class QueuedThreadPoolTest {
           JavaAsyncChild child1 = new JavaAsyncChild();
           // this child won't
           JavaAsyncChild child2 = new JavaAsyncChild(false, false);
-          pool.dispatch(child1);
-          pool.dispatch(child2);
-          child1.waitForCompletion();
-          child2.waitForCompletion();
+          if (dispatch != null) {
+            dispatch.invoke(pool, child1);
+            dispatch.invoke(pool, child2);
+            child1.waitForCompletion();
+            child2.waitForCompletion();
+          }
         });
 
     testing.waitAndAssertTraces(
@@ -59,15 +61,17 @@ class QueuedThreadPoolTest {
     QueuedThreadPool pool = new QueuedThreadPool();
     // run test only if QueuedThreadPool has dispatch method
     // dispatch method was removed in jetty 9.1
-    Method method = QueuedThreadPool.class.getMethod("dispatch", Runnable.class);
-    assumeTrue(method != null);
+    Method dispatch = QueuedThreadPool.class.getDeclaredMethod("dispatch", Runnable.class);
+    assumeTrue(dispatch != null);
     pool.start();
 
     JavaAsyncChild child = new JavaAsyncChild(true, true);
     testing.runWithSpan(
         "parent",
         () -> {
-          pool.dispatch(JavaLambdaMaker.lambda(child));
+          if (dispatch != null) {
+            dispatch.invoke(pool, JavaLambdaMaker.lambda(child));
+          }
         });
 
     // We block in child to make sure spans close in predictable order
