@@ -17,7 +17,8 @@ import java.util.function.Consumer
 class ZioRuntimeInstrumentationTest {
 
   @RegisterExtension
-  val testing: InstrumentationExtension = AgentInstrumentationExtension.create()
+  val testing: InstrumentationExtension =
+    RelaxedInstrumentationExtension.create()
 
   @Test
   def traceIsPropagatedToChildFiber(): Unit = {
