@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Collections;
 import javax.servlet.DispatcherType;
-import jakarta.servlet.ServletException;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
