@@ -37,18 +37,6 @@ enum SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Me
 
   @Override
   @Nullable
-  public String getProtocol(Message message) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String getProtocolVersion(Message message) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String getConversationId(Message message) {
     return null;
   }

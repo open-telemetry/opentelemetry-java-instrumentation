@@ -41,18 +41,6 @@ enum RocketMqConsumerReceiveAttributeGetter
 
   @Nullable
   @Override
-  public String getProtocol(ReceiveMessageRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(ReceiveMessageRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getConversationId(ReceiveMessageRequest request) {
     return null;
   }

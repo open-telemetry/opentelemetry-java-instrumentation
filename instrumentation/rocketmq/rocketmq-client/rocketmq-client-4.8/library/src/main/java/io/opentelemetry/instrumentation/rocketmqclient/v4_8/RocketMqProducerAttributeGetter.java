@@ -42,18 +42,6 @@ enum RocketMqProducerAttributeGetter
 
   @Nullable
   @Override
-  public String getProtocol(SendMessageContext sendMessageContext) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(SendMessageContext sendMessageContext) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getConversationId(SendMessageContext sendMessageContext) {
     return null;
   }

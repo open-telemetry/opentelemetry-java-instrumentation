@@ -43,8 +43,6 @@ class MessagingAttributesExtractorTest {
     if (temporary) {
       request.put("temporaryDestination", "y");
     }
-    request.put("protocol", "AMQP");
-    request.put("protocolVersion", "1.0.0");
     request.put("url", "http://broker/topic");
     request.put("conversationId", "42");
     request.put("payloadSize", "100");
@@ -70,8 +68,6 @@ class MessagingAttributesExtractorTest {
     if (temporary) {
       expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true));
     }
-    expectedEntries.add(entry(SemanticAttributes.NET_APP_PROTOCOL_NAME, "AMQP"));
-    expectedEntries.add(entry(SemanticAttributes.NET_APP_PROTOCOL_VERSION, "1.0.0"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_MESSAGE_CONVERSATION_ID, "42"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 100L));
     expectedEntries.add(
@@ -135,16 +131,6 @@ class MessagingAttributesExtractorTest {
     @Override
     public boolean isTemporaryDestination(Map<String, String> request) {
       return request.containsKey("temporaryDestination");
-    }
-
-    @Override
-    public String getProtocol(Map<String, String> request) {
-      return request.get("protocol");
-    }
-
-    @Override
-    public String getProtocolVersion(Map<String, String> request) {
-      return request.get("protocolVersion");
     }
 
     @Override
