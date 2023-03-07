@@ -80,6 +80,8 @@ class KtorHttpClientTest : AbstractHttpClientTest<HttpRequestBuilder>() {
     private fun HttpClientConfig<*>.installTracing() {
       install(KtorClientTracing) {
         setOpenTelemetry(TESTING.openTelemetry)
+        setCapturedRequestHeaders(listOf(AbstractHttpClientTest.TEST_REQUEST_HEADER))
+        setCapturedResponseHeaders(listOf(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
       }
     }
   }
