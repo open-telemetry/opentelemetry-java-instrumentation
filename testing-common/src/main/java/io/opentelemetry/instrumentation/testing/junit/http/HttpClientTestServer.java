@@ -21,8 +21,10 @@ import io.opentelemetry.testing.internal.armeria.common.ResponseHeadersBuilder;
 import io.opentelemetry.testing.internal.armeria.server.ServerBuilder;
 import io.opentelemetry.testing.internal.armeria.server.logging.LoggingService;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.ServerExtension;
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.time.Duration;
 import javax.net.ssl.KeyManagerFactory;
@@ -40,15 +42,18 @@ public final class HttpClientTestServer extends ServerExtension {
   @Override
   protected void configure(ServerBuilder sb) throws Exception {
     KeyStore keystore = KeyStore.getInstance("PKCS12");
-    keystore.load(
-        new FileInputStream(System.getProperty("javax.net.ssl.trustStore")),
-        "testing".toCharArray());
+    try (InputStream in =
+        Files.newInputStream(Paths.get(System.getProperty("javax.net.ssl.trustStore")))) {
+      keystore.load(in, "testing".toCharArray());
+    }
     KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
     kmf.init(keystore, "testing".toCharArray());
 
     sb.http(0)
         .https(0)
         .tls(kmf)
+        // not cleaning idle connections so eagerly helps minimize failures in HTTP client tests
+        .idleTimeout(Duration.ofSeconds(30))
         .service(
             "/success",
             (ctx, req) -> {
