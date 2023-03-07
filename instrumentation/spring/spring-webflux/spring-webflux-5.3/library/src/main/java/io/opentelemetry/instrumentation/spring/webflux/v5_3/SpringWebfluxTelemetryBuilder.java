@@ -133,7 +133,6 @@ public final class SpringWebfluxTelemetryBuilder {
    */
   public SpringWebfluxTelemetry build() {
 
-    // headers are injected elsewhere; ClientRequest is immutable
     Instrumenter<ClientRequest, ClientResponse> clientInstrumenter = clientBuilder.build();
 
     WebfluxServerHttpAttributesGetter serverAttributesGetter =
