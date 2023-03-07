@@ -55,7 +55,7 @@ dependencies {
   implementation("com.diffplug.spotless:spotless-plugin-gradle:6.16.0")
   implementation("com.google.guava:guava:31.1-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
-  implementation("gradle.plugin.com.github.johnrengelman:shadow:7.1.2")
+  implementation("gradle.plugin.com.github.johnrengelman:shadow:8.0.0")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
   implementation("com.gradle.enterprise:com.gradle.enterprise.gradle.plugin:3.12.4")
   implementation("org.owasp:dependency-check-gradle:8.1.2")
