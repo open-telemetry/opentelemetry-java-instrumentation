@@ -9,17 +9,15 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.R2dbcSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.listener.ProxyMethodExecutionListener;
 import io.r2dbc.spi.ConnectionFactoryOptions;
-import java.util.HashMap;
-import java.util.Map;
 
 public class TraceProxyListener implements ProxyMethodExecutionListener {
 
+  private static final String KEY_DB_EXECUTION = "dbExecution";
+
   private final ConnectionFactoryOptions factoryOptions;
-  private final Map<QueryExecutionInfo, DbExecution> dbExecutions = new HashMap<>();
 
   public TraceProxyListener(ConnectionFactoryOptions factoryOptions) {
     this.factoryOptions = factoryOptions;
@@ -29,23 +27,18 @@ public class TraceProxyListener implements ProxyMethodExecutionListener {
   public void beforeQuery(QueryExecutionInfo queryInfo) {
     Context parentContext = currentContext();
     DbExecution dbExecution = new DbExecution(queryInfo, factoryOptions);
-    dbExecutions.put(queryInfo, dbExecution);
     if (!instrumenter().shouldStart(parentContext, dbExecution)) {
       return;
     }
-    Context context = instrumenter().start(parentContext, dbExecution);
-    dbExecution.setContext(context);
-    Scope scope = parentContext.makeCurrent();
-    dbExecution.setScope(scope);
+    dbExecution.setContext(instrumenter().start(parentContext, dbExecution));
+    queryInfo.getValueStore().put(KEY_DB_EXECUTION, dbExecution);
   }
 
   @Override
   public void afterQuery(QueryExecutionInfo queryInfo) {
-    DbExecution dbExecution = dbExecutions.remove(queryInfo);
-    if (dbExecution.getScope() == null) {
-      return;
+    DbExecution dbExecution = (DbExecution) queryInfo.getValueStore().get(KEY_DB_EXECUTION);
+    if (dbExecution != null && dbExecution.getContext() != null) {
+      instrumenter().end(dbExecution.getContext(), dbExecution, null, null);
     }
-    instrumenter().end(dbExecution.getContext(), dbExecution, null, null);
-    dbExecution.getScope().close();
   }
 }

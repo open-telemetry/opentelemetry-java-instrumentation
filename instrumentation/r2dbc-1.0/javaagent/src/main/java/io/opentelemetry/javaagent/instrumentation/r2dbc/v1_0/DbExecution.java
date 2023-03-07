@@ -13,14 +13,14 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.PROTOCOL;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
-public class DbExecution {
+public final class DbExecution {
   private final String system;
   private final String user;
   private final String name;
@@ -30,18 +30,21 @@ public class DbExecution {
   private final String rawStatement;
 
   private Context context;
-  private Scope scope;
 
   public DbExecution(QueryExecutionInfo queryInfo, ConnectionFactoryOptions factoryOptions) {
     Connection originalConnection = queryInfo.getConnectionInfo().getOriginalConnection();
     this.system =
         originalConnection != null
-            ? originalConnection.getMetadata().getDatabaseProductName().toLowerCase().split(" ")[0]
+            ? originalConnection
+                .getMetadata()
+                .getDatabaseProductName()
+                .toLowerCase(Locale.ROOT)
+                .split(" ")[0]
             : "";
     this.user = factoryOptions.hasOption(USER) ? (String) factoryOptions.getValue(USER) : null;
     this.name =
         factoryOptions.hasOption(DATABASE)
-            ? ((String) factoryOptions.getValue(DATABASE)).toLowerCase()
+            ? ((String) factoryOptions.getValue(DATABASE)).toLowerCase(Locale.ROOT)
             : null;
     String driver =
         factoryOptions.hasOption(DRIVER) ? (String) factoryOptions.getValue(DRIVER) : null;
@@ -96,14 +99,6 @@ public class DbExecution {
     this.context = context;
   }
 
-  public Scope getScope() {
-    return scope;
-  }
-
-  public void setScope(Scope scope) {
-    this.scope = scope;
-  }
-
   @Override
   public String toString() {
     return "DbExecution{"
@@ -129,8 +124,6 @@ public class DbExecution {
         + '\''
         + ", context="
         + context
-        + ", scope="
-        + scope
         + '}';
   }
 }
