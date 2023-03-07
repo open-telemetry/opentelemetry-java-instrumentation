@@ -232,11 +232,18 @@ tasks {
     delete(rootProject.file("licenses"))
   }
 
+  val generateLicenseReportEnabled = gradle.startParameter.taskNames.any { it.equals("generateLicenseReport") }
   named("generateLicenseReport").configure {
     dependsOn(cleanLicenses)
     finalizedBy(":spotlessApply")
+    // disable licence report generation unless this task is explicitly run
+    // the files produced by this task are used by other tasks without declaring them as dependency
+    // which gradle considers an error
+    enabled = enabled && generateLicenseReportEnabled
   }
-  project.parent?.tasks?.getByName("spotlessMisc")?.dependsOn(named("generateLicenseReport"))
+  if (generateLicenseReportEnabled) {
+    project.parent?.tasks?.getByName("spotlessMisc")?.dependsOn(named("generateLicenseReport"))
+  }
 
   // Because we reconfigure publishing to only include the shadow jar, the Gradle metadata is not correct.
   // Since we are fully bundled and have no dependencies, Gradle metadata wouldn't provide any advantage over
