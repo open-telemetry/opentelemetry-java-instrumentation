@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.pulsar.v28;
+package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 public class ProducerData {
   public final String url;
