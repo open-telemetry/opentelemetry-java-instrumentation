@@ -10,7 +10,17 @@ on:
   workflow_dispatch:
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.set-tag.outputs.TAG }}
+    steps:
+      - id: set-tag
+        name: Set tag
+        run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_OUTPUT
+
   publish:
+    needs: prepare
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -52,9 +62,6 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set tag
-        run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
-
       - name: Set up Gradle cache
         uses: gradle/gradle-build-action@v2
         with:
@@ -63,11 +70,11 @@ jobs:
 
       - name: Build Linux docker images
         if: matrix.os != 'windows-latest'
-        run: ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        run: ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PextraTag=${{ needs.prepare.outputs.tag }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
 
       - name: Build Windows docker images
         if: matrix.os == 'windows-latest'
-        run: ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        run: ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PextraTag=${{ needs.prepare.outputs.tag }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
 
   open-issue-on-failure:
     needs:
