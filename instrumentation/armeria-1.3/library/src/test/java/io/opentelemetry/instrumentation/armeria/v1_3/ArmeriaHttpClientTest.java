@@ -7,8 +7,10 @@ package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.client.WebClientBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
@@ -19,7 +21,13 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
   @Override
   protected WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
     return clientBuilder.decorator(
-        ArmeriaTelemetry.create(testing.getOpenTelemetry()).newClientDecorator());
+        ArmeriaTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedClientRequestHeaders(
+                Collections.singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
+            .setCapturedClientResponseHeaders(
+                Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+            .build()
+            .newClientDecorator());
   }
 
   @Override

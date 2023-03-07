@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.TEST_REQUEST_HEADER;
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.TEST_RESPONSE_HEADER;
 import static io.opentelemetry.testing.internal.armeria.common.MediaType.PLAIN_TEXT_UTF_8;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -61,6 +63,10 @@ public final class HttpClientTestServer extends ServerExtension {
               String testRequestId = req.headers().get("test-request-id");
               if (testRequestId != null) {
                 headers.set("test-request-id", testRequestId);
+              }
+              String capturedHeader = req.headers().get(TEST_REQUEST_HEADER);
+              if (capturedHeader != null) {
+                headers.set(TEST_RESPONSE_HEADER, capturedHeader);
               }
               return HttpResponse.of(headers.build(), HttpData.ofAscii("Hello."));
             })
