@@ -29,3 +29,11 @@ dependencies {
   latestDepTestLibrary("org.eclipse.jetty:jetty-server:10.+") // see jetty-11.0 module
   latestDepTestLibrary("org.eclipse.jetty:jetty-servlet:10.+") // see jetty-11.0 module
 }
+
+// jetty-server 10+ requires Java 11
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_11)
+  }
+}
