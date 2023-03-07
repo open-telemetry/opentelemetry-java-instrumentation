@@ -35,7 +35,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import spock.lang.Shared;
 
 public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
 
@@ -56,7 +55,7 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
         }
       };
 
-  @Shared private static final TestHandler testHandler = new TestHandler();
+  private static final TestHandler testHandler = new TestHandler();
 
   @Override
   protected Server setupServer() {
