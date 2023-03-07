@@ -146,6 +146,7 @@ public final class SpringWebfluxTelemetryBuilder {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesGetter))
             .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
             .addAttributesExtractors(serverAdditionalExtractors)
+            .addOperationMetrics(HttpServerMetrics.get())
             .buildServerInstrumenter(WebfluxTextMapGetter.INSTANCE);
 
     return new SpringWebfluxTelemetry(
