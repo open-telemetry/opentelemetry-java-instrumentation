@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Collections;
 import javax.servlet.DispatcherType;
+import jakarta.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
@@ -159,7 +160,7 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
         Request baseRequest,
         HttpServletRequest request,
         HttpServletResponse response)
-        throws IOException {
+        throws IOException, ServletException {
       if (baseRequest.getDispatcherType() != DispatcherType.ERROR) {
         handleRequest(baseRequest, response);
         baseRequest.setHandled(true);
