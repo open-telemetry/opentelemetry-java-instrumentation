@@ -25,7 +25,11 @@ class QueuedThreadPoolTest {
     QueuedThreadPool pool = new QueuedThreadPool();
     // run test only if QueuedThreadPool has dispatch method
     // dispatch method was removed in jetty 9.1
-    Method dispatch = QueuedThreadPool.class.getMethod("dispatch", Runnable.class);
+    Method dispatch = null;
+    try {
+      dispatch = QueuedThreadPool.class.getMethod("dispatch", Runnable.class);
+    } catch(NoSuchMethodException ignore) {
+    }
     assumeTrue(dispatch != null);
     pool.start();
 
@@ -61,7 +65,11 @@ class QueuedThreadPoolTest {
     QueuedThreadPool pool = new QueuedThreadPool();
     // run test only if QueuedThreadPool has dispatch method
     // dispatch method was removed in jetty 9.1
-    Method dispatch = QueuedThreadPool.class.getMethod("dispatch", Runnable.class);
+    Method dispatch = null;
+    try {
+      dispatch = QueuedThreadPool.class.getMethod("dispatch", Runnable.class);
+    } catch(NoSuchMethodException ignore) {
+    }
     assumeTrue(dispatch != null);
     pool.start();
 
