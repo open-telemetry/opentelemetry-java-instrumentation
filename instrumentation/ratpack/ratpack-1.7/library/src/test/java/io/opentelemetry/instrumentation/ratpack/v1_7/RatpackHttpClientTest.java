@@ -6,7 +6,9 @@
 package io.opentelemetry.instrumentation.ratpack.v1_7;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import ratpack.func.Action;
 import ratpack.http.client.HttpClient;
@@ -19,7 +21,12 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
 
   @Override
   protected HttpClient buildHttpClient() throws Exception {
-    return RatpackTelemetry.create(testing.getOpenTelemetry())
+    return RatpackTelemetry.builder(testing.getOpenTelemetry())
+        .setCapturedClientRequestHeaders(
+            Collections.singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
+        .setCapturedClientResponseHeaders(
+            Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+        .build()
         .instrumentHttpClient(HttpClient.of(Action.noop()));
   }
 

@@ -74,6 +74,11 @@ class ResteasyProxyClientTest extends HttpClientTest<ResteasyProxyResource> impl
   boolean testCallback() {
     false
   }
+
+  @Override
+  boolean testCapturedHttpHeaders() {
+    false
+  }
 }
 
 @Path("")

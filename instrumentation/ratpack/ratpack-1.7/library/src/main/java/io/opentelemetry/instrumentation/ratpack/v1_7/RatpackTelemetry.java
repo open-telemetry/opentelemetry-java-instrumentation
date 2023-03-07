@@ -18,8 +18,10 @@ import ratpack.http.client.RequestSpec;
 import ratpack.registry.RegistrySpec;
 
 /**
- * Entrypoint for instrumenting Ratpack servers. To apply OpenTelemetry to a server, configure the
- * {@link RegistrySpec} using {@link #configureServerRegistry(RegistrySpec)}.
+ * Entrypoint for instrumenting Ratpack server and http client.
+ *
+ * <p>To apply OpenTelemetry instrumentation to a server, configure the {@link RegistrySpec} using
+ * {@link #configureServerRegistry(RegistrySpec)}.
  *
  * <pre>{@code
  * RatpackTelemetry telemetry = RatpackTelemetry.create(OpenTelemetrySdk.builder()
@@ -29,6 +31,16 @@ import ratpack.registry.RegistrySpec;
  *   server.registryOf(telemetry::configureServerRegistry);
  *   server.handlers(chain -> ...);
  * });
+ * }</pre>
+ *
+ * <p>To apply OpenTelemetry instrumentation to a http client, wrap the {@link HttpClient} using
+ * {@link #instrumentHttpClient(HttpClient)}.
+ *
+ * <pre>{@code
+ * RatpackTelemetry telemetry = RatpackTelemetry.create(OpenTelemetrySdk.builder()
+ *   ...
+ *   .build());
+ * HttpClient instrumentedHttpClient = telemetry.instrumentHttpClient(httpClient);
  * }</pre>
  */
 public final class RatpackTelemetry {

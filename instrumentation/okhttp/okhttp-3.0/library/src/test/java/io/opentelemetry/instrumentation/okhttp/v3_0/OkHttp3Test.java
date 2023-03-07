@@ -6,7 +6,9 @@
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import java.util.Collections;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -18,6 +20,12 @@ public class OkHttp3Test extends AbstractOkHttp3Test {
 
   @Override
   public Call.Factory createCallFactory(OkHttpClient.Builder clientBuilder) {
-    return OkHttpTelemetry.create(testing.getOpenTelemetry()).newCallFactory(clientBuilder.build());
+    return OkHttpTelemetry.builder(testing.getOpenTelemetry())
+        .setCapturedRequestHeaders(
+            Collections.singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
+        .setCapturedResponseHeaders(
+            Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+        .build()
+        .newCallFactory(clientBuilder.build());
   }
 }
