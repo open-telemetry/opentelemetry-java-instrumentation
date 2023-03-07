@@ -128,7 +128,7 @@ class WithSpanInstrumentationTest {
                             assertThat(span)
                                 .hasName("TracedWithSpan.server")
                                 .hasKind(SpanKind.SERVER)
-                                .hasParentSpanId(SpanId.getInvalid())
+                                .hasNoParent()
                                 .hasAttributesSatisfying(
                                     attributes ->
                                         assertThat(attributes)
