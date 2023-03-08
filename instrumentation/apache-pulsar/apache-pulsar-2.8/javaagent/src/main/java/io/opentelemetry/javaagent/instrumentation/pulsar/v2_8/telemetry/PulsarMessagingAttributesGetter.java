@@ -5,8 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
 
@@ -61,5 +65,11 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Pulsar
     }
 
     return null;
+  }
+
+  @Override
+  public List<String> getMessageHeader(PulsarRequest request, String name) {
+    String value = request.getMessage().getProperty(name);
+    return value != null ? singletonList(value) : emptyList();
   }
 }

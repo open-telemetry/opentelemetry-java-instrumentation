@@ -205,6 +205,95 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     }
   }
 
+  def "capture message header as span attribute"() {
+    setup:
+    def topic = "persistent://public/default/testCaptureMessageHeaderTopic"
+    def latch = new CountDownLatch(1)
+    admin.topics().createNonPartitionedTopic(topic)
+    consumer = client.newConsumer(Schema.STRING)
+      .subscriptionName("test_sub")
+      .topic(topic)
+      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+      .messageListener(new MessageListener<String>() {
+        @Override
+        void received(Consumer<String> consumer, Message<String> msg) {
+          consumer.acknowledge(msg)
+          latch.countDown()
+        }
+      })
+      .subscribe()
+
+    producer = client.newProducer(Schema.STRING)
+      .topic(topic)
+      .enableBatching(false)
+      .create()
+
+    when:
+    def msg = "test"
+    def msgId = runWithSpan("parent") {
+      producer.newMessage().value(msg).property("test-message-header", "test").send()
+    }
+
+    latch.await(1, TimeUnit.MINUTES)
+
+    then:
+    assertTraces(1) {
+      trace(0, 4) {
+        span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "$topic send"
+          kind PRODUCER
+          childOf span(0)
+          attributes {
+            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.NET_PEER_NAME" brokerHost
+            "$SemanticAttributes.NET_PEER_PORT" brokerPort
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topic
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "messaging.pulsar.message.type" "normal"
+            "messaging.header.test_message_header" { it == ["test"] }
+          }
+        }
+        span(2) {
+          name "$topic receive"
+          kind CONSUMER
+          childOf span(1)
+          attributes {
+            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.NET_PEER_NAME" brokerHost
+            "$SemanticAttributes.NET_PEER_PORT" brokerPort
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topic
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
+            "messaging.header.test_message_header" { it == ["test"] }
+          }
+        }
+        span(3) {
+          name "$topic process"
+          kind INTERNAL
+          childOf span(2)
+          attributes {
+            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topic
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "messaging.header.test_message_header" { it == ["test"] }
+          }
+        }
+      }
+    }
+  }
+
   def "test send partitioned topic"() {
     setup:
     def topic = "persistent://public/default/testSendPartitionedTopic"
