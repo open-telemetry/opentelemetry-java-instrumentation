@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.oshi;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -18,11 +17,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class SystemInfoInstrumentation implements TypeInstrumentation {
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("oshi.SystemInfo");
-  }
-
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("oshi.SystemInfo");
