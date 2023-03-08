@@ -3,10 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.rabbitmq;
+package io.opentelemetry.instrumentation.api.internal;
 
 import java.time.Instant;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class Timer {
 
   public static Timer start() {
