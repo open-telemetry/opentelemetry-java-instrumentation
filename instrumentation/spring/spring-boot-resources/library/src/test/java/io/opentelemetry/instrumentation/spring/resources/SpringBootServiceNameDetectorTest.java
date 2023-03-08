@@ -74,6 +74,24 @@ class SpringBootServiceNameDetectorTest {
   }
 
   @Test
+  void classpathApplicationYamlContainingMultipleYamlDefinitions() {
+    when(system.openClasspathResource(APPLICATION_YML))
+        .thenReturn(
+            ClassLoader.getSystemClassLoader().getResourceAsStream("application-multi.yml"));
+    SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
+    Resource result = guesser.createResource(config);
+    expectServiceName(result, "cat-store");
+  }
+
+  @Test
+  void bootInfApplicationYaml() {
+    when(system.openBootInfClassesResource(APPLICATION_YML)).thenCallRealMethod();
+    SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
+    Resource result = guesser.createResource(config);
+    expectServiceName(result, "cat-store");
+  }
+
+  @Test
   void yamlFileInCurrentDir() throws Exception {
     Path yamlPath = Paths.get(APPLICATION_YML);
     try {

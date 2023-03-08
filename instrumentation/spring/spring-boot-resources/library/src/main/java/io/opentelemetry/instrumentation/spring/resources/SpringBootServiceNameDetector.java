@@ -86,7 +86,8 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
             this::findByCurrentDirectoryApplicationProperties,
             this::findByCurrentDirectoryApplicationYaml,
             this::findByClasspathApplicationProperties,
-            this::findByClasspathApplicationYaml);
+            this::findByClasspathApplicationYaml,
+            this::findByBootInfApplicationYml);
     return finders
         .map(Supplier::get)
         .filter(Objects::nonNull)
@@ -161,6 +162,14 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   }
 
   @Nullable
+  private String findByBootInfApplicationYml() {
+    String result =
+        loadFromBootInf("application.yml", SpringBootServiceNameDetector::parseNameFromYaml);
+    logger.log(Level.FINER, "Checking application.yml in classpath: {0}", result);
+    return result;
+  }
+
+  @Nullable
   private String findByCurrentDirectoryApplicationYaml() {
     String result = null;
     try (InputStream in = system.openFile("application.yml")) {
@@ -178,14 +187,16 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     try {
       LoadSettings settings = LoadSettings.builder().build();
       Load yaml = new Load(settings);
-      Map<String, Object> data = (Map<String, Object>) yaml.loadFromInputStream(in);
-      Map<String, Map<String, Object>> spring =
-          (Map<String, Map<String, Object>>) data.get("spring");
-      if (spring != null) {
-        Map<String, Object> app = spring.get("application");
-        if (app != null) {
-          Object name = app.get("name");
-          return (String) name;
+      for (Object o : yaml.loadAllFromInputStream(in)) {
+        Map<String, Object> data = (Map<String, Object>) o;
+        Map<String, Map<String, Object>> spring =
+            (Map<String, Map<String, Object>>) data.get("spring");
+        if (spring != null) {
+          Map<String, Object> app = spring.get("application");
+          if (app != null) {
+            Object name = app.get("name");
+            return (String) name;
+          }
         }
       }
     } catch (RuntimeException e) {
@@ -263,6 +274,15 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     }
   }
 
+  @Nullable
+  private String loadFromBootInf(String filename, Function<InputStream, String> parser) {
+    try (InputStream in = system.openBootInfClassesResource(filename)) {
+      return parser.apply(in);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
   // Exists for testing
   static class SystemHelper {
 
@@ -276,6 +296,12 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
 
     InputStream openClasspathResource(String filename) {
       return ClassLoader.getSystemClassLoader().getResourceAsStream(filename);
+    }
+
+    InputStream openBootInfClassesResource(String filename) {
+      return Thread.currentThread()
+          .getContextClassLoader()
+          .getResourceAsStream(Paths.get("BOOT-INF", "classes", filename).toString());
     }
 
     InputStream openFile(String filename) throws Exception {
