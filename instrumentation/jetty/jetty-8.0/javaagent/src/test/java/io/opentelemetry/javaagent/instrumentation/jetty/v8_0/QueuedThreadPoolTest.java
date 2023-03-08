@@ -33,6 +33,7 @@ class QueuedThreadPoolTest {
     assumeTrue(dispatch != null);
     pool.start();
 
+    Method finalDispatch = dispatch;
     testing.runWithSpan(
         "parent",
         () -> {
@@ -40,9 +41,9 @@ class QueuedThreadPoolTest {
           JavaAsyncChild child1 = new JavaAsyncChild();
           // this child won't
           JavaAsyncChild child2 = new JavaAsyncChild(false, false);
-          if (dispatch != null) {
-            dispatch.invoke(pool, child1);
-            dispatch.invoke(pool, child2);
+          if (finalDispatch != null) {
+            finalDispatch.invoke(pool, child1);
+            finalDispatch.invoke(pool, child2);
             child1.waitForCompletion();
             child2.waitForCompletion();
           }
@@ -74,11 +75,12 @@ class QueuedThreadPoolTest {
     pool.start();
 
     JavaAsyncChild child = new JavaAsyncChild(true, true);
+    Method finalDispatch = dispatch;
     testing.runWithSpan(
         "parent",
         () -> {
-          if (dispatch != null) {
-            dispatch.invoke(pool, JavaLambdaMaker.lambda(child));
+          if (finalDispatch != null) {
+            finalDispatch.invoke(pool, JavaLambdaMaker.lambda(child));
           }
         });
 
