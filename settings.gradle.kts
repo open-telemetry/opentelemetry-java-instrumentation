@@ -5,8 +5,8 @@ pluginManagement {
     id("com.github.jk1.dependency-license-report") version "2.1"
     id("com.google.cloud.tools.jib") version "3.3.1"
     id("com.gradle.plugin-publish") version "1.1.0"
-    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
-    id("org.jetbrains.kotlin.jvm") version "1.8.10"
+    id("io.github.gradle-nexus.publish-plugin") version "1.2.0"
+    id("org.jetbrains.kotlin.jvm") version "1.8.0"
     id("org.xbib.gradle.plugin.jflex") version "1.7.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
   }
@@ -146,7 +146,6 @@ hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.0:jav
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.3:library")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.3:testing")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent")
-hideFromDependabot(":instrumentation:apache-pulsar:apache-pulsar-2.8:javaagent")
 hideFromDependabot(":instrumentation:armeria-1.3:javaagent")
 hideFromDependabot(":instrumentation:armeria-1.3:library")
 hideFromDependabot(":instrumentation:armeria-1.3:testing")
@@ -174,10 +173,6 @@ hideFromDependabot(":instrumentation:azure-core:azure-core-1.36:javaagent")
 hideFromDependabot(":instrumentation:azure-core:azure-core-1.36:library-instrumentation-shaded")
 hideFromDependabot(":instrumentation:cassandra:cassandra-3.0:javaagent")
 hideFromDependabot(":instrumentation:cassandra:cassandra-4.0:javaagent")
-hideFromDependabot(":instrumentation:cassandra:cassandra-4.4:javaagent")
-hideFromDependabot(":instrumentation:cassandra:cassandra-4.4:library")
-hideFromDependabot(":instrumentation:cassandra:cassandra-4.4:testing")
-hideFromDependabot(":instrumentation:cassandra:cassandra-4-common:testing")
 hideFromDependabot(":instrumentation:cdi-testing")
 hideFromDependabot(":instrumentation:graphql-java-12.0:javaagent")
 hideFromDependabot(":instrumentation:graphql-java-12.0:library")
@@ -401,7 +396,6 @@ hideFromDependabot(":instrumentation:quartz-2.0:testing")
 hideFromDependabot(":instrumentation:r2dbc-1.0:javaagent")
 hideFromDependabot(":instrumentation:r2dbc-1.0:library")
 hideFromDependabot(":instrumentation:r2dbc-1.0:testing")
-hideFromDependabot(":instrumentation:r2dbc-1.0:tracing-opentelemetry-shaded")
 hideFromDependabot(":instrumentation:rabbitmq-2.7:javaagent")
 hideFromDependabot(":instrumentation:ratpack:ratpack-1.4:javaagent")
 hideFromDependabot(":instrumentation:ratpack:ratpack-1.4:testing")
@@ -481,9 +475,9 @@ hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:java
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library")
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-common:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-common:testing")
-hideFromDependabot(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent")
-hideFromDependabot(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing")
-hideFromDependabot(":instrumentation:spring:spring-webflux:spring-webflux-5.3:library")
+hideFromDependabot(":instrumentation:spring:spring-webflux-5.0:javaagent")
+hideFromDependabot(":instrumentation:spring:spring-webflux-5.0:library")
+hideFromDependabot(":instrumentation:spring:spring-webflux-5.0:testing")
 hideFromDependabot(":instrumentation:spring:spring-ws-2.0:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-boot-autoconfigure")
 hideFromDependabot(":instrumentation:spring:starters:spring-boot-starter")

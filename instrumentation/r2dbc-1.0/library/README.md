@@ -35,8 +35,11 @@ The instrumentation library provides a R2dbc `ProxyConnectionFactory` that gets 
 ```java
 ConnectionFactory wrapWithProxyFactory(OpenTelemetry openTelemetry, ConnectionFactory originalFactory, ConnectionFactoryOptions factoryOptions) {
   return R2dbcTelemetryBuilder
-    .create(openTelemetry)
-    .wrapConnectionFactory(originalFactory, factoryOptions);
+    .builder(openTelemetry)
+    .setOriginalConnectionFactory(originalFactory)
+    .setConnectionFactoryOptions(factoryOptions)
+    .build()
+    .getConnectionFactory();
 }
 ```
 

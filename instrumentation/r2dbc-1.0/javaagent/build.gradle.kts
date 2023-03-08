@@ -17,5 +17,4 @@ dependencies {
   implementation(project(":instrumentation:r2dbc-1.0:library"))
 
   testImplementation(project(":instrumentation:r2dbc-1.0:testing"))
-  testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 }

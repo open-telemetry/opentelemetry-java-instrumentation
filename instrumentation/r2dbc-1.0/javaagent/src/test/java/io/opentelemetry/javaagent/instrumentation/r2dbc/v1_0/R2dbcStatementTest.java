@@ -7,6 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.r2dbc.spi.ConnectionFactories;
+import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.ConnectionFactoryOptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class R2dbcStatementTest extends AbstractR2dbcStatementTest {
@@ -17,5 +20,11 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
   @Override
   protected InstrumentationExtension getTesting() {
     return testing;
+  }
+
+  @Override
+  ConnectionFactory createProxyConnectionFactory(
+      ConnectionFactoryOptions connectionFactoryOptions) {
+    return ConnectionFactories.find(connectionFactoryOptions);
   }
 }
