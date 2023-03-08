@@ -83,11 +83,21 @@ public class ExtensionClassLoader extends URLClassLoader {
       File tempDirectory = null;
       while (entryEnumeration.hasMoreElements()) {
         JarEntry jarEntry = entryEnumeration.nextElement();
+        String name = jarEntry.getName();
 
-        if (jarEntry.getName().startsWith(prefix) && !jarEntry.isDirectory()) {
+        if (name.startsWith(prefix) && !jarEntry.isDirectory()) {
           tempDirectory = ensureTempDirectoryExists(tempDirectory);
 
-          File tempFile = new File(tempDirectory, jarEntry.getName().substring(prefix.length()));
+          File tempFile = new File(tempDirectory, name.substring(prefix.length()));
+          // reject extensions that would be extracted outside of temp directory
+          // https://security.snyk.io/research/zip-slip-vulnerability
+          if (name.indexOf("..") != -1
+              && !tempFile
+                  .getCanonicalFile()
+                  .toPath()
+                  .startsWith(tempDirectory.getCanonicalFile().toPath())) {
+            throw new IllegalStateException("Invalid extension " + name);
+          }
           if (tempFile.createNewFile()) {
             tempFile.deleteOnExit();
             extractFile(jarFile, jarEntry, tempFile);

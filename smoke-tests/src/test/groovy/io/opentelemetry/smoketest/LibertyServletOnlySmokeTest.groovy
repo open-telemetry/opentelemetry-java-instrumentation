@@ -28,10 +28,10 @@ abstract class LibertyServletOnlySmokeTest extends LibertySmokeTest {
   }
 }
 
-@AppServer(version = "20.0.0.12", jdk = "11")
-class LibertyServletOnly20Jdk11 extends LibertySmokeTest {
+@AppServer(version = "21.0.0.12", jdk = "11")
+class LibertyServletOnly21Jdk11 extends LibertySmokeTest {
 }
 
-@AppServer(version = "21.0.0.10", jdk = "11")
-class LibertyServletOnly21Jdk11 extends LibertySmokeTest {
+@AppServer(version = "22.0.0.12", jdk = "11")
+class LibertyServletOnly22Jdk11 extends LibertySmokeTest {
 }

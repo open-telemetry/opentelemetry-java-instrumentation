@@ -1,6 +1,5 @@
 plugins {
   id("otel.javaagent-instrumentation")
-  id("org.unbroken-dome.test-sets")
 }
 
 muzzle {
@@ -10,15 +9,6 @@ muzzle {
     versions.set("[1.2,3)")
     extraDependency("jakarta.el:jakarta.el-api:3.0.3")
     assertInverse.set(true)
-  }
-}
-
-testSets {
-  create("myfaces12Test")
-  create("myfaces2Test")
-  create("latestDepTest") {
-    extendsFrom("myfaces2Test")
-    dirName = "myfaces2LatestTest"
   }
 }
 
@@ -38,13 +28,42 @@ dependencies {
   testImplementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
+}
 
-  add("myfaces12TestImplementation", "org.apache.myfaces.core:myfaces-impl:1.2.12")
-  add("myfaces12TestImplementation", "com.sun.facelets:jsf-facelets:1.1.14")
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+testing {
+  suites {
+    val myfaces12Test by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
+        implementation("com.sun.facelets:jsf-facelets:1.1.14")
 
-  add("myfaces2TestImplementation", "org.apache.myfaces.core:myfaces-impl:2.3.2")
-  add("myfaces2TestImplementation", "javax.xml.bind:jaxb-api:2.2.11")
-  add("myfaces2TestImplementation", "com.sun.xml.bind:jaxb-impl:2.2.11")
+        if (latestDepTest) {
+          implementation("org.apache.myfaces.core:myfaces-impl:1.2.+")
+        } else {
+          implementation("org.apache.myfaces.core:myfaces-impl:1.2.2")
+        }
+      }
+    }
 
-  add("latestDepTestImplementation", "org.apache.myfaces.core:myfaces-impl:2.+")
+    val myfaces2Test by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
+        implementation("javax.xml.bind:jaxb-api:2.2.11")
+        implementation("com.sun.xml.bind:jaxb-impl:2.2.11")
+
+        if (latestDepTest) {
+          implementation("org.apache.myfaces.core:myfaces-impl:2.+")
+        } else {
+          implementation("org.apache.myfaces.core:myfaces-impl:2.2.0")
+        }
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
 }

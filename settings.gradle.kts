@@ -5,17 +5,17 @@ pluginManagement {
     id("com.github.jk1.dependency-license-report") version "2.1"
     id("com.google.cloud.tools.jib") version "3.3.1"
     id("com.gradle.plugin-publish") version "1.1.0"
-    id("io.github.gradle-nexus.publish-plugin") version "1.2.0"
-    id("org.jetbrains.kotlin.jvm") version "1.8.0"
-    id("org.unbroken-dome.test-sets") version "4.0.0"
+    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
+    id("org.jetbrains.kotlin.jvm") version "1.8.10"
     id("org.xbib.gradle.plugin.jflex") version "1.7.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
   }
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.12.2"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.8.2"
+  id("com.gradle.enterprise") version "3.12.4"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.9"
+  id("org.gradle.toolchains.foojay-resolver-convention") version "0.4.0"
 }
 
 dependencyResolutionManagement {
@@ -146,6 +146,7 @@ hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.0:jav
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.3:library")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.3:testing")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent")
+hideFromDependabot(":instrumentation:apache-pulsar:apache-pulsar-2.8:javaagent")
 hideFromDependabot(":instrumentation:armeria-1.3:javaagent")
 hideFromDependabot(":instrumentation:armeria-1.3:library")
 hideFromDependabot(":instrumentation:armeria-1.3:testing")
@@ -472,9 +473,9 @@ hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:java
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library")
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-common:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-common:testing")
-hideFromDependabot(":instrumentation:spring:spring-webflux-5.0:javaagent")
-hideFromDependabot(":instrumentation:spring:spring-webflux-5.0:library")
-hideFromDependabot(":instrumentation:spring:spring-webflux-5.0:testing")
+hideFromDependabot(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent")
+hideFromDependabot(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing")
+hideFromDependabot(":instrumentation:spring:spring-webflux:spring-webflux-5.3:library")
 hideFromDependabot(":instrumentation:spring:spring-ws-2.0:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-boot-autoconfigure")
 hideFromDependabot(":instrumentation:spring:starters:spring-boot-starter")
