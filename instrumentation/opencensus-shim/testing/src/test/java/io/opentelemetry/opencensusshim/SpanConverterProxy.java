@@ -7,6 +7,9 @@ package io.opentelemetry.opencensusshim;
 
 import io.opentelemetry.api.trace.SpanContext;
 
+/*
+Needed to expose the package-private SpanConverter's `mapSpanContext()` method.
+ */
 public class SpanConverterProxy {
 
   private SpanConverterProxy() {}
