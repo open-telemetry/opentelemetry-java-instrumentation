@@ -55,13 +55,13 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
     events[0].getMDCPropertyMap().get("trace_id") == null
     events[0].getMDCPropertyMap().get("span_id") == null
     events[0].getMDCPropertyMap().get("trace_flags") == null
-    events[0].getMDCPropertyMap().get("baggage_key") == (expectBaggage() ? "baggage_value" : null)
+    events[0].getMDCPropertyMap().get("baggage_key") == (expectBaggage() ? "baggage.baggage_value" : null)
 
     events[1].message == "log message 2"
     events[1].getMDCPropertyMap().get("trace_id") == null
     events[1].getMDCPropertyMap().get("span_id") == null
     events[1].getMDCPropertyMap().get("trace_flags") == null
-    events[1].getMDCPropertyMap().get("baggage_key") == (expectBaggage() ? "baggage_value" : null)
+    events[1].getMDCPropertyMap().get("baggage_key") == (expectBaggage() ? "baggage.baggage_value" : null)
   }
 
   def "ids when span"() {
@@ -86,7 +86,7 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
     events[0].getMDCPropertyMap().get("trace_id") == span1.spanContext.traceId
     events[0].getMDCPropertyMap().get("span_id") == span1.spanContext.spanId
     events[0].getMDCPropertyMap().get("trace_flags") == "01"
-    events[0].getMDCPropertyMap().get("baggage_key") == (expectBaggage() ? "baggage_value" : null)
+    events[0].getMDCPropertyMap().get("baggage_key") == (expectBaggage() ? "baggage.baggage_value" : null)
 
     events[1].message == "log message 2"
     events[1].getMDCPropertyMap().get("trace_id") == null
@@ -98,7 +98,7 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
     events[2].getMDCPropertyMap().get("trace_id") == span2.spanContext.traceId
     events[2].getMDCPropertyMap().get("span_id") == span2.spanContext.spanId
     events[2].getMDCPropertyMap().get("trace_flags") == "01"
-    events[2].getMDCPropertyMap().get("baggage_key") == (expectBaggage() ? "baggage_value" : null)
+    events[2].getMDCPropertyMap().get("baggage_key") == (expectBaggage() ? "baggage.baggage_value" : null)
   }
 
   Span runWithSpanAndBaggage(String spanName, Baggage baggage, Closure callback) {
