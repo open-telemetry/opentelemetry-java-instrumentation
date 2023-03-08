@@ -5,14 +5,11 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
 import org.reactivestreams.Subscription;
 import org.springframework.core.Ordered;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -77,12 +74,6 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
   }
 
   private static class TelemetryWrappedSubscriber implements CoreSubscriber<Void> {
-
-    private static final HttpServerAttributesGetter<ServerWebExchange, ServerWebExchange>
-        attributesGetter = WebfluxServerHttpAttributesGetter.INSTANCE;
-    private static final SpanNameExtractor<ServerWebExchange> spanNameExtractor =
-        HttpSpanNameExtractor.create(WebfluxServerHttpAttributesGetter.INSTANCE);
-
     private final CoreSubscriber<? super Void> actual;
     private final Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter;
     private final Context currentOtelContext;
@@ -138,15 +129,12 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
     }
 
     private void end(Context currentContext, Throwable t) {
-      // Update span name and HTTP route now, because during instrumenter.start()
+      // Update HTTP route now, because during instrumenter.start()
       // the HTTP route isn't available from the exchange attributes, but is afterwards
-      String spanName = spanNameExtractor.extract(exchange);
-      String route = attributesGetter.getRoute(exchange);
-      Span span = Span.fromContext(currentContext);
-      span.updateName(spanName);
-      if (route != null) {
-        span.setAttribute(SemanticAttributes.HTTP_ROUTE, route);
-      }
+      HttpRouteHolder.updateHttpRoute(
+          currentContext,
+          HttpRouteSource.CONTROLLER,
+          WebfluxServerHttpAttributesGetter.INSTANCE.getRoute(exchange));
       instrumenter.end(currentContext, exchange, exchange, t);
     }
   }
