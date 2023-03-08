@@ -24,7 +24,8 @@ import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 
 public final class PulsarSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-client-2.8";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-pulsar-2.8";
+
   private static final OpenTelemetry TELEMETRY = GlobalOpenTelemetry.get();
   private static final TextMapPropagator PROPAGATOR =
       TELEMETRY.getPropagators().getTextMapPropagator();
