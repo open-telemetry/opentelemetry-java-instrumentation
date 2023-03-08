@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
+package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -19,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CassandraClientInstrumentationModule extends InstrumentationModule {
 
   public CassandraClientInstrumentationModule() {
-    super("cassandra", "cassandra-4.0");
+    super("cassandra", "cassandra-4.4");
   }
 
   @Override
@@ -30,6 +29,6 @@ public class CassandraClientInstrumentationModule extends InstrumentationModule 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // new public interface introduced in version 4.4
-    return not(hasClassesNamed("com.datastax.dse.driver.api.core.cql.reactive.ReactiveSession"));
+    return hasClassesNamed("com.datastax.dse.driver.api.core.cql.reactive.ReactiveSession");
   }
 }
