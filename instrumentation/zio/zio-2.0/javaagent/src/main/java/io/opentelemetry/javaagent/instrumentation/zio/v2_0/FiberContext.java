@@ -5,19 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.zio.v2_0;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 
 public class FiberContext {
 
-  private Span span;
+  private Context context;
 
-  private FiberContext(Span span) {
-    this.span = span;
+  private FiberContext(Context context) {
+    this.context = context;
   }
 
   public static FiberContext create() {
-    return new FiberContext(Span.current());
+    return new FiberContext(Context.current());
   }
 
   public void onEnd() {
@@ -25,11 +24,11 @@ public class FiberContext {
   }
 
   public void onSuspend() {
-    this.span = Span.current();
+    this.context = Context.current();
     Context.root().makeCurrent();
   }
 
   public void onResume() {
-    this.span.makeCurrent();
+    this.context.makeCurrent();
   }
 }

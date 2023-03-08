@@ -100,6 +100,7 @@ object ZioTestFixtures {
         }
         .getOrThrowFiberFailure()
     }
+    executor.shutdownNow()
   }
 
 }
