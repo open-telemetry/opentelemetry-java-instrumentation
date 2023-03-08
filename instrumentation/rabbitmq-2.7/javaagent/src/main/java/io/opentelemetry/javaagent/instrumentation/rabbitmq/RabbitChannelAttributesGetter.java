@@ -49,12 +49,6 @@ enum RabbitChannelAttributesGetter implements MessagingAttributesGetter<ChannelA
 
   @Nullable
   @Override
-  public String getUrl(ChannelAndMethod channelAndMethod) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getConversationId(ChannelAndMethod channelAndMethod) {
     return null;
   }

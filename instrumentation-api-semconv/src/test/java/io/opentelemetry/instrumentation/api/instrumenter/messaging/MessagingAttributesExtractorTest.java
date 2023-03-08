@@ -26,7 +26,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation") // operationName
 class MessagingAttributesExtractorTest {
 
   @ParameterizedTest
@@ -73,8 +72,7 @@ class MessagingAttributesExtractorTest {
     }
     expectedEntries.add(entry(SemanticAttributes.NET_APP_PROTOCOL_NAME, "AMQP"));
     expectedEntries.add(entry(SemanticAttributes.NET_APP_PROTOCOL_VERSION, "1.0.0"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_URL, "http://broker/topic"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_CONVERSATION_ID, "42"));
+    expectedEntries.add(entry(SemanticAttributes.MESSAGING_MESSAGE_CONVERSATION_ID, "42"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 100L));
     expectedEntries.add(
         entry(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES, 10L));
@@ -147,11 +145,6 @@ class MessagingAttributesExtractorTest {
     @Override
     public String getProtocolVersion(Map<String, String> request) {
       return request.get("protocolVersion");
-    }
-
-    @Override
-    public String getUrl(Map<String, String> request) {
-      return request.get("url");
     }
 
     @Override
