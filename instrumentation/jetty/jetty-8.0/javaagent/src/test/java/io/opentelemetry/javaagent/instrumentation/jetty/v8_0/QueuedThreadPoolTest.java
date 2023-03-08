@@ -29,6 +29,7 @@ class QueuedThreadPoolTest {
     try {
       dispatch = QueuedThreadPool.class.getMethod("dispatch", Runnable.class);
     } catch (NoSuchMethodException ignore) {
+      // ignore
     }
     assumeTrue(dispatch != null);
     pool.start();
@@ -70,6 +71,7 @@ class QueuedThreadPoolTest {
     try {
       dispatch = QueuedThreadPool.class.getMethod("dispatch", Runnable.class);
     } catch (NoSuchMethodException ignore) {
+      // ignore
     }
     assumeTrue(dispatch != null);
     pool.start();
