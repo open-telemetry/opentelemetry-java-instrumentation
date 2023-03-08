@@ -5,33 +5,32 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
 
-enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Message<?>, Attributes> {
+enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<PulsarRequest, Void> {
   INSTANCE;
 
   @Override
-  public String getSystem(Message<?> message) {
+  public String getSystem(PulsarRequest request) {
     return "pulsar";
   }
 
   @Override
-  public String getDestinationKind(Message<?> message) {
+  public String getDestinationKind(PulsarRequest request) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Nullable
   @Override
-  public String getDestination(Message<?> message) {
-    return null;
+  public String getDestination(PulsarRequest request) {
+    return request.getDestination();
   }
 
   @Override
-  public boolean isTemporaryDestination(Message<?> message) {
+  public boolean isTemporaryDestination(PulsarRequest request) {
     return false;
   }
 
@@ -43,24 +42,21 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Messag
 
   @Nullable
   @Override
-  public Long getMessagePayloadSize(Message<?> message) {
-    if (message != null) {
-      return (long) message.size();
-    }
+  public Long getMessagePayloadSize(PulsarRequest request) {
+    return (long) request.getMessage().size();
+  }
 
+  @Nullable
+  @Override
+  public Long getMessagePayloadCompressedSize(PulsarRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long getMessagePayloadCompressedSize(Message<?> message) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getMessageId(Message<?> message, @Nullable Attributes attributes) {
-    if (message != null && message.getMessageId() != null) {
+  public String getMessageId(PulsarRequest request, @Nullable Void response) {
+    Message<?> message = request.getMessage();
+    if (message.getMessageId() != null) {
       return message.getMessageId().toString();
     }
 

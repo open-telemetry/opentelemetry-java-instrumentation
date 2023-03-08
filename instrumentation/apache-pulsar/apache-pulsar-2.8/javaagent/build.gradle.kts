@@ -18,3 +18,9 @@ dependencies {
   testImplementation("org.testcontainers:pulsar:1.17.1")
   testImplementation("org.apache.pulsar:pulsar-client-admin:2.8.0")
 }
+
+tasks.withType<Test>().configureEach {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs("-Dotel.instrumentation.apache-pulsar.experimental-span-attributes=true")
+  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+}

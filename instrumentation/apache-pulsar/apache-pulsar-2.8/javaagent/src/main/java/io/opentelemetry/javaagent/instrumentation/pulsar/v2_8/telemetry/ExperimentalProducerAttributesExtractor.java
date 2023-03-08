@@ -5,35 +5,33 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
-import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.Locale;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.impl.MessageImpl;
 import org.apache.pulsar.common.api.proto.MessageMetadata;
 
-enum ProducerAttributesExtractor implements AttributesExtractor<Message<?>, Attributes> {
+enum ExperimentalProducerAttributesExtractor implements AttributesExtractor<PulsarRequest, Void> {
   INSTANCE;
 
-  private ProducerAttributesExtractor() {}
+  private static final AttributeKey<String> MESSAGE_TYPE =
+      AttributeKey.stringKey("messaging.pulsar.message.type");
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext, Message<?> message) {}
+  public void onStart(AttributesBuilder attributes, Context parentContext, PulsarRequest request) {}
 
   @Override
   public void onEnd(
       AttributesBuilder attributesBuilder,
       Context context,
-      Message<?> message,
-      @Nullable Attributes attributes,
+      PulsarRequest request,
+      @Nullable Void response,
       @Nullable Throwable error) {
-    if (attributes != null) {
-      attributesBuilder.putAll(attributes);
-    }
-
+    Message<?> message = request.getMessage();
     if (message instanceof MessageImpl<?>) {
       MessageType type = MessageType.NORMAL;
       MessageImpl<?> impl = (MessageImpl<?>) message;
@@ -48,7 +46,7 @@ enum ProducerAttributesExtractor implements AttributesExtractor<Message<?>, Attr
         type = MessageType.CHUNK;
       }
 
-      attributesBuilder.put(SemanticAttributes.MESSAGE_TYPE, type.name());
+      attributesBuilder.put(MESSAGE_TYPE, type.name().toLowerCase(Locale.ROOT));
     }
   }
 

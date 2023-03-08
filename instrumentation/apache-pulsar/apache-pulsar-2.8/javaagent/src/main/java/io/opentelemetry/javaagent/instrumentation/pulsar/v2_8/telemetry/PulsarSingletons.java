@@ -7,19 +7,22 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.time.Instant;
+import java.util.List;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 
@@ -29,101 +32,104 @@ public final class PulsarSingletons {
   private static final OpenTelemetry TELEMETRY = GlobalOpenTelemetry.get();
   private static final TextMapPropagator PROPAGATOR =
       TELEMETRY.getPropagators().getTextMapPropagator();
+  private static final List<String> capturedHeaders =
+      ExperimentalConfig.get().getMessagingHeaders();
 
-  private static final SpanNameExtractor<Message<?>> CONSUMER_RECEIVE =
-      new MessagingSpanNameExtractor<>(SpanKind.CONSUMER, MessageOperation.RECEIVE);
-  private static final SpanNameExtractor<Message<?>> CONSUMER_PROCESS =
-      new MessagingSpanNameExtractor<>(SpanKind.CONSUMER, MessageOperation.PROCESS);
-  private static final SpanNameExtractor<Message<?>> PRODUCER_SEND =
-      new MessagingSpanNameExtractor<>(SpanKind.PRODUCER, MessageOperation.SEND);
-
-  private static final Instrumenter<Message<?>, Attributes> CONSUMER_LISTENER_INSTRUMENTER =
-      createConsumerListenerInstrumenter();
-  private static final Instrumenter<Message<?>, Attributes> CONSUMER_RECEIVE_INSTRUMENTER =
+  private static final Instrumenter<PulsarRequest, Void> CONSUMER_PROCESS_INSTRUMENTER =
+      createConsumerProcessInstrumenter();
+  private static final Instrumenter<PulsarRequest, Void> CONSUMER_RECEIVE_INSTRUMENTER =
       createConsumerReceiveInstrumenter();
-  private static final Instrumenter<Message<?>, Attributes> PRODUER_INSTRUMENTER =
+  private static final Instrumenter<PulsarRequest, Void> PRODUER_INSTRUMENTER =
       createProducerInstrumenter();
 
-  public static Instrumenter<Message<?>, Attributes> consumerListenerInstrumenter() {
-    return CONSUMER_LISTENER_INSTRUMENTER;
+  public static Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter() {
+    return CONSUMER_PROCESS_INSTRUMENTER;
   }
 
-  public static Instrumenter<Message<?>, Attributes> consumerReceiveInstrumenter() {
+  public static Instrumenter<PulsarRequest, Void> consumerReceiveInstrumenter() {
     return CONSUMER_RECEIVE_INSTRUMENTER;
   }
 
-  public static Instrumenter<Message<?>, Attributes> producerInstrumenter() {
+  public static Instrumenter<PulsarRequest, Void> producerInstrumenter() {
     return PRODUER_INSTRUMENTER;
   }
 
-  private static Instrumenter<Message<?>, Attributes> createConsumerReceiveInstrumenter() {
-    MessagingAttributesGetter<Message<?>, Attributes> getter =
+  private static Instrumenter<PulsarRequest, Void> createConsumerReceiveInstrumenter() {
+    MessagingAttributesGetter<PulsarRequest, Void> getter =
         PulsarMessagingAttributesGetter.INSTANCE;
 
-    return Instrumenter.<Message<?>, Attributes>builder(
-            TELEMETRY, INSTRUMENTATION_NAME, CONSUMER_RECEIVE)
-        .addAttributesExtractor(ConsumerAttributesExtractor.INSTANCE)
+    return Instrumenter.<PulsarRequest, Void>builder(
+            TELEMETRY,
+            INSTRUMENTATION_NAME,
+            MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
+        .addAttributesExtractor(createMessagingAttributesExtractor(MessageOperation.RECEIVE))
         .addAttributesExtractor(
-            MessagingAttributesExtractor.create(getter, MessageOperation.RECEIVE))
+            NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
         .buildConsumerInstrumenter(MessageTextMapGetter.INSTANCE);
   }
 
-  private static Instrumenter<Message<?>, Attributes> createConsumerListenerInstrumenter() {
-    MessagingAttributesGetter<Message<?>, Attributes> getter =
+  private static Instrumenter<PulsarRequest, Void> createConsumerProcessInstrumenter() {
+    MessagingAttributesGetter<PulsarRequest, Void> getter =
         PulsarMessagingAttributesGetter.INSTANCE;
 
-    return Instrumenter.<Message<?>, Attributes>builder(
-            TELEMETRY, INSTRUMENTATION_NAME, CONSUMER_PROCESS)
-        .addAttributesExtractor(
-            MessagingAttributesExtractor.create(getter, MessageOperation.PROCESS))
-        .addAttributesExtractor(ConsumerAttributesExtractor.INSTANCE)
+    return Instrumenter.<PulsarRequest, Void>builder(
+            TELEMETRY,
+            INSTRUMENTATION_NAME,
+            MessagingSpanNameExtractor.create(getter, MessageOperation.PROCESS))
+        .addAttributesExtractor(createMessagingAttributesExtractor(MessageOperation.PROCESS))
         .buildInstrumenter();
   }
 
-  private static Instrumenter<Message<?>, Attributes> createProducerInstrumenter() {
-    MessagingAttributesGetter<Message<?>, Attributes> getter =
+  private static Instrumenter<PulsarRequest, Void> createProducerInstrumenter() {
+    MessagingAttributesGetter<PulsarRequest, Void> getter =
         PulsarMessagingAttributesGetter.INSTANCE;
 
-    return Instrumenter.<Message<?>, Attributes>builder(
-            TELEMETRY, INSTRUMENTATION_NAME, PRODUCER_SEND)
-        .addAttributesExtractor(ProducerAttributesExtractor.INSTANCE)
-        .addAttributesExtractor(MessagingAttributesExtractor.create(getter, MessageOperation.SEND))
-        .buildProducerInstrumenter(MessageTextMapSetter.INSTANCE);
+    InstrumenterBuilder<PulsarRequest, Void> builder =
+        Instrumenter.<PulsarRequest, Void>builder(
+                TELEMETRY,
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(getter, MessageOperation.SEND))
+            .addAttributesExtractor(createMessagingAttributesExtractor(MessageOperation.SEND))
+            .addAttributesExtractor(
+                NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
+
+    if (InstrumentationConfig.get()
+        .getBoolean("otel.instrumentation.apache-pulsar.experimental-span-attributes", false)) {
+      builder.addAttributesExtractor(ExperimentalProducerAttributesExtractor.INSTANCE);
+    }
+
+    return builder.buildProducerInstrumenter(MessageTextMapSetter.INSTANCE);
+  }
+
+  private static AttributesExtractor<PulsarRequest, Void> createMessagingAttributesExtractor(
+      MessageOperation operation) {
+    return MessagingAttributesExtractor.builder(PulsarMessagingAttributesGetter.INSTANCE, operation)
+        .setCapturedHeaders(capturedHeaders)
+        .build();
   }
 
   public static Context startAndEndConsumerReceive(
       Context parent, Message<?> message, long start, Consumer<?> consumer) {
-    if (message == null || !CONSUMER_RECEIVE_INSTRUMENTER.shouldStart(parent, message)) {
+    if (message == null) {
       return null;
     }
-
     String brokerUrl = VirtualFieldStore.extract(consumer);
-    Attributes attributes = Attributes.of(SemanticAttributes.NET_SOCK_PEER_ADDR, brokerUrl);
+    PulsarRequest request = PulsarRequest.create(message, brokerUrl);
+    if (!CONSUMER_RECEIVE_INSTRUMENTER.shouldStart(parent, request)) {
+      return null;
+    }
     // startAndEnd not supports extract trace context from carrier
     // start not supports custom startTime
     // extract trace context by using TEXT_MAP_PROPAGATOR here.
     return InstrumenterUtil.startAndEnd(
         CONSUMER_RECEIVE_INSTRUMENTER,
-        PROPAGATOR.extract(parent, message, MessageTextMapGetter.INSTANCE),
-        message,
-        attributes,
+        PROPAGATOR.extract(parent, request, MessageTextMapGetter.INSTANCE),
+        request,
+        null,
         null,
         Instant.ofEpochMilli(start),
         Instant.now());
   }
 
   private PulsarSingletons() {}
-
-  static class MessagingSpanNameExtractor<T> implements SpanNameExtractor<T> {
-    private final String name;
-
-    private MessagingSpanNameExtractor(SpanKind kind, MessageOperation operation) {
-      this.name = kind.name() + "/" + operation.name();
-    }
-
-    @Override
-    public String extract(T unused) {
-      return this.name;
-    }
-  }
 }
