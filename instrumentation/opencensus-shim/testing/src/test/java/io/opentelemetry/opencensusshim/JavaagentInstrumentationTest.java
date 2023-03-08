@@ -7,6 +7,7 @@ package io.opentelemetry.opencensusshim;
 
 import io.opencensus.trace.AttributeValue;
 import io.opencensus.trace.Tracing;
+import io.opencensus.trace.samplers.Samplers;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -17,6 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import org.assertj.core.api.AbstractBooleanAssert;
+import org.junit.BeforeClass;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -24,6 +26,15 @@ public class JavaagentInstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @BeforeClass
+  static void setup() {
+    Tracing.getTraceConfig()
+        .updateActiveTraceParams(
+            Tracing.getTraceConfig().getActiveTraceParams().toBuilder()
+                .setSampler(Samplers.alwaysSample())
+                .build());
+  }
 
   @Test
   void testInterleavedSpansOcFirst() {
@@ -321,6 +332,8 @@ public class JavaagentInstrumentationTest {
                                 AbstractBooleanAssert::isNull))));
   }
 
+  // todo verify no longer required now that setup() method is in place;
+  //  requires merge of dependent PR in opentelemetry-java first
   static io.opencensus.trace.Span findSampledOCSpan(
       io.opencensus.trace.Tracer ocTracer, String name) {
     // loop until we get a span which will be exported (isSampled);
