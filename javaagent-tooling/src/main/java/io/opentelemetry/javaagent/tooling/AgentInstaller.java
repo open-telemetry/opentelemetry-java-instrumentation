@@ -246,11 +246,11 @@ public class AgentInstaller {
     HttpServerResponseCustomizerHolder.setCustomizer(
         new HttpServerResponseCustomizer() {
           @Override
-          public <T> void onStart(
+          public <T> void customize(
               Context serverContext, T response, HttpServerResponseMutator<T> responseMutator) {
 
             for (HttpServerResponseCustomizer modifier : customizers) {
-              modifier.onStart(serverContext, response, responseMutator);
+              modifier.customize(serverContext, response, responseMutator);
             }
           }
         });

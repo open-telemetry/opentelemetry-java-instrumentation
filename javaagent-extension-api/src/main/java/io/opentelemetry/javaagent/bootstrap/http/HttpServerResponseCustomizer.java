@@ -25,5 +25,8 @@ public interface HttpServerResponseCustomizer {
    * @param response Response object specific to the library being instrumented
    * @param responseMutator Mutator through which the provided response object can be mutated
    */
-  <T> void onStart(Context serverContext, T response, HttpServerResponseMutator<T> responseMutator);
+  <RESPONSE> void customize(
+      Context serverContext,
+      RESPONSE response,
+      HttpServerResponseMutator<RESPONSE> responseMutator);
 }

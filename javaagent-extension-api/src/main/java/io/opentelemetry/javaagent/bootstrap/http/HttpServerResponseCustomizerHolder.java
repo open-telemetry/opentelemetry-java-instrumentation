@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.bootstrap.http;
 
 import io.opentelemetry.context.Context;
-import javax.annotation.Nonnull;
 
 /**
  * Holds the currently active response customizer. This is set during agent initialization to an
@@ -14,15 +13,13 @@ import javax.annotation.Nonnull;
  * intended to be used directly from HTTP server library instrumentations, which is why this package
  * is inside the bootstrap package that gets loaded in the bootstrap classloader.
  */
-public class HttpServerResponseCustomizerHolder {
-  @Nonnull
+public final class HttpServerResponseCustomizerHolder {
   private static volatile HttpServerResponseCustomizer responseCustomizer = new NoOpCustomizer();
 
-  public static void setCustomizer(@Nonnull HttpServerResponseCustomizer customizer) {
+  public static void setCustomizer(HttpServerResponseCustomizer customizer) {
     HttpServerResponseCustomizerHolder.responseCustomizer = customizer;
   }
 
-  @Nonnull
   public static HttpServerResponseCustomizer getCustomizer() {
     return responseCustomizer;
   }
@@ -32,7 +29,7 @@ public class HttpServerResponseCustomizerHolder {
   private static class NoOpCustomizer implements HttpServerResponseCustomizer {
 
     @Override
-    public <T> void onStart(
+    public <T> void customize(
         Context serverContext, T response, HttpServerResponseMutator<T> responseMutator) {}
   }
 }

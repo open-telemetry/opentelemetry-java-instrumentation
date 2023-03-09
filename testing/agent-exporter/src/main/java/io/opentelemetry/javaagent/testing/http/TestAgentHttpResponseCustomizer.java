@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.testing.http;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizer;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
@@ -15,11 +16,12 @@ import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 public class TestAgentHttpResponseCustomizer implements HttpServerResponseCustomizer {
 
   @Override
-  public <T> void onStart(
+  public <T> void customize(
       Context serverContext, T response, HttpServerResponseMutator<T> responseMutator) {
 
-    String traceId = Span.fromContext(serverContext).getSpanContext().getTraceId();
-    String spanId = Span.fromContext(serverContext).getSpanContext().getSpanId();
+    SpanContext spanContext = Span.fromContext(serverContext).getSpanContext();
+    String traceId = spanContext.getTraceId();
+    String spanId = spanContext.getSpanId();
 
     responseMutator.appendHeader(response, "X-Test-TraceId", traceId);
     responseMutator.appendHeader(response, "X-Test-SpanId", spanId);
