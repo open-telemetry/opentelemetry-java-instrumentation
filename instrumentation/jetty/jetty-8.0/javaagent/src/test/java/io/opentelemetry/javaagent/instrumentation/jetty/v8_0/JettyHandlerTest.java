@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Collections;
 import javax.servlet.DispatcherType;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
@@ -159,7 +160,7 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
         Request baseRequest,
         HttpServletRequest request,
         HttpServletResponse response)
-        throws IOException {
+        throws IOException, ServletException {
       // This line here is to verify that we don't break Jetty if it wants to cast to implementation
       // class
       Response jettyResponse = (Response) response;
