@@ -4,6 +4,7 @@
  */
 
 import com.rabbitmq.client.ConnectionFactory
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -91,6 +92,10 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
     then:
     assertTraces(2) {
       trace(0, 5) {
+        spans.subList(2, 4).sort {
+          def destination = it.attributes.get(SemanticAttributes.MESSAGING_DESTINATION_NAME)
+          return destination == "<default>" ? 0 : 1
+        }
         span(0) {
           name "parent"
         }
