@@ -4,6 +4,8 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import org.testcontainers.utility.DockerImageName
+
 import java.time.Duration
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.NewTopic
@@ -43,7 +45,8 @@ class KafkaStreamsBaseTest extends AgentInstrumentationSpecification {
   static CountDownLatch consumerReady = new CountDownLatch(1)
 
   def setupSpec() {
-    kafka = new KafkaContainer()
+    kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"))
+      .withEnv("KAFKA_HEAP_OPTS", "-Xmx256m -Xmx256m")
       .withLogConsumer(new Slf4jLogConsumer(logger))
       .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
       .withStartupTimeout(Duration.ofMinutes(1))
