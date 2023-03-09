@@ -42,18 +42,6 @@ enum RocketMqConsumerProcessAttributeGetter
 
   @Nullable
   @Override
-  public String getProtocol(MessageView messageView) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(MessageView messageView) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getConversationId(MessageView messageView) {
     return null;
   }

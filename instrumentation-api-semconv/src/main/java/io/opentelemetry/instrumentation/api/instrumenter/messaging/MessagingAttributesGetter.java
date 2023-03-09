@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.messaging;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -30,11 +31,27 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
 
   boolean isTemporaryDestination(REQUEST request);
 
+  /**
+   * Returns the application protocol used.
+   *
+   * @deprecated Use {@link NetClientAttributesGetter#getProtocolName(Object, Object)} instead.
+   */
+  @Deprecated
   @Nullable
-  String getProtocol(REQUEST request);
+  default String getProtocol(REQUEST request) {
+    return null;
+  }
 
+  /**
+   * Returns the version of the application protocol used.
+   *
+   * @deprecated Use {@link NetClientAttributesGetter#getProtocolVersion(Object, Object)} instead.
+   */
+  @Deprecated
   @Nullable
-  String getProtocolVersion(REQUEST request);
+  default String getProtocolVersion(REQUEST request) {
+    return null;
+  }
 
   /**
    * Returns the application protocol used.

@@ -20,6 +20,28 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   String getTransport(REQUEST request, @Nullable RESPONSE response);
 
+  // TODO: make required after the 1.24 release
+  /**
+   * Returns the application protocol used.
+   *
+   * <p>Examples: `amqp`, `http`, `mqtt`.
+   */
+  @Nullable
+  default String getProtocolName(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
+  // TODO: make required after the 1.24 release
+  /**
+   * Returns the version of the application protocol used.
+   *
+   * <p>Examples: `3.1.1`.
+   */
+  @Nullable
+  default String getProtocolVersion(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
   @Nullable
   String getPeerName(REQUEST request);
 
