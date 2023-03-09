@@ -13,8 +13,7 @@ public final class R2dbcTelemetry {
 
   /** Returns a new {@link R2dbcTelemetry} configured with the given {@link OpenTelemetry}. */
   public static R2dbcTelemetry create(OpenTelemetry openTelemetry) {
-    R2dbcTelemetryBuilder builder = builder(openTelemetry);
-    return builder.build();
+    return builder(openTelemetry).build();
   }
 
   /**
