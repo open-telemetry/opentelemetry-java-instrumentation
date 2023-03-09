@@ -27,12 +27,11 @@ object ZioTestFixtures {
     run {
       for {
         childStarted <- Promise.make[Nothing, Unit]
-        never <- Promise.make[Nothing, Unit]
         _ <- childSpan("fiber_1_span_1") {
           for {
             child <- childSpan("fiber_2_span_1") {
               childStarted.succeed(()) *>
-                never.await
+                ZIO.never
             }.fork
             _ <- childStarted.await
             _ <- child.interrupt
@@ -41,29 +40,87 @@ object ZioTestFixtures {
       } yield ()
     }
 
-  def runConcurrentFibers(): Unit =
+  def runSynchronizedFibers(): Unit = {
+    def runFiber(
+        fiberNumber: Int,
+        onStart: UIO[Unit],
+        onEnd: UIO[Unit]
+    ): ZIO[Any, Nothing, Any] =
+      childSpan(s"fiber_${fiberNumber}_span_1") {
+        onStart *>
+          childSpan(s"fiber_${fiberNumber}_span_2") {
+            onEnd
+          }
+      }
+
     run {
       for {
         fiber1Started <- Promise.make[Nothing, Unit]
         fiber2Done <- Promise.make[Nothing, Unit]
 
-        fiber1 <- childSpan("fiber_1_span_1") {
-          fiber1Started.succeed(()) *>
-            fiber2Done.await *>
-            childSpan("fiber_1_span_2")(ZIO.unit)
-        }.fork
+        fiber1 <- runFiber(
+          fiberNumber = 1,
+          onStart = fiber1Started.succeed(()) *> fiber2Done.await,
+          onEnd = ZIO.unit
+        ).fork
 
-        fiber2 <- childSpan("fiber_2_span_1") {
-          fiber1Started.await *>
-            childSpan("fiber_2_span_2") {
-              fiber2Done.succeed(()) *>
-                ZIO.unit
-            }
-        }.fork
+        fiber2 <- runFiber(
+          fiberNumber = 2,
+          onStart = fiber1Started.await,
+          onEnd = fiber2Done.succeed(()).unit
+        ).fork
 
         _ <- Fiber.joinAll(List(fiber1, fiber2))
       } yield ()
     }
+  }
+
+  def runConcurrentFibers(): Unit = {
+    def runFiber(
+        fiberNumber: Int,
+        start: Promise[Nothing, Unit]
+    ): ZIO[Any, Nothing, Unit] = {
+      start.await *>
+        childSpan(s"fiber_${fiberNumber}_span_1") {
+          ZIO.yieldNow *>
+            childSpan(s"fiber_${fiberNumber}_span_2") {
+              ZIO.yieldNow
+            }
+        }
+    }
+
+    run {
+      for {
+        start <- Promise.make[Nothing, Unit]
+        fiber1 <- runFiber(1, start).fork
+        fiber2 <- runFiber(2, start).fork
+        fiber3 <- runFiber(3, start).fork
+        _ <- start.succeed(())
+        _ <- Fiber.joinAll(List(fiber1, fiber2, fiber3))
+      } yield ()
+    }
+  }
+
+  def runSequentialFibers(): Unit = {
+    def runFiber(fiberNumber: Int): ZIO[Any, Nothing, Unit] = {
+      childSpan(s"fiber_${fiberNumber}_span_1") {
+        childSpan(s"fiber_${fiberNumber}_span_2") {
+          ZIO.unit
+        }
+      }
+    }
+
+    run {
+      for {
+        fiber1 <- runFiber(1).fork
+        _ <- fiber1.join
+        fiber2 <- runFiber(2).fork
+        _ <- fiber2.join
+        fiber3 <- runFiber(3).fork
+        _ <- fiber3.join
+      } yield ()
+    }
+  }
 
   private val tracer: Tracer = GlobalOpenTelemetry.getTracer("test")
 
@@ -81,22 +138,19 @@ object ZioTestFixtures {
 
   private def run[A](zio: ZIO[Any, Nothing, A]): Unit = {
     val executor = Executors.newSingleThreadExecutor()
+    val zioExecutor = Executor.fromJavaExecutor(executor)
     Unsafe.unsafe { implicit unsafe =>
       Runtime.default.unsafe
         .run {
           ZIO
             .scoped {
               for {
-                _ <- Runtime
-                  .setExecutor(Executor.fromJavaExecutor(executor))
-                  .build
-                _ <- Runtime
-                  .setBlockingExecutor(Executor.fromJavaExecutor(executor))
-                  .build
+                _ <- Runtime.setExecutor(zioExecutor).build
+                _ <- Runtime.setBlockingExecutor(zioExecutor).build
                 res <- zio
               } yield res
             }
-            .onExecutor(Executor.fromJavaExecutor(executor))
+            .onExecutor(zioExecutor)
         }
         .getOrThrowFiberFailure()
     }

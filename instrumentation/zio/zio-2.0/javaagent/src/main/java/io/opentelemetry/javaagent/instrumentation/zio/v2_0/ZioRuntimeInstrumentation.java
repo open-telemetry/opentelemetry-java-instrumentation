@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.zio.v2_0;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -23,11 +22,6 @@ public class ZioRuntimeInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("zio.Runtime$");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("zio.Runtime$");
   }
 
   @Override

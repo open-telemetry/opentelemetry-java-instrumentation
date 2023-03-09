@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.zio.v2_0;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
@@ -23,12 +22,5 @@ public class ZioInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ZioRuntimeInstrumentation());
-  }
-
-  @Override
-  public List<String> getAdditionalHelperClassNames() {
-    return asList(
-        "io.opentelemetry.javaagent.instrumentation.zio.v2_0.FiberContext",
-        "io.opentelemetry.javaagent.instrumentation.zio.v2_0.TracingSupervisor");
   }
 }

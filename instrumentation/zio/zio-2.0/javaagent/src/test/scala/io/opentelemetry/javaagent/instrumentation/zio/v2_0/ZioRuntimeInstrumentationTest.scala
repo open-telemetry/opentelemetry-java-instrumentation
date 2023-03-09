@@ -21,8 +21,7 @@ import java.util.function.Consumer
 class ZioRuntimeInstrumentationTest {
 
   @RegisterExtension
-  val testing: InstrumentationExtension =
-    RelaxedInstrumentationExtension.create()
+  val testing: InstrumentationExtension = AgentInstrumentationExtension.create()
 
   @Test
   def traceIsPropagatedToChildFiber(): Unit = {
@@ -53,6 +52,26 @@ class ZioRuntimeInstrumentationTest {
   }
 
   @Test
+  def synchronizedFibersDoNotInterfereWithEachOthersTraces(): Unit = {
+    runSynchronizedFibers()
+
+    assertThat(traces).hasTracesSatisfyingExactly(
+      assertTrace { trace =>
+        trace.hasSpansSatisfyingExactly(
+          assertSpan(_.hasName("fiber_1_span_1").hasNoParent),
+          assertSpan(_.hasName("fiber_1_span_2").hasParent(trace.getSpan(0)))
+        )
+      },
+      assertTrace { trace =>
+        trace.hasSpansSatisfyingExactly(
+          assertSpan(_.hasName("fiber_2_span_1").hasNoParent),
+          assertSpan(_.hasName("fiber_2_span_2").hasParent(trace.getSpan(0)))
+        )
+      }
+    )
+  }
+
+  @Test
   def concurrentFibersDoNotInterfereWithEachOthersTraces(): Unit = {
     runConcurrentFibers()
 
@@ -67,6 +86,38 @@ class ZioRuntimeInstrumentationTest {
         trace.hasSpansSatisfyingExactly(
           assertSpan(_.hasName("fiber_2_span_1").hasNoParent),
           assertSpan(_.hasName("fiber_2_span_2").hasParent(trace.getSpan(0)))
+        )
+      },
+      assertTrace { trace =>
+        trace.hasSpansSatisfyingExactly(
+          assertSpan(_.hasName("fiber_3_span_1").hasNoParent),
+          assertSpan(_.hasName("fiber_3_span_2").hasParent(trace.getSpan(0)))
+        )
+      }
+    )
+  }
+
+  @Test
+  def sequentialFibersDoNotInterfereWithEachOthersTraces(): Unit = {
+    runSequentialFibers()
+
+    assertThat(traces).hasTracesSatisfyingExactly(
+      assertTrace { trace =>
+        trace.hasSpansSatisfyingExactly(
+          assertSpan(_.hasName("fiber_1_span_1").hasNoParent),
+          assertSpan(_.hasName("fiber_1_span_2").hasParent(trace.getSpan(0)))
+        )
+      },
+      assertTrace { trace =>
+        trace.hasSpansSatisfyingExactly(
+          assertSpan(_.hasName("fiber_2_span_1").hasNoParent),
+          assertSpan(_.hasName("fiber_2_span_2").hasParent(trace.getSpan(0)))
+        )
+      },
+      assertTrace { trace =>
+        trace.hasSpansSatisfyingExactly(
+          assertSpan(_.hasName("fiber_3_span_1").hasNoParent),
+          assertSpan(_.hasName("fiber_3_span_2").hasParent(trace.getSpan(0)))
         )
       }
     )
