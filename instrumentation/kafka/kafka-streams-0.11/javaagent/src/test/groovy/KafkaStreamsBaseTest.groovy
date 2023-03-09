@@ -4,9 +4,6 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import org.testcontainers.utility.DockerImageName
-
-import java.time.Duration
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.Consumer
@@ -24,8 +21,10 @@ import org.slf4j.LoggerFactory
 import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.utility.DockerImageName
 import spock.lang.Shared
 
+import java.time.Duration
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
