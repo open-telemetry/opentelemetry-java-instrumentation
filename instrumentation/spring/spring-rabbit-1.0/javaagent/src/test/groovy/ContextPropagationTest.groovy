@@ -4,7 +4,6 @@
  */
 
 import com.rabbitmq.client.ConnectionFactory
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
