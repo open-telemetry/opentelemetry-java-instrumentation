@@ -17,6 +17,8 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import io.opentelemetry.api.baggage.Baggage;
+import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
@@ -54,11 +56,11 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class GetMdcAdvice {
-
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This ILoggingEvent event,
         @Advice.Return(typing = Typing.DYNAMIC, readOnly = false) Map<String, String> contextData) {
+
       if (contextData != null && contextData.containsKey(TRACE_ID)) {
         // Assume already instrumented event if traceId is present.
         return;
@@ -69,15 +71,28 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         return;
       }
 
+      Map<String, String> spanContextData = new HashMap<>();
+
       SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
-      if (!spanContext.isValid()) {
-        return;
+
+      if (spanContext.isValid()) {
+        spanContextData.put(TRACE_ID, spanContext.getTraceId());
+        spanContextData.put(SPAN_ID, spanContext.getSpanId());
+        spanContextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
       }
 
-      Map<String, String> spanContextData = new HashMap<>();
-      spanContextData.put(TRACE_ID, spanContext.getTraceId());
-      spanContextData.put(SPAN_ID, spanContext.getSpanId());
-      spanContextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
+      if (LogbackSingletons.addBaggage()) {
+        Baggage baggage = Java8BytecodeBridge.baggageFromContext(context);
+
+        // using a lambda here does not play nicely with instrumentation bytecode process
+        // (Java 6 related errors are observed) so relying on for loop instead
+        for (Map.Entry<String, BaggageEntry> entry : baggage.asMap().entrySet()) {
+          spanContextData.put(
+              entry.getKey(),
+              // prefix all baggage values to avoid clashes with existing context
+              "baggage." + entry.getValue().getValue());
+        }
+      }
 
       if (contextData == null) {
         contextData = spanContextData;

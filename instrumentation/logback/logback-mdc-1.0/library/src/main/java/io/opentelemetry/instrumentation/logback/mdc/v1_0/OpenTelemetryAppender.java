@@ -15,8 +15,10 @@ import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
@@ -25,15 +27,22 @@ import java.util.Map;
 
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     implements AppenderAttachable<ILoggingEvent> {
+  private volatile boolean addBaggage;
 
   private final AppenderAttachableImpl<ILoggingEvent> aai = new AppenderAttachableImpl<>();
 
-  public static ILoggingEvent wrapEvent(ILoggingEvent event) {
-    Span currentSpan = Span.current();
-    if (!currentSpan.getSpanContext().isValid()) {
-      return event;
-    }
+  /**
+   * When set to true this will enable addition of all baggage entries to MDC. This can be done by
+   * adding the following to the logback.xml config for this appender. {@code
+   * <addBaggage>true</addBaggage>}
+   *
+   * @param addBaggage True if baggage should be added to MDC
+   */
+  public void setAddBaggage(boolean addBaggage) {
+    this.addBaggage = addBaggage;
+  }
 
+  public ILoggingEvent wrapEvent(ILoggingEvent event) {
     Map<String, String> eventContext = event.getMDCPropertyMap();
     if (eventContext != null && eventContext.containsKey(TRACE_ID)) {
       // Assume already instrumented event if traceId is present.
@@ -41,10 +50,25 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     }
 
     Map<String, String> contextData = new HashMap<>();
-    SpanContext spanContext = currentSpan.getSpanContext();
-    contextData.put(TRACE_ID, spanContext.getTraceId());
-    contextData.put(SPAN_ID, spanContext.getSpanId());
-    contextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
+    Context context = Context.current();
+    Span currentSpan = Span.fromContext(context);
+
+    if (currentSpan.getSpanContext().isValid()) {
+      SpanContext spanContext = currentSpan.getSpanContext();
+      contextData.put(TRACE_ID, spanContext.getTraceId());
+      contextData.put(SPAN_ID, spanContext.getSpanId());
+      contextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
+    }
+
+    if (addBaggage) {
+      Baggage baggage = Baggage.fromContext(context);
+      baggage.forEach(
+          (key, value) ->
+              contextData.put(
+                  key,
+                  // prefix all baggage values to avoid clashes with existing context
+                  "baggage." + value.getValue()));
+    }
 
     if (eventContext == null) {
       eventContext = contextData;
