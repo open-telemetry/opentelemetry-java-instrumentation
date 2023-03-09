@@ -84,6 +84,7 @@ public class TelemetryDataUtilTest {
     }
 
     List<List<SpanData>> result = TelemetryDataUtil.groupTraces(spans);
-    assertThat(result).hasTracesSatisfyingExactly(trace -> trace.hasSpansSatisfyingExactly(asserts));
+    assertThat(result)
+        .hasTracesSatisfyingExactly(trace -> trace.hasSpansSatisfyingExactly(asserts));
   }
 }
