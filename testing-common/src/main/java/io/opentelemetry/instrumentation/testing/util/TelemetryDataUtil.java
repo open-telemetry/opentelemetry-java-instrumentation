@@ -14,7 +14,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +37,9 @@ public final class TelemetryDataUtil {
   public static List<List<SpanData>> groupTraces(List<SpanData> spans) {
     List<List<SpanData>> traces =
         new ArrayList<>(
-            spans.stream().collect(Collectors.groupingBy(SpanData::getTraceId)).values());
+            spans.stream()
+                .collect(Collectors.groupingBy(SpanData::getTraceId, LinkedHashMap::new, toList()))
+                .values());
     sortTraces(traces);
     for (int i = 0; i < traces.size(); i++) {
       List<SpanData> trace = traces.get(i);
@@ -107,7 +109,7 @@ public final class TelemetryDataUtil {
   @SuppressWarnings("UnstableApiUsage")
   private static List<SpanData> sort(List<SpanData> trace) {
 
-    Map<String, Node> lookup = new HashMap<>();
+    Map<String, Node> lookup = new LinkedHashMap<>();
     for (SpanData span : trace) {
       lookup.put(span.getSpanId(), new Node(span));
     }
