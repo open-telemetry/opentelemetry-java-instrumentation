@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("com.datastax.oss")
     module.set("java-driver-core")
-    versions.set("[4.0,)")
+    versions.set("[4.0,4.4)")
     assertInverse.set(true)
   }
 }
@@ -16,6 +16,11 @@ dependencies {
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
+
+  testImplementation(project(":instrumentation:cassandra:cassandra-4-common:testing"))
+
+  testInstrumentation(project(":instrumentation:cassandra:cassandra-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:cassandra:cassandra-4.4:javaagent"))
 }
 
 tasks {

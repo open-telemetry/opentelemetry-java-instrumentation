@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +29,20 @@ class NetClientAttributesExtractorTest {
     @Override
     public String getTransport(Map<String, String> request, Map<String, String> response) {
       return response.get("transport");
+    }
+
+    @Nullable
+    @Override
+    public String getProtocolName(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("protocolName");
+    }
+
+    @Nullable
+    @Override
+    public String getProtocolVersion(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("protocolVersion");
     }
 
     @Override
@@ -71,6 +86,8 @@ class NetClientAttributesExtractorTest {
     // given
     Map<String, String> map = new HashMap<>();
     map.put("transport", IP_TCP);
+    map.put("protocolName", "http");
+    map.put("protocolVersion", "1.1");
     map.put("peerName", "opentelemetry.io");
     map.put("peerPort", "42");
     map.put("sockFamily", "inet6");
@@ -96,6 +113,8 @@ class NetClientAttributesExtractorTest {
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
+            entry(SemanticAttributes.NET_APP_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NET_APP_PROTOCOL_VERSION, "1.1"),
             entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"),
             entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
             entry(SemanticAttributes.NET_SOCK_PEER_NAME, "proxy.opentelemetry.io"),

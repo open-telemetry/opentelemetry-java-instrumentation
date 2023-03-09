@@ -44,24 +44,6 @@ enum KafkaProducerAttributesGetter
 
   @Override
   @Nullable
-  public String getProtocol(KafkaProducerRequest request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String getProtocolVersion(KafkaProducerRequest request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String getUrl(KafkaProducerRequest request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String getConversationId(KafkaProducerRequest request) {
     return null;
   }

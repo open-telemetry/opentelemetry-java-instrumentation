@@ -45,24 +45,6 @@ enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<Deliver
 
   @Nullable
   @Override
-  public String getProtocol(DeliveryRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(DeliveryRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getUrl(DeliveryRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getConversationId(DeliveryRequest request) {
     return null;
   }

@@ -37,24 +37,6 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Messag
 
   @Nullable
   @Override
-  public String getProtocol(Message<?> message) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(Message<?> message) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getUrl(Message<?> message) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getConversationId(Message<?> message) {
     return null;
   }
