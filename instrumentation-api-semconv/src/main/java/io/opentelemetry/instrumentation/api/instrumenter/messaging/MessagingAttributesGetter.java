@@ -36,8 +36,16 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   String getProtocolVersion(REQUEST request);
 
+  /**
+   * Returns the application protocol used.
+   *
+   * @deprecated The {@code messaging.url} attribute was removed without replacement.
+   */
+  @Deprecated
   @Nullable
-  String getUrl(REQUEST request);
+  default String getUrl(REQUEST request) {
+    return null;
+  }
 
   @Nullable
   String getConversationId(REQUEST request);

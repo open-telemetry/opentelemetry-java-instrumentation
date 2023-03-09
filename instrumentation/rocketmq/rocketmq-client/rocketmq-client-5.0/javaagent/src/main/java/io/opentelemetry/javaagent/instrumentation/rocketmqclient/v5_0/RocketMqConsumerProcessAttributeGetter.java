@@ -54,17 +54,10 @@ enum RocketMqConsumerProcessAttributeGetter
 
   @Nullable
   @Override
-  public String getUrl(MessageView messageView) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getConversationId(MessageView messageView) {
     return null;
   }
 
-  @Nullable
   @Override
   public Long getMessagePayloadSize(MessageView messageView) {
     return (long) messageView.getBody().remaining();

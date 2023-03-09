@@ -58,12 +58,6 @@ enum KafkaReceiveAttributesGetter implements MessagingAttributesGetter<KafkaRece
 
   @Override
   @Nullable
-  public String getUrl(KafkaReceiveRequest request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String getConversationId(KafkaReceiveRequest request) {
     return null;
   }

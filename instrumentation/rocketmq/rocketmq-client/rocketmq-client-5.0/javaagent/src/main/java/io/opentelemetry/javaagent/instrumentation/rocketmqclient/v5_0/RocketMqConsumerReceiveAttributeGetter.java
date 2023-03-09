@@ -53,12 +53,6 @@ enum RocketMqConsumerReceiveAttributeGetter
 
   @Nullable
   @Override
-  public String getUrl(ReceiveMessageRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getConversationId(ReceiveMessageRequest request) {
     return null;
   }

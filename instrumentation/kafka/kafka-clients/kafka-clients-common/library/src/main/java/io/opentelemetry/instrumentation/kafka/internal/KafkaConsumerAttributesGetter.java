@@ -50,12 +50,6 @@ enum KafkaConsumerAttributesGetter implements MessagingAttributesGetter<KafkaPro
 
   @Override
   @Nullable
-  public String getUrl(KafkaProcessRequest request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String getConversationId(KafkaProcessRequest request) {
     return null;
   }

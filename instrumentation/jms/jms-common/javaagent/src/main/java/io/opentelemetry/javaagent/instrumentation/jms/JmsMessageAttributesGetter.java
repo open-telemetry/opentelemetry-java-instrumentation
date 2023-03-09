@@ -54,12 +54,6 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
 
   @Nullable
   @Override
-  public String getUrl(MessageWithDestination messageWithDestination) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getConversationId(MessageWithDestination messageWithDestination) {
     try {
       return messageWithDestination.message().getJmsCorrelationId();
