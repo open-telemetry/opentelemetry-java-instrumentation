@@ -87,7 +87,6 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
                 DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(SemanticAttributes.HTTP_ROUTE)));
     options.setHasResponseSpan(endpoint -> endpoint == REDIRECT || endpoint == ERROR);
     options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
-    super.configure(options);
   }
 
   @Override
@@ -108,14 +107,14 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
         endpoint,
         () -> {
           try {
-            return extracted(request, response, endpoint);
+            return response(request, response, endpoint);
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
         });
   }
 
-  private static HttpServletResponse extracted(
+  private static HttpServletResponse response(
       Request request, HttpServletResponse response, ServerEndpoint endpoint) throws IOException {
     response.setContentType("text/plain");
     switch (endpoint) {
