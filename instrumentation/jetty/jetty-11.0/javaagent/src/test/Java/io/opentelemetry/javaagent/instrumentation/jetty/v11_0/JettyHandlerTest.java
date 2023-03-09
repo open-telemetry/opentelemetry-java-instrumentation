@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Collections;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ErrorHandler;
@@ -160,8 +161,11 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
         HttpServletRequest request,
         HttpServletResponse response)
         throws IOException, ServletException {
+      // This line here is to verify that we don't break Jetty if it wants to cast to implementation
+      // class
+      Response jettyResponse = (Response) response;
       if (baseRequest.getDispatcherType() != DispatcherType.ERROR) {
-        handleRequest(baseRequest, response);
+        handleRequest(baseRequest, jettyResponse);
         baseRequest.setHandled(true);
       } else {
         errorHandler.handle(target, baseRequest, baseRequest, response);
