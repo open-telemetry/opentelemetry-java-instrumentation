@@ -139,22 +139,20 @@ object ZioTestFixtures {
   private def run[A](zio: ZIO[Any, Nothing, A]): Unit = {
     val executor = Executors.newSingleThreadExecutor()
     val zioExecutor = Executor.fromJavaExecutor(executor)
-    Unsafe.unsafe { implicit unsafe =>
-      Runtime.default.unsafe
-        .run {
-          ZIO
-            .scoped {
-              for {
-                _ <- Runtime.setExecutor(zioExecutor).build
-                _ <- Runtime.setBlockingExecutor(zioExecutor).build
-                res <- zio
-              } yield res
-            }
-            .onExecutor(zioExecutor)
-        }
-        .getOrThrowFiberFailure()
+    val layer =
+      Runtime.setExecutor(zioExecutor) >>>
+        Runtime.setBlockingExecutor(zioExecutor)
+    try {
+      Unsafe.unsafe { implicit unsafe =>
+        Runtime.unsafe
+          .fromLayer(layer)
+          .unsafe
+          .run(zio)
+          .getOrThrowFiberFailure()
+      }
+    } finally {
+      executor.shutdownNow()
     }
-    executor.shutdownNow()
   }
 
 }

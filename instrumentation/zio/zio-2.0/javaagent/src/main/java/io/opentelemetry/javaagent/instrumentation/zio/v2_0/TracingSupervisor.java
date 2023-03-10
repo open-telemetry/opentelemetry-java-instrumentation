@@ -44,12 +44,7 @@ public final class TracingSupervisor extends Supervisor<Object> {
   }
 
   @Override
-  public <R, E, A1> void onEnd(Exit<E, A1> value, Fiber.Runtime<E, A1> fiber, Unsafe unsafe) {
-    FiberContext context = virtualField.get(fiber);
-    if (context != null) {
-      context.onEnd();
-    }
-  }
+  public <R, E, A1> void onEnd(Exit<E, A1> value, Fiber.Runtime<E, A1> fiber, Unsafe unsafe) {}
 
   @Override
   public <E, A1> void onSuspend(Fiber.Runtime<E, A1> fiber, Unsafe unsafe) {

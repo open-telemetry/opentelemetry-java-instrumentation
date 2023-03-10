@@ -10,7 +10,6 @@ import io.opentelemetry.context.Scope;
 import javax.annotation.Nullable;
 
 public class FiberContext {
-
   private Context context;
   @Nullable private Scope scope;
 
@@ -21,12 +20,6 @@ public class FiberContext {
 
   public static FiberContext create() {
     return new FiberContext(Context.current());
-  }
-
-  public void onEnd() {
-    if (this.scope != null) {
-      this.scope.close();
-    }
   }
 
   public void onSuspend() {
