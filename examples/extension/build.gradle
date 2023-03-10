@@ -101,7 +101,7 @@ dependencies {
   //All dependencies below are only for tests
   testImplementation("org.testcontainers:testcontainers:1.17.6")
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
-  testImplementation("com.google.protobuf:protobuf-java-util:3.22.0")
+  testImplementation("com.google.protobuf:protobuf-java-util:3.22.2")
   testImplementation("com.squareup.okhttp3:okhttp:4.10.0")
   testImplementation("io.opentelemetry:opentelemetry-api")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:0.19.0-alpha")
