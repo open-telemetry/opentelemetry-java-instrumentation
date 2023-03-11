@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Named.named;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import java.time.Duration;
@@ -87,8 +88,10 @@ public abstract class AbstractR2dbcStatementTest {
   private static Integer port;
   private static GenericContainer<?> container;
 
-  abstract ConnectionFactory createProxyConnectionFactory(
-      ConnectionFactoryOptions connectionFactoryOptions);
+  protected ConnectionFactory createProxyConnectionFactory(
+      ConnectionFactoryOptions connectionFactoryOptions) {
+    return ConnectionFactories.find(connectionFactoryOptions);
+  }
 
   @AfterAll
   void stopContainer(){
