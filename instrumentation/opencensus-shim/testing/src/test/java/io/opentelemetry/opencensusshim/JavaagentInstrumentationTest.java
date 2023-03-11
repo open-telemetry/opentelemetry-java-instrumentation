@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import org.assertj.core.api.AbstractBooleanAssert;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -27,8 +27,11 @@ public class JavaagentInstrumentationTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @BeforeClass
-  static void setup() {
+  @BeforeEach
+  void setup() {
+    // by default in opencensus, a probability sampling is used which is not 100%;
+    // we specifically set this configuration here to always sample to ensure traces are emitted for
+    // our tests
     Tracing.getTraceConfig()
         .updateActiveTraceParams(
             Tracing.getTraceConfig().getActiveTraceParams().toBuilder()
@@ -41,7 +44,7 @@ public class JavaagentInstrumentationTest {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
 
-    io.opencensus.trace.Span outerSpan = findSampledOCSpan(ocTracer, "outer-span");
+    io.opencensus.trace.Span outerSpan = ocTracer.spanBuilder("outer-span").startSpan();
     Span midSpan;
     io.opencensus.trace.Span innerSpan;
 
@@ -55,7 +58,7 @@ public class JavaagentInstrumentationTest {
               .setAttribute("middle", true)
               .startSpan();
       try (Scope midScope = midSpan.makeCurrent()) {
-        innerSpan = findSampledOCSpan(ocTracer, "inner-span");
+        innerSpan = ocTracer.spanBuilder("inner-span").startSpan();
         innerSpan.putAttribute("inner", AttributeValue.booleanAttributeValue(true));
         try (io.opencensus.common.Scope innerScope = ocTracer.withSpan(innerSpan)) {
         } finally {
@@ -77,16 +80,16 @@ public class JavaagentInstrumentationTest {
         ta ->
             // ensure each span's attributes haven't seeped into parents or children
             ta.hasSpansSatisfyingExactly(
-                // inner span
+                // outer span
                 sa ->
-                    sa.hasName("inner-span")
-                        .hasParentSpanId(midSpan.getSpanContext().getSpanId())
-                        .hasAttribute(AttributeKey.booleanKey("inner"), true)
+                    sa.hasName("outer-span")
+                        .hasNoParent()
+                        .hasAttribute(AttributeKey.booleanKey("outer"), true)
                         .hasAttributesSatisfying(
                             OpenTelemetryAssertions.satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
+                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
                             OpenTelemetryAssertions.satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
+                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull)),
                 // middle span
                 sa ->
                     sa.hasName("mid-span")
@@ -97,17 +100,16 @@ public class JavaagentInstrumentationTest {
                                 AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
                             OpenTelemetryAssertions.satisfies(
                                 AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
-                // outer span
+                // inner span
                 sa ->
-                    sa.hasName("outer-span")
-                        .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("outer"), true)
+                    sa.hasName("inner-span")
+                        .hasParentSpanId(midSpan.getSpanContext().getSpanId())
+                        .hasAttribute(AttributeKey.booleanKey("inner"), true)
                         .hasAttributesSatisfying(
                             OpenTelemetryAssertions.satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
+                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
                             OpenTelemetryAssertions.satisfies(
-                                AttributeKey.booleanKey("middle"),
-                                AbstractBooleanAssert::isNull))));
+                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull))));
   }
 
   @Test
@@ -125,7 +127,7 @@ public class JavaagentInstrumentationTest {
     Span innerSpan;
 
     try (Scope outerScope = outerSpan.makeCurrent()) {
-      midSpan = findSampledOCSpan(ocTracer, "mid-span");
+      midSpan = ocTracer.spanBuilder("mid-span").startSpan();
       midSpan.putAttribute("middle", AttributeValue.booleanAttributeValue(true));
       try (io.opencensus.common.Scope midScope = ocTracer.withSpan(midSpan)) {
         innerSpan =
@@ -154,16 +156,16 @@ public class JavaagentInstrumentationTest {
         ta ->
             // ensure each span's attributes haven't seeped into parents or children
             ta.hasSpansSatisfyingExactly(
-                // inner span
+                // outer span
                 sa ->
-                    sa.hasName("inner-span")
-                        .hasParentSpanId(midContext.getSpanId())
-                        .hasAttribute(AttributeKey.booleanKey("inner"), true)
+                    sa.hasName("outer-span")
+                        .hasNoParent()
+                        .hasAttribute(AttributeKey.booleanKey("outer"), true)
                         .hasAttributesSatisfying(
                             OpenTelemetryAssertions.satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
+                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
                             OpenTelemetryAssertions.satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
+                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull)),
                 // middle span
                 sa ->
                     sa.hasName("mid-span")
@@ -174,17 +176,16 @@ public class JavaagentInstrumentationTest {
                                 AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
                             OpenTelemetryAssertions.satisfies(
                                 AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
-                // outer span
+                // inner span
                 sa ->
-                    sa.hasName("outer-span")
-                        .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("outer"), true)
+                    sa.hasName("inner-span")
+                        .hasParentSpanId(midContext.getSpanId())
+                        .hasAttribute(AttributeKey.booleanKey("inner"), true)
                         .hasAttributesSatisfying(
                             OpenTelemetryAssertions.satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
+                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
                             OpenTelemetryAssertions.satisfies(
-                                AttributeKey.booleanKey("middle"),
-                                AbstractBooleanAssert::isNull))));
+                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull))));
   }
 
   @Test
@@ -201,7 +202,7 @@ public class JavaagentInstrumentationTest {
 
     io.opencensus.trace.Span ocSpan;
     try (Scope scope = otelSpan.makeCurrent()) {
-      ocSpan = findSampledOCSpan(ocTracer, "oc-span");
+      ocSpan = ocTracer.spanBuilder("oc-span").startSpan();
       try (io.opencensus.common.Scope ocScope = ocTracer.withSpan(ocSpan)) {
         ocTracer
             .getCurrentSpan()
@@ -217,13 +218,13 @@ public class JavaagentInstrumentationTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("oc-span")
-                        .hasParentSpanId(otelSpan.getSpanContext().getSpanId())
-                        .hasAttribute(AttributeKey.booleanKey("present-on-oc"), true),
-                span ->
                     span.hasName("otel-span")
                         .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("present-on-otel"), true)));
+                        .hasAttribute(AttributeKey.booleanKey("present-on-otel"), true),
+                span ->
+                    span.hasName("oc-span")
+                        .hasParentSpanId(otelSpan.getSpanContext().getSpanId())
+                        .hasAttribute(AttributeKey.booleanKey("present-on-oc"), true)));
   }
 
   @Test
@@ -231,7 +232,7 @@ public class JavaagentInstrumentationTest {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
 
-    io.opencensus.trace.Span ocSpan = findSampledOCSpan(ocTracer, "oc-span");
+    io.opencensus.trace.Span ocSpan = ocTracer.spanBuilder("oc-span").startSpan();
 
     ocSpan.putAttribute("present-on-oc", AttributeValue.booleanAttributeValue(true));
 
@@ -253,30 +254,30 @@ public class JavaagentInstrumentationTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("otel-span")
-                        .hasParentSpanId(ocContext.getSpanId())
-                        .hasAttribute(AttributeKey.booleanKey("present-on-otel"), true),
-                span ->
                     span.hasName("oc-span")
                         .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("present-on-oc"), true)));
+                        .hasAttribute(AttributeKey.booleanKey("present-on-oc"), true),
+                span ->
+                    span.hasName("otel-span")
+                        .hasParentSpanId(ocContext.getSpanId())
+                        .hasAttribute(AttributeKey.booleanKey("present-on-otel"), true)));
   }
 
   @Test
   void testNestedOpenCensusSpans() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
 
-    io.opencensus.trace.Span outerSpan = findSampledOCSpan(ocTracer, "outer-span");
+    io.opencensus.trace.Span outerSpan = ocTracer.spanBuilder("outer-span").startSpan();
     io.opencensus.trace.Span midSpan;
     io.opencensus.trace.Span innerSpan;
 
     outerSpan.putAttribute("outer", AttributeValue.booleanAttributeValue(true));
 
     try (io.opencensus.common.Scope outerScope = ocTracer.withSpan(outerSpan)) {
-      midSpan = findSampledOCSpan(ocTracer, "mid-span");
+      midSpan = ocTracer.spanBuilder("mid-span").startSpan();
       midSpan.putAttribute("middle", AttributeValue.booleanAttributeValue(true));
       try (io.opencensus.common.Scope midScope = ocTracer.withSpan(midSpan)) {
-        innerSpan = findSampledOCSpan(ocTracer, "inner-span");
+        innerSpan = ocTracer.spanBuilder("inner-span").startSpan();
         innerSpan.putAttribute("inner", AttributeValue.booleanAttributeValue(true));
         try (io.opencensus.common.Scope innerScope = ocTracer.withSpan(innerSpan)) {
         } finally {
@@ -299,16 +300,16 @@ public class JavaagentInstrumentationTest {
         ta ->
             // ensure each span's attributes haven't seeped into parents or children
             ta.hasSpansSatisfyingExactly(
-                // inner span
+                // outer span
                 sa ->
-                    sa.hasName("inner-span")
-                        .hasParentSpanId(midContext.getSpanId())
-                        .hasAttribute(AttributeKey.booleanKey("inner"), true)
+                    sa.hasName("outer-span")
+                        .hasNoParent()
+                        .hasAttribute(AttributeKey.booleanKey("outer"), true)
                         .hasAttributesSatisfying(
                             OpenTelemetryAssertions.satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
+                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
                             OpenTelemetryAssertions.satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
+                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull)),
                 // middle span
                 sa ->
                     sa.hasName("mid-span")
@@ -319,34 +320,15 @@ public class JavaagentInstrumentationTest {
                                 AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
                             OpenTelemetryAssertions.satisfies(
                                 AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
-                // outer span
+                // inner span
                 sa ->
-                    sa.hasName("outer-span")
-                        .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("outer"), true)
+                    sa.hasName("inner-span")
+                        .hasParentSpanId(midContext.getSpanId())
+                        .hasAttribute(AttributeKey.booleanKey("inner"), true)
                         .hasAttributesSatisfying(
                             OpenTelemetryAssertions.satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
+                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
                             OpenTelemetryAssertions.satisfies(
-                                AttributeKey.booleanKey("middle"),
-                                AbstractBooleanAssert::isNull))));
-  }
-
-  // todo verify no longer required now that setup() method is in place;
-  //  requires merge of dependent PR in opentelemetry-java first
-  static io.opencensus.trace.Span findSampledOCSpan(
-      io.opencensus.trace.Tracer ocTracer, String name) {
-    // loop until we get a span which will be exported (isSampled);
-    // opencensus-shim at its root uses the default sampler which is probability-based,
-    // and we need the span to be emitted in order to adequately test;
-    //
-    // todo otel spans should correctly inherit the sampling state of a parent OC span;
-    //  attow, the otel span below does not respect the isSampled state of the OC span and is
-    //  _always_ exported
-    io.opencensus.trace.Span ocSpan;
-    do {
-      ocSpan = ocTracer.spanBuilder(name).startSpan();
-    } while (!ocSpan.getContext().getTraceOptions().isSampled());
-    return ocSpan;
+                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull))));
   }
 }
