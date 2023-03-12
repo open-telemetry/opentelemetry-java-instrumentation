@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.internal.DbExecution;
-import io.r2dbc.proxy.core.QueryExecutionInfo;
-import io.r2dbc.proxy.listener.ProxyMethodExecutionListener;
+import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.shaded.io.r2dbc.proxy.core.QueryExecutionInfo;
+import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.shaded.io.r2dbc.proxy.listener.ProxyMethodExecutionListener;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 
 public class TraceProxyListener implements ProxyMethodExecutionListener {

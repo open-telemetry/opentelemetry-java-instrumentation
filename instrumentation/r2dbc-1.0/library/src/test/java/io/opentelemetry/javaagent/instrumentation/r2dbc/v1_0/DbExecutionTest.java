@@ -9,10 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.internal.DbExecution;
-import io.r2dbc.proxy.core.QueryExecutionInfo;
-import io.r2dbc.proxy.core.QueryInfo;
-import io.r2dbc.proxy.test.MockConnectionInfo;
-import io.r2dbc.proxy.test.MockQueryExecutionInfo;
+import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.shaded.io.r2dbc.proxy.core.QueryExecutionInfo;
+import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.shaded.io.r2dbc.proxy.core.QueryInfo;
+import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.shaded.io.r2dbc.proxy.test.MockConnectionInfo;
+import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.shaded.io.r2dbc.proxy.test.MockQueryExecutionInfo;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import io.r2dbc.spi.ConnectionMetadata;
