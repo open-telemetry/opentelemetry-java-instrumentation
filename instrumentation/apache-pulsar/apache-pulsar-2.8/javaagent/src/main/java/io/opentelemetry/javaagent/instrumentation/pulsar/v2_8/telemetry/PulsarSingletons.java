@@ -39,7 +39,7 @@ public final class PulsarSingletons {
       createConsumerProcessInstrumenter();
   private static final Instrumenter<PulsarRequest, Void> CONSUMER_RECEIVE_INSTRUMENTER =
       createConsumerReceiveInstrumenter();
-  private static final Instrumenter<PulsarRequest, Void> PRODUER_INSTRUMENTER =
+  private static final Instrumenter<PulsarRequest, Void> PRODUCER_INSTRUMENTER =
       createProducerInstrumenter();
 
   public static Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter() {
@@ -51,7 +51,7 @@ public final class PulsarSingletons {
   }
 
   public static Instrumenter<PulsarRequest, Void> producerInstrumenter() {
-    return PRODUER_INSTRUMENTER;
+    return PRODUCER_INSTRUMENTER;
   }
 
   private static Instrumenter<PulsarRequest, Void> createConsumerReceiveInstrumenter() {
