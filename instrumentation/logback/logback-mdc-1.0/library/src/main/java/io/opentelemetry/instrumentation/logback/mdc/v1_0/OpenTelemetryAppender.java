@@ -20,6 +20,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -92,7 +93,11 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
               } else if ("getLoggerContextVO".equals(method.getName())) {
                 return vo;
               }
-              return method.invoke(event, args);
+              try {
+                return method.invoke(event, args);
+              } catch (InvocationTargetException exception) {
+                throw exception.getCause();
+              }
             });
   }
 
