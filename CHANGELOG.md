@@ -37,6 +37,8 @@
   ([#7989](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7989))
 - Add baggage to Logback MDC; controlled by a configuration flag
   ([#7892](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7892))
+- Make the Spring Boot autoconfigure module work with Spring Boot 3 
+  ([#8028](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8028))
 
 ### 🛠️ Bug fixes
 
