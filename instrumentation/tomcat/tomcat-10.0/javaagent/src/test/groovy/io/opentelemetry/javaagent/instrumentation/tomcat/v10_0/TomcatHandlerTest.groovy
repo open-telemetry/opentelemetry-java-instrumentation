@@ -34,6 +34,11 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
   }
 
   @Override
+  boolean hasResponseCustomizer(ServerEndpoint endpoint) {
+    true
+  }
+
+  @Override
   boolean testCapturedRequestParameters() {
     true
   }

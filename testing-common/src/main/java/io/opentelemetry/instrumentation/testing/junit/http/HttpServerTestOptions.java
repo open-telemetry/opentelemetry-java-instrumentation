@@ -39,6 +39,7 @@ public final class HttpServerTestOptions {
   Predicate<ServerEndpoint> hasHandlerSpan = unused -> false;
   Predicate<ServerEndpoint> hasResponseSpan = unused -> false;
   Predicate<ServerEndpoint> hasErrorPageSpans = unused -> false;
+  Predicate<ServerEndpoint> hasResponseCustomizer = unused -> false;
 
   Predicate<ServerEndpoint> hasExceptionOnServerSpan = endpoint -> !hasHandlerSpan.test(endpoint);
 
@@ -114,6 +115,13 @@ public final class HttpServerTestOptions {
   public HttpServerTestOptions setHasExceptionOnServerSpan(
       Predicate<ServerEndpoint> hasExceptionOnServerSpan) {
     this.hasExceptionOnServerSpan = hasExceptionOnServerSpan;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setHasResponseCustomizer(
+      Predicate<ServerEndpoint> hasResponseCustomizer) {
+    this.hasResponseCustomizer = hasResponseCustomizer;
     return this;
   }
 
