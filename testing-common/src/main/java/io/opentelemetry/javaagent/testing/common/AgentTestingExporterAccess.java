@@ -482,9 +482,10 @@ public final class AgentTestingExporterAccess {
                     point.getTimeUnixNano(),
                     fromProto(point.getAttributesList()),
                     point.getSum(),
-                    // TODO(anuraaga): Read min/max from proto with 0.17.0 release.
-                    /* min= */ null,
-                    /* max= */ null,
+                    point.hasMin(),
+                    point.getMin(),
+                    point.hasMax(),
+                    point.getMax(),
                     point.getExplicitBoundsList(),
                     point.getBucketCountsList()))
         .collect(toList());
