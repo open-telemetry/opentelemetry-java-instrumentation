@@ -7,194 +7,104 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraSingletons.instrumenter;
 
-import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.DriverException;
-import com.datastax.oss.driver.api.core.context.DriverContext;
 import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
-import com.datastax.oss.driver.api.core.cql.PrepareRequest;
-import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.cql.Statement;
-import com.datastax.oss.driver.api.core.metadata.Metadata;
-import com.datastax.oss.driver.api.core.metrics.Metrics;
-import com.datastax.oss.driver.api.core.session.Request;
-import com.datastax.oss.driver.api.core.type.reflect.GenericType;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import java.util.Optional;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
-public class TracingCqlSession implements CqlSession {
-  private final CqlSession session;
+final class TracingCqlSession {
+  private TracingCqlSession() {}
 
-  public TracingCqlSession(CqlSession session) {
-    this.session = session;
+  static CqlSession wrapSession(CqlSession session) {
+    if (session == null) {
+      return null;
+    }
+
+    List<Class<?>> interfaces = new ArrayList<>();
+    Class<?> clazz = session.getClass();
+    while (clazz != Object.class) {
+      interfaces.addAll(Arrays.asList(clazz.getInterfaces()));
+      clazz = clazz.getSuperclass();
+    }
+    return (CqlSession)
+        Proxy.newProxyInstance(
+            session.getClass().getClassLoader(),
+            interfaces.toArray(new Class<?>[0]),
+            (proxy, method, args) -> {
+              if ("execute".equals(method.getName()) && method.getParameterCount() == 1) {
+                if (method.getParameterTypes()[0] == String.class) {
+                  String query = (String) args[0];
+                  return execute(session, query);
+                } else if (method.getParameterTypes()[0] == Statement.class) {
+                  Statement<?> statement = (Statement<?>) args[0];
+                  return execute(session, statement);
+                }
+              } else if ("executeAsync".equals(method.getName())
+                  && method.getParameterCount() == 1) {
+                if (method.getParameterTypes()[0] == String.class) {
+                  String query = (String) args[0];
+                  return executeAsync(session, query);
+                } else if (method.getParameterTypes()[0] == Statement.class) {
+                  Statement<?> statement = (Statement<?>) args[0];
+                  return executeAsync(session, statement);
+                }
+              }
+
+              return method.invoke(session, args);
+            });
   }
 
-  @Override
-  public PreparedStatement prepare(SimpleStatement statement) {
-    return session.prepare(statement);
-  }
-
-  @Override
-  public PreparedStatement prepare(String query) {
-    return session.prepare(query);
-  }
-
-  @Override
-  public PreparedStatement prepare(PrepareRequest request) {
-    return session.prepare(request);
-  }
-
-  @Override
-  public CompletionStage<PreparedStatement> prepareAsync(SimpleStatement statement) {
-    return session.prepareAsync(statement);
-  }
-
-  @Override
-  public CompletionStage<PreparedStatement> prepareAsync(String query) {
-    return session.prepareAsync(query);
-  }
-
-  @Override
-  public CompletionStage<PreparedStatement> prepareAsync(PrepareRequest request) {
-    return session.prepareAsync(request);
-  }
-
-  @Override
-  public String getName() {
-    return session.getName();
-  }
-
-  @Override
-  public Metadata getMetadata() {
-    return session.getMetadata();
-  }
-
-  @Override
-  public boolean isSchemaMetadataEnabled() {
-    return session.isSchemaMetadataEnabled();
-  }
-
-  @Override
-  public CompletionStage<Metadata> setSchemaMetadataEnabled(@Nullable Boolean newValue) {
-    return session.setSchemaMetadataEnabled(newValue);
-  }
-
-  @Override
-  public CompletionStage<Metadata> refreshSchemaAsync() {
-    return session.refreshSchemaAsync();
-  }
-
-  @Override
-  public Metadata refreshSchema() {
-    return session.refreshSchema();
-  }
-
-  @Override
-  public CompletionStage<Boolean> checkSchemaAgreementAsync() {
-    return session.checkSchemaAgreementAsync();
-  }
-
-  @Override
-  public boolean checkSchemaAgreement() {
-    return session.checkSchemaAgreement();
-  }
-
-  @Override
-  public DriverContext getContext() {
-    return session.getContext();
-  }
-
-  @Override
-  public Optional<CqlIdentifier> getKeyspace() {
-    return session.getKeyspace();
-  }
-
-  @Override
-  public Optional<Metrics> getMetrics() {
-    return session.getMetrics();
-  }
-
-  @Override
-  public CompletionStage<Void> closeFuture() {
-    return session.closeFuture();
-  }
-
-  @Override
-  public boolean isClosed() {
-    return session.isClosed();
-  }
-
-  @Override
-  public CompletionStage<Void> closeAsync() {
-    return session.closeAsync();
-  }
-
-  @Override
-  public CompletionStage<Void> forceCloseAsync() {
-    return session.forceCloseAsync();
-  }
-
-  @Override
-  public void close() {
-    session.close();
-  }
-
-  @Override
-  @Nullable
-  public <REQUEST extends Request, RESULT> RESULT execute(
-      REQUEST request, GenericType<RESULT> resultType) {
-    return session.execute(request, resultType);
-  }
-
-  @Override
-  public ResultSet execute(String query) {
+  private static ResultSet execute(CqlSession session, String query) {
     CassandraRequest request = CassandraRequest.create(session, query);
     Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query);
-    } catch (RuntimeException e) {
-      instrumenter().end(context, request, getExecutionInfo(e), e);
-      throw e;
+    } catch (Throwable exception) {
+      instrumenter().end(context, request, getExecutionInfo(exception), exception);
+      throw exception;
     }
     instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
     return resultSet;
   }
 
-  @Override
-  public ResultSet execute(Statement<?> statement) {
+  private static ResultSet execute(CqlSession session, Statement<?> statement) {
     String query = getQuery(statement);
     CassandraRequest request = CassandraRequest.create(session, query);
     Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(statement);
-    } catch (RuntimeException e) {
-      instrumenter().end(context, request, getExecutionInfo(e), e);
-      throw e;
+    } catch (Throwable exception) {
+      instrumenter().end(context, request, getExecutionInfo(exception), exception);
+      throw exception;
     }
     instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
     return resultSet;
   }
 
-  @Override
-  public CompletionStage<AsyncResultSet> executeAsync(Statement<?> statement) {
+  private static CompletionStage<AsyncResultSet> executeAsync(
+      CqlSession session, Statement<?> statement) {
     String query = getQuery(statement);
     CassandraRequest request = CassandraRequest.create(session, query);
     return executeAsync(request, () -> session.executeAsync(statement));
   }
 
-  @Override
-  public CompletionStage<AsyncResultSet> executeAsync(String query) {
+  private static CompletionStage<AsyncResultSet> executeAsync(CqlSession session, String query) {
     CassandraRequest request = CassandraRequest.create(session, query);
     return executeAsync(request, () -> session.executeAsync(query));
   }
@@ -218,7 +128,7 @@ public class TracingCqlSession implements CqlSession {
     }
   }
 
-  static <T> CompletableFuture<T> wrap(CompletionStage<T> future, Context context) {
+  private static <T> CompletableFuture<T> wrap(CompletionStage<T> future, Context context) {
     CompletableFuture<T> result = new CompletableFuture<>();
     future.whenComplete(
         (T value, Throwable throwable) -> {
