@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -12,14 +13,11 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -65,8 +63,6 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
       String brokerUrl = pulsarClient.getLookup().getServiceUrl();
       String topic = producer.getTopic();
-      topic = topic == null ? "unknown" : topic;
-      brokerUrl = brokerUrl == null ? "unknown" : brokerUrl;
       VirtualFieldStore.inject(producer, brokerUrl, topic);
     }
   }
@@ -81,73 +77,61 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) Message<?> message,
         @Advice.Argument(value = 1, readOnly = false) SendCallback callback) {
       Context parent = Context.current();
-      Instrumenter<Message<?>, Attributes> instrumenter = PulsarSingletons.producerInstrumenter();
+      PulsarRequest request = PulsarRequest.create(message, VirtualFieldStore.extract(producer));
 
-      Context current = null;
-      if (instrumenter.shouldStart(parent, message)) {
-        current = instrumenter.start(parent, message);
+      if (!producerInstrumenter().shouldStart(parent, request)) {
+        return;
       }
 
-      callback = new SendCallbackWrapper(current, message, callback, producer);
+      Context context = producerInstrumenter().start(parent, request);
+      callback = new SendCallbackWrapper(context, request, callback);
     }
   }
 
   public static class SendCallbackWrapper implements SendCallback {
 
     private final Context context;
-    private final Message<?> message;
-    private final SendCallback delegator;
-    private final ProducerImpl<?> producer;
+    private final PulsarRequest request;
+    private final SendCallback delegate;
 
-    public SendCallbackWrapper(
-        Context context, Message<?> message, SendCallback callback, ProducerImpl<?> producer) {
+    public SendCallbackWrapper(Context context, PulsarRequest request, SendCallback callback) {
       this.context = context;
-      this.message = message;
-      this.delegator = callback;
-      this.producer = producer;
+      this.request = request;
+      this.delegate = callback;
     }
 
     @Override
     public void sendComplete(Exception e) {
       if (context == null) {
-        this.delegator.sendComplete(e);
+        this.delegate.sendComplete(e);
         return;
       }
 
-      Instrumenter<Message<?>, Attributes> instrumenter = PulsarSingletons.producerInstrumenter();
-      ProducerData producerData = VirtualFieldStore.extract(producer);
-      Attributes attributes =
-          Attributes.of(
-              SemanticAttributes.NET_SOCK_PEER_ADDR,
-              producerData.url,
-              SemanticAttributes.MESSAGING_DESTINATION_NAME,
-              producerData.topic);
-
       try (Scope ignore = context.makeCurrent()) {
-        this.delegator.sendComplete(e);
+        this.delegate.sendComplete(e);
       } finally {
-        instrumenter.end(context, message, attributes, e);
+        producerInstrumenter().end(context, request, null, e);
       }
     }
 
     @Override
     public void addCallback(MessageImpl<?> msg, SendCallback scb) {
-      this.delegator.addCallback(msg, scb);
+      this.delegate.addCallback(msg, scb);
     }
 
     @Override
     public SendCallback getNextSendCallback() {
-      return this.delegator.getNextSendCallback();
+      return this.delegate.getNextSendCallback();
     }
 
     @Override
     public MessageImpl<?> getNextMessage() {
-      return this.delegator.getNextMessage();
+      return this.delegate.getNextMessage();
     }
 
     @Override
     public CompletableFuture<MessageId> getFuture() {
-      return this.delegator.getFuture();
+      return this.delegate.getFuture();
     }
   }
 }
