@@ -58,7 +58,8 @@ final class TracingCqlSession {
                   Statement<?> statement = (Statement<?>) args[0];
                   return execute(session, statement);
                 }
-              } else if ("executeAsync".equals(method.getName()) && method.getParameterCount() == 1) {
+              } else if ("executeAsync".equals(method.getName())
+                  && method.getParameterCount() == 1) {
                 if (method.getParameterTypes()[0] == String.class) {
                   String query = (String) args[0];
                   return executeAsync(session, query);
@@ -66,7 +67,8 @@ final class TracingCqlSession {
                   Statement<?> statement = (Statement<?>) args[0];
                   return executeAsync(session, statement);
                 }
-              } else if ("executeReactive".equals(method.getName()) && method.getParameterCount() == 1) {
+              } else if ("executeReactive".equals(method.getName())
+                  && method.getParameterCount() == 1) {
                 if (method.getParameterTypes()[0] == String.class) {
                   String query = (String) args[0];
                   return executeReactive(session, query);
@@ -129,12 +131,8 @@ final class TracingCqlSession {
       return wrap(
           stage.whenComplete(
               (asyncResultSet, throwable) ->
-                  instrumenter
-                      .end(
-                          context,
-                          request,
-                          getExecutionInfo(asyncResultSet, throwable),
-                          throwable)),
+                  instrumenter.end(
+                      context, request, getExecutionInfo(asyncResultSet, throwable), throwable)),
           parentContext);
     }
   }
