@@ -10,7 +10,8 @@
 - Add Apache Pulsar client instrumentation
   ([#5926](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5926),
   [#7999](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7999),
-  [#7943](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7943))
+  [#7943](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7943),
+  [#8007](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8007))
 - Add Jodd-Http instrumentation
   ([#7868](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7868))
 
