@@ -40,7 +40,7 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Pulsar
 
   @Nullable
   @Override
-  public String getConversationId(Message<?> message) {
+  public String getConversationId(PulsarRequest message) {
     return null;
   }
 
