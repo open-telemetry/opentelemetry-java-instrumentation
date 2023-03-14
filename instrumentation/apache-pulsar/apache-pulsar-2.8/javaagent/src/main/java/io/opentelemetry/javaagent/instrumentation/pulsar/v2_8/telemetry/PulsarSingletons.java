@@ -18,10 +18,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttr
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
-import java.time.Instant;
 import java.util.List;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
@@ -109,7 +109,7 @@ public final class PulsarSingletons {
   }
 
   public static Context startAndEndConsumerReceive(
-      Context parent, Message<?> message, long start, Consumer<?> consumer) {
+      Context parent, Message<?> message, Timer timer, Consumer<?> consumer) {
     if (message == null) {
       return null;
     }
@@ -127,8 +127,8 @@ public final class PulsarSingletons {
         request,
         null,
         null,
-        Instant.ofEpochMilli(start),
-        Instant.now());
+        timer.startTime(),
+        timer.now());
   }
 
   private PulsarSingletons() {}
