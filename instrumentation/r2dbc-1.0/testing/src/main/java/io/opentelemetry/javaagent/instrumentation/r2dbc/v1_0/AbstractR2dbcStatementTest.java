@@ -26,12 +26,14 @@ import static org.junit.jupiter.api.Named.named;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -86,8 +88,17 @@ public abstract class AbstractR2dbcStatementTest {
   private static Integer port;
   private static GenericContainer<?> container;
 
-  abstract ConnectionFactory createProxyConnectionFactory(
-      ConnectionFactoryOptions connectionFactoryOptions);
+  protected ConnectionFactory createProxyConnectionFactory(
+      ConnectionFactoryOptions connectionFactoryOptions) {
+    return ConnectionFactories.find(connectionFactoryOptions);
+  }
+
+  @AfterAll
+  void stopContainer(){
+    if(container != null){
+      container.stop();
+    }
+  }
 
   void startContainer(DbSystemProps props) {
     if (container != null && container.getDockerImageName().equals(props.image)) {
@@ -143,12 +154,11 @@ public abstract class AbstractR2dbcStatementTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL)),
-            trace ->
-                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
                         span.hasName(parameter.spanName)
                             .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
                                     DB_CONNECTION_STRING,
@@ -160,10 +170,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(DB_OPERATION, parameter.operation),
                                 equalTo(DB_SQL_TABLE, parameter.table),
                                 equalTo(NET_PEER_NAME, "localhost"),
-                                equalTo(NET_PEER_PORT, port))),
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("child").hasKind(SpanKind.INTERNAL)));
+                                equalTo(NET_PEER_PORT, port)),
+                    span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)))
+                );
   }
 
   private static Stream<Arguments> provideParameters() {

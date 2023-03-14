@@ -13,8 +13,8 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.PROTOCOL;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
 
 import io.opentelemetry.context.Context;
-import io.r2dbc.proxy.core.QueryExecutionInfo;
-import io.r2dbc.proxy.core.QueryInfo;
+import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.shaded.io.r2dbc.proxy.core.QueryExecutionInfo;
+import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.shaded.io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import java.util.Locale;

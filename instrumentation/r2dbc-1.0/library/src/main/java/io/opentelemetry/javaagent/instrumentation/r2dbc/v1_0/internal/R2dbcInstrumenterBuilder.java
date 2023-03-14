@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +40,7 @@ public final class R2dbcInstrumenterBuilder {
     return this;
   }
 
-  public Instrumenter<DbExecution, Void> build() {
+  public Instrumenter<DbExecution, Void> build(boolean statementSanitizationEnabled) {
 
     return Instrumenter.<DbExecution, Void>builder(
             openTelemetry,
@@ -49,9 +48,7 @@ public final class R2dbcInstrumenterBuilder {
             DbClientSpanNameExtractor.create(R2dbcSqlAttributesGetter.INSTANCE))
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(R2dbcSqlAttributesGetter.INSTANCE)
-                .setStatementSanitizationEnabled(
-                    ConfigPropertiesUtil.getBoolean(
-                        "otel.instrumentation.common.db-statement-sanitizer.enabled", true))
+                .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
         .addAttributesExtractor(
             NetClientAttributesExtractor.create(R2dbcNetAttributesGetter.INSTANCE))
