@@ -49,7 +49,8 @@ final class TracingCqlSession {
                 if (method.getParameterTypes()[0] == String.class) {
                   String query = (String) args[0];
                   return execute(session, query);
-                } else if (method.getParameterTypes()[0] == Statement.class) {
+                }
+                if (method.getParameterTypes()[0] == Statement.class) {
                   Statement<?> statement = (Statement<?>) args[0];
                   return execute(session, statement);
                 }
@@ -58,7 +59,8 @@ final class TracingCqlSession {
                 if (method.getParameterTypes()[0] == String.class) {
                   String query = (String) args[0];
                   return executeAsync(session, query);
-                } else if (method.getParameterTypes()[0] == Statement.class) {
+                }
+                if (method.getParameterTypes()[0] == Statement.class) {
                   Statement<?> statement = (Statement<?>) args[0];
                   return executeAsync(session, statement);
                 }
