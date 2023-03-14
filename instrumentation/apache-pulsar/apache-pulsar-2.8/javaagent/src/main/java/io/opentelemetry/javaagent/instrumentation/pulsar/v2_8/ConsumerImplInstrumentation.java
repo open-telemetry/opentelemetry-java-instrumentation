@@ -16,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletableFuture;
@@ -87,22 +88,22 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
     private ConsumerInternalReceiveAdviser() {}
 
     @Advice.OnMethodEnter
-    public static void before(@Advice.Local(value = "startTime") long startTime) {
-      startTime = System.currentTimeMillis();
+    public static Timer before() {
+      return Timer.start();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void after(
+        @Advice.Enter Timer timer,
         @Advice.This Consumer<?> consumer,
         @Advice.Return Message<?> message,
-        @Advice.Thrown Throwable t,
-        @Advice.Local(value = "startTime") long startTime) {
+        @Advice.Thrown Throwable t) {
       if (t != null) {
         return;
       }
 
       Context parent = Context.current();
-      Context current = startAndEndConsumerReceive(parent, message, startTime, consumer);
+      Context current = startAndEndConsumerReceive(parent, message, timer, consumer);
       if (current != null) {
         // ConsumerBase#internalReceive(long,TimeUnit) will be called before
         // ConsumerListener#receive(Consumer,Message), so, need to inject Context into Message.
@@ -116,22 +117,22 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
     private ConsumerSyncReceiveAdviser() {}
 
     @Advice.OnMethodEnter
-    public static void before(@Advice.Local(value = "startTime") long startTime) {
-      startTime = System.currentTimeMillis();
+    public static Timer before() {
+      return Timer.start();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void after(
+        @Advice.Enter Timer timer,
         @Advice.This Consumer<?> consumer,
         @Advice.Return Message<?> message,
-        @Advice.Thrown Throwable t,
-        @Advice.Local(value = "startTime") long startTime) {
+        @Advice.Thrown Throwable t) {
       if (t != null) {
         return;
       }
 
       Context parent = Context.current();
-      startAndEndConsumerReceive(parent, message, startTime, consumer);
+      startAndEndConsumerReceive(parent, message, timer, consumer);
       // No need to inject context to message.
     }
   }
@@ -141,15 +142,15 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
     private ConsumerAsyncReceiveAdviser() {}
 
     @Advice.OnMethodEnter
-    public static void before(@Advice.Local(value = "startTime") long startTime) {
-      startTime = System.currentTimeMillis();
+    public static Timer before() {
+      return Timer.start();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void after(
+        @Advice.Enter Timer timer,
         @Advice.This Consumer<?> consumer,
-        @Advice.Return CompletableFuture<Message<?>> future,
-        @Advice.Local(value = "startTime") long startTime) {
+        @Advice.Return CompletableFuture<Message<?>> future) {
       future.whenComplete(
           (message, t) -> {
             if (t != null) {
@@ -157,7 +158,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
             }
 
             Context parent = Context.current();
-            startAndEndConsumerReceive(parent, message, startTime, consumer);
+            startAndEndConsumerReceive(parent, message, timer, consumer);
             // No need to inject context to message.
           });
     }
