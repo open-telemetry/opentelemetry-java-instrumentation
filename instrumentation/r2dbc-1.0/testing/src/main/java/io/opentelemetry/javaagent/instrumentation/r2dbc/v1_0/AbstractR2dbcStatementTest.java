@@ -94,8 +94,8 @@ public abstract class AbstractR2dbcStatementTest {
   }
 
   @AfterAll
-  void stopContainer(){
-    if(container != null){
+  void stopContainer() {
+    if (container != null) {
       container.stop();
     }
   }
@@ -171,8 +171,10 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(DB_SQL_TABLE, parameter.table),
                                 equalTo(NET_PEER_NAME, "localhost"),
                                 equalTo(NET_PEER_PORT, port)),
-                    span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)))
-                );
+                    span ->
+                        span.hasName("child")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
   }
 
   private static Stream<Arguments> provideParameters() {
