@@ -4,7 +4,6 @@
 
 ### Migration notes
 
-
 ### 🌟 New javaagent instrumentation
 
 - Add Apache Pulsar client instrumentation
@@ -38,8 +37,9 @@
   ([#7989](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7989))
 - Add baggage to Logback MDC; controlled by a configuration flag
   ([#7892](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7892))
-- Make the Spring Boot autoconfigure module work with Spring Boot 3 
-  ([#8028](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8028))
+- Make the Spring Boot autoconfigure module work with Spring Boot 3
+  ([#8028](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8028),
+  [#8051](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8051))
 
 ### 🛠️ Bug fixes
 
@@ -112,6 +112,8 @@
   ([#7918](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7918))
 - Update the OpenTelemetry SDK version to 1.24.0
   ([#8027](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8027))
+- Provide ability to add HTTP server response headers, with Tomcat implementation
+  ([#7990](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7990))
 
 ## Version 1.23.0 (2023-02-16)
 
