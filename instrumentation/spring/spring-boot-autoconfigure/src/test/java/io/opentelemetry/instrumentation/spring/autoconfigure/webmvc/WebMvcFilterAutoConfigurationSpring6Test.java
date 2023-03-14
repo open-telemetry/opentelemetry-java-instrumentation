@@ -22,7 +22,8 @@ class WebMvcFilterAutoConfigurationSpring6Test {
       new ApplicationContextRunner()
           .withConfiguration(
               AutoConfigurations.of(
-                  OpenTelemetryAutoConfiguration.class, WebMvcFilterAutoConfigurationSpring6.class));
+                  OpenTelemetryAutoConfiguration.class,
+                  WebMvcFilterAutoConfigurationSpring6.class));
 
   @BeforeAll
   static void setUp() {
