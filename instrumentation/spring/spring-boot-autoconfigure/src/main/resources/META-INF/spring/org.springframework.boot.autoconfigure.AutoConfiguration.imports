@@ -11,4 +11,4 @@ io.opentelemetry.instrumentation.spring.autoconfigure.kafka.KafkaInstrumentation
 io.opentelemetry.instrumentation.spring.autoconfigure.metrics.MicrometerShimAutoConfiguration
 io.opentelemetry.instrumentation.spring.autoconfigure.propagators.PropagationAutoConfiguration
 io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration
-io.opentelemetry.instrumentation.spring.autoconfigure.webmvc.WebMvcFilterAutoConfiguration
+io.opentelemetry.instrumentation.spring.autoconfigure.webmvc.WebMvcFilterAutoConfigurationSpring6
