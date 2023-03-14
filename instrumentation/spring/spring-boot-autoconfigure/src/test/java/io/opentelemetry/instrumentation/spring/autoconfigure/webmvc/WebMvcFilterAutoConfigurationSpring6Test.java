@@ -6,27 +6,28 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.webmvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import javax.servlet.Filter;
+import jakarta.servlet.Filter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
-/** Spring Boot auto configuration test for {@link WebMvcFilterAutoConfiguration}. */
-class WebMvcFilterAutoConfigurationTest {
+/** Spring Boot auto configuration test for {@link WebMvcFilterAutoConfigurationSpring6}. */
+class WebMvcFilterAutoConfigurationSpring6Test {
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withConfiguration(
               AutoConfigurations.of(
-                  OpenTelemetryAutoConfiguration.class, WebMvcFilterAutoConfiguration.class));
+                  OpenTelemetryAutoConfiguration.class,
+                  WebMvcFilterAutoConfigurationSpring6.class));
 
   @BeforeAll
   static void setUp() {
-    assumeFalse(Boolean.getBoolean("testLatestDeps"));
+    assumeTrue(Boolean.getBoolean("testLatestDeps"));
   }
 
   @Test
