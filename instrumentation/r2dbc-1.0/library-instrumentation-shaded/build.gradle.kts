@@ -7,13 +7,16 @@ plugins {
 group = "io.opentelemetry.javaagent.instrumentation"
 
 dependencies {
-  implementation("io.r2dbc:r2dbc-proxy:1.0.1.RELEASE")
+  implementation(project(":instrumentation:r2dbc-1.0:library"))
 }
 
 tasks {
   shadowJar {
+    exclude("META-INF/**/*")
+
     dependencies {
-      // including only tracing-opentelemetry excludes its transitive dependencies
+      // including only :r2dbc-1.0:library excludes its transitive dependencies
+      include(project(":instrumentation:r2dbc-1.0:library"))
       include(dependency("io.r2dbc:r2dbc-proxy"))
     }
     relocate(

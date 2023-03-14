@@ -19,11 +19,6 @@ public class R2dbcInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return className.startsWith("io.r2dbc.proxy");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Collections.singletonList(new R2dbcInstrumentation());
   }
