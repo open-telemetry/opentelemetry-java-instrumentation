@@ -23,7 +23,7 @@ import java.util.Map;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class AwsXrayEnvSpanLinksExtractor implements SpanLinksExtractor<AwsLambdaRequest> {
+final class AwsXrayEnvSpanLinksExtractor implements SpanLinksExtractor<AwsLambdaRequest> {
 
   private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
 
@@ -49,7 +49,6 @@ public final class AwsXrayEnvSpanLinksExtractor implements SpanLinksExtractor<Aw
     Context xrayContext =
         AwsXrayPropagator.getInstance()
             .extract(
-                // see BaseTracer#extract() on why we're using root() here
                 Context.root(),
                 Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentTraceHeader),
                 MapGetter.INSTANCE);
