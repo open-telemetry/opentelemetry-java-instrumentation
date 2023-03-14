@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
 import static io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.R2dbcSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -29,7 +30,10 @@ class R2dbcInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("find")).and(takesArguments(1)),
+        isMethod()
+            .and(named("find"))
+            .and(takesArguments(1))
+            .and(takesArgument(0, named("io.r2dbc.spi.ConnectionFactoryOptions"))),
         this.getClass().getName() + "$FactoryAdvice");
   }
 
