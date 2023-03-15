@@ -108,7 +108,7 @@ dependencies {
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.4.5")
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.4.6")
 
   //Otel Java instrumentation that we use and extend during integration tests
   otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")
