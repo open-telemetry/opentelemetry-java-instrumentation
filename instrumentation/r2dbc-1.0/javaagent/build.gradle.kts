@@ -4,7 +4,6 @@ plugins {
 }
 
 muzzle {
-
   pass {
     group.set("io.r2dbc")
     module.set("r2dbc-spi")
@@ -12,9 +11,19 @@ muzzle {
   }
 }
 
+sourceSets {
+  main {
+    val shadedDep = project(":instrumentation:r2dbc-1.0:library-instrumentation-shaded")
+    output.dir(
+      shadedDep.file("build/extracted/shadow"),
+      "builtBy" to ":instrumentation:r2dbc-1.0:library-instrumentation-shaded:extractShadowJar",
+    )
+  }
+}
+
 dependencies {
   library("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
-  implementation(project(":instrumentation:r2dbc-1.0:library"))
+  compileOnly(project(path = ":instrumentation:r2dbc-1.0:library-instrumentation-shaded", configuration = "shadow"))
 
   testImplementation(project(":instrumentation:r2dbc-1.0:testing"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
