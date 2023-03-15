@@ -8,6 +8,7 @@ muzzle {
     group.set("io.r2dbc")
     module.set("r2dbc-spi")
     versions.set("[1.0.0.RELEASE,)")
+    extraDependency("io.projectreactor:reactor-core:3.4.12")
   }
 }
 
