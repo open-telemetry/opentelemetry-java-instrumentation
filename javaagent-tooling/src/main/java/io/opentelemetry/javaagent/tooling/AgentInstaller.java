@@ -129,9 +129,9 @@ public class AgentInstaller {
 
     AgentBuilder agentBuilder =
         new AgentBuilder.Default(
-            // default method graph compiler inspects the class hierarchy, we don't need it, so
-            // we use a simpler and faster strategy instead
-            new ByteBuddy().with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE))
+                // default method graph compiler inspects the class hierarchy, we don't need it, so
+                // we use a simpler and faster strategy instead
+                new ByteBuddy().with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE))
             .disableClassFormatChanges()
             // disableClassFormatChanges sets type strategy to TypeStrategy.Default.REDEFINE_FROZEN
             // we'll wrap it with our own strategy
