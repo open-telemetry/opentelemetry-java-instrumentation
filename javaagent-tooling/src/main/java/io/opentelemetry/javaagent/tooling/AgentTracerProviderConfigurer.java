@@ -20,6 +20,7 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 @AutoService(AutoConfigurationCustomizerProvider.class)
 public class AgentTracerProviderConfigurer implements AutoConfigurationCustomizerProvider {
   private static final String ADD_THREAD_DETAILS = "otel.javaagent.add-thread-details";
+  private static final String ADD_BAGGAGE = "otel.javaagent.span.add-baggage";
 
   @Override
   public void customize(AutoConfigurationCustomizer autoConfigurationCustomizer) {
@@ -36,6 +37,11 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
     // Register additional thread details logging span processor
     if (config.getBoolean(ADD_THREAD_DETAILS, true)) {
       sdkTracerProviderBuilder.addSpanProcessor(new AddThreadDetailsSpanProcessor());
+    }
+
+    // Register baggage adding span processor if config value is set
+    if (config.getBoolean(ADD_BAGGAGE, false)) {
+      sdkTracerProviderBuilder.addSpanProcessor(new AddBaggageSpanProcessor());
     }
 
     maybeEnableLoggingExporter(sdkTracerProviderBuilder, config);
