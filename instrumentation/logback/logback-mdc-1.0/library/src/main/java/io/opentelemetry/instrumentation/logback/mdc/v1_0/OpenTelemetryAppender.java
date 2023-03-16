@@ -66,9 +66,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       baggage.forEach(
           (key, value) ->
               contextData.put(
-                  key,
                   // prefix all baggage values to avoid clashes with existing context
-                  "baggage." + value.getValue()));
+                  "baggage." + key, value.getValue()));
     }
 
     if (eventContext == null) {
