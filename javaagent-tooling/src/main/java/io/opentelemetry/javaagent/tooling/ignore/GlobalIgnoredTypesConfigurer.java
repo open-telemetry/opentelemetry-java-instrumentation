@@ -130,6 +130,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .ignoreClassLoader("datadog.")
         .ignoreClassLoader("com.dynatrace.")
         .ignoreClassLoader("com.appdynamics.")
+        .ignoreClassLoader("com.singularity.")
         .ignoreClassLoader("com.newrelic.agent.")
         .ignoreClassLoader("com.newrelic.api.agent.")
         .ignoreClassLoader("com.nr.agent.");
