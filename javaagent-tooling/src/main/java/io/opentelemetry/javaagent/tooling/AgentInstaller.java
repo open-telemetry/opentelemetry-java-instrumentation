@@ -22,6 +22,9 @@ import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.ClassFileTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import io.opentelemetry.javaagent.bootstrap.InstrumentedTaskClasses;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizer;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
@@ -126,9 +129,9 @@ public class AgentInstaller {
 
     AgentBuilder agentBuilder =
         new AgentBuilder.Default(
-                // default method graph compiler inspects the class hierarchy, we don't need it, so
-                // we use a simpler and faster strategy instead
-                new ByteBuddy().with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE))
+            // default method graph compiler inspects the class hierarchy, we don't need it, so
+            // we use a simpler and faster strategy instead
+            new ByteBuddy().with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE))
             .disableClassFormatChanges()
             // disableClassFormatChanges sets type strategy to TypeStrategy.Default.REDEFINE_FROZEN
             // we'll wrap it with our own strategy
@@ -182,6 +185,8 @@ public class AgentInstaller {
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
 
+    addHttpServerResponseCustomizers(extensionClassLoader);
+
     runAfterAgentListeners(agentListeners, autoConfiguredSdk);
   }
 
@@ -232,6 +237,23 @@ public class AgentInstaller {
             (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) -> {
               return HelperInjector.isInjectedClass(classLoader, typeDescription.getName());
             });
+  }
+
+  private static void addHttpServerResponseCustomizers(ClassLoader extensionClassLoader) {
+    List<HttpServerResponseCustomizer> customizers =
+        load(HttpServerResponseCustomizer.class, extensionClassLoader);
+
+    HttpServerResponseCustomizerHolder.setCustomizer(
+        new HttpServerResponseCustomizer() {
+          @Override
+          public <T> void customize(
+              Context serverContext, T response, HttpServerResponseMutator<T> responseMutator) {
+
+            for (HttpServerResponseCustomizer modifier : customizers) {
+              modifier.customize(serverContext, response, responseMutator);
+            }
+          }
+        });
   }
 
   private static void runAfterAgentListeners(
