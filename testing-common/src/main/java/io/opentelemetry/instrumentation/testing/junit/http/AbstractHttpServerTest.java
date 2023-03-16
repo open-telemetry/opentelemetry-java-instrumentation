@@ -47,6 +47,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -108,9 +109,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     for (AggregatedHttpResponse response : responses) {
       assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
       assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
+      assertResponseHasCustomizedHeaders(response, SUCCESS, null);
     }
 
-    assertTheTraces(count, null, null, method, SUCCESS, responses.get(0));
+    assertTheTraces(count, null, null, null, method, SUCCESS, responses.get(0));
   }
 
   @Test
@@ -130,7 +132,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
-    assertTheTraces(1, traceId, parentId, "GET", SUCCESS, response);
+    String spanId = assertResponseHasCustomizedHeaders(response, SUCCESS, traceId);
+    assertTheTraces(1, traceId, parentId, spanId, "GET", SUCCESS, response);
   }
 
   @Test
@@ -148,7 +151,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
-    assertTheTraces(1, traceId, parentId, "GET", SUCCESS, response);
+    String spanId = assertResponseHasCustomizedHeaders(response, SUCCESS, traceId);
+    assertTheTraces(1, traceId, parentId, spanId, "GET", SUCCESS, response);
   }
 
   @ParameterizedTest
@@ -163,7 +167,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.status().code()).isEqualTo(endpoint.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(endpoint.getBody());
 
-    assertTheTraces(1, null, null, method, endpoint, response);
+    String spanId = assertResponseHasCustomizedHeaders(response, endpoint, null);
+    assertTheTraces(1, null, null, spanId, method, endpoint, response);
   }
 
   @Test
@@ -182,7 +187,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                 assertThat(new URI(location).normalize().toString())
                     .isEqualTo(address.resolve(REDIRECT.getBody()).toString()));
 
-    assertTheTraces(1, null, null, method, REDIRECT, response);
+    String spanId = assertResponseHasCustomizedHeaders(response, REDIRECT, null);
+    assertTheTraces(1, null, null, spanId, method, REDIRECT, response);
   }
 
   @Test
@@ -198,7 +204,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       assertThat(response.contentUtf8()).isEqualTo(ERROR.getBody());
     }
 
-    assertTheTraces(1, null, null, method, ERROR, response);
+    String spanId = assertResponseHasCustomizedHeaders(response, ERROR, null);
+    assertTheTraces(1, null, null, spanId, method, ERROR, response);
   }
 
   @Test
@@ -215,7 +222,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
       assertThat(response.status().code()).isEqualTo(EXCEPTION.getStatus());
 
-      assertTheTraces(1, null, null, method, EXCEPTION, response);
+      String spanId = assertResponseHasCustomizedHeaders(response, EXCEPTION, null);
+      assertTheTraces(1, null, null, spanId, method, EXCEPTION, response);
     } finally {
       Awaitility.reset();
     }
@@ -231,7 +239,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     assertThat(response.status().code()).isEqualTo(NOT_FOUND.getStatus());
 
-    assertTheTraces(1, null, null, method, NOT_FOUND, response);
+    String spanId = assertResponseHasCustomizedHeaders(response, NOT_FOUND, null);
+    assertTheTraces(1, null, null, spanId, method, NOT_FOUND, response);
   }
 
   @Test
@@ -245,7 +254,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.status().code()).isEqualTo(PATH_PARAM.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(PATH_PARAM.getBody());
 
-    assertTheTraces(1, null, null, method, PATH_PARAM, response);
+    String spanId = assertResponseHasCustomizedHeaders(response, PATH_PARAM, null);
+    assertTheTraces(1, null, null, spanId, method, PATH_PARAM, response);
   }
 
   @Test
@@ -263,7 +273,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.contentUtf8()).isEqualTo(CAPTURE_HEADERS.getBody());
     assertThat(response.headers().get("X-Test-Response")).isEqualTo("test");
 
-    assertTheTraces(1, null, null, "GET", CAPTURE_HEADERS, response);
+    String spanId = assertResponseHasCustomizedHeaders(response, CAPTURE_HEADERS, null);
+    assertTheTraces(1, null, null, spanId, "GET", CAPTURE_HEADERS, response);
   }
 
   @Test
@@ -282,7 +293,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.status().code()).isEqualTo(CAPTURE_PARAMETERS.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(CAPTURE_PARAMETERS.getBody());
 
-    assertTheTraces(1, null, null, "POST", CAPTURE_PARAMETERS, response);
+    String spanId = assertResponseHasCustomizedHeaders(response, CAPTURE_PARAMETERS, null);
+    assertTheTraces(1, null, null, spanId, "POST", CAPTURE_PARAMETERS, response);
   }
 
   /**
@@ -372,12 +384,32 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     testing.waitAndAssertTraces(assertions);
   }
 
+  protected String assertResponseHasCustomizedHeaders(
+      AggregatedHttpResponse response, ServerEndpoint endpoint, String expectedTraceId) {
+    if (!options.hasResponseCustomizer.test(endpoint)) {
+      return null;
+    }
+
+    String responseHeaderTraceId = response.headers().get("x-test-traceid");
+    String responseHeaderSpanId = response.headers().get("x-test-spanid");
+
+    if (expectedTraceId != null) {
+      assertThat(responseHeaderTraceId).matches(expectedTraceId);
+    } else {
+      assertThat(responseHeaderTraceId).isNotNull();
+    }
+
+    assertThat(responseHeaderSpanId).isNotNull();
+    return responseHeaderSpanId;
+  }
+
   // NOTE: this method does not currently implement asserting all the span types that groovy
   // HttpServerTest does
   protected void assertTheTraces(
       int size,
       String traceId,
       String parentId,
+      String spanId,
       String method,
       ServerEndpoint endpoint,
       AggregatedHttpResponse response) {
@@ -389,8 +421,14 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             spanAssertions.add(
                 span -> {
                   assertServerSpan(span, method, endpoint);
+                  if (traceId != null) {
+                    span.hasTraceId(traceId);
+                  }
+                  if (spanId != null) {
+                    span.hasSpanId(spanId);
+                  }
                   if (parentId != null) {
-                    span.hasTraceId(traceId).hasParentSpanId(parentId);
+                    span.hasParentSpanId(parentId);
                   } else {
                     span.hasNoParent();
                   }
@@ -463,13 +501,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    Set<AttributeKey<?>> httpAttributes = options.httpAttributes.apply(endpoint);
 
+    Set<AttributeKey<?>> httpAttributes = options.httpAttributes.apply(endpoint);
     String expectedRoute = options.expectedHttpRoute.apply(endpoint);
-    String name =
-        expectedRoute != null
-            ? expectedRoute
-            : options.expectedServerSpanNameMapper.apply(endpoint, method);
+    String name = getString(method, endpoint, expectedRoute);
 
     span.hasName(name).hasKind(SpanKind.SERVER);
     if (endpoint.status >= 500) {
@@ -523,9 +558,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_METHOD, method);
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_STATUS_CODE, endpoint.status);
 
-          assertThat(attrs)
-              .hasEntrySatisfying(
-                  SemanticAttributes.HTTP_FLAVOR, entry -> assertThat(entry).isIn("1.1", "2.0"));
+          if (attrs.get(SemanticAttributes.HTTP_FLAVOR) != null) {
+            assertThat(attrs)
+                .hasEntrySatisfying(
+                    SemanticAttributes.HTTP_FLAVOR, entry -> assertThat(entry).isIn("1.1", "2.0"));
+          }
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_USER_AGENT, TEST_USER_AGENT);
 
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_SCHEME, "http");
@@ -569,6 +606,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return span;
   }
 
+  private String getString(String method, ServerEndpoint endpoint, String expectedRoute) {
+    String name = options.expectedServerSpanNameMapper.apply(endpoint, method, expectedRoute);
+    return name;
+  }
+
   protected SpanDataAssert assertIndexedServerSpan(SpanDataAssert span, int requestId) {
     ServerEndpoint endpoint = INDEXED_CHILD;
     String method = "GET";
@@ -592,9 +634,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return span;
   }
 
-  public String expectedServerSpanName(ServerEndpoint endpoint, String method) {
-    String route = expectedHttpRoute(endpoint);
-    return route == null ? "HTTP " + method : route;
+  public String expectedServerSpanName(
+      ServerEndpoint endpoint, String method, @Nullable String route) {
+    return HttpServerTestOptions.DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER.apply(
+        endpoint, method, route);
   }
 
   public String expectedHttpRoute(ServerEndpoint endpoint) {

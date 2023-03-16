@@ -356,6 +356,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     junitTest.requestWithExistingTracingHeaders()
   }
 
+  def "test captured HTTP headers"() {
+    assumeTrue(testCapturedHttpHeaders())
+    expect:
+    junitTest.captureHttpHeaders()
+  }
+
   def "connection error (unopened port)"() {
     assumeTrue(testConnectionFailure())
     expect:
@@ -428,7 +434,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   protected String expectedClientSpanName(URI uri, String method) {
-    return method != null ? "HTTP " + method : "HTTP request"
+    return method
   }
 
   Integer responseCodeOnRedirectError() {
@@ -468,6 +474,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   boolean testReusedRequest() {
+    true
+  }
+
+  boolean testCapturedHttpHeaders() {
     true
   }
 

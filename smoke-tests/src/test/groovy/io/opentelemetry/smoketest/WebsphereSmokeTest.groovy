@@ -23,7 +23,7 @@ abstract class WebsphereSmokeTest extends AppServerTest {
     switch (path) {
       case "/app/hello.txt":
       case "/app/file-that-does-not-exist":
-        return "HTTP GET"
+        return "GET"
     }
     return super.getSpanName(path)
   }
@@ -34,10 +34,10 @@ abstract class WebsphereSmokeTest extends AppServerTest {
   }
 }
 
-@AppServer(version = "8.5.5.19", jdk = "8-openj9")
+@AppServer(version = "8.5.5.22", jdk = "8-openj9")
 class Websphere8Jdk8Openj9 extends WebsphereSmokeTest {
 }
 
-@AppServer(version = "9.0.5.9", jdk = "8-openj9")
+@AppServer(version = "9.0.5.14", jdk = "8-openj9")
 class Websphere9Jdk8Openj9 extends WebsphereSmokeTest {
 }

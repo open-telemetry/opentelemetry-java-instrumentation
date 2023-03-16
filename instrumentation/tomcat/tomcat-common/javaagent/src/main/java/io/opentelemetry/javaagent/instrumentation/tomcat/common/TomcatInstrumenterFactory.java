@@ -39,7 +39,7 @@ public final class TomcatInstrumenterFactory {
                 .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                 .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                 .build())
-        .addContextCustomizer(HttpRouteHolder.get())
+        .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
         .addContextCustomizer(
             (context, request, attributes) ->
                 new AppServerBridge.Builder()

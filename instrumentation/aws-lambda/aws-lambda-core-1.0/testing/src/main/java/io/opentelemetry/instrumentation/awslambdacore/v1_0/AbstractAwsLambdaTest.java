@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -108,8 +110,22 @@ public abstract class AbstractAwsLambdaTest {
                     span ->
                         span.hasName("my_function")
                             .hasKind(SpanKind.SERVER)
-                            .hasTraceId("8a3c60f7d188f8fa79d48a391a778fa6")
-                            .hasParentSpanId("0000000000000456")
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .singleElement()
+                                        .satisfies(
+                                            link -> {
+                                              assertThat(link.getSpanContext().getTraceId())
+                                                  .isEqualTo("8a3c60f7d188f8fa79d48a391a778fa6");
+                                              assertThat(link.getSpanContext().getSpanId())
+                                                  .isEqualTo("0000000000000456");
+                                              assertThat(link.getAttributes())
+                                                  .isEqualTo(
+                                                      Attributes.of(
+                                                          AttributeKey.stringKey("source"),
+                                                          "x-ray-env"));
+                                            }))
                             .hasAttributesSatisfying(
                                 attrs ->
                                     assertThat(attrs)

@@ -28,6 +28,7 @@ jobs:
           - 1
           - 2
           - 3
+      fail-fast: false
     steps:
       - uses: actions/checkout@v3
 
@@ -36,6 +37,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+
+      # vaadin 14 tests fail with node 18
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules
@@ -46,7 +53,7 @@ jobs:
 
       - name: Increase gradle daemon heap size
         run: |
-          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx2g /" gradle.properties
+          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
       - name: Test
         uses: gradle/gradle-build-action@v2

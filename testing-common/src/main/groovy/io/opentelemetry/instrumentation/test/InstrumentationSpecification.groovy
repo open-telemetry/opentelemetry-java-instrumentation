@@ -143,7 +143,7 @@ abstract class InstrumentationSpecification extends Specification {
    * Runs the provided {@code callback} inside the scope of an HTTP CLIENT span with name {@code
    * spanName}.
    */
-  def <T> T runWithHttpServerSpan(String spanName, Closure callback) {
-    return (T) testRunner().runWithHttpServerSpan(spanName, (ThrowingSupplier) callback)
+  def <T> T runWithHttpServerSpan(Closure callback) {
+    return (T) testRunner().runWithHttpServerSpan((ThrowingSupplier) callback)
   }
 }

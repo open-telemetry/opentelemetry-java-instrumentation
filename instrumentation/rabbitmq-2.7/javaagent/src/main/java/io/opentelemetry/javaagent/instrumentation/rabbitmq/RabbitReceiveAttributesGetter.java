@@ -47,24 +47,6 @@ enum RabbitReceiveAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocol(ReceiveRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(ReceiveRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getUrl(ReceiveRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getConversationId(ReceiveRequest request) {
     return null;
   }

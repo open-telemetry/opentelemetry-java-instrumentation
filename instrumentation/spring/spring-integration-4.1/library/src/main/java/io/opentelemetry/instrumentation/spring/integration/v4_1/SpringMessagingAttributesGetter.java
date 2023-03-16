@@ -40,24 +40,6 @@ enum SpringMessagingAttributesGetter
 
   @Override
   @Nullable
-  public String getProtocol(MessageWithChannel messageWithChannel) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String getProtocolVersion(MessageWithChannel messageWithChannel) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String getUrl(MessageWithChannel messageWithChannel) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String getConversationId(MessageWithChannel messageWithChannel) {
     return null;
   }

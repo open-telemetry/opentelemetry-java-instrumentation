@@ -110,7 +110,9 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   private static void configureIgnoredClassLoaders(IgnoredTypesBuilder builder) {
     builder
+        .ignoreClassLoader("groovy.lang.GroovyClassLoader")
         .ignoreClassLoader("org.codehaus.groovy.runtime.callsite.CallSiteClassLoader")
+        .ignoreClassLoader("org.apache.tinkerpop.gremlin.groovy.jsr223.GremlinGroovyClassLoader")
         .ignoreClassLoader("sun.reflect.DelegatingClassLoader")
         .ignoreClassLoader("jdk.internal.reflect.DelegatingClassLoader")
         .ignoreClassLoader("clojure.lang.DynamicClassLoader")

@@ -28,14 +28,14 @@ public class AbstractVaadin16Test extends AbstractVaadinTest {
                             .satisfies(
                                 spans ->
                                     OpenTelemetryAssertions.assertThat(spans.get(0))
-                                        .hasName("IndexHtmlRequestHandler.handleRequest")
+                                        .hasName("GET IndexHtmlRequestHandler.handleRequest")
                                         .hasNoParent()
                                         .hasKind(SpanKind.SERVER));
                         assertThat(trace)
                             .anySatisfy(
                                 spans -> {
                                   OpenTelemetryAssertions.assertThat(spans.get(0))
-                                      .hasName(getContextPath() + "/main")
+                                      .hasName("POST " + getContextPath() + "/main")
                                       .hasNoParent()
                                       .hasKind(SpanKind.SERVER);
                                   OpenTelemetryAssertions.assertThat(spans.get(1))

@@ -27,7 +27,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
   def "test #resource"() {
     when:
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    def response = runWithHttpServerSpan("test.span") {
+    def response = runWithHttpServerSpan {
       resources.client().resource(resource).post(String)
     }
 
@@ -37,9 +37,10 @@ class JerseyTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name expectedRoute
+          name "GET " + expectedRoute
           kind SERVER
           attributes {
+            "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_ROUTE" expectedRoute
           }
         }
@@ -66,7 +67,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
 
     when:
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    def response = runWithHttpServerSpan("test.span") {
+    def response = runWithHttpServerSpan {
       resources.client().resource(resource).post(String)
     }
 
@@ -76,9 +77,10 @@ class JerseyTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name expectedRoute
+          name "GET " + expectedRoute
           kind SERVER
           attributes {
+            "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_ROUTE" expectedRoute
           }
         }

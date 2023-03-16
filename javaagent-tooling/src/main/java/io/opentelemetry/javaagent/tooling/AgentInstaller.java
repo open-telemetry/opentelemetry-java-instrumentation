@@ -22,6 +22,9 @@ import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.ClassFileTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import io.opentelemetry.javaagent.bootstrap.InstrumentedTaskClasses;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizer;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
@@ -138,6 +141,7 @@ public class AgentInstaller {
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(AgentTooling.poolStrategy())
             .with(new ClassLoadListener())
+            .with(AgentTooling.transformListener())
             .with(AgentTooling.locationStrategy());
     if (JavaModule.isSupported()) {
       agentBuilder = agentBuilder.with(new ExposeAgentBootstrapListener(inst));
@@ -180,6 +184,8 @@ public class AgentInstaller {
 
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
+
+    addHttpServerResponseCustomizers(extensionClassLoader);
 
     runAfterAgentListeners(agentListeners, autoConfiguredSdk);
   }
@@ -231,6 +237,23 @@ public class AgentInstaller {
             (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) -> {
               return HelperInjector.isInjectedClass(classLoader, typeDescription.getName());
             });
+  }
+
+  private static void addHttpServerResponseCustomizers(ClassLoader extensionClassLoader) {
+    List<HttpServerResponseCustomizer> customizers =
+        load(HttpServerResponseCustomizer.class, extensionClassLoader);
+
+    HttpServerResponseCustomizerHolder.setCustomizer(
+        new HttpServerResponseCustomizer() {
+          @Override
+          public <T> void customize(
+              Context serverContext, T response, HttpServerResponseMutator<T> responseMutator) {
+
+            for (HttpServerResponseCustomizer modifier : customizers) {
+              modifier.customize(serverContext, response, responseMutator);
+            }
+          }
+        });
   }
 
   private static void runAfterAgentListeners(

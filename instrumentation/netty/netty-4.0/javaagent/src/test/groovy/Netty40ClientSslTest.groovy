@@ -163,7 +163,7 @@ class Netty40ClientSslTest extends AgentInstrumentationSpecification {
           }
         }
         span(3) {
-          name "HTTP GET"
+          name "GET"
           kind CLIENT
           childOf(span(0))
         }

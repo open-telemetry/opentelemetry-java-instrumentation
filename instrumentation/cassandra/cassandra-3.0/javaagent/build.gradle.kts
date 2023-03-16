@@ -35,10 +35,13 @@ dependencies {
   testInstrumentation(project(":instrumentation:guava-10.0:javaagent"))
 
   latestDepTestLibrary("com.datastax.cassandra:cassandra-driver-core:3.+") // see cassandra-4.0 module
+
+  testInstrumentation(project(":instrumentation:cassandra:cassandra-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:cassandra:cassandra-4.4:javaagent"))
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
-configurations.testRuntimeClasspath.resolutionStrategy.force("com.google.guava:guava:19.0")
+configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
 
 tasks {
   test {

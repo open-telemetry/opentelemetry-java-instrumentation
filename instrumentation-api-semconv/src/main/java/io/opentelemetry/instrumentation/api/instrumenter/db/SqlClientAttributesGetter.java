@@ -26,22 +26,5 @@ public interface SqlClientAttributesGetter<REQUEST>
    * SqlClientAttributesExtractor} before being set as span attribute.
    */
   @Nullable
-  default String getRawStatement(REQUEST request) {
-    return rawStatement(request);
-  }
-
-  /**
-   * Get the raw SQL statement. The value returned by this method is later sanitized by the {@link
-   * SqlClientAttributesExtractor} before being set as span attribute.
-   *
-   * <p>This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getRawStatement(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String rawStatement(REQUEST request) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
-  }
+  String getRawStatement(REQUEST request);
 }

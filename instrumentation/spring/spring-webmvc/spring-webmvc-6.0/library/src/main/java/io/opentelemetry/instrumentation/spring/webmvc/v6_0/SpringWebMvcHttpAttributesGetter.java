@@ -89,12 +89,6 @@ enum SpringWebMvcHttpAttributesGetter
 
   @Override
   @Nullable
-  public String getRoute(HttpServletRequest request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String getScheme(HttpServletRequest request) {
     return request.getScheme();
   }

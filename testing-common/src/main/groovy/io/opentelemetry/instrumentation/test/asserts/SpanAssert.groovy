@@ -102,6 +102,11 @@ class SpanAssert {
     checked.parentId = true
   }
 
+  def spanId(String expected) {
+    assert span.spanId == expected
+    checked.spanId = true
+  }
+
   def traceId(String expected) {
     assert span.traceId == expected
     checked.traceId = true

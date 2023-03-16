@@ -16,10 +16,9 @@ import javax.annotation.Nullable;
 enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String, Void> {
   INSTANCE;
 
-  @Nullable
   @Override
   public String getMethod(String s) {
-    return null;
+    return "GET";
   }
 
   @Override
@@ -47,12 +46,6 @@ enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String
   @Nullable
   @Override
   public String getTarget(String s) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getRoute(String s) {
     return null;
   }
 

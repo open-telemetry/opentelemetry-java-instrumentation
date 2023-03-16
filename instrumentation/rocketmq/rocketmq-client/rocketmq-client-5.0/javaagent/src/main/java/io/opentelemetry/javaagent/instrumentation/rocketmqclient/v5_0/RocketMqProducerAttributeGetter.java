@@ -42,29 +42,10 @@ enum RocketMqProducerAttributeGetter
 
   @Nullable
   @Override
-  public String getProtocol(PublishingMessageImpl message) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(PublishingMessageImpl message) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getUrl(PublishingMessageImpl message) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getConversationId(PublishingMessageImpl message) {
     return null;
   }
 
-  @Nullable
   @Override
   public Long getMessagePayloadSize(PublishingMessageImpl message) {
     return (long) message.getBody().remaining();

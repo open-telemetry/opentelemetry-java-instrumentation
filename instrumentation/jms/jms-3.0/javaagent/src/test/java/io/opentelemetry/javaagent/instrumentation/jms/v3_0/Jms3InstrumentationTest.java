@@ -141,7 +141,8 @@ class Jms3InstrumentationTest {
                       .hasAttributesSatisfying(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                           equalTo(
-                              SemanticAttributes.MESSAGING_DESTINATION, producerDestinationName),
+                              SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                              producerDestinationName),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                           equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
@@ -159,7 +160,8 @@ class Jms3InstrumentationTest {
                         .hasAttributesSatisfying(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
-                                SemanticAttributes.MESSAGING_DESTINATION, actualDestinationName),
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                actualDestinationName),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId))));
@@ -209,7 +211,8 @@ class Jms3InstrumentationTest {
                         .hasAttributesSatisfying(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
-                                SemanticAttributes.MESSAGING_DESTINATION, producerDestinationName),
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                producerDestinationName),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
@@ -220,7 +223,8 @@ class Jms3InstrumentationTest {
                         .hasAttributesSatisfying(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
-                                SemanticAttributes.MESSAGING_DESTINATION, actualDestinationName),
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                actualDestinationName),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId)),
@@ -293,7 +297,8 @@ class Jms3InstrumentationTest {
                         .hasAttributesSatisfying(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
-                                SemanticAttributes.MESSAGING_DESTINATION, producerDestinationName),
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                producerDestinationName),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
@@ -310,7 +315,8 @@ class Jms3InstrumentationTest {
                         .hasAttributesSatisfying(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
-                                SemanticAttributes.MESSAGING_DESTINATION, actualDestinationName),
+                                SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                actualDestinationName),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
@@ -325,8 +331,8 @@ class Jms3InstrumentationTest {
 
   private static AttributeAssertion messagingTempDestination(boolean isTemporary) {
     return isTemporary
-        ? equalTo(SemanticAttributes.MESSAGING_TEMP_DESTINATION, true)
-        : satisfies(SemanticAttributes.MESSAGING_TEMP_DESTINATION, AbstractAssert::isNull);
+        ? equalTo(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true)
+        : satisfies(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull);
   }
 
   static final class EmptyReceiveArgumentsProvider implements ArgumentsProvider {

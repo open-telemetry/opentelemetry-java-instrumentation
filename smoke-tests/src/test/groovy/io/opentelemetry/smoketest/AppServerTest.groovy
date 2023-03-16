@@ -54,7 +54,7 @@ abstract class AppServerTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
     String platformSuffix = windows ? "-windows" : ""
-    String extraTag = "20221129.3575751672"
+    String extraTag = windows ? "20230302.4309128636" : "20230301.4309128636"
     String fullSuffix = "${serverVersion}-jdk$jdk$platformSuffix-$extraTag"
     return getTargetImagePrefix() + ":" + fullSuffix
   }
@@ -371,12 +371,12 @@ abstract class AppServerTest extends SmokeTest {
       case "/app/headers":
       case "/app/exception":
       case "/app/asyncgreeting":
-        return path
+        return "GET " + path
       case "/app/hello.txt":
       case "/app/file-that-does-not-exist":
-        return "/app/*"
+        return "GET /app/*"
     }
-    return "HTTP GET"
+    return "GET"
   }
 
   protected List<List<Object>> getTestParams() {

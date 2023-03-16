@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_DESTINATION;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_DESTINATION_KIND;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_OPERATION;
@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
@@ -57,7 +58,10 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
   @Test
   void testSendAndConsumeMessage() throws Throwable {
     ClientConfiguration clientConfiguration =
-        ClientConfiguration.newBuilder().setEndpoints(container.endpoints).build();
+        ClientConfiguration.newBuilder()
+            .setEndpoints(container.endpoints)
+            .setRequestTimeout(Duration.ofSeconds(10))
+            .build();
     // Inner topic of the container.
     String topic = "normal-topic-0";
     ClientServiceProvider provider = ClientServiceProvider.loadService();
@@ -122,7 +126,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                     equalTo(
                                         MESSAGING_DESTINATION_KIND,
                                         SemanticAttributes.MessagingDestinationKindValues.TOPIC),
-                                    equalTo(MESSAGING_DESTINATION, topic)),
+                                    equalTo(MESSAGING_DESTINATION_NAME, topic)),
                         span ->
                             span.hasKind(SpanKind.CONSUMER)
                                 .hasName(topic + " process")
@@ -142,7 +146,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                     equalTo(
                                         MESSAGING_DESTINATION_KIND,
                                         SemanticAttributes.MessagingDestinationKindValues.TOPIC),
-                                    equalTo(MESSAGING_DESTINATION, topic),
+                                    equalTo(MESSAGING_DESTINATION_NAME, topic),
                                     equalTo(MESSAGING_OPERATION, "process")),
                         span ->
                             span.hasName("child")

@@ -1,6 +1,6 @@
 plugins {
   id("java")
-  id("com.diffplug.spotless") version "6.14.1"
+  id("com.diffplug.spotless") version "6.17.0"
 }
 
 spotless {

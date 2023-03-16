@@ -51,7 +51,7 @@ public class StreamTaskInstrumentation implements TypeInstrumentation {
       Context context = holder.getContext();
       if (context != null) {
         holder.closeScope();
-        instrumenter().end(context, holder.getRecord(), null, throwable);
+        instrumenter().end(context, holder.getRequest(), null, throwable);
       }
     }
   }

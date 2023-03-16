@@ -65,10 +65,4 @@ public class UndertowHttpAttributesGetter
   public String getScheme(HttpServerExchange exchange) {
     return exchange.getRequestScheme();
   }
-
-  @Override
-  @Nullable
-  public String getRoute(HttpServerExchange exchange) {
-    return null;
-  }
 }

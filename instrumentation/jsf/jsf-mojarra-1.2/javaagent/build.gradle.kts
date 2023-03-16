@@ -1,6 +1,5 @@
 plugins {
   id("otel.javaagent-instrumentation")
-  id("org.unbroken-dome.test-sets")
 }
 
 muzzle {
@@ -45,36 +44,49 @@ muzzle {
   }
 }
 
-testSets {
-  create("mojarra12Test")
-  create("mojarra2Test")
-  create("latestDepTest") {
-    extendsFrom("mojarra2Test")
-    dirName = "mojarra2LatestTest"
+dependencies {
+  compileOnly("javax.faces:jsf-api:1.2")
+
+  implementation(project(":instrumentation:jsf:jsf-javax-common:javaagent"))
+
+  testImplementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
+  testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
+}
+
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+testing {
+  suites {
+    val mojarra12Test by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
+        implementation("javax.faces:jsf-api:1.2")
+        implementation("com.sun.facelets:jsf-facelets:1.1.14")
+
+        if (latestDepTest) {
+          implementation("javax.faces:jsf-impl:1.+")
+        } else {
+          implementation("javax.faces:jsf-impl:1.2_04")
+        }
+      }
+    }
+
+    val mojarra2Test by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
+
+        if (latestDepTest) {
+          implementation("org.glassfish:jakarta.faces:2.+")
+        } else {
+          implementation("org.glassfish:javax.faces:2.2.0")
+        }
+      }
+    }
   }
 }
 
 tasks {
-  test {
-    dependsOn("mojarra12Test")
-    dependsOn("mojarra2Test")
+  check {
+    dependsOn(testing.suites)
   }
-}
-
-dependencies {
-  compileOnly("javax.faces:jsf-api:1.2")
-
-  implementation(project(":instrumentation:jsf:jsf-common:javaagent"))
-
-  testImplementation(project(":instrumentation:jsf:jsf-common:testing"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
-
-  add("mojarra12TestImplementation", "javax.faces:jsf-impl:1.2-20")
-  add("mojarra12TestImplementation", "javax.faces:jsf-api:1.2")
-  add("mojarra12TestImplementation", "com.sun.facelets:jsf-facelets:1.1.14")
-
-  add("mojarra2TestImplementation", "org.glassfish:jakarta.faces:2.3.12")
-
-  add("latestDepTestImplementation", "org.glassfish:jakarta.faces:2.+")
 }

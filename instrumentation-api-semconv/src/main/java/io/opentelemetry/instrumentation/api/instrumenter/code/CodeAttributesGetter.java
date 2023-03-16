@@ -17,36 +17,8 @@ import javax.annotation.Nullable;
 public interface CodeAttributesGetter<REQUEST> {
 
   @Nullable
-  default Class<?> getCodeClass(REQUEST request) {
-    return codeClass(request);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getCodeClass(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default Class<?> codeClass(REQUEST request) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
-  }
+  Class<?> getCodeClass(REQUEST request);
 
   @Nullable
-  default String getMethodName(REQUEST request) {
-    return methodName(request);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getMethodName(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String methodName(REQUEST request) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
-  }
+  String getMethodName(REQUEST request);
 }

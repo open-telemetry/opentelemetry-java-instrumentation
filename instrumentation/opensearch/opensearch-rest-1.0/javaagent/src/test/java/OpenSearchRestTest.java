@@ -96,7 +96,7 @@ public class OpenSearchRestTest {
                                 SemanticAttributes.NET_TRANSPORT,
                                 SemanticAttributes.NetTransportValues.IP_TCP)),
                 span ->
-                    span.hasName("HTTP GET")
+                    span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -171,7 +171,7 @@ public class OpenSearchRestTest {
                                 SemanticAttributes.NET_TRANSPORT,
                                 SemanticAttributes.NetTransportValues.IP_TCP)),
                 span ->
-                    span.hasName("HTTP GET")
+                    span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(

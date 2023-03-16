@@ -66,7 +66,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
                     .build())
             .addAttributesExtractor(additionalAttributesExtractor)
             .addOperationMetrics(HttpServerMetrics.get())
-            .addContextCustomizer(HttpRouteHolder.get());
+            .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter));
     if (ServletRequestParametersExtractor.enabled()) {
       AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
           requestParametersExtractor = new ServletRequestParametersExtractor<>(accessor);

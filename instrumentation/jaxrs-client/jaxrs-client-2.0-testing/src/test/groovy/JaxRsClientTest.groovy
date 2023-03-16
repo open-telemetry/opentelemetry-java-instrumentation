@@ -104,7 +104,7 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
       trace(0, 2) {
         span(0) {
           hasNoParent()
-          name "HTTP $method"
+          name "$method"
           kind CLIENT
           status ERROR
           attributes {
@@ -138,6 +138,11 @@ class JerseyClientTest extends JaxRsClientTest {
     ClientConfig config = new ClientConfig()
     config.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT_MS)
     return new JerseyClientBuilder().withConfig(config)
+  }
+
+  @Override
+  String userAgent() {
+    "Jersey"
   }
 
   @Override
@@ -176,6 +181,11 @@ class CxfClientTest extends JaxRsClientTest {
         }
     }
     return exception
+  }
+
+  @Override
+  String userAgent() {
+    "Apache"
   }
 
   @Override

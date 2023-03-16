@@ -22,7 +22,7 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
       return makeRequest(resource)
     }
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    return runWithHttpServerSpan("test.span") {
+    return runWithHttpServerSpan {
       makeRequest(resource)
     }
   }
@@ -35,8 +35,8 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
     false
   }
 
-  String defaultServerSpanName() {
-    "test.span"
+  String defaultServerRoute() {
+    null
   }
 
   abstract void setAbortStatus(boolean abortNormal, boolean abortPrematch)
@@ -61,10 +61,14 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
       responseStatus == 200 // Response.Status.OK.statusCode
     }
 
+    def serverRoute = route ?: defaultServerRoute()
+    def method = runsOnServer() ? "POST" : "GET"
+    def expectedServerSpanName = serverRoute == null ? method : method + " " + serverRoute
+
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name parentSpanName != null ? parentSpanName : defaultServerSpanName()
+          name expectedServerSpanName
           kind SERVER
           if (runsOnServer() && abortNormal) {
             status UNSET
@@ -89,7 +93,7 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
     }
 
     where:
-    resource           | abortNormal | abortPrematch | parentSpanName        | controllerName                 | expectedResponse
+    resource           | abortNormal | abortPrematch | route                 | controllerName                 | expectedResponse
     "/test/hello/bob"  | false       | false         | "/test/hello/{name}"  | "Test1.hello"                  | "Test1 bob!"
     "/test2/hello/bob" | false       | false         | "/test2/hello/{name}" | "Test2.hello"                  | "Test2 bob!"
     "/test3/hi/bob"    | false       | false         | "/test3/hi/{name}"    | "Test3.hello"                  | "Test3 bob!"
@@ -117,14 +121,17 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
     responseStatus == 200 // Response.Status.OK.statusCode
     responseText == expectedResponse
 
+    def method = runsOnServer() ? "POST" : "GET"
+
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name parentResourceName
+          name method + " " + route
           kind SERVER
           if (!runsOnServer()) {
             attributes {
-              "$SemanticAttributes.HTTP_ROUTE" parentResourceName
+              "$SemanticAttributes.HTTP_METHOD" method
+              "$SemanticAttributes.HTTP_ROUTE" route
             }
           }
         }
@@ -141,7 +148,7 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
     }
 
     where:
-    resource        | parentResourceName | controller1Name | expectedResponse
-    "/test3/nested" | "/test3/nested"    | "Test3.nested"  | "Test3 nested!"
+    resource        | route           | controller1Name | expectedResponse
+    "/test3/nested" | "/test3/nested" | "Test3.nested"  | "Test3 nested!"
   }
 }
