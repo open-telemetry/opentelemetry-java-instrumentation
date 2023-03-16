@@ -263,8 +263,8 @@ public abstract class AbstractR2dbcStatementTest {
 
     @CanIgnoreReturnValue
     public DbSystemProps envVariables(String... keyValues) {
-      for (int i = 0; i < keyValues.length - 1; i++) {
-        envVariables.put(keyValues[i], keyValues[i + 1]);
+      for (int i = 0; i < keyValues.length / 2; i++) {
+        envVariables.put(keyValues[2 * i], keyValues[2 * i + 1]);
       }
       return this;
     }

@@ -3,16 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
+package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.internal.DbExecution;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.listener.ProxyMethodExecutionListener;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 
-public class TraceProxyListener implements ProxyMethodExecutionListener {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class TraceProxyListener implements ProxyMethodExecutionListener {
 
   private static final String KEY_DB_EXECUTION = "dbExecution";
 

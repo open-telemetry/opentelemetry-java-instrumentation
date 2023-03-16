@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.internal.DbExecution;
+import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.internal.TraceProxyListener;
 import io.r2dbc.proxy.ProxyConnectionFactory;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
