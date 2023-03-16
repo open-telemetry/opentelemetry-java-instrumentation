@@ -60,10 +60,11 @@ public class JavaagentInstrumentationTest {
       try (Scope midScope = midSpan.makeCurrent()) {
         innerSpan = ocTracer.spanBuilder("inner-span").startSpan();
         innerSpan.putAttribute("inner", AttributeValue.booleanAttributeValue(true));
-        try (io.opencensus.common.Scope innerScope = ocTracer.withSpan(innerSpan)) {
-        } finally {
-          innerSpan.end();
-        }
+
+        // make current and immediately close -- avoid empty try block
+        ocTracer.withSpan(innerSpan).close();
+
+        innerSpan.end();
       } finally {
         midSpan.end();
       }
@@ -136,10 +137,11 @@ public class JavaagentInstrumentationTest {
                 .setSpanKind(SpanKind.INTERNAL)
                 .setAttribute("inner", true)
                 .startSpan();
-        try (Scope innerScope = innerSpan.makeCurrent()) {
-        } finally {
-          innerSpan.end();
-        }
+
+        // make current and immediately close -- avoid empty try block
+        innerSpan.makeCurrent().close();
+
+        innerSpan.end();
       } finally {
         midSpan.end();
       }
@@ -279,10 +281,11 @@ public class JavaagentInstrumentationTest {
       try (io.opencensus.common.Scope midScope = ocTracer.withSpan(midSpan)) {
         innerSpan = ocTracer.spanBuilder("inner-span").startSpan();
         innerSpan.putAttribute("inner", AttributeValue.booleanAttributeValue(true));
-        try (io.opencensus.common.Scope innerScope = ocTracer.withSpan(innerSpan)) {
-        } finally {
-          innerSpan.end();
-        }
+
+        // make current and immediately close -- avoid empty try block
+        ocTracer.withSpan(innerSpan).close();
+
+        innerSpan.end();
       } finally {
         midSpan.end();
       }
