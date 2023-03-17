@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +24,7 @@ public class DynamicClassloaderTest {
 
   private static final Logger logger = LoggerFactory.getLogger(DynamicClassloaderTest.class);
 
-  @Ignore("This test takes a long time.  Not great for CI.")
+  @Disabled("This test takes a long time.  Not great for CI.")
   @Test
   void testDynamicGeneratedClassLoaderMemory()
       throws InterruptedException, ClassNotFoundException, IOException {
