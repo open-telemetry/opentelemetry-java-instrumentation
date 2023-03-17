@@ -18,12 +18,13 @@ import org.slf4j.MDC;
 
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
-  private volatile boolean captureExperimentalAttributes = false;
-  private volatile boolean captureCodeAttributes = false;
-  private volatile boolean captureMarkerAttribute = false;
-  private volatile List<String> captureMdcAttributes = emptyList();
+  private boolean captureExperimentalAttributes = false;
+  private boolean captureCodeAttributes = false;
+  private boolean captureMarkerAttribute = false;
+  private boolean captureKeyValuePairAttributes = true;
+  private List<String> captureMdcAttributes = emptyList();
 
-  private volatile LoggingEventMapper mapper;
+  private LoggingEventMapper mapper;
 
   public OpenTelemetryAppender() {}
 
@@ -34,6 +35,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             captureExperimentalAttributes,
             captureMdcAttributes,
             captureCodeAttributes,
+            captureKeyValuePairAttributes,
             captureMarkerAttribute);
     super.start();
   }
@@ -71,6 +73,15 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    */
   public void setCaptureMarkerAttribute(boolean captureMarkerAttribute) {
     this.captureMarkerAttribute = captureMarkerAttribute;
+  }
+
+  /**
+   * Sets whether the key value pair attributes should be set to logs.
+   *
+   * @param captureKeyValuePairAttributes To enable or disable the marker attribute
+   */
+  public void setCaptureKeyValuePairAttributes(boolean captureKeyValuePairAttributes) {
+    this.captureKeyValuePairAttributes = captureKeyValuePairAttributes;
   }
 
   /** Configures the {@link MDC} attributes that will be copied to logs. */

@@ -16,6 +16,7 @@ import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Marker;
+import org.slf4j.event.KeyValuePair;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -30,6 +32,8 @@ import org.slf4j.Marker;
  */
 public final class LoggingEventMapper {
 
+  private static final boolean supportsKeyValuePairs = supportsKeyValuePairs();
+  private static final boolean supportsMultipleMarkers = supportsMultipleMarkers();
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
   private static final AttributeKey<String> LOG_MARKER = AttributeKey.stringKey("logback.marker");
@@ -39,16 +43,19 @@ public final class LoggingEventMapper {
   private final boolean captureAllMdcAttributes;
   private final boolean captureCodeAttributes;
   private final boolean captureMarkerAttribute;
+  private final boolean captureKeyValuePairAttributes;
 
   public LoggingEventMapper(
       boolean captureExperimentalAttributes,
       List<String> captureMdcAttributes,
       boolean captureCodeAttributes,
-      boolean captureMarkerAttribute) {
+      boolean captureMarkerAttribute,
+      boolean captureKeyValuePairAttributes) {
     this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureCodeAttributes = captureCodeAttributes;
     this.captureMdcAttributes = captureMdcAttributes;
     this.captureMarkerAttribute = captureMarkerAttribute;
+    this.captureKeyValuePairAttributes = captureKeyValuePairAttributes;
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }
@@ -132,11 +139,11 @@ public final class LoggingEventMapper {
     }
 
     if (captureMarkerAttribute) {
-      Marker marker = loggingEvent.getMarker();
-      if (marker != null) {
-        String markerName = marker.getName();
-        attributes.put(LOG_MARKER, markerName);
-      }
+      captureMarkerAttribute(attributes, loggingEvent);
+    }
+
+    if (supportsKeyValuePairs && captureKeyValuePairAttributes) {
+      captureKeyValuePairAttributes(attributes, loggingEvent);
     }
 
     builder.setAllAttributes(attributes.build());
@@ -194,5 +201,78 @@ public final class LoggingEventMapper {
       default:
         return Severity.UNDEFINED_SEVERITY_NUMBER;
     }
+  }
+
+  @NoMuzzle
+  private static void captureKeyValuePairAttributes(
+      AttributesBuilder attributes, ILoggingEvent loggingEvent) {
+    List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
+    if (keyValuePairs != null) {
+      for (KeyValuePair keyValuePair : keyValuePairs) {
+        if (keyValuePair.value != null) {
+          attributes.put(keyValuePair.key, keyValuePair.value.toString());
+        }
+      }
+    }
+  }
+
+  private static boolean supportsKeyValuePairs() {
+    try {
+      Class.forName("org.slf4j.event.KeyValuePair");
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+    try {
+      ILoggingEvent.class.getMethod("getKeyValuePairs");
+    } catch (NoSuchMethodException e) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private static void captureMarkerAttribute(
+      AttributesBuilder attributes, ILoggingEvent loggingEvent) {
+    if (supportsMultipleMarkers && hasMultipleMarkers(loggingEvent)) {
+      captureMultipleMarkerAttributes(attributes, loggingEvent);
+    } else {
+      captureSingleMarkerAttribute(attributes, loggingEvent);
+    }
+  }
+
+  @Deprecated // getMarker is deprecate since 1.3.0
+  private static void captureSingleMarkerAttribute(
+      AttributesBuilder attributes, ILoggingEvent loggingEvent) {
+    Marker marker = loggingEvent.getMarker();
+    if (marker != null) {
+      String markerName = marker.getName();
+      attributes.put(LOG_MARKER, markerName);
+    }
+  }
+
+  @NoMuzzle
+  private static void captureMultipleMarkerAttributes(
+      AttributesBuilder attributes, ILoggingEvent loggingEvent) {
+    int i = 1;
+    for (Marker marker : loggingEvent.getMarkerList()) {
+      String markerName = marker.getName();
+      attributes.put(AttributeKey.stringKey("logback.marker." + i++), markerName);
+    }
+  }
+
+  @NoMuzzle
+  private static boolean hasMultipleMarkers(ILoggingEvent loggingEvent) {
+    List<Marker> markerList = loggingEvent.getMarkerList();
+    return markerList != null && markerList.size() > 1;
+  }
+
+  private static boolean supportsMultipleMarkers() {
+    try {
+      ILoggingEvent.class.getMethod("getMarkerList");
+    } catch (NoSuchMethodException e) {
+      return false;
+    }
+
+    return true;
   }
 }
