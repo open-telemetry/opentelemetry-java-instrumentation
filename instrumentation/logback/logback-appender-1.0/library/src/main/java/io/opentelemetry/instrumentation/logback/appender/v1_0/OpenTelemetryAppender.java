@@ -21,7 +21,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureExperimentalAttributes = false;
   private boolean captureCodeAttributes = false;
   private boolean captureMarkerAttribute = false;
-  private boolean captureKeyValuePairAttributes = true;
+  private boolean captureKeyValuePairAttributes = false;
   private List<String> captureMdcAttributes = emptyList();
 
   private LoggingEventMapper mapper;
@@ -35,8 +35,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             captureExperimentalAttributes,
             captureMdcAttributes,
             captureCodeAttributes,
-            captureKeyValuePairAttributes,
-            captureMarkerAttribute);
+            captureMarkerAttribute,
+            captureKeyValuePairAttributes);
     super.start();
   }
 

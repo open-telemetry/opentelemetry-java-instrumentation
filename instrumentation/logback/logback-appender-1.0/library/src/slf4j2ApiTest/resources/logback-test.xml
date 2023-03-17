@@ -13,6 +13,7 @@
     <captureExperimentalAttributes>false</captureExperimentalAttributes>
     <captureCodeAttributes>true</captureCodeAttributes>
     <captureMarkerAttribute>true</captureMarkerAttribute>
+    <captureKeyValuePairAttributes>true</captureKeyValuePairAttributes>
     <captureMdcAttributes>*</captureMdcAttributes>
   </appender>
 
