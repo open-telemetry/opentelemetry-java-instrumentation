@@ -59,9 +59,6 @@ class MuzzleGradlePluginUtil {
 
       // We cannot reference Mismatch class directly here, because we are loaded from a different
       // class loader.
-
-      // We cannot reference Mismatch class directly here, because we are loaded from a different
-      // class loader.
       val allMismatches = matcherClass
         .getMethod("matchesAll", ClassLoader::class.java, Boolean::class.javaPrimitiveType, Set::class.java)
         .invoke(null, userClassLoader, assertPass, excludedInstrumentationNames)
