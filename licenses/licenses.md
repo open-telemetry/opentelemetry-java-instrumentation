@@ -1,7 +1,7 @@
 
 #javaagent
 ##Dependency License Report
-_2023-03-13 23:23:20 UTC_
+_2023-03-18 10:34:53 EET_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -212,15 +212,15 @@ _2023-03-13 23:23:20 UTC_
 
 ## MIT License
 
-**46** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.6`
-> - **Manifest Project URL**: [http://www.qos.ch](http://www.qos.ch)
-> - **POM Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
+**46** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.7`
+> - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
+> - **Embedded license files**: [slf4j-api-2.0.7.jar/META-INF/LICENSE.txt](slf4j-api-2.0.7.jar/META-INF/LICENSE.txt)
 
-**47** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.6`
-> - **Manifest Project URL**: [http://www.qos.ch](http://www.qos.ch)
-> - **POM Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
+**47** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.7`
+> - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
+> - **Embedded license files**: [slf4j-simple-2.0.7.jar/META-INF/LICENSE.txt](slf4j-simple-2.0.7.jar/META-INF/LICENSE.txt)
 
 ## The 3-Clause BSD License
 
