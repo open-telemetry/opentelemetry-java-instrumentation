@@ -6,9 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.zio.v2_0
 
 import io.opentelemetry.instrumentation.testing.junit._
-import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.groupTraces
+import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
 import io.opentelemetry.javaagent.instrumentation.zio.v2_0.ZioTestFixtures._
-import io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.sdk.trace.data.SpanData
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -27,7 +26,7 @@ class ZioRuntimeInstrumentationTest {
   def traceIsPropagatedToChildFiber(): Unit = {
     runNestedFibers()
 
-    assertThat(traces).hasTracesSatisfyingExactly(
+    testing.waitAndAssertTraces(
       assertTrace { trace =>
         trace.hasSpansSatisfyingExactly(
           assertSpan(_.hasName("fiber_1_span_1").hasNoParent),
@@ -41,7 +40,7 @@ class ZioRuntimeInstrumentationTest {
   def traceIsPreservedWhenFiberIsInterrupted(): Unit = {
     runInterruptedFiber()
 
-    assertThat(traces).hasTracesSatisfyingExactly(
+    testing.waitAndAssertTraces(
       assertTrace { trace =>
         trace.hasSpansSatisfyingExactly(
           assertSpan(_.hasName("fiber_1_span_1").hasNoParent),
@@ -55,7 +54,7 @@ class ZioRuntimeInstrumentationTest {
   def synchronizedFibersDoNotInterfereWithEachOthersTraces(): Unit = {
     runSynchronizedFibers()
 
-    assertThat(traces).hasTracesSatisfyingExactly(
+    testing.waitAndAssertTraces(
       assertTrace { trace =>
         trace.hasSpansSatisfyingExactly(
           assertSpan(_.hasName("fiber_1_span_1").hasNoParent),
@@ -75,7 +74,8 @@ class ZioRuntimeInstrumentationTest {
   def concurrentFibersDoNotInterfereWithEachOthersTraces(): Unit = {
     runConcurrentFibers()
 
-    assertThat(traces).hasTracesSatisfyingExactly(
+    testing.waitAndAssertSortedTraces(
+      orderByRootSpanName("fiber_1_span_1", "fiber_2_span_1", "fiber_3_span_1"),
       assertTrace { trace =>
         trace.hasSpansSatisfyingExactly(
           assertSpan(_.hasName("fiber_1_span_1").hasNoParent),
@@ -101,7 +101,7 @@ class ZioRuntimeInstrumentationTest {
   def sequentialFibersDoNotInterfereWithEachOthersTraces(): Unit = {
     runSequentialFibers()
 
-    assertThat(traces).hasTracesSatisfyingExactly(
+    testing.waitAndAssertTraces(
       assertTrace { trace =>
         trace.hasSpansSatisfyingExactly(
           assertSpan(_.hasName("fiber_1_span_1").hasNoParent),
@@ -122,9 +122,6 @@ class ZioRuntimeInstrumentationTest {
       }
     )
   }
-
-  private def traces: util.List[util.List[SpanData]] =
-    groupTraces(testing.spans())
 
   private def assertTrace(f: TraceAssert => Any): Consumer[TraceAssert] =
     (t: TraceAssert) => f(t)
