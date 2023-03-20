@@ -6,16 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.zio.v2_0;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
-import javax.annotation.Nullable;
 
-public class FiberContext {
+public final class FiberContext {
   private Context context;
-  @Nullable private Scope scope;
 
   private FiberContext(Context context) {
     this.context = context;
-    this.scope = null;
   }
 
   public static FiberContext create() {
@@ -25,18 +21,15 @@ public class FiberContext {
   public void onSuspend() {
     this.context = Context.current();
 
-    if (this.scope != null) {
-      this.scope.close();
-    }
-
-    this.scope = Context.root().makeCurrent();
+    // Reset context to avoid leaking it to other fibers
+    Context.root().makeCurrent();
   }
 
   public void onResume() {
-    if (this.scope != null) {
-      this.scope.close();
-    }
-
-    this.scope = this.context.makeCurrent();
+    // Not using returned Scope because we can't reliably close it. If fiber also opens a Scope and
+    // does not close it before onSuspend is called then the attempt to close the scope returned
+    // here would not work because it is not the current scope.
+    // See https://github.com/open-telemetry/opentelemetry-java/issues/5303
+    this.context.makeCurrent();
   }
 }

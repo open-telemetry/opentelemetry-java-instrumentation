@@ -30,6 +30,7 @@ public class ZioRuntimeInstrumentation implements TypeInstrumentation {
         isMethod().and(named("defaultSupervisor")), getClass().getName() + "$DefaultSupervisor");
   }
 
+  @SuppressWarnings("unused")
   public static final class DefaultSupervisor {
 
     private DefaultSupervisor() {}
