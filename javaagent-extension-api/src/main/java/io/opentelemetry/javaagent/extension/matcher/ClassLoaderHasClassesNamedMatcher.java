@@ -21,6 +21,7 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
   private static final AtomicInteger counter = new AtomicInteger();
 
   private final String[] resources;
+  // each matcher gets a unique index that is used for caching the matching status
   private final int index = counter.getAndIncrement();
 
   ClassLoaderHasClassesNamedMatcher(String... classNames) {
@@ -64,6 +65,8 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
     private static final BitSet EMPTY = new BitSet(0);
     static final Manager INSTANCE = new Manager();
     private final List<ClassLoaderHasClassesNamedMatcher> matchers = new CopyOnWriteArrayList<>();
+    // each matcher gets a bit in BitSet, that bit indicates whether current matcher matched or not
+    // for given class loader
     private final Cache<ClassLoader, BitSet> enabled = Cache.weak();
     private volatile boolean matchCalled = false;
 
@@ -85,6 +88,7 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
         set = new BitSet(counter.get());
         for (ClassLoaderHasClassesNamedMatcher m : matchers) {
           if (hasResources(cl, m.resources)) {
+            // set the bit corresponding to the matcher when it matched
             set.set(m.index);
           }
         }
