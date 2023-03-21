@@ -89,7 +89,6 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
           }
         }
         enabled.put(cl, set.isEmpty() ? EMPTY : set);
-        enabled.put(cl, set);
       } else if (set.isEmpty()) {
         return false;
       }
