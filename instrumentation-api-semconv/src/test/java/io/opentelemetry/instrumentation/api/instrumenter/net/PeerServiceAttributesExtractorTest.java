@@ -96,7 +96,6 @@ class PeerServiceAttributesExtractorTest {
     assertThat(endAttributes.build())
         .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "myService"));
   }
-
   
   @Test
   void shouldSetSockPeerNameIfItMatchesAndNoPeerNameProvided() {
