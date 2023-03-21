@@ -27,6 +27,7 @@ import io.netty.util.CharsetUtil
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
@@ -46,6 +47,11 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 class Netty40ServerTest extends HttpServerTest<EventLoopGroup> implements AgentTestTrait {
 
   static final LoggingHandler LOGGING_HANDLER = new LoggingHandler(SERVER_LOGGER.name, LogLevel.DEBUG)
+
+  @Override
+  boolean hasResponseCustomizer(ServerEndpoint endpoint) {
+    true
+  }
 
   @Override
   EventLoopGroup startServer(int port) {

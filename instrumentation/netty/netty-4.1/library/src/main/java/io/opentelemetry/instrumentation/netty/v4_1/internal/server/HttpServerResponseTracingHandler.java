@@ -35,10 +35,13 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       AttributeKey.valueOf(HttpServerResponseTracingHandler.class, "http-server-response");
 
   private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
+  private final HttpServerResponseBeforeCommitHandler beforeCommitHandler;
 
   public HttpServerResponseTracingHandler(
-      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter) {
+      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter,
+      HttpServerResponseBeforeCommitHandler beforeCommitHandler) {
     this.instrumenter = instrumenter;
+    this.beforeCommitHandler = beforeCommitHandler;
   }
 
   @Override
@@ -65,6 +68,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       // Going to finish the span after the write of the last content finishes.
       if (msg instanceof FullHttpResponse) {
         // Headers and body all sent together, we have the response information in the msg.
+        beforeCommitHandler.handle(context, (HttpResponse) msg);
         writePromise.addListener(
             future -> end(ctx.channel(), (FullHttpResponse) msg, writePromise));
       } else {
@@ -82,6 +86,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       writePromise = prm;
       if (msg instanceof HttpResponse) {
         // Headers before body has been sent, store them to use when finishing the span.
+        beforeCommitHandler.handle(context, (HttpResponse) msg);
         ctx.channel().attr(HTTP_SERVER_RESPONSE).set((HttpResponse) msg);
       }
     }

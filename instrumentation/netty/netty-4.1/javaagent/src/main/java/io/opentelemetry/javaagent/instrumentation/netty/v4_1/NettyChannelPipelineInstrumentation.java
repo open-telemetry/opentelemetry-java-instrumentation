@@ -105,11 +105,17 @@ public class NettyChannelPipelineInstrumentation
       ChannelHandler ourHandler = null;
       // Server pipeline handlers
       if (handler instanceof HttpServerCodec) {
-        ourHandler = new HttpServerTracingHandler(NettyServerSingletons.instrumenter());
+        ourHandler =
+            new HttpServerTracingHandler(
+                NettyServerSingletons.instrumenter(),
+                NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
       } else if (handler instanceof HttpRequestDecoder) {
         ourHandler = new HttpServerRequestTracingHandler(NettyServerSingletons.instrumenter());
       } else if (handler instanceof HttpResponseEncoder) {
-        ourHandler = new HttpServerResponseTracingHandler(NettyServerSingletons.instrumenter());
+        ourHandler =
+            new HttpServerResponseTracingHandler(
+                NettyServerSingletons.instrumenter(),
+                NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
         // Client pipeline handlers
       } else if (handler instanceof HttpClientCodec) {
         ourHandler = new HttpClientTracingHandler(NettyClientSingletons.instrumenter());

@@ -89,6 +89,7 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
         });
 
     options.setExpectedException(new IllegalArgumentException(ServerEndpoint.EXCEPTION.getBody()));
+    options.setHasResponseCustomizer(serverEndpoint -> true);
   }
 
   private static ChannelPipeline channelPipeline() {

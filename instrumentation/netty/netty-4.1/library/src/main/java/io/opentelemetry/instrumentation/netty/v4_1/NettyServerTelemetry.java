@@ -13,6 +13,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerRequestTracingHandler;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerResponseBeforeCommitHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTracingHandler;
 
@@ -51,7 +52,8 @@ public final class NettyServerTelemetry {
    * responses. Must be paired with {@link #createRequestHandler()}.
    */
   public ChannelOutboundHandlerAdapter createResponseHandler() {
-    return new HttpServerResponseTracingHandler(instrumenter);
+    return new HttpServerResponseTracingHandler(
+        instrumenter, HttpServerResponseBeforeCommitHandler.Noop.INSTANCE);
   }
 
   /**
@@ -61,6 +63,7 @@ public final class NettyServerTelemetry {
   public CombinedChannelDuplexHandler<
           ? extends ChannelInboundHandlerAdapter, ? extends ChannelOutboundHandlerAdapter>
       createCombinedHandler() {
-    return new HttpServerTracingHandler(instrumenter);
+    return new HttpServerTracingHandler(
+        instrumenter, HttpServerResponseBeforeCommitHandler.Noop.INSTANCE);
   }
 }
