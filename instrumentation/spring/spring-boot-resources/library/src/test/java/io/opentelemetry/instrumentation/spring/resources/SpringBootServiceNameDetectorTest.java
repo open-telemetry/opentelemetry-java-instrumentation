@@ -68,7 +68,8 @@ class SpringBootServiceNameDetectorTest {
 
   @Test
   void classpathApplicationYaml() {
-    when(system.openClasspathResource(APPLICATION_YML)).thenReturn(openClasspathResource(APPLICATION_YML));
+    when(system.openClasspathResource(APPLICATION_YML))
+        .thenReturn(openClasspathResource(APPLICATION_YML));
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource result = guesser.createResource(config);
     expectServiceName(result, "cat-store");
