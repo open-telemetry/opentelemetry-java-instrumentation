@@ -127,7 +127,7 @@ include(":smoke-tests:images:quarkus")
 include(":smoke-tests:images:servlet")
 hideFromDependabot(":smoke-tests:images:servlet:servlet-3.0")
 hideFromDependabot(":smoke-tests:images:servlet:servlet-5.0")
-include(":smoke-tests:images:spring-boot")
+hideFromDependabot(":smoke-tests:images:spring-boot")
 
 hideFromDependabot("instrumentation:akka:akka-actor-2.3:javaagent")
 hideFromDependabot(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
