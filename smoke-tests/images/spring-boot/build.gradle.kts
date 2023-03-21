@@ -30,6 +30,13 @@ val targetJDK = project.findProperty("targetJDK") ?: "11"
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
+java {
+  // needed by jib to detect java version used in project
+  // for jdk9+ jib uses an entrypoint that doesn't work with jdk8
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 jib {
   from.image = "openjdk:$targetJDK"
   to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$targetJDK-$tag"
