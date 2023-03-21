@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletAsyncListener;
 import io.opentelemetry.javaagent.instrumentation.servlet.javax.JavaxServletAccessor;
 import java.util.Collections;
@@ -12,7 +13,8 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class Servlet2Accessor extends JavaxServletAccessor<HttpServletResponse> {
+public class Servlet2Accessor extends JavaxServletAccessor<HttpServletResponse>
+    implements HttpServerResponseMutator<HttpServletResponse> {
   public static final Servlet2Accessor INSTANCE = new Servlet2Accessor();
 
   private Servlet2Accessor() {}
@@ -54,5 +56,10 @@ public class Servlet2Accessor extends JavaxServletAccessor<HttpServletResponse> 
   @Override
   public boolean isResponseCommitted(HttpServletResponse httpServletResponse) {
     return httpServletResponse.isCommitted();
+  }
+
+  @Override
+  public void appendHeader(HttpServletResponse response, String name, String value) {
+    response.addHeader(name, value);
   }
 }

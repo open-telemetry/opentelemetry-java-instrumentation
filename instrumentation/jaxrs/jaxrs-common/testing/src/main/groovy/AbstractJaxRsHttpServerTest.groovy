@@ -220,6 +220,11 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
   }
 
   @Override
+  boolean hasResponseCustomizer(ServerEndpoint endpoint) {
+    true
+  }
+
+  @Override
   void serverSpan(TraceAssert trace,
                   int index,
                   String traceID = null,
