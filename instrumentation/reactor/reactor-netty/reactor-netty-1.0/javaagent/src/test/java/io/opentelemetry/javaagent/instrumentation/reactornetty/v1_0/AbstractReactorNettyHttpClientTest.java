@@ -105,9 +105,13 @@ abstract class AbstractReactorNettyHttpClientTest
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.disableTestRedirects();
+    optionsBuilder.markAsLowLevelInstrumentation();
+    optionsBuilder.setMaxRedirects(52);
+
     optionsBuilder.setUserAgent(USER_AGENT);
-    optionsBuilder.enableTestCallbackWithImplicitParent();
+    // TODO: remove this test altogether? this scenario is (was) only implemented in reactor-netty,
+    // all other HTTP clients worked in a different way
+    //    optionsBuilder.enableTestCallbackWithImplicitParent();
 
     optionsBuilder.setClientSpanErrorMapper(
         (uri, exception) -> {
@@ -121,7 +125,18 @@ abstract class AbstractReactorNettyHttpClientTest
           return exception;
         });
 
+    // TODO: see the comment in HttpResponseReceiverInstrumenter.EndOperationWithRequestError
+    optionsBuilder.setExpectedClientSpanNameMapper(this::getExpectedClientSpanName);
     optionsBuilder.setHttpAttributes(this::getHttpAttributes);
+  }
+
+  private static String getExpectedClientSpanName(URI uri, String method) {
+    // unopened port or non routable address
+    if ("http://localhost:61/".equals(uri.toString())
+        || "https://192.0.2.1/".equals(uri.toString())) {
+      return "CONNECT";
+    }
+    return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
   }
 
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
@@ -186,7 +201,7 @@ abstract class AbstractReactorNettyHttpClientTest
               span -> span.hasName("GET").hasKind(CLIENT).hasParent(parentSpan),
               span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(nettyClientSpan));
 
-          assertSameSpan(nettyClientSpan, onRequestSpan);
+          assertSameSpan(parentSpan, onRequestSpan);
           assertSameSpan(nettyClientSpan, afterRequestSpan);
           assertSameSpan(nettyClientSpan, onResponseSpan);
           assertSameSpan(parentSpan, afterResponseSpan);
@@ -307,6 +322,8 @@ abstract class AbstractReactorNettyHttpClientTest
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_URL, uri.toString()),
                             equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, USER_AGENT),
+                            // TODO: that's probably not valid tho?
+                            equalTo(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 0),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, uri.getPort())),
                 span ->

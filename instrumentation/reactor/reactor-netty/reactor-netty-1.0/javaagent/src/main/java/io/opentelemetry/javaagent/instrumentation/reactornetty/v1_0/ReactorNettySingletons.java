@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -18,7 +17,7 @@ import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyCon
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
-import reactor.netty.http.client.HttpClientConfig;
+import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
 public final class ReactorNettySingletons {
@@ -37,7 +36,7 @@ public final class ReactorNettySingletons {
             false);
   }
 
-  private static final Instrumenter<HttpClientConfig, HttpClientResponse> INSTRUMENTER;
+  private static final Instrumenter<HttpClientRequest, HttpClientResponse> INSTRUMENTER;
   private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
 
   static {
@@ -47,7 +46,7 @@ public final class ReactorNettySingletons {
         new ReactorNettyNetClientAttributesGetter();
 
     INSTRUMENTER =
-        Instrumenter.<HttpClientConfig, HttpClientResponse>builder(
+        Instrumenter.<HttpClientRequest, HttpClientResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesGetter))
@@ -61,8 +60,7 @@ public final class ReactorNettySingletons {
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addOperationMetrics(HttpClientMetrics.get())
-            // headers are injected in ResponseReceiverInstrumenter
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+            .buildClientInstrumenter(HttpClientRequestHeadersSetter.INSTANCE);
 
     NettyClientInstrumenterFactory instrumenterFactory =
         new NettyClientInstrumenterFactory(
@@ -74,7 +72,7 @@ public final class ReactorNettySingletons {
     CONNECTION_INSTRUMENTER = instrumenterFactory.createConnectionInstrumenter();
   }
 
-  public static Instrumenter<HttpClientConfig, HttpClientResponse> instrumenter() {
+  public static Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter() {
     return INSTRUMENTER;
   }
 
