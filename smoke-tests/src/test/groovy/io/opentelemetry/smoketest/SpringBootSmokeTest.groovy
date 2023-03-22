@@ -21,7 +21,7 @@ import static java.util.stream.Collectors.toSet
 class SpringBootSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20230320.4472351571"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20230321.4484174638"
   }
 
   @Override
@@ -98,7 +98,6 @@ class SpringBootSmokeTest extends SmokeTest {
     stopTarget()
 
     where:
-    // FIXME: add back jdk8 when jdk8 image is fixed
-    jdk << [11, 17, 19]
+    jdk << [8, 11, 17, 19]
   }
 }
