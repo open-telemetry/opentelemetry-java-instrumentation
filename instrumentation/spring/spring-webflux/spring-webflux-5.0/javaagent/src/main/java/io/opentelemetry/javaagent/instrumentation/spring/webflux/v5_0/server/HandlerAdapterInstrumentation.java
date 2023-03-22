@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.WebfluxSingletons.httpRouteGetter;
 import static io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.WebfluxSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -17,16 +16,19 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
+import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.util.pattern.PathPattern;
 
 public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
@@ -65,8 +67,17 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
       Context parentContext = Context.current();
 
-      HttpRouteHolder.updateHttpRoute(
-          parentContext, HttpRouteSource.CONTROLLER, httpRouteGetter(), exchange);
+      Span serverSpan = LocalRootSpan.fromContextOrNull(parentContext);
+
+      PathPattern bestPattern =
+          exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+      if (serverSpan != null && bestPattern != null) {
+        String spanName = ServletContextPath.prepend(Context.current(), bestPattern.toString());
+        serverSpan.updateName(spanName);
+      }
+
+//      HttpRouteHolder.updateHttpRoute(
+//          parentContext, HttpRouteSource.CONTROLLER, httpRouteGetter(), exchange);
 
       if (handler == null) {
         return;
