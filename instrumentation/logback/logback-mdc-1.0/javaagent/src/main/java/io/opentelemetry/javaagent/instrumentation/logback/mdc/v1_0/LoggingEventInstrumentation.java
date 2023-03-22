@@ -88,9 +88,8 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         // (Java 6 related errors are observed) so relying on for loop instead
         for (Map.Entry<String, BaggageEntry> entry : baggage.asMap().entrySet()) {
           spanContextData.put(
-              entry.getKey(),
               // prefix all baggage values to avoid clashes with existing context
-              "baggage." + entry.getValue().getValue());
+              "baggage." + entry.getKey(), entry.getValue().getValue());
         }
       }
 
