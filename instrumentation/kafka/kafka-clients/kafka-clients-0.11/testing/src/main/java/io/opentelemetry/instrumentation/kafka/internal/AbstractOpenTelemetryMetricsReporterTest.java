@@ -33,7 +33,9 @@ import java.util.Set;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.KafkaConsumerAccess;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.KafkaProducerAccess;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.MetricName;
@@ -133,6 +135,22 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
         TestMetricsReporter.class.getName(),
         (o, o2) -> o + "," + o2);
     return consumerConfig;
+  }
+
+  @Test
+  void noDuplicateMetricsReporter() {
+    List<MetricsReporter> producerMetricsReporters =
+        KafkaProducerAccess.getMetricsReporters(producer);
+    assertThat(countOpenTelemetryMetricsReporters(producerMetricsReporters)).isEqualTo(1);
+    List<MetricsReporter> consumerMetricsReporters =
+        KafkaConsumerAccess.getMetricsReporters(consumer);
+    assertThat(countOpenTelemetryMetricsReporters(consumerMetricsReporters)).isEqualTo(1);
+  }
+
+  private static long countOpenTelemetryMetricsReporters(List<MetricsReporter> metricsReporters) {
+    return metricsReporters.stream()
+        .filter(reporter -> reporter.getClass().getName().endsWith("OpenTelemetryMetricsReporter"))
+        .count();
   }
 
   @Test
