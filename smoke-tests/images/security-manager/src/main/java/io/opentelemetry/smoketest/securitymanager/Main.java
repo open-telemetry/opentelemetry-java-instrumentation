@@ -19,6 +19,7 @@ public class Main {
     Tracer tracer = GlobalOpenTelemetry.get().getTracer("test-tracer");
     Span span = tracer.spanBuilder("test").startSpan();
     try (Scope ignore = span.makeCurrent()) {
+      // empty
     } finally {
       span.end();
     }
