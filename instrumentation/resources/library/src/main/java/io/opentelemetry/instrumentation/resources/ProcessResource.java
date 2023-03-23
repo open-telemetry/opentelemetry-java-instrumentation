@@ -12,6 +12,9 @@ import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /** Factory of a {@link Resource} which provides information about the current running process. */
 public final class ProcessResource {
@@ -69,9 +72,25 @@ public final class ProcessResource {
 
       attributes.put(ResourceAttributes.PROCESS_EXECUTABLE_PATH, executablePath.toString());
 
+      List<String> commandArgs = new ArrayList<>();
+      commandArgs.add(executablePath.toString());
+      commandArgs.addAll(runtime.getInputArguments()); // Only includes VM arguments
+      // sun.java.command doesn't seem to be well document or official, but there
+      // doesn't seem to be any better way to get this consistently without more complexity.
+      String javaCommand = System.getProperty("sun.java.command");
+      if (javaCommand != null) {
+        String[] args = javaCommand.split(" ");
+        commandArgs.addAll(Arrays.asList(args));
+      }
+      attributes.put(ResourceAttributes.PROCESS_COMMAND_ARGS, commandArgs);
+
+      // TODO: The following for command_line should be removed as command_args is preferred.
       StringBuilder commandLine = new StringBuilder(executablePath);
       for (String arg : runtime.getInputArguments()) {
         commandLine.append(' ').append(arg);
+      }
+      if (javaCommand != null) {
+        commandLine.append(' ').append(javaCommand);
       }
       attributes.put(ResourceAttributes.PROCESS_COMMAND_LINE, commandLine.toString());
     }

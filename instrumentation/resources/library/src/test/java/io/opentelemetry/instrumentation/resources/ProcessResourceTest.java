@@ -31,6 +31,9 @@ class ProcessResourceTest {
     assertThat(attributes.get(ResourceAttributes.PROCESS_EXECUTABLE_PATH)).matches(".*[/\\\\]java");
     assertThat(attributes.get(ResourceAttributes.PROCESS_COMMAND_LINE))
         .contains(attributes.get(ResourceAttributes.PROCESS_EXECUTABLE_PATH));
+    assertThat(attributes.get(ResourceAttributes.PROCESS_COMMAND_ARGS))
+        .contains(attributes.get(ResourceAttributes.PROCESS_EXECUTABLE_PATH))
+        .hasSizeGreaterThan(2);
   }
 
   @Test
@@ -45,6 +48,9 @@ class ProcessResourceTest {
         .matches(".*[/\\\\]java\\.exe");
     assertThat(attributes.get(ResourceAttributes.PROCESS_COMMAND_LINE))
         .contains(attributes.get(ResourceAttributes.PROCESS_EXECUTABLE_PATH));
+    assertThat(attributes.get(ResourceAttributes.PROCESS_COMMAND_ARGS))
+        .contains(attributes.get(ResourceAttributes.PROCESS_EXECUTABLE_PATH))
+        .hasSizeGreaterThan(2);
   }
 
   @Nested
