@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.AbstractReactorNettyHttpClientTest.USER_AGENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,6 +87,7 @@ class ReactorNettyBaseUrlOnlyTest {
             () ->
                 httpClient
                     .baseUrl(uri)
+                    .headers(h -> h.set("User-Agent", USER_AGENT))
                     .get()
                     .responseSingle(
                         (resp, content) -> {
@@ -109,7 +111,10 @@ class ReactorNettyBaseUrlOnlyTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_URL, uri + "/"),
+                            equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, USER_AGENT),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
+                            // TODO: that's probably not valid tho?
+                            equalTo(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 0),
                             satisfies(
                                 SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
                                 AbstractLongAssert::isNotNegative),
