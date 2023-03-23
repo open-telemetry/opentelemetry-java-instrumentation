@@ -139,6 +139,12 @@ public abstract class InstrumentationExtension
     testRunner.waitAndAssertSortedTraces(traceComparator, assertions);
   }
 
+  public final void waitAndAssertSortedTraces(
+      Comparator<List<SpanData>> traceComparator,
+      Iterable<? extends Consumer<TraceAssert>> assertions) {
+    testRunner.waitAndAssertSortedTraces(traceComparator, assertions);
+  }
+
   @SafeVarargs
   @SuppressWarnings("varargs")
   public final void waitAndAssertTracesWithoutScopeVersionVerification(

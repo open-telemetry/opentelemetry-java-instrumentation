@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
@@ -255,7 +256,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     assertThat(responseCode).isEqualTo(200);
 
     if (options.isLowLevelInstrumentation()) {
-      testing.waitAndAssertTraces(
+      testing.waitAndAssertSortedTraces(
+          comparingRootSpanAttribute(SemanticAttributes.HTTP_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -294,7 +296,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     assertThat(responseCode).isEqualTo(200);
 
     if (options.isLowLevelInstrumentation()) {
-      testing.waitAndAssertTraces(
+      testing.waitAndAssertSortedTraces(
+          comparingRootSpanAttribute(SemanticAttributes.HTTP_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -352,7 +355,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     Throwable clientError = options.getClientSpanErrorMapper().apply(uri, ex);
 
     if (options.isLowLevelInstrumentation()) {
-      testing.waitAndAssertTraces(
+      testing.waitAndAssertSortedTraces(
+          comparingRootSpanAttribute(SemanticAttributes.HTTP_RESEND_COUNT),
           IntStream.range(0, options.getMaxRedirects())
               .mapToObj(i -> makeCircularRedirectAssertForLolLevelTrace(uri, method, i))
               .collect(Collectors.toList()));
@@ -398,7 +402,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     assertThat(responseCode).isEqualTo(200);
 
     if (options.isLowLevelInstrumentation()) {
-      testing.waitAndAssertTraces(
+      testing.waitAndAssertSortedTraces(
+          comparingRootSpanAttribute(SemanticAttributes.HTTP_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
