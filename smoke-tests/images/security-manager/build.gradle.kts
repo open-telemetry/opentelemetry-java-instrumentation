@@ -28,7 +28,6 @@ java {
 jib {
   from.image = "openjdk:$targetJDK"
   to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk$targetJDK-$tag"
-  container.ports = listOf("8080")
   container.mainClass = "io.opentelemetry.smoketest.securitymanager.Main"
   container.jvmFlags = listOf("-Djava.security.manager", "-Djava.security.policy=/app/resources/security.policy")
 }
