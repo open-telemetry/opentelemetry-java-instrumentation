@@ -63,8 +63,10 @@ abstract class HttpCommonAttributesExtractor<
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
 
-    internalSet(
-        attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestContentLength(request));
+    Long requestLength = requestContentLength(request);
+    if (requestLength != null && requestLength > 0) {
+      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestLength);
+    }
 
     if (response != null) {
       Integer statusCode = getter.getStatusCode(request, response, error);
@@ -72,10 +74,10 @@ abstract class HttpCommonAttributesExtractor<
         internalSet(attributes, SemanticAttributes.HTTP_STATUS_CODE, (long) statusCode);
       }
 
-      internalSet(
-          attributes,
-          SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-          responseContentLength(request, response));
+      Long responseLength = responseContentLength(request, response);
+      if (responseLength != null && responseLength > 0) {
+        internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, responseLength);
+      }
 
       for (String name : capturedResponseHeaders) {
         List<String> values = getter.getResponseHeader(request, response, name);

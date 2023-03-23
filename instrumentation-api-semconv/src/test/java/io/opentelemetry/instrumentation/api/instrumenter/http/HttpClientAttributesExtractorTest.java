@@ -57,7 +57,8 @@ class HttpClientAttributesExtractorTest {
     @Override
     public Integer getStatusCode(
         Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
-      return Integer.parseInt(response.get("statusCode"));
+      String statusCode = response.get("statusCode");
+      return statusCode == null ? null : Integer.parseInt(statusCode);
     }
 
     @Override
@@ -291,6 +292,25 @@ class HttpClientAttributesExtractorTest {
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
     extractor.onEnd(attributes, Context.root(), request, null, null);
+    assertThat(attributes.build()).isEmpty();
+  }
+
+  @Test
+  void emptyBodies() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.content-length", "0");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("header.content-length", "-1");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.builder(
+                new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
+            .build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, response, null);
     assertThat(attributes.build()).isEmpty();
   }
 }
