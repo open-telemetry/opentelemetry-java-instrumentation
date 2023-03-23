@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.bootstrap;
 import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.security.PrivilegedExceptionAction;
 import javax.annotation.Nullable;
 
@@ -53,9 +52,10 @@ public final class AgentInitializer {
         });
   }
 
+  @SuppressWarnings({"deprecation", "removal"}) // AccessController is deprecated
   private static void execute(PrivilegedExceptionAction<Void> action) throws Exception {
-    if (System.getSecurityManager() != null && AccessControllerInvoker.canInvoke()) {
-      AccessControllerInvoker.invoke(action);
+    if (System.getSecurityManager() != null) {
+      java.security.AccessController.doPrivileged(action);
     } else {
       action.run();
     }
@@ -147,31 +147,4 @@ public final class AgentInitializer {
   }
 
   private AgentInitializer() {}
-
-  // using java.security.AccessController directly causes build to fail due to warnings about
-  // using a terminally deprecated class
-  private static class AccessControllerInvoker {
-    private static final Method doPrivilegedMethod = getDoPrivilegedMethod();
-
-    private static Method getDoPrivilegedMethod() {
-      try {
-        Class<?> clazz = Class.forName("java.security.AccessController");
-        return clazz.getMethod("doPrivileged", PrivilegedExceptionAction.class);
-      } catch (Exception exception) {
-        return null;
-      }
-    }
-
-    static boolean canInvoke() {
-      return doPrivilegedMethod != null;
-    }
-
-    static void invoke(PrivilegedExceptionAction<?> action) {
-      try {
-        doPrivilegedMethod.invoke(null, action);
-      } catch (Exception exception) {
-        throw new IllegalStateException(exception);
-      }
-    }
-  }
 }
