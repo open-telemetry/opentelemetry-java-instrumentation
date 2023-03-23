@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.smoketest.securitymanager;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -15,7 +20,7 @@ public class Main {
     Span span = tracer.spanBuilder("test").startSpan();
     try (Scope ignore = span.makeCurrent()) {
     } finally {
-       span.end();
+      span.end();
     }
     System.out.println("completed successfully");
   }
