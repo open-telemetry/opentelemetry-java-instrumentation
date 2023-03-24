@@ -69,7 +69,7 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
         attributes.put(SemanticAttributes.PEER_SERVICE, sockPeerService);
       }
     }
-  }
+
   @Nullable
   private String mapToPeerService(String endpoint) {
     if (endpoint == null) {
