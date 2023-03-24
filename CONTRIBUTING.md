@@ -36,6 +36,14 @@ and then you can find the java agent artifact at
 
 `javaagent/build/libs/opentelemetry-javaagent-<version>.jar`.
 
+To simplify local development, you can remove the version number from the build product. This allows
+the file name to stay consistent across versions. To do so, add the following to
+`~/.gradle/gradle.properties`.
+
+```properties
+removeJarVersionNumbers=true
+```
+
 ## IntelliJ setup and troubleshooting
 
 See [IntelliJ setup and troubleshooting](docs/contributing/intellij-setup-and-troubleshooting.md)
