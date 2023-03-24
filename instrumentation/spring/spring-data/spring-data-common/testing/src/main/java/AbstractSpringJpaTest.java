@@ -74,7 +74,7 @@ public abstract class AbstractSpringJpaTest<
             span ->
                 span.hasName("INSERT test.JpaCustomer")
                     .hasKind(SpanKind.CLIENT)
-                    .hasParentSpanId(trace.getSpan(0).getSpanId())
+                    .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfyingExactly(
                         equalTo(SemanticAttributes.DB_SYSTEM, "hsqldb"),
                         equalTo(SemanticAttributes.DB_NAME, "test"),
@@ -111,7 +111,7 @@ public abstract class AbstractSpringJpaTest<
             span ->
                 span.hasName("INSERT test.JpaCustomer")
                     .hasKind(SpanKind.CLIENT)
-                    .hasParentSpanId(trace.getSpan(0).getSpanId())
+                    .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfyingExactly(
                         equalTo(SemanticAttributes.DB_SYSTEM, "hsqldb"),
                         equalTo(SemanticAttributes.DB_NAME, "test"),
@@ -148,7 +148,7 @@ public abstract class AbstractSpringJpaTest<
                     span ->
                         span.hasName("SELECT test.JpaCustomer")
                             .hasKind(SpanKind.CLIENT)
-                            .hasParentSpanId(trace.getSpan(0).getSpanId())
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.DB_SYSTEM, "hsqldb"),
                                 equalTo(SemanticAttributes.DB_NAME, "test"),
@@ -188,7 +188,7 @@ public abstract class AbstractSpringJpaTest<
                     span ->
                         span.hasName("SELECT test.JpaCustomer")
                             .hasKind(SpanKind.CLIENT)
-                            .hasParentSpanId(trace.getSpan(0).getSpanId())
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.DB_SYSTEM, "hsqldb"),
                                 equalTo(SemanticAttributes.DB_NAME, "test"),
@@ -202,7 +202,7 @@ public abstract class AbstractSpringJpaTest<
                     span ->
                         span.hasName("UPDATE test.JpaCustomer")
                             .hasKind(SpanKind.CLIENT)
-                            .hasParentSpanId(trace.getSpan(0).getSpanId())
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.DB_SYSTEM, "hsqldb"),
                                 equalTo(SemanticAttributes.DB_NAME, "test"),
@@ -230,7 +230,7 @@ public abstract class AbstractSpringJpaTest<
                     span ->
                         span.hasName("SELECT test.JpaCustomer")
                             .hasKind(SpanKind.CLIENT)
-                            .hasParentSpanId(trace.getSpan(0).getSpanId())
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.DB_SYSTEM, "hsqldb"),
                                 equalTo(SemanticAttributes.DB_NAME, "test"),
@@ -258,7 +258,7 @@ public abstract class AbstractSpringJpaTest<
                     span ->
                         span.hasName("SELECT test.JpaCustomer")
                             .hasKind(SpanKind.CLIENT)
-                            .hasParentSpanId(trace.getSpan(0).getSpanId())
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.DB_SYSTEM, "hsqldb"),
                                 equalTo(SemanticAttributes.DB_NAME, "test"),
@@ -272,7 +272,7 @@ public abstract class AbstractSpringJpaTest<
                     span ->
                         span.hasName("DELETE test.JpaCustomer")
                             .hasKind(SpanKind.CLIENT)
-                            .hasParentSpanId(trace.getSpan(0).getSpanId())
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.DB_SYSTEM, "hsqldb"),
                                 equalTo(SemanticAttributes.DB_NAME, "test"),
@@ -307,7 +307,7 @@ public abstract class AbstractSpringJpaTest<
                     span ->
                         span.hasName("SELECT test.JpaCustomer")
                             .hasKind(SpanKind.CLIENT)
-                            .hasParentSpanId(trace.getSpan(0).getSpanId())
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.DB_SYSTEM, "hsqldb"),
                                 equalTo(SemanticAttributes.DB_NAME, "test"),
