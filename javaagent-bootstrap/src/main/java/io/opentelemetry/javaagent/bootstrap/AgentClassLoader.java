@@ -69,6 +69,10 @@ public class AgentClassLoader extends URLClassLoader {
   private final boolean isSecurityManagerSupportEnabled;
   private final Manifest manifest;
 
+  public AgentClassLoader(File javaagentFile, String internalJarFileName) {
+    this(javaagentFile, internalJarFileName, false);
+  }
+
   /**
    * Construct a new AgentClassLoader.
    *
