@@ -22,7 +22,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public abstract class AbstractSpringJpaTest<ENTITY, REPOSITORY extends JpaRepository<ENTITY, Long>> {
+public abstract class AbstractSpringJpaTest<
+    ENTITY, REPOSITORY extends JpaRepository<ENTITY, Long>> {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

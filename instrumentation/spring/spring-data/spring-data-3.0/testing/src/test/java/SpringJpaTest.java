@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import java.util.List;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import spring.jpa.JpaCustomer;
 import spring.jpa.JpaCustomerRepository;
 import spring.jpa.JpaPersistenceConfig;
-import java.util.List;
 
 public class SpringJpaTest extends AbstractSpringJpaTest<JpaCustomer, JpaCustomerRepository> {
 
@@ -33,7 +33,8 @@ public class SpringJpaTest extends AbstractSpringJpaTest<JpaCustomer, JpaCustome
 
   @Override
   JpaCustomerRepository repository() {
-    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(JpaPersistenceConfig.class);
+    AnnotationConfigApplicationContext context =
+        new AnnotationConfigApplicationContext(JpaPersistenceConfig.class);
     JpaCustomerRepository repo = context.getBean(JpaCustomerRepository.class);
 
     // when Spring JPA sets up, it issues metadata queries -- clear those traces
@@ -51,5 +52,4 @@ public class SpringJpaTest extends AbstractSpringJpaTest<JpaCustomer, JpaCustome
   List<JpaCustomer> findSpecialCustomers(JpaCustomerRepository repository) {
     return repository.findSpecialCustomers();
   }
-
 }
