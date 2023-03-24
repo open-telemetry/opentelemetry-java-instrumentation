@@ -10,6 +10,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpMethodBase;
 
 final class ApacheHttpClientNetAttributesGetter
     implements NetClientAttributesGetter<HttpMethod, HttpMethod> {
@@ -17,6 +18,20 @@ final class ApacheHttpClientNetAttributesGetter
   @Override
   public String getTransport(HttpMethod request, @Nullable HttpMethod response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
+  }
+
+  @Override
+  public String getProtocolName(HttpMethod request, @Nullable HttpMethod response) {
+    return "http";
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(HttpMethod request, @Nullable HttpMethod response) {
+    if (request instanceof HttpMethodBase) {
+      return ((HttpMethodBase) request).isHttp11() ? "1.1" : "1.0";
+    }
+    return null;
   }
 
   @Override

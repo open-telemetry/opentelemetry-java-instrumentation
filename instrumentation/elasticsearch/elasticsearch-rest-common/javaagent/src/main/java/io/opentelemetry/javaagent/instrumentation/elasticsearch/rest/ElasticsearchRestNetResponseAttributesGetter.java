@@ -19,6 +19,18 @@ final class ElasticsearchRestNetResponseAttributesGetter
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
+  @Nullable
+  @Override
+  public String getProtocolName(ElasticsearchRestRequest request, @Nullable Response response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(ElasticsearchRestRequest request, @Nullable Response response) {
+    return null;
+  }
+
   @Override
   @Nullable
   public String getPeerName(ElasticsearchRestRequest request) {

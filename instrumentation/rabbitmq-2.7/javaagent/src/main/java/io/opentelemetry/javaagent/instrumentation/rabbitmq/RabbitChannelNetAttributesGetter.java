@@ -20,6 +20,18 @@ public class RabbitChannelNetAttributesGetter
 
   @Nullable
   @Override
+  public String getProtocolName(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getPeerName(ChannelAndMethod channelAndMethod) {
     return null;
   }

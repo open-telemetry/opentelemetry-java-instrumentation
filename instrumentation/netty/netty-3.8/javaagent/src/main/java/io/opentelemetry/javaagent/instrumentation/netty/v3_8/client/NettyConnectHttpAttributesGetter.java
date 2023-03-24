@@ -24,13 +24,6 @@ enum NettyConnectHttpAttributesGetter
 
   @Nullable
   @Override
-  public String getFlavor(
-      NettyConnectionRequest nettyConnectionRequest, @Nullable Channel channel) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getMethod(NettyConnectionRequest nettyConnectionRequest) {
     return null;
   }

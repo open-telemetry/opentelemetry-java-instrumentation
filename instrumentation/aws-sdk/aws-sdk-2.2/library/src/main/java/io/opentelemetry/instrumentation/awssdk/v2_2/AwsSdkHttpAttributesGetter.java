@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -23,12 +22,6 @@ class AwsSdkHttpAttributesGetter
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
     return httpRequest.getUri().toString();
-  }
-
-  @Override
-  @Nullable
-  public String getFlavor(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
-    return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.ratpack.v1_7;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 import ratpack.http.client.HttpResponse;
@@ -20,11 +19,6 @@ enum RatpackHttpClientAttributesGetter
   @Override
   public String getUrl(RequestSpec requestSpec) {
     return requestSpec.getUri().toString();
-  }
-
-  @Override
-  public String getFlavor(RequestSpec requestSpec, @Nullable HttpResponse httpResponse) {
-    return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Nullable

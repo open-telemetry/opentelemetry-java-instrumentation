@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -890,6 +891,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (attrs.get(SemanticAttributes.NET_TRANSPORT) != null) {
                 assertThat(attrs).containsEntry(SemanticAttributes.NET_TRANSPORT, IP_TCP);
               }
+              if (httpClientAttributes.contains(NetAttributes.NET_PROTOCOL_NAME)) {
+                assertThat(attrs).containsEntry(NetAttributes.NET_PROTOCOL_NAME, "http");
+              }
+              if (httpClientAttributes.contains(NetAttributes.NET_PROTOCOL_VERSION)) {
+                // TODO(anuraaga): Support HTTP/2
+                assertThat(attrs).containsEntry(NetAttributes.NET_PROTOCOL_VERSION, "1.1");
+              }
               if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
                 assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
               }
@@ -935,13 +943,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_METHOD)) {
                 assertThat(attrs).containsEntry(SemanticAttributes.HTTP_METHOD, method);
               }
-              if (httpClientAttributes.contains(SemanticAttributes.HTTP_FLAVOR)) {
-                // TODO(anuraaga): Support HTTP/2
-                assertThat(attrs)
-                    .containsEntry(
-                        SemanticAttributes.HTTP_FLAVOR,
-                        SemanticAttributes.HttpFlavorValues.HTTP_1_1);
-              }
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_USER_AGENT)) {
                 String userAgent = options.getUserAgent();
                 if (userAgent != null || attrs.get(SemanticAttributes.HTTP_USER_AGENT) != null) {
@@ -986,10 +987,12 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   }
 
   protected Set<AttributeKey<?>> httpAttributes(URI uri) {
+    // FIXME (mateusz) why is this not the same as HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES?
     Set<AttributeKey<?>> attributes = new HashSet<>();
+    attributes.add(NetAttributes.NET_PROTOCOL_NAME);
+    attributes.add(NetAttributes.NET_PROTOCOL_VERSION);
     attributes.add(SemanticAttributes.HTTP_URL);
     attributes.add(SemanticAttributes.HTTP_METHOD);
-    attributes.add(SemanticAttributes.HTTP_FLAVOR);
     attributes.add(SemanticAttributes.HTTP_USER_AGENT);
     return attributes;
   }

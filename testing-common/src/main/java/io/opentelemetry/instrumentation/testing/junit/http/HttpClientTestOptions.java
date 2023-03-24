@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.Arrays;
@@ -24,11 +25,12 @@ public abstract class HttpClientTestOptions {
       Collections.unmodifiableSet(
           new HashSet<>(
               Arrays.asList(
+                  NetAttributes.NET_PROTOCOL_NAME,
+                  NetAttributes.NET_PROTOCOL_VERSION,
                   SemanticAttributes.NET_PEER_NAME,
                   SemanticAttributes.NET_PEER_PORT,
                   SemanticAttributes.HTTP_URL,
                   SemanticAttributes.HTTP_METHOD,
-                  SemanticAttributes.HTTP_FLAVOR,
                   SemanticAttributes.HTTP_USER_AGENT)));
 
   public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =

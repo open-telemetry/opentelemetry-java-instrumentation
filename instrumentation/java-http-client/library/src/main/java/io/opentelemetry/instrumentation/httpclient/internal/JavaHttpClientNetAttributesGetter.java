@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.httpclient.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import javax.annotation.Nullable;
@@ -19,19 +20,46 @@ public class JavaHttpClientNetAttributesGetter
     implements NetClientAttributesGetter<HttpRequest, HttpResponse<?>> {
 
   @Override
-  public String getTransport(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
+  public String getTransport(HttpRequest request, @Nullable HttpResponse<?> response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
-  @Override
   @Nullable
-  public String getPeerName(HttpRequest httpRequest) {
-    return httpRequest.uri().getHost();
+  @Override
+  public String getProtocolName(HttpRequest request, @Nullable HttpResponse<?> response) {
+    return "http";
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(HttpRequest request, @Nullable HttpResponse<?> response) {
+    HttpClient.Version version;
+    if (response != null) {
+      version = response.version();
+    } else {
+      version = request.version().orElse(null);
+    }
+    if (version == null) {
+      return null;
+    }
+    switch (version) {
+      case HTTP_1_1:
+        return "1.1";
+      case HTTP_2:
+        return "2.0";
+    }
+    return null;
   }
 
   @Override
   @Nullable
-  public Integer getPeerPort(HttpRequest httpRequest) {
-    return httpRequest.uri().getPort();
+  public String getPeerName(HttpRequest request) {
+    return request.uri().getHost();
+  }
+
+  @Override
+  @Nullable
+  public Integer getPeerPort(HttpRequest request) {
+    return request.uri().getPort();
   }
 }

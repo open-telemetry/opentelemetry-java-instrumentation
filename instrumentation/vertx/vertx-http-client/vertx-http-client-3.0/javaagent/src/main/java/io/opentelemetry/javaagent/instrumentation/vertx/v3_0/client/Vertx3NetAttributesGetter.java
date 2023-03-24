@@ -23,6 +23,19 @@ enum Vertx3NetAttributesGetter
 
   @Nullable
   @Override
+  public String getProtocolName(HttpClientRequest request, @Nullable HttpClientResponse response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(
+      HttpClientRequest request, @Nullable HttpClientResponse response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getPeerName(HttpClientRequest request) {
     return null;
   }

@@ -21,6 +21,18 @@ final class JedisNetAttributesGetter
 
   @Nullable
   @Override
+  public String getProtocolName(JedisRequest jedisRequest, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(JedisRequest jedisRequest, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getPeerName(JedisRequest jedisRequest) {
     return jedisRequest.getConnection().getHost();
   }

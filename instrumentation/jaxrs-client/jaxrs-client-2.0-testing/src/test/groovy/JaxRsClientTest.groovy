@@ -115,7 +115,6 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
             "$SemanticAttributes.HTTP_URL" "${uri}"
             "$SemanticAttributes.HTTP_METHOD" method
             "$SemanticAttributes.HTTP_STATUS_CODE" statusCode
-            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" { it == null || it instanceof String }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }

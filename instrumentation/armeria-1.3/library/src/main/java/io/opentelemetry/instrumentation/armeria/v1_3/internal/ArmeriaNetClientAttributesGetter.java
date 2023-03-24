@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.armeria.v1_3.internal;
 
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.RequestContext;
+import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -24,6 +25,17 @@ public final class ArmeriaNetClientAttributesGetter
   @Override
   public String getTransport(RequestContext ctx, @Nullable RequestLog requestLog) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
+  }
+
+  @Override
+  public String getProtocolName(RequestContext ctx, @Nullable RequestLog requestLog) {
+    return "http";
+  }
+
+  @Override
+  public String getProtocolVersion(RequestContext ctx, @Nullable RequestLog requestLog) {
+    SessionProtocol protocol = ctx.sessionProtocol();
+    return protocol.isMultiplex() ? "2.0" : "1.1";
   }
 
   @Nullable

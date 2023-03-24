@@ -17,6 +17,18 @@ final class LettuceConnectNetAttributesGetter implements NetClientAttributesGett
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getProtocolName(RedisURI redisURI, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(RedisURI redisURI, @Nullable Void unused) {
+    return null;
+  }
+
   @Override
   public String getPeerName(RedisURI redisUri) {
     return redisUri.getHost();

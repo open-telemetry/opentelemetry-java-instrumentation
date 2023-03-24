@@ -40,7 +40,7 @@ class AkkaHttpServerAttributesGetter
 
   @Override
   public String getFlavor(HttpRequest request) {
-    return AkkaHttpUtil.flavor(request);
+    return AkkaHttpUtil.httpVersion(request);
   }
 
   @Override

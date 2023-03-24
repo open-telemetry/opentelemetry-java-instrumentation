@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -28,6 +29,20 @@ class InetSocketAddressNetClientAttributesGetterTest {
             @Override
             public String getTransport(InetSocketAddress request, InetSocketAddress response) {
               return SemanticAttributes.NetTransportValues.IP_TCP;
+            }
+
+            @Nullable
+            @Override
+            public String getProtocolName(
+                InetSocketAddress address, @Nullable InetSocketAddress response) {
+              return null;
+            }
+
+            @Nullable
+            @Override
+            public String getProtocolVersion(
+                InetSocketAddress address, @Nullable InetSocketAddress response) {
+              return null;
             }
 
             @Override

@@ -20,6 +20,19 @@ class AwsSdkNetAttributesGetter
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
+  @Nullable
+  @Override
+  public String getProtocolName(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(
+      ExecutionAttributes request, @Nullable SdkHttpResponse response) {
+    return null;
+  }
+
   @Override
   @Nullable
   public String getPeerName(ExecutionAttributes request) {

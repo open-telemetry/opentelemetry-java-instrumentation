@@ -25,6 +25,18 @@ public final class WebClientNetAttributesGetter
 
   @Nullable
   @Override
+  public String getProtocolName(ClientRequest request, @Nullable ClientResponse response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(ClientRequest request, @Nullable ClientResponse response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getPeerName(ClientRequest request) {
     return request.url().getHost();
   }

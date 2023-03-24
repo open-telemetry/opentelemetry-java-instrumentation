@@ -19,6 +19,18 @@ final class GoogleHttpClientNetAttributesGetter
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
+  @Nullable
+  @Override
+  public String getProtocolName(HttpRequest request, @Nullable HttpResponse response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(HttpRequest request, @Nullable HttpResponse response) {
+    return null;
+  }
+
   @Override
   @Nullable
   public String getPeerName(HttpRequest request) {

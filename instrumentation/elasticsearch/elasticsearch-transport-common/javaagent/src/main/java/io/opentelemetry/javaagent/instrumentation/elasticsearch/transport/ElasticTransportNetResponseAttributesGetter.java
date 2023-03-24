@@ -18,6 +18,20 @@ public class ElasticTransportNetResponseAttributesGetter
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getProtocolName(
+      ElasticTransportRequest request, @Nullable ActionResponse actionResponse) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(
+      ElasticTransportRequest request, @Nullable ActionResponse actionResponse) {
+    return null;
+  }
+
   @Override
   @Nullable
   public String getPeerName(ElasticTransportRequest request) {

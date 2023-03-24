@@ -16,6 +16,18 @@ final class JedisNetAttributesGetter implements NetClientAttributesGetter<JedisR
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getProtocolName(JedisRequest jedisRequest, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(JedisRequest jedisRequest, @Nullable Void unused) {
+    return null;
+  }
+
   @Override
   public String getPeerName(JedisRequest request) {
     return request.getConnection().getHost();

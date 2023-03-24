@@ -22,6 +22,18 @@ public final class JdbcNetAttributesGetter implements NetClientAttributesGetter<
 
   @Nullable
   @Override
+  public String getProtocolName(DbRequest dbRequest, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(DbRequest dbRequest, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getPeerName(DbRequest request) {
     return request.getDbInfo().getHost();
   }

@@ -23,6 +23,25 @@ public class JettyHttpClientNetAttributesGetter
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
+  @Nullable
+  @Override
+  public String getProtocolName(Request request, @Nullable Response response) {
+    return "http";
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(Request request, @Nullable Response response) {
+    if (response == null || response.getVersion() == null) {
+      return null;
+    }
+    String version = response.getVersion().toString();
+    if (version.startsWith("HTTP/")) {
+      version = version.substring("HTTP/".length());
+    }
+    return version;
+  }
+
   @Override
   @Nullable
   public String getPeerName(Request request) {

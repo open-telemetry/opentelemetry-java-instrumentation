@@ -22,6 +22,18 @@ final class LettuceNetAttributesGetter
 
   @Nullable
   @Override
+  public String getProtocolName(OpenTelemetryEndpoint endpoint, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(OpenTelemetryEndpoint endpoint, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getPeerName(OpenTelemetryEndpoint openTelemetryEndpoint) {
     return null;
   }

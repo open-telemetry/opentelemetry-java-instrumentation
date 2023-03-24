@@ -18,6 +18,18 @@ class KubernetesNetAttributesGetter implements NetClientAttributesGetter<Request
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
+  @Nullable
+  @Override
+  public String getProtocolName(Request request, @Nullable ApiResponse<?> response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(Request request, @Nullable ApiResponse<?> response) {
+    return null;
+  }
+
   @Override
   public String getPeerName(Request request) {
     return request.url().host();

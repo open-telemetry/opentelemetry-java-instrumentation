@@ -23,6 +23,19 @@ public class CouchbaseNetAttributesGetter
 
   @Nullable
   @Override
+  public String getProtocolName(CouchbaseRequestInfo couchbaseRequestInfo, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(
+      CouchbaseRequestInfo couchbaseRequestInfo, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getPeerName(CouchbaseRequestInfo couchbaseRequest) {
     return null;
   }

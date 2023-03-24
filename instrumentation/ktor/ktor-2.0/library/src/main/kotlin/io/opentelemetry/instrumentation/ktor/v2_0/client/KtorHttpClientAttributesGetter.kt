@@ -14,9 +14,6 @@ internal object KtorHttpClientAttributesGetter : HttpClientAttributesGetter<Http
   override fun getUrl(request: HttpRequestData) =
     request.url.toString()
 
-  override fun getFlavor(request: HttpRequestData, response: HttpResponse?) =
-    null
-
   override fun getMethod(request: HttpRequestData) =
     request.method.value
 

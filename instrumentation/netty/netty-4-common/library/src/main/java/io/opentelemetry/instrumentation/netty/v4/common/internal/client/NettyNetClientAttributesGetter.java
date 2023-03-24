@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.net.InetSocketAddress;
@@ -23,6 +24,19 @@ final class NettyNetClientAttributesGetter
   public String getTransport(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return requestAndChannel.channel() instanceof DatagramChannel ? IP_UDP : IP_TCP;
+  }
+
+  @Override
+  public String getProtocolName(
+      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
+    return requestAndChannel.request().getProtocolVersion().protocolName();
+  }
+
+  @Override
+  public String getProtocolVersion(
+      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
+    HttpVersion version = requestAndChannel.request().getProtocolVersion();
+    return version.majorVersion() + "." + version.minorVersion();
   }
 
   @Nullable

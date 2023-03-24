@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpVersion;
 import io.vertx.core.net.SocketAddress;
 import javax.annotation.Nullable;
 
@@ -18,6 +19,30 @@ final class Vertx4NetAttributesGetter
   @Override
   public String getTransport(HttpClientRequest request, @Nullable HttpClientResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
+  }
+
+  @Override
+  public String getProtocolName(HttpClientRequest request, @Nullable HttpClientResponse response) {
+    return "http";
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(
+      HttpClientRequest request, @Nullable HttpClientResponse response) {
+    HttpVersion version = request.version();
+    if (version == null) {
+      return null;
+    }
+    switch (version) {
+      case HTTP_1_0:
+        return "1.0";
+      case HTTP_1_1:
+        return "1.1";
+      case HTTP_2:
+        return "2.0";
+    }
+    return null;
   }
 
   @Nullable
