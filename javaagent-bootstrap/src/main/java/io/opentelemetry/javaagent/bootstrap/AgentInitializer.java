@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
+import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import javax.annotation.Nullable;
 
@@ -23,6 +25,7 @@ public final class AgentInitializer {
 
   @Nullable private static ClassLoader agentClassLoader = null;
   @Nullable private static AgentStarter agentStarter = null;
+  private static boolean isSecurityManagerSupportEnabled = false;
 
   public static void initialize(Instrumentation inst, File javaagentFile, boolean fromPremain)
       throws Exception {
@@ -35,6 +38,8 @@ public final class AgentInitializer {
     if (AgentInitializer.class.getClassLoader() != null) {
       throw new IllegalStateException("agent initializer should be loaded in boot loader");
     }
+
+    isSecurityManagerSupportEnabled = isSecurityManagerSupportEnabled();
 
     // this call deliberately uses anonymous class instead of lambda because using lambdas too
     // early on early jdk8 (see isEarlyOracle18 method) causes jvm to crash. See CrashEarlyJdk8Test.
@@ -52,13 +57,39 @@ public final class AgentInitializer {
         });
   }
 
-  @SuppressWarnings({"deprecation", "removal"}) // AccessController is deprecated
   private static void execute(PrivilegedExceptionAction<Void> action) throws Exception {
-    if (System.getSecurityManager() != null) {
-      java.security.AccessController.doPrivileged(action);
+    if (isSecurityManagerSupportEnabled && System.getSecurityManager() != null) {
+      doPrivilegedExceptionAction(action);
     } else {
       action.run();
     }
+  }
+
+  private static boolean isSecurityManagerSupportEnabled() {
+    return getBoolean("otel.javaagent.experimental.security-manager.enabled", false);
+  }
+
+  private static boolean getBoolean(String property, boolean defaultValue) {
+    // this call deliberately uses anonymous class instead of lambda because using lambdas too
+    // early on early jdk8 (see isEarlyOracle18 method) causes jvm to crash. See CrashEarlyJdk8Test.
+    return doPrivileged(
+        new PrivilegedAction<Boolean>() {
+          @Override
+          public Boolean run() {
+            return ConfigPropertiesUtil.getBoolean(property, defaultValue);
+          }
+        });
+  }
+
+  @SuppressWarnings({"deprecation", "removal"}) // AccessController is deprecated
+  private static <T> T doPrivilegedExceptionAction(PrivilegedExceptionAction<T> action)
+      throws Exception {
+    return java.security.AccessController.doPrivileged(action);
+  }
+
+  @SuppressWarnings({"deprecation", "removal"}) // AccessController is deprecated
+  private static <T> T doPrivileged(PrivilegedAction<T> action) {
+    return java.security.AccessController.doPrivileged(action);
   }
 
   /**
@@ -133,7 +164,7 @@ public final class AgentInitializer {
    * @return Agent Classloader
    */
   private static ClassLoader createAgentClassLoader(String innerJarFilename, File javaagentFile) {
-    return new AgentClassLoader(javaagentFile, innerJarFilename);
+    return new AgentClassLoader(javaagentFile, innerJarFilename, isSecurityManagerSupportEnabled);
   }
 
   private static AgentStarter createAgentStarter(

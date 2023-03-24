@@ -40,14 +40,20 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 @SuppressWarnings({"unused", "SystemOut"})
 public class ExtensionClassLoader extends URLClassLoader {
   public static final String EXTENSIONS_CONFIG = "otel.javaagent.extensions";
-  private static final Permissions ALL_PERMISSIONS = new Permissions();
+  // if this class was defined with all permissions then also define classes in this class loader
+  // with all permissions
+  // this class is defined with all permissions when security manager support is enabled
+  private static final boolean addAllPermissions =
+      ExtensionClassLoader.class
+          .getProtectionDomain()
+          .getPermissions()
+          .implies(new AllPermission());
 
   // NOTE it's important not to use logging in this class, because this class is used before logging
   // is initialized
 
   static {
     ClassLoader.registerAsParallelCapable();
-    ALL_PERMISSIONS.add(new AllPermission());
   }
 
   public static ClassLoader getInstance(ClassLoader parent, File javaagentFile) {
@@ -187,7 +193,12 @@ public class ExtensionClassLoader extends URLClassLoader {
 
   @Override
   protected PermissionCollection getPermissions(CodeSource codesource) {
-    return ALL_PERMISSIONS;
+    if (addAllPermissions) {
+      Permissions permissions = new Permissions();
+      permissions.add(new AllPermission());
+      return permissions;
+    }
+    return super.getPermissions(codesource);
   }
 
   private ExtensionClassLoader(URL[] urls, ClassLoader parent) {

@@ -14,8 +14,14 @@ import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContaine
 @IgnoreIf({ useWindowsContainers() })
 class SecurityManagerSmokeTest extends SmokeTest {
 
+  @Override
   protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk$jdk-20230323.4502979551"
+  }
+
+  @Override
+  protected Map<String, String> getExtraEnv() {
+    return Collections.singletonMap("OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_ENABLED", "true")
   }
 
   @Unroll

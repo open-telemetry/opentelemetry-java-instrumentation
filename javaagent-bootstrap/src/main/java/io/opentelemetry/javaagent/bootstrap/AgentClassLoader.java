@@ -19,8 +19,8 @@ import java.net.URLStreamHandler;
 import java.security.AllPermission;
 import java.security.CodeSource;
 import java.security.Permission;
+import java.security.PermissionCollection;
 import java.security.Permissions;
-import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
@@ -66,7 +66,7 @@ public class AgentClassLoader extends URLClassLoader {
   private final URL jarBase;
   private final String jarEntryPrefix;
   private final CodeSource codeSource;
-  private final ProtectionDomain protectionDomain;
+  private final boolean isSecurityManagerSupportEnabled;
   private final Manifest manifest;
 
   /**
@@ -74,8 +74,11 @@ public class AgentClassLoader extends URLClassLoader {
    *
    * @param javaagentFile Used for resource lookups.
    * @param internalJarFileName File name of the internal jar
+   * @param isSecurityManagerSupportEnabled Whether this class loader should define classes with all
+   *     permissions
    */
-  public AgentClassLoader(File javaagentFile, String internalJarFileName) {
+  public AgentClassLoader(
+      File javaagentFile, String internalJarFileName, boolean isSecurityManagerSupportEnabled) {
     super(new URL[] {}, getParentClassLoader());
     if (javaagentFile == null) {
       throw new IllegalArgumentException("Agent jar location should be set");
@@ -84,6 +87,7 @@ public class AgentClassLoader extends URLClassLoader {
       throw new IllegalArgumentException("Internal jar file name should be set");
     }
 
+    this.isSecurityManagerSupportEnabled = isSecurityManagerSupportEnabled;
     bootstrapProxy = new BootstrapClassLoaderProxy(this);
 
     jarEntryPrefix =
@@ -99,7 +103,6 @@ public class AgentClassLoader extends URLClassLoader {
       codeSource = new CodeSource(javaagentFile.toURI().toURL(), (Certificate[]) null);
       Permissions permissions = new Permissions();
       permissions.add(new AllPermission());
-      protectionDomain = new ProtectionDomain(codeSource, permissions);
       manifest = jarFile.getManifest();
     } catch (IOException e) {
       throw new IllegalStateException("Unable to open agent jar", e);
@@ -180,7 +183,18 @@ public class AgentClassLoader extends URLClassLoader {
   }
 
   public Class<?> defineClass(String name, byte[] bytes) {
-    return defineClass(name, bytes, 0, bytes.length, protectionDomain);
+    return defineClass(name, bytes, 0, bytes.length, codeSource);
+  }
+
+  @Override
+  protected PermissionCollection getPermissions(CodeSource codeSource) {
+    if (isSecurityManagerSupportEnabled) {
+      Permissions permissions = new Permissions();
+      permissions.add(new AllPermission());
+      return permissions;
+    }
+
+    return super.getPermissions(codeSource);
   }
 
   private byte[] getJarEntryBytes(JarEntry jarEntry) throws IOException {
