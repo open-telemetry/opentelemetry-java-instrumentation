@@ -80,7 +80,14 @@ public final class ProcessResource {
       String javaCommand = System.getProperty("sun.java.command");
       if (javaCommand != null) {
         String[] args = javaCommand.split(" ");
-        commandArgs.addAll(Arrays.asList(args));
+        if (args.length > 0) {
+          // TODO: add handling for windows paths.
+          if (args[0].startsWith("/")) {
+            // We are dealing with a `java -jar /path/to/some.jar` situation and need to add
+            commandArgs.add("-jar");
+          }
+          commandArgs.addAll(Arrays.asList(args));
+        }
       }
       attributes.put(ResourceAttributes.PROCESS_COMMAND_ARGS, commandArgs);
 
