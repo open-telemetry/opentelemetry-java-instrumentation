@@ -64,6 +64,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = Context.current();
+
       HttpRouteHolder.updateHttpRoute(
           parentContext, HttpRouteSource.CONTROLLER, httpRouteGetter(), exchange);
 
