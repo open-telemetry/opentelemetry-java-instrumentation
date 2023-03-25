@@ -1,11 +1,6 @@
 plugins {
-  id("otel.javaagent-instrumentation")
-}
-
-muzzle {
-  pass {
-    coreJdk()
-  }
+  id("otel.library-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 otelJava {
@@ -13,6 +8,5 @@ otelJava {
 }
 
 dependencies {
-  implementation(project(":instrumentation:java-http-client:library"))
   testImplementation(project(":instrumentation:java-http-client:testing"))
 }

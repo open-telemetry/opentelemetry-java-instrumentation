@@ -7,14 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.httpclient;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
+import io.opentelemetry.instrumentation.httpclient.internal.JdkHttpInstrumenterFactory;
+import io.opentelemetry.instrumentation.httpclient.internal.JdkHttpNetAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Arrays;
 
 public class JdkHttpClientSingletons {
 
@@ -24,25 +24,16 @@ public class JdkHttpClientSingletons {
   static {
     SETTER = new HttpHeadersSetter(GlobalOpenTelemetry.getPropagators());
 
-    JdkHttpAttributesGetter httpAttributesGetter = new JdkHttpAttributesGetter();
     JdkHttpNetAttributesGetter netAttributesGetter = new JdkHttpNetAttributesGetter();
 
     INSTRUMENTER =
-        Instrumenter.<HttpRequest, HttpResponse<?>>builder(
-                GlobalOpenTelemetry.get(),
-                "io.opentelemetry.java-http-client",
-                HttpSpanNameExtractor.create(httpAttributesGetter))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
-                    .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-                    .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-                    .build())
-            .addAttributesExtractor(
+        JdkHttpInstrumenterFactory.createInstrumenter(
+            GlobalOpenTelemetry.get(),
+            CommonConfig.get().getClientRequestHeaders(),
+            CommonConfig.get().getClientResponseHeaders(),
+            Arrays.asList(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
-            .addOperationMetrics(HttpClientMetrics.get())
-            .buildClientInstrumenter(SETTER);
+                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping())));
   }
 
   public static Instrumenter<HttpRequest, HttpResponse<?>> instrumenter() {

@@ -1,0 +1,153 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.httpclient.internal;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.io.IOException;
+import java.net.Authenticator;
+import java.net.CookieHandler;
+import java.net.ProxySelector;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.function.Function;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
+
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class OpenTelemetryClient extends HttpClient {
+  private final HttpClient client;
+  private final Instrumenter<HttpRequest, HttpResponse<?>> instrumenter;
+  private final HttpHeadersSetter headersSetter;
+
+  public OpenTelemetryClient(
+      HttpClient client,
+      Instrumenter<HttpRequest, HttpResponse<?>> instrumenter,
+      HttpHeadersSetter headersSetter) {
+    this.client = client;
+    this.instrumenter = instrumenter;
+    this.headersSetter = headersSetter;
+  }
+
+  @Override
+  public Optional<CookieHandler> cookieHandler() {
+    return client.cookieHandler();
+  }
+
+  @Override
+  public Optional<Duration> connectTimeout() {
+    return client.connectTimeout();
+  }
+
+  @Override
+  public Redirect followRedirects() {
+    return client.followRedirects();
+  }
+
+  @Override
+  public Optional<ProxySelector> proxy() {
+    return client.proxy();
+  }
+
+  @Override
+  public SSLContext sslContext() {
+    return client.sslContext();
+  }
+
+  @Override
+  public SSLParameters sslParameters() {
+    return client.sslParameters();
+  }
+
+  @Override
+  public Optional<Authenticator> authenticator() {
+    return client.authenticator();
+  }
+
+  @Override
+  public Version version() {
+    return client.version();
+  }
+
+  @Override
+  public Optional<Executor> executor() {
+    return client.executor();
+  }
+
+  @Override
+  public <T> HttpResponse<T> send(
+      HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
+      throws IOException, InterruptedException {
+    Context parentContext = Context.current();
+    if (request == null || !instrumenter.shouldStart(parentContext, request)) {
+      return client.send(request, responseBodyHandler);
+    }
+
+    HttpResponse<T> response = null;
+    Throwable error = null;
+    Context context = instrumenter.start(parentContext, request);
+    try (Scope scope = context.makeCurrent()) {
+      HttpRequestWrapper requestWrapper =
+          new HttpRequestWrapper(request, headersSetter.inject(request.headers()));
+
+      response = client.send(requestWrapper, responseBodyHandler);
+      instrumenter.end(context, request, response, null);
+    } catch (Throwable throwable) {
+      error = throwable;
+      throw throwable;
+    } finally {
+      instrumenter.end(context, request, response, error);
+    }
+
+    return response;
+  }
+
+  @Override
+  public <T> CompletableFuture<HttpResponse<T>> sendAsync(
+      HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler) {
+    return traceAsync(request, req -> client.sendAsync(req, responseBodyHandler));
+  }
+
+  @Override
+  public <T> CompletableFuture<HttpResponse<T>> sendAsync(
+      HttpRequest request,
+      HttpResponse.BodyHandler<T> responseBodyHandler,
+      HttpResponse.PushPromiseHandler<T> pushPromiseHandler) {
+    return traceAsync(
+        request, req -> client.sendAsync(req, responseBodyHandler, pushPromiseHandler));
+  }
+
+  private <T> CompletableFuture<HttpResponse<T>> traceAsync(
+      HttpRequest request, Function<HttpRequest, CompletableFuture<HttpResponse<T>>> action) {
+    Context parentContext = Context.current();
+    if (request == null || !instrumenter.shouldStart(parentContext, request)) {
+      return action.apply(request);
+    }
+
+    Context context = instrumenter.start(parentContext, request);
+    try (Scope scope = context.makeCurrent()) {
+      HttpRequestWrapper requestWrapper =
+          new HttpRequestWrapper(request, headersSetter.inject(request.headers()));
+
+      CompletableFuture<HttpResponse<T>> future = action.apply(requestWrapper);
+      future = future.whenComplete(new ResponseConsumer(instrumenter, context, request));
+      future = CompletableFutureWrapper.wrap(future, parentContext);
+      return future;
+    } catch (Throwable throwable) {
+      instrumenter.end(context, request, null, throwable);
+      throw throwable;
+    }
+  }
+}

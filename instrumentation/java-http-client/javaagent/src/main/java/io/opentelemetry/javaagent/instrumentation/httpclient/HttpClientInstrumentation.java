@@ -19,6 +19,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.httpclient.internal.CompletableFutureWrapper;
+import io.opentelemetry.instrumentation.httpclient.internal.ResponseConsumer;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -146,7 +148,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       if (throwable != null) {
         instrumenter().end(context, httpRequest, null, throwable);
       } else {
-        future = future.whenComplete(new ResponseConsumer(context, httpRequest));
+        future = future.whenComplete(new ResponseConsumer(instrumenter(), context, httpRequest));
         future = CompletableFutureWrapper.wrap(future, parentContext);
       }
     }
