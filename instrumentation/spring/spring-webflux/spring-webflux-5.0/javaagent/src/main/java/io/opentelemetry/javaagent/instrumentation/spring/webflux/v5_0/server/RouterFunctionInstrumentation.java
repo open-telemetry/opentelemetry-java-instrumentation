@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.WebfluxSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -15,6 +16,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -22,6 +25,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.reactive.function.server.HandlerFunction;
 import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 public class RouterFunctionInstrumentation implements TypeInstrumentation {
@@ -60,6 +64,26 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
    */
   @SuppressWarnings("unused")
   public static class RouteAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void methodEnter(
+        @Advice.Argument(0) ServerWebExchange exchange,
+        @Advice.Argument(1) Object handler,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+
+      if (handler == null) {
+        return;
+      }
+
+      Context parentContext = Context.current();
+      if (!instrumenter().shouldStart(parentContext, handler)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, handler);
+      scope = context.makeCurrent();
+    }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(

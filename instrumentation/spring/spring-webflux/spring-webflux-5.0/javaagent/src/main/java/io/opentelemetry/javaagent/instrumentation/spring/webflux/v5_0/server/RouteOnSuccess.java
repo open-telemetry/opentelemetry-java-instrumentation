@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -29,7 +30,8 @@ public class RouteOnSuccess implements Consumer<HandlerFunction<?>> {
 
   @Override
   public void accept(HandlerFunction<?> handler) {
-    HttpRouteHolder.updateHttpRoute(Context.current(), HttpRouteSource.CONTROLLER, route);
+    String httpRoute = ServletContextPath.prepend(Context.current(), route);
+    HttpRouteHolder.updateHttpRoute(Context.current(), HttpRouteSource.CONTROLLER, httpRoute);
   }
 
   private static String parsePredicateString(RouterFunction<?> routerFunction) {
