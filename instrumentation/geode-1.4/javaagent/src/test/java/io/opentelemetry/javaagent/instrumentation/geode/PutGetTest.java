@@ -50,28 +50,28 @@ class PutGetTest {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  void testPutAndGet(Object Key, Object Value) {
+  void testPutAndGet(Object key, Object value) {
     Object cacheValue =
         testing.runWithSpan(
             "someTrace",
             () -> {
               region.clear();
-              region.put(Key, Value);
-              return region.get(Key);
+              region.put(key, value);
+              return region.get(key);
             });
-    assertEquals(Value, cacheValue);
+    assertEquals(value, cacheValue);
     assertGeodeTrace("get", null);
   }
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  void testPutAndRemove(Object Key, Object Value) {
+  void testPutAndRemove(Object key, Object value) {
     testing.runWithSpan(
         "someTrace",
         () -> {
           region.clear();
-          region.put(Key, Value);
-          region.remove(Key);
+          region.put(key, value);
+          region.remove(key);
         });
     assertEquals(0, region.size());
     assertGeodeTrace("remove", null);
@@ -79,13 +79,13 @@ class PutGetTest {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  void testQuery(Object Key, Object Value) throws QueryException {
+  void testQuery(Object key, Object value) throws QueryException {
     SelectResults<Object> cacheValue =
         testing.runWithSpan(
             "someTrace",
             () -> {
               region.clear();
-              region.put(Key, Value);
+              region.put(key, value);
               return region.query("SELECT * FROM /test-region");
             });
     assertEquals(1, cacheValue.size());
@@ -94,13 +94,13 @@ class PutGetTest {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  void testExistsValue(Object Key, Object Value) throws QueryException {
+  void testExistsValue(Object key, Object value) throws QueryException {
     boolean cacheValue =
         testing.runWithSpan(
             "someTrace",
             () -> {
               region.clear();
-              region.put(Key, Value);
+              region.put(key, value);
               return region.existsValue("SELECT * FROM /test-region");
             });
     assertTrue(cacheValue);
