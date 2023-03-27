@@ -22,7 +22,6 @@ import io.vertx.reactivex.ext.web.client.WebClient
 import spock.lang.Shared
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey
-import static io.opentelemetry.api.common.AttributeKey.stringKey
 
 class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implements AgentTestTrait {
 

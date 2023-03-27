@@ -26,7 +26,6 @@ import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey
-import static io.opentelemetry.api.common.AttributeKey.stringKey
 
 class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> implements AgentTestTrait {
 
