@@ -50,6 +50,7 @@ class JaxRsClientV1Test extends HttpClientTest<WebResource.Builder> implements A
     false
   }
 
+  @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
     attributes.remove(stringKey("net.protocol.name"))

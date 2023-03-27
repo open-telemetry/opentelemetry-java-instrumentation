@@ -19,13 +19,13 @@ final class LettuceConnectNetAttributesGetter implements NetClientAttributesGett
 
   @Nullable
   @Override
-  public String getProtocolName(RedisURI redisURI, @Nullable Void unused) {
+  public String getProtocolName(RedisURI redisUri, @Nullable Void unused) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getProtocolVersion(RedisURI redisURI, @Nullable Void unused) {
+  public String getProtocolVersion(RedisURI redisUri, @Nullable Void unused) {
     return null;
   }
 

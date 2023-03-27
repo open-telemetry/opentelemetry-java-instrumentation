@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.httpclient;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
@@ -13,7 +16,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 
 public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
@@ -79,5 +84,19 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
     // TODO nested client span is not created, but context is still injected
     //  which is not what the test expects
     optionsBuilder.disableTestWithClientParent();
+
+    optionsBuilder.setHttpAttributes(
+        uri -> {
+          Set<AttributeKey<?>> attributes =
+              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          // unopened port or non routable address; or timeout
+          if ("http://localhost:61/".equals(uri.toString())
+              || "https://192.0.2.1/".equals(uri.toString())
+              || uri.toString().contains("/read-timeout")) {
+            attributes.remove(stringKey("net.protocol.name"));
+            attributes.remove(stringKey("net.protocol.version"));
+          }
+          return attributes;
+        });
   }
 }
