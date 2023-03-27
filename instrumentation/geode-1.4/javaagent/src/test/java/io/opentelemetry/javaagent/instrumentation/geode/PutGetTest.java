@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -149,11 +150,15 @@ class PutGetTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 attributes -> {
-                                  equalTo(SemanticAttributes.DB_SYSTEM, "geode");
-                                  equalTo(SemanticAttributes.DB_NAME, "test-region");
-                                  equalTo(SemanticAttributes.DB_OPERATION, verb);
+                                  assertThat(attributes)
+                                      .containsEntry(SemanticAttributes.DB_SYSTEM, "geode");
+                                  assertThat(attributes)
+                                      .containsEntry(SemanticAttributes.DB_NAME, "test-region");
+                                  assertThat(attributes)
+                                      .containsEntry(SemanticAttributes.DB_OPERATION, verb);
                                   if (query != null) {
-                                    equalTo(SemanticAttributes.DB_STATEMENT, query);
+                                    assertThat(attributes)
+                                        .containsEntry(SemanticAttributes.DB_STATEMENT, query);
                                   }
                                 })));
   }
