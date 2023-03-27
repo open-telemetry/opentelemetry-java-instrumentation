@@ -121,7 +121,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes("http.target", "/app/headers") == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes("http.flavor", "1.1") == 3
+    traces.countFilteredAttributes("http.flavor", "1.1") == 2
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 3
@@ -353,7 +353,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes("http.target", "/app/headers") == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes("http.flavor", "1.1") == 3
+    traces.countFilteredAttributes("http.flavor", "1.1") == 2
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 3

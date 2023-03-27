@@ -10,12 +10,15 @@ import com.ning.http.client.Request
 import com.ning.http.client.RequestBuilder
 import com.ning.http.client.Response
 import com.ning.http.client.uri.Uri
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import spock.lang.AutoCleanup
 import spock.lang.Shared
+
+import static io.opentelemetry.api.common.AttributeKey.stringKey
 
 class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTrait {
 
@@ -68,5 +71,12 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
     // connection test would require manually sequencing the connections, which is not meaningful
     // for a high concurrency test.
     return null
+  }
+
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    def attributes = super.httpAttributes(uri)
+    attributes.remove(stringKey("net.protocol.name"))
+    attributes.remove(stringKey("net.protocol.version"))
+    return attributes
   }
 }

@@ -50,12 +50,13 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "aws.queue.name" queueName
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
             "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
@@ -74,12 +75,13 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
             "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
@@ -98,12 +100,13 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
             "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
@@ -121,12 +124,13 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.method" "CreateTopic"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
             "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
@@ -144,12 +148,13 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.method" "Subscribe"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
             "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
@@ -166,12 +171,13 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.method" "Publish"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
             "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
@@ -187,13 +193,14 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
             "rpc.method" "ReceiveMessage"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "http.user_agent" String
             "net.peer.name" String
             "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
@@ -215,12 +222,13 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
             "rpc.method" "ReceiveMessage"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
             "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }

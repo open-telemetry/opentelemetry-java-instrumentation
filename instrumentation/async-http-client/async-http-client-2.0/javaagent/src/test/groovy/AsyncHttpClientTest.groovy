@@ -65,13 +65,4 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   boolean testRedirects() {
     false
   }
-
-  @Override
-  Set<AttributeKey<?>> httpAttributes(URI uri) {
-    Set<AttributeKey<?>> extra = [
-      SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_TARGET
-    ]
-    super.httpAttributes(uri) + extra
-  }
 }
