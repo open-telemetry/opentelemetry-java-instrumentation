@@ -213,7 +213,7 @@ jobs:
 
       - name: Set test tasks
         run: |
-          echo "test-task=$(cat test-tasks.txt | xargs echo | sed 's/ /","/g')" >> $GITHUB_ENV
+          echo "test-task=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
 
       - name: Test
         env:
