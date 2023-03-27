@@ -28,12 +28,14 @@ public class RouteOnSuccess implements Consumer<HandlerFunction<?>> {
     this.route = parseRoute(parsePredicateString(routerFunction));
   }
 
+  @SuppressWarnings("SystemOut")
   @Override
   public void accept(HandlerFunction<?> handler) {
+    Context parentContext = Context.current();
     HttpRouteHolder.updateHttpRoute(
-        Context.current(),
+        parentContext,
         HttpRouteSource.CONTROLLER,
-        ServletContextPath.prepend(Context.current(), route));
+        ServletContextPath.prepend(parentContext, route));
   }
 
   private static String parsePredicateString(RouterFunction<?> routerFunction) {

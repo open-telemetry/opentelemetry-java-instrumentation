@@ -25,7 +25,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.reactive.function.server.HandlerFunction;
 import org.springframework.web.reactive.function.server.RouterFunction;
-import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.reactive.function.server.ServerRequest;
 import reactor.core.publisher.Mono;
 
 public class RouterFunctionInstrumentation implements TypeInstrumentation {
@@ -67,21 +67,15 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(0) ServerWebExchange exchange,
-        @Advice.Argument(1) Object handler,
+        @Advice.Argument(0) ServerRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-
-      if (handler == null) {
-        return;
-      }
-
       Context parentContext = Context.current();
-      if (!instrumenter().shouldStart(parentContext, handler)) {
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = instrumenter().start(parentContext, handler);
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -89,7 +83,13 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
     public static void methodExit(
         @Advice.This RouterFunction<?> thiz,
         @Advice.Return(readOnly = false) Mono<HandlerFunction<?>> result,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
+      scope.close();
       if (throwable == null) {
         result = result.doOnNext(new RouteOnSuccess(thiz));
       }
