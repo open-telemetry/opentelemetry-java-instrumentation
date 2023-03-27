@@ -109,6 +109,8 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
           status ERROR
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_PEER_NAME" uri.host
             "$SemanticAttributes.NET_PEER_PORT" uri.port > 0 ? uri.port : { it == null || it == 443 }
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
