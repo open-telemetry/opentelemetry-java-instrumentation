@@ -109,7 +109,6 @@ class PutGetTest {
 
   @Test
   void shouldSanitizeGeodeQuery() throws QueryException {
-
     Card value = new Card("1234432156788765", "10/2020");
     SelectResults<Object> results =
         testing.runWithSpan(
