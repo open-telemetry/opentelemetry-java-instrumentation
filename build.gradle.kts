@@ -92,6 +92,8 @@ tasks {
 if (gradle.startParameter.taskNames.any { it.equals("listTestPartitions") }) {
   // disable all tasks to stop build
   project.tasks.configureEach {
-    enabled = false
+    if (this.name != "listTestPartitions") {
+      enabled = false
+    }
   }
 }
