@@ -96,7 +96,7 @@ jobs:
             exit 1
           fi
 
-  assemble:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -107,7 +107,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Assemble
+      - name: Build
         uses: gradle/gradle-build-action@v2
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
@@ -115,7 +115,7 @@ jobs:
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
           # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-          arguments: assemble -x javadoc ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+          arguments: check -x javadoc -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
           gradle-home-cache-excludes: caches/build-cache-1
@@ -194,6 +194,23 @@ jobs:
       - name: Start deadlock detector
         run: .github/scripts/deadlock-detector.sh
 
+      - name: List tests
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: >
+            check
+            listTestPartitions
+            -PtestPartition=${{ matrix.test-partition }}
+          cache-read-only: true
+
+      - name: Set test tasks
+        run: |
+          echo "test-task=$(cat test-tasks.txt | xargs echo | sed 's/ /","/g')" >> $GITHUB_ENV
+
       - name: Test
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
@@ -203,13 +220,11 @@ jobs:
         with:
           # spotless is checked separately since it's a common source of failure
           arguments: >
-            check
-            -x spotlessCheck
+            ${{ env.test-task }}
             -PtestJavaVersion=${{ matrix.test-java-version }}
             -PtestJavaVM=${{ matrix.vm }}
             -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
             -Porg.gradle.java.installations.auto-download=false
-            -PtestPartition=${{ matrix.test-partition }}
             ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
           # only push cache for one matrix option since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
