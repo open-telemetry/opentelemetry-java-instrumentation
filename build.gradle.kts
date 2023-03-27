@@ -73,7 +73,8 @@ tasks {
         partitionTasks.forEach { task ->
           var taskPath = task.project.path + ":" + task.name
           // smoke tests are run separately
-          if (taskPath != ":smoke-tests:test") {
+          // :instrumentation:test runs all instrumentation tests
+          if (taskPath != ":smoke-tests:test" && taskPath != ":instrumentation:test") {
             writer.println(taskPath)
           }
         }
