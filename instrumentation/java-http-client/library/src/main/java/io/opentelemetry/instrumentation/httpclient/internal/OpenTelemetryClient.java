@@ -103,7 +103,6 @@ public final class OpenTelemetryClient extends HttpClient {
           new HttpRequestWrapper(request, headersSetter.inject(request.headers()));
 
       response = client.send(requestWrapper, responseBodyHandler);
-      instrumenter.end(context, request, response, null);
     } catch (Throwable throwable) {
       error = throwable;
       throw throwable;

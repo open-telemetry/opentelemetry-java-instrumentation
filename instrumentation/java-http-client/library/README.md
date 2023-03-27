@@ -48,7 +48,7 @@ public class JavaHttpClientConfiguration {
 
   //your configuration of the Java HTTP Client goes here:
   private HttpClient createClient() {
-    return new HttpClient.newBuilder().build();
+    return HttpClient.newBuilder().build();
   }
 }
 ```
