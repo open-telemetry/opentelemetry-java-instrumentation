@@ -14,7 +14,6 @@ import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes
 import io.opentelemetry.instrumentation.awssdk.v1_11.AbstractAws1ClientTest
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
