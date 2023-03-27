@@ -107,6 +107,10 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Increase gradle daemon heap size
+        run: |
+          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
+
       - name: Build
         uses: gradle/gradle-build-action@v2
         env:
