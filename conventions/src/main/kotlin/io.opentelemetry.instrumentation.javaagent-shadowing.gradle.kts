@@ -17,7 +17,7 @@ tasks.withType<ShadowJar>().configureEach {
   // rewrite dependencies calling Logger.getLogger
   relocate("java.util.logging.Logger", "io.opentelemetry.javaagent.bootstrap.PatchLogger")
 
-  if (!project.hasProperty("disableShadowRelocate") || !(project.property("disableShadowRelocate").toString().toBoolean())) {
+  if (project.findProperty("disableShadowRelocate") != "true") {
     // prevents conflict with library instrumentation, since these classes live in the bootstrap class loader
     relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation") {
       // Exclude resource providers since they live in the agent class loader
