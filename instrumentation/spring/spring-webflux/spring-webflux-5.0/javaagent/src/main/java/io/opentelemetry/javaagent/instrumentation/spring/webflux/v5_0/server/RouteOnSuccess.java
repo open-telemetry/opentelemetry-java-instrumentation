@@ -28,7 +28,6 @@ public class RouteOnSuccess implements Consumer<HandlerFunction<?>> {
     this.route = parseRoute(parsePredicateString(routerFunction));
   }
 
-  @SuppressWarnings("SystemOut")
   @Override
   public void accept(HandlerFunction<?> handler) {
     Context parentContext = Context.current();
