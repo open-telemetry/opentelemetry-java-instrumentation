@@ -18,7 +18,7 @@ public final class DurationUtil {
   @SuppressWarnings("TimeUnitMismatch")
   public static double toMillis(Duration duration) {
     double epochSecs = (double) duration.getSeconds();
-    return epochSecs + duration.getNano() / NANOS_PER_MILLI;
+    return epochSecs * 1000 + duration.getNano() / NANOS_PER_MILLI;
   }
 
   private DurationUtil() {}
