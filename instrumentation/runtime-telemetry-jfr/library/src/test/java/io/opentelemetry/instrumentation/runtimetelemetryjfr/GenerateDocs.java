@@ -71,7 +71,7 @@ public class GenerateDocs {
 
     // Exercise JVM to produce various JFR events
     System.gc();
-    executeDummyNetworkRequest("https://google.com");
+    executeDummyNetworkRequest("https://opentelemetry.io");
     Thread.sleep(2000);
 
     // Build table, shut everything down
