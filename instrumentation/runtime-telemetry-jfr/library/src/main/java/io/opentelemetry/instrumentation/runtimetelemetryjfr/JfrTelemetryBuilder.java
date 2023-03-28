@@ -12,7 +12,7 @@ import java.util.EnumMap;
 import java.util.function.Predicate;
 
 /** Builder for {@link JfrTelemetry}. */
-public class JfrTelemetryBuilder {
+public final class JfrTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
   // Visible for testing
