@@ -23,6 +23,7 @@ public interface TestContainerManager {
       String agentPath,
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
+      boolean setServiceName,
       List<ResourceMapping> extraResources,
       List<Integer> extraPorts,
       TargetWaitStrategy waitStrategy,

@@ -74,6 +74,7 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
       String agentPath,
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
+      boolean setServiceName,
       List<ResourceMapping> extraResources,
       List<Integer> extraPorts,
       TargetWaitStrategy waitStrategy,
@@ -94,7 +95,7 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
             .withLogConsumer(new Slf4jLogConsumer(appLogger))
             .withCopyFileToContainer(
                 MountableFile.forHostPath(agentPath), "/" + TARGET_AGENT_FILENAME)
-            .withEnv(getAgentEnvironment(jvmArgsEnvVarName))
+            .withEnv(getAgentEnvironment(jvmArgsEnvVarName, setServiceName))
             .withEnv(extraEnv);
 
     for (ResourceMapping resource : extraResources) {
