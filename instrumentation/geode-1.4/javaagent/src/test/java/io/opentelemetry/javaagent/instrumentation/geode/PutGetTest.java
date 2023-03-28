@@ -151,10 +151,8 @@ class PutGetTest {
                             .hasAttributesSatisfying(
                                 attributes -> {
                                   assertThat(attributes)
-                                      .containsEntry(SemanticAttributes.DB_SYSTEM, "geode");
-                                  assertThat(attributes)
-                                      .containsEntry(SemanticAttributes.DB_NAME, "test-region");
-                                  assertThat(attributes)
+                                      .containsEntry(SemanticAttributes.DB_SYSTEM, "geode")
+                                      .containsEntry(SemanticAttributes.DB_NAME, "test-region")
                                       .containsEntry(SemanticAttributes.DB_OPERATION, verb);
                                   if (query != null) {
                                     assertThat(attributes)
