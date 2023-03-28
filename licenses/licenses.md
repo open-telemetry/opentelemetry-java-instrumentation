@@ -1,7 +1,7 @@
 
 #javaagent
 ##Dependency License Report
-_2023-03-18 10:34:53 EET_
+_2023-03-28 06:06:41 UTC_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -184,7 +184,7 @@ _2023-03-18 10:34:53 EET_
 > - **POM Project URL**: [https://kotlinlang.org/](https://kotlinlang.org/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**42** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.4`
+**42** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.5`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
@@ -198,7 +198,7 @@ _2023-03-18 10:34:53 EET_
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**44** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.4`
+**44** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.5`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
@@ -224,7 +224,7 @@ _2023-03-18 10:34:53 EET_
 
 ## The 3-Clause BSD License
 
-**48** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.4`
+**48** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.5`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
@@ -238,7 +238,7 @@ _2023-03-18 10:34:53 EET_
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**50** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.4`
+**50** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.5`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
