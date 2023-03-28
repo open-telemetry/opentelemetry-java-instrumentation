@@ -73,6 +73,8 @@ public class Bridging {
       return io.opentelemetry.api.trace.Span.getInvalid();
     } else if (applicationSpan instanceof ApplicationSpan) {
       return ((ApplicationSpan) applicationSpan).getAgentSpan();
+    } else if (applicationSpan instanceof io.opentelemetry.api.trace.Span) {
+      return (io.opentelemetry.api.trace.Span) applicationSpan;
     } else {
       return null;
     }
