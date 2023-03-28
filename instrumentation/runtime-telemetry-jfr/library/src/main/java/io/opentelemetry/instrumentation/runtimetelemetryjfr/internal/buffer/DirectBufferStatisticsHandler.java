@@ -95,6 +95,6 @@ public final class DirectBufferStatisticsHandler implements RecordedEventHandler
 
   @Override
   public void close() {
-    closeObservables(observables);
+    RecordedEventHandler.closeObservables(observables);
   }
 }

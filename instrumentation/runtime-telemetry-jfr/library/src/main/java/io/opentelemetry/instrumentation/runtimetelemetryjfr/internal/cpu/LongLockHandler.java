@@ -61,9 +61,6 @@ public final class LongLockHandler extends AbstractThreadDispatchingHandler {
     return Optional.empty();
   }
 
-  @Override
-  public void close() {}
-
   private static class PerThreadLongLockHandler implements Consumer<RecordedEvent> {
     private static final String EVENT_THREAD = "eventThread";
 

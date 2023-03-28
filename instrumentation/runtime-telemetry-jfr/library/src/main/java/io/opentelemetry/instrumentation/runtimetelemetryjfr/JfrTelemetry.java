@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.runtimetelemetryjfr;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.RecordedEventHandler;
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
@@ -97,11 +96,7 @@ public final class JfrTelemetry implements Closeable {
     recordingStream.close();
     recordedEventHandlers.forEach(
         handler -> {
-          try {
-            handler.close();
-          } catch (IOException e) {
-            // Ignore
-          }
+          handler.close();
         });
   }
 }

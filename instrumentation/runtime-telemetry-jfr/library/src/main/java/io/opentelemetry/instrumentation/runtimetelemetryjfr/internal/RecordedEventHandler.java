@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.runtimetelemetryjfr.internal;
 
 import io.opentelemetry.instrumentation.runtimetelemetryjfr.JfrFeature;
-import java.io.Closeable;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +20,7 @@ import jdk.jfr.consumer.RecordedEvent;
  * at any time.
  */
 public interface RecordedEventHandler
-    extends Consumer<RecordedEvent>, Predicate<RecordedEvent>, Closeable {
+    extends Consumer<RecordedEvent>, Predicate<RecordedEvent>, AutoCloseable {
 
   /**
    * JFR event name (e.g. jdk.ObjectAllocationInNewTLAB)
@@ -64,7 +63,7 @@ public interface RecordedEventHandler
     return Optional.empty();
   }
 
-  default void closeObservables(List<AutoCloseable> observables) {
+  static void closeObservables(List<AutoCloseable> observables) {
     observables.forEach(
         observable -> {
           try {
@@ -74,4 +73,7 @@ public interface RecordedEventHandler
           }
         });
   }
+
+  @Override
+  default void close() {}
 }

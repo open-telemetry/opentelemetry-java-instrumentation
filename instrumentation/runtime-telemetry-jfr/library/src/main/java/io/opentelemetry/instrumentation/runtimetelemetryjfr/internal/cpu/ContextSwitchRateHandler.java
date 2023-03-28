@@ -59,6 +59,6 @@ public final class ContextSwitchRateHandler implements RecordedEventHandler {
 
   @Override
   public void close() {
-    closeObservables(observables);
+    RecordedEventHandler.closeObservables(observables);
   }
 }

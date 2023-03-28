@@ -29,7 +29,6 @@ import io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.memory.Para
 import io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.network.NetworkReadHandler;
 import io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.network.NetworkWriteHandler;
 import io.opentelemetry.instrumentation.runtimetelemetryjfr.internal.threads.ThreadCountHandler;
-import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
@@ -108,11 +107,7 @@ final class HandlerRegistry {
     while (iter.hasNext()) {
       RecordedEventHandler handler = iter.next();
       if (!featurePredicate.test(handler.getFeature())) {
-        try {
-          handler.close();
-        } catch (IOException e) {
-          // Ignored
-        }
+        handler.close();
         iter.remove();
       }
     }

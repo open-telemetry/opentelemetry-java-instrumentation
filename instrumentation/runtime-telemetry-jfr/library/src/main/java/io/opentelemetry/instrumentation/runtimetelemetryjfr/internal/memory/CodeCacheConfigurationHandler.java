@@ -69,6 +69,6 @@ public final class CodeCacheConfigurationHandler implements RecordedEventHandler
 
   @Override
   public void close() {
-    closeObservables(observables);
+    RecordedEventHandler.closeObservables(observables);
   }
 }

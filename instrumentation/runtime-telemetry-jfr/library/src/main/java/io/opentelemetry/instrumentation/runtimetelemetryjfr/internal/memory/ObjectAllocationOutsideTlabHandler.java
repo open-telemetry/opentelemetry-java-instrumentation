@@ -58,9 +58,6 @@ public final class ObjectAllocationOutsideTlabHandler extends AbstractThreadDisp
     return new PerThreadObjectAllocationOutsideTlabHandler(histogram, threadName);
   }
 
-  @Override
-  public void close() {}
-
   /** This class aggregates all non-TLAB allocation JFR events for a single thread */
   private static class PerThreadObjectAllocationOutsideTlabHandler
       implements Consumer<RecordedEvent> {

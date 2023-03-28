@@ -140,6 +140,6 @@ public final class G1HeapSummaryHandler implements RecordedEventHandler {
 
   @Override
   public void close() {
-    closeObservables(observables);
+    RecordedEventHandler.closeObservables(observables);
   }
 }

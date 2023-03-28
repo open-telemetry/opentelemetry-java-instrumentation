@@ -68,9 +68,6 @@ public final class NetworkReadHandler extends AbstractThreadDispatchingHandler {
     return new PerThreadNetworkReadHandler(bytesHistogram, durationHistogram, threadName);
   }
 
-  @Override
-  public void close() {}
-
   private static class PerThreadNetworkReadHandler implements Consumer<RecordedEvent> {
     private static final String BYTES_READ = "bytesRead";
 

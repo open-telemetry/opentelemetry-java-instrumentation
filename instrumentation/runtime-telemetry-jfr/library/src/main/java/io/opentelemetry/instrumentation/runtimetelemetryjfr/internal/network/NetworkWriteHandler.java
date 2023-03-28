@@ -86,9 +86,6 @@ public final class NetworkWriteHandler extends AbstractThreadDispatchingHandler 
     return new PerThreadNetworkWriteHandler(bytesHistogram, durationHistogram, threadName);
   }
 
-  @Override
-  public void close() {}
-
   private static final class PerThreadNetworkWriteHandler implements Consumer<RecordedEvent> {
     private static final String BYTES_WRITTEN = "bytesWritten";
 

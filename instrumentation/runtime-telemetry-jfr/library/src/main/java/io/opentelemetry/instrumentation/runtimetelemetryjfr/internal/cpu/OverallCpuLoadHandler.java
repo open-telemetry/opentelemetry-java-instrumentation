@@ -79,6 +79,6 @@ public final class OverallCpuLoadHandler implements RecordedEventHandler {
 
   @Override
   public void close() {
-    closeObservables(observables);
+    RecordedEventHandler.closeObservables(observables);
   }
 }

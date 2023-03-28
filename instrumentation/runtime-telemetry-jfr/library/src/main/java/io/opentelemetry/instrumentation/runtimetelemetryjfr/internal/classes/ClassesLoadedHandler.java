@@ -90,6 +90,6 @@ public final class ClassesLoadedHandler implements RecordedEventHandler {
 
   @Override
   public void close() {
-    closeObservables(observables);
+    RecordedEventHandler.closeObservables(observables);
   }
 }

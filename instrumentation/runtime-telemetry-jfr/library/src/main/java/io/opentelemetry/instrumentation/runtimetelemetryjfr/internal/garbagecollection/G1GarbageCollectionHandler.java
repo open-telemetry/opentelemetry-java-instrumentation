@@ -61,7 +61,4 @@ public final class G1GarbageCollectionHandler implements RecordedEventHandler {
   public Optional<Duration> getPollingDuration() {
     return Optional.of(Duration.ofSeconds(1));
   }
-
-  @Override
-  public void close() {}
 }

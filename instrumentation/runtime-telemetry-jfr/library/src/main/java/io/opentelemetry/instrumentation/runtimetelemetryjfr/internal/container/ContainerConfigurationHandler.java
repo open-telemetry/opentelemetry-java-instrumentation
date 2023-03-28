@@ -54,6 +54,6 @@ public final class ContainerConfigurationHandler implements RecordedEventHandler
 
   @Override
   public void close() {
-    closeObservables(observables);
+    RecordedEventHandler.closeObservables(observables);
   }
 }

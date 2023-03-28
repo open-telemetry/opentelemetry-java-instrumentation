@@ -58,9 +58,6 @@ public final class ObjectAllocationInNewTlabHandler extends AbstractThreadDispat
     return new PerThreadObjectAllocationInNewTlabHandler(histogram, threadName);
   }
 
-  @Override
-  public void close() {}
-
   /** This class aggregates all TLAB allocation JFR events for a single thread */
   private static class PerThreadObjectAllocationInNewTlabHandler
       implements Consumer<RecordedEvent> {
