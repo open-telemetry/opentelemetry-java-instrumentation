@@ -42,7 +42,7 @@ class AwsSdkNetAttributesGetter implements NetClientAttributesGetter<Request<?>,
   }
 
   @Nullable
-  private ProtocolVersion getProtocolVersion(@Nullable Response<?> response) {
+  private static ProtocolVersion getProtocolVersion(@Nullable Response<?> response) {
     if (response == null) {
       return null;
     }

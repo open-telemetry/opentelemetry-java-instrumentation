@@ -43,7 +43,7 @@ final class AsyncHttpClientNetAttributesGetter
   }
 
   @Nullable
-  private HttpVersion getHttpVersion(RequestContext request) {
+  private static HttpVersion getHttpVersion(RequestContext request) {
     NettyRequest nettyRequest = request.getNettyRequest();
     if (nettyRequest == null) {
       return null;
