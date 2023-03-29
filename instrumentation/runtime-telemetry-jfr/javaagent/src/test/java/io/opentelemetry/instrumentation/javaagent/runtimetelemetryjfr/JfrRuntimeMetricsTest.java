@@ -13,6 +13,8 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import java.util.Collection;
 import java.util.function.Consumer;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class JfrRuntimeMetricsTest {
@@ -27,6 +29,15 @@ class JfrRuntimeMetricsTest {
                 assertThat(metrics).anySatisfy(metric -> assertion.accept(assertThat(metric)));
               }
             });
+  }
+
+  @BeforeAll
+  static void setUp() {
+    try {
+      Class.forName("jdk.jfr.consumer.RecordingStream");
+    } catch (ClassNotFoundException exception) {
+      Assumptions.abort("JFR not present");
+    }
   }
 
   @Test

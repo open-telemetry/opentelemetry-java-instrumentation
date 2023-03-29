@@ -12,6 +12,8 @@ muzzle {
     extraDependency("software.amazon.awssdk:protocol-core")
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
+    // sdk-core-2.20.34.jar is missing
+    skip("2.20.34")
   }
 }
 
