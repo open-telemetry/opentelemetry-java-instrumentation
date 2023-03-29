@@ -10,7 +10,6 @@ import com.amazonaws.Response;
 import com.amazonaws.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.Optional;
 import javax.annotation.Nullable;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -25,23 +24,37 @@ class AwsSdkNetAttributesGetter implements NetClientAttributesGetter<Request<?>,
   @Nullable
   @Override
   public String getProtocolName(Request<?> request, @Nullable Response<?> response) {
-    return Optional.ofNullable(response)
-        .map(Response::getHttpResponse)
-        .map(HttpResponse::getHttpRequest)
-        .map(HttpRequestBase::getProtocolVersion)
-        .map(ProtocolVersion::getProtocol)
-        .orElse(null);
+    ProtocolVersion protocolVersion = getProtocolVersion(response);
+    if (protocolVersion == null) {
+      return null;
+    }
+    return protocolVersion.getProtocol();
   }
 
   @Nullable
   @Override
   public String getProtocolVersion(Request<?> request, @Nullable Response<?> response) {
-    return Optional.ofNullable(response)
-        .map(Response::getHttpResponse)
-        .map(HttpResponse::getHttpRequest)
-        .map(HttpRequestBase::getProtocolVersion)
-        .map(p -> p.getMajor() + "." + p.getMinor())
-        .orElse(null);
+    ProtocolVersion protocolVersion = getProtocolVersion(response);
+    if (protocolVersion == null) {
+      return null;
+    }
+    return protocolVersion.getMajor() + "." + protocolVersion.getMinor();
+  }
+
+  @Nullable
+  private ProtocolVersion getProtocolVersion(@Nullable Response<?> response) {
+    if (response == null) {
+      return null;
+    }
+    HttpResponse httpResponse = response.getHttpResponse();
+    if (httpResponse == null) {
+      return null;
+    }
+    HttpRequestBase httpRequest = httpResponse.getHttpRequest();
+    if (httpRequest == null) {
+      return null;
+    }
+    return httpRequest.getProtocolVersion();
   }
 
   @Override

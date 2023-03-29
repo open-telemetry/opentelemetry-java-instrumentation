@@ -14,7 +14,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.http.Header;
@@ -77,7 +76,7 @@ public final class ApacheHttpClientRequest {
   }
 
   String getProtocolName() {
-    return delegate.getProtocolVersion().getProtocol().toLowerCase(Locale.ROOT);
+    return delegate.getProtocolVersion().getProtocol();
   }
 
   String getProtocolVersion() {
