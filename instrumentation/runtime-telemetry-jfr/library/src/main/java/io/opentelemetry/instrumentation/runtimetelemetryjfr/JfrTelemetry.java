@@ -31,7 +31,6 @@ public final class JfrTelemetry implements Closeable {
     this.openTelemetry = openTelemetry;
     this.recordedEventHandlers = HandlerRegistry.getHandlers(openTelemetry, featurePredicate);
     try {
-      logger.log(Level.INFO, "Starting JfrTelemetry");
       recordingStream = new RecordingStream();
       recordedEventHandlers.forEach(
           handler -> {
@@ -92,11 +91,7 @@ public final class JfrTelemetry implements Closeable {
       logger.log(Level.WARNING, "JfrTelemetry is already closed");
       return;
     }
-    logger.log(Level.INFO, "Closing JfrTelemetry");
     recordingStream.close();
-    recordedEventHandlers.forEach(
-        handler -> {
-          handler.close();
-        });
+    recordedEventHandlers.forEach(RecordedEventHandler::close);
   }
 }

@@ -50,9 +50,6 @@ class JfrTelemetryTest {
   @Test
   void create_Default() {
     try (JfrTelemetry unused = JfrTelemetry.create(sdk)) {
-      assertThat(logs.getEvents()).hasSize(1);
-      logs.assertContains("Starting JfrTelemetry");
-
       assertThat(reader.collectAllMetrics())
           .isNotEmpty()
           .allSatisfy(
@@ -67,9 +64,6 @@ class JfrTelemetryTest {
   @Test
   void create_AllDisabled() {
     try (JfrTelemetry unused = JfrTelemetry.builder(sdk).disableAllFeatures().build()) {
-      assertThat(logs.getEvents()).hasSize(1);
-      logs.assertContains("Starting JfrTelemetry");
-
       assertThat(reader.collectAllMetrics()).isEmpty();
     }
   }
@@ -94,7 +88,6 @@ class JfrTelemetryTest {
       assertThat(reader.collectAllMetrics()).isNotEmpty();
 
       jfrTelemetry.close();
-      logs.assertContains("Closing JfrTelemetry");
       logs.assertDoesNotContain("JfrTelemetry is already closed");
       assertThat(recordingStreamClosed.get()).isTrue();
       assertThat(reader.collectAllMetrics()).isEmpty();
