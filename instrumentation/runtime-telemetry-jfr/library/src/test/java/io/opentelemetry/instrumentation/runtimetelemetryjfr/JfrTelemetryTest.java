@@ -13,6 +13,7 @@ import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -26,6 +27,12 @@ class JfrTelemetryTest {
 
   @BeforeEach
   void setup() {
+    try {
+      Class.forName("jdk.jfr.consumer.RecordingStream");
+    } catch (ClassNotFoundException exception) {
+      Assumptions.abort("JFR not present");
+    }
+
     reader = InMemoryMetricReader.createDelta();
     sdk =
         OpenTelemetrySdk.builder()
@@ -35,7 +42,9 @@ class JfrTelemetryTest {
 
   @AfterEach
   void tearDown() {
-    sdk.getSdkMeterProvider().close();
+    if (sdk != null) {
+      sdk.getSdkMeterProvider().close();
+    }
   }
 
   @Test
