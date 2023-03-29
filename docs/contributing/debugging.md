@@ -60,7 +60,6 @@ disableShadowRelocate=true
 
 Enable the GraalVM tracing agent:
 
-graalvmNative {
 ```
 graalvmNative {
 
