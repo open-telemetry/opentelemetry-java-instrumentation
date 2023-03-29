@@ -44,7 +44,6 @@ graalvmNative {
   }
 
   toolchainDetection.set(false)
-
 }
 
 configurations.configureEach {
