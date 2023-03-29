@@ -9,7 +9,7 @@ package io.opentelemetry.instrumentation.runtimetelemetryjfr;
  * Enumeration of JFR features, which can be toggled on or off via {@link JfrTelemetryBuilder}.
  *
  * <p>Features are disabled by default if they are already available through {@code
- * io.opentelemetry.instrumentation:opentelemetry-runtime-metrics} JMX based instrumentation.
+ * io.opentelemetry.instrumentation:opentelemetry-runtime-telemetry-jmx} JMX based instrumentation.
  */
 public enum JfrFeature {
   BUFFER_METRICS(/* defaultEnabled= */ false),

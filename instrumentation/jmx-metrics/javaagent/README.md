@@ -12,7 +12,7 @@ To control the time interval between MBean detection attempts, one can use the `
 
 ## Predefined metrics
 
-JMX is a popular metrics technology used throughout the JVM (see [runtime metrics](../../runtime-metrics/library/README.md)), application servers, third-party libraries, and applications.
+JMX is a popular metrics technology used throughout the JVM (see [runtime metrics](../../runtime-telemetry-jmx/library/README.md)), application servers, third-party libraries, and applications.
 JMX Metric Insight comes with a number of predefined configurations containing curated sets of JMX metrics for frequently used application servers or frameworks.
 To enable collection of the predefined metrics, specify a list of targets as the value for the `otel.jmx.target.system` property. For example
 
