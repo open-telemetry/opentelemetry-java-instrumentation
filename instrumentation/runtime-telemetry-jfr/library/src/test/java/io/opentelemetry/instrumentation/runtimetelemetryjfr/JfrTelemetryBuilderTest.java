@@ -10,9 +10,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.Arrays;
 import java.util.HashMap;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class JfrTelemetryBuilderTest {
+
+  @BeforeAll
+  static void setup() {
+    try {
+      Class.forName("jdk.jfr.consumer.RecordingStream");
+    } catch (ClassNotFoundException exception) {
+      Assumptions.abort("JFR not present");
+    }
+  }
 
   @Test
   void defaultFeatures() {
