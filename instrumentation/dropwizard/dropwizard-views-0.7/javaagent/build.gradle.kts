@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("io.dropwizard")
     module.set("dropwizard-views")
-    versions.set("(,)")
+    versions.set("(,4.0.0)")
   }
 }
 
