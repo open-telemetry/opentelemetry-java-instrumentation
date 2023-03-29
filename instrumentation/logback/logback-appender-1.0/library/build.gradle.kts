@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("org.graalvm.buildtools.native") version "0.9.14"
 }
 
 dependencies {
@@ -34,4 +35,20 @@ dependencies {
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-logs")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+}
+
+graalvmNative {
+
+  binaries.all {
+    resources.autodetect()
+  }
+
+  toolchainDetection.set(false)
+
+}
+
+configurations.configureEach {
+  exclude("org.apache.groovy", "groovy")
+  exclude("org.apache.groovy", "groovy-json")
+  exclude("org.spockframework", "spock-core")
 }
