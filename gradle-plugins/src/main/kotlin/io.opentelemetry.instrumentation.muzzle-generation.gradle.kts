@@ -50,7 +50,7 @@ val languageTasks = LANGUAGES.map { language ->
     return@map null
   }
   val compileTask = tasks.named(compileTaskName)
-  createLanguageTask(compileTask, "byteBuddy${language.capitalize()}")
+  createLanguageTask(compileTask, "byteBuddy${language.replaceFirstChar(Char::titlecase)}")
 }.filterNotNull()
 
 tasks {

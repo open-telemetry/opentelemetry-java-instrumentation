@@ -78,7 +78,7 @@ abstract class MuzzleDirective {
 
   internal val normalizedSkipVersions: Set<String>
     get() = skipVersions.getOrElse(setOf()).stream()
-      .map(String::toLowerCase)
+      .map(String::lowercase)
       .collect(Collectors.toSet())
 
   override fun toString(): String {
