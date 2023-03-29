@@ -51,7 +51,7 @@ public final class OpenTelemetryAgent {
 
   private static void startAgent(Instrumentation inst, boolean fromPremain) {
     try {
-      File javaagentFile = installBootstrapJar(inst);
+      File javaagentFile =  installBootstrapJar(inst);
       InstrumentationHolder.setInstrumentation(inst);
       JavaagentFileHolder.setJavaagentFile(javaagentFile);
       AgentInitializer.initialize(inst, javaagentFile, fromPremain);
