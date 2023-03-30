@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.ArrayList;
+import java.util.List;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
@@ -36,7 +36,7 @@ public class Log4j1MdcTest {
     logger.info("log message 1");
     logger.info("log message 2");
 
-    ArrayList<LoggingEvent> events = ListAppender.getEvents();
+    List<LoggingEvent> events = ListAppender.getEvents();
 
     assertEquals(2, events.size());
     assertEquals("log message 1", events.get(0).getMessage());
@@ -70,7 +70,7 @@ public class Log4j1MdcTest {
               return Span.current();
             });
 
-    ArrayList<LoggingEvent> events = ListAppender.getEvents();
+    List<LoggingEvent> events = ListAppender.getEvents();
 
     assertEquals(3, events.size());
     assertEquals("log message 1", events.get(0).getMessage());

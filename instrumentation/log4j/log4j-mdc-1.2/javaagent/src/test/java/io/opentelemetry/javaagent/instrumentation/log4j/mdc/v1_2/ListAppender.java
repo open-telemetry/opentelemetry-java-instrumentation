@@ -6,12 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.log4j.mdc.v1_2;
 
 import java.util.ArrayList;
+import java.util.List;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
 
 public class ListAppender extends AppenderSkeleton {
 
-  private static final ArrayList<LoggingEvent> events = new ArrayList<LoggingEvent>();
+  private static final List<LoggingEvent> events = new ArrayList<LoggingEvent>();
 
   @Override
   protected void append(LoggingEvent loggingEvent) {
@@ -30,7 +31,7 @@ public class ListAppender extends AppenderSkeleton {
     events.clear();
   }
 
-  public static ArrayList<LoggingEvent> getEvents() {
+  public static List<LoggingEvent> getEvents() {
     return events;
   }
 }
