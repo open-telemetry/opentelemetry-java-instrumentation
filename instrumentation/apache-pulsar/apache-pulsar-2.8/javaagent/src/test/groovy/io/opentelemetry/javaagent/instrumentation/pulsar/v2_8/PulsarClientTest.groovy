@@ -461,7 +461,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
   }
 
   def producerSpan(TraceAssert trace, int index, Object parentSpan, String topic, Object msgId, boolean headers = false) {
-    producerSpan(trace, index, parentSpan, topic, null, { topic }, msgId, headers)
+    producerSpan(trace, index, parentSpan, topic, null, { it == topic }, msgId, headers)
   }
 
   def producerSpan(TraceAssert trace, int index, Object parentSpan, String topic, Pattern namePattern, Closure destination, Object msgId, boolean headers = false) {
@@ -494,7 +494,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
   }
 
   def receiveSpan(TraceAssert trace, int index, Object parentSpan, String topic, Object msgId, boolean headers = false) {
-    receiveSpan(trace, index, parentSpan, topic, null, { topic }, msgId, headers)
+    receiveSpan(trace, index, parentSpan, topic, null, { it == topic }, msgId, headers)
   }
 
   def receiveSpan(TraceAssert trace, int index, Object parentSpan, String topic, Pattern namePattern, Closure destination, Object msgId, boolean headers = false) {
@@ -527,7 +527,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
   }
 
   def processSpan(TraceAssert trace, int index, Object parentSpan, String topic, Object msgId, boolean headers = false) {
-    processSpan(trace, index, parentSpan, topic, null, { topic }, msgId, headers)
+    processSpan(trace, index, parentSpan, topic, null, { it == topic }, msgId, headers)
   }
 
   def processSpan(TraceAssert trace, int index, Object parentSpan, String topic, Pattern namePattern, Closure destination, Object msgId, boolean headers = false) {
