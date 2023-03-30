@@ -1,6 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
-  id("org.graalvm.buildtools.native") version "0.9.14"
+  id("org.graalvm.buildtools.native")
 }
 
 dependencies {
