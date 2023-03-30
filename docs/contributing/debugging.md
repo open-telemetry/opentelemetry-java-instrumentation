@@ -55,3 +55,28 @@ builds by adding the following to `~/.gradle/gradle.properties` before building.
 ```properties
 disableShadowRelocate=true
 ```
+
+## Missing GraalVM hints
+
+Enable the GraalVM tracing agent:
+
+```
+graalvmNative {
+
+  ...
+
+  agent {
+    defaultMode.set("standard")
+    enabled.set(true)
+  }
+
+}
+```
+
+Execute tests as native executables:
+
+```
+./gradlew nativeTest
+```
+
+The tracing data will be generated in the `build/native/agent-output` folder.
