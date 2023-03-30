@@ -165,9 +165,9 @@ public class AkkaFlowWrapper
 
   private static class TracingRequest {
     static final TracingRequest EMPTY = new TracingRequest(null, null, null);
-    Context context;
-    Scope scope;
-    HttpRequest request;
+    final Context context;
+    final Scope scope;
+    final HttpRequest request;
 
     TracingRequest(Context context, Scope scope, HttpRequest request) {
       this.context = context;
