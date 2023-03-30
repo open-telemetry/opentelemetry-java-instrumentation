@@ -46,6 +46,7 @@ graalvmNative {
   toolchainDetection.set(false)
 }
 
+// To be able to execute the tests as GraalVM native executables
 configurations.configureEach {
   exclude("org.apache.groovy", "groovy")
   exclude("org.apache.groovy", "groovy-json")
