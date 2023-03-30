@@ -12,6 +12,7 @@ import org.apache.pulsar.client.admin.PulsarAdmin
 import org.apache.pulsar.client.api.Consumer
 import org.apache.pulsar.client.api.Message
 import org.apache.pulsar.client.api.MessageListener
+import org.apache.pulsar.client.api.Messages
 import org.apache.pulsar.client.api.Producer
 import org.apache.pulsar.client.api.PulsarClient
 import org.apache.pulsar.client.api.Schema
@@ -24,6 +25,7 @@ import org.testcontainers.utility.DockerImageName
 import spock.lang.Shared
 
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
@@ -194,7 +196,6 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
   def "test consume non-partitioned topic using receiveAsync"() {
     setup:
     def topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceiveAsync"
-    def latch = new CountDownLatch(1)
     admin.topics().createNonPartitionedTopic(topic)
     consumer = client.newConsumer(Schema.STRING)
       .subscriptionName("test_sub")
@@ -208,10 +209,9 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       .create()
 
     when:
-    consumer.receiveAsync().whenComplete { receivedMsg, throwable ->
+    CompletableFuture<Message<String>> result = consumer.receiveAsync().whenComplete { receivedMsg, throwable ->
       runWithSpan("callback") {
         consumer.acknowledge(receivedMsg)
-        latch.countDown()
       }
     }
 
@@ -220,7 +220,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       producer.send(msg)
     }
 
-    latch.await(1, TimeUnit.MINUTES)
+    result.get(1, TimeUnit.MINUTES)
 
     then:
     assertTraces(1) {
@@ -281,6 +281,115 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     }
   }
 
+  def "test consume non-partitioned topic using batchReceive"() {
+    setup:
+    def topic = "persistent://public/default/testConsumeNonPartitionedTopicCallBatchReceive"
+    admin.topics().createNonPartitionedTopic(topic)
+    consumer = client.newConsumer(Schema.STRING)
+      .subscriptionName("test_sub")
+      .topic(topic)
+      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+      .subscribe()
+
+    producer = client.newProducer(Schema.STRING)
+      .topic(topic)
+      .enableBatching(false)
+      .create()
+
+    when:
+    def msg = "test"
+    def msgId = runWithSpan("parent") {
+      producer.send(msg)
+    }
+
+    runWithSpan("receive-parent") {
+      def receivedMsg = consumer.batchReceive()
+      consumer.acknowledge(receivedMsg)
+    }
+
+    then:
+    def producer
+    assertTraces(2) {
+      trace(0, 2) {
+        span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        producerSpan(it, 1, span(0), topic, msgId)
+        producer = span(1)
+      }
+      trace(1, 2) {
+        span(0) {
+          name "receive-parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        receiveSpan(it, 1, span(0), topic, null, producer)
+      }
+    }
+  }
+
+  def "test consume non-partitioned topic using batchReceiveAsync"() {
+    setup:
+    def topic = "persistent://public/default/testConsumeNonPartitionedTopicCallBatchReceiveAsync"
+    admin.topics().createNonPartitionedTopic(topic)
+    consumer = client.newConsumer(Schema.STRING)
+      .subscriptionName("test_sub")
+      .topic(topic)
+      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+      .subscribe()
+
+    producer = client.newProducer(Schema.STRING)
+      .topic(topic)
+      .enableBatching(false)
+      .create()
+
+    when:
+    def msg = "test"
+    def msgId = runWithSpan("parent") {
+      producer.send(msg)
+    }
+
+    CompletableFuture<Messages<String>> result = runWithSpan("receive-parent") {
+      consumer.batchReceiveAsync().whenComplete { receivedMsg, throwable ->
+        runWithSpan("callback") {
+          consumer.acknowledge(receivedMsg)
+        }
+      }
+    }
+    result.get(1, TimeUnit.MINUTES).size() == 1
+
+    then:
+    def producer
+    assertTraces(2) {
+      trace(0, 2) {
+        span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        producerSpan(it, 1, span(0), topic, msgId)
+        producer = span(1)
+      }
+      trace(1, 3) {
+        span(0) {
+          name "receive-parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        receiveSpan(it, 1, span(0), topic, null, producer)
+        span(2) {
+          name "callback"
+          kind INTERNAL
+          childOf span(1)
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
   def "capture message header as span attribute"() {
     setup:
     def topic = "persistent://public/default/testCaptureMessageHeaderTopic"
@@ -321,7 +430,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
         }
         producerSpan(it, 1, span(0), topic, msgId, true)
-        receiveSpan(it, 2, span(1), topic, msgId, true)
+        receiveSpan(it, 2, span(1), topic, msgId, null, true)
         processSpan(it, 3, span(2), topic, msgId, true)
       }
     }
@@ -452,9 +561,9 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
             kind INTERNAL
             hasNoParent()
           }
-          producerSpan(it, 1, span(0), topic, null, { it.startsWith(topicNamePrefix) }, null)
-          receiveSpan(it, 2, span(1), topic, null, { it.startsWith(topicNamePrefix) }, null)
-          processSpan(it, 3, span(2), topic, null, { it.startsWith(topicNamePrefix) }, null)
+          producerSpan(it, 1, span(0), topic, null, { it.startsWith(topicNamePrefix) }, String)
+          receiveSpan(it, 2, span(1), topic, null, { it.startsWith(topicNamePrefix) }, String)
+          processSpan(it, 3, span(2), topic, null, { it.startsWith(topicNamePrefix) }, String)
         }
       }
     }
@@ -479,10 +588,10 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.NET_PEER_PORT" brokerPort
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destination
-        if (msgId != null) {
-          "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-        } else {
+        if (msgId == String) {
           "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+        } else if (msgId != null) {
+          "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         }
         "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
         "messaging.pulsar.message.type" "normal"
@@ -493,11 +602,11 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     }
   }
 
-  def receiveSpan(TraceAssert trace, int index, Object parentSpan, String topic, Object msgId, boolean headers = false) {
-    receiveSpan(trace, index, parentSpan, topic, null, { it == topic }, msgId, headers)
+  def receiveSpan(TraceAssert trace, int index, Object parentSpan, String topic, Object msgId, Object linkedSpan = null, boolean headers = false) {
+    receiveSpan(trace, index, parentSpan, topic, null, { it == topic }, msgId, linkedSpan, headers)
   }
 
-  def receiveSpan(TraceAssert trace, int index, Object parentSpan, String topic, Pattern namePattern, Closure destination, Object msgId, boolean headers = false) {
+  def receiveSpan(TraceAssert trace, int index, Object parentSpan, String topic, Pattern namePattern, Closure destination, Object msgId, Object linkedSpan = null, boolean headers = false) {
     trace.span(index) {
       if (namePattern != null) {
         name namePattern
@@ -506,16 +615,21 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       }
       kind CONSUMER
       childOf parentSpan
+      if (linkedSpan == null) {
+        hasNoLinks()
+      } else {
+        hasLink linkedSpan
+      }
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
         "$SemanticAttributes.NET_PEER_NAME" brokerHost
         "$SemanticAttributes.NET_PEER_PORT" brokerPort
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destination
-        if (msgId != null) {
-          "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-        } else {
+        if (msgId == String) {
           "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+        } else if (msgId != null) {
+          "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         }
         "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
         "$SemanticAttributes.MESSAGING_OPERATION" "receive"
@@ -543,10 +657,10 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destination
-        if (msgId != null) {
-          "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-        } else {
+        if (msgId == String) {
           "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+        } else if (msgId != null) {
+          "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         }
         "$SemanticAttributes.MESSAGING_OPERATION" "process"
         "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long

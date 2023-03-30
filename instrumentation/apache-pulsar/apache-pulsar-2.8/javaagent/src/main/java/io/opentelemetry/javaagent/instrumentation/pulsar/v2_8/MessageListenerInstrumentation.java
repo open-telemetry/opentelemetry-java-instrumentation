@@ -38,12 +38,11 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(isPublic()).and(named("getMessageListener")),
-        MessageListenerInstrumentation.class.getName() + "$ConsumerConfigurationDataMethodAdviser");
+        MessageListenerInstrumentation.class.getName() + "$ConsumerConfigurationDataMethodAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class ConsumerConfigurationDataMethodAdviser {
-    private ConsumerConfigurationDataMethodAdviser() {}
+  public static class ConsumerConfigurationDataMethodAdvice {
 
     @Advice.OnMethodExit
     public static void after(

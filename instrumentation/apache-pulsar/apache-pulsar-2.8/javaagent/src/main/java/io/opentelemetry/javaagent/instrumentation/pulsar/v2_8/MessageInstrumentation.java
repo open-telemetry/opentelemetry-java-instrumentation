@@ -32,7 +32,6 @@ public class MessageInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class MessageRecycleAdvice {
-    private MessageRecycleAdvice() {}
 
     @Advice.OnMethodExit
     public static void after(@Advice.This Message<?> message) {

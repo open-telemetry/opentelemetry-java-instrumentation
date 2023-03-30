@@ -44,18 +44,17 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
             .and(isPublic())
             .and(
                 takesArgument(0, hasSuperType(named("org.apache.pulsar.client.api.PulsarClient")))),
-        ProducerImplInstrumentation.class.getName() + "$ProducerImplConstructorAdviser");
+        ProducerImplInstrumentation.class.getName() + "$ProducerImplConstructorAdvice");
 
     transformer.applyAdviceToMethod(
         isMethod()
             .and(named("sendAsync"))
             .and(takesArgument(1, named("org.apache.pulsar.client.impl.SendCallback"))),
-        ProducerImplInstrumentation.class.getName() + "$ProducerSendAsyncMethodAdviser");
+        ProducerImplInstrumentation.class.getName() + "$ProducerSendAsyncMethodAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class ProducerImplConstructorAdviser {
-    private ProducerImplConstructorAdviser() {}
+  public static class ProducerImplConstructorAdvice {
 
     @Advice.OnMethodExit
     public static void intercept(
@@ -68,8 +67,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class ProducerSendAsyncMethodAdviser {
-    private ProducerSendAsyncMethodAdviser() {}
+  public static class ProducerSendAsyncMethodAdvice {
 
     @Advice.OnMethodEnter
     public static void before(

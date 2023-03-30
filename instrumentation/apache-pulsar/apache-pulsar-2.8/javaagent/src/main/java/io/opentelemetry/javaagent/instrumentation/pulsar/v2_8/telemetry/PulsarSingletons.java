@@ -13,6 +13,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
+import org.apache.pulsar.client.api.Messages;
 
 public final class PulsarSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-pulsar-2.8";
@@ -41,6 +43,8 @@ public final class PulsarSingletons {
       createConsumerProcessInstrumenter();
   private static final Instrumenter<PulsarRequest, Void> CONSUMER_RECEIVE_INSTRUMENTER =
       createConsumerReceiveInstrumenter();
+  private static final Instrumenter<PulsarBatchRequest, Void> CONSUMER_BATCH_RECEIVE_INSTRUMENTER =
+      createConsumerBatchReceiveInstrumenter();
   private static final Instrumenter<PulsarRequest, Void> PRODUCER_INSTRUMENTER =
       createProducerInstrumenter();
 
@@ -64,10 +68,30 @@ public final class PulsarSingletons {
             TELEMETRY,
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
-        .addAttributesExtractor(createMessagingAttributesExtractor(MessageOperation.RECEIVE))
+        .addAttributesExtractor(
+            createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
         .addAttributesExtractor(
             NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
         .buildConsumerInstrumenter(MessageTextMapGetter.INSTANCE);
+  }
+
+  private static Instrumenter<PulsarBatchRequest, Void> createConsumerBatchReceiveInstrumenter() {
+    MessagingAttributesGetter<PulsarBatchRequest, Void> getter =
+        PulsarBatchMessagingAttributesGetter.INSTANCE;
+
+    return Instrumenter.<PulsarBatchRequest, Void>builder(
+            TELEMETRY,
+            INSTRUMENTATION_NAME,
+            MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
+        .addAttributesExtractor(
+            createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
+        .addAttributesExtractor(
+            NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
+        .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+        .addSpanLinksExtractor(
+            new PulsarBatchRequestSpanLinksExtractor(
+                GlobalOpenTelemetry.getPropagators().getTextMapPropagator()))
+        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   private static Instrumenter<PulsarRequest, Void> createConsumerProcessInstrumenter() {
@@ -78,7 +102,8 @@ public final class PulsarSingletons {
             TELEMETRY,
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(getter, MessageOperation.PROCESS))
-        .addAttributesExtractor(createMessagingAttributesExtractor(MessageOperation.PROCESS))
+        .addAttributesExtractor(
+            createMessagingAttributesExtractor(getter, MessageOperation.PROCESS))
         .buildInstrumenter();
   }
 
@@ -91,7 +116,8 @@ public final class PulsarSingletons {
                 TELEMETRY,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, MessageOperation.SEND))
-            .addAttributesExtractor(createMessagingAttributesExtractor(MessageOperation.SEND))
+            .addAttributesExtractor(
+                createMessagingAttributesExtractor(getter, MessageOperation.SEND))
             .addAttributesExtractor(
                 NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
 
@@ -103,9 +129,9 @@ public final class PulsarSingletons {
     return builder.buildProducerInstrumenter(MessageTextMapSetter.INSTANCE);
   }
 
-  private static AttributesExtractor<PulsarRequest, Void> createMessagingAttributesExtractor(
-      MessageOperation operation) {
-    return MessagingAttributesExtractor.builder(PulsarMessagingAttributesGetter.INSTANCE, operation)
+  private static <T> AttributesExtractor<T, Void> createMessagingAttributesExtractor(
+      MessagingAttributesGetter<T, Void> getter, MessageOperation operation) {
+    return MessagingAttributesExtractor.builder(getter, operation)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }
@@ -133,6 +159,30 @@ public final class PulsarSingletons {
         timer.now());
   }
 
+  private static Context startAndEndConsumerReceive(
+      Context parent,
+      Messages<?> messages,
+      Timer timer,
+      Consumer<?> consumer,
+      Throwable throwable) {
+    if (messages == null) {
+      return null;
+    }
+    String brokerUrl = VirtualFieldStore.extract(consumer);
+    PulsarBatchRequest request = PulsarBatchRequest.create(messages, brokerUrl);
+    if (!CONSUMER_BATCH_RECEIVE_INSTRUMENTER.shouldStart(parent, request)) {
+      return null;
+    }
+    return InstrumenterUtil.startAndEnd(
+        CONSUMER_BATCH_RECEIVE_INSTRUMENTER,
+        parent,
+        request,
+        null,
+        throwable,
+        timer.startTime(),
+        timer.now());
+  }
+
   public static CompletableFuture<Message<?>> wrap(
       CompletableFuture<Message<?>> future, Timer timer, Consumer<?> consumer) {
     Context parent = Context.current();
@@ -147,6 +197,28 @@ public final class PulsarSingletons {
                   result.completeExceptionally(throwable);
                 } else {
                   result.complete(message);
+                }
+              });
+        });
+
+    return result;
+  }
+
+  public static CompletableFuture<Messages<?>> wrapBatch(
+      CompletableFuture<Messages<?>> future, Timer timer, Consumer<?> consumer) {
+    Context parent = Context.current();
+    CompletableFuture<Messages<?>> result = new CompletableFuture<>();
+    future.whenComplete(
+        (messages, throwable) -> {
+          Context context =
+              startAndEndConsumerReceive(parent, messages, timer, consumer, throwable);
+          runWithContext(
+              context,
+              () -> {
+                if (throwable != null) {
+                  result.completeExceptionally(throwable);
+                } else {
+                  result.complete(messages);
                 }
               });
         });
