@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.pulsar.client.admin.PulsarAdmin
 import org.apache.pulsar.client.api.Consumer
@@ -25,6 +26,7 @@ import spock.lang.Shared
 import java.time.Duration
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
@@ -100,21 +102,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
         }
-        span(1) {
-          name "$topic send"
-          kind PRODUCER
-          childOf span(0)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.NET_PEER_NAME" brokerHost
-            "$SemanticAttributes.NET_PEER_PORT" brokerPort
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topic
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "messaging.pulsar.message.type" "normal"
-          }
-        }
+        producerSpan(it, 1, span(0), topic, msgId)
       }
     }
   }
@@ -158,49 +146,137 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
         }
-        span(1) {
-          name "$topic send"
-          kind PRODUCER
-          childOf span(0)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.NET_PEER_NAME" brokerHost
-            "$SemanticAttributes.NET_PEER_PORT" brokerPort
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topic
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "messaging.pulsar.message.type" "normal"
-          }
+        producerSpan(it, 1, span(0), topic, msgId)
+        receiveSpan(it, 2, span(1), topic, msgId)
+        processSpan(it, 3, span(2), topic, msgId)
+      }
+    }
+  }
+
+  def "test consume non-partitioned topic using receive"() {
+    setup:
+    def topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceive"
+    admin.topics().createNonPartitionedTopic(topic)
+    consumer = client.newConsumer(Schema.STRING)
+      .subscriptionName("test_sub")
+      .topic(topic)
+      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+      .subscribe()
+
+    producer = client.newProducer(Schema.STRING)
+      .topic(topic)
+      .enableBatching(false)
+      .create()
+
+    when:
+    def msg = "test"
+    def msgId = runWithSpan("parent") {
+      producer.send(msg)
+    }
+
+    def receivedMsg = consumer.receive()
+    consumer.acknowledge(receivedMsg)
+
+    then:
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
         }
-        span(2) {
-          name "$topic receive"
-          kind CONSUMER
-          childOf span(1)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.NET_PEER_NAME" brokerHost
-            "$SemanticAttributes.NET_PEER_PORT" brokerPort
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topic
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-          }
+        producerSpan(it, 1, span(0), topic, msgId)
+        receiveSpan(it, 2, span(1), topic, msgId)
+      }
+    }
+  }
+
+  def "test consume non-partitioned topic using receiveAsync"() {
+    setup:
+    def topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceiveAsync"
+    def latch = new CountDownLatch(1)
+    admin.topics().createNonPartitionedTopic(topic)
+    consumer = client.newConsumer(Schema.STRING)
+      .subscriptionName("test_sub")
+      .topic(topic)
+      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+      .subscribe()
+
+    producer = client.newProducer(Schema.STRING)
+      .topic(topic)
+      .enableBatching(false)
+      .create()
+
+    when:
+    consumer.receiveAsync().whenComplete { receivedMsg, throwable ->
+      runWithSpan("callback") {
+        consumer.acknowledge(receivedMsg)
+        latch.countDown()
+      }
+    }
+
+    def msg = "test"
+    def msgId = runWithSpan("parent") {
+      producer.send(msg)
+    }
+
+    latch.await(1, TimeUnit.MINUTES)
+
+    then:
+    assertTraces(1) {
+      trace(0, 4) {
+        span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
         }
+        producerSpan(it, 1, span(0), topic, msgId)
+        receiveSpan(it, 2, span(1), topic, msgId)
         span(3) {
-          name "$topic process"
+          name "callback"
           kind INTERNAL
           childOf span(2)
           attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topic
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_OPERATION" "process"
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
           }
         }
+      }
+    }
+  }
+
+  def "test consume non-partitioned topic using receive with timeout"() {
+    setup:
+    def topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceiveWithTimeout"
+    admin.topics().createNonPartitionedTopic(topic)
+    consumer = client.newConsumer(Schema.STRING)
+      .subscriptionName("test_sub")
+      .topic(topic)
+      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+      .subscribe()
+
+    producer = client.newProducer(Schema.STRING)
+      .topic(topic)
+      .enableBatching(false)
+      .create()
+
+    when:
+    def msg = "test"
+    def msgId = runWithSpan("parent") {
+      producer.send(msg)
+    }
+
+    def receivedMsg = consumer.receive(1, TimeUnit.MINUTES)
+    consumer.acknowledge(receivedMsg)
+
+    then:
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          name "parent"
+          kind INTERNAL
+          hasNoParent()
+        }
+        producerSpan(it, 1, span(0), topic, msgId)
+        receiveSpan(it, 2, span(1), topic, msgId)
       }
     }
   }
@@ -244,52 +320,9 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
         }
-        span(1) {
-          name "$topic send"
-          kind PRODUCER
-          childOf span(0)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.NET_PEER_NAME" brokerHost
-            "$SemanticAttributes.NET_PEER_PORT" brokerPort
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topic
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "messaging.pulsar.message.type" "normal"
-            "messaging.header.test_message_header" { it == ["test"] }
-          }
-        }
-        span(2) {
-          name "$topic receive"
-          kind CONSUMER
-          childOf span(1)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.NET_PEER_NAME" brokerHost
-            "$SemanticAttributes.NET_PEER_PORT" brokerPort
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topic
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-            "messaging.header.test_message_header" { it == ["test"] }
-          }
-        }
-        span(3) {
-          name "$topic process"
-          kind INTERNAL
-          childOf span(2)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topic
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_OPERATION" "process"
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "messaging.header.test_message_header" { it == ["test"] }
-          }
-        }
+        producerSpan(it, 1, span(0), topic, msgId, true)
+        receiveSpan(it, 2, span(1), topic, msgId, true)
+        processSpan(it, 3, span(2), topic, msgId, true)
       }
     }
   }
@@ -316,21 +349,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
         }
-        span(1) {
-          name ~/${topic}-partition-.*send/
-          kind PRODUCER
-          childOf span(0)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.NET_PEER_NAME" brokerHost
-            "$SemanticAttributes.NET_PEER_PORT" brokerPort
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" { it.startsWith(topic) }
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "messaging.pulsar.message.type" "normal"
-          }
-        }
+        producerSpan(it, 1, span(0), topic, ~/${topic}-partition-.*send/, { it.startsWith(topic) }, msgId)
       }
     }
   }
@@ -375,49 +394,9 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
         }
-        span(1) {
-          name ~/${topic}-partition-.*send/
-          kind PRODUCER
-          childOf span(0)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.NET_PEER_NAME" brokerHost
-            "$SemanticAttributes.NET_PEER_PORT" brokerPort
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" { it.startsWith(topic) }
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "messaging.pulsar.message.type" "normal"
-          }
-        }
-        span(2) {
-          name ~/${topic}-partition-.*receive/
-          kind CONSUMER
-          childOf span(1)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.NET_PEER_NAME" brokerHost
-            "$SemanticAttributes.NET_PEER_PORT" brokerPort
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" { it.startsWith(topic) }
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-          }
-        }
-        span(3) {
-          name ~/${topic}-partition-.*process/
-          kind INTERNAL
-          childOf span(2)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" { it.startsWith(topic) }
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGING_OPERATION" "process"
-          }
-        }
+        producerSpan(it, 1, span(0), topic, ~/${topic}-partition-.*send/, { it.startsWith(topic) }, msgId)
+        receiveSpan(it, 2, span(1), topic,  ~/${topic}-partition-.*receive/, { it.startsWith(topic) }, msgId)
+        processSpan(it, 3, span(2), topic, ~/${topic}-partition-.*process/, { it.startsWith(topic) }, msgId)
       }
     }
   }
@@ -473,49 +452,106 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
             kind INTERNAL
             hasNoParent()
           }
-          span(1) {
-            name "$topic send"
-            kind PRODUCER
-            childOf span(0)
-            attributes {
-              "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-              "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-              "$SemanticAttributes.NET_PEER_NAME" brokerHost
-              "$SemanticAttributes.NET_PEER_PORT" brokerPort
-              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" { it.startsWith(topicNamePrefix) }
-              "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-              "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-              "messaging.pulsar.message.type" "normal"
-            }
-          }
-          span(2) {
-            name "$topic receive"
-            kind CONSUMER
-            childOf span(1)
-            attributes {
-              "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-              "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-              "$SemanticAttributes.NET_PEER_NAME" brokerHost
-              "$SemanticAttributes.NET_PEER_PORT" brokerPort
-              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" { it.startsWith(topicNamePrefix) }
-              "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-              "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-              "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-            }
-          }
-          span(3) {
-            name  "$topic process"
-            kind INTERNAL
-            childOf span(2)
-            attributes {
-              "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-              "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" { it.startsWith(topicNamePrefix) }
-              "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-              "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-              "$SemanticAttributes.MESSAGING_OPERATION" "process"
-            }
-          }
+          producerSpan(it, 1, span(0), topic, null, { it.startsWith(topicNamePrefix) }, null)
+          receiveSpan(it, 2, span(1), topic, null, { it.startsWith(topicNamePrefix) }, null)
+          processSpan(it, 3, span(2), topic, null, { it.startsWith(topicNamePrefix) }, null)
+        }
+      }
+    }
+  }
+
+  def producerSpan(TraceAssert trace, int index, Object parentSpan, String topic, Object msgId, boolean headers = false) {
+    producerSpan(trace, index, parentSpan, topic, null, { it == topic }, msgId, headers)
+  }
+
+  def producerSpan(TraceAssert trace, int index, Object parentSpan, String topic, Pattern namePattern, Closure destination, Object msgId, boolean headers = false) {
+    trace.span(index) {
+      if (namePattern != null) {
+        name namePattern
+      } else {
+        name "$topic send"
+      }
+      kind PRODUCER
+      childOf parentSpan
+      attributes {
+        "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
+        "$SemanticAttributes.NET_PEER_NAME" brokerHost
+        "$SemanticAttributes.NET_PEER_PORT" brokerPort
+        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destination
+        if (msgId != null) {
+          "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
+        } else {
+          "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+        }
+        "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+        "messaging.pulsar.message.type" "normal"
+        if (headers) {
+          "messaging.header.test_message_header" { it == ["test"] }
+        }
+      }
+    }
+  }
+
+  def receiveSpan(TraceAssert trace, int index, Object parentSpan, String topic, Object msgId, boolean headers = false) {
+    receiveSpan(trace, index, parentSpan, topic, null, { it == topic }, msgId, headers)
+  }
+
+  def receiveSpan(TraceAssert trace, int index, Object parentSpan, String topic, Pattern namePattern, Closure destination, Object msgId, boolean headers = false) {
+    trace.span(index) {
+      if (namePattern != null) {
+        name namePattern
+      } else {
+        name "$topic receive"
+      }
+      kind CONSUMER
+      childOf parentSpan
+      attributes {
+        "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
+        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+        "$SemanticAttributes.NET_PEER_NAME" brokerHost
+        "$SemanticAttributes.NET_PEER_PORT" brokerPort
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destination
+        if (msgId != null) {
+          "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
+        } else {
+          "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+        }
+        "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+        "$SemanticAttributes.MESSAGING_OPERATION" "receive"
+        if (headers) {
+          "messaging.header.test_message_header" { it == ["test"] }
+        }
+      }
+    }
+  }
+
+  def processSpan(TraceAssert trace, int index, Object parentSpan, String topic, Object msgId, boolean headers = false) {
+    processSpan(trace, index, parentSpan, topic, null, { it == topic }, msgId, headers)
+  }
+
+  def processSpan(TraceAssert trace, int index, Object parentSpan, String topic, Pattern namePattern, Closure destination, Object msgId, boolean headers = false) {
+    trace.span(index) {
+      if (namePattern != null) {
+        name namePattern
+      } else {
+        name "$topic process"
+      }
+      kind INTERNAL
+      childOf parentSpan
+      attributes {
+        "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
+        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destination
+        if (msgId != null) {
+          "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
+        } else {
+          "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+        }
+        "$SemanticAttributes.MESSAGING_OPERATION" "process"
+        "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+        if (headers) {
+          "messaging.header.test_message_header" { it == ["test"] }
         }
       }
     }
