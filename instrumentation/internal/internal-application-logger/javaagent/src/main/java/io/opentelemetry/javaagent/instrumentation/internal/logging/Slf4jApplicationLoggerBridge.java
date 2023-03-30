@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.logging;
 
-import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerBridge;
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
+import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerBridge;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;

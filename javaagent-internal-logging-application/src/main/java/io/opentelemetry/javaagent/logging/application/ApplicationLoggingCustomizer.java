@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.logging.application;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
-import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerBridge;
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
+import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerBridge;
 import io.opentelemetry.javaagent.tooling.LoggingCustomizer;
 
 @AutoService(LoggingCustomizer.class)
