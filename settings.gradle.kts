@@ -9,7 +9,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "1.8.10"
     id("org.xbib.gradle.plugin.jflex") version "1.7.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
-    id("org.graalvm.buildtools.native") version "0.9.14"
+    id("org.graalvm.buildtools.native") version "0.9.20"
   }
 }
 
