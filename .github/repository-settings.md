@@ -10,6 +10,11 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
 
 * Allow auto-merge
 
+## Collaborators and teams
+
+* [@opentelemetrybot](https://github.com/opentelemetrybot) has write permission in order to
+  enable [comment-driven PR automation](workflows/comment-driven-pr-automation.yml).
+
 ## Actions > General
 
 * Fork pull request workflows from outside collaborators:
