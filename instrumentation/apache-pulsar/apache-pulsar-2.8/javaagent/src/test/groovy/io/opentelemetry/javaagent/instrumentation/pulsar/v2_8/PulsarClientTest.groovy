@@ -156,7 +156,6 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
   def "test consume non-partitioned topic using receive"() {
     setup:
     def topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceive"
-    def latch = new CountDownLatch(1)
     admin.topics().createNonPartitionedTopic(topic)
     consumer = client.newConsumer(Schema.STRING)
       .subscriptionName("test_sub")
@@ -247,7 +246,6 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
   def "test consume non-partitioned topic using receive with timeout"() {
     setup:
     def topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceiveWithTimeout"
-    def latch = new CountDownLatch(1)
     admin.topics().createNonPartitionedTopic(topic)
     consumer = client.newConsumer(Schema.STRING)
       .subscriptionName("test_sub")
