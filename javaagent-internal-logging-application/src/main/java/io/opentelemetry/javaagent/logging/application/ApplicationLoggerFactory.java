@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.logging.application;
 
-import io.opentelemetry.javaagent.bootstrap.ApplicationLoggerBridge;
+import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerBridge;
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;

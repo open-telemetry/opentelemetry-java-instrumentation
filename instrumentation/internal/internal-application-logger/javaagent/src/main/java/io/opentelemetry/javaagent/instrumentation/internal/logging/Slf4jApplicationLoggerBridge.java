@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.internal.slf4j;
+package io.opentelemetry.javaagent.instrumentation.internal.logging;
 
-import io.opentelemetry.javaagent.bootstrap.ApplicationLoggerBridge;
+import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerBridge;
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;

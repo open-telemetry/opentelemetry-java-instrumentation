@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.bootstrap;
+package io.opentelemetry.javaagent.bootstrap.logging;
 
+import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class ApplicationLoggerBridge {
