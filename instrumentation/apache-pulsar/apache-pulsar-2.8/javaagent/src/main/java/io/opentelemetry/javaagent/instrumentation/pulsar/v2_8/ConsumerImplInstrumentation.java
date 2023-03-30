@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.startAndEndConsumerReceive;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.wrap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -52,21 +52,16 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(1, named("java.util.concurrent.TimeUnit"))),
         className + "$ConsumerInternalReceiveAdviser");
-    // receive/batchReceive will apply to Consumer#receive()/Consumer#batchReceive()
+    // internalReceive will apply to Consumer#receive()
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(namedOneOf("receive", "batchReceive"))
-            .and(takesArguments(0)),
+        isMethod().and(isProtected()).and(named("internalReceive")).and(takesArguments(0)),
         className + "$ConsumerSyncReceiveAdviser");
-    // receiveAsync/batchReceiveAsync will apply to
-    // Consumer#receiveAsync()/Consumer#batchReceiveAsync()
+    // internalReceiveAsync will apply to Consumer#receiveAsync()
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(namedOneOf("receiveAsync", "batchReceiveAsync"))
-            .and(takesArguments(0)),
+        isMethod().and(isProtected()).and(named("internalReceiveAsync")).and(takesArguments(0)),
         className + "$ConsumerAsyncReceiveAdviser");
+    // TODO batch receiving not implemented (Consumer#batchReceive() and
+    // Consumer#batchReceiveAsync())
   }
 
   @SuppressWarnings("unused")
@@ -97,14 +92,10 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.Enter Timer timer,
         @Advice.This Consumer<?> consumer,
         @Advice.Return Message<?> message,
-        @Advice.Thrown Throwable t) {
-      if (t != null) {
-        return;
-      }
-
+        @Advice.Thrown Throwable throwable) {
       Context parent = Context.current();
-      Context current = startAndEndConsumerReceive(parent, message, timer, consumer);
-      if (current != null) {
+      Context current = startAndEndConsumerReceive(parent, message, timer, consumer, throwable);
+      if (current != null && throwable == null) {
         // ConsumerBase#internalReceive(long,TimeUnit) will be called before
         // ConsumerListener#receive(Consumer,Message), so, need to inject Context into Message.
         VirtualFieldStore.inject(message, current);
@@ -126,13 +117,9 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.Enter Timer timer,
         @Advice.This Consumer<?> consumer,
         @Advice.Return Message<?> message,
-        @Advice.Thrown Throwable t) {
-      if (t != null) {
-        return;
-      }
-
+        @Advice.Thrown Throwable throwable) {
       Context parent = Context.current();
-      startAndEndConsumerReceive(parent, message, timer, consumer);
+      startAndEndConsumerReceive(parent, message, timer, consumer, throwable);
       // No need to inject context to message.
     }
   }
@@ -150,17 +137,8 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
     public static void after(
         @Advice.Enter Timer timer,
         @Advice.This Consumer<?> consumer,
-        @Advice.Return CompletableFuture<Message<?>> future) {
-      future.whenComplete(
-          (message, t) -> {
-            if (t != null) {
-              return;
-            }
-
-            Context parent = Context.current();
-            startAndEndConsumerReceive(parent, message, timer, consumer);
-            // No need to inject context to message.
-          });
+        @Advice.Return(readOnly = false) CompletableFuture<Message<?>> future) {
+      future = wrap(future, timer, consumer);
     }
   }
 }

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -23,6 +24,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 
@@ -109,7 +111,7 @@ public final class PulsarSingletons {
   }
 
   public static Context startAndEndConsumerReceive(
-      Context parent, Message<?> message, Timer timer, Consumer<?> consumer) {
+      Context parent, Message<?> message, Timer timer, Consumer<?> consumer, Throwable throwable) {
     if (message == null) {
       return null;
     }
@@ -126,9 +128,40 @@ public final class PulsarSingletons {
         PROPAGATOR.extract(parent, request, MessageTextMapGetter.INSTANCE),
         request,
         null,
-        null,
+        throwable,
         timer.startTime(),
         timer.now());
+  }
+
+  public static CompletableFuture<Message<?>> wrap(
+      CompletableFuture<Message<?>> future, Timer timer, Consumer<?> consumer) {
+    Context parent = Context.current();
+    CompletableFuture<Message<?>> result = new CompletableFuture<>();
+    future.whenComplete(
+        (message, throwable) -> {
+          Context context = startAndEndConsumerReceive(parent, message, timer, consumer, throwable);
+          runWithContext(
+              context,
+              () -> {
+                if (throwable != null) {
+                  result.completeExceptionally(throwable);
+                } else {
+                  result.complete(message);
+                }
+              });
+        });
+
+    return result;
+  }
+
+  private static void runWithContext(Context context, Runnable runnable) {
+    if (context != null) {
+      try (Scope ignored = context.makeCurrent()) {
+        runnable.run();
+      }
+    } else {
+      runnable.run();
+    }
   }
 
   private PulsarSingletons() {}
