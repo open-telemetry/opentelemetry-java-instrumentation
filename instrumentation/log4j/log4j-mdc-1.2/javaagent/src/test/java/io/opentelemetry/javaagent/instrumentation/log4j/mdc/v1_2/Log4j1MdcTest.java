@@ -27,12 +27,12 @@ public class Log4j1MdcTest {
   private static final Logger logger = LogManager.getLogger("TestLogger");
 
   @BeforeEach
-  public void cleanup() {
+  void cleanup() {
     ListAppender.clearEvents();
   }
 
   @Test
-  public void noIdsWhenNoSpan() {
+  void noIdsWhenNoSpan() {
     logger.info("log message 1");
     logger.info("log message 2");
 
@@ -51,7 +51,7 @@ public class Log4j1MdcTest {
   }
 
   @Test
-  public void idsWhenSpan() {
+  void idsWhenSpan() {
     Span span1 =
         testing.runWithSpan(
             "test",

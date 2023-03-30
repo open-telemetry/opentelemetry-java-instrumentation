@@ -11,7 +11,7 @@ import org.apache.log4j.spi.LoggingEvent;
 
 public class ListAppender extends AppenderSkeleton {
 
-  private static ArrayList<LoggingEvent> events = new ArrayList<LoggingEvent>();
+  private static final ArrayList<LoggingEvent> events = new ArrayList<LoggingEvent>();
 
   @Override
   protected void append(LoggingEvent loggingEvent) {
@@ -32,9 +32,5 @@ public class ListAppender extends AppenderSkeleton {
 
   public static ArrayList<LoggingEvent> getEvents() {
     return events;
-  }
-
-  public static void setEvents(ArrayList<LoggingEvent> events) {
-    ListAppender.events = events;
   }
 }
