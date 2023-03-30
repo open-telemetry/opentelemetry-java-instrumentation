@@ -23,6 +23,9 @@ jobs:
         with:
           # history is needed for the update command to run "git merge"
           fetch-depth: ${{ env.COMMAND == 'update' && '0' || '1' }}
+          # this is the personal access token used for "git push" below
+          # which is needed in order to trigger workflows
+          token: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
 
       - name: Check out PR branch
         if: |
@@ -35,6 +38,23 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh pr checkout $NUMBER
+
+      - name: This could take me a few minutes...
+        if: |
+          env.COMMAND == 'spotless' ||
+          env.COMMAND == 'license' ||
+          env.COMMAND == 'apidiff'
+        env:
+          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+        run: |
+          if [[ "$COMMAND" == "spotless" ]]; then
+            command="./gradlew spotlessApply"
+          elif [[ "$COMMAND" == "license" ]]; then
+            command="./gradlew generateLicenseReport"
+          elif [[ "$COMMAND" == "apidiff" ]]; then
+            command="./gradlew jApiCmp"
+          fi
+          gh pr comment $NUMBER --body "Running \`$command\`, this could take a few minutes..."
 
       - name: Set up Gradle cache
         if: |
