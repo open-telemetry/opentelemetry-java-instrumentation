@@ -34,10 +34,9 @@ dependencies {
   library("com.typesafe.akka:akka-http_2.11:10.0.0")
   library("com.typesafe.akka:akka-stream_2.11:2.4.14")
 
-  // these instrumentations are not needed for the tests to pass
-  // they are here to test for context leaks
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))
   testInstrumentation(project(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent"))
+  testInstrumentation(project(":instrumentation:scala-fork-join-2.8:javaagent"))
 
   latestDepTestLibrary("com.typesafe.akka:akka-http_2.13:+")
   latestDepTestLibrary("com.typesafe.akka:akka-stream_2.13:+")
@@ -47,6 +46,8 @@ tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
 
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }

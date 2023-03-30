@@ -12,6 +12,7 @@ import akka.dispatch.Envelope;
 import akka.dispatch.sysmsg.SystemMessage;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.bootstrap.executors.TaskAdviceHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -51,6 +52,11 @@ public class AkkaActorCellInstrumentation implements TypeInstrumentation {
     public static void exit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
+      }
+      // akka-http instrumentation can leak scopes
+      // reset the context to clear the leaked scopes
+      if (Java8BytecodeBridge.currentContext() != Java8BytecodeBridge.rootContext()) {
+        Java8BytecodeBridge.rootContext().makeCurrent();
       }
     }
   }

@@ -12,11 +12,15 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
+import io.opentelemetry.instrumentation.testing.junit.http.{
+  AbstractHttpServerTest,
+  ServerEndpoint
+}
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
 
+import java.util.function.Supplier
 import scala.concurrent.Await
 
-// FIXME: This doesn't work because we don't support bindAndHandle.
 object AkkaHttpTestWebServer {
   implicit val system = ActorSystem("my-system")
   implicit val materializer = ActorMaterializer()
@@ -29,21 +33,36 @@ object AkkaHttpTestWebServer {
     )
   }
 
-  val route = { // handleExceptions(exceptionHandler) {
-    path(SUCCESS.rawPath) {
-      complete(
-        HttpResponse(status = SUCCESS.getStatus).withEntity(SUCCESS.getBody)
-      )
-    } ~ path(QUERY_PARAM.rawPath) {
-      complete(
-        HttpResponse(status = QUERY_PARAM.getStatus).withEntity(SUCCESS.getBody)
-      )
-    } ~ path(REDIRECT.rawPath) {
-      redirect(Uri(REDIRECT.getBody), StatusCodes.Found)
-    } ~ path(ERROR.rawPath) {
-      complete(HttpResponse(status = ERROR.getStatus).withEntity(ERROR.getBody))
-    } ~ path(EXCEPTION.rawPath) {
-      failWith(new Exception(EXCEPTION.getBody))
+  val route = handleExceptions(exceptionHandler) {
+    extractUri { uri =>
+      val endpoint = ServerEndpoint.forPath(uri.path.toString())
+      complete {
+        AbstractHttpServerTest.controller(
+          endpoint,
+          new Supplier[HttpResponse] {
+            def get(): HttpResponse = {
+              val resp = HttpResponse(status = endpoint.getStatus)
+              endpoint match {
+                case SUCCESS => resp.withEntity(endpoint.getBody)
+                case INDEXED_CHILD =>
+                  INDEXED_CHILD.collectSpanAttributes(new UrlParameterProvider {
+                    override def getParameter(name: String): String =
+                      uri.query().get(name).orNull
+                  })
+                  resp.withEntity("")
+                case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
+                case REDIRECT =>
+                  resp.withHeaders(headers.Location(endpoint.getBody))
+                case ERROR     => resp.withEntity(endpoint.getBody)
+                case EXCEPTION => throw new Exception(endpoint.getBody)
+                case _ =>
+                  HttpResponse(status = NOT_FOUND.getStatus)
+                    .withEntity(NOT_FOUND.getBody)
+              }
+            }
+          }
+        )
+      }
     }
   }
 
