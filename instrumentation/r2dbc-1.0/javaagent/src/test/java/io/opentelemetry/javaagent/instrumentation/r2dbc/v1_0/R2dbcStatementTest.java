@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
 
+import io.opentelemetry.instrumentation.r2dbc.v1_0.AbstractR2dbcStatementTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;

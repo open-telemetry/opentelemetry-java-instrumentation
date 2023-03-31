@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
+package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_CONNECTION_STRING;

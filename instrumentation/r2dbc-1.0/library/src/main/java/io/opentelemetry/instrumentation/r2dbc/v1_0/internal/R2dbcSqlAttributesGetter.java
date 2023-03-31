@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.internal;
+package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesGetter;
 import javax.annotation.Nullable;
