@@ -240,7 +240,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}
+          name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}-${{ matrix.test-partition }}
           path: /tmp/deadlock-detector-*
           if-no-files-found: ignore
 
@@ -248,7 +248,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: javacore-test-${{ matrix.test-java-version }}
+          name: javacore-test-${{ matrix.test-java-version }}-${{ matrix.test-partition }}
           path: |
             **/hs_err_pid*.log
             **/javacore.*.txt

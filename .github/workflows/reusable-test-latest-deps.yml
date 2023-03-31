@@ -55,6 +55,23 @@ jobs:
         run: |
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
+      - name: List tests
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: >
+            check
+            listTestPartitions
+            -PtestPartition=${{ matrix.test-partition }}
+          cache-read-only: true
+
+      - name: Set test tasks
+        run: |
+          echo "test-task=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
+
       - name: Test
         uses: gradle/gradle-build-action@v2
         env:
@@ -63,9 +80,9 @@ jobs:
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
           arguments: >
-            test
+            ${{ env.test-task }}
             -PtestLatestDeps=true
-            -PtestPartition=${{ matrix.test-partition }}
+            --no-build-cache
             ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
