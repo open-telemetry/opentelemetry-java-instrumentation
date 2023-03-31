@@ -19,3 +19,10 @@ dependencies {
   // 4.0 introduces submitListenable() methods
   testLibrary("org.springframework:spring-core:4.0.0.RELEASE")
 }
+
+// spring 6 requires java 17
+if (findProperty("testLatestDeps") as Boolean) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_17)
+  }
+}
