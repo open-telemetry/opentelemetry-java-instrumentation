@@ -47,7 +47,7 @@ public class SimpleAsyncTaskExecutorInstrumentationTest {
     executeTwoTasks(task -> EXECUTOR.submitListenable((Callable<?>) task));
   }
 
-  private void executeTwoTasks(ThrowingConsumer<AsyncTask> task) {
+  private static void executeTwoTasks(ThrowingConsumer<AsyncTask> task) {
     testing.runWithSpan(
         "parent",
         () -> {
@@ -81,6 +81,10 @@ public class SimpleAsyncTaskExecutorInstrumentationTest {
     private final boolean startSpan;
     private final CountDownLatch latch = new CountDownLatch(1);
 
+    public AsyncTask(boolean startSpan) {
+      this.startSpan = startSpan;
+    }
+
     @Override
     public void run() {
       if (startSpan) {
@@ -102,10 +106,6 @@ public class SimpleAsyncTaskExecutorInstrumentationTest {
         Thread.currentThread().interrupt();
         throw new AssertionError(e);
       }
-    }
-
-    public AsyncTask(boolean startSpan) {
-      this.startSpan = startSpan;
     }
   }
 }
