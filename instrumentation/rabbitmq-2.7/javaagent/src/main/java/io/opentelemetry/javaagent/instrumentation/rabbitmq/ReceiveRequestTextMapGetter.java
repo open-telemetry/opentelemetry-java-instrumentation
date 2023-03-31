@@ -34,7 +34,7 @@ enum ReceiveRequestTextMapGetter implements TextMapGetter<ReceiveRequest> {
   }
 
   @Nullable
-  private Map<String, Object> getHeaders(@Nullable ReceiveRequest carrier) {
+  private static Map<String, Object> getHeaders(@Nullable ReceiveRequest carrier) {
     if (carrier == null) {
       return null;
     }
