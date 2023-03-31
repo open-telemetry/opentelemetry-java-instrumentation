@@ -23,7 +23,7 @@ public class SimpleAsyncTaskExecutorInstrumentationTest {
   private static final SimpleAsyncTaskExecutor EXECUTOR = new SimpleAsyncTaskExecutor();
 
   @Test
-  public void executeRunnable() {
+  void executeRunnable() {
     executeTwoTasks(EXECUTOR::execute);
   }
 
