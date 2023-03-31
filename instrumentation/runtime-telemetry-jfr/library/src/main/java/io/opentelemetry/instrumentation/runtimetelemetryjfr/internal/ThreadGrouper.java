@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetryjfr.internal;
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 import jdk.jfr.consumer.RecordedThread;
 
@@ -14,13 +14,14 @@ import jdk.jfr.consumer.RecordedThread;
  * any time.
  */
 public final class ThreadGrouper {
+
   // FIXME doesn't actually do any grouping, but should be safe for now
-  public Optional<String> groupedName(RecordedEvent ev) {
+  @Nullable
+  public String groupedName(RecordedEvent ev) {
     Object thisField = ev.getValue("eventThread");
-    if (thisField instanceof RecordedThread) {
-      RecordedThread thread = (RecordedThread) thisField;
-      return Optional.of(thread.getJavaName());
+    if (thisField instanceof RecordedThread thread) {
+      return thread.getJavaName();
     }
-    return Optional.empty();
+    return null;
   }
 }

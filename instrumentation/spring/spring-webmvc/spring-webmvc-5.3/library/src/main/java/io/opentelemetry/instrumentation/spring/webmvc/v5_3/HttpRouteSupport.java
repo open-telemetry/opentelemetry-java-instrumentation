@@ -11,7 +11,6 @@ import static org.springframework.web.util.ServletRequestPathUtils.PATH_ATTRIBUT
 import io.opentelemetry.context.Context;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import javax.servlet.FilterConfig;
@@ -65,9 +64,13 @@ final class HttpRouteSupport {
   boolean hasMappings() {
     if (contextRefreshTriggered.compareAndSet(true, false)) {
       // reload the handler mappings only if the web app context was recently refreshed
-      Optional.ofNullable(dispatcherServlet)
-          .map(DispatcherServlet::getHandlerMappings)
-          .ifPresent(this::setHandlerMappings);
+      DispatcherServlet dispatcherServlet = this.dispatcherServlet;
+      if (dispatcherServlet != null) {
+        List<HandlerMapping> mappings = dispatcherServlet.getHandlerMappings();
+        if (mappings != null) {
+          setHandlerMappings(mappings);
+        }
+      }
     }
     return handlerMappings != null;
   }

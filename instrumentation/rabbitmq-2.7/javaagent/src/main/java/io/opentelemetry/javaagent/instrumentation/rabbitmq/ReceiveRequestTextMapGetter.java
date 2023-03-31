@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
+import static java.util.Collections.emptySet;
+
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 enum ReceiveRequestTextMapGetter implements TextMapGetter<ReceiveRequest> {
@@ -18,23 +18,34 @@ enum ReceiveRequestTextMapGetter implements TextMapGetter<ReceiveRequest> {
 
   @Override
   public Iterable<String> keys(ReceiveRequest carrier) {
-    return Optional.of(carrier)
-        .map(ReceiveRequest::getResponse)
-        .map(GetResponse::getProps)
-        .map(AMQP.BasicProperties::getHeaders)
-        .map(Map::keySet)
-        .orElse(Collections.emptySet());
+    Map<String, Object> headers = getHeaders(carrier);
+    return headers == null ? emptySet() : headers.keySet();
   }
 
   @Nullable
   @Override
   public String get(@Nullable ReceiveRequest carrier, String key) {
-    return Optional.ofNullable(carrier)
-        .map(ReceiveRequest::getResponse)
-        .map(GetResponse::getProps)
-        .map(AMQP.BasicProperties::getHeaders)
-        .map(headers -> headers.get(key))
-        .map(Object::toString)
-        .orElse(null);
+    Map<String, Object> headers = getHeaders(carrier);
+    if (headers == null) {
+      return null;
+    }
+    Object value = headers.get(key);
+    return value == null ? null : value.toString();
+  }
+
+  @Nullable
+  private Map<String, Object> getHeaders(@Nullable ReceiveRequest carrier) {
+    if (carrier == null) {
+      return null;
+    }
+    GetResponse response = carrier.getResponse();
+    if (response == null) {
+      return null;
+    }
+    AMQP.BasicProperties props = response.getProps();
+    if (props == null) {
+      return null;
+    }
+    return props.getHeaders();
   }
 }
