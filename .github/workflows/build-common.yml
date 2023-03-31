@@ -213,7 +213,7 @@ jobs:
 
       - name: Set test tasks
         run: |
-          echo "test-task=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
+          echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
 
       - name: Test
         env:
@@ -224,7 +224,7 @@ jobs:
         with:
           # spotless is checked separately since it's a common source of failure
           arguments: >
-            ${{ env.test-task }}
+            ${{ env.test-tasks }}
             -PtestJavaVersion=${{ matrix.test-java-version }}
             -PtestJavaVM=${{ matrix.vm }}
             -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}

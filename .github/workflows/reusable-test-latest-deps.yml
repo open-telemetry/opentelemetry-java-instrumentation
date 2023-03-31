@@ -66,11 +66,12 @@ jobs:
             check -x spotlessCheck
             listTestPartitions
             -PtestPartition=${{ matrix.test-partition }}
+            -PtestLatestDeps=true
           cache-read-only: true
 
       - name: Set test tasks
         run: |
-          echo "test-task=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
+          echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
 
       - name: Test
         uses: gradle/gradle-build-action@v2
@@ -80,7 +81,7 @@ jobs:
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
           arguments: >
-            ${{ env.test-task }}
+            ${{ env.test-tasks }}
             -PtestLatestDeps=true
             --no-build-cache
             ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
