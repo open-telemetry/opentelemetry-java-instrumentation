@@ -132,5 +132,12 @@ plugins {
 Following the reasoning from [Writing a Java library with better experience (slide 12)](https://speakerdeck.com/trustin/writing-a-java-library-with-better-experience?slide=12),
 usage of `java.util.Optional` is kept at a minimum in this project.
 
-It is ok to use `Optional` in places where it does not leak into public API signatures and where
-performance is not critical.
+It is ok to use `Optional` in places where it does not leak into public API signatures.
+
+Also, avoid `Optional` usage on the hot path (instrumentation code), unless the instrumented library
+itself uses it.
+
+## java.util.stream.Stream usage
+
+Avoid streams on the hot path (instrumentation code), unless the instrumented library itself uses
+them.
