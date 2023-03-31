@@ -86,8 +86,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
             this::findByCurrentDirectoryApplicationProperties,
             this::findByCurrentDirectoryApplicationYaml,
             this::findByClasspathApplicationProperties,
-            this::findByClasspathApplicationYaml,
-            this::findByBootInfApplicationYml);
+            this::findByClasspathApplicationYaml);
     return finders
         .map(Supplier::get)
         .filter(Objects::nonNull)
@@ -157,14 +156,6 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   private String findByClasspathApplicationYaml() {
     String result =
         loadFromClasspath("application.yml", SpringBootServiceNameDetector::parseNameFromYaml);
-    logger.log(Level.FINER, "Checking application.yml in classpath: {0}", result);
-    return result;
-  }
-
-  @Nullable
-  private String findByBootInfApplicationYml() {
-    String result =
-        loadFromBootInf("application.yml", SpringBootServiceNameDetector::parseNameFromYaml);
     logger.log(Level.FINER, "Checking application.yml in classpath: {0}", result);
     return result;
   }
@@ -274,15 +265,6 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     }
   }
 
-  @Nullable
-  private String loadFromBootInf(String filename, Function<InputStream, String> parser) {
-    try (InputStream in = system.openBootInfClassesResource(filename)) {
-      return parser.apply(in);
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
   // Exists for testing
   static class SystemHelper {
     private final ClassLoader classLoader;
@@ -309,12 +291,6 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     InputStream openClasspathResource(String filename) {
       String path = addBootInfPrefix ? "BOOT-INF/classes/" + filename : filename;
       return classLoader.getResourceAsStream(path);
-    }
-
-    InputStream openBootInfClassesResource(String filename) {
-      return Thread.currentThread()
-          .getContextClassLoader()
-          .getResourceAsStream(Paths.get("BOOT-INF", "classes", filename).toString());
     }
 
     InputStream openFile(String filename) throws Exception {
