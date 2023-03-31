@@ -47,7 +47,7 @@ public class SimpleAsyncTaskExecutorInstrumentationTest {
     executeTwoTasks(task -> EXECUTOR.submitListenable((Callable<?>) task));
   }
 
-  public void executeTwoTasks(ThrowingConsumer<AsyncTask> task) {
+  private void executeTwoTasks(ThrowingConsumer<AsyncTask> task) {
     testing.runWithSpan(
         "parent",
         () -> {
