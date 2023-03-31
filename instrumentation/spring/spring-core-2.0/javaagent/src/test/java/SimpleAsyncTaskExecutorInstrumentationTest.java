@@ -28,22 +28,22 @@ public class SimpleAsyncTaskExecutorInstrumentationTest {
   }
 
   @Test
-  public void submitRunnable() {
+  void submitRunnable() {
     executeTwoTasks(task -> EXECUTOR.submit((Runnable) task));
   }
 
   @Test
-  public void submitCallable() {
+  void submitCallable() {
     executeTwoTasks(task -> EXECUTOR.submit((Callable<?>) task));
   }
 
   @Test
-  public void submitListenableRunnable() {
+  void submitListenableRunnable() {
     executeTwoTasks(task -> EXECUTOR.submitListenable((Runnable) task));
   }
 
   @Test
-  public void submitListenableCallable() {
+  void submitListenableCallable() {
     executeTwoTasks(task -> EXECUTOR.submitListenable((Callable<?>) task));
   }
 
