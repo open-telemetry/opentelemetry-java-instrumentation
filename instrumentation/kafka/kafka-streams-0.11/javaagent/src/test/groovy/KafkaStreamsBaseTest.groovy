@@ -44,7 +44,7 @@ class KafkaStreamsBaseTest extends AgentInstrumentationSpecification {
   static CountDownLatch consumerReady = new CountDownLatch(1)
 
   def setupSpec() {
-    kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"))
+    kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.2.10"))
       .withEnv("KAFKA_HEAP_OPTS", "-Xmx256m")
       .withLogConsumer(new Slf4jLogConsumer(logger))
       .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
