@@ -19,8 +19,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.concurrent.CompletableFuture;
@@ -102,9 +104,15 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Argument(value = 1, readOnly = false) HttpResponse.BodyHandler<?> bodyHandler,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelParentContext") Context parentContext,
         @Advice.Local("otelScope") Scope scope) {
+      callDepth = CallDepth.forClass(HttpClient.class);
+      if (callDepth.getAndIncrement() > 0) {
+        return;
+      }
+
       parentContext = currentContext();
       if (bodyHandler != null) {
         bodyHandler = new BodyHandlerWrapper<>(bodyHandler, parentContext);
@@ -122,9 +130,14 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Return(readOnly = false) CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelParentContext") Context parentContext,
         @Advice.Local("otelScope") Scope scope) {
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
+
       if (scope == null) {
         return;
       }

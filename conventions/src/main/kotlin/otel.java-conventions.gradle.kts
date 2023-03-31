@@ -262,7 +262,7 @@ abstract class TestcontainersBuildService : BuildService<BuildServiceParameters.
 // To limit number of concurrently running resource intensive tests add
 // tasks {
 //   test {
-//     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+//     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 //   }
 // }
 gradle.sharedServices.registerIfAbsent("testcontainersBuildService", TestcontainersBuildService::class.java) {

@@ -220,14 +220,20 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
   }
 
   @Override
+  boolean hasResponseCustomizer(ServerEndpoint endpoint) {
+    true
+  }
+
+  @Override
   void serverSpan(TraceAssert trace,
                   int index,
                   String traceID = null,
                   String parentID = null,
                   String method = "GET",
                   Long responseContentLength = null,
-                  ServerEndpoint endpoint = SUCCESS) {
-    serverSpan(trace, index, traceID, parentID, method,
+                  ServerEndpoint endpoint = SUCCESS,
+                  String spanID = null) {
+    serverSpan(trace, index, traceID, parentID, spanID, method,
       endpoint == PATH_PARAM ? getContextPath() + "/path/{id}/param" : endpoint.resolvePath(address).path,
       endpoint.resolve(address),
       endpoint.status,
@@ -239,7 +245,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
                        String url,
                        int statusCode) {
     def rawUrl = URI.create(url).toURL()
-    serverSpan(trace, index, null, null, "GET",
+    serverSpan(trace, index, null, null, null, "GET",
       rawUrl.path,
       rawUrl.toURI(),
       statusCode,
@@ -250,6 +256,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
                   int index,
                   String traceID,
                   String parentID,
+                  String spanID,
                   String method,
                   String path,
                   URI fullUrl,
@@ -261,11 +268,16 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
       if (statusCode >= 500) {
         status ERROR
       }
-      if (parentID != null) {
+      if (traceID != null) {
         traceId traceID
+      }
+      if (parentID != null) {
         parentSpanId parentID
       } else {
         hasNoParent()
+      }
+      if (spanID != null) {
+        spanId spanID
       }
       attributes {
         "$SemanticAttributes.NET_HOST_NAME" fullUrl.host

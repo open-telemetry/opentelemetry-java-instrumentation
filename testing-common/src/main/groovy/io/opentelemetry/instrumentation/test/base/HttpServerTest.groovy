@@ -100,6 +100,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     false
   }
 
+  boolean hasResponseCustomizer(ServerEndpoint endpoint) {
+    false
+  }
+
   String sockPeerAddr(ServerEndpoint endpoint) {
     "127.0.0.1"
   }
@@ -199,6 +203,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       options.hasExceptionOnServerSpan = { endpoint ->
         HttpServerTest.this.hasExceptionOnServerSpan(endpoint)
       }
+      options.hasResponseCustomizer = { endpoint ->
+        HttpServerTest.this.hasResponseCustomizer(endpoint)
+      }
       options.sockPeerAddr = { endpoint ->
         HttpServerTest.this.sockPeerAddr(endpoint)
       }
@@ -221,10 +228,11 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       int size,
       String traceId,
       String parentId,
+      String spanId,
       String method,
       ServerEndpoint endpoint,
       AggregatedHttpResponse response) {
-      HttpServerTest.this.assertTheTraces(size, traceId, parentId, method, endpoint, response)
+      HttpServerTest.this.assertTheTraces(size, traceId, parentId, spanId, method, endpoint, response)
     }
 
     @Override
@@ -342,7 +350,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   //FIXME: add tests for POST with large/chunked data
 
-  void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, AggregatedHttpResponse response = null) {
+  void assertTheTraces(int size, String traceID = null, String parentID = null, String spanID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, AggregatedHttpResponse response = null) {
     def spanCount = 1 // server span
     if (hasResponseSpan(endpoint)) {
       spanCount++
@@ -368,7 +376,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
               assert it.span(0).endEpochNanos - it.span(index).endEpochNanos >= 0
             }
           }
-          serverSpan(it, spanIndex++, traceID, parentID, method, response?.content()?.length(), endpoint)
+          serverSpan(it, spanIndex++, traceID, parentID, method, response?.content()?.length(), endpoint, spanID)
           if (hasHandlerSpan(endpoint)) {
             handlerSpan(it, spanIndex++, span(0), method, endpoint)
           }
@@ -441,7 +449,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     }
   }
 
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS, String spanID = null) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
     def assertion = junitTest.assertServerSpan(OpenTelemetryAssertions.assertThat(spanData), method, endpoint)
@@ -449,7 +457,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       assertion.hasParentSpanId(SpanId.invalid)
     } else {
       assertion.hasParentSpanId(parentID)
+    }
+    if (traceID != null) {
       assertion.hasTraceId(traceID)
+    }
+    if (spanID != null) {
+      assertion.hasSpanId(spanID)
     }
   }
 

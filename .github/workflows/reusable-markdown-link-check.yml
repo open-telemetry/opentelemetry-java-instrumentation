@@ -10,7 +10,9 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install markdown-link-check
-        run: npm install -g markdown-link-check
+        # fix version to 3.10.3 as 3.11.0 appears to ignore --config, so we can't specify our own
+        # configuration file
+        run: npm install -g markdown-link-check@3.10.3
 
       - name: Run markdown-link-check
         run: |

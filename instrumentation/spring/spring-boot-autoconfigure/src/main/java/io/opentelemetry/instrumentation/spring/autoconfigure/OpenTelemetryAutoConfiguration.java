@@ -34,7 +34,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
- * Create {@link io.opentelemetry.api.trace.Tracer} bean if bean is missing.
+ * Create {@link io.opentelemetry.api.OpenTelemetry} bean if bean is missing.
  *
  * <p>Adds span exporter beans to the active tracer provider.
  *

@@ -1,6 +1,6 @@
 # Debugging
 
-Debugging java agent can be a challenging task since some instrumentation
+Debugging javaagent instrumentation can be a challenging task since instrumentation
 code is directly inlined into target classes.
 
 ## Advice methods
@@ -14,11 +14,20 @@ The advice methods are annotated with:
 @net.bytebuddy.asm.Advice.OnMethodExit
 ```
 
-The best approach to debug advice methods and agent initialization is to use the following statements:
+These annotations have an option to disable inlining which can allow breakpoints to work within
+advice methods. This should only be used for debugging and may break things. As such, it is best to
+first try debugging the methods that advice is calling rather than the advice method itself.
 
 ```java
-System.out.println()
-Thread.dumpStack()
+@Advice.OnMethodEnter(inline = false)
+```
+
+When inlined, the best approach to debug advice methods and agent initialization is to use the
+following statements:
+
+```java
+System.out.println();
+Thread.dumpStack();
 ```
 
 ## Agent initialization code
@@ -35,3 +44,39 @@ should work in any code except ByteBuddy advice methods.
 ```bash
 java -agentlib:jdwp="transport=dt_socket,server=y,suspend=y,address=5000" -javaagent:opentelemetry-javaagent-<version>.jar -jar app.jar
 ```
+
+## Shadow Renaming
+
+One additional thing that complicates debugging is that certain packages are renamed to avoid
+conflict with whatever might already be on the classpath. This results in classes that don't match
+what the IDE is expecting for debug breakpoints. You can disable the shadow renaming for local
+builds by adding the following to `~/.gradle/gradle.properties` before building.
+
+```properties
+disableShadowRelocate=true
+```
+
+## Missing GraalVM hints
+
+Enable the GraalVM tracing agent:
+
+```
+graalvmNative {
+
+  ...
+
+  agent {
+    defaultMode.set("standard")
+    enabled.set(true)
+  }
+
+}
+```
+
+Execute tests as native executables:
+
+```
+./gradlew nativeTest
+```
+
+The tracing data will be generated in the `build/native/agent-output` folder.

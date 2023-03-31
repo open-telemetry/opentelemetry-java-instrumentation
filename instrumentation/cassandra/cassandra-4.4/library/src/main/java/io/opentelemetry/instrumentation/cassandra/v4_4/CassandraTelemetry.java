@@ -26,10 +26,10 @@ public class CassandraTelemetry {
     return new CassandraTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<CassandraRequest, ExecutionInfo> instrumenter;
+  private final TracingCqlSession tracingCqlSession;
 
   protected CassandraTelemetry(Instrumenter<CassandraRequest, ExecutionInfo> instrumenter) {
-    this.instrumenter = instrumenter;
+    this.tracingCqlSession = new TracingCqlSession(instrumenter);
   }
 
   /**
@@ -39,6 +39,6 @@ public class CassandraTelemetry {
    * @return a {@link TracingCqlSession}.
    */
   public CqlSession wrap(CqlSession session) {
-    return new TracingCqlSession(session, instrumenter);
+    return tracingCqlSession.wrapSession(session);
   }
 }

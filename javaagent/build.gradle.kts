@@ -216,6 +216,12 @@ tasks {
     dependsOn(shadowJar, baseJavaagentJar)
   }
 
+  if (findProperty("removeJarVersionNumbers") == "true") {
+    withType<AbstractArchiveTask>().configureEach {
+      archiveVersion.set("")
+    }
+  }
+
   withType<Test>().configureEach {
     dependsOn(shadowJar)
 

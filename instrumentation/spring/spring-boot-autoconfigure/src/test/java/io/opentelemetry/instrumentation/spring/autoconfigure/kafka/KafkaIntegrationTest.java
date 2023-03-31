@@ -46,8 +46,8 @@ class KafkaIntegrationTest {
   @BeforeAll
   static void setUpKafka() {
     kafka =
-        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.1.9"))
-            .withEnv("KAFKA_HEAP_OPTS", "-Xmx256m -Xmx256m")
+        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.2.10"))
+            .withEnv("KAFKA_HEAP_OPTS", "-Xmx256m")
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
     kafka.start();
@@ -81,7 +81,9 @@ class KafkaIntegrationTest {
     contextRunner.run(KafkaIntegrationTest::runShouldInstrumentProducerAndConsumer);
   }
 
-  @SuppressWarnings("unchecked")
+  // In kafka 2 ops.send is deprecated. We are using it to avoid reflection because kafka 3 also has
+  // ops.send, although with different return type.
+  @SuppressWarnings({"unchecked", "deprecation"})
   private static void runShouldInstrumentProducerAndConsumer(
       ConfigurableApplicationContext applicationContext) {
     KafkaTemplate<String, String> kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
@@ -91,7 +93,7 @@ class KafkaIntegrationTest {
         () -> {
           kafkaTemplate.executeInTransaction(
               ops -> {
-                ops.usingCompletableFuture().send("testTopic", "10", "testSpan");
+                ops.send("testTopic", "10", "testSpan");
                 return 0;
               });
         });

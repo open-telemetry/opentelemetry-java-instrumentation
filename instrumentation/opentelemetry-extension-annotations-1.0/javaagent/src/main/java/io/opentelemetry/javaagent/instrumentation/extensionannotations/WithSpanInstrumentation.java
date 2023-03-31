@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.extensionannotations;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -55,6 +56,11 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
                 isAnnotatedWith(
                     named("application.io.opentelemetry.extension.annotations.SpanAttribute"))));
     excludedMethodsMatcher = configureExcludedMethods();
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("application.io.opentelemetry.extension.annotations.WithSpan");
   }
 
   @Override

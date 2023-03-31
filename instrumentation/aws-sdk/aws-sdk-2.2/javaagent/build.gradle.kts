@@ -12,6 +12,8 @@ muzzle {
     extraDependency("software.amazon.awssdk:protocol-core")
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
+    // sdk-core-2.20.34.jar is missing
+    skip("2.20.34")
   }
 }
 
@@ -26,13 +28,13 @@ dependencies {
   testImplementation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
   latestDepTestLibrary("software.amazon.awssdk:aws-json-protocol:2.17.+")
-  latestDepTestLibrary("software.amazon.awssdk:aws-core:+")
-  latestDepTestLibrary("software.amazon.awssdk:dynamodb:+")
-  latestDepTestLibrary("software.amazon.awssdk:ec2:+")
-  latestDepTestLibrary("software.amazon.awssdk:kinesis:+")
-  latestDepTestLibrary("software.amazon.awssdk:rds:+")
-  latestDepTestLibrary("software.amazon.awssdk:s3:+")
-  latestDepTestLibrary("software.amazon.awssdk:sqs:+")
+  latestDepTestLibrary("software.amazon.awssdk:aws-core:2.20.33")
+  latestDepTestLibrary("software.amazon.awssdk:dynamodb:2.20.33")
+  latestDepTestLibrary("software.amazon.awssdk:ec2:2.20.33")
+  latestDepTestLibrary("software.amazon.awssdk:kinesis:2.20.33")
+  latestDepTestLibrary("software.amazon.awssdk:rds:2.20.33")
+  latestDepTestLibrary("software.amazon.awssdk:s3:2.20.33")
+  latestDepTestLibrary("software.amazon.awssdk:sqs:2.20.33")
 }
 
 tasks.withType<Test>().configureEach {

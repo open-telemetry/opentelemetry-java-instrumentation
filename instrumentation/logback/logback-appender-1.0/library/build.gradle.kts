@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("org.graalvm.buildtools.native")
 }
 
 dependencies {
@@ -34,4 +35,20 @@ dependencies {
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-logs")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+}
+
+graalvmNative {
+
+  binaries.all {
+    resources.autodetect()
+  }
+
+  toolchainDetection.set(false)
+}
+
+// To be able to execute the tests as GraalVM native executables
+configurations.configureEach {
+  exclude("org.apache.groovy", "groovy")
+  exclude("org.apache.groovy", "groovy-json")
+  exclude("org.spockframework", "spock-core")
 }

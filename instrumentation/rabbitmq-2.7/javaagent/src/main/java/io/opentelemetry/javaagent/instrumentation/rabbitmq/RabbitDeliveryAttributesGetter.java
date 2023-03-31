@@ -5,10 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<DeliveryRequest, Void> {
@@ -72,10 +75,14 @@ enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<Deliver
 
   @Override
   public List<String> getMessageHeader(DeliveryRequest request, String name) {
-    Object value = request.getProperties().getHeaders().get(name);
-    if (value != null) {
-      return Collections.singletonList(value.toString());
+    Map<String, Object> headers = request.getProperties().getHeaders();
+    if (headers == null) {
+      return emptyList();
     }
-    return Collections.emptyList();
+    Object value = headers.get(name);
+    if (value == null) {
+      return emptyList();
+    }
+    return singletonList(value.toString());
   }
 }

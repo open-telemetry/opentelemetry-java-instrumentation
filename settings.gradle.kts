@@ -9,12 +9,13 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "1.8.10"
     id("org.xbib.gradle.plugin.jflex") version "1.7.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
+    id("org.graalvm.buildtools.native") version "0.9.20"
   }
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.12.4"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.9"
+  id("com.gradle.enterprise") version "3.12.6"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.10"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.4.0"
 }
 
@@ -124,10 +125,11 @@ include(":smoke-tests:images:fake-backend")
 include(":smoke-tests:images:grpc")
 include(":smoke-tests:images:play")
 include(":smoke-tests:images:quarkus")
+include(":smoke-tests:images:security-manager")
 include(":smoke-tests:images:servlet")
 hideFromDependabot(":smoke-tests:images:servlet:servlet-3.0")
 hideFromDependabot(":smoke-tests:images:servlet:servlet-5.0")
-include(":smoke-tests:images:spring-boot")
+hideFromDependabot(":smoke-tests:images:spring-boot")
 
 hideFromDependabot("instrumentation:akka:akka-actor-2.3:javaagent")
 hideFromDependabot(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
@@ -147,6 +149,7 @@ hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.3:lib
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.3:testing")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent")
 hideFromDependabot(":instrumentation:apache-pulsar:apache-pulsar-2.8:javaagent")
+hideFromDependabot(":instrumentation:apache-pulsar:apache-pulsar-2.8:javaagent-unit-tests")
 hideFromDependabot(":instrumentation:armeria-1.3:javaagent")
 hideFromDependabot(":instrumentation:armeria-1.3:library")
 hideFromDependabot(":instrumentation:armeria-1.3:testing")
@@ -398,6 +401,10 @@ hideFromDependabot(":instrumentation:play:play-ws:play-ws-common:testing")
 hideFromDependabot(":instrumentation:quartz-2.0:javaagent")
 hideFromDependabot(":instrumentation:quartz-2.0:library")
 hideFromDependabot(":instrumentation:quartz-2.0:testing")
+hideFromDependabot(":instrumentation:r2dbc-1.0:javaagent")
+hideFromDependabot(":instrumentation:r2dbc-1.0:library")
+hideFromDependabot(":instrumentation:r2dbc-1.0:library-instrumentation-shaded")
+hideFromDependabot(":instrumentation:r2dbc-1.0:testing")
 hideFromDependabot(":instrumentation:rabbitmq-2.7:javaagent")
 hideFromDependabot(":instrumentation:ratpack:ratpack-1.4:javaagent")
 hideFromDependabot(":instrumentation:ratpack:ratpack-1.4:testing")
@@ -429,6 +436,8 @@ hideFromDependabot(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.
 hideFromDependabot(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:testing")
 hideFromDependabot(":instrumentation:runtime-metrics:javaagent")
 hideFromDependabot(":instrumentation:runtime-metrics:library")
+hideFromDependabot(":instrumentation:runtime-telemetry-jfr:javaagent")
+hideFromDependabot(":instrumentation:runtime-telemetry-jfr:library")
 hideFromDependabot(":instrumentation:rxjava:rxjava-1.0:library")
 hideFromDependabot(":instrumentation:rxjava:rxjava-2.0:library")
 hideFromDependabot(":instrumentation:rxjava:rxjava-2.0:testing")
@@ -450,6 +459,7 @@ hideFromDependabot(":instrumentation:spark-2.3:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-batch-3.0:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-boot-actuator-autoconfigure-2.0:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-boot-resources:library")
+hideFromDependabot(":instrumentation:spring:spring-boot-resources:testing")
 hideFromDependabot(":instrumentation:spring:spring-core-2.0:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-data:spring-data-1.8:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-data:spring-data-3.0:testing")

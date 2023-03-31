@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-public class ProducerData {
+public final class ProducerData {
   public final String url;
   public final String topic;
 

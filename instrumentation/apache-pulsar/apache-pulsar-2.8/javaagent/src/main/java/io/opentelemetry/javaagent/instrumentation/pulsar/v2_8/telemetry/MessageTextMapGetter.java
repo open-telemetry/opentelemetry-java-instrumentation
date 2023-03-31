@@ -7,19 +7,18 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
-import org.apache.pulsar.client.api.Message;
 
-enum MessageTextMapGetter implements TextMapGetter<Message<?>> {
+enum MessageTextMapGetter implements TextMapGetter<PulsarRequest> {
   INSTANCE;
 
   @Override
-  public Iterable<String> keys(Message<?> message) {
-    return message.getProperties().keySet();
+  public Iterable<String> keys(PulsarRequest request) {
+    return request.getMessage().getProperties().keySet();
   }
 
   @Nullable
   @Override
-  public String get(@Nullable Message<?> message, String key) {
-    return message == null ? null : message.getProperties().get(key);
+  public String get(@Nullable PulsarRequest request, String key) {
+    return request == null ? null : request.getMessage().getProperties().get(key);
   }
 }

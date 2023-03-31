@@ -5,17 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.consumerProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons;
+import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
@@ -61,36 +61,36 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
   public static class MessageListenerWrapper<T> implements MessageListener<T> {
     private static final long serialVersionUID = 1L;
 
-    private final MessageListener<T> delegator;
+    private final MessageListener<T> delegate;
 
     public MessageListenerWrapper(MessageListener<T> messageListener) {
-      this.delegator = messageListener;
+      this.delegate = messageListener;
     }
 
     @Override
-    public void received(Consumer<T> consumer, Message<T> msg) {
-      Context parent = VirtualFieldStore.extract(msg);
+    public void received(Consumer<T> consumer, Message<T> message) {
+      Context parent = VirtualFieldStore.extract(message);
 
-      Instrumenter<Message<?>, Attributes> instrumenter =
-          PulsarSingletons.consumerListenerInstrumenter();
-      if (!instrumenter.shouldStart(parent, msg)) {
-        this.delegator.received(consumer, msg);
+      Instrumenter<PulsarRequest, Void> instrumenter = consumerProcessInstrumenter();
+      PulsarRequest request = PulsarRequest.create(message);
+      if (!instrumenter.shouldStart(parent, request)) {
+        this.delegate.received(consumer, message);
         return;
       }
 
-      Context current = instrumenter.start(parent, msg);
+      Context current = instrumenter.start(parent, request);
       try (Scope scope = current.makeCurrent()) {
-        this.delegator.received(consumer, msg);
-        instrumenter.end(current, msg, null, null);
+        this.delegate.received(consumer, message);
+        instrumenter.end(current, request, null, null);
       } catch (Throwable t) {
-        instrumenter.end(current, msg, null, t);
+        instrumenter.end(current, request, null, t);
         throw t;
       }
     }
 
     @Override
     public void reachedEndOfTopic(Consumer<T> consumer) {
-      this.delegator.reachedEndOfTopic(consumer);
+      this.delegate.reachedEndOfTopic(consumer);
     }
   }
 }

@@ -17,5 +17,7 @@ public class JdbcIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
   public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/5946
     builder.ignoreClass("org.jboss.jca.adapters.jdbc.");
+    // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8109
+    builder.ignoreClass("org.apache.shardingsphere.shardingjdbc.jdbc.core.statement.");
   }
 }

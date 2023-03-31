@@ -52,6 +52,13 @@ abstract class SmokeTest extends Specification {
   }
 
   /**
+   * Subclasses can override this method to disable setting default service name
+   */
+  protected boolean getSetServiceName() {
+    return true
+  }
+
+  /**
    * Subclasses can override this method to provide additional files to copy to target container
    */
   protected List<ResourceMapping> getExtraResources() {
@@ -77,7 +84,7 @@ abstract class SmokeTest extends Specification {
 
   def startTarget(String jdk, String serverVersion, boolean windows) {
     def targetImage = getTargetImage(jdk, serverVersion, windows)
-    return containerManager.startTarget(targetImage, agentPath, jvmArgsEnvVarName, extraEnv, extraResources, extraPorts, getWaitStrategy(), getCommand())
+    return containerManager.startTarget(targetImage, agentPath, jvmArgsEnvVarName, extraEnv, setServiceName, extraResources, extraPorts, getWaitStrategy(), getCommand())
   }
 
   protected abstract String getTargetImage(String jdk)

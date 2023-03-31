@@ -57,7 +57,6 @@ public class VirtualFieldStore {
   }
 
   public static String extract(Consumer<?> instance) {
-    String brokerUrl = CONSUMER_FIELD.get(instance);
-    return brokerUrl == null ? "unknown" : brokerUrl;
+    return CONSUMER_FIELD.get(instance);
   }
 }

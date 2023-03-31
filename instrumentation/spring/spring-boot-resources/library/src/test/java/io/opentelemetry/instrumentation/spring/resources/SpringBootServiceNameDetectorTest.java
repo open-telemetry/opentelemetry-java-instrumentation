@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
@@ -45,7 +46,7 @@ class SpringBootServiceNameDetectorTest {
 
   @Test
   void classpathApplicationProperties() {
-    when(system.openClasspathResource(PROPS)).thenCallRealMethod();
+    when(system.openClasspathResource(PROPS)).thenReturn(openClasspathResource(PROPS));
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource result = guesser.createResource(config);
     expectServiceName(result, "dog-store");
@@ -67,7 +68,8 @@ class SpringBootServiceNameDetectorTest {
 
   @Test
   void classpathApplicationYaml() {
-    when(system.openClasspathResource(APPLICATION_YML)).thenCallRealMethod();
+    when(system.openClasspathResource(APPLICATION_YML))
+        .thenReturn(openClasspathResource(APPLICATION_YML));
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource result = guesser.createResource(config);
     expectServiceName(result, "cat-store");
@@ -173,5 +175,9 @@ class SpringBootServiceNameDetectorTest {
   private static String readString(Path path) throws Exception {
     byte[] allBytes = Files.readAllBytes(path);
     return new String(allBytes, UTF_8);
+  }
+
+  private InputStream openClasspathResource(String resource) {
+    return getClass().getClassLoader().getResourceAsStream(resource);
   }
 }

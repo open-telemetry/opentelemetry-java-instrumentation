@@ -18,9 +18,11 @@ public class HttpServerTracingHandler
     extends CombinedChannelDuplexHandler<
         HttpServerRequestTracingHandler, HttpServerResponseTracingHandler> {
 
-  public HttpServerTracingHandler(Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter) {
+  public HttpServerTracingHandler(
+      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter,
+      HttpServerResponseBeforeCommitHandler responseBeforeCommitHandler) {
     super(
         new HttpServerRequestTracingHandler(instrumenter),
-        new HttpServerResponseTracingHandler(instrumenter));
+        new HttpServerResponseTracingHandler(instrumenter, responseBeforeCommitHandler));
   }
 }

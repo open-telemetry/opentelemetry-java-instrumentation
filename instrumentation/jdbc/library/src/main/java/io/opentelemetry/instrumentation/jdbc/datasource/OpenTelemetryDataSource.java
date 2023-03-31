@@ -47,6 +47,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   private final DataSource delegate;
   private final Instrumenter<DataSource, Void> dataSourceInstrumenter;
   private final Instrumenter<DbRequest, Void> statementInstrumenter;
+  private volatile DbInfo cachedDbInfo;
 
   /**
    * Create a OpenTelemetry DataSource wrapping another DataSource.
@@ -74,14 +75,14 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   @Override
   public Connection getConnection() throws SQLException {
     Connection connection = wrapCall(delegate::getConnection);
-    DbInfo dbInfo = computeDbInfo(connection);
+    DbInfo dbInfo = getDbInfo(connection);
     return new OpenTelemetryConnection(connection, dbInfo, statementInstrumenter);
   }
 
   @Override
   public Connection getConnection(String username, String password) throws SQLException {
     Connection connection = wrapCall(() -> delegate.getConnection(username, password));
-    DbInfo dbInfo = computeDbInfo(connection);
+    DbInfo dbInfo = getDbInfo(connection);
     return new OpenTelemetryConnection(connection, dbInfo, statementInstrumenter);
   }
 
@@ -146,5 +147,12 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
     }
     this.dataSourceInstrumenter.end(context, delegate, null, null);
     return result;
+  }
+
+  private DbInfo getDbInfo(Connection connection) {
+    if (cachedDbInfo == null) {
+      cachedDbInfo = computeDbInfo(connection);
+    }
+    return cachedDbInfo;
   }
 }

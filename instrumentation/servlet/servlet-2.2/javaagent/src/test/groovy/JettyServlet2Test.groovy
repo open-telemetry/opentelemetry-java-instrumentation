@@ -112,6 +112,11 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
   }
 
   @Override
+  boolean hasResponseCustomizer(ServerEndpoint endpoint) {
+    true
+  }
+
+  @Override
   void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     def responseMethod = endpoint == REDIRECT ? "sendRedirect" : "sendError"
     trace.span(index) {

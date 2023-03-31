@@ -64,8 +64,8 @@ public abstract class KafkaClientBaseTest {
   @BeforeAll
   void setupClass() throws ExecutionException, InterruptedException, TimeoutException {
     kafka =
-        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"))
-            .withEnv("KAFKA_HEAP_OPTS", "-Xmx256m -Xmx256m")
+        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.2.10"))
+            .withEnv("KAFKA_HEAP_OPTS", "-Xmx256m")
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));

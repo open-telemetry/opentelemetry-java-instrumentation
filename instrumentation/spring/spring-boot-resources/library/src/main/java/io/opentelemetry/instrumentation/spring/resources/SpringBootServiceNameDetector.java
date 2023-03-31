@@ -285,6 +285,18 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
 
   // Exists for testing
   static class SystemHelper {
+    private final ClassLoader classLoader;
+    private final boolean addBootInfPrefix;
+
+    SystemHelper() {
+      ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+      classLoader =
+          contextClassLoader != null ? contextClassLoader : ClassLoader.getSystemClassLoader();
+      addBootInfPrefix = classLoader.getResource("BOOT-INF/classes/") != null;
+      if (addBootInfPrefix) {
+        logger.log(Level.FINER, "Detected presence of BOOT-INF/classes/");
+      }
+    }
 
     String getenv(String name) {
       return System.getenv(name);
@@ -295,7 +307,8 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     }
 
     InputStream openClasspathResource(String filename) {
-      return ClassLoader.getSystemClassLoader().getResourceAsStream(filename);
+      String path = addBootInfPrefix ? "BOOT-INF/classes/" + filename : filename;
+      return classLoader.getResourceAsStream(path);
     }
 
     InputStream openBootInfClassesResource(String filename) {

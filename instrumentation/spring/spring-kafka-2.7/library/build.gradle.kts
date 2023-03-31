@@ -22,6 +22,10 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
 }
 
+tasks.withType<Test>().configureEach {
+  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+}
+
 val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 // spring 6 (which spring-kafka 3.+ uses) requires java 17
