@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
+package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.internal.DbExecution;
-import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.internal.R2dbcInstrumenterBuilder;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcInstrumenterBuilder;
 
 /** A builder of {@link R2dbcTelemetry}. */
 public final class R2dbcTelemetryBuilder {

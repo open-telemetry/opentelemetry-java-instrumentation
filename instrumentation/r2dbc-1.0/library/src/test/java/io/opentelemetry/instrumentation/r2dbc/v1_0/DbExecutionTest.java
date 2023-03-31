@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
+package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.internal.DbExecution;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.proxy.test.MockConnectionInfo;
@@ -38,8 +38,7 @@ class DbExecutionTest {
             .build();
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.parse("r2dbc:mariadb://root:root@localhost:3306/db");
-    io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.internal.DbExecution dbExecution =
-        new DbExecution(queryExecutionInfo, factoryOptions);
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo, factoryOptions);
     assertEquals("testdb", dbExecution.getSystem());
     assertEquals("root", dbExecution.getUser());
     assertEquals("db", dbExecution.getName());
