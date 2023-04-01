@@ -13,6 +13,7 @@ import org.apache.cxf.phase.Phase;
 public class TracingEndInInterceptor extends AbstractPhaseInterceptor<Message> {
   public TracingEndInInterceptor() {
     super(Phase.POST_INVOKE);
+    // end the span before the OutInterceptors (callbacks) are executed
     addBefore(OutgoingChainInterceptor.class.getName());
   }
 
