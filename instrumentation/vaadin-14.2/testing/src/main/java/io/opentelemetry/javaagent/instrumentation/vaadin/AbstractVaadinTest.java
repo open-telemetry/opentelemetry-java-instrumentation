@@ -76,7 +76,7 @@ public abstract class AbstractVaadinTest
     Testcontainers.exposeHostPorts(port);
 
     browser =
-        new BrowserWebDriverContainer<>()
+        new BrowserWebDriverContainer<>("selenium/standalone-chrome:111.0")
             .withCapabilities(new ChromeOptions())
             .withLogConsumer(new Slf4jLogConsumer(logger));
     browser.start();
