@@ -65,7 +65,7 @@ class SingleServiceCamelTest extends AgentInstrumentationSpecification implement
           attributes {
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_URL" "${address.resolve("/camelService")}"
-            "apache-camel.uri" "${address.resolve("/camelService")}".replace("localhost", "0.0.0.0")
+            "camel.uri" "${address.resolve("/camelService")}".replace("localhost", "0.0.0.0")
           }
         }
       }

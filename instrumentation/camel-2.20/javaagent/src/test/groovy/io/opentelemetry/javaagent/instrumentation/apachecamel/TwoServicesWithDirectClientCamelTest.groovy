@@ -17,9 +17,7 @@ import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.SpanKind.*
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecification implements RetryOnAddressAlreadyInUseTrait {
@@ -52,9 +50,9 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
     clientContext.addRoutes(new RouteBuilder() {
       void configure() {
         from("direct:input")
-          .log("SENT Client request")
-          .to("http://localhost:$portOne/serviceOne")
-          .log("RECEIVED Client response")
+            .log("SENT Client request")
+            .to("http://localhost:$portOne/serviceOne")
+            .log("RECEIVED Client response")
       }
     })
     clientContext.start()
@@ -82,7 +80,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
           name "input"
           kind INTERNAL
           attributes {
-            "apache-camel.uri" "direct://input"
+            "camel.uri" "direct://input"
           }
         }
         it.span(1) {
@@ -93,7 +91,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_URL" "http://localhost:$portOne/serviceOne"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "apache-camel.uri" "http://localhost:$portOne/serviceOne"
+            "camel.uri" "http://localhost:$portOne/serviceOne"
           }
         }
         it.span(2) {
@@ -104,7 +102,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_URL" "http://localhost:$portOne/serviceOne"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "apache-camel.uri" "http://0.0.0.0:$portOne/serviceOne"
+            "camel.uri" "http://0.0.0.0:$portOne/serviceOne"
           }
         }
         it.span(3) {
@@ -115,7 +113,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_URL" "http://127.0.0.1:$portTwo/serviceTwo"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "apache-camel.uri" "http://127.0.0.1:$portTwo/serviceTwo"
+            "camel.uri" "http://127.0.0.1:$portTwo/serviceTwo"
           }
         }
         it.span(4) {
@@ -145,7 +143,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
           attributes {
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_URL" "http://127.0.0.1:$portTwo/serviceTwo"
-            "apache-camel.uri" "jetty:http://0.0.0.0:$portTwo/serviceTwo?arg=value"
+            "camel.uri" "jetty:http://0.0.0.0:$portTwo/serviceTwo?arg=value"
           }
         }
       }

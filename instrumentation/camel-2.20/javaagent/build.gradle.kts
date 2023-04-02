@@ -62,7 +62,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.apache-camel.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.camel.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
 
     // TODO: fix camel instrumentation so that it uses semantic attributes extractors

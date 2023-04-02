@@ -94,13 +94,13 @@ class CassandraTest extends AgentInstrumentationSpecification implements RetryOn
           kind INTERNAL
           hasNoParent()
           attributes {
-            "apache-camel.uri" "direct://input"
+            "camel.uri" "direct://input"
           }
         }
         span(1) {
           kind CLIENT
           attributes {
-            "apache-camel.uri" "cql://$host:$port/test"
+            "camel.uri" "cql://$host:$port/test"
             "$SemanticAttributes.DB_NAME" "test"
             "$SemanticAttributes.DB_STATEMENT" "select * from test.users where id=? ALLOW FILTERING"
             "$SemanticAttributes.DB_SYSTEM" "cassandra"

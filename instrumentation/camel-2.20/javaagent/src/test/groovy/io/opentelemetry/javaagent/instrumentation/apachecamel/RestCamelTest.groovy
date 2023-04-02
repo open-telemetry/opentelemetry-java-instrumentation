@@ -15,9 +15,7 @@ import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.SpanKind.*
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class RestCamelTest extends AgentInstrumentationSpecification implements RetryOnAddressAlreadyInUseTrait {
@@ -70,7 +68,7 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
           name "start"
           kind INTERNAL
           attributes {
-            "apache-camel.uri" "direct://start"
+            "camel.uri" "direct://start"
           }
         }
         it.span(1) {
@@ -80,7 +78,7 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
           attributes {
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "apache-camel.uri" "rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D"
+            "camel.uri" "rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D"
           }
         }
         it.span(2) {
@@ -110,7 +108,7 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
           attributes {
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_URL" "http://localhost:$port/api/firstModule/unit/unitOne"
-            "apache-camel.uri" String
+            "camel.uri" String
           }
         }
         it.span(4) {
@@ -118,7 +116,7 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
           kind INTERNAL
           parentSpanId(span(3).spanId)
           attributes {
-            "apache-camel.uri" "direct://moduleUnit"
+            "camel.uri" "direct://moduleUnit"
           }
         }
       }

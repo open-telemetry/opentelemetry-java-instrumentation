@@ -48,7 +48,7 @@ class MulticastDirectCamelTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
           attributes {
-            "apache-camel.uri" "direct://input"
+            "camel.uri" "direct://input"
           }
         }
         // there is no strict ordering of "first" and "second" span
@@ -59,7 +59,7 @@ class MulticastDirectCamelTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           parentSpanId parent.span(0).spanId
           attributes {
-            "apache-camel.uri" "direct://first"
+            "camel.uri" "direct://first"
           }
         }
         it.span(indexOfSecond) {
@@ -67,7 +67,7 @@ class MulticastDirectCamelTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           parentSpanId parent.span(0).spanId
           attributes {
-            "apache-camel.uri" "direct://second"
+            "camel.uri" "direct://second"
           }
         }
       }

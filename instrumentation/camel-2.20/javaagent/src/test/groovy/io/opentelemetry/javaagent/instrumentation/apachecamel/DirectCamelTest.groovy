@@ -48,7 +48,7 @@ class DirectCamelTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
           attributes {
-            "apache-camel.uri" "direct://input"
+            "camel.uri" "direct://input"
           }
         }
         it.span(1) {
@@ -56,7 +56,7 @@ class DirectCamelTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           parentSpanId parent.span(0).spanId
           attributes {
-            "apache-camel.uri" "direct://receiver"
+            "camel.uri" "direct://receiver"
           }
         }
       }

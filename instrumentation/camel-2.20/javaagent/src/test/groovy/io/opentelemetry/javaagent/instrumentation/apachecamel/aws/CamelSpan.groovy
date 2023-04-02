@@ -18,7 +18,7 @@ class CamelSpan {
       kind INTERNAL
       hasNoParent()
       attributes {
-        "apache-camel.uri" "direct://${spanName}"
+        "camel.uri" "direct://${spanName}"
       }
     }
   }
@@ -33,7 +33,7 @@ class CamelSpan {
         childOf parentSpan
       }
       attributes {
-        "apache-camel.uri" "aws-sqs://${queueName}?amazonSQSClient=%23sqsClient&delay=1000"
+        "camel.uri" "aws-sqs://${queueName}?amazonSQSClient=%23sqsClient&delay=1000"
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" queueName
       }
     }
@@ -49,7 +49,7 @@ class CamelSpan {
         childOf parentSpan
       }
       attributes {
-        "apache-camel.uri" "aws-sqs://${queueName}?amazonSQSClient=%23sqsClient&delay=1000"
+        "camel.uri" "aws-sqs://${queueName}?amazonSQSClient=%23sqsClient&delay=1000"
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" queueName
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
       }
@@ -62,7 +62,7 @@ class CamelSpan {
       kind INTERNAL
       childOf parentSpan
       attributes {
-        "apache-camel.uri" "aws-sns://${topicName}?amazonSNSClient=%23snsClient"
+        "camel.uri" "aws-sns://${topicName}?amazonSNSClient=%23snsClient"
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topicName
       }
     }
@@ -74,7 +74,7 @@ class CamelSpan {
       kind INTERNAL
       childOf parentSpan
       attributes {
-        "apache-camel.uri" "aws-s3://${bucketName}?amazonS3Client=%23s3Client"
+        "camel.uri" "aws-s3://${bucketName}?amazonS3Client=%23s3Client"
       }
     }
   }
