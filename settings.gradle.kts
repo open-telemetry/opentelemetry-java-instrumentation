@@ -27,7 +27,7 @@ dependencyResolutionManagement {
 }
 
 val gradleEnterpriseServer = "https://ge.opentelemetry.io"
-val isCI = System.getenv("CI")!=null
+val isCI = System.getenv("CI") != null
 val geAccessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY") ?: ""
 
 // if GE access key is not given and we are in CI, then we publish to scans.gradle.com
