@@ -41,7 +41,10 @@ public abstract class AbstractRxJava3SubscriptionTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span -> span.hasName("Connection.query").hasKind(SpanKind.INTERNAL)));
+                    span ->
+                        span.hasName("Connection.query")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
   }
 
   static class Connection {
