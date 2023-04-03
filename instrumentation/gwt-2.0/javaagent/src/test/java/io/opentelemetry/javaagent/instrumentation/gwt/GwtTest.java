@@ -67,7 +67,7 @@ class GwtTest {
   }
 
   @BeforeAll
-  static void setupSpec() throws Exception {
+  static void setup() throws Exception {
     startServer();
 
     Testcontainers.exposeHostPorts(port);
@@ -82,7 +82,7 @@ class GwtTest {
   }
 
   @AfterAll
-  static void cleanupSpec() throws Exception {
+  static void cleanup() throws Exception {
     stopServer();
     browser.stop();
   }
