@@ -1272,7 +1272,7 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
 
 - Renamed Apache Dubbo and Log4j MDC library artifacts
   ([#4779](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4779))
-- Added http4 handler to apache-camel instrumentation
+- Added http4 handler to camel instrumentation
   ([#4650](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4650))
 - Capture servlet request parameters
   ([#4703](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4703))
