@@ -79,6 +79,10 @@ public class AgentStarterImpl implements AgentStarter {
     }
     // unsupported logger implementation; defaulting to noop
     if (loggingCustomizer == null) {
+      System.err.println(
+          "Unrecognized value of 'otel.javaagent.logging': '"
+              + loggerImplementationName
+              + "'. The agent will use the no-op implementation.");
       loggingCustomizer = new NoopLoggingCustomizer();
     }
 

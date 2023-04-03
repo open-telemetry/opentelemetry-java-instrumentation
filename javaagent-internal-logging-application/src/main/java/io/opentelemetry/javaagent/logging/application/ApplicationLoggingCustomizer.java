@@ -22,7 +22,8 @@ public final class ApplicationLoggingCustomizer implements LoggingCustomizer {
   @Override
   public void init() {
     int limit =
-        ConfigPropertiesUtil.getInt("otel.javaagent.logging.application.logs-buffer-size", 2048);
+        ConfigPropertiesUtil.getInt(
+            "otel.javaagent.logging.application.logs-buffer-max-records", 2048);
     InMemoryLogStore inMemoryLogStore = new InMemoryLogStore(limit);
     ApplicationLoggerFactory loggerFactory = new ApplicationLoggerFactory(inMemoryLogStore);
     // register a shutdown hook that'll dump the logs to stderr in case something goes wrong

@@ -23,7 +23,7 @@ public class ApplicationLoggingInstrumentationModule extends InstrumentationModu
   @Override
   public boolean defaultEnabled(ConfigProperties config) {
     // only enable this instrumentation if the application logger is enabled
-    return config.getString("otel.javaagent.logging", "simple").equalsIgnoreCase("application");
+    return "application".equals(config.getString("otel.javaagent.logging"));
   }
 
   @Override

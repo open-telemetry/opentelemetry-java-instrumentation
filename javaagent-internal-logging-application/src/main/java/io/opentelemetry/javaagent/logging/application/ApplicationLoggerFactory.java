@@ -29,6 +29,13 @@ final class ApplicationLoggerFactory extends ApplicationLoggerBridge
   protected void install(InternalLogger.Factory applicationLoggerFactory) {
     // just use the first bridge that gets discovered and ignore the rest
     if (!installed.compareAndSet(false, true)) {
+      applicationLoggerFactory
+          .create(ApplicationLoggerBridge.class.getName())
+          .log(
+              InternalLogger.Level.WARN,
+              "Multiple application logger implementations were provided."
+                  + " The javaagent will use the first bridge provided and ignore the following ones (this one).",
+              null);
       return;
     }
 

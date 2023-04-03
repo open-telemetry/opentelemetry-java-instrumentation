@@ -63,7 +63,7 @@ final class InMemoryLogStore {
   }
 
   void dump(PrintStream out) {
-    // make a copy to avoid ConcurrentModificationException in case some other threads writes a log
+    // make a copy to avoid ConcurrentModificationException in case some other thread writes a log
     for (InMemoryLog log : copyLogs()) {
       log.dump(out);
     }
