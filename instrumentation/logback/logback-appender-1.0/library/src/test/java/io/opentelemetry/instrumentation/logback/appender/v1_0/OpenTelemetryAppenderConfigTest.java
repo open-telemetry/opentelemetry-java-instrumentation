@@ -22,6 +22,7 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
@@ -141,8 +142,9 @@ class OpenTelemetryAppenderConfigTest {
     Long lineNumber = logData.getAttributes().get(SemanticAttributes.CODE_LINENO);
     assertThat(lineNumber).isGreaterThan(1);
 
-    String logMarker = logData.getAttributes().get(AttributeKey.stringKey("logback.marker"));
-    assertThat(logMarker).isEqualTo(markerName);
+    List<String> logMarker =
+        logData.getAttributes().get(AttributeKey.stringArrayKey("logback.marker"));
+    assertThat(logMarker).isEqualTo(Arrays.asList(markerName));
   }
 
   @Test

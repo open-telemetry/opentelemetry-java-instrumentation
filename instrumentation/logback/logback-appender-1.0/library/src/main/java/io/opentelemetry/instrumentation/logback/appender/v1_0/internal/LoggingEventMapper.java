@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +37,8 @@ public final class LoggingEventMapper {
   private static final boolean supportsMultipleMarkers = supportsMultipleMarkers();
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
-  private static final AttributeKey<String> LOG_MARKER = AttributeKey.stringKey("logback.marker");
+  private static final AttributeKey<List<String>> LOG_MARKER =
+      AttributeKey.stringArrayKey("logback.marker");
 
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
@@ -245,19 +247,18 @@ public final class LoggingEventMapper {
       AttributesBuilder attributes, ILoggingEvent loggingEvent) {
     Marker marker = loggingEvent.getMarker();
     if (marker != null) {
-      String markerName = marker.getName();
-      attributes.put(LOG_MARKER, markerName);
+      attributes.put(LOG_MARKER, marker.getName());
     }
   }
 
   @NoMuzzle
   private static void captureMultipleMarkerAttributes(
       AttributesBuilder attributes, ILoggingEvent loggingEvent) {
-    int i = 1;
+    List<String> markerNames = new ArrayList<>(loggingEvent.getMarkerList().size());
     for (Marker marker : loggingEvent.getMarkerList()) {
-      String markerName = marker.getName();
-      attributes.put(AttributeKey.stringKey("logback.marker." + i++), markerName);
+      markerNames.add(marker.getName());
     }
+    attributes.put(LOG_MARKER, markerNames.toArray(new String[0]));
   }
 
   @NoMuzzle

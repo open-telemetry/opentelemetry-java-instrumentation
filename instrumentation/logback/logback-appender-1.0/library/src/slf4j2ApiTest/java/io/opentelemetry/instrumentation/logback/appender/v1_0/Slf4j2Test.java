@@ -15,6 +15,7 @@ import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.logs.export.InMemoryLogRecordExporter;
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.resources.Resource;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,14 +85,10 @@ public class Slf4j2Test {
     assertThat(logData.getResource()).isEqualTo(resource);
     assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
-    assertThat(logData.getAttributes().size()).isEqualTo(6); // 4 code attributes + 2 markers
+    assertThat(logData.getAttributes().size()).isEqualTo(5); // 4 code attributes + 1 marker
     assertThat(logData.getAttributes())
         .hasEntrySatisfying(
-            AttributeKey.stringKey("logback.marker.1"),
-            value -> assertThat(value).isEqualTo(markerName1));
-    assertThat(logData.getAttributes())
-        .hasEntrySatisfying(
-            AttributeKey.stringKey("logback.marker.2"),
-            value -> assertThat(value).isEqualTo(markerName2));
+            AttributeKey.stringArrayKey("logback.marker"),
+            value -> assertThat(value).isEqualTo(Arrays.asList(markerName1, markerName2)));
   }
 }
