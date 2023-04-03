@@ -5,14 +5,9 @@
 
 package test.io.opentelemetry.javaagent.instrumentation.vaadin;
 
-import static net.bytebuddy.matcher.ElementMatchers.named;
-
 import io.opentelemetry.javaagent.instrumentation.vaadin.AbstractVaadin14Test;
 import java.io.File;
-import java.lang.instrument.Instrumentation;
 import java.net.URISyntaxException;
-import net.bytebuddy.agent.ByteBuddyAgent;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +36,7 @@ public class Vaadin14LatestTest extends AbstractVaadin14Test {
     // Vaadin adds a hash to package.json that includes path to node_modules directory, so it won't
     // be same on all computers. To avoid vaadin replacing our provided package.json we suppress the
     // package.json modification check.
+    /*
     Instrumentation instrumentation = ByteBuddyAgent.install();
     new AgentBuilder.Default()
         .type(named("com.vaadin.flow.server.frontend.TaskUpdatePackages"))
@@ -50,12 +46,14 @@ public class Vaadin14LatestTest extends AbstractVaadin14Test {
                     named("updatePackageJsonDependencies"), UpdatePackageAdvice.class.getName()))
         .installOn(instrumentation);
 
+     */
+
     super.setup();
   }
 
   @Override
   protected void prepareVaadinBaseDir(File baseDir) {
-    copyResource("/pnpm/package.json", baseDir);
-    copyResource("/pnpm/pnpm-lock.yaml", baseDir);
+    // copyResource("/pnpm/package.json", baseDir);
+    // copyResource("/pnpm/pnpm-lock.yaml", baseDir);
   }
 }
