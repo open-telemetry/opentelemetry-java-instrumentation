@@ -14,6 +14,7 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -33,7 +34,7 @@ public class JfrExtension implements BeforeEachCallback, AfterEachCallback {
   }
 
   @Override
-  public void beforeEach(ExtensionContext context) {
+  public void beforeEach(ExtensionContext context) throws InterruptedException {
     try {
       Class.forName("jdk.jfr.consumer.RecordingStream");
     } catch (ClassNotFoundException exception) {
@@ -46,6 +47,7 @@ public class JfrExtension implements BeforeEachCallback, AfterEachCallback {
     JfrTelemetryBuilder builder = JfrTelemetry.builder(sdk);
     builderConsumer.accept(builder);
     jfrTelemetry = builder.build();
+    jfrTelemetry.getStartUpLatch().await(30, TimeUnit.SECONDS);
   }
 
   @Override
