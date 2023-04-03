@@ -29,7 +29,7 @@ class TestWsServlet extends CXFNonSpringServlet {
       void handleMessage(Message message) {
         Context context = Context.current()
         if (LocalRootSpan.fromContext(context) != Span.fromContext(context)) {
-          throw new IllegalStateException("handler span should not be ended before outgoing interceptors")
+          throw new IllegalStateException("handler span should be ended before outgoing interceptors")
         }
       }
     })
