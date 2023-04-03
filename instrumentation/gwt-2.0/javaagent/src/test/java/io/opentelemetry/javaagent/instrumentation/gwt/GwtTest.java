@@ -87,7 +87,7 @@ class GwtTest {
     browser.stop();
   }
 
-  static String getContextPath() {
+  static final String getContextPath() {
     return "/xyz";
   }
 
