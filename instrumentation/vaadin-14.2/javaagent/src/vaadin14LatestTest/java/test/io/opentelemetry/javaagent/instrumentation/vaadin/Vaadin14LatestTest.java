@@ -54,7 +54,6 @@ public class Vaadin14LatestTest extends AbstractVaadin14Test {
   }
 
   @Override
-  @SuppressWarnings("checkstyle:SystemOut")
   protected void prepareVaadinBaseDir(File baseDir) {
     copyResource("/pnpm/package.json", baseDir);
     copyResource("/pnpm/pnpm-lock.yaml", baseDir);
