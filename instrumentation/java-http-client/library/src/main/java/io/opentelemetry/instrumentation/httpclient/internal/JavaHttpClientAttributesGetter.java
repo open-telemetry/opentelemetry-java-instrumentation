@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.httpclient;
+package io.opentelemetry.instrumentation.httpclient.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -13,7 +13,13 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import javax.annotation.Nullable;
 
-class JdkHttpAttributesGetter implements HttpClientAttributesGetter<HttpRequest, HttpResponse<?>> {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+enum JavaHttpClientAttributesGetter
+    implements HttpClientAttributesGetter<HttpRequest, HttpResponse<?>> {
+  INSTANCE;
 
   @Override
   public String getMethod(HttpRequest httpRequest) {

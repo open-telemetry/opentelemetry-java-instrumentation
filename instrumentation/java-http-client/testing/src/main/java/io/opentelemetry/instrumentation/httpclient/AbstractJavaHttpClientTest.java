@@ -3,31 +3,35 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.httpclient;
+package io.opentelemetry.instrumentation.httpclient;
 
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Map;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.BeforeAll;
 
-public class JdkHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
+public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
 
-  @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  private HttpClient client;
 
-  private static final HttpClient client =
-      HttpClient.newBuilder()
-          .version(HttpClient.Version.HTTP_1_1)
-          .connectTimeout(CONNECTION_TIMEOUT)
-          .followRedirects(HttpClient.Redirect.NORMAL)
-          .build();
+  @BeforeAll
+  void setUp() {
+    HttpClient httpClient =
+        HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
+            .connectTimeout(CONNECTION_TIMEOUT)
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build();
+    client = configureHttpClient(httpClient);
+  }
+
+  protected abstract HttpClient configureHttpClient(HttpClient httpClient);
 
   @Override
   public HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -42,7 +46,7 @@ public class JdkHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
 
   @Override
   public int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers)
-      throws Exception {
+      throws IOException, InterruptedException {
     return client.send(request, HttpResponse.BodyHandlers.ofString()).statusCode();
   }
 
@@ -59,8 +63,11 @@ public class JdkHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
             (response, throwable) -> {
               if (throwable == null) {
                 httpClientResult.complete(response.statusCode());
-              } else {
+              } else if (throwable.getCause() != null) {
                 httpClientResult.complete(throwable.getCause());
+              } else {
+                httpClientResult.complete(
+                    new IllegalStateException("throwable.getCause() returned null", throwable));
               }
             });
   }
