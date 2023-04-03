@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.sparkjava;
+
 import spark.Spark;
 
 public class TestSparkJavaApplication {
