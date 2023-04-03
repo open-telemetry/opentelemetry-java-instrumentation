@@ -71,7 +71,6 @@ class CgroupV1ContainerIdExtractorTest {
   @Test
   void hostStyleCgroupFile() throws IOException {
     String line = "1:name=systemd:/user.slice/user-0.slice/session-31207.scope";
-    line = "1:name=systemd:/user.slice/user-1000.slice/session-4.scope";
     when(filesystem.isReadable(V1_CGROUP_PATH)).thenReturn(true);
     when(filesystem.lines(V1_CGROUP_PATH)).thenReturn(Stream.of(line));
 
