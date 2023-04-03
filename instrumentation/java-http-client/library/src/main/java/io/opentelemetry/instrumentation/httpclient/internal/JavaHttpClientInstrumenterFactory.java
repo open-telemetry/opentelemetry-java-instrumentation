@@ -22,7 +22,7 @@ import java.util.List;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class JdkHttpInstrumenterFactory {
+public final class JavaHttpClientInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.java-http-client";
 
   public static Instrumenter<HttpRequest, HttpResponse<?>> createInstrumenter(
@@ -31,12 +31,12 @@ public final class JdkHttpInstrumenterFactory {
       List<String> capturedResponseHeaders,
       List<AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>>>
           additionalExtractors) {
-    JdkHttpAttributesGetter httpAttributesGetter = JdkHttpAttributesGetter.INSTANCE;
+    JavaHttpClientAttributesGetter httpAttributesGetter = JavaHttpClientAttributesGetter.INSTANCE;
 
     HttpClientAttributesExtractorBuilder<HttpRequest, HttpResponse<?>>
         httpAttributesExtractorBuilder =
             HttpClientAttributesExtractor.builder(
-                httpAttributesGetter, new JdkHttpNetAttributesGetter());
+                httpAttributesGetter, new JavaHttpClientNetAttributesGetter());
     httpAttributesExtractorBuilder.setCapturedRequestHeaders(capturedRequestHeaders);
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(capturedResponseHeaders);
 
@@ -49,5 +49,5 @@ public final class JdkHttpInstrumenterFactory {
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  private JdkHttpInstrumenterFactory() {}
+  private JavaHttpClientInstrumenterFactory() {}
 }

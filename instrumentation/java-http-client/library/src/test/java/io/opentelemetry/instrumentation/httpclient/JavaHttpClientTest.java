@@ -12,7 +12,7 @@ import java.net.http.HttpClient;
 import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JdkHttpClientTest extends AbstractJdkHttpClientTest {
+public class JavaHttpClientTest extends AbstractJavaHttpClientTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();

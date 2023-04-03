@@ -9,14 +9,14 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
-import io.opentelemetry.instrumentation.httpclient.internal.JdkHttpInstrumenterFactory;
-import io.opentelemetry.instrumentation.httpclient.internal.JdkHttpNetAttributesGetter;
+import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstrumenterFactory;
+import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientNetAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Arrays;
 
-public class JdkHttpClientSingletons {
+public class JavaHttpClientSingletons {
 
   private static final HttpHeadersSetter SETTER;
   private static final Instrumenter<HttpRequest, HttpResponse<?>> INSTRUMENTER;
@@ -24,10 +24,10 @@ public class JdkHttpClientSingletons {
   static {
     SETTER = new HttpHeadersSetter(GlobalOpenTelemetry.getPropagators());
 
-    JdkHttpNetAttributesGetter netAttributesGetter = new JdkHttpNetAttributesGetter();
+    JavaHttpClientNetAttributesGetter netAttributesGetter = new JavaHttpClientNetAttributesGetter();
 
     INSTRUMENTER =
-        JdkHttpInstrumenterFactory.createInstrumenter(
+        JavaHttpClientInstrumenterFactory.createInstrumenter(
             GlobalOpenTelemetry.get(),
             CommonConfig.get().getClientRequestHeaders(),
             CommonConfig.get().getClientResponseHeaders(),
@@ -44,5 +44,5 @@ public class JdkHttpClientSingletons {
     return SETTER;
   }
 
-  private JdkHttpClientSingletons() {}
+  private JavaHttpClientSingletons() {}
 }

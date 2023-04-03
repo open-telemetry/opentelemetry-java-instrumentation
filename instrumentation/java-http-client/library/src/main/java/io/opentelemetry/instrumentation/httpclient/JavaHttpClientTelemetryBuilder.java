@@ -12,7 +12,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
-import io.opentelemetry.instrumentation.httpclient.internal.JdkHttpInstrumenterFactory;
+import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstrumenterFactory;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
@@ -67,7 +67,7 @@ public final class JavaHttpClientTelemetryBuilder {
 
   public JavaHttpClientTelemetry build() {
     Instrumenter<HttpRequest, HttpResponse<?>> instrumenter =
-        JdkHttpInstrumenterFactory.createInstrumenter(
+        JavaHttpClientInstrumenterFactory.createInstrumenter(
             openTelemetry, capturedRequestHeaders, capturedResponseHeaders, additionalExtractors);
 
     return new JavaHttpClientTelemetry(

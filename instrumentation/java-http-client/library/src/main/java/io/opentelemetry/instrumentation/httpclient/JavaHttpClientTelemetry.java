@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.httpclient;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
-import io.opentelemetry.instrumentation.httpclient.internal.OpenTelemetryClient;
+import io.opentelemetry.instrumentation.httpclient.internal.OpenTelemetryHttpClient;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -44,6 +44,6 @@ public final class JavaHttpClientTelemetry {
    * @return a tracing-enabled {@link HttpClient}.
    */
   public HttpClient newHttpClient(HttpClient client) {
-    return new OpenTelemetryClient(client, instrumenter, headersSetter);
+    return new OpenTelemetryHttpClient(client, instrumenter, headersSetter);
   }
 }

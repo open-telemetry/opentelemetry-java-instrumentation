@@ -27,12 +27,12 @@ import javax.net.ssl.SSLParameters;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class OpenTelemetryClient extends HttpClient {
+public final class OpenTelemetryHttpClient extends HttpClient {
   private final HttpClient client;
   private final Instrumenter<HttpRequest, HttpResponse<?>> instrumenter;
   private final HttpHeadersSetter headersSetter;
 
-  public OpenTelemetryClient(
+  public OpenTelemetryHttpClient(
       HttpClient client,
       Instrumenter<HttpRequest, HttpResponse<?>> instrumenter,
       HttpHeadersSetter headersSetter) {
@@ -98,7 +98,7 @@ public final class OpenTelemetryClient extends HttpClient {
     HttpResponse<T> response = null;
     Throwable error = null;
     Context context = instrumenter.start(parentContext, request);
-    try (Scope scope = context.makeCurrent()) {
+    try (Scope ignore = context.makeCurrent()) {
       HttpRequestWrapper requestWrapper =
           new HttpRequestWrapper(request, headersSetter.inject(request.headers()));
 
@@ -136,7 +136,7 @@ public final class OpenTelemetryClient extends HttpClient {
     }
 
     Context context = instrumenter.start(parentContext, request);
-    try (Scope scope = context.makeCurrent()) {
+    try (Scope ignore = context.makeCurrent()) {
       HttpRequestWrapper requestWrapper =
           new HttpRequestWrapper(request, headersSetter.inject(request.headers()));
 

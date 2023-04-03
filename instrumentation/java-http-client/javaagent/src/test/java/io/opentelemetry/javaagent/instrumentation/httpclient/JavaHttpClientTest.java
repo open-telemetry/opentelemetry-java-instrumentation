@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
-import io.opentelemetry.instrumentation.httpclient.AbstractJdkHttpClientTest;
+import io.opentelemetry.instrumentation.httpclient.AbstractJavaHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import java.net.http.HttpClient;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JdkHttpClientTest extends AbstractJdkHttpClientTest {
+public class JavaHttpClientTest extends AbstractJavaHttpClientTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();

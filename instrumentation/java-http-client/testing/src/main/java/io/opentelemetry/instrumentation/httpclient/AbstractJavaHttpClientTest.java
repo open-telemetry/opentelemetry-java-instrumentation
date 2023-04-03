@@ -16,7 +16,7 @@ import java.net.http.HttpResponse;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 
-public abstract class AbstractJdkHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
+public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
 
   private HttpClient client;
 
