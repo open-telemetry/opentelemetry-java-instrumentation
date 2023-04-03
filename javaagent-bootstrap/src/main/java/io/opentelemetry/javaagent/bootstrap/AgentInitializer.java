@@ -66,7 +66,7 @@ public final class AgentInitializer {
   }
 
   private static boolean isSecurityManagerSupportEnabled() {
-    return getBoolean("otel.javaagent.experimental.security-manager.enabled", false);
+    return getBoolean("otel.javaagent.experimental.security-manager-support.enabled", false);
   }
 
   private static boolean getBoolean(String property, boolean defaultValue) {
@@ -173,8 +173,9 @@ public final class AgentInitializer {
     Class<?> starterClass =
         agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.AgentStarterImpl");
     Constructor<?> constructor =
-        starterClass.getDeclaredConstructor(Instrumentation.class, File.class);
-    return (AgentStarter) constructor.newInstance(instrumentation, javaagentFile);
+        starterClass.getDeclaredConstructor(Instrumentation.class, File.class, boolean.class);
+    return (AgentStarter)
+        constructor.newInstance(instrumentation, javaagentFile, isSecurityManagerSupportEnabled);
   }
 
   private AgentInitializer() {}

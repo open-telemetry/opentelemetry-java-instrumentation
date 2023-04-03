@@ -30,11 +30,16 @@ import org.objectweb.asm.Type;
 public class AgentStarterImpl implements AgentStarter {
   private final Instrumentation instrumentation;
   private final File javaagentFile;
+  private final boolean isSecurityManagerSupportEnabled;
   private ClassLoader extensionClassLoader;
 
-  public AgentStarterImpl(Instrumentation instrumentation, File javaagentFile) {
+  public AgentStarterImpl(
+      Instrumentation instrumentation,
+      File javaagentFile,
+      boolean isSecurityManagerSupportEnabled) {
     this.instrumentation = instrumentation;
     this.javaagentFile = javaagentFile;
+    this.isSecurityManagerSupportEnabled = isSecurityManagerSupportEnabled;
   }
 
   @Override
@@ -62,7 +67,7 @@ public class AgentStarterImpl implements AgentStarter {
 
   @Override
   public void start() {
-    extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader(), javaagentFile);
+    extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader());
 
     String loggerImplementationName = ConfigPropertiesUtil.getString("otel.javaagent.logging");
     // default to the built-in stderr slf4j-simple logger
@@ -119,9 +124,9 @@ public class AgentStarterImpl implements AgentStarter {
     return extensionClassLoader;
   }
 
-  private static ClassLoader createExtensionClassLoader(
-      ClassLoader agentClassLoader, File javaagentFile) {
-    return ExtensionClassLoader.getInstance(agentClassLoader, javaagentFile);
+  private ClassLoader createExtensionClassLoader(ClassLoader agentClassLoader) {
+    return ExtensionClassLoader.getInstance(
+        agentClassLoader, javaagentFile, isSecurityManagerSupportEnabled);
   }
 
   private static class LaunchHelperClassFileTransformer implements ClassFileTransformer {

@@ -11,7 +11,6 @@ import io.opentelemetry.javaagent.bootstrap.JavaagentFileHolder;
 import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
-import java.net.JarURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.jar.JarFile;
@@ -67,10 +66,12 @@ public final class OpenTelemetryAgent {
       throws IOException, URISyntaxException {
     // we are not using OpenTelemetryAgent.class.getProtectionDomain().getCodeSource() to get agent
     // location because getProtectionDomain does a permission check with security manager
+    ClassLoader classLoader = OpenTelemetryAgent.class.getClassLoader();
+    if (classLoader == null) {
+      classLoader = ClassLoader.getSystemClassLoader();
+    }
     URL url =
-        OpenTelemetryAgent.class
-            .getClassLoader()
-            .getResource(OpenTelemetryAgent.class.getName().replace('.', '/') + ".class");
+        classLoader.getResource(OpenTelemetryAgent.class.getName().replace('.', '/') + ".class");
     if (url == null || !"jar".equals(url.getProtocol())) {
       throw new IllegalStateException("could not get agent jar location from url " + url);
     }
@@ -88,7 +89,9 @@ public final class OpenTelemetryAgent {
           "agent jar location doesn't appear to be a file: " + javaagentFile.getAbsolutePath());
     }
 
-    JarFile agentJar = ((JarURLConnection) url.openConnection()).getJarFile();
+    // verification is very slow before the JIT compiler starts up, which on Java 8 is not until
+    // after premain execution completes
+    JarFile agentJar = new JarFile(javaagentFile, false);
     verifyJarManifestMainClassIsThis(javaagentFile, agentJar);
     inst.appendToBootstrapClassLoaderSearch(agentJar);
     return javaagentFile;

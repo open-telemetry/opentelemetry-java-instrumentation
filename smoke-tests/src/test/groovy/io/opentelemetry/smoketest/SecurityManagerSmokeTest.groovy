@@ -21,7 +21,7 @@ class SecurityManagerSmokeTest extends SmokeTest {
 
   @Override
   protected Map<String, String> getExtraEnv() {
-    return Collections.singletonMap("OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_ENABLED", "true")
+    return Collections.singletonMap("OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_SUPPORT_ENABLED", "true")
   }
 
   @Unroll

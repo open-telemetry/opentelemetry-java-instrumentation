@@ -105,8 +105,6 @@ public class AgentClassLoader extends URLClassLoader {
       jarBase =
           new URL("x-internal-jar", null, 0, "/", new AgentClassLoaderUrlStreamHandler(jarFile));
       codeSource = new CodeSource(javaagentFile.toURI().toURL(), (Certificate[]) null);
-      Permissions permissions = new Permissions();
-      permissions.add(new AllPermission());
       manifest = jarFile.getManifest();
     } catch (IOException e) {
       throw new IllegalStateException("Unable to open agent jar", e);

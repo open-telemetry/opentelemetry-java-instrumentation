@@ -390,7 +390,8 @@ public class HelperInjector implements Transformer {
 
     Class<?> inject(ClassLoader classLoader, String className) {
       // if security manager is present byte buddy calls
-      // checkPermission(new ReflectPermission("suppressAccessChecks"))
+      // checkPermission(new ReflectPermission("suppressAccessChecks")) so we must call class
+      // injection with AccessController.doPrivileged when security manager is enabled
       Map<String, Class<?>> result =
           execute(
               () ->

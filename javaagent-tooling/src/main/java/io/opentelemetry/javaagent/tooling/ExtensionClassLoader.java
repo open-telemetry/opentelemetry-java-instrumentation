@@ -40,14 +40,8 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 @SuppressWarnings({"unused", "SystemOut"})
 public class ExtensionClassLoader extends URLClassLoader {
   public static final String EXTENSIONS_CONFIG = "otel.javaagent.extensions";
-  // if this class was defined with all permissions then also define classes in this class loader
-  // with all permissions
-  // this class is defined with all permissions when security manager support is enabled
-  private static final boolean addAllPermissions =
-      ExtensionClassLoader.class
-          .getProtectionDomain()
-          .getPermissions()
-          .implies(new AllPermission());
+
+  private final boolean isSecurityManagerSupportEnabled;
 
   // NOTE it's important not to use logging in this class, because this class is used before logging
   // is initialized
@@ -56,7 +50,8 @@ public class ExtensionClassLoader extends URLClassLoader {
     ClassLoader.registerAsParallelCapable();
   }
 
-  public static ClassLoader getInstance(ClassLoader parent, File javaagentFile) {
+  public static ClassLoader getInstance(
+      ClassLoader parent, File javaagentFile, boolean isSecurityManagerSupportEnabled) {
     List<URL> extensions = new ArrayList<>();
 
     includeEmbeddedExtensionsIfFound(parent, extensions, javaagentFile);
@@ -81,7 +76,7 @@ public class ExtensionClassLoader extends URLClassLoader {
 
     List<ClassLoader> delegates = new ArrayList<>(extensions.size());
     for (URL url : extensions) {
-      delegates.add(getDelegate(parent, url));
+      delegates.add(getDelegate(parent, url, isSecurityManagerSupportEnabled));
     }
     return new MultipleParentClassLoader(parent, delegates);
   }
@@ -131,8 +126,9 @@ public class ExtensionClassLoader extends URLClassLoader {
     return tempDirectory;
   }
 
-  private static URLClassLoader getDelegate(ClassLoader parent, URL extensionUrl) {
-    return new ExtensionClassLoader(new URL[] {extensionUrl}, parent);
+  private static URLClassLoader getDelegate(
+      ClassLoader parent, URL extensionUrl, boolean isSecurityManagerSupportEnabled) {
+    return new ExtensionClassLoader(extensionUrl, parent, isSecurityManagerSupportEnabled);
   }
 
   // visible for testing
@@ -193,7 +189,7 @@ public class ExtensionClassLoader extends URLClassLoader {
 
   @Override
   protected PermissionCollection getPermissions(CodeSource codesource) {
-    if (addAllPermissions) {
+    if (isSecurityManagerSupportEnabled) {
       Permissions permissions = new Permissions();
       permissions.add(new AllPermission());
       return permissions;
@@ -201,7 +197,9 @@ public class ExtensionClassLoader extends URLClassLoader {
     return super.getPermissions(codesource);
   }
 
-  private ExtensionClassLoader(URL[] urls, ClassLoader parent) {
-    super(urls, parent);
+  private ExtensionClassLoader(
+      URL url, ClassLoader parent, boolean isSecurityManagerSupportEnabled) {
+    super(new URL[] {url}, parent);
+    this.isSecurityManagerSupportEnabled = isSecurityManagerSupportEnabled;
   }
 }
