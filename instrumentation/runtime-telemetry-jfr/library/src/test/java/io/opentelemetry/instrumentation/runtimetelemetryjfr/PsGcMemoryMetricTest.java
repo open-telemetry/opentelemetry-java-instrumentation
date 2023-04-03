@@ -76,12 +76,24 @@ class PsGcMemoryMetricTest {
         .anyMatch(p -> p.getAttributes().equals(ATTR_PS_OLD_GEN));
   }
 
+  private static void causeGc() {
+    String s = "1234567890";
+    try {
+      while (true) {
+        s = s + s;
+      }
+    } catch (OutOfMemoryError outOfMemoryError) {
+      // ignore
+    }
+  }
+
   @Test
-  void shouldHaveGcDurationMetrics() throws InterruptedException {
+  void shouldHaveGcDurationMetrics() {
     // TODO: Need a reliable way to test old and young gen GC in isolation.
     // Generate some JFR events
-    Thread.sleep(100);
-    System.gc();
+    // using System.gc() here doesn't reliably get us the GC events we need
+    causeGc();
+
     Attributes minorGcAttributes =
         Attributes.of(ATTR_GC, "PS Scavenge", ATTR_ACTION, END_OF_MINOR_GC);
     Attributes majorGcAttributes =

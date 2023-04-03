@@ -32,6 +32,7 @@ tasks {
     }
     include("**/*PsGcMemoryMetricTest.*")
     jvmArgs("-XX:+UseParallelGC")
+    jvmArgs("-Xmx128m")
   }
 
   val testSerial by registering(Test::class) {
