@@ -77,7 +77,6 @@ jobs:
           arguments: >
             ${{ env.test-tasks }}
             -PtestLatestDeps=true
-            --no-build-cache
             ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
