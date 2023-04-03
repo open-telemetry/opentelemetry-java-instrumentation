@@ -6,9 +6,10 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.3.1"
     id("com.gradle.plugin-publish") version "1.1.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
-    id("org.jetbrains.kotlin.jvm") version "1.8.10"
+    id("org.jetbrains.kotlin.jvm") version "1.8.20"
     id("org.xbib.gradle.plugin.jflex") version "1.7.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
+    id("org.graalvm.buildtools.native") version "0.9.20"
   }
 }
 
@@ -133,8 +134,6 @@ hideFromDependabot(":smoke-tests:images:spring-boot")
 hideFromDependabot("instrumentation:akka:akka-actor-2.3:javaagent")
 hideFromDependabot(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
 hideFromDependabot(":instrumentation:akka:akka-http-10.0:javaagent")
-hideFromDependabot(":instrumentation:apache-camel-2.20:javaagent")
-hideFromDependabot(":instrumentation:apache-camel-2.20:javaagent-unit-tests")
 hideFromDependabot(":instrumentation:apache-dbcp-2.0:javaagent")
 hideFromDependabot(":instrumentation:apache-dbcp-2.0:library")
 hideFromDependabot(":instrumentation:apache-dbcp-2.0:testing")
@@ -147,8 +146,6 @@ hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.0:jav
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.3:library")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.3:testing")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent")
-hideFromDependabot(":instrumentation:apache-pulsar:apache-pulsar-2.8:javaagent")
-hideFromDependabot(":instrumentation:apache-pulsar:apache-pulsar-2.8:javaagent-unit-tests")
 hideFromDependabot(":instrumentation:armeria-1.3:javaagent")
 hideFromDependabot(":instrumentation:armeria-1.3:library")
 hideFromDependabot(":instrumentation:armeria-1.3:testing")
@@ -174,6 +171,8 @@ hideFromDependabot(":instrumentation:azure-core:azure-core-1.19:javaagent")
 hideFromDependabot(":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded")
 hideFromDependabot(":instrumentation:azure-core:azure-core-1.36:javaagent")
 hideFromDependabot(":instrumentation:azure-core:azure-core-1.36:library-instrumentation-shaded")
+hideFromDependabot(":instrumentation:camel-2.20:javaagent")
+hideFromDependabot(":instrumentation:camel-2.20:javaagent-unit-tests")
 hideFromDependabot(":instrumentation:cassandra:cassandra-3.0:javaagent")
 hideFromDependabot(":instrumentation:cassandra:cassandra-4.0:javaagent")
 hideFromDependabot(":instrumentation:cassandra:cassandra-4.4:javaagent")
@@ -397,6 +396,8 @@ hideFromDependabot(":instrumentation:play:play-ws:play-ws-2.0:javaagent")
 hideFromDependabot(":instrumentation:play:play-ws:play-ws-2.1:javaagent")
 hideFromDependabot(":instrumentation:play:play-ws:play-ws-common:javaagent")
 hideFromDependabot(":instrumentation:play:play-ws:play-ws-common:testing")
+hideFromDependabot(":instrumentation:pulsar:pulsar-2.8:javaagent")
+hideFromDependabot(":instrumentation:pulsar:pulsar-2.8:javaagent-unit-tests")
 hideFromDependabot(":instrumentation:quartz-2.0:javaagent")
 hideFromDependabot(":instrumentation:quartz-2.0:library")
 hideFromDependabot(":instrumentation:quartz-2.0:testing")

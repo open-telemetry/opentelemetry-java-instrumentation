@@ -85,7 +85,9 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
     transformer.applyAdviceToMethod(
         isMethod()
-            .and(returns(implementsInterface(named("org.hibernate.query.CommonQueryContract")))),
+            .and(
+                returns(implementsInterface(named("org.hibernate.query.CommonQueryContract")))
+                    .or(named("org.hibernate.query.spi.QueryImplementor"))),
         SessionInstrumentation.class.getName() + "$GetQueryAdvice");
   }
 
@@ -150,7 +152,11 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getQuery(
-        @Advice.This SharedSessionContract session, @Advice.Return CommonQueryContract query) {
+        @Advice.This SharedSessionContract session, @Advice.Return Object queryObject) {
+      if (!(queryObject instanceof CommonQueryContract)) {
+        return;
+      }
+      CommonQueryContract query = (CommonQueryContract) queryObject;
 
       VirtualField<SharedSessionContract, SessionInfo> sessionVirtualField =
           VirtualField.find(SharedSessionContract.class, SessionInfo.class);

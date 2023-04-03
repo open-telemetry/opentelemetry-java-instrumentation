@@ -15,7 +15,7 @@ rootProject.extra["versions"] = dependencyVersions
 val otelSdkVersion = "1.24.0"
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.10"
+val groovyVersion = "4.0.11"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new

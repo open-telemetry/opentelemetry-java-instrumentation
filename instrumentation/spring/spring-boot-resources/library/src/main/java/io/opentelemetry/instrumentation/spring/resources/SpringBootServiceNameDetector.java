@@ -178,14 +178,16 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     try {
       LoadSettings settings = LoadSettings.builder().build();
       Load yaml = new Load(settings);
-      Map<String, Object> data = (Map<String, Object>) yaml.loadFromInputStream(in);
-      Map<String, Map<String, Object>> spring =
-          (Map<String, Map<String, Object>>) data.get("spring");
-      if (spring != null) {
-        Map<String, Object> app = spring.get("application");
-        if (app != null) {
-          Object name = app.get("name");
-          return (String) name;
+      for (Object o : yaml.loadAllFromInputStream(in)) {
+        Map<String, Object> data = (Map<String, Object>) o;
+        Map<String, Map<String, Object>> spring =
+            (Map<String, Map<String, Object>>) data.get("spring");
+        if (spring != null) {
+          Map<String, Object> app = spring.get("application");
+          if (app != null) {
+            Object name = app.get("name");
+            return (String) name;
+          }
         }
       }
     } catch (RuntimeException e) {

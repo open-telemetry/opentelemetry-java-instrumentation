@@ -55,6 +55,15 @@ If you are on Windows and you want to run the tests using linux containers:
 USE_LINUX_CONTAINERS=1 ./gradlew :smoke-tests:test -PsmokeTestSuite=payara
 ```
 
+## GraalVM native test
+
+Some tests can be executed as GraalVM native executables:
+
+```
+./gradlew nativeTest
+```
+
+
 ## Docker disk space
 
 Some of the instrumentation tests (and all of the smoke tests) spin up docker containers via

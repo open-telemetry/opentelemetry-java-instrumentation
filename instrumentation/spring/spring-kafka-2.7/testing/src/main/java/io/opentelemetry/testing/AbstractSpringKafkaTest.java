@@ -46,7 +46,7 @@ public abstract class AbstractSpringKafkaTest {
   @BeforeAll
   static void setUpKafka() {
     kafka =
-        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"))
+        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.2.10"))
             .withEnv("KAFKA_HEAP_OPTS", "-Xmx256m")
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
