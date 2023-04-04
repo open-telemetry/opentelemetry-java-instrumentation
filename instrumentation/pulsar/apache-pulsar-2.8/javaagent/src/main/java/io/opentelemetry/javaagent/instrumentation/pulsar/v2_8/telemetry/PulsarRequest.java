@@ -11,15 +11,12 @@ import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.ProducerData;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.UrlData;
 import org.apache.pulsar.client.api.Message;
 
-public final class PulsarRequest {
+public final class PulsarRequest extends BasePulsarRequest {
   private final Message<?> message;
-  private final String destination;
-  private final UrlData urlData;
 
   private PulsarRequest(Message<?> message, String destination, UrlData urlData) {
+    super(destination, urlData);
     this.message = message;
-    this.destination = destination;
-    this.urlData = urlData;
   }
 
   public static PulsarRequest create(Message<?> message) {
@@ -30,19 +27,15 @@ public final class PulsarRequest {
     return new PulsarRequest(message, message.getTopicName(), parseUrl(url));
   }
 
+  public static PulsarRequest create(Message<?> message, UrlData urlData) {
+    return new PulsarRequest(message, message.getTopicName(), urlData);
+  }
+
   public static PulsarRequest create(Message<?> message, ProducerData producerData) {
     return new PulsarRequest(message, producerData.topic, parseUrl(producerData.url));
   }
 
   public Message<?> getMessage() {
     return message;
-  }
-
-  public String getDestination() {
-    return destination;
-  }
-
-  public UrlData getUrlData() {
-    return urlData;
   }
 }

@@ -9,22 +9,22 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 import javax.annotation.Nullable;
 
 public final class PulsarNetClientAttributesGetter
-    implements NetClientAttributesGetter<PulsarRequest, Void> {
+    implements NetClientAttributesGetter<BasePulsarRequest, Void> {
   @Nullable
   @Override
-  public String getTransport(PulsarRequest request, @Nullable Void unused) {
+  public String getTransport(BasePulsarRequest request, @Nullable Void unused) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getPeerName(PulsarRequest request) {
+  public String getPeerName(BasePulsarRequest request) {
     return request.getUrlData() != null ? request.getUrlData().getHost() : null;
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(PulsarRequest request) {
+  public Integer getPeerPort(BasePulsarRequest request) {
     return request.getUrlData() != null ? request.getUrlData().getPort() : null;
   }
 }
