@@ -58,7 +58,7 @@ jobs:
         with:
           arguments: >
             check -x spotlessCheck
-            listTestPartitions
+            listTestsInPartition
             -PtestPartition=${{ matrix.test-partition }}
             -PtestLatestDeps=true
           cache-read-only: true

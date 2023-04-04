@@ -42,7 +42,7 @@ if (project.findProperty("skipTests") as String? == "true") {
 }
 
 tasks {
-  val listTestPartitions by registering {
+  val listTestsInPartition by registering {
     group = "Help"
     description = "List test tasks in given partition"
 
@@ -90,10 +90,10 @@ tasks {
   }
 }
 
-if (gradle.startParameter.taskNames.any { it.equals("listTestPartitions") }) {
+if (gradle.startParameter.taskNames.any { it.equals("listTestsInPartition") }) {
   // disable all tasks to stop build
   project.tasks.configureEach {
-    if (this.name != "listTestPartitions") {
+    if (this.name != "listTestsInPartition") {
       enabled = false
     }
   }

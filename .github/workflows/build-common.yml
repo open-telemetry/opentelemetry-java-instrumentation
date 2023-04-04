@@ -205,9 +205,12 @@ jobs:
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         uses: gradle/gradle-build-action@v2
         with:
+          # "check" is needed to activate all tests for listing purposes
+          # listTestsInPartition writes test tasks that apply to the given partition to a file named
+          # "test-tasks.txt" and then disables all tasks (including tests) after it runs
           arguments: >
             check -x spotlessCheck
-            listTestPartitions
+            listTestsInPartition
             -PtestPartition=${{ matrix.test-partition }}
           cache-read-only: true
 
