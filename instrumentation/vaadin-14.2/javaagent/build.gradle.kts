@@ -36,6 +36,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
+  testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
+  testInstrumentation(project(":instrumentation:tomcat:tomcat-10.0:javaagent"))
 }
 
 testing {
@@ -83,10 +85,13 @@ tasks {
     }
   }
 }
+
 configurations.configureEach {
-  resolutionStrategy {
-    // requires old logback (and therefore also old slf4j)
-    force("ch.qos.logback:logback-classic:1.2.11")
-    force("org.slf4j:slf4j-api:1.7.36")
+  if (!this.name.startsWith("vaadinLatestTest")) {
+    resolutionStrategy {
+      // requires old logback (and therefore also old slf4j)
+      force("ch.qos.logback:logback-classic:1.2.11")
+      force("org.slf4j:slf4j-api:1.7.36")
+    }
   }
 }
