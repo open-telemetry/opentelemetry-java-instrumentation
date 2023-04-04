@@ -48,6 +48,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
+import org.assertj.core.api.AssertAccess;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -466,6 +467,17 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             }
 
             trace.hasSpansSatisfyingExactly(spanAssertions);
+
+            if (options.verifyServerSpanEndTime) {
+              List<SpanData> spanData = AssertAccess.getActual(trace);
+              if (spanData.size() > 1) {
+                SpanData rootSpan = spanData.get(0);
+                for (int j = 1; j < spanData.size(); j++) {
+                  assertThat(rootSpan.getEndEpochNanos())
+                      .isGreaterThanOrEqualTo(spanData.get(j).getEndEpochNanos());
+                }
+              }
+            }
           });
     }
 
