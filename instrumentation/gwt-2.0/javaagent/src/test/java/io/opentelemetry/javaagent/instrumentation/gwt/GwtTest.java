@@ -29,8 +29,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.rnorth.ducttape.timeouts.Timeouts;
-import org.rnorth.ducttape.unreliables.Unreliables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.Testcontainers;
@@ -94,15 +92,7 @@ class GwtTest {
   }
 
   RemoteWebDriver getDriver() {
-    RemoteWebDriver driver =
-        Unreliables.retryUntilSuccess(
-            30,
-            TimeUnit.SECONDS,
-            () ->
-                Timeouts.getWithTimeout(
-                    10,
-                    TimeUnit.SECONDS,
-                    () -> new RemoteWebDriver(browser.getSeleniumAddress(), new ChromeOptions())));
+    RemoteWebDriver driver = browser.getWebDriver();
     driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
     return driver;
   }
