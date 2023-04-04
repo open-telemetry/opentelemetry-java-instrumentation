@@ -51,6 +51,7 @@ public final class HttpServerTestOptions {
   boolean testPathParam = false;
   boolean testCaptureHttpHeaders = true;
   boolean testCaptureRequestParameters = false;
+  boolean verifyServerSpanEndTime = true;
 
   HttpServerTestOptions() {}
 
@@ -171,6 +172,12 @@ public final class HttpServerTestOptions {
   public HttpServerTestOptions setTestCaptureRequestParameters(
       boolean testCaptureRequestParameters) {
     this.testCaptureRequestParameters = testCaptureRequestParameters;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setVerifyServerSpanEndTime(boolean verifyServerSpanEndTime) {
+    this.verifyServerSpanEndTime = verifyServerSpanEndTime;
     return this;
   }
 
