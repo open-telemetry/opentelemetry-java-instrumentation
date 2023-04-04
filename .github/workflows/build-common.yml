@@ -96,7 +96,7 @@ jobs:
             exit 1
           fi
 
-  assemble:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -107,7 +107,11 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Assemble
+      - name: Increase gradle daemon heap size
+        run: |
+          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
+
+      - name: Build
         uses: gradle/gradle-build-action@v2
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
@@ -115,7 +119,7 @@ jobs:
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
           # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-          arguments: assemble -x javadoc ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+          arguments: check -x javadoc -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
           gradle-home-cache-excludes: caches/build-cache-1
@@ -194,6 +198,26 @@ jobs:
       - name: Start deadlock detector
         run: .github/scripts/deadlock-detector.sh
 
+      - name: List tests
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          # "check" is needed to activate all tests for listing purposes
+          # listTestsInPartition writes test tasks that apply to the given partition to a file named
+          # "test-tasks.txt" and then disables all tasks (including tests) after it runs
+          arguments: >
+            check -x spotlessCheck
+            listTestsInPartition
+            -PtestPartition=${{ matrix.test-partition }}
+          cache-read-only: true
+
+      - name: Set test tasks
+        run: |
+          echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
+
       - name: Test
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
@@ -203,13 +227,11 @@ jobs:
         with:
           # spotless is checked separately since it's a common source of failure
           arguments: >
-            check
-            -x spotlessCheck
+            ${{ env.test-tasks }}
             -PtestJavaVersion=${{ matrix.test-java-version }}
             -PtestJavaVM=${{ matrix.vm }}
             -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
             -Porg.gradle.java.installations.auto-download=false
-            -PtestPartition=${{ matrix.test-partition }}
             ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
           # only push cache for one matrix option since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
@@ -220,7 +242,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}
+          name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}-${{ matrix.test-partition }}
           path: /tmp/deadlock-detector-*
           if-no-files-found: ignore
 
@@ -228,7 +250,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: javacore-test-${{ matrix.test-java-version }}
+          name: javacore-test-${{ matrix.test-java-version }}-${{ matrix.test-partition }}
           path: |
             **/hs_err_pid*.log
             **/javacore.*.txt
