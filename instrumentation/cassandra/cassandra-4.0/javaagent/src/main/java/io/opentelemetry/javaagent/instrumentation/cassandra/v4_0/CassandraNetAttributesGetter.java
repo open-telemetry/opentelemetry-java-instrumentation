@@ -23,19 +23,6 @@ final class CassandraNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(
-      CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(CassandraRequest request) {
     return null;
   }

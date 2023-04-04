@@ -19,18 +19,6 @@ class MongoNetAttributesGetter implements NetClientAttributesGetter<CommandStart
 
   @Nullable
   @Override
-  public String getProtocolName(CommandStartedEvent event, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(CommandStartedEvent event, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(CommandStartedEvent event) {
     if (event.getConnectionDescription() != null
         && event.getConnectionDescription().getServerAddress() != null) {

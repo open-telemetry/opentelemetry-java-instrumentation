@@ -19,18 +19,6 @@ final class OpenSearchRestNetResponseAttributesGetter
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
-  @Nullable
-  @Override
-  public String getProtocolName(OpenSearchRestRequest request, @Nullable Response response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(OpenSearchRestRequest request, @Nullable Response response) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getPeerName(OpenSearchRestRequest request) {

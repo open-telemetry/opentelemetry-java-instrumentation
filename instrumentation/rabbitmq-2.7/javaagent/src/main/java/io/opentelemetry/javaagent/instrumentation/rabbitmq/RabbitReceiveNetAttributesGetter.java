@@ -21,18 +21,6 @@ public class RabbitReceiveNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(ReceiveRequest request, @Nullable GetResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(ReceiveRequest request, @Nullable GetResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(ReceiveRequest request) {
     return null;
   }

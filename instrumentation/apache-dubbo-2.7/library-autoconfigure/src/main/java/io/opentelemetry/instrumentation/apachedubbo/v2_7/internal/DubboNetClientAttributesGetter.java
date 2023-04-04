@@ -26,18 +26,6 @@ public final class DubboNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(DubboRequest request, @Nullable Result result) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(DubboRequest request, @Nullable Result result) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(DubboRequest request) {
     return request.url().getHost();
   }

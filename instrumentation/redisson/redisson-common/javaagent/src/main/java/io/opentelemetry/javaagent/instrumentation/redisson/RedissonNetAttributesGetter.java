@@ -20,18 +20,6 @@ final class RedissonNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(RedissonRequest redissonRequest, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(RedissonRequest redissonRequest, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(RedissonRequest redissonRequest) {
     return null;
   }

@@ -23,18 +23,6 @@ public final class RatpackNetClientAttributesGetter
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
-  @Nullable
-  @Override
-  public String getProtocolName(RequestSpec request, @Nullable HttpResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(RequestSpec request, @Nullable HttpResponse response) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getPeerName(RequestSpec request) {

@@ -23,18 +23,6 @@ final class NettySslNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(NettySslRequest request, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(NettySslRequest request, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(NettySslRequest nettySslRequest) {
     return null;
   }

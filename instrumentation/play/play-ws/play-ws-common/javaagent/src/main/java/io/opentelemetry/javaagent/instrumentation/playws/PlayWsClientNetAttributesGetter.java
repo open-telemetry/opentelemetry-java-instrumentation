@@ -22,18 +22,6 @@ final class PlayWsClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(Request request) {
     return request.getUri().getHost();
   }

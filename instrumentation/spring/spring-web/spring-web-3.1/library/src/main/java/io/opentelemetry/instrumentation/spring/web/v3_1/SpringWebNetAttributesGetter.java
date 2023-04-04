@@ -19,18 +19,6 @@ final class SpringWebNetAttributesGetter
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
-  @Nullable
-  @Override
-  public String getProtocolName(HttpRequest httpRequest, @Nullable ClientHttpResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(HttpRequest httpRequest, @Nullable ClientHttpResponse response) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getPeerName(HttpRequest httpRequest) {

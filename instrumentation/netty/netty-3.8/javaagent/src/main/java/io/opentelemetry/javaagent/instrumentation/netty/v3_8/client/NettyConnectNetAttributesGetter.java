@@ -26,18 +26,6 @@ final class NettyConnectNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(NettyConnectionRequest request, @Nullable Channel channel) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(NettyConnectionRequest request, @Nullable Channel channel) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(NettyConnectionRequest request) {
     SocketAddress requestedAddress = request.remoteAddressOnStart();
     if (requestedAddress instanceof InetSocketAddress) {

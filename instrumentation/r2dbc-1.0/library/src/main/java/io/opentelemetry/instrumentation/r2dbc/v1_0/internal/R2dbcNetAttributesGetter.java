@@ -23,18 +23,6 @@ public enum R2dbcNetAttributesGetter implements NetClientAttributesGetter<DbExec
 
   @Nullable
   @Override
-  public String getProtocolName(DbExecution dbExecution, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(DbExecution dbExecution, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(DbExecution request) {
     return request.getHost();
   }

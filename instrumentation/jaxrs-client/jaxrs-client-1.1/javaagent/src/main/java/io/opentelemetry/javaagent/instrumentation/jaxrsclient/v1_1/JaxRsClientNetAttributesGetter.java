@@ -19,18 +19,6 @@ final class JaxRsClientNetAttributesGetter
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
-  @Nullable
-  @Override
-  public String getProtocolName(ClientRequest request, @Nullable ClientResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(ClientRequest request, @Nullable ClientResponse response) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getPeerName(ClientRequest request) {

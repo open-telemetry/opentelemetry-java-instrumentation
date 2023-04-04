@@ -27,18 +27,6 @@ public final class GrpcNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(GrpcRequest grpcRequest, @Nullable Status status) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(GrpcRequest grpcRequest, @Nullable Status status) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(GrpcRequest grpcRequest) {
     return grpcRequest.getLogicalHost();
   }
