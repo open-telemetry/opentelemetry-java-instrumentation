@@ -5,36 +5,25 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
-public abstract class InternalLogger {
+public interface InternalLogger {
 
-  private static final AtomicReference<Factory> loggerFactory =
-      new AtomicReference<>(NoopLoggerFactory.INSTANCE);
-
-  public static void initialize(Factory factory) {
-    if (!loggerFactory.compareAndSet(NoopLoggerFactory.INSTANCE, factory)) {
-      factory
-          .create(InternalLogger.class.getName())
-          .log(
-              Level.WARN,
-              "Developer error: logging system has already been initialized once",
-              null);
-    }
+  static void initialize(Factory factory) {
+    InternalLoggerFactoryHolder.initialize(factory);
   }
 
   static InternalLogger getLogger(String name) {
-    return loggerFactory.get().create(name);
+    return InternalLoggerFactoryHolder.get().create(name);
   }
 
-  protected abstract boolean isLoggable(Level level);
+  boolean isLoggable(Level level);
 
-  protected abstract void log(Level level, String message, @Nullable Throwable error);
+  void log(Level level, String message, @Nullable Throwable error);
 
-  protected abstract String name();
+  String name();
 
-  public enum Level {
+  enum Level {
     ERROR,
     WARN,
     INFO,
@@ -43,7 +32,7 @@ public abstract class InternalLogger {
   }
 
   @FunctionalInterface
-  public interface Factory {
+  interface Factory {
 
     InternalLogger create(String name);
   }

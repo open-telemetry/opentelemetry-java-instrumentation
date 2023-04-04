@@ -11,6 +11,13 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 // DefaultLoggingCustomizer
 public interface LoggingCustomizer {
 
+  /**
+   * Returns name of the logger implementation. Will be matched against the value of the {@code
+   * otel.javavagent.logger} system property - in case it is the same, this {@link
+   * LoggingCustomizer} will be used to initialize the javaagent logging subsystem.
+   */
+  String name();
+
   // note that if this throws an exception, it will end up calling onStartupFailure, because
   // otherwise that exception will bubble up to OpenTelemetryAgent where a distro cannot control the
   // logging of it.

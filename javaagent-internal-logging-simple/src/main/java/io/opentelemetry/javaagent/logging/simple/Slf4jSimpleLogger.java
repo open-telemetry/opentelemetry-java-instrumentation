@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-final class Slf4jSimpleLogger extends InternalLogger {
+final class Slf4jSimpleLogger implements InternalLogger {
 
   static Slf4jSimpleLogger create(String name) {
     return new Slf4jSimpleLogger(name);
@@ -23,17 +23,17 @@ final class Slf4jSimpleLogger extends InternalLogger {
   }
 
   @Override
-  protected boolean isLoggable(Level level) {
+  public boolean isLoggable(Level level) {
     return logger.isEnabledForLevel(toSlf4jLevel(level));
   }
 
   @Override
-  protected void log(Level level, String message, @Nullable Throwable error) {
+  public void log(Level level, String message, @Nullable Throwable error) {
     logger.makeLoggingEventBuilder(toSlf4jLevel(level)).setCause(error).log(message);
   }
 
   @Override
-  protected String name() {
+  public String name() {
     return logger.getName();
   }
 
