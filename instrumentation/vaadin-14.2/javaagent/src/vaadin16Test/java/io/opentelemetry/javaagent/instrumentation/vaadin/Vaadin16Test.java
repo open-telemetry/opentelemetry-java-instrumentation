@@ -13,14 +13,19 @@ import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class Vaadin16Test extends AbstractVaadinTest {
 
   @Override
   protected void prepareVaadinBaseDir(File baseDir) {
-    copyResource("/pnpm/package.json", baseDir);
-    copyResource("/pnpm/pnpm-lock.yaml", baseDir);
+    Path basePath = Paths.get(baseDir.toURI());
+    // underscore "_" prefix is used to hide these files from dependabot
+    // (they are only used for tests ok for them to have outdated dependencies)
+    copyClasspathResource("/pnpm/_package.json", basePath.resolve("package.json"));
+    copyClasspathResource("/pnpm/_pnpm-lock.yaml", basePath.resolve("pnpm-lock.yaml"));
   }
 
   @Override
