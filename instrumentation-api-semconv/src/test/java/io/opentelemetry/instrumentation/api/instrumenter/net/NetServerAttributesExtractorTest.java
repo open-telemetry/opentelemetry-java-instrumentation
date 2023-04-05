@@ -33,6 +33,18 @@ class NetServerAttributesExtractorTest {
 
     @Nullable
     @Override
+    public String getProtocolName(Map<String, String> request) {
+      return request.get("protocolName");
+    }
+
+    @Nullable
+    @Override
+    public String getProtocolVersion(Map<String, String> request) {
+      return request.get("protocolVersion");
+    }
+
+    @Nullable
+    @Override
     public String getHostName(Map<String, String> request) {
       return request.get("hostName");
     }
@@ -83,6 +95,8 @@ class NetServerAttributesExtractorTest {
     // given
     Map<String, String> map = new HashMap<>();
     map.put("transport", IP_TCP);
+    map.put("protocolName", "http");
+    map.put("protocolVersion", "1.1");
     map.put("hostName", "opentelemetry.io");
     map.put("hostPort", "80");
     map.put("sockFamily", "inet6");
@@ -104,6 +118,8 @@ class NetServerAttributesExtractorTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
+            entry(SemanticAttributes.NET_APP_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NET_APP_PROTOCOL_VERSION, "1.1"),
             entry(SemanticAttributes.NET_HOST_NAME, "opentelemetry.io"),
             entry(SemanticAttributes.NET_HOST_PORT, 80L),
             entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"),

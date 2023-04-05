@@ -68,10 +68,4 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
   public List<String> getResponseHeader(Request request, Response response, String name) {
     return Collections.list(response.getMimeHeaders().values(name));
   }
-
-  @Override
-  @Nullable
-  public String getRoute(Request request) {
-    return null;
-  }
 }

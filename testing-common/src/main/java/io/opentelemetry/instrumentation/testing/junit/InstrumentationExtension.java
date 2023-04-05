@@ -196,18 +196,17 @@ public abstract class InstrumentationExtension
    * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
    * spanName}.
    */
-  public <E extends Throwable> void runWithHttpServerSpan(
-      String spanName, ThrowingRunnable<E> callback) throws E {
-    testRunner.runWithHttpServerSpan(spanName, callback);
+  public <E extends Throwable> void runWithHttpServerSpan(ThrowingRunnable<E> callback) throws E {
+    testRunner.runWithHttpServerSpan(callback);
   }
 
   /**
    * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
    * spanName}.
    */
-  public <T, E extends Throwable> T runWithHttpServerSpan(
-      String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testRunner.runWithHttpServerSpan(spanName, callback);
+  public <T, E extends Throwable> T runWithHttpServerSpan(ThrowingSupplier<T, E> callback)
+      throws E {
+    return testRunner.runWithHttpServerSpan(callback);
   }
 
   /** Returns whether forceFlush was called. */

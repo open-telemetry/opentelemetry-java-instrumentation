@@ -5,8 +5,15 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-enum NoopLoggingCustomizer implements LoggingCustomizer {
-  INSTANCE;
+import com.google.auto.service.AutoService;
+
+@AutoService(LoggingCustomizer.class)
+public final class NoopLoggingCustomizer implements LoggingCustomizer {
+
+  @Override
+  public String name() {
+    return "none";
+  }
 
   @Override
   public void init() {}

@@ -20,7 +20,7 @@ class RabbitDeliveryExtraAttributesExtractor implements AttributesExtractor<Deli
     Envelope envelope = request.getEnvelope();
     String routingKey = envelope.getRoutingKey();
     if (routingKey != null && !routingKey.isEmpty()) {
-      attributes.put(SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY, routingKey);
+      attributes.put(SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
     }
   }
 

@@ -2,7 +2,7 @@ name: Build (daily)
 
 on:
   schedule:
-    # strange schedule to reduce the risk of DDOS GitHub infra
+    # daily at 3:24 UTC
     - cron: "24 3 * * *"
   workflow_dispatch:
 

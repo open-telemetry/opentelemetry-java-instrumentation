@@ -68,12 +68,6 @@ final class GrizzlyHttpAttributesGetter
     return target;
   }
 
-  @Nullable
-  @Override
-  public String getRoute(HttpRequestPacket request) {
-    return null;
-  }
-
   @Override
   public String getScheme(HttpRequestPacket request) {
     return request.isSecure() ? "https" : "http";

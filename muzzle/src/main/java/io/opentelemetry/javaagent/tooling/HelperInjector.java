@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.net.URL;
 import java.nio.file.Files;
+import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
 import java.util.Collection;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder.Transformer;
 import net.bytebuddy.description.type.TypeDescription;
@@ -52,6 +54,9 @@ public class HelperInjector implements Transformer {
 
   private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(HelperInjector.class);
+
+  private static final ProtectionDomain PROTECTION_DOMAIN =
+      HelperInjector.class.getProtectionDomain();
 
   // a hook for static instrumentation used to save additional classes created by the agent
   // see https://github.com/open-telemetry/opentelemetry-java-contrib/tree/main/static-instrumenter
@@ -88,7 +93,7 @@ public class HelperInjector implements Transformer {
   private final List<HelperResource> helperResources;
   @Nullable private final ClassLoader helpersSource;
   @Nullable private final Instrumentation instrumentation;
-  private final Map<String, byte[]> dynamicTypeMap = new LinkedHashMap<>();
+  private final Map<String, Supplier<byte[]>> dynamicTypeMap = new LinkedHashMap<>();
 
   private final Cache<ClassLoader, Boolean> injectedClassLoaders = Cache.weak();
   private final Cache<ClassLoader, Boolean> resourcesInjectedClassLoaders = Cache.weak();
@@ -108,7 +113,6 @@ public class HelperInjector implements Transformer {
       String requestingName,
       List<String> helperClassNames,
       List<HelperResource> helperResources,
-      // TODO can this be replaced with the context class loader?
       ClassLoader helpersSource,
       Instrumentation instrumentation) {
     this.requestingName = requestingName;
@@ -120,7 +124,9 @@ public class HelperInjector implements Transformer {
   }
 
   private HelperInjector(
-      String requestingName, Map<String, byte[]> helperMap, Instrumentation instrumentation) {
+      String requestingName,
+      Map<String, Supplier<byte[]>> helperMap,
+      Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
     this.helperClassNames = helperMap.keySet();
@@ -135,9 +141,9 @@ public class HelperInjector implements Transformer {
       String requestingName,
       Collection<DynamicType.Unloaded<?>> helpers,
       Instrumentation instrumentation) {
-    Map<String, byte[]> bytes = new HashMap<>(helpers.size());
+    Map<String, Supplier<byte[]>> bytes = new HashMap<>(helpers.size());
     for (DynamicType.Unloaded<?> helper : helpers) {
-      bytes.put(helper.getTypeDescription().getName(), helper.getBytes());
+      bytes.put(helper.getTypeDescription().getName(), helper::getBytes);
     }
     return new HelperInjector(requestingName, bytes, instrumentation);
   }
@@ -146,18 +152,27 @@ public class HelperInjector implements Transformer {
     helperInjectorListener = listener;
   }
 
-  private Map<String, byte[]> getHelperMap() throws IOException {
+  private Map<String, Supplier<byte[]>> getHelperMap() {
     if (dynamicTypeMap.isEmpty()) {
-      Map<String, byte[]> classnameToBytes = new LinkedHashMap<>();
-
-      ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(helpersSource);
+      Map<String, Supplier<byte[]>> result = new LinkedHashMap<>();
 
       for (String helperClassName : helperClassNames) {
-        byte[] classBytes = locator.locate(helperClassName).resolve();
-        classnameToBytes.put(helperClassName, classBytes);
+        result.put(
+            helperClassName,
+            () -> {
+              try (ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(helpersSource)) {
+                return locator.locate(helperClassName).resolve();
+              } catch (IOException exception) {
+                if (logger.isLoggable(SEVERE)) {
+                  logger.log(
+                      SEVERE, "Failed to read {0}", new Object[] {helperClassName}, exception);
+                }
+                throw new IllegalStateException("Failed to read " + helperClassName, exception);
+              }
+            });
       }
 
-      return classnameToBytes;
+      return result;
     } else {
       return dynamicTypeMap;
     }
@@ -248,10 +263,10 @@ public class HelperInjector implements Transformer {
                   new Object[] {cl, helperClassNames});
             }
 
-            Map<String, byte[]> classnameToBytes = getHelperMap();
+            Map<String, Supplier<byte[]>> classnameToBytes = getHelperMap();
             Map<String, HelperClassInjector> map =
                 helperInjectors.computeIfAbsent(cl, (unused) -> new ConcurrentHashMap<>());
-            for (Map.Entry<String, byte[]> entry : classnameToBytes.entrySet()) {
+            for (Map.Entry<String, Supplier<byte[]>> entry : classnameToBytes.entrySet()) {
               // for boot loader we use a placeholder injector, we only need these classes to be
               // in the injected classes map to later tell which of the classes are injected
               HelperClassInjector injector =
@@ -280,9 +295,18 @@ public class HelperInjector implements Transformer {
         });
   }
 
-  private Map<String, Class<?>> injectBootstrapClassLoader(Map<String, byte[]> classnameToBytes)
+  private static Map<String, byte[]> resolve(Map<String, Supplier<byte[]>> classes) {
+    Map<String, byte[]> result = new LinkedHashMap<>();
+    for (Map.Entry<String, Supplier<byte[]>> entry : classes.entrySet()) {
+      result.put(entry.getKey(), entry.getValue().get());
+    }
+    return result;
+  }
+
+  private Map<String, Class<?>> injectBootstrapClassLoader(Map<String, Supplier<byte[]>> inject)
       throws IOException {
 
+    Map<String, byte[]> classnameToBytes = resolve(inject);
     if (helperInjectorListener != null) {
       helperInjectorListener.onInjection(classnameToBytes);
     }
@@ -358,17 +382,31 @@ public class HelperInjector implements Transformer {
   }
 
   private static class HelperClassInjector {
-    private final byte[] bytes;
+    private final Supplier<byte[]> bytes;
 
-    HelperClassInjector(byte[] bytes) {
+    HelperClassInjector(Supplier<byte[]> bytes) {
       this.bytes = bytes;
     }
 
     Class<?> inject(ClassLoader classLoader, String className) {
+      // if security manager is present byte buddy calls
+      // checkPermission(new ReflectPermission("suppressAccessChecks")) so we must call class
+      // injection with AccessController.doPrivileged when security manager is enabled
       Map<String, Class<?>> result =
-          new ClassInjector.UsingReflection(classLoader)
-              .injectRaw(Collections.singletonMap(className, bytes));
+          execute(
+              () ->
+                  new ClassInjector.UsingReflection(classLoader, PROTECTION_DOMAIN)
+                      .injectRaw(Collections.singletonMap(className, bytes.get())));
       return result.get(className);
+    }
+  }
+
+  @SuppressWarnings({"deprecation", "removal"}) // AccessController is deprecated
+  private static <T> T execute(PrivilegedAction<T> action) {
+    if (System.getSecurityManager() != null) {
+      return java.security.AccessController.doPrivileged(action);
+    } else {
+      return action.run();
     }
   }
 }

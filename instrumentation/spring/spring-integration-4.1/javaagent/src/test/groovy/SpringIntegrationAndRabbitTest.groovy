@@ -9,7 +9,6 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification implements WithRabbitProducerConsumerTrait {
   def setupSpec() {
@@ -22,8 +21,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
 
   def "should cooperate with existing RabbitMQ instrumentation"() {
     when:
-    // simulate the workflow being triggered by HTTP request
-    runWithHttpServerSpan("HTTP GET") {
+    runWithSpan("parent") {
       producerContext.getBean("producer", Runnable).run()
     }
 
@@ -31,8 +29,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
     assertTraces(2) {
       trace(0, 7) {
         span(0) {
-          name "HTTP GET"
-          kind SERVER
+          name "parent"
           attributes {}
         }
         span(1) {
@@ -63,10 +60,10 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testTopic"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" String
+            "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
           }
         }
         // spring-cloud-stream-binder-rabbit listener puts all messages into a BlockingQueue immediately after receiving
@@ -78,11 +75,11 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           kind CONSUMER
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testTopic"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" String
+            "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
           }
         }
         // spring-integration will detect that spring-rabbit has already created a consumer span and back off
@@ -93,7 +90,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           kind CONSUMER
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testTopic"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String

@@ -6,8 +6,11 @@ plugins {
   id("org.jetbrains.kotlin.jvm")
 }
 
+val ktorVersion = "2.0.0"
+
 dependencies {
-  library("io.ktor:ktor-server-core:2.0.0")
+  library("io.ktor:ktor-client-core:$ktorVersion")
+  library("io.ktor:ktor-server-core:$ktorVersion")
 
   implementation(project(":instrumentation:ktor:ktor-common:library"))
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
@@ -16,7 +19,8 @@ dependencies {
 
   testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
-  testLibrary("io.ktor:ktor-server-netty:2.0.0")
+  testLibrary("io.ktor:ktor-server-netty:$ktorVersion")
+  testLibrary("io.ktor:ktor-client-cio:$ktorVersion")
 }
 
 tasks {

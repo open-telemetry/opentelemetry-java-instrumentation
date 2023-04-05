@@ -33,9 +33,11 @@ val targets = mapOf(
   ),
   "liberty" to listOf(
     ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11"), mapOf("release" to "2020-11-11_0736")),
-    // running configure.sh is failing while building the image with Java 19
-    ImageTarget(listOf("21.0.0.10"), listOf("hotspot"), listOf("8", "11", "17"), mapOf("release" to "2021-09-20_1900")),
-    ImageTarget(listOf("21.0.0.10"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "2021-09-20_1900")),
+    ImageTarget(listOf("21.0.0.12"), listOf("hotspot"), listOf("8", "11", "17"), mapOf("release" to "2021-11-17_1256")),
+    ImageTarget(listOf("21.0.0.12"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "2021-11-17_1256")),
+    // Java 19 is not supported until 22.0.0.10
+    ImageTarget(listOf("22.0.0.12"), listOf("hotspot"), listOf("8", "11", "17", "19"), mapOf("release" to "22.0.0.12")),
+    ImageTarget(listOf("22.0.0.12"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "22.0.0.12")),
   ),
   "payara" to listOf(
     ImageTarget(listOf("5.2020.6"), listOf("hotspot", "openj9"), listOf("8", "11")),
@@ -59,9 +61,7 @@ val targets = mapOf(
     ImageTarget(listOf("9.0.0-M7"), listOf("openj9"), listOf("8", "11", "17", "18"), war = "servlet-5.0"),
   ),
   "websphere" to listOf(
-    // TODO (trask) this is a recent change, check back in a while and see if it's been fixed
-    // 8.5.5.20 only has linux/ppc64le image
-    ImageTarget(listOf("8.5.5.19", "9.0.5.9"), listOf("openj9"), listOf("8"), windows = false),
+    ImageTarget(listOf("8.5.5.22", "9.0.5.14"), listOf("openj9"), listOf("8"), windows = false),
   ),
   "wildfly" to listOf(
     ImageTarget(listOf("13.0.0.Final"), listOf("hotspot", "openj9"), listOf("8")),

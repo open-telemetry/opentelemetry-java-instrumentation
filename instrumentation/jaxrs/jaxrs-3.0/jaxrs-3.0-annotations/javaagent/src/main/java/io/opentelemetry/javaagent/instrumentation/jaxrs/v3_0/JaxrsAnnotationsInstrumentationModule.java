@@ -23,7 +23,7 @@ public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule
   // require jax-rs 3
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("jakarta.ws.rs.container.AsyncResponse");
+    return hasClassesNamed("jakarta.ws.rs.Path");
   }
 
   @Override

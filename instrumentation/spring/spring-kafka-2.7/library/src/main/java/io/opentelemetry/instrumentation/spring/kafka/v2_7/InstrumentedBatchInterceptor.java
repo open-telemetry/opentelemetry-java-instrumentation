@@ -9,6 +9,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -16,16 +19,14 @@ import org.springframework.kafka.listener.BatchInterceptor;
 
 final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V> {
 
-  private static final VirtualField<ConsumerRecords<?, ?>, Context> receiveContextField =
-      VirtualField.find(ConsumerRecords.class, Context.class);
-  private static final VirtualField<ConsumerRecords<?, ?>, State<ConsumerRecords<?, ?>>>
-      stateField = VirtualField.find(ConsumerRecords.class, State.class);
+  private static final VirtualField<ConsumerRecords<?, ?>, State<KafkaReceiveRequest>> stateField =
+      VirtualField.find(ConsumerRecords.class, State.class);
 
-  private final Instrumenter<ConsumerRecords<?, ?>, Void> batchProcessInstrumenter;
+  private final Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter;
   @Nullable private final BatchInterceptor<K, V> decorated;
 
   InstrumentedBatchInterceptor(
-      Instrumenter<ConsumerRecords<?, ?>, Void> batchProcessInstrumenter,
+      Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter,
       @Nullable BatchInterceptor<K, V> decorated) {
     this.batchProcessInstrumenter = batchProcessInstrumenter;
     this.decorated = decorated;
@@ -35,17 +36,19 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   public ConsumerRecords<K, V> intercept(ConsumerRecords<K, V> records, Consumer<K, V> consumer) {
     Context parentContext = getParentContext(records);
 
-    if (batchProcessInstrumenter.shouldStart(parentContext, records)) {
-      Context context = batchProcessInstrumenter.start(parentContext, records);
+    KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
+    if (batchProcessInstrumenter.shouldStart(parentContext, request)) {
+      Context context = batchProcessInstrumenter.start(parentContext, request);
       Scope scope = context.makeCurrent();
-      stateField.set(records, State.create(records, context, scope));
+      stateField.set(records, State.create(request, context, scope));
     }
 
     return decorated == null ? records : decorated.intercept(records, consumer);
   }
 
-  private Context getParentContext(ConsumerRecords<K, V> records) {
-    Context receiveContext = receiveContextField.get(records);
+  private static Context getParentContext(ConsumerRecords<?, ?> records) {
+    KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
+    Context receiveContext = consumerContext.getContext();
 
     // use the receive CONSUMER span as parent if it's available
     return receiveContext != null ? receiveContext : Context.current();
@@ -68,11 +71,12 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   }
 
   private void end(ConsumerRecords<K, V> records, @Nullable Throwable error) {
-    State<ConsumerRecords<?, ?>> state = stateField.get(records);
+    State<KafkaReceiveRequest> state = stateField.get(records);
     stateField.set(records, null);
     if (state != null) {
+      KafkaReceiveRequest request = state.request();
       state.scope().close();
-      batchProcessInstrumenter.end(state.context(), state.request(), null, error);
+      batchProcessInstrumenter.end(state.context(), request, null, error);
     }
   }
 }

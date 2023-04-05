@@ -1,6 +1,5 @@
 plugins {
   id("otel.javaagent-instrumentation")
-  id("org.unbroken-dome.test-sets")
 }
 
 muzzle {
@@ -9,14 +8,6 @@ muzzle {
     module.set("log4j-core")
     versions.set("[2.17.0,)")
     assertInverse.set(true)
-  }
-}
-
-testSets {
-  // Very different codepaths when threadlocals are enabled or not so we check both.
-  // Regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2403
-  create("testDisableThreadLocals") {
-    dirName = "test"
   }
 }
 
@@ -30,12 +21,33 @@ dependencies {
   testImplementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
 }
 
-tasks {
-  val testDisableThreadLocals by existing(Test::class) {
-    jvmArgs("-Dlog4j2.is.webapp=false")
-    jvmArgs("-Dlog4j2.enable.threadlocals=false")
-  }
+testing {
+  suites {
+    // Very different codepaths when threadlocals are enabled or not so we check both.
+    // Regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2403
+    val testDisableThreadLocals by registering(JvmTestSuite::class) {
+      sources {
+        groovy {
+          setSrcDirs(listOf("src/test/groovy"))
+        }
+      }
+      dependencies {
+        implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
+      }
 
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dlog4j2.is.webapp=false")
+            jvmArgs("-Dlog4j2.enable.threadlocals=false")
+          }
+        }
+      }
+    }
+  }
+}
+
+tasks {
   // Threadlocals are always false if is.webapp is true, so we make sure to override it because as of
   // now testing-common includes jetty / servlet.
   test {
@@ -44,6 +56,6 @@ tasks {
   }
 
   named("check") {
-    dependsOn(testDisableThreadLocals)
+    dependsOn(testing.suites)
   }
 }

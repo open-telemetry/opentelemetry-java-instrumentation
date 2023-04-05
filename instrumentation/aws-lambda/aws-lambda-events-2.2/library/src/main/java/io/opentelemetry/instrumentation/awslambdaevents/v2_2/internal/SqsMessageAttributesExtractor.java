@@ -18,7 +18,7 @@ class SqsMessageAttributesExtractor implements AttributesExtractor<SQSMessage, V
     attributes.put(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS");
     attributes.put(SemanticAttributes.MESSAGING_OPERATION, "process");
     attributes.put(SemanticAttributes.MESSAGING_MESSAGE_ID, message.getMessageId());
-    attributes.put(SemanticAttributes.MESSAGING_DESTINATION, message.getEventSource());
+    attributes.put(SemanticAttributes.MESSAGING_DESTINATION_NAME, message.getEventSource());
   }
 
   @Override

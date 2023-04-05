@@ -58,7 +58,7 @@ class UrlConnectionTest {
                         .hasStatus(StatusData.error())
                         .hasException(thrown),
                 span ->
-                    span.hasName("HTTP GET")
+                    span.hasName("GET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())

@@ -23,7 +23,7 @@ dependencies {
   testInstrumentation "io.opentelemetry.javaagent.instrumentation:opentelemetry-javaagent-servlet-2.2:${versions.opentelemetryJavaagentAlpha}"
   testInstrumentation "io.opentelemetry.javaagent.instrumentation:opentelemetry-javaagent-servlet-3.0:${versions.opentelemetryJavaagentAlpha}"
 
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common:${versions.opentelemetryJavaagentAlpha}") {
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common") {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
 

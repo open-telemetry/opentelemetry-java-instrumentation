@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.WithSpanSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.WithSpanSingletons.instrumenterWithAttributes;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
@@ -58,6 +59,11 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
                     named(
                         "application.io.opentelemetry.instrumentation.annotations.SpanAttribute"))));
     excludedMethodsMatcher = configureExcludedMethods();
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("application.io.opentelemetry.instrumentation.annotations.WithSpan");
   }
 
   @Override

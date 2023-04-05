@@ -8,8 +8,6 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.base.BaseConf
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.TimeUnit
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer
 import org.apache.rocketmq.client.producer.DefaultMQProducer
 import org.apache.rocketmq.client.producer.SendCallback
@@ -19,6 +17,9 @@ import org.apache.rocketmq.common.message.Message
 import org.apache.rocketmq.remoting.common.RemotingHelper
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
@@ -104,7 +105,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           kind PRODUCER
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" sharedTopic
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG" "TagA"
@@ -118,7 +119,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           childOf span(0)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" sharedTopic
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
@@ -160,7 +161,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           childOf span(0)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" sharedTopic
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG" "TagA"
@@ -174,7 +175,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           childOf span(1)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" sharedTopic
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
@@ -238,7 +239,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           childOf span(0)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" sharedTopic
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "messaging.rocketmq.broker_address" String
@@ -261,7 +262,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           kind CONSUMER
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" sharedTopic
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
@@ -279,7 +280,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           kind CONSUMER
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" sharedTopic
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
@@ -325,7 +326,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           childOf span(0)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" sharedTopic
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG" "TagA"
@@ -340,7 +341,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           childOf span(1)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" sharedTopic
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long

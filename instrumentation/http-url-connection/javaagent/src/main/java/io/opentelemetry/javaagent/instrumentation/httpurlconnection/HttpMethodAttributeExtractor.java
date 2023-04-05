@@ -42,7 +42,7 @@ public class HttpMethodAttributeExtractor<
       // The getOutputStream() has transformed "GET" into "POST"
       attributes.put(SemanticAttributes.HTTP_METHOD, requestMethod);
       Span span = Span.fromContext(context);
-      span.updateName("HTTP " + requestMethod);
+      span.updateName(requestMethod);
     }
   }
 }

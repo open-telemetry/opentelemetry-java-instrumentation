@@ -45,7 +45,7 @@ dependencies {
 
 if (!(findProperty("testLatestDeps") as Boolean)) {
   // early jersey versions require old guava
-  configurations.testRuntimeClasspath.resolutionStrategy.force("com.google.guava:guava:14.0.1")
+  configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:14.0.1")
 
   configurations {
     // early jersey versions bundle asm without shading

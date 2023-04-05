@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 
 import static java.util.Collections.singletonList;
 
-import io.opentelemetry.instrumentation.kafkaclients.KafkaTelemetry;
+import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.testing.AbstractSpringKafkaNoReceiveTelemetryTest;

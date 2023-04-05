@@ -2,7 +2,8 @@ name: CodeQL (daily)
 
 on:
   schedule:
-    - cron: '30 1 * * *'
+    # daily at 1:30 UTC
+    - cron: "30 1 * * *"
   workflow_dispatch:
 
 jobs:
@@ -22,6 +23,9 @@ jobs:
         uses: github/codeql-action/init@v2
         with:
           languages: java
+          # using "latest" helps to keep up with the latest Kotlin support
+          # see https://github.com/github/codeql-action/issues/1555#issuecomment-1452228433
+          tools: latest
 
       - uses: gradle/gradle-build-action@v2
         with:

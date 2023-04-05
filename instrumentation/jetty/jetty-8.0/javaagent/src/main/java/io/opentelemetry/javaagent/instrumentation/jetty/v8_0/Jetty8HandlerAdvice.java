@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.jetty.v8_0.Jetty8Single
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -45,6 +46,9 @@ public class Jetty8HandlerAdvice {
 
     // Must be set here since Jetty handlers can use startAsync outside of servlet scope.
     helper().setAsyncListenerResponse(request, response);
+
+    HttpServerResponseCustomizerHolder.getCustomizer()
+        .customize(context, response, Jetty8ResponseMutator.INSTANCE);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

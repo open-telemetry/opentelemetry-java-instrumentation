@@ -1,0 +1,23 @@
+name: Publish Security Manager test app images for smoke tests
+
+on:
+  push:
+    paths:
+      - 'smoke-tests/images/security-manager/**'
+      - '.github/workflows/publish-smoke-test-security-manager-images.yml'
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  publish:
+    uses: ./.github/workflows/reusable-smoke-test-images.yml
+    with:
+      project: ":smoke-tests:images:security-manager"
+      publish: true
+
+  open-issue-on-failure:
+    needs:
+      - publish
+    if: failure() && github.run_attempt == 1
+    uses: ./.github/workflows/reusable-open-issue-on-failure.yml

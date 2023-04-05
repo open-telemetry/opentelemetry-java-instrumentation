@@ -131,7 +131,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasNoParent(),
                 span ->
-                    span.hasName("HTTP GET")
+                    span.hasName("GET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -148,7 +148,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1)),
                 span ->
-                    span.hasName("HTTP GET")
+                    span.hasName("GET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -186,7 +186,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasNoParent(),
                 span ->
-                    span.hasName("HTTP GET")
+                    span.hasName("GET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -237,7 +237,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasNoParent(),
                 span ->
-                    span.hasName("HTTP POST")
+                    span.hasName("POST")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -293,7 +293,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasNoParent(),
                 span ->
-                    span.hasName("HTTP POST")
+                    span.hasName("POST")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

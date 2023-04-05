@@ -73,7 +73,7 @@ public boolean isHelperClass(String className) {
 
 For more information on package conventions, see the [muzzle docs](muzzle.md#compile-time-reference-collection).
 
-### Inject additional resources using the `helperResourceNames()` method
+### Inject additional resources using the `registerHelperResources(HelperResourceBuilder)` method
 
 Some libraries may expose SPI interfaces that you can easily implement to provide
 telemetry-gathering capabilities. The OpenTelemetry javaagent is able to inject `ServiceLoader`
@@ -81,8 +81,8 @@ service provider files, but it needs to be told which ones:
 
 ```java
 @Override
-public List<String> helperResourceNames() {
-  return singletonList("META-INF/services/org.my.library.SpiClass");
+public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
+    helperResourceBuilder.register("META-INF/services/org.my.library.SpiClass");
 }
 ```
 

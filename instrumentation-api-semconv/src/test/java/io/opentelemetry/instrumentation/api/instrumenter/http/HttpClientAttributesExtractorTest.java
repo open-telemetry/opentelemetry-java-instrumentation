@@ -23,6 +23,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
@@ -79,7 +80,7 @@ class HttpClientAttributesExtractorTest {
     @Override
     public String getTransport(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return response.get("transport");
+      return response == null ? null : response.get("transport");
     }
 
     @Nullable
@@ -114,12 +115,15 @@ class HttpClientAttributesExtractorTest {
     response.put("header.custom-response-header", "654,321");
     response.put("transport", IP_TCP);
 
+    ToIntFunction<Context> resendCountFromContext = context -> 2;
+
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.builder(
-                new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
-            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
-            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
-            .build();
+        new HttpClientAttributesExtractor<>(
+            new TestHttpClientAttributesGetter(),
+            new TestNetClientAttributesGetter(),
+            singletonList("Custom-Request-Header"),
+            singletonList("Custom-Response-Header"),
+            resendCountFromContext);
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -142,6 +146,7 @@ class HttpClientAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
+            entry(SemanticAttributes.HTTP_RESEND_COUNT, 2L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")),
@@ -267,5 +272,25 @@ class HttpClientAttributesExtractorTest {
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(arguments(80, "http://github.com"), arguments(443, "https://github.com"));
     }
+  }
+
+  @Test
+  void zeroResends() {
+    Map<String, String> request = new HashMap<>();
+
+    ToIntFunction<Context> resendCountFromContext = context -> 0;
+
+    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        new HttpClientAttributesExtractor<>(
+            new TestHttpClientAttributesGetter(),
+            new TestNetClientAttributesGetter(),
+            emptyList(),
+            emptyList(),
+            resendCountFromContext);
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, null, null);
+    assertThat(attributes.build()).isEmpty();
   }
 }

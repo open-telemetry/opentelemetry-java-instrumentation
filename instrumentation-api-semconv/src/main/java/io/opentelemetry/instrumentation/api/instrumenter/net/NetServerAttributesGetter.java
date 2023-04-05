@@ -18,138 +18,56 @@ import javax.annotation.Nullable;
 public interface NetServerAttributesGetter<REQUEST> {
 
   @Nullable
-  default String getTransport(REQUEST request) {
-    return transport(request);
+  String getTransport(REQUEST request);
+
+  /**
+   * Returns the application protocol used.
+   *
+   * <p>Examples: `amqp`, `http`, `mqtt`.
+   */
+  @Nullable
+  default String getProtocolName(REQUEST request) {
+    return null;
   }
 
   /**
-   * This method is deprecated and will be removed in the subsequent release.
+   * Returns the version of the application protocol used.
    *
-   * @deprecated Use {@link #getTransport(Object)} instead.
+   * <p>Examples: `3.1.1`.
    */
-  @Deprecated
   @Nullable
-  default String transport(REQUEST request) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
+  default String getProtocolVersion(REQUEST request) {
+    return null;
   }
 
   @Nullable
-  default String getHostName(REQUEST request) {
-    return hostName(request);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getHostName(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String hostName(REQUEST request) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
-  }
+  String getHostName(REQUEST request);
 
   @Nullable
-  default Integer getHostPort(REQUEST request) {
-    return hostPort(request);
-  }
+  Integer getHostPort(REQUEST request);
 
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getHostPort(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default Integer hostPort(REQUEST request) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
-  }
-
-  // TODO: when removing sockFamily(), make sure this method returns null by default
   @Nullable
   default String getSockFamily(REQUEST request) {
-    return sockFamily(request);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getSockFamily(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String sockFamily(REQUEST request) {
     return null;
   }
 
-  // TODO: when removing sockPeerAddr(), make sure this method returns null by default
   @Nullable
   default String getSockPeerAddr(REQUEST request) {
-    return sockPeerAddr(request);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getSockPeerAddr(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String sockPeerAddr(REQUEST request) {
     return null;
   }
 
-  // TODO: when removing sockPeerPort(), make sure this method returns null by default
   @Nullable
   default Integer getSockPeerPort(REQUEST request) {
-    return sockPeerPort(request);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getSockPeerPort(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default Integer sockPeerPort(REQUEST request) {
     return null;
   }
 
-  // TODO: when removing sockHostAddr(), make sure this method returns null by default
   @Nullable
   default String getSockHostAddr(REQUEST request) {
-    return sockHostAddr(request);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getSockHostAddr(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String sockHostAddr(REQUEST request) {
     return null;
   }
 
-  // TODO: when removing sockHostPort(), make sure this method returns null by default
   @Nullable
   default Integer getSockHostPort(REQUEST request) {
-    return sockHostPort(request);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getSockHostPort(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default Integer sockHostPort(REQUEST request) {
     return null;
   }
 }

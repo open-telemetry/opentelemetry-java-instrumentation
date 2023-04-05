@@ -30,14 +30,7 @@ public abstract class ApiGatewayProxyRequest {
   private static boolean noHttpPropagationNeeded() {
     Collection<String> fields =
         GlobalOpenTelemetry.getPropagators().getTextMapPropagator().fields();
-    return fields.isEmpty() || xrayPropagationFieldsOnly(fields);
-  }
-
-  private static boolean xrayPropagationFieldsOnly(Collection<String> fields) {
-    // ugly but faster than typical convert-to-set-and-check-contains-only
-    return (fields.size() == 1)
-        && ParentContextExtractor.AWS_TRACE_HEADER_PROPAGATOR_KEY.equalsIgnoreCase(
-            fields.iterator().next());
+    return fields.isEmpty();
   }
 
   public static ApiGatewayProxyRequest forStream(InputStream source) {

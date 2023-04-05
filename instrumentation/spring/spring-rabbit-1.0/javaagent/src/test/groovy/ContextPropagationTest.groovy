@@ -21,9 +21,9 @@ import org.springframework.context.annotation.Bean
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import spock.lang.Shared
+import spock.lang.Unroll
 
 import java.time.Duration
-import spock.lang.Unroll
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
@@ -91,6 +91,10 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
     then:
     assertTraces(2) {
       trace(0, 5) {
+        spans.subList(2, 4).sort {
+          def destination = it.attributes.get(SemanticAttributes.MESSAGING_DESTINATION_NAME)
+          return destination == "<default>" ? 0 : 1
+        }
         span(0) {
           name "parent"
         }
@@ -103,10 +107,10 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" "<default>"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "<default>"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" String
+            "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
             if (testHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
             }
@@ -121,11 +125,11 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
           childOf span(1)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" "<default>"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "<default>"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" String
+            "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
             if (testHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
             }
@@ -138,7 +142,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
           childOf span(1)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION" "testQueue"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testQueue"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long

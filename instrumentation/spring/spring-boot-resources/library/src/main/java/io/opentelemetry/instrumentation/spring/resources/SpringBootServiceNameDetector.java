@@ -178,14 +178,16 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     try {
       LoadSettings settings = LoadSettings.builder().build();
       Load yaml = new Load(settings);
-      Map<String, Object> data = (Map<String, Object>) yaml.loadFromInputStream(in);
-      Map<String, Map<String, Object>> spring =
-          (Map<String, Map<String, Object>>) data.get("spring");
-      if (spring != null) {
-        Map<String, Object> app = spring.get("application");
-        if (app != null) {
-          Object name = app.get("name");
-          return (String) name;
+      for (Object o : yaml.loadAllFromInputStream(in)) {
+        Map<String, Object> data = (Map<String, Object>) o;
+        Map<String, Map<String, Object>> spring =
+            (Map<String, Map<String, Object>>) data.get("spring");
+        if (spring != null) {
+          Map<String, Object> app = spring.get("application");
+          if (app != null) {
+            Object name = app.get("name");
+            return (String) name;
+          }
         }
       }
     } catch (RuntimeException e) {
@@ -265,6 +267,18 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
 
   // Exists for testing
   static class SystemHelper {
+    private final ClassLoader classLoader;
+    private final boolean addBootInfPrefix;
+
+    SystemHelper() {
+      ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+      classLoader =
+          contextClassLoader != null ? contextClassLoader : ClassLoader.getSystemClassLoader();
+      addBootInfPrefix = classLoader.getResource("BOOT-INF/classes/") != null;
+      if (addBootInfPrefix) {
+        logger.log(Level.FINER, "Detected presence of BOOT-INF/classes/");
+      }
+    }
 
     String getenv(String name) {
       return System.getenv(name);
@@ -275,7 +289,8 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     }
 
     InputStream openClasspathResource(String filename) {
-      return ClassLoader.getSystemClassLoader().getResourceAsStream(filename);
+      String path = addBootInfPrefix ? "BOOT-INF/classes/" + filename : filename;
+      return classLoader.getResourceAsStream(path);
     }
 
     InputStream openFile(String filename) throws Exception {

@@ -93,10 +93,4 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
       String name) {
     return accessor.getResponseHeaderValues(responseContext.response(), name);
   }
-
-  @Override
-  @Nullable
-  public String getRoute(ServletRequestContext<REQUEST> requestContext) {
-    return null;
-  }
 }

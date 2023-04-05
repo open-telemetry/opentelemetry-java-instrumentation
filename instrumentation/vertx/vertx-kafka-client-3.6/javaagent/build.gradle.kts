@@ -24,19 +24,30 @@ dependencies {
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
 }
 
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
 testing {
   suites {
     val testNoReceiveTelemetry by registering(JvmTestSuite::class) {
       dependencies {
-        implementation("io.vertx:vertx-kafka-client:3.6.0")
-        implementation("io.vertx:vertx-codegen:3.6.0")
         implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
+
+        // the "library" configuration is not recognized by the test suite plugin
+        if (latestDepTest) {
+          implementation("io.vertx:vertx-kafka-client:+")
+          implementation("io.vertx:vertx-codegen:+")
+        } else {
+          implementation("io.vertx:vertx-kafka-client:3.6.0")
+          implementation("io.vertx:vertx-codegen:3.6.0")
+        }
       }
 
       targets {
         all {
           testTask.configure {
             usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+            systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
@@ -50,6 +61,8 @@ testing {
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+    systemProperty("testLatestDeps", latestDepTest)
 
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")

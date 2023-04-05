@@ -49,6 +49,14 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
 
     internalSet(
         attributes, SemanticAttributes.NET_TRANSPORT, getter.getTransport(request, response));
+    internalSet(
+        attributes,
+        SemanticAttributes.NET_APP_PROTOCOL_NAME,
+        getter.getProtocolName(request, response));
+    internalSet(
+        attributes,
+        SemanticAttributes.NET_APP_PROTOCOL_VERSION,
+        getter.getProtocolVersion(request, response));
 
     String peerName = extractPeerName(request);
 

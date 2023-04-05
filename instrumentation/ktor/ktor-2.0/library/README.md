@@ -1,6 +1,6 @@
 # Library Instrumentation for Ktor version 2.0 and higher
 
-This package contains libraries to help instrument Ktor. Currently, only server instrumentation is supported.
+This package contains libraries to help instrument Ktor. Server and client instrumentations are supported.
 
 ## Quickstart
 
@@ -35,10 +35,25 @@ Initialize instrumentation by installing the `KtorServerTracing` feature. You mu
 the feature.
 
 ```kotlin
-OpenTelemetry openTelemetry = initializeOpenTelemetryForMe()
+val openTelemetry: OpenTelemetry = initializeOpenTelemetryForMe()
 
 embeddedServer(Netty, 8080) {
   install(KtorServerTracing) {
+    setOpenTelemetry(openTelemetry)
+  }
+}
+```
+
+## Initializing client instrumentation
+
+Initialize instrumentation by installing the `KtorClientTracing` feature. You must set the `OpenTelemetry` to use with
+the feature.
+
+```kotlin
+val openTelemetry: OpenTelemetry = initializeOpenTelemetryForMe()
+
+val client = HttpClient {
+  install(KtorClientTracing) {
     setOpenTelemetry(openTelemetry)
   }
 }

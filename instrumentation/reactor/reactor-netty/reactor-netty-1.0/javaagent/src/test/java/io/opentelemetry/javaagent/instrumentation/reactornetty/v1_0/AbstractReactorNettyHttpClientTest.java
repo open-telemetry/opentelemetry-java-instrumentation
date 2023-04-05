@@ -182,7 +182,7 @@ abstract class AbstractReactorNettyHttpClientTest
 
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-              span -> span.hasName("HTTP GET").hasKind(CLIENT).hasParent(parentSpan),
+              span -> span.hasName("GET").hasKind(CLIENT).hasParent(parentSpan),
               span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(nettyClientSpan));
 
           assertSameSpan(nettyClientSpan, onRequestSpan);
@@ -299,7 +299,7 @@ abstract class AbstractReactorNettyHttpClientTest
                         .hasStatus(StatusData.error())
                         .hasException(thrown),
                 span ->
-                    span.hasName("HTTP GET")
+                    span.hasName("GET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

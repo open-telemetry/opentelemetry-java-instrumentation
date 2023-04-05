@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1
 
 import io.lettuce.core.RedisClient
 import io.lettuce.core.resource.ClientResources
-import io.opentelemetry.instrumentation.reactor.ContextPropagationOperator
+import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import spock.lang.Shared
 

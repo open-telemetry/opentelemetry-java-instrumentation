@@ -27,11 +27,10 @@ import io.opentelemetry.context.Scope;
 import io.reactivex.Observer;
 import io.reactivex.internal.fuseable.QueueDisposable;
 import io.reactivex.internal.observers.BasicFuseableObserver;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
 
 class TracingObserver<T> extends BasicFuseableObserver<T, T> {
-  private static final MethodHandle queueDisposableGetter = getQueueDisposableGetter();
+  private static final Field queueDisposableField = getQueueDisposableField();
 
   // BasicFuseableObserver#actual has been renamed to downstream in newer versions, we can't use it
   // in this class
@@ -81,34 +80,35 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
     return getQueueDisposable().poll();
   }
 
+  @SuppressWarnings("unchecked")
   private QueueDisposable<T> getQueueDisposable() {
     try {
-      return (QueueDisposable<T>) queueDisposableGetter.invoke(this);
+      return (QueueDisposable<T>) queueDisposableField.get(this);
     } catch (Throwable throwable) {
       throw new IllegalStateException(throwable);
     }
   }
 
-  private static MethodHandle getGetterHandle(String fieldName) {
+  private static Field getField(String fieldName) {
+
     try {
-      return MethodHandles.lookup()
-          .findGetter(BasicFuseableObserver.class, fieldName, QueueDisposable.class);
-    } catch (NoSuchFieldException | IllegalAccessException ignored) {
+      return BasicFuseableObserver.class.getDeclaredField(fieldName);
+    } catch (NoSuchFieldException ignored) {
       // Ignore
     }
     return null;
   }
 
-  private static MethodHandle getQueueDisposableGetter() {
-    MethodHandle getter = getGetterHandle("qd");
-    if (getter == null) {
+  private static Field getQueueDisposableField() {
+    Field queueDisposableField = getField("qd");
+    if (queueDisposableField == null) {
       // in versions before 2.2.1 field was named "qs"
-      getter = getGetterHandle("qs");
+      queueDisposableField = getField("qs");
     }
-    return getter;
+    return queueDisposableField;
   }
 
   public static boolean canEnable() {
-    return queueDisposableGetter != null;
+    return queueDisposableField != null;
   }
 }

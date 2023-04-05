@@ -54,12 +54,6 @@ class AkkaHttpServerAttributesGetter
   }
 
   @Override
-  @Nullable
-  public String getRoute(HttpRequest request) {
-    return null;
-  }
-
-  @Override
   public String getScheme(HttpRequest request) {
     return request.uri().scheme();
   }

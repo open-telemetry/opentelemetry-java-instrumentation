@@ -56,7 +56,7 @@ rules:
         metric: my.own.jvm.thread.count
         type: updowncounter
         desc: The current number of threads
-        unit: 1
+        unit: "1"
 ```
 
 MBeans are identified by unique [ObjectNames](https://docs.oracle.com/javase/8/docs/api/javax/management/ObjectName.html). In the example above, the object name `java.lang:type=Threading` identifies one of the standard JVM MBeans, which can be used to access a number of internal JVM statistics related to threads. For that MBean, we specify its attribute `ThreadCount` which reflects the number of currently active (alive) threads. The values of this attribute will be reported by a metric named `my.own.jvm.thread.count`. The declared OpenTelemetry type of the metric is declared as `updowncounter` which indicates that the value is a sum which can go up or down over time. Metric description and/or unit can also be specified.
@@ -186,9 +186,9 @@ rules:
       punctuate-latency-avg:
       punctuate-latency-max:
       poll-records-avg:
-        unit: 1
+        unit: "1"
       poll-records-max:
-        unit: 1
+        unit: "1"
   - bean: kafka.streams:type=stream-thread-metrics,thread-id=*
     metricAttribute:
       threadId: param(thread-id)
@@ -205,7 +205,7 @@ rules:
     metricAttribute:
       threadId: param(thread-id)
     prefix: my.kafka.streams.totals.
-    unit: 1
+    unit: "1"
     type: counter
     mapping:
       commit-total:
@@ -271,7 +271,7 @@ The following table explains the used terms with more details.
 | DESCRIPTION | Any string to be used as human-readable [description](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-description) of the metric. If the description is not provided by the rule, an attempt will be made to extract one automatically from the corresponding MBean. |
 | UNIT | A string identifying the [unit](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-unit) of measurements reported by the metric. Enclose the string in single or double quotes if using unit annotations. |
 | STR | Any string to be used directly as the metric attribute value. |
-| BEANATTR | A non-empty string representing the MBean attribute defining the metric value. The attribute value must be a number. Special dot-notation _attributeName.itemName_ can be used to access numerical items within attributes of [CompositeType](https://docs.oracle.com/javase/8/docs/api/javax/management/openmbean/CompositeType.html). |
+| BEANATTR | A non-empty string representing the MBean attribute defining the metric value. The attribute value must be a number. Special dot-notation _attributeName.itemName_ can be used to access numerical items within attributes of [CompositeType](https://docs.oracle.com/javase/8/docs/api/javax/management/openmbean/CompositeType.html). If a dot happens to be an integral part of the MBean attribute name, it must be escaped by backslash (`\`). |
 
 ## Assumptions and Limitations
 

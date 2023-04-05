@@ -183,10 +183,9 @@ public abstract class InstrumentationTestRunner {
    * Runs the provided {@code callback} inside the scope of an HTTP SERVER span with name {@code
    * spanName}.
    */
-  public final <E extends Throwable> void runWithHttpServerSpan(
-      String spanName, ThrowingRunnable<E> callback) throws E {
+  public final <E extends Throwable> void runWithHttpServerSpan(ThrowingRunnable<E> callback)
+      throws E {
     runWithHttpServerSpan(
-        spanName,
         () -> {
           callback.run();
           return null;
@@ -197,9 +196,9 @@ public abstract class InstrumentationTestRunner {
    * Runs the provided {@code callback} inside the scope of an HTTP SERVER span with name {@code
    * spanName}.
    */
-  public final <T, E extends Throwable> T runWithHttpServerSpan(
-      String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testInstrumenters.runWithHttpServerSpan(spanName, callback);
+  public final <T, E extends Throwable> T runWithHttpServerSpan(ThrowingSupplier<T, E> callback)
+      throws E {
+    return testInstrumenters.runWithHttpServerSpan(callback);
   }
 
   /** Runs the provided {@code callback} inside the scope of a non-recording span. */

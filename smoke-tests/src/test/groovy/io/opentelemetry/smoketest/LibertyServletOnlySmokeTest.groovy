@@ -22,16 +22,16 @@ abstract class LibertyServletOnlySmokeTest extends LibertySmokeTest {
     switch (path) {
       case "/app/hello.txt":
       case "/app/file-that-does-not-exist":
-        return "HTTP GET"
+        return "GET"
     }
     return super.getSpanName(path)
   }
 }
 
-@AppServer(version = "20.0.0.12", jdk = "11")
-class LibertyServletOnly20Jdk11 extends LibertySmokeTest {
+@AppServer(version = "21.0.0.12", jdk = "11")
+class LibertyServletOnly21Jdk11 extends LibertySmokeTest {
 }
 
-@AppServer(version = "21.0.0.10", jdk = "11")
-class LibertyServletOnly21Jdk11 extends LibertySmokeTest {
+@AppServer(version = "22.0.0.12", jdk = "11")
+class LibertyServletOnly22Jdk11 extends LibertySmokeTest {
 }

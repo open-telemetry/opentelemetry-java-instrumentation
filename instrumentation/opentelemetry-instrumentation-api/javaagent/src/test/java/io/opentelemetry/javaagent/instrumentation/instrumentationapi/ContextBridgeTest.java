@@ -87,10 +87,11 @@ class ContextBridgeTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("/test/server/*")
+                    span.hasName("GET /test/server/*")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_ROUTE, "/test/server/*"))));
   }
 
@@ -106,10 +107,11 @@ class ContextBridgeTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("/test/controller/:id")
+                    span.hasName("GET /test/controller/:id")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_ROUTE, "/test/controller/:id"))));
   }
 }

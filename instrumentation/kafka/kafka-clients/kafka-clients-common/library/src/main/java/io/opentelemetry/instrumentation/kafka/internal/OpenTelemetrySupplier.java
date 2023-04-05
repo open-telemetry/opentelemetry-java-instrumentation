@@ -30,4 +30,9 @@ public final class OpenTelemetrySupplier implements Supplier<OpenTelemetry>, Ser
   public OpenTelemetry get() {
     return openTelemetry;
   }
+
+  private Object writeReplace() {
+    // serialize this object to null
+    return null;
+  }
 }

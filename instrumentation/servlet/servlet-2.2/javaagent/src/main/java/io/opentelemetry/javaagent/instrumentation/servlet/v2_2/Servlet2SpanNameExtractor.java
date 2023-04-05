@@ -20,19 +20,17 @@ public class Servlet2SpanNameExtractor<REQUEST, RESPONSE>
   @Override
   public String extract(ServletRequestContext<REQUEST> requestContext) {
     REQUEST request = requestContext.request();
+    String method = accessor.getRequestMethod(request);
     String servletPath = accessor.getRequestServletPath(request);
-    if (!servletPath.isEmpty()) {
+    if (method != null) {
+      if (servletPath.isEmpty()) {
+        return method;
+      }
       String contextPath = accessor.getRequestContextPath(request);
       if (contextPath == null || contextPath.isEmpty() || contextPath.equals("/")) {
-        return servletPath;
+        return method + " " + servletPath;
       }
-
-      return contextPath + servletPath;
-    }
-
-    String method = accessor.getRequestMethod(request);
-    if (method != null) {
-      return "HTTP " + method;
+      return method + " " + contextPath + servletPath;
     }
     return "HTTP request";
   }

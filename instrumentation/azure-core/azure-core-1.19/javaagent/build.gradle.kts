@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("com.azure")
     module.set("azure-core")
-    versions.set("[1.19.0,)")
+    versions.set("[1.19.0,1.36.0)")
     assertInverse.set(true)
   }
 }
@@ -28,6 +28,7 @@ dependencies {
 
   // Ensure no cross interference
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.14:javaagent"))
+  testInstrumentation(project(":instrumentation:azure-core:azure-core-1.36:javaagent"))
 
   latestDepTestLibrary("com.azure:azure-core:1.35.0")
 }

@@ -109,7 +109,7 @@ class KtorServerTracing private constructor(
         setSpanStatusExtractor(configuration.statusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter)))
         addAttributesExtractor(configuration.httpAttributesExtractorBuilder.build())
         addOperationMetrics(HttpServerMetrics.get())
-        addContextCustomizer(HttpRouteHolder.get())
+        addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
       }
 
       val instrumenter = instrumenterBuilder.buildServerInstrumenter(ApplicationRequestGetter)

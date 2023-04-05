@@ -152,6 +152,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
 
       @Override
       public void onClose(Status status, Metadata trailers) {
+        request.setPeerSocketAddress(getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
         instrumenter.end(context, request, status, status.getCause());
         try (Scope ignored = parentContext.makeCurrent()) {
           delegate().onClose(status, trailers);
@@ -161,7 +162,6 @@ final class TracingClientInterceptor implements ClientInterceptor {
       @Override
       public void onReady() {
         try (Scope ignored = context.makeCurrent()) {
-          request.setPeerSocketAddress(getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
           delegate().onReady();
         }
       }

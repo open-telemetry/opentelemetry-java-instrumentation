@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.bootstrap.spring.SpringSchedulingTaskTracing;
@@ -26,7 +26,18 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        nameStartsWith("schedule").and(takesArgument(0, Runnable.class)),
+        // only instrumenting repeating jobs, not one-time scheduled jobs
+        // (same behavior as ScheduledExecutorService)
+        namedOneOf("scheduleAtFixedRate", "scheduleWithFixedDelay")
+            .and(takesArgument(0, Runnable.class))
+            .or(
+                named("schedule")
+                    .and(
+                        takesArgument(0, Runnable.class)
+                            .and(
+                                takesArgument(
+                                    // Trigger represents a repeating job
+                                    1, named("org.springframework.scheduling.Trigger"))))),
         this.getClass().getName() + "$ScheduleMethodAdvice");
   }
 

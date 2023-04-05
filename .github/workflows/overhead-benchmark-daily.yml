@@ -1,7 +1,7 @@
 name: Overhead benchmark (daily)
 on:
   schedule:
-    # 5am GMT
+    # daily at 5:00 UTC
     - cron: '0 5 * * *'
   workflow_dispatch:
 

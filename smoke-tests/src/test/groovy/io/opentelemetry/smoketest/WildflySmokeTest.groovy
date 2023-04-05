@@ -34,7 +34,7 @@ abstract class WildflySmokeTest extends AppServerTest {
 
     traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
 
-    traces.countSpansByName('/app/jsp') == 1
+    traces.countSpansByName('GET /app/jsp') == 1
 
     where:
     [appServer, jdk] << getTestParams()

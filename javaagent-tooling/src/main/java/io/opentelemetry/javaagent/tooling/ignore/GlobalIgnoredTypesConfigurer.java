@@ -98,7 +98,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .allowClass("sun.rmi.transport")
         .allowClass("sun.net.www.http.HttpClient");
 
-    builder.ignoreClass("org.slf4j.").allowClass("org.slf4j.MDC");
+    builder.ignoreClass("org.slf4j.");
 
     builder
         .ignoreClass("org.springframework.core.$Proxy")
@@ -110,7 +110,9 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   private static void configureIgnoredClassLoaders(IgnoredTypesBuilder builder) {
     builder
+        .ignoreClassLoader("groovy.lang.GroovyClassLoader")
         .ignoreClassLoader("org.codehaus.groovy.runtime.callsite.CallSiteClassLoader")
+        .ignoreClassLoader("org.apache.tinkerpop.gremlin.groovy.jsr223.GremlinGroovyClassLoader")
         .ignoreClassLoader("sun.reflect.DelegatingClassLoader")
         .ignoreClassLoader("jdk.internal.reflect.DelegatingClassLoader")
         .ignoreClassLoader("clojure.lang.DynamicClassLoader")
@@ -128,6 +130,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .ignoreClassLoader("datadog.")
         .ignoreClassLoader("com.dynatrace.")
         .ignoreClassLoader("com.appdynamics.")
+        .ignoreClassLoader("com.singularity.")
         .ignoreClassLoader("com.newrelic.agent.")
         .ignoreClassLoader("com.newrelic.api.agent.")
         .ignoreClassLoader("com.nr.agent.");

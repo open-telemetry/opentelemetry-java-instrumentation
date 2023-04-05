@@ -1,6 +1,5 @@
 plugins {
   id("otel.javaagent-instrumentation")
-  id("org.unbroken-dome.test-sets")
 }
 
 muzzle {
@@ -11,23 +10,6 @@ muzzle {
     extraDependency("javax.jms:jms-api:1.1-rev-1")
     excludeInstrumentationName("jms")
     assertInverse.set(true)
-  }
-}
-
-testSets {
-  create("testReceiveSpansDisabled")
-}
-
-tasks {
-  test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-  }
-
-  val testReceiveSpansDisabled by existing
-
-  check {
-    dependsOn(testReceiveSpansDisabled)
   }
 }
 
@@ -54,7 +36,35 @@ dependencies {
   }
 
   latestDepTestLibrary("org.springframework:spring-jms:5.+")
+}
 
-  // this is just to avoid a bit more copy-pasting
-  add("testReceiveSpansDisabledImplementation", sourceSets["test"].output)
+testing {
+  suites {
+    val testReceiveSpansDisabled by registering(JvmTestSuite::class) {
+      dependencies {
+        // this is just to avoid a bit more copy-pasting
+        implementation(project.sourceSets["test"].output)
+      }
+    }
+  }
+}
+
+configurations {
+  named("testReceiveSpansDisabledImplementation") {
+    extendsFrom(configurations["testImplementation"])
+  }
+}
+
+tasks {
+  withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+  // this does not apply to testReceiveSpansDisabled
+  test {
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testing.suites)
+  }
 }

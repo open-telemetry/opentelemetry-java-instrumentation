@@ -65,10 +65,4 @@ public class LibertyDispatcherHttpAttributesGetter
   public String getScheme(LibertyRequest libertyRequest) {
     return libertyRequest.getScheme();
   }
-
-  @Override
-  @Nullable
-  public String getRoute(LibertyRequest libertyRequest) {
-    return null;
-  }
 }

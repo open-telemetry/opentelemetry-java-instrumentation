@@ -65,13 +65,12 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
     io.opentelemetry.context.Context parentOtelContext = io.opentelemetry.context.Context.current();
     executionAttributes.putAttribute(SDK_REQUEST_ATTRIBUTE, context.request());
+    SdkHttpRequest httpRequest = context.httpRequest();
+    executionAttributes.putAttribute(SDK_HTTP_REQUEST_ATTRIBUTE, httpRequest);
 
     if (!requestInstrumenter.shouldStart(parentOtelContext, executionAttributes)) {
       return;
     }
-
-    SdkHttpRequest httpRequest = context.httpRequest();
-    executionAttributes.putAttribute(SDK_HTTP_REQUEST_ATTRIBUTE, httpRequest);
 
     io.opentelemetry.context.Context otelContext =
         requestInstrumenter.start(parentOtelContext, executionAttributes);
@@ -163,13 +162,16 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       afterConsumerResponse(executionAttributes, context.response(), context.httpResponse());
     }
 
-    // http request has been changed
-    executionAttributes.putAttribute(SDK_HTTP_REQUEST_ATTRIBUTE, context.httpRequest());
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
-    Span span = Span.fromContext(otelContext);
-    onUserAgentHeaderAvailable(span, executionAttributes);
-    onSdkResponse(span, context.response(), executionAttributes);
-    requestInstrumenter.end(otelContext, executionAttributes, context.httpResponse(), null);
+    if (otelContext != null) {
+      // http request has been changed
+      executionAttributes.putAttribute(SDK_HTTP_REQUEST_ATTRIBUTE, context.httpRequest());
+
+      Span span = Span.fromContext(otelContext);
+      onUserAgentHeaderAvailable(span, executionAttributes);
+      onSdkResponse(span, context.response(), executionAttributes);
+      requestInstrumenter.end(otelContext, executionAttributes, context.httpResponse(), null);
+    }
     clearAttributes(executionAttributes);
   }
 
@@ -192,9 +194,11 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Object message, ExecutionAttributes executionAttributes, SdkHttpResponse httpResponse) {
     io.opentelemetry.context.Context parentContext =
         SqsParentContext.ofSystemAttributes(SqsMessageAccess.getAttributes(message));
-    io.opentelemetry.context.Context context =
-        consumerInstrumenter.start(parentContext, executionAttributes);
-    consumerInstrumenter.end(context, executionAttributes, httpResponse, null);
+    if (consumerInstrumenter.shouldStart(parentContext, executionAttributes)) {
+      io.opentelemetry.context.Context context =
+          consumerInstrumenter.start(parentContext, executionAttributes);
+      consumerInstrumenter.end(context, executionAttributes, httpResponse, null);
+    }
   }
 
   // Certain headers in the request like User-Agent are only available after execution.
@@ -223,7 +227,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void onExecutionFailure(
       Context.FailedExecution context, ExecutionAttributes executionAttributes) {
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
-    requestInstrumenter.end(otelContext, executionAttributes, null, context.exception());
+    if (otelContext != null) {
+      requestInstrumenter.end(otelContext, executionAttributes, null, context.exception());
+    }
     clearAttributes(executionAttributes);
   }
 

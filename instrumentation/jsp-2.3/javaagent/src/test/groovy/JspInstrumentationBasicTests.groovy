@@ -87,7 +87,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           def route = "/$jspWebappContext/$jspFileName"
 
           hasNoParent()
-          name route
+          name "GET $route"
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
@@ -146,7 +146,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           def route = "/$jspWebappContext/getQuery.jsp"
 
           hasNoParent()
-          name route
+          name "GET $route"
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
@@ -200,7 +200,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           def route = "/$jspWebappContext/post.jsp"
 
           hasNoParent()
-          name route
+          name "POST $route"
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
@@ -251,7 +251,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           def route = "/$jspWebappContext/$jspFileName"
 
           hasNoParent()
-          name route
+          name "GET $route"
           kind SERVER
           status ERROR
           event(0) {
@@ -332,7 +332,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           def route = "/$jspWebappContext/includes/includeHtml.jsp"
 
           hasNoParent()
-          name route
+          name "GET $route"
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
@@ -381,7 +381,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           def route = "/$jspWebappContext/includes/includeMulti.jsp"
 
           hasNoParent()
-          name route
+          name "GET $route"
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
@@ -460,7 +460,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           def route = "/$jspWebappContext/$jspFileName"
 
           hasNoParent()
-          name route
+          name "GET $route"
           kind SERVER
           status ERROR
           errorEvent(JasperException, String)
@@ -512,7 +512,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           def route = "/$jspWebappContext/*"
 
           hasNoParent()
-          name route
+          name "GET $route"
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"

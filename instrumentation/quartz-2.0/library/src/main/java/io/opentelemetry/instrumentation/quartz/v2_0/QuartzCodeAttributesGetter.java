@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.quartz.v2_0;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesGetter;
 import org.quartz.JobExecutionContext;
 
-public class QuartzCodeAttributesGetter implements CodeAttributesGetter<JobExecutionContext> {
+final class QuartzCodeAttributesGetter implements CodeAttributesGetter<JobExecutionContext> {
 
   @Override
   public Class<?> getCodeClass(JobExecutionContext jobExecutionContext) {

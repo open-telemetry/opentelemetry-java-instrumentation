@@ -112,7 +112,7 @@ class Netty40ConnectionSpanTest extends InstrumentationSpecification implements 
           }
         }
         span(2) {
-          name "HTTP GET"
+          name "GET"
           kind CLIENT
           childOf(span(0))
         }

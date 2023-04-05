@@ -262,7 +262,7 @@ abstract class TestcontainersBuildService : BuildService<BuildServiceParameters.
 // To limit number of concurrently running resource intensive tests add
 // tasks {
 //   test {
-//     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+//     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 //   }
 // }
 gradle.sharedServices.registerIfAbsent("testcontainersBuildService", TestcontainersBuildService::class.java) {
@@ -344,16 +344,6 @@ afterEvaluate {
             languageVersion.set(JavaLanguageVersion.of(otelJava.maxJavaVersionForTests.get().majorVersion))
           }
         )
-      }
-    }
-
-    if (plugins.hasPlugin("org.unbroken-dome.test-sets") && configurations.findByName("latestDepTestRuntime") != null) {
-      doFirst {
-        val testArtifacts = configurations.testRuntimeClasspath.get().resolvedConfiguration.resolvedArtifacts
-        val latestTestArtifacts = configurations.getByName("latestDepTestRuntimeClasspath").resolvedConfiguration.resolvedArtifacts
-        if (testArtifacts == latestTestArtifacts) {
-          throw IllegalStateException("latestDepTest dependencies are identical to test")
-        }
       }
     }
   }

@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.tomcat.v10_0.Tomcat10Si
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import net.bytebuddy.asm.Advice;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
@@ -32,6 +33,9 @@ public class Tomcat10ServerHandlerAdvice {
     context = helper().start(parentContext, request);
 
     scope = context.makeCurrent();
+
+    HttpServerResponseCustomizerHolder.getCustomizer()
+        .customize(context, response, Tomcat10ResponseMutator.INSTANCE);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

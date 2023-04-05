@@ -16,7 +16,7 @@ class AcceptableVersions(private val skipVersions: Collection<String>) :
     if (version == null) {
       return false
     }
-    val versionString = version.toString().toLowerCase(Locale.ROOT)
+    val versionString = version.toString().lowercase(Locale.ROOT)
     if (skipVersions.contains(versionString)) {
       return false
     }

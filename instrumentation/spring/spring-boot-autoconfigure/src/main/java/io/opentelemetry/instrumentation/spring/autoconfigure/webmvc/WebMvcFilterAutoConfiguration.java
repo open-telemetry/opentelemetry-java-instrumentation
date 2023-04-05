@@ -21,7 +21,7 @@ import org.springframework.web.servlet.DispatcherServlet;
 @Configuration
 @EnableConfigurationProperties(WebMvcProperties.class)
 @ConditionalOnProperty(prefix = "otel.springboot.web", name = "enabled", matchIfMissing = true)
-@ConditionalOnClass({OncePerRequestFilter.class, DispatcherServlet.class})
+@ConditionalOnClass({Filter.class, OncePerRequestFilter.class, DispatcherServlet.class})
 @ConditionalOnBean(OpenTelemetry.class)
 public class WebMvcFilterAutoConfiguration {
 

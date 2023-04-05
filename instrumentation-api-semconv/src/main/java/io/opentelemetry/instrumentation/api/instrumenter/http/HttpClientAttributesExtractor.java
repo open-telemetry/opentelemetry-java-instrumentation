@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import java.util.function.ToIntFunction;
 import javax.annotation.Nullable;
 
 /**
@@ -32,35 +33,11 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
         REQUEST, RESPONSE, HttpClientAttributesGetter<REQUEST, RESPONSE>>
     implements SpanKeyProvider {
 
-  /**
-   * Creates the HTTP client attributes extractor with default configuration.
-   *
-   * @deprecated Use {@link #create(HttpClientAttributesGetter, NetClientAttributesGetter)} instead.
-   */
-  @Deprecated
-  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
-    return builder(getter).build();
-  }
-
   /** Creates the HTTP client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
     return builder(httpAttributesGetter, netAttributesGetter).build();
-  }
-
-  /**
-   * Returns a new {@link HttpClientAttributesExtractorBuilder} that can be used to configure the
-   * HTTP client attributes extractor.
-   *
-   * @deprecated Use {@link #builder(HttpClientAttributesGetter, NetClientAttributesGetter)}
-   *     instead.
-   */
-  @Deprecated
-  public static <REQUEST, RESPONSE> HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
-    return builder(httpAttributesGetter, new NoopNetClientAttributesGetter<>());
   }
 
   /**
@@ -74,18 +51,35 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private final InternalNetClientAttributesExtractor<REQUEST, RESPONSE> internalNetExtractor;
+  private final ToIntFunction<Context> resendCountIncrementer;
 
   HttpClientAttributesExtractor(
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders) {
+    this(
+        httpAttributesGetter,
+        netAttributesGetter,
+        capturedRequestHeaders,
+        capturedResponseHeaders,
+        HttpClientResend::getAndIncrement);
+  }
+
+  // visible for tests
+  HttpClientAttributesExtractor(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
+      NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
+      List<String> capturedRequestHeaders,
+      List<String> capturedResponseHeaders,
+      ToIntFunction<Context> resendCountIncrementer) {
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
     internalNetExtractor =
         new InternalNetClientAttributesExtractor<>(
             netAttributesGetter,
             this::shouldCapturePeerPort,
             new HttpNetNamePortGetter<>(httpAttributesGetter));
+    this.resendCountIncrementer = resendCountIncrementer;
   }
 
   @Override
@@ -165,6 +159,11 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     internalSet(attributes, SemanticAttributes.HTTP_FLAVOR, getter.getFlavor(request, response));
 
     internalNetExtractor.onEnd(attributes, request, response);
+
+    int resendCount = resendCountIncrementer.applyAsInt(context);
+    if (resendCount > 0) {
+      attributes.put(SemanticAttributes.HTTP_RESEND_COUNT, resendCount);
+    }
   }
 
   /**
@@ -174,27 +173,5 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public SpanKey internalGetSpanKey() {
     return SpanKey.HTTP_CLIENT;
-  }
-
-  private static final class NoopNetClientAttributesGetter<REQUEST, RESPONSE>
-      implements NetClientAttributesGetter<REQUEST, RESPONSE> {
-
-    @Nullable
-    @Override
-    public String getTransport(REQUEST request, @Nullable RESPONSE response) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public String getPeerName(REQUEST request) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public Integer getPeerPort(REQUEST request) {
-      return null;
-    }
   }
 }

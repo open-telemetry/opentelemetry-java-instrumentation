@@ -169,7 +169,7 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
     assertTraces(1) {
       trace(0, 2 + (hasHandlerSpan(SUCCESS) ? 1 : 0)) {
         span(0) {
-          name "/fork_and_yieldAll"
+          name "GET /fork_and_yieldAll"
           kind SpanKind.SERVER
           hasNoParent()
         }

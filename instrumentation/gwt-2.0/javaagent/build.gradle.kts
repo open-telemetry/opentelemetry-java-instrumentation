@@ -104,7 +104,7 @@ tasks {
     // add test app classes to classpath
     classpath = sourceSets.test.get().runtimeClasspath.plus(files("$buildDir/testapp/classes"))
 
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }
 

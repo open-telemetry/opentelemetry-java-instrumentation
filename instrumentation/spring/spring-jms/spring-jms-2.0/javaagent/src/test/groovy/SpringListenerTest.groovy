@@ -53,10 +53,10 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
       hasNoParent()
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
-        "$SemanticAttributes.MESSAGING_DESTINATION" destinationName
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destinationName
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" destinationType
         if (destinationName == "(temporary)") {
-          "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
+          "$SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY" true
         }
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
         if (testHeaders) {
@@ -81,7 +81,7 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
       }
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
-        "$SemanticAttributes.MESSAGING_DESTINATION" destinationName
+        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destinationName
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" destinationType
         "$SemanticAttributes.MESSAGING_OPERATION" operation
         if (messageId != null) {
@@ -89,7 +89,7 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
           "$SemanticAttributes.MESSAGING_MESSAGE_ID" { it == messageId || messageId == "" }
         }
         if (destinationName == "(temporary)") {
-          "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
+          "$SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY" true
         }
         if (testHeaders) {
           "messaging.header.test_message_header" { it == ["test"] }

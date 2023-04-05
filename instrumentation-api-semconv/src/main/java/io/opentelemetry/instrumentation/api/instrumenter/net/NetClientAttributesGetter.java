@@ -18,121 +18,53 @@ import javax.annotation.Nullable;
 public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
-  default String getTransport(REQUEST request, @Nullable RESPONSE response) {
-    return transport(request, response);
-  }
+  String getTransport(REQUEST request, @Nullable RESPONSE response);
 
+  // TODO: make required after the 1.24 release
   /**
-   * This method is deprecated and will be removed in the subsequent release.
+   * Returns the application protocol used.
    *
-   * @deprecated Use {@link #getTransport(Object, Object)} instead.
+   * <p>Examples: `amqp`, `http`, `mqtt`.
    */
-  @Deprecated
   @Nullable
-  default String transport(REQUEST request, @Nullable RESPONSE response) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
+  default String getProtocolName(REQUEST request, @Nullable RESPONSE response) {
+    return null;
   }
 
-  @Nullable
-  default String getPeerName(REQUEST request) {
-    return peerName(request);
-  }
-
+  // TODO: make required after the 1.24 release
   /**
-   * This method is deprecated and will be removed in the subsequent release.
+   * Returns the version of the application protocol used.
    *
-   * @deprecated Use {@link #getPeerName(Object)} instead.
+   * <p>Examples: `3.1.1`.
    */
-  @Deprecated
   @Nullable
-  default String peerName(REQUEST request) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
+  default String getProtocolVersion(REQUEST request, @Nullable RESPONSE response) {
+    return null;
   }
 
   @Nullable
-  default Integer getPeerPort(REQUEST request) {
-    return peerPort(request);
-  }
+  String getPeerName(REQUEST request);
 
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getPeerPort(Object)} instead.
-   */
-  @Deprecated
   @Nullable
-  default Integer peerPort(REQUEST request) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the subsequent release.");
-  }
+  Integer getPeerPort(REQUEST request);
 
-  // TODO: when removing sockFamily(), make sure this method returns null by default
   @Nullable
   default String getSockFamily(REQUEST request, @Nullable RESPONSE response) {
-    return sockFamily(request, response);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getSockFamily(Object, Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String sockFamily(REQUEST request, @Nullable RESPONSE response) {
     return null;
   }
 
-  // TODO: when removing sockPeerAddr(), make sure this method returns null by default
   @Nullable
   default String getSockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
-    return sockPeerAddr(request, response);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getSockPeerAddr(Object, Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String sockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
     return null;
   }
 
-  // TODO: when removing sockPeerName(), make sure this method returns null by default
   @Nullable
   default String getSockPeerName(REQUEST request, @Nullable RESPONSE response) {
-    return sockPeerName(request, response);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getSockPeerName(Object, Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String sockPeerName(REQUEST request, @Nullable RESPONSE response) {
     return null;
   }
 
-  // TODO: when removing sockPeerPort(), make sure this method returns null by default
   @Nullable
   default Integer getSockPeerPort(REQUEST request, @Nullable RESPONSE response) {
-    return sockPeerPort(request, response);
-  }
-
-  /**
-   * This method is deprecated and will be removed in the subsequent release.
-   *
-   * @deprecated Use {@link #getSockPeerName(Object, Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response) {
     return null;
   }
 }

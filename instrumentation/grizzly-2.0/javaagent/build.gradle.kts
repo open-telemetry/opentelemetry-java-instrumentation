@@ -33,4 +33,4 @@ tasks.withType<Test>().configureEach {
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
-configurations.testRuntimeClasspath.resolutionStrategy.force("com.google.guava:guava:19.0")
+configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")

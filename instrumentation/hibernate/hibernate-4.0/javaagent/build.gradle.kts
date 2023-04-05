@@ -1,6 +1,5 @@
 plugins {
   id("otel.javaagent-instrumentation")
-  id("org.unbroken-dome.test-sets")
 }
 
 muzzle {
@@ -9,24 +8,6 @@ muzzle {
     module.set("hibernate-core")
     versions.set("[4.0.0.Final,6)")
     assertInverse.set(true)
-  }
-}
-
-testSets {
-  create("version5Test") {
-    dirName = "test"
-  }
-
-  create("latestDepTest") {
-    dirName = "test"
-  }
-}
-
-tasks {
-  val version5Test by existing(Test::class)
-
-  test {
-    dependsOn(version5Test)
   }
 }
 
@@ -51,14 +32,44 @@ dependencies {
 
   testImplementation("org.hibernate:hibernate-core:4.0.0.Final")
   testImplementation("org.hibernate:hibernate-entitymanager:4.0.0.Final")
+}
 
-  add("version5TestImplementation", "org.hibernate:hibernate-core:5.0.0.Final")
-  add("version5TestImplementation", "org.hibernate:hibernate-entitymanager:5.0.0.Final")
-  add("version5TestImplementation", "org.springframework.data:spring-data-jpa:2.3.0.RELEASE")
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+testing {
+  suites {
+    val version5Test by registering(JvmTestSuite::class) {
+      dependencies {
+        sources {
+          groovy {
+            setSrcDirs(listOf("src/test/groovy"))
+          }
+          java {
+            setSrcDirs(listOf("src/test/java"))
+          }
+          resources {
+            setSrcDirs(listOf("src/test/resources"))
+          }
+        }
 
-  add("latestDepTestImplementation", "org.hibernate:hibernate-core:5.+")
-  add("latestDepTestImplementation", "org.hibernate:hibernate-entitymanager:5.+")
-  add("latestDepTestImplementation", "org.springframework.data:spring-data-jpa:(2.4.0,3)")
+        implementation("com.h2database:h2:1.4.197")
+        implementation("javax.xml.bind:jaxb-api:2.2.11")
+        implementation("com.sun.xml.bind:jaxb-core:2.2.11")
+        implementation("com.sun.xml.bind:jaxb-impl:2.2.11")
+        implementation("javax.activation:activation:1.1.1")
+        implementation("org.hsqldb:hsqldb:2.0.0")
+
+        if (latestDepTest) {
+          implementation("org.hibernate:hibernate-core:5.0.0.Final")
+          implementation("org.hibernate:hibernate-entitymanager:5.0.0.Final")
+          implementation("org.springframework.data:spring-data-jpa:2.3.0.RELEASE")
+        } else {
+          implementation("org.hibernate:hibernate-core:5.+")
+          implementation("org.hibernate:hibernate-entitymanager:5.+")
+          implementation("org.springframework.data:spring-data-jpa:(2.4.0,3)")
+        }
+      }
+    }
+  }
 }
 
 tasks.withType<Test>().configureEach {
@@ -69,4 +80,10 @@ tasks.withType<Test>().configureEach {
 
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
 }

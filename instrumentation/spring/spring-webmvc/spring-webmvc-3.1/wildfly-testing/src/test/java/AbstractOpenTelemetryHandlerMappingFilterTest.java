@@ -47,7 +47,7 @@ public abstract class AbstractOpenTelemetryHandlerMappingFilterTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("/hello/{name}").hasKind(SpanKind.SERVER).hasNoParent(),
+                span -> span.hasName("GET /hello/{name}").hasKind(SpanKind.SERVER).hasNoParent(),
                 span ->
                     span.hasName("HelloController.hello")
                         .hasKind(SpanKind.INTERNAL)
@@ -63,7 +63,7 @@ public abstract class AbstractOpenTelemetryHandlerMappingFilterTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("/hello/{name}")
+                    span.hasName("GET /hello/{name}")
                         .hasKind(SpanKind.SERVER)
                         .hasStatus(StatusData.error())
                         .hasNoParent()
