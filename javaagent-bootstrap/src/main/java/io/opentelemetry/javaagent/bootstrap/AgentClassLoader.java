@@ -16,8 +16,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
+import java.security.AllPermission;
 import java.security.CodeSource;
 import java.security.Permission;
+import java.security.PermissionCollection;
+import java.security.Permissions;
 import java.security.cert.Certificate;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
@@ -63,15 +66,24 @@ public class AgentClassLoader extends URLClassLoader {
   private final URL jarBase;
   private final String jarEntryPrefix;
   private final CodeSource codeSource;
+  private final boolean isSecurityManagerSupportEnabled;
   private final Manifest manifest;
+
+  // Used by tests
+  public AgentClassLoader(File javaagentFile) {
+    this(javaagentFile, "", false);
+  }
 
   /**
    * Construct a new AgentClassLoader.
    *
    * @param javaagentFile Used for resource lookups.
    * @param internalJarFileName File name of the internal jar
+   * @param isSecurityManagerSupportEnabled Whether this class loader should define classes with all
+   *     permissions
    */
-  public AgentClassLoader(File javaagentFile, String internalJarFileName) {
+  public AgentClassLoader(
+      File javaagentFile, String internalJarFileName, boolean isSecurityManagerSupportEnabled) {
     super(new URL[] {}, getParentClassLoader());
     if (javaagentFile == null) {
       throw new IllegalArgumentException("Agent jar location should be set");
@@ -80,6 +92,7 @@ public class AgentClassLoader extends URLClassLoader {
       throw new IllegalArgumentException("Internal jar file name should be set");
     }
 
+    this.isSecurityManagerSupportEnabled = isSecurityManagerSupportEnabled;
     bootstrapProxy = new BootstrapClassLoaderProxy(this);
 
     jarEntryPrefix =
@@ -174,6 +187,17 @@ public class AgentClassLoader extends URLClassLoader {
 
   public Class<?> defineClass(String name, byte[] bytes) {
     return defineClass(name, bytes, 0, bytes.length, codeSource);
+  }
+
+  @Override
+  protected PermissionCollection getPermissions(CodeSource codeSource) {
+    if (isSecurityManagerSupportEnabled) {
+      Permissions permissions = new Permissions();
+      permissions.add(new AllPermission());
+      return permissions;
+    }
+
+    return super.getPermissions(codeSource);
   }
 
   private byte[] getJarEntryBytes(JarEntry jarEntry) throws IOException {

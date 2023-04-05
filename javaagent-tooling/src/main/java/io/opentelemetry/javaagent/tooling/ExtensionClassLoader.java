@@ -15,6 +15,10 @@ import java.net.URLClassLoader;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
+import java.security.AllPermission;
+import java.security.CodeSource;
+import java.security.PermissionCollection;
+import java.security.Permissions;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -37,6 +41,8 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 public class ExtensionClassLoader extends URLClassLoader {
   public static final String EXTENSIONS_CONFIG = "otel.javaagent.extensions";
 
+  private final boolean isSecurityManagerSupportEnabled;
+
   // NOTE it's important not to use logging in this class, because this class is used before logging
   // is initialized
 
@@ -44,7 +50,8 @@ public class ExtensionClassLoader extends URLClassLoader {
     ClassLoader.registerAsParallelCapable();
   }
 
-  public static ClassLoader getInstance(ClassLoader parent, File javaagentFile) {
+  public static ClassLoader getInstance(
+      ClassLoader parent, File javaagentFile, boolean isSecurityManagerSupportEnabled) {
     List<URL> extensions = new ArrayList<>();
 
     includeEmbeddedExtensionsIfFound(parent, extensions, javaagentFile);
@@ -69,7 +76,7 @@ public class ExtensionClassLoader extends URLClassLoader {
 
     List<ClassLoader> delegates = new ArrayList<>(extensions.size());
     for (URL url : extensions) {
-      delegates.add(getDelegate(parent, url));
+      delegates.add(getDelegate(parent, url, isSecurityManagerSupportEnabled));
     }
     return new MultipleParentClassLoader(parent, delegates);
   }
@@ -119,8 +126,9 @@ public class ExtensionClassLoader extends URLClassLoader {
     return tempDirectory;
   }
 
-  private static URLClassLoader getDelegate(ClassLoader parent, URL extensionUrl) {
-    return new ExtensionClassLoader(new URL[] {extensionUrl}, parent);
+  private static URLClassLoader getDelegate(
+      ClassLoader parent, URL extensionUrl, boolean isSecurityManagerSupportEnabled) {
+    return new ExtensionClassLoader(extensionUrl, parent, isSecurityManagerSupportEnabled);
   }
 
   // visible for testing
@@ -179,7 +187,19 @@ public class ExtensionClassLoader extends URLClassLoader {
     }
   }
 
-  private ExtensionClassLoader(URL[] urls, ClassLoader parent) {
-    super(urls, parent);
+  @Override
+  protected PermissionCollection getPermissions(CodeSource codesource) {
+    if (isSecurityManagerSupportEnabled) {
+      Permissions permissions = new Permissions();
+      permissions.add(new AllPermission());
+      return permissions;
+    }
+    return super.getPermissions(codesource);
+  }
+
+  private ExtensionClassLoader(
+      URL url, ClassLoader parent, boolean isSecurityManagerSupportEnabled) {
+    super(new URL[] {url}, parent);
+    this.isSecurityManagerSupportEnabled = isSecurityManagerSupportEnabled;
   }
 }
