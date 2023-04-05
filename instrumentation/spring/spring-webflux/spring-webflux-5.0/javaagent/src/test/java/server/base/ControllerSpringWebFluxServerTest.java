@@ -74,13 +74,9 @@ public abstract class ControllerSpringWebFluxServerTest extends SpringWebFluxSer
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setHasHandlerAsControllerParentSpan(unused -> false);
+    // TODO (trask) it seems like in this case ideally the controller span (which ends when the
+    // Mono that the controller returns completes) should end before the server span (which needs
+    // the result of the Mono)
+    options.setVerifyServerSpanEndTime(false);
   }
-
-  //  @Override
-  //  public boolean verifyServerSpanEndTime() {
-  //     TODO (trask) it seems like in this case ideally the controller span (which ends when the
-  // Mono that the controller returns completes) should end before the server span (which needs
-  // the result of the Mono)
-  //    return false;
-  //  }
 }
