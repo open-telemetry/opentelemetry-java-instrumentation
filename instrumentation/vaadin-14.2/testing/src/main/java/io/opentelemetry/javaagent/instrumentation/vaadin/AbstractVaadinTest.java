@@ -23,7 +23,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,10 +93,7 @@ public abstract class AbstractVaadinTest
 
   protected void prepareVaadinBaseDir(File baseDir) {}
 
-  protected static void copyResource(String resource, File destinationDirectory) {
-    int lastSlash = resource.lastIndexOf('/');
-    String fileName = lastSlash == -1 ? resource : resource.substring(lastSlash + 1);
-    Path destination = Paths.get(destinationDirectory.toURI()).resolve(fileName);
+  protected static void copyClasspathResource(String resource, Path destination) {
     if (!Files.exists(destination)) {
       try (InputStream inputStream = AbstractVaadinTest.class.getResourceAsStream(resource)) {
         Files.copy(inputStream, destination);
