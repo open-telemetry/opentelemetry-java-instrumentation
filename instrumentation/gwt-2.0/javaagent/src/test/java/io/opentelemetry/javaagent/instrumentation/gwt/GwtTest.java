@@ -17,7 +17,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -27,6 +27,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.openqa.selenium.By;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
@@ -92,8 +93,9 @@ class GwtTest {
   }
 
   RemoteWebDriver getDriver() {
-    RemoteWebDriver driver = browser.getWebDriver();
-    driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+    RemoteWebDriver driver =
+        new RemoteWebDriver(browser.getSeleniumAddress(), new ChromeOptions(), false);
+    driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30));
     return driver;
   }
 
@@ -104,7 +106,7 @@ class GwtTest {
     // fetch the test page
     driver.get(address.resolve("greeting.html").toString());
 
-    driver.findElementByClassName("greeting.button");
+    driver.findElement(By.className("greeting.button"));
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("GET " + getContextPath() + "/*", "GET"),
         trace -> {
@@ -140,8 +142,8 @@ class GwtTest {
     testing.clearData();
 
     // click a button to trigger calling java code
-    driver.findElementByClassName("greeting.button").click();
-    assertEquals(driver.findElementByClassName("message.received").getText(), "Hello, Otel");
+    driver.findElement(By.className("greeting.button")).click();
+    assertEquals(driver.findElement(By.className("message.received")).getText(), "Hello, Otel");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -166,8 +168,8 @@ class GwtTest {
     testing.clearData();
 
     // click a button to trigger calling java code
-    driver.findElementByClassName("error.button").click();
-    assertEquals(driver.findElementByClassName("error.received").getText(), "Error");
+    driver.findElement(By.className("error.button")).click();
+    assertEquals(driver.findElement(By.className("error.received")).getText(), "Error");
 
     testing.waitAndAssertTraces(
         trace ->
