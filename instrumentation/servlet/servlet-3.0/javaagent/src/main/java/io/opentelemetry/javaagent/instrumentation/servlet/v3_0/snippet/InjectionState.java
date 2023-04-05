@@ -24,7 +24,7 @@ public class InjectionState {
     return wrapper.getCharacterEncoding();
   }
 
-  public void setHeadTagWritten() {
+  private void setHeadTagWritten() {
     headTagBytesSeen = HEAD_TAG_WRITTEN_FAKE_VALUE;
   }
 
@@ -45,7 +45,12 @@ public class InjectionState {
     } else {
       headTagBytesSeen = 0;
     }
-    return headTagBytesSeen == HEAD_TAG_LENGTH;
+    if (headTagBytesSeen == HEAD_TAG_LENGTH) {
+      setHeadTagWritten();
+      return true;
+    } else {
+      return false;
+    }
   }
 
   private boolean inHeadTag(int b) {

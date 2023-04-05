@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.TestUtil.readFileBytes;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.TestUtil.readFileAsBytes;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.mock;
@@ -23,7 +23,7 @@ class SnippetServletOutputStreamTest {
   @Test
   void testInjectionForStringContainHeadTag() throws IOException {
     String snippet = "\n  <script type=\"text/javascript\"> Test </script>";
-    byte[] html = readFileBytes("beforeSnippetInjection.html");
+    byte[] html = readFileAsBytes("beforeSnippetInjection.html");
 
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
@@ -33,14 +33,14 @@ class SnippetServletOutputStreamTest {
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
     assertThat(injected).isEqualTo(true);
 
-    byte[] expectedHtml = readFileBytes("afterSnippetInjection.html");
+    byte[] expectedHtml = readFileAsBytes("afterSnippetInjection.html");
     assertThat(out.getBytes()).isEqualTo(expectedHtml);
   }
 
   @Test
   void testInjectionForChinese() throws IOException {
     String snippet = "\n  <script type=\"text/javascript\"> Test </script>";
-    byte[] html = readFileBytes("beforeSnippetInjectionChinese.html");
+    byte[] html = readFileAsBytes("beforeSnippetInjectionChinese.html");
 
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
@@ -48,7 +48,7 @@ class SnippetServletOutputStreamTest {
     OutputStreamSnippetInjectionHelper helper = new OutputStreamSnippetInjectionHelper(snippet);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
 
-    byte[] expectedHtml = readFileBytes("afterSnippetInjectionChinese.html");
+    byte[] expectedHtml = readFileAsBytes("afterSnippetInjectionChinese.html");
     assertThat(injected).isTrue();
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
     assertThat(out.getBytes()).isEqualTo(expectedHtml);
@@ -57,7 +57,7 @@ class SnippetServletOutputStreamTest {
   @Test
   void testInjectionForStringWithoutHeadTag() throws IOException {
     String snippet = "\n  <script type=\"text/javascript\"> Test </script>";
-    byte[] html = readFileBytes("htmlWithoutHeadTag.html");
+    byte[] html = readFileAsBytes("htmlWithoutHeadTag.html");
 
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();

@@ -34,10 +34,12 @@ public class OutputStreamSnippetInjectionHelper {
     if (state.isHeadTagWritten()) {
       return false;
     }
-    int i;
+    int endOfHeadTagPosition;
     boolean endOfHeadTagFound = false;
-    for (i = off; i < length && i - off < length; i++) {
-      if (state.processByte(original[i])) {
+    for (endOfHeadTagPosition = off;
+        endOfHeadTagPosition < length && endOfHeadTagPosition - off < length;
+        endOfHeadTagPosition++) {
+      if (state.processByte(original[endOfHeadTagPosition])) {
         endOfHeadTagFound = true;
         break;
       }
@@ -45,8 +47,7 @@ public class OutputStreamSnippetInjectionHelper {
     if (!endOfHeadTagFound) {
       return false;
     }
-    // set before write to avoid recursive loop
-    state.setHeadTagWritten();
+
     if (state.getWrapper().isNotSafeToInject()) {
       return false;
     }
@@ -59,9 +60,9 @@ public class OutputStreamSnippetInjectionHelper {
     }
     // updating Content-Length before any further writing in case that writing triggers a flush
     state.getWrapper().updateContentLengthIfPreviouslySet();
-    out.write(original, off, i + 1);
+    out.write(original, off, endOfHeadTagPosition + 1);
     out.write(snippetBytes);
-    out.write(original, i + 1, length - i - 1);
+    out.write(original, endOfHeadTagPosition + 1, length - endOfHeadTagPosition - 1);
     return true;
   }
 
@@ -72,8 +73,6 @@ public class OutputStreamSnippetInjectionHelper {
     if (!state.processByte(b)) {
       return false;
     }
-    // set before write to avoid recursive loop
-    state.setHeadTagWritten();
 
     if (state.getWrapper().isNotSafeToInject()) {
       return false;

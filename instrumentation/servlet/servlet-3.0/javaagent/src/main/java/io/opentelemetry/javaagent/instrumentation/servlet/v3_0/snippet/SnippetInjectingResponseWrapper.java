@@ -38,7 +38,8 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   private static final int UNSET = -1;
 
   // this is for Servlet 3.1 support
-  @Nullable private static final MethodHandle setContentLengthLongHandler = getMethodHandle();
+  @Nullable
+  private static final MethodHandle setContentLengthLongHandler = findSetContentLengthLongMethod();
 
   private final String snippet;
   private final int snippetLength;
@@ -119,7 +120,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   }
 
   @Nullable
-  private static MethodHandle getMethodHandle() {
+  private static MethodHandle findSetContentLengthLongMethod() {
     try {
       return MethodHandles.lookup()
           .findSpecial(
@@ -143,7 +144,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
     }
   }
 
-  public boolean isContentTypeTextHtml() {
+  boolean isContentTypeTextHtml() {
     String contentType = super.getContentType();
     if (contentType == null) {
       contentType = super.getHeader("content-type");
@@ -170,13 +171,13 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
     return snippetInjectingPrintWriter;
   }
 
-  public void updateContentLengthIfPreviouslySet() {
+  void updateContentLengthIfPreviouslySet() {
     if (contentLength != UNSET) {
       setContentLength((int) contentLength + snippetLength);
     }
   }
 
-  public boolean isNotSafeToInject() {
+  boolean isNotSafeToInject() {
     // if content-length was set and response was already committed (headers sent to the client),
     // then it is not safe to inject because the content-length header cannot be updated to account
     // for the snippet length

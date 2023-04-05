@@ -13,7 +13,7 @@ import java.io.InputStream;
 
 public class TestUtil {
 
-  public static byte[] readFileBytes(String resourceName) throws IOException {
+  protected static byte[] readFileAsBytes(String resourceName) throws IOException {
     InputStream in =
         SnippetPrintWriterTest.class.getClassLoader().getResourceAsStream(resourceName);
     ByteArrayOutputStream result = new ByteArrayOutputStream();
@@ -25,8 +25,8 @@ public class TestUtil {
     return result.toByteArray();
   }
 
-  public static String readFile(String resourceName) throws IOException {
-    return new String(readFileBytes(resourceName), UTF_8);
+  protected static String readFileAsString(String resourceName) throws IOException {
+    return new String(readFileAsBytes(resourceName), UTF_8);
   }
 
   private TestUtil() {}

@@ -9,8 +9,14 @@ public class ExperimentalSnippetHolder {
 
   private static volatile String snippet = "";
 
+  private static boolean isSet = false;
+
   public static void setSnippet(String snippet) {
+    if (isSet) {
+      return;
+    }
     ExperimentalSnippetHolder.snippet = snippet;
+    isSet = true;
   }
 
   public static String getSnippet() {

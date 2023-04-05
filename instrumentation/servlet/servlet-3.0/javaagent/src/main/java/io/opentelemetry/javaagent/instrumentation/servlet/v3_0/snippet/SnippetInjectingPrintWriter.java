@@ -39,8 +39,7 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
     if (!endOfHeadTagFound) {
       return;
     }
-    // set before write to avoid recursive loop
-    state.setHeadTagWritten();
+
     if (state.getWrapper().isNotSafeToInject()) {
       return;
     }

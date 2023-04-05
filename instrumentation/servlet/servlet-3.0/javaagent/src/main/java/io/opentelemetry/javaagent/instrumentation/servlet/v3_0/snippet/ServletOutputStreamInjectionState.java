@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
 import javax.servlet.ServletOutputStream;
 
 public class ServletOutputStreamInjectionState {
@@ -26,6 +27,7 @@ public class ServletOutputStreamInjectionState {
     }
   }
 
+  @Nullable
   public static InjectionState getInjectionState(ServletOutputStream servletOutputStream) {
     return virtualField.get(servletOutputStream);
   }
