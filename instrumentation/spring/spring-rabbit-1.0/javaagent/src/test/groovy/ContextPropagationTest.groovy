@@ -49,13 +49,13 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
     app.setDefaultProperties([
       "spring.jmx.enabled"              : false,
       "spring.main.web-application-type": "none",
-      "spring.rabbitmq.host"            : rabbitMqContainer.containerIpAddress,
+      "spring.rabbitmq.host"            : rabbitMqContainer.host,
       "spring.rabbitmq.port"            : rabbitMqContainer.getMappedPort(5672),
     ])
     applicationContext = app.run()
 
     connectionFactory = new ConnectionFactory(
-      host: rabbitMqContainer.containerIpAddress,
+      host: rabbitMqContainer.host,
       port: rabbitMqContainer.getMappedPort(5672)
     )
   }

@@ -39,7 +39,7 @@ trait WithRabbitProducerConsumerTrait {
       "spring.application.name"                        : "testProducer",
       "spring.jmx.enabled"                             : false,
       "spring.main.web-application-type"               : "none",
-      "spring.rabbitmq.host"                           : rabbitMqContainer.containerIpAddress,
+      "spring.rabbitmq.host"                           : rabbitMqContainer.host,
       "spring.rabbitmq.port"                           : rabbitMqContainer.getMappedPort(5672),
       "spring.cloud.stream.bindings.output.destination": "testTopic"
     ])
@@ -50,7 +50,7 @@ trait WithRabbitProducerConsumerTrait {
       "spring.application.name"                       : "testConsumer",
       "spring.jmx.enabled"                            : false,
       "spring.main.web-application-type"              : "none",
-      "spring.rabbitmq.host"                          : rabbitMqContainer.containerIpAddress,
+      "spring.rabbitmq.host"                          : rabbitMqContainer.host,
       "spring.rabbitmq.port"                          : rabbitMqContainer.getMappedPort(5672),
       "spring.cloud.stream.bindings.input.destination": "testTopic"
     ])
