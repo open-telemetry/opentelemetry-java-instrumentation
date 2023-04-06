@@ -16,5 +16,8 @@ public final class ApplicationLoggingIgnoredTypesConfigurer implements IgnoredTy
   @Override
   public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     builder.allowClass("org.slf4j.LoggerFactory");
+    builder.allowClass("org.springframework.boot.SpringApplication");
+    builder.allowClass("org.springframework.boot.logging.LoggingApplicationListener");
+    builder.allowClass("org.springframework.boot.context.logging.LoggingApplicationListener");
   }
 }

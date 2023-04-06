@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.logging;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -28,6 +28,9 @@ public class ApplicationLoggingInstrumentationModule extends InstrumentationModu
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new LoggerFactoryInstrumentation());
+    return asList(
+        new LoggerFactoryInstrumentation(),
+        new SpringApplicationInstrumentation(),
+        new LoggingApplicationListenerInstrumentation());
   }
 }

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.logging;
 
+import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerFlags;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -15,29 +15,26 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LoggerFactoryInstrumentation implements TypeInstrumentation {
+public class SpringApplicationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.slf4j.LoggerFactory");
+    return named("org.springframework.boot.SpringApplication");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // once a call to getILoggerFactory() exits we can be certain that slf4j is properly initialized
     transformer.applyAdviceToMethod(
-        named("getILoggerFactory").and(takesArguments(0)),
-        this.getClass().getName() + "$GetLoggerFactoryAdvice");
+        isTypeInitializer(), this.getClass().getName() + "$TypeInitAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class GetLoggerFactoryAdvice {
+  public static class TypeInitAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit() {
-      if (ApplicationLoggerFlags.bridgeLoggerFactory()) {
-        Slf4jApplicationLoggerBridge.install();
-      }
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter() {
+      // mark the instrumented application as spring boot app
+      ApplicationLoggerFlags.setSpringBootApp();
     }
   }
 }
