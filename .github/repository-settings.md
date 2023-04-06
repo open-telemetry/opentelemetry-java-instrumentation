@@ -6,7 +6,7 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
 
 ## General > Pull Requests
 
-* Allow squash merging > Default to pull request title and description
+* Allow squash merging > Default to pull request title
 
 * Allow auto-merge
 
