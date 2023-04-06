@@ -51,7 +51,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
       .withStartupTimeout(Duration.ofSeconds(120))
     memcachedContainer.start()
     memcachedAddress = new InetSocketAddress(
-      memcachedContainer.containerIpAddress,
+      memcachedContainer.host,
       memcachedContainer.getMappedPort(11211)
     )
   }
