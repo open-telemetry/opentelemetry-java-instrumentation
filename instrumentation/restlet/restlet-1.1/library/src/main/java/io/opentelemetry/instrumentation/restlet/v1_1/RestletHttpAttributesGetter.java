@@ -48,7 +48,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
     if (headers == null) {
       return Collections.emptyList();
     }
-    return parametersToList(headers.subList(name, /* ignoreCase = */ true));
+    return parametersToList(headers.subList(name, /* ignoreCase= */ true));
   }
 
   @Override
@@ -79,7 +79,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
     if (headers == null) {
       return Collections.emptyList();
     }
-    return parametersToList(headers.subList(name, /* ignoreCase = */ true));
+    return parametersToList(headers.subList(name, /* ignoreCase= */ true));
   }
 
   // minimize memory overhead by not using streams
