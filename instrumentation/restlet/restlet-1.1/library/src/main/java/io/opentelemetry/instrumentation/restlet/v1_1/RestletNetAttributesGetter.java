@@ -39,7 +39,7 @@ final class RestletNetAttributesGetter implements NetServerAttributesGetter<Requ
     return null;
   }
 
-  private String getProtocolString(Request request) {
+  private static String getProtocolString(Request request) {
     return (String) request.getAttributes().get("org.restlet.http.version");
   }
 
