@@ -17,14 +17,14 @@ public class HelperResourceBuilderImpl implements HelperResourceBuilder {
   public void register(String applicationResourcePath, String agentResourcePath) {
     resources.add(
         HelperResource.create(
-            applicationResourcePath, agentResourcePath, /* allClassLoaders = */ false));
+            applicationResourcePath, agentResourcePath, /* allClassLoaders= */ false));
   }
 
   @Override
   public void registerForAllClassLoaders(String applicationResourcePath, String agentResourcePath) {
     resources.add(
         HelperResource.create(
-            applicationResourcePath, agentResourcePath, /* allClassLoaders = */ true));
+            applicationResourcePath, agentResourcePath, /* allClassLoaders= */ true));
   }
 
   public List<HelperResource> getResources() {
