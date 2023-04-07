@@ -24,7 +24,18 @@ enum ArmeriaHttpClientAttributesGetter
 
   @Override
   public String getUrl(RequestContext ctx) {
-    return request(ctx).uri().toString();
+    HttpRequest request = request(ctx);
+    StringBuilder uri = new StringBuilder();
+    String scheme = request.scheme();
+    if (scheme != null) {
+      uri.append(scheme).append("://");
+    }
+    String authority = request.authority();
+    if (authority != null) {
+      uri.append(authority);
+    }
+    uri.append(request.path());
+    return uri.toString();
   }
 
   @Override
