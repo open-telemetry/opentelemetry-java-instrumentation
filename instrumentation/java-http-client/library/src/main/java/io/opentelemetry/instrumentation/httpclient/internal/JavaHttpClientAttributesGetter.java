@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.httpclient.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.net.http.HttpClient.Version;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
@@ -40,14 +38,6 @@ enum JavaHttpClientAttributesGetter
   public Integer getStatusCode(
       HttpRequest httpRequest, HttpResponse<?> httpResponse, @Nullable Throwable error) {
     return httpResponse.statusCode();
-  }
-
-  @Override
-  public String getFlavor(HttpRequest httpRequest, @Nullable HttpResponse<?> httpResponse) {
-    if (httpResponse != null && httpResponse.version() == Version.HTTP_2) {
-      return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
-    }
-    return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override

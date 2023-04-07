@@ -75,13 +75,14 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
             "rpc.method" "CreateQueue"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" "http://localhost:$sqsPort"
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
@@ -98,13 +99,14 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.method" "SendMessage"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" "http://localhost:$sqsPort"
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
@@ -119,7 +121,6 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" "http://localhost:$sqsPort"
@@ -127,6 +128,8 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
@@ -147,13 +150,14 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" "http://localhost:$sqsPort"
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }

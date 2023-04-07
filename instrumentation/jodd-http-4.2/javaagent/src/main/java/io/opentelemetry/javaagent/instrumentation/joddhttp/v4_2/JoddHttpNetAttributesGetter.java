@@ -20,6 +20,26 @@ final class JoddHttpNetAttributesGetter
   }
 
   @Override
+  public String getProtocolName(HttpRequest request, @Nullable HttpResponse response) {
+    return "http";
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(HttpRequest request, @Nullable HttpResponse response) {
+    String httpVersion = request.httpVersion();
+    if (httpVersion == null && response != null) {
+      httpVersion = response.httpVersion();
+    }
+    if (httpVersion != null) {
+      if (httpVersion.contains("/")) {
+        httpVersion = httpVersion.substring(httpVersion.lastIndexOf("/") + 1);
+      }
+    }
+    return httpVersion;
+  }
+
+  @Override
   @Nullable
   public String getPeerName(HttpRequest request) {
     return request.host();

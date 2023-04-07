@@ -19,6 +19,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -61,11 +62,6 @@ class HttpClientAttributesExtractorTest {
     }
 
     @Override
-    public String getFlavor(Map<String, String> request, Map<String, String> response) {
-      return request.get("flavor");
-    }
-
-    @Override
     public List<String> getResponseHeader(
         Map<String, String> request, Map<String, String> response, String name) {
       String value = response.get("header." + name);
@@ -81,6 +77,20 @@ class HttpClientAttributesExtractorTest {
     public String getTransport(
         Map<String, String> request, @Nullable Map<String, String> response) {
       return response == null ? null : response.get("transport");
+    }
+
+    @Nullable
+    @Override
+    public String getProtocolName(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("protocolName");
+    }
+
+    @Nullable
+    @Override
+    public String getProtocolVersion(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("protocolVersion");
     }
 
     @Nullable
@@ -103,9 +113,10 @@ class HttpClientAttributesExtractorTest {
     request.put("method", "POST");
     request.put("url", "http://github.com");
     request.put("header.content-length", "10");
-    request.put("flavor", "http/2");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.custom-request-header", "123,456");
+    request.put("protocolName", "http");
+    request.put("protocolVersion", "1.1");
     request.put("peerName", "github.com");
     request.put("peerPort", "123");
 
@@ -143,14 +154,15 @@ class HttpClientAttributesExtractorTest {
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
-            entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
             entry(SemanticAttributes.HTTP_RESEND_COUNT, 2L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")),
-            entry(SemanticAttributes.NET_TRANSPORT, IP_TCP));
+            entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
+            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"));
   }
 
   @ParameterizedTest

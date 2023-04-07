@@ -28,10 +28,11 @@ class AwsSpan {
         "rpc.method" spanName.substring(3)
         "rpc.service" "Amazon S3"
         "aws.bucket.name" bucketName
-        "http.flavor" "1.1"
         "http.method" method
         "http.status_code" 200
         "http.url" String
+        "net.protocol.name" "http"
+        "net.protocol.version" "1.1"
         "net.peer.name" String
         "net.transport" IP_TCP
         "net.peer.port" { it == null || it instanceof Number }
@@ -56,13 +57,14 @@ class AwsSpan {
         "rpc.service" "AmazonSQS"
         "aws.queue.name" { it == null || it == queueName }
         "aws.queue.url" { it == null || it == queueUrl }
-        "http.flavor" "1.1"
         "http.method" "POST"
         "http.status_code" 200
         "http.url" String
         "http.user_agent" { it == null || it instanceof String }
         "http.request_content_length" { it == null || it instanceof Long }
         "http.response_content_length" { it == null || it instanceof Long }
+        "net.protocol.name" "http"
+        "net.protocol.version" "1.1"
         "net.peer.name" String
         "net.peer.port" { it == null || it instanceof Number }
         "net.transport" IP_TCP
@@ -85,10 +87,11 @@ class AwsSpan {
         "rpc.system" "aws-api"
         "rpc.method" spanName.substring(4)
         "rpc.service" "AmazonSNS"
-        "http.flavor" "1.1"
         "http.method" "POST"
         "http.status_code" 200
         "http.url" String
+        "net.protocol.name" "http"
+        "net.protocol.version" "1.1"
         "net.peer.name" String
         "net.peer.port" { it == null || it instanceof Number }
         "net.transport" IP_TCP

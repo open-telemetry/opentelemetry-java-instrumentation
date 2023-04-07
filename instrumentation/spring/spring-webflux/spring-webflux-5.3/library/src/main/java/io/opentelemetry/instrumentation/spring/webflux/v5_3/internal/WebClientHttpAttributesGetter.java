@@ -22,12 +22,6 @@ enum WebClientHttpAttributesGetter
     return request.url().toString();
   }
 
-  @Nullable
-  @Override
-  public String getFlavor(ClientRequest request, @Nullable ClientResponse response) {
-    return null;
-  }
-
   @Override
   public String getMethod(ClientRequest request) {
     return request.method().name();

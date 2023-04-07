@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
@@ -133,9 +134,10 @@ abstract class AbstractReactorNettyHttpClientTest
 
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     if (uri.toString().contains("/read-timeout")) {
+      attributes.remove(stringKey("net.protocol.name"));
+      attributes.remove(stringKey("net.protocol.version"));
       attributes.remove(SemanticAttributes.NET_PEER_NAME);
       attributes.remove(SemanticAttributes.NET_PEER_PORT);
-      attributes.remove(SemanticAttributes.HTTP_FLAVOR);
     }
     return attributes;
   }

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashSet;
 import java.util.Set;
@@ -30,6 +31,8 @@ final class TemporaryMetricsView {
     view.add(SemanticAttributes.HTTP_METHOD);
     view.add(SemanticAttributes.HTTP_STATUS_CODE); // Optional
     view.add(SemanticAttributes.HTTP_FLAVOR); // Optional
+    view.add(NetAttributes.NET_PROTOCOL_NAME); // Optional
+    view.add(NetAttributes.NET_PROTOCOL_VERSION); // Optional
     return view;
   }
 

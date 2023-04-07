@@ -8,9 +8,12 @@ import com.sun.jersey.api.client.ClientResponse
 import com.sun.jersey.api.client.WebResource
 import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter
 import com.sun.jersey.api.client.filter.LoggingFilter
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import spock.lang.Shared
+
+import static io.opentelemetry.api.common.AttributeKey.stringKey
 
 class JaxRsClientV1Test extends HttpClientTest<WebResource.Builder> implements AgentTestTrait {
 
@@ -45,5 +48,13 @@ class JaxRsClientV1Test extends HttpClientTest<WebResource.Builder> implements A
   @Override
   boolean testCallback() {
     false
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    def attributes = super.httpAttributes(uri)
+    attributes.remove(stringKey("net.protocol.name"))
+    attributes.remove(stringKey("net.protocol.version"))
+    return attributes
   }
 }

@@ -84,7 +84,8 @@ class ElasticsearchRest7Test extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
             "$SemanticAttributes.NET_PEER_PORT" httpHost.port
             "$SemanticAttributes.HTTP_METHOD" "GET"
-            "$SemanticAttributes.HTTP_FLAVOR" SemanticAttributes.HttpFlavorValues.HTTP_1_1
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.HTTP_URL" "${httpHost.toURI()}/_cluster/health"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
@@ -156,7 +157,8 @@ class ElasticsearchRest7Test extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
             "$SemanticAttributes.NET_PEER_PORT" httpHost.port
             "$SemanticAttributes.HTTP_METHOD" "GET"
-            "$SemanticAttributes.HTTP_FLAVOR" SemanticAttributes.HttpFlavorValues.HTTP_1_1
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.HTTP_URL" "${httpHost.toURI()}/_cluster/health"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long

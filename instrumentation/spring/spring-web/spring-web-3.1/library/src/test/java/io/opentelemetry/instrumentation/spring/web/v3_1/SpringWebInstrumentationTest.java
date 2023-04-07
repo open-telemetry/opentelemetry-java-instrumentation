@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.web.v3_1;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -13,7 +14,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashSet;
@@ -101,7 +101,8 @@ public class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEnt
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.HTTP_FLAVOR);
+          attributes.remove(stringKey("net.protocol.name"));
+          attributes.remove(stringKey("net.protocol.version"));
           return attributes;
         });
   }

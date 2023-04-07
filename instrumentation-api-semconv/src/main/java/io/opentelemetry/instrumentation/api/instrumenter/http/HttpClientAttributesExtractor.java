@@ -156,8 +156,6 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     super.onEnd(attributes, context, request, response, error);
 
-    internalSet(attributes, SemanticAttributes.HTTP_FLAVOR, getter.getFlavor(request, response));
-
     internalNetExtractor.onEnd(attributes, request, response);
 
     int resendCount = resendCountIncrementer.applyAsInt(context);

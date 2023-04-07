@@ -100,7 +100,6 @@ class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_URL" "https://s3.amazonaws.com"
             "$SemanticAttributes.HTTP_METHOD" "HEAD"
-            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.NET_PEER_NAME" "s3.amazonaws.com"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "Amazon S3"

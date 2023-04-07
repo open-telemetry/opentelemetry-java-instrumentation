@@ -21,6 +21,8 @@ import io.vertx.reactivex.ext.web.client.HttpResponse
 import io.vertx.reactivex.ext.web.client.WebClient
 import spock.lang.Shared
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey
+
 class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implements AgentTestTrait {
 
   @Shared
@@ -88,7 +90,8 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
   @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
-    attributes.remove(SemanticAttributes.HTTP_FLAVOR)
+    attributes.remove(stringKey("net.protocol.name"))
+    attributes.remove(stringKey("net.protocol.version"))
     attributes.remove(SemanticAttributes.NET_PEER_NAME)
     attributes.remove(SemanticAttributes.NET_PEER_PORT)
     return attributes
