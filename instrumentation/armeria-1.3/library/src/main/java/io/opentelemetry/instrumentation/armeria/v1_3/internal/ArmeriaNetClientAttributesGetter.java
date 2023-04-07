@@ -41,12 +41,32 @@ public final class ArmeriaNetClientAttributesGetter
   @Nullable
   @Override
   public String getPeerName(RequestContext ctx) {
-    return request(ctx).uri().getHost();
+    HttpRequest request = request(ctx);
+    String authority = request.authority();
+    if (authority == null) {
+      return null;
+    }
+    int separatorPos = authority.indexOf(':');
+    return separatorPos == -1 ? authority : authority.substring(0, separatorPos);
   }
 
+  @Nullable
   @Override
   public Integer getPeerPort(RequestContext ctx) {
-    return request(ctx).uri().getPort();
+    HttpRequest request = request(ctx);
+    String authority = request.authority();
+    if (authority == null) {
+      return null;
+    }
+    int separatorPos = authority.indexOf(':');
+    if (separatorPos == -1) {
+      return null;
+    }
+    try {
+      return Integer.parseInt(authority.substring(separatorPos + 1));
+    } catch (NumberFormatException e) {
+      return null;
+    }
   }
 
   @Override
