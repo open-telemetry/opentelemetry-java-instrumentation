@@ -15,6 +15,12 @@ internal class KtorNetServerAttributesGetter : NetServerAttributesGetter<Applica
     return SemanticAttributes.NetTransportValues.IP_TCP
   }
 
+  override fun getProtocolName(request: ApplicationRequest): String? =
+    if (request.httpVersion.startsWith("HTTP/")) "http" else null
+
+  override fun getProtocolVersion(request: ApplicationRequest): String? =
+    if (request.httpVersion.startsWith("HTTP/")) request.httpVersion.substring("HTTP/".length) else null
+
   override fun getSockPeerAddr(request: ApplicationRequest): String? {
     val remote = request.local.remoteHost
     if ("unknown" != remote && isIpAddress(remote)) {

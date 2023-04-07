@@ -20,6 +20,26 @@ enum SpringWebMvcNetAttributesGetter implements NetServerAttributesGetter<HttpSe
 
   @Nullable
   @Override
+  public String getProtocolName(HttpServletRequest request) {
+    String protocol = request.getProtocol();
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(HttpServletRequest request) {
+    String protocol = request.getProtocol();
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getHostName(HttpServletRequest request) {
     return request.getServerName();
   }

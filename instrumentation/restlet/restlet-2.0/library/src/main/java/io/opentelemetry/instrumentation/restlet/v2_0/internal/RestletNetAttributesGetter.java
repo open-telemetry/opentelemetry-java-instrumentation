@@ -85,6 +85,18 @@ public final class RestletNetAttributesGetter implements NetServerAttributesGett
 
   @Nullable
   @Override
+  public String getProtocolName(Request request) {
+    return request.getProtocol().getSchemeName();
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(Request request) {
+    return request.getProtocol().getVersion();
+  }
+
+  @Nullable
+  @Override
   public String getHostName(Request request) {
     if (GET_HOST_DOMAIN == null) {
       return null;

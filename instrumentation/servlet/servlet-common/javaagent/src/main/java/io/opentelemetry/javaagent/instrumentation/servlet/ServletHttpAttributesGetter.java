@@ -50,19 +50,6 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public String getFlavor(ServletRequestContext<REQUEST> requestContext) {
-    String flavor = accessor.getRequestProtocol(requestContext.request());
-    if (flavor != null) {
-      // remove HTTP/ prefix to comply with semantic conventions
-      if (flavor.startsWith("HTTP/")) {
-        flavor = flavor.substring("HTTP/".length());
-      }
-    }
-    return flavor;
-  }
-
-  @Override
-  @Nullable
   public Integer getStatusCode(
       ServletRequestContext<REQUEST> requestContext,
       ServletResponseContext<RESPONSE> responseContext,

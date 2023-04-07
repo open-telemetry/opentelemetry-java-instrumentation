@@ -164,12 +164,6 @@ final class TestInstrumenters {
 
     @Nullable
     @Override
-    public String getFlavor(String unused) {
-      return null;
-    }
-
-    @Nullable
-    @Override
     public String getTarget(String unused) {
       return null;
     }

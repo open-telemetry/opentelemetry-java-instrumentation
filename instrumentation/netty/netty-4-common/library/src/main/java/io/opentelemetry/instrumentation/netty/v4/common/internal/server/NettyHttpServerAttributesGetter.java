@@ -38,15 +38,6 @@ final class NettyHttpServerAttributesGetter
   }
 
   @Override
-  public String getFlavor(HttpRequestAndChannel requestAndChannel) {
-    String flavor = requestAndChannel.request().getProtocolVersion().toString();
-    if (flavor.startsWith("HTTP/")) {
-      flavor = flavor.substring("HTTP/".length());
-    }
-    return flavor;
-  }
-
-  @Override
   public String getTarget(HttpRequestAndChannel requestAndChannel) {
     return requestAndChannel.request().getUri();
   }

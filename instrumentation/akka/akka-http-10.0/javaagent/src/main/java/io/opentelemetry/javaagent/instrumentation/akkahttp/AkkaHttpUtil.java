@@ -32,12 +32,20 @@ public class AkkaHttpUtil {
         .orElse(Collections.emptyList());
   }
 
-  public static String httpVersion(HttpRequest httpRequest) {
-    String protocol = httpRequest.protocol().value();
+  public static String protocolName(HttpRequest request) {
+    String protocol = request.protocol().value();
     if (protocol.startsWith("HTTP/")) {
-      protocol = protocol.substring("HTTP/".length());
+      return "http";
     }
-    return protocol;
+    return null;
+  }
+
+  public static String protocolVersion(HttpRequest request) {
+    String protocol = request.protocol().value();
+    if (protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
   }
 
   private AkkaHttpUtil() {}

@@ -9,11 +9,11 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMe
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyClientDurationAndSizeView;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerDurationAndSizeView;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_1_1;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.junit.jupiter.api.Test;
 
@@ -34,8 +34,9 @@ class TemporaryMetricsViewTest {
     Attributes endAttributes =
         Attributes.builder()
             .put(SemanticAttributes.HTTP_STATUS_CODE, 500)
-            .put(SemanticAttributes.HTTP_FLAVOR, HTTP_1_1)
             .put(SemanticAttributes.NET_TRANSPORT, IP_TCP)
+            .put(NetAttributes.NET_PROTOCOL_NAME, "http")
+            .put(NetAttributes.NET_PROTOCOL_VERSION, "1.1")
             .put(SemanticAttributes.NET_PEER_NAME, "somehost2")
             .put(SemanticAttributes.NET_PEER_PORT, 443)
             .put(SemanticAttributes.NET_SOCK_FAMILY, "inet")
@@ -48,7 +49,8 @@ class TemporaryMetricsViewTest {
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "GET"),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 500L),
-            entry(SemanticAttributes.HTTP_FLAVOR, HTTP_1_1),
+            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"),
             entry(SemanticAttributes.NET_PEER_NAME, "somehost2"),
             entry(SemanticAttributes.NET_PEER_PORT, 443L),
             entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"));
@@ -62,10 +64,11 @@ class TemporaryMetricsViewTest {
             .put(
                 SemanticAttributes.HTTP_URL,
                 "https://somehost/high/cardinality/12345?jsessionId=121454")
-            .put(SemanticAttributes.HTTP_FLAVOR, HTTP_1_1)
             .put(SemanticAttributes.HTTP_TARGET, "/high/cardinality/12345?jsessionId=121454")
             .put(SemanticAttributes.HTTP_SCHEME, "https")
             .put(SemanticAttributes.NET_TRANSPORT, IP_TCP)
+            .put(NetAttributes.NET_PROTOCOL_NAME, "http")
+            .put(NetAttributes.NET_PROTOCOL_VERSION, "1.1")
             .put(SemanticAttributes.NET_HOST_NAME, "somehost")
             .put(SemanticAttributes.NET_HOST_PORT, 443)
             .put(SemanticAttributes.NET_SOCK_FAMILY, "inet")
@@ -87,8 +90,9 @@ class TemporaryMetricsViewTest {
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "GET"),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 500L),
-            entry(SemanticAttributes.HTTP_FLAVOR, HTTP_1_1),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
+            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"),
             entry(SemanticAttributes.NET_HOST_NAME, "somehost"),
             entry(SemanticAttributes.NET_HOST_PORT, 443L),
             entry(SemanticAttributes.HTTP_ROUTE, "/somehost/high/{name}/{id}"));
@@ -102,10 +106,11 @@ class TemporaryMetricsViewTest {
             .put(
                 SemanticAttributes.HTTP_URL,
                 "https://somehost/high/cardinality/12345?jsessionId=121454")
-            .put(SemanticAttributes.HTTP_FLAVOR, HTTP_1_1)
             .put(SemanticAttributes.HTTP_TARGET, "/high/cardinality/12345?jsessionId=121454")
             .put(SemanticAttributes.HTTP_SCHEME, "https")
             .put(SemanticAttributes.NET_TRANSPORT, IP_TCP)
+            .put(NetAttributes.NET_PROTOCOL_NAME, "http")
+            .put(NetAttributes.NET_PROTOCOL_VERSION, "1.1")
             .put(SemanticAttributes.NET_HOST_NAME, "somehost")
             .put(SemanticAttributes.NET_HOST_PORT, 443)
             .put(SemanticAttributes.NET_SOCK_FAMILY, "inet")
@@ -119,7 +124,6 @@ class TemporaryMetricsViewTest {
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "GET"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
-            entry(SemanticAttributes.HTTP_FLAVOR, HTTP_1_1),
             entry(SemanticAttributes.NET_HOST_NAME, "somehost"),
             entry(SemanticAttributes.NET_HOST_PORT, 443L));
   }

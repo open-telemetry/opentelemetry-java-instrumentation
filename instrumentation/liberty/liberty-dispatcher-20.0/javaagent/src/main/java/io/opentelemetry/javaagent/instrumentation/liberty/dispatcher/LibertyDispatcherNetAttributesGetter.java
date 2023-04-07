@@ -19,6 +19,26 @@ public class LibertyDispatcherNetAttributesGetter
 
   @Nullable
   @Override
+  public String getProtocolName(LibertyRequest request) {
+    String protocol = request.getProtocol();
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(LibertyRequest request) {
+    String protocol = request.getProtocol();
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getHostName(LibertyRequest request) {
     return request.request().getURLHost();
   }

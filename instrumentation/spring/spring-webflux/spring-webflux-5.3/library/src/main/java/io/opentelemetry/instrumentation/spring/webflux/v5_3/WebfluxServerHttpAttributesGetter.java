@@ -42,12 +42,6 @@ enum WebfluxServerHttpAttributesGetter
 
   @Nullable
   @Override
-  public String getFlavor(ServerWebExchange request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getTarget(ServerWebExchange request) {
     String path = request.getRequest().getURI().getPath();
     String query = request.getRequest().getURI().getQuery();
