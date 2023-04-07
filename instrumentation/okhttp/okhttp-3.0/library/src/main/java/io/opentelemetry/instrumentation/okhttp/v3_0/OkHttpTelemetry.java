@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.okhttp.v3_0;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.okhttp.v3_0.internal.ConnectionErrorSpanInterceptor;
+import io.opentelemetry.instrumentation.okhttp.v3_0.internal.TracingInterceptor;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Interceptor;
@@ -32,18 +34,10 @@ public final class OkHttpTelemetry {
 
   private final Instrumenter<Request, Response> instrumenter;
   private final ContextPropagators propagators;
-  private final boolean emitEncompassingSpan;
-  private final boolean createSpanForConnectionErrors;
 
-  OkHttpTelemetry(
-      Instrumenter<Request, Response> instrumenter,
-      ContextPropagators propagators,
-      boolean emitEncompassingSpan,
-      boolean createSpanForConnectionErrors) {
+  OkHttpTelemetry(Instrumenter<Request, Response> instrumenter, ContextPropagators propagators) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
-    this.emitEncompassingSpan = emitEncompassingSpan;
-    this.createSpanForConnectionErrors = createSpanForConnectionErrors;
   }
 
   /**
@@ -77,11 +71,7 @@ public final class OkHttpTelemetry {
     OkHttpClient.Builder builder = baseClient.newBuilder();
     // add our interceptors before other interceptors
     builder.interceptors().add(0, new ContextInterceptor());
-    if (emitEncompassingSpan) {
-      builder.interceptors().add(1, new EncompassingSpanInterceptor());
-    } else if (createSpanForConnectionErrors) {
-      builder.interceptors().add(1, new ConnectionErrorSpanInterceptor(instrumenter));
-    }
+    builder.interceptors().add(1, new ConnectionErrorSpanInterceptor(instrumenter));
     builder.networkInterceptors().add(0, newInterceptor());
     OkHttpClient tracingClient = builder.build();
     return new TracingCallFactory(tracingClient);

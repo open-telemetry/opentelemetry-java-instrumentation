@@ -121,10 +121,6 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    // TODO: fix connection spans
-    optionsBuilder.disableTestConnectionFailure();
-    optionsBuilder.disableTestRemoteConnection();
-
     // TODO: replace the base class redirect tests
     optionsBuilder.disableTestRedirects();
 
@@ -134,7 +130,9 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          // TODO: fix that
+          // the tests are capturing the user-agent, but since it's not possible to override it in
+          // the builder, and since it contains the okhttp library version, let's just skip
+          // verification on this attribute
           attributes.remove(SemanticAttributes.HTTP_USER_AGENT);
 
           // protocol is extracted from the response, and those URLs cause exceptions (= null
@@ -166,8 +164,7 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
     String method = "GET";
     URI uri = resolveAddress("/success");
 
-    HttpClientResult result = new HttpClientResult(() -> testing.runWithSpan("child", () -> {
-    }));
+    HttpClientResult result = new HttpClientResult(() -> testing.runWithSpan("child", () -> {}));
     OkHttpClient.Builder builder = getClientBuilder(false);
     builder.addInterceptor(new TestInterceptor());
     Call.Factory testClient = createCallFactory(builder);

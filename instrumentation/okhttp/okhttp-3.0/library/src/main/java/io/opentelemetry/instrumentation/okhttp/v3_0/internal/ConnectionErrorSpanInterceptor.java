@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.okhttp.v3_0;
+package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -15,11 +15,15 @@ import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 
-final class ConnectionErrorSpanInterceptor implements Interceptor {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class ConnectionErrorSpanInterceptor implements Interceptor {
 
   private final Instrumenter<Request, Response> instrumenter;
 
-  ConnectionErrorSpanInterceptor(Instrumenter<Request, Response> instrumenter) {
+  public ConnectionErrorSpanInterceptor(Instrumenter<Request, Response> instrumenter) {
     this.instrumenter = instrumenter;
   }
 

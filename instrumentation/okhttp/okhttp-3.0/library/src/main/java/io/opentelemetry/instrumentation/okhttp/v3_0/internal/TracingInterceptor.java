@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.okhttp.v3_0;
+package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -14,12 +14,17 @@ import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 
-final class TracingInterceptor implements Interceptor {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class TracingInterceptor implements Interceptor {
 
   private final Instrumenter<Request, Response> instrumenter;
   private final ContextPropagators propagators;
 
-  TracingInterceptor(Instrumenter<Request, Response> instrumenter, ContextPropagators propagators) {
+  public TracingInterceptor(
+      Instrumenter<Request, Response> instrumenter, ContextPropagators propagators) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
   }

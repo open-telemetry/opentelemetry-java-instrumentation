@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.okhttp.v3_0;
+package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
