@@ -4,7 +4,7 @@ pluginManagement {
     id("com.github.ben-manes.versions") version "0.46.0"
     id("com.github.jk1.dependency-license-report") version "2.1"
     id("com.google.cloud.tools.jib") version "3.3.1"
-    id("com.gradle.plugin-publish") version "1.1.0"
+    id("com.gradle.plugin-publish") version "1.2.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
     id("org.jetbrains.kotlin.jvm") version "1.8.20"
     id("org.xbib.gradle.plugin.jflex") version "1.7.0"
