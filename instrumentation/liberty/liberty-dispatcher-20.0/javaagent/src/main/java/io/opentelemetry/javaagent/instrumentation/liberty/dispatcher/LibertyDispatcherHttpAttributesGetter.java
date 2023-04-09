@@ -25,19 +25,6 @@ public class LibertyDispatcherHttpAttributesGetter
 
   @Override
   @Nullable
-  public String getFlavor(LibertyRequest libertyRequest) {
-    String flavor = libertyRequest.getProtocol();
-    if (flavor != null) {
-      // remove HTTP/ prefix to comply with semantic conventions
-      if (flavor.startsWith("HTTP/")) {
-        flavor = flavor.substring("HTTP/".length());
-      }
-    }
-    return flavor;
-  }
-
-  @Override
-  @Nullable
   public Integer getStatusCode(
       LibertyRequest libertyRequest, LibertyResponse libertyResponse, @Nullable Throwable error) {
     return libertyResponse.getStatus();

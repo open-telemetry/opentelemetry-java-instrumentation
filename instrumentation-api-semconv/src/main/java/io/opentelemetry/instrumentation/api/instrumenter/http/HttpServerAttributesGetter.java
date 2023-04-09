@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import javax.annotation.Nullable;
 
 /**
@@ -19,8 +20,17 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
 
   // Attributes that always exist in a request
 
+  /**
+   * Extracts the {@code http.flavor} span attribute.
+   *
+   * @deprecated Use {@link NetServerAttributesGetter#getProtocolName(Object)} and {@link
+   *     NetServerAttributesGetter#getProtocolVersion(Object)} instead.
+   */
+  @Deprecated
   @Nullable
-  String getFlavor(REQUEST request);
+  default String getFlavor(REQUEST request) {
+    return null;
+  }
 
   @Nullable
   String getTarget(REQUEST request);

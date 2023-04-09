@@ -15,13 +15,11 @@ internal class KtorNetServerAttributesGetter : NetServerAttributesGetter<Applica
     return SemanticAttributes.NetTransportValues.IP_TCP
   }
 
-  override fun getSockPeerAddr(request: ApplicationRequest): String? {
-    val remote = request.local.remoteHost
-    if ("unknown" != remote && isIpAddress(remote)) {
-      return remote
-    }
-    return null
-  }
+  override fun getProtocolName(request: ApplicationRequest): String? =
+    if (request.httpVersion.startsWith("HTTP/")) "http" else null
+
+  override fun getProtocolVersion(request: ApplicationRequest): String? =
+    if (request.httpVersion.startsWith("HTTP/")) request.httpVersion.substring("HTTP/".length) else null
 
   override fun getHostName(request: ApplicationRequest): String {
     return request.local.host
@@ -29,5 +27,13 @@ internal class KtorNetServerAttributesGetter : NetServerAttributesGetter<Applica
 
   override fun getHostPort(request: ApplicationRequest): Int {
     return request.local.port
+  }
+
+  override fun getSockPeerAddr(request: ApplicationRequest): String? {
+    val remote = request.local.remoteHost
+    if ("unknown" != remote && isIpAddress(remote)) {
+      return remote
+    }
+    return null
   }
 }

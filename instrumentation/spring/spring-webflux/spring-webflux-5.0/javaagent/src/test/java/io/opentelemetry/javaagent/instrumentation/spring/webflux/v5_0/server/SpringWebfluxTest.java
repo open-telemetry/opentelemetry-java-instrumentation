@@ -13,7 +13,6 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEP
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_FLAVOR;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH;
@@ -114,6 +113,8 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NET_TRANSPORT, IP_TCP),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
@@ -123,7 +124,6 @@ public class SpringWebfluxTest {
                             equalTo(HTTP_METHOD, "GET"),
                             equalTo(HTTP_STATUS_CODE, 200),
                             equalTo(HTTP_SCHEME, "http"),
-                            equalTo(HTTP_FLAVOR, "1.1"),
                             satisfies(HTTP_USER_AGENT, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
                             satisfies(
@@ -238,6 +238,8 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NET_TRANSPORT, IP_TCP),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
@@ -247,7 +249,6 @@ public class SpringWebfluxTest {
                             equalTo(HTTP_METHOD, "GET"),
                             equalTo(HTTP_STATUS_CODE, 200),
                             equalTo(HTTP_SCHEME, "http"),
-                            equalTo(HTTP_FLAVOR, "1.1"),
                             satisfies(HTTP_USER_AGENT, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
                             satisfies(
@@ -357,6 +358,8 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NET_TRANSPORT, IP_TCP),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
@@ -366,7 +369,6 @@ public class SpringWebfluxTest {
                             equalTo(HTTP_METHOD, "GET"),
                             equalTo(HTTP_STATUS_CODE, 200),
                             equalTo(HTTP_SCHEME, "http"),
-                            equalTo(HTTP_FLAVOR, "1.1"),
                             satisfies(HTTP_USER_AGENT, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
                             satisfies(
@@ -441,6 +443,8 @@ public class SpringWebfluxTest {
                         .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
                             equalTo(NET_TRANSPORT, IP_TCP),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
@@ -450,7 +454,6 @@ public class SpringWebfluxTest {
                             equalTo(HTTP_METHOD, "GET"),
                             equalTo(HTTP_STATUS_CODE, 404),
                             equalTo(HTTP_SCHEME, "http"),
-                            equalTo(HTTP_FLAVOR, "1.1"),
                             satisfies(HTTP_USER_AGENT, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/**"),
                             satisfies(
@@ -508,6 +511,8 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NET_TRANSPORT, IP_TCP),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
@@ -517,7 +522,6 @@ public class SpringWebfluxTest {
                             equalTo(HTTP_METHOD, "POST"),
                             equalTo(HTTP_STATUS_CODE, 202),
                             equalTo(HTTP_SCHEME, "http"),
-                            equalTo(HTTP_FLAVOR, "1.1"),
                             satisfies(HTTP_USER_AGENT, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/echo"),
                             satisfies(
@@ -560,6 +564,8 @@ public class SpringWebfluxTest {
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
                             equalTo(NET_TRANSPORT, IP_TCP),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
@@ -569,7 +575,6 @@ public class SpringWebfluxTest {
                             equalTo(HTTP_METHOD, "GET"),
                             equalTo(HTTP_STATUS_CODE, 500),
                             equalTo(HTTP_SCHEME, "http"),
-                            equalTo(HTTP_FLAVOR, "1.1"),
                             satisfies(HTTP_USER_AGENT, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
                             satisfies(
@@ -651,6 +656,8 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NET_TRANSPORT, IP_TCP),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
@@ -660,7 +667,6 @@ public class SpringWebfluxTest {
                             equalTo(HTTP_METHOD, "GET"),
                             equalTo(HTTP_STATUS_CODE, 307),
                             equalTo(HTTP_SCHEME, "http"),
-                            equalTo(HTTP_FLAVOR, "1.1"),
                             satisfies(HTTP_USER_AGENT, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/double-greet-redirect"),
                             satisfies(
@@ -691,6 +697,8 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NET_TRANSPORT, IP_TCP),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
@@ -700,7 +708,6 @@ public class SpringWebfluxTest {
                             equalTo(HTTP_METHOD, "GET"),
                             equalTo(HTTP_STATUS_CODE, 200),
                             equalTo(HTTP_SCHEME, "http"),
-                            equalTo(HTTP_FLAVOR, "1.1"),
                             satisfies(HTTP_USER_AGENT, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/double-greet"),
                             satisfies(
@@ -754,6 +761,8 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NET_TRANSPORT, IP_TCP),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
@@ -763,7 +772,6 @@ public class SpringWebfluxTest {
                             equalTo(HTTP_METHOD, "GET"),
                             equalTo(HTTP_STATUS_CODE, 200),
                             equalTo(HTTP_SCHEME, "http"),
-                            equalTo(HTTP_FLAVOR, "1.1"),
                             satisfies(HTTP_USER_AGENT, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
                             satisfies(

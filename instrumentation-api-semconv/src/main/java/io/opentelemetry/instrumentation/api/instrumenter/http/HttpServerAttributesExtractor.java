@@ -90,7 +90,6 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    internalSet(attributes, SemanticAttributes.HTTP_FLAVOR, getter.getFlavor(request));
     String forwardedProto = forwardedProto(request);
     String value = forwardedProto != null ? forwardedProto : getter.getScheme(request);
     internalSet(attributes, SemanticAttributes.HTTP_SCHEME, value);

@@ -25,6 +25,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -579,10 +580,14 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_METHOD, method);
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_STATUS_CODE, endpoint.status);
 
-          if (attrs.get(SemanticAttributes.HTTP_FLAVOR) != null) {
+          if (attrs.get(NetAttributes.NET_PROTOCOL_NAME) != null) {
+            assertThat(attrs).containsEntry(NetAttributes.NET_PROTOCOL_NAME, "http");
+          }
+          if (attrs.get(NetAttributes.NET_PROTOCOL_VERSION) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
-                    SemanticAttributes.HTTP_FLAVOR, entry -> assertThat(entry).isIn("1.1", "2.0"));
+                    NetAttributes.NET_PROTOCOL_VERSION,
+                    entry -> assertThat(entry).isIn("1.1", "2.0"));
           }
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_USER_AGENT, TEST_USER_AGENT);
 

@@ -22,6 +22,26 @@ final class GrizzlyNetAttributesGetter implements NetServerAttributesGetter<Http
 
   @Nullable
   @Override
+  public String getProtocolName(HttpRequestPacket request) {
+    String protocol = request.getProtocolString();
+    if (protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(HttpRequestPacket request) {
+    String protocol = request.getProtocolString();
+    if (protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getHostName(HttpRequestPacket request) {
     return request.getLocalHost();
   }
