@@ -17,4 +17,6 @@ dependencies {
   implementation(project(":instrumentation:oracle-ucp-11.2:library"))
 
   testImplementation(project(":instrumentation:oracle-ucp-11.2:testing"))
+
+  latestDepTestLibrary("com.oracle.database.jdbc:ucp:21.9.0.0")
 }
