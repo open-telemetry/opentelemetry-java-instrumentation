@@ -11,6 +11,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
@@ -19,6 +20,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvents;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -49,21 +51,42 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     Context parentContext = parentContextAttr.get();
 
     if (msg instanceof FullHttpResponse) {
-      HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
-      instrumenter.end(context, request, (HttpResponse) msg, null);
-      contextAttr.set(null);
-      parentContextAttr.set(null);
+      FullHttpResponse response = (FullHttpResponse) msg;
+      if (response.status().equals(HttpResponseStatus.SWITCHING_PROTOCOLS)) {
+        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).get();
+        ProtocolSpecificEvents.SWITCHING_PROTOCOLS.addEvent(
+            context, request != null ? request.request() : null, response);
+      } else {
+        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
+        instrumenter.end(context, request, (HttpResponse) msg, null);
+        contextAttr.set(null);
+        parentContextAttr.set(null);
+      }
     } else if (msg instanceof HttpResponse) {
+      HttpResponse response = (HttpResponse) msg;
+      if (response.status().equals(HttpResponseStatus.SWITCHING_PROTOCOLS)) {
+        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).get();
+        ProtocolSpecificEvents.SWITCHING_PROTOCOLS.addEvent(
+            context, request != null ? request.request() : null, response);
+      }
+      // HTTP 101 proto switch note: netty sends EmptyLastHttpContent upon proto upgrade;
+      // setting this here ensures we can see in the next if-block (LastHttpContent) whether
+      // the latest http status was indeed 101 or something else.
+
       // Headers before body have been received, store them to use when finishing the span.
       ctx.channel().attr(HTTP_CLIENT_RESPONSE).set((HttpResponse) msg);
     } else if (msg instanceof LastHttpContent) {
-      // Not a FullHttpResponse so this is content that has been received after headers.
-      // Finish the span using what we stored in attrs.
-      HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
-      HttpResponse response = ctx.channel().attr(HTTP_CLIENT_RESPONSE).getAndSet(null);
-      instrumenter.end(context, request, response, null);
-      contextAttr.set(null);
-      parentContextAttr.set(null);
+      HttpResponse responseTest = ctx.channel().attr(HTTP_CLIENT_RESPONSE).get();
+      if (responseTest == null
+          || !responseTest.status().equals(HttpResponseStatus.SWITCHING_PROTOCOLS)) {
+        // Not a FullHttpResponse so this is content that has been received after headers.
+        // Finish the span using what we stored in attrs.
+        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
+        HttpResponse response = ctx.channel().attr(HTTP_CLIENT_RESPONSE).getAndSet(null);
+        instrumenter.end(context, request, response, null);
+        contextAttr.set(null);
+        parentContextAttr.set(null);
+      }
     }
 
     // We want the callback in the scope of the parent, not the client span

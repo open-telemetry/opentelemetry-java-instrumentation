@@ -87,7 +87,6 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     while ((serverContext = serverContexts.pollFirst()) != null) {
       instrumenter.end(serverContext.context(), serverContext.request(), null, null);
     }
-    super.channelInactive(ctx);
   }
 
   private static <T> Deque<T> getOrCreate(Channel channel, AttributeKey<Deque<T>> key) {
