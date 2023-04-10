@@ -21,6 +21,9 @@ public class UndertowInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new HandlerInstrumentation(), new HttpServerExchangeInstrumentation());
+    return asList(
+        new HandlerInstrumentation(),
+        new HttpServerExchangeInstrumentation(),
+        new HttpTransferEncodingInstrumentation());
   }
 }

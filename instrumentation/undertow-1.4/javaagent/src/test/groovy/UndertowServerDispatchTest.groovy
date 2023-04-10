@@ -35,6 +35,11 @@ class UndertowServerDispatchTest extends HttpServerTest<Undertow> implements Age
   }
 
   @Override
+  boolean hasResponseCustomizer(ServerEndpoint endpoint) {
+    true
+  }
+
+  @Override
   Undertow startServer(int port) {
     Undertow server = Undertow.builder()
       .addHttpListener(port, "localhost")
