@@ -72,35 +72,30 @@ public final class ProcessResource {
 
       attributes.put(ResourceAttributes.PROCESS_EXECUTABLE_PATH, executablePath.toString());
 
-      List<String> commandArgs = new ArrayList<>();
-      commandArgs.add(executablePath.toString());
-      // sun.java.command isn't well document and may not be available on all systems.
-      String javaCommand = System.getProperty("sun.java.command");
-
-      String[] args = ProcessArguments.getProcessArguments(); // Only Java 9+ but does everything.
-      if (args.length == 0 && javaCommand != null) {
-        commandArgs.addAll(runtime.getInputArguments()); // Only includes VM arguments
-        args = javaCommand.split(" ");
-        if (args.length > 0) {
-          // TODO: add handling for windows paths.
-          if (args[0].startsWith("/")) {
-            // We are dealing with a `java -jar /path/to/some.jar` situation and need to add
-            commandArgs.add("-jar");
-          }
+      String[] args = ProcessArguments.getProcessArguments();
+      // This will only work with Java 9+ but provides everything except the executablePath.
+      if (args.length > 0) {
+        List<String> commandArgs = new ArrayList<>(args.length + 1);
+        commandArgs.add(executablePath.toString());
+        commandArgs.addAll(Arrays.asList(args));
+        attributes.put(ResourceAttributes.PROCESS_COMMAND_ARGS, commandArgs);
+      } else { // Java 8
+        StringBuilder commandLine = new StringBuilder(executablePath);
+        for (String arg : runtime.getInputArguments()) {
+          commandLine.append(' ').append(arg);
         }
+        // sun.java.command isn't well document and may not be available on all systems.
+        String javaCommand = System.getProperty("sun.java.command");
+        if (javaCommand != null) {
+          // TODO: add handling for windows paths.
+          if (javaCommand.startsWith("/")) {
+            // We are dealing with a `java -jar /path/to/some.jar` situation and need to add
+            javaCommand = "-jar " + javaCommand;
+          }
+          commandLine.append(' ').append(javaCommand);
+        }
+        attributes.put(ResourceAttributes.PROCESS_COMMAND_LINE, commandLine.toString());
       }
-      commandArgs.addAll(Arrays.asList(args));
-      attributes.put(ResourceAttributes.PROCESS_COMMAND_ARGS, commandArgs);
-
-      // TODO: The following code for command_line should be removed as command_args is preferred.
-      StringBuilder commandLine = new StringBuilder(executablePath);
-      for (String arg : runtime.getInputArguments()) {
-        commandLine.append(' ').append(arg);
-      }
-      if (javaCommand != null) {
-        commandLine.append(' ').append(javaCommand);
-      }
-      attributes.put(ResourceAttributes.PROCESS_COMMAND_LINE, commandLine.toString());
     }
 
     return Resource.create(attributes.build(), ResourceAttributes.SCHEMA_URL);
