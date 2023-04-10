@@ -38,6 +38,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
 
   def setupSpec() {
     startRabbit()
+    connectionFactory.setAutomaticRecoveryEnabled(false)
   }
 
   def cleanupSpec() {
@@ -277,9 +278,9 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
 
   def "test spring rabbit"() {
     setup:
-    def connectionFactory = new CachingConnectionFactory(connectionFactory)
-    AmqpAdmin admin = new RabbitAdmin(connectionFactory)
-    AmqpTemplate template = new RabbitTemplate(connectionFactory)
+    def cachingConnectionFactory = new CachingConnectionFactory(connectionFactory)
+    AmqpAdmin admin = new RabbitAdmin(cachingConnectionFactory)
+    AmqpTemplate template = new RabbitTemplate(cachingConnectionFactory)
 
     def queue = new Queue("some-routing-queue", false, true, true, null)
     runWithSpan("producer parent") {
@@ -316,6 +317,9 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
         rabbitSpan(it, 1, "<default>", "some-routing-queue", "receive", queue.name, span(0), producerSpan)
       }
     }
+
+    cleanup:
+    cachingConnectionFactory.destroy()
   }
 
   def "capture message header as span attributes"() {
