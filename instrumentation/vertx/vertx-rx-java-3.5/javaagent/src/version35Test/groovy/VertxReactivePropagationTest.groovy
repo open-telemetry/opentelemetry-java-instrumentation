@@ -75,7 +75,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" "/listProducts"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
@@ -169,7 +169,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
               "$SemanticAttributes.HTTP_METHOD" "GET"
               "$SemanticAttributes.HTTP_STATUS_CODE" 200
               "$SemanticAttributes.HTTP_SCHEME" "http"
-              "$SemanticAttributes.HTTP_USER_AGENT" String
+              "$SemanticAttributes.USER_AGENT_ORIGINAL" String
               "$SemanticAttributes.HTTP_ROUTE" "/listProducts"
               "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
               "${TEST_REQUEST_ID_ATTRIBUTE}" requestId

@@ -95,10 +95,11 @@ public class AwsLambdaStreamWrapperHttpPropagationTest {
                                 OpenTelemetryAssertions.assertThat(attrs)
                                     .containsOnly(
                                         entry(
-                                            ResourceAttributes.FAAS_ID,
+                                            ResourceAttributes.CLOUD_RESOURCE_ID,
                                             "arn:aws:lambda:us-east-1:123456789:function:test"),
                                         entry(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                                        entry(SemanticAttributes.FAAS_EXECUTION, "1-22-333")))));
+                                        entry(
+                                            SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333")))));
   }
 
   @Test
@@ -135,10 +136,11 @@ public class AwsLambdaStreamWrapperHttpPropagationTest {
                                 OpenTelemetryAssertions.assertThat(attrs)
                                     .containsOnly(
                                         entry(
-                                            ResourceAttributes.FAAS_ID,
+                                            ResourceAttributes.CLOUD_RESOURCE_ID,
                                             "arn:aws:lambda:us-east-1:123456789:function:test"),
                                         entry(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                                        entry(SemanticAttributes.FAAS_EXECUTION, "1-22-333")))));
+                                        entry(
+                                            SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333")))));
   }
 
   public static final class TestRequestHandler implements RequestStreamHandler {

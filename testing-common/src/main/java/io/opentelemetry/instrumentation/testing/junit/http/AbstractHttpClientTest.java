@@ -943,12 +943,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_METHOD)) {
                 assertThat(attrs).containsEntry(SemanticAttributes.HTTP_METHOD, method);
               }
-              if (httpClientAttributes.contains(SemanticAttributes.HTTP_USER_AGENT)) {
+              if (httpClientAttributes.contains(SemanticAttributes.USER_AGENT_ORIGINAL)) {
                 String userAgent = options.getUserAgent();
-                if (userAgent != null || attrs.get(SemanticAttributes.HTTP_USER_AGENT) != null) {
+                if (userAgent != null
+                    || attrs.get(SemanticAttributes.USER_AGENT_ORIGINAL) != null) {
                   assertThat(attrs)
                       .hasEntrySatisfying(
-                          SemanticAttributes.HTTP_USER_AGENT,
+                          SemanticAttributes.USER_AGENT_ORIGINAL,
                           actual -> {
                             if (userAgent != null) {
                               assertThat(actual).startsWith(userAgent);
@@ -993,7 +994,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     attributes.add(NetAttributes.NET_PROTOCOL_VERSION);
     attributes.add(SemanticAttributes.HTTP_URL);
     attributes.add(SemanticAttributes.HTTP_METHOD);
-    attributes.add(SemanticAttributes.HTTP_USER_AGENT);
+    attributes.add(SemanticAttributes.USER_AGENT_ORIGINAL);
     return attributes;
   }
 

@@ -291,7 +291,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         "$SemanticAttributes.HTTP_TARGET" fullUrl.getPath() + (fullUrl.getQuery() != null ? "?" + fullUrl.getQuery() : "")
         "$SemanticAttributes.HTTP_METHOD" method
         "$SemanticAttributes.HTTP_STATUS_CODE" statusCode
-        "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
+        "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
         "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
         "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         // Optional

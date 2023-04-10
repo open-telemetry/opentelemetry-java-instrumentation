@@ -589,7 +589,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                     NetAttributes.NET_PROTOCOL_VERSION,
                     entry -> assertThat(entry).isIn("1.1", "2.0"));
           }
-          assertThat(attrs).containsEntry(SemanticAttributes.HTTP_USER_AGENT, TEST_USER_AGENT);
+          assertThat(attrs).containsEntry(SemanticAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT);
 
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_SCHEME, "http");
           if (endpoint != INDEXED_CHILD) {

@@ -92,7 +92,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
@@ -163,7 +163,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
@@ -213,7 +213,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
@@ -311,7 +311,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
@@ -395,7 +395,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 500
-            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
@@ -458,7 +458,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 404
-            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
