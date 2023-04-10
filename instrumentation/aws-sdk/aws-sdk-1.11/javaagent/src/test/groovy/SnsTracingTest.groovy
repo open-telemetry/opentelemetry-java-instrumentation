@@ -196,7 +196,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
-            "http.user_agent" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.protocol.name" "http"
