@@ -74,24 +74,25 @@ public final class ProcessResource {
 
       List<String> commandArgs = new ArrayList<>();
       commandArgs.add(executablePath.toString());
-      commandArgs.addAll(runtime.getInputArguments()); // Only includes VM arguments
-      // sun.java.command doesn't seem to be well document or official, but there
-      // doesn't seem to be any better way to get this consistently without more complexity.
+      // sun.java.command isn't well document and may not be available on all systems.
       String javaCommand = System.getProperty("sun.java.command");
-      if (javaCommand != null) {
-        String[] args = javaCommand.split(" ");
+
+      String[] args = ProcessArguments.getProcessArguments(); // Only Java 9+ but does everything.
+      if (args.length == 0 && javaCommand != null) {
+        commandArgs.addAll(runtime.getInputArguments()); // Only includes VM arguments
+        args = javaCommand.split(" ");
         if (args.length > 0) {
           // TODO: add handling for windows paths.
           if (args[0].startsWith("/")) {
             // We are dealing with a `java -jar /path/to/some.jar` situation and need to add
             commandArgs.add("-jar");
           }
-          commandArgs.addAll(Arrays.asList(args));
         }
       }
+      commandArgs.addAll(Arrays.asList(args));
       attributes.put(ResourceAttributes.PROCESS_COMMAND_ARGS, commandArgs);
 
-      // TODO: The following for command_line should be removed as command_args is preferred.
+      // TODO: The following code for command_line should be removed as command_args is preferred.
       StringBuilder commandLine = new StringBuilder(executablePath);
       for (String arg : runtime.getInputArguments()) {
         commandLine.append(' ').append(arg);
