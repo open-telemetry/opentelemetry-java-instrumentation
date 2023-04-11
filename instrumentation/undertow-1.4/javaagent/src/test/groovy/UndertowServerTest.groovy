@@ -113,6 +113,11 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
     attributes
   }
 
+  @Override
+  boolean hasResponseCustomizer(ServerEndpoint endpoint) {
+    true
+  }
+
   def "test send response"() {
     setup:
     def uri = address.resolve("sendResponse")
