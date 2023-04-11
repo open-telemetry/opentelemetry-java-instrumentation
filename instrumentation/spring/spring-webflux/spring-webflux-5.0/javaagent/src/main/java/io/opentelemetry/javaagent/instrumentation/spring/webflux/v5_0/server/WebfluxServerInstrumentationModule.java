@@ -24,7 +24,8 @@ public class WebfluxServerInstrumentationModule extends InstrumentationModule {
     return asList(
         new DispatcherHandlerInstrumentation(),
         new HandlerAdapterInstrumentation(),
-        //new DefaultRouterFunctionInstrumentation(),
-        new DefaultNestedRouterFunctionInstrumentation());
+        new DefaultRouterFunctionInstrumentation()
+        //        new DefaultNestedRouterFunctionInstrumentation()
+        );
   }
 }
