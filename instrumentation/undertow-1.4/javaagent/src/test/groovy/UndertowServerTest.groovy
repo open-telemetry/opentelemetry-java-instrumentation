@@ -148,7 +148,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "$SemanticAttributes.HTTP_TARGET" uri.getPath()
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_TARGET" "/sendResponse"
@@ -203,7 +203,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "$SemanticAttributes.HTTP_TARGET" uri.getPath()
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_TARGET" "/sendResponseWithException"

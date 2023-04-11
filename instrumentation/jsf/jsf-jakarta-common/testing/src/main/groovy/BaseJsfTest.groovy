@@ -97,7 +97,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_TARGET" "/jetty-context/" + path
-            "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_ROUTE" "/jetty-context/" + route
             "$SemanticAttributes.HTTP_CLIENT_IP" { it == null || it == TEST_CLIENT_IP }

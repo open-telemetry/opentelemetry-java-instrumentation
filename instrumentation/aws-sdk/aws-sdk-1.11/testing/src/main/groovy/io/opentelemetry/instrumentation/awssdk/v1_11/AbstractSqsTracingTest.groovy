@@ -124,7 +124,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.method" "POST"
             "http.status_code" 200
             "http.url" "http://localhost:$sqsPort"
-            "http.user_agent" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP

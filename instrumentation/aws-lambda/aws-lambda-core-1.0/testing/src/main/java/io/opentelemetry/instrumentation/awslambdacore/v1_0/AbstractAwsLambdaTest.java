@@ -70,7 +70,8 @@ public abstract class AbstractAwsLambdaTest {
                                     assertThat(attrs)
                                         .containsOnly(
                                             entry(
-                                                SemanticAttributes.FAAS_EXECUTION, "1-22-333")))));
+                                                SemanticAttributes.FAAS_INVOCATION_ID,
+                                                "1-22-333")))));
   }
 
   @Test
@@ -92,7 +93,8 @@ public abstract class AbstractAwsLambdaTest {
                                     assertThat(attrs)
                                         .containsOnly(
                                             entry(
-                                                SemanticAttributes.FAAS_EXECUTION, "1-22-333")))));
+                                                SemanticAttributes.FAAS_INVOCATION_ID,
+                                                "1-22-333")))));
   }
 
   @Test
@@ -131,6 +133,7 @@ public abstract class AbstractAwsLambdaTest {
                                     assertThat(attrs)
                                         .containsOnly(
                                             entry(
-                                                SemanticAttributes.FAAS_EXECUTION, "1-22-333")))));
+                                                SemanticAttributes.FAAS_INVOCATION_ID,
+                                                "1-22-333")))));
   }
 }

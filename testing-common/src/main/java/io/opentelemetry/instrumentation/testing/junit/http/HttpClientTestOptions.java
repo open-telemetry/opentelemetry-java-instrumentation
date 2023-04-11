@@ -31,7 +31,7 @@ public abstract class HttpClientTestOptions {
                   SemanticAttributes.NET_PEER_PORT,
                   SemanticAttributes.HTTP_URL,
                   SemanticAttributes.HTTP_METHOD,
-                  SemanticAttributes.HTTP_USER_AGENT)));
+                  SemanticAttributes.USER_AGENT_ORIGINAL)));
 
   public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =
       (uri, method) -> method;

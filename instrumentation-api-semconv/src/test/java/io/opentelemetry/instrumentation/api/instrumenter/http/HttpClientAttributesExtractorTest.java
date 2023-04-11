@@ -142,7 +142,7 @@ class HttpClientAttributesExtractorTest {
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_URL, "http://github.com"),
-            entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
+            entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")),

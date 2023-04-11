@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
@@ -60,7 +61,7 @@ class AwsSpan {
         "http.method" "POST"
         "http.status_code" 200
         "http.url" String
-        "http.user_agent" { it == null || it instanceof String }
+        "$SemanticAttributes.USER_AGENT_ORIGINAL" { it == null || it instanceof String }
         "http.request_content_length" { it == null || it instanceof Long }
         "http.response_content_length" { it == null || it instanceof Long }
         "net.protocol.name" "http"

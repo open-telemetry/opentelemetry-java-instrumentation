@@ -89,7 +89,7 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_TARGET" "/api/firstModule/unit/unitOne"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_ROUTE" "/api/{module}/unit/{unitId}"
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP

@@ -66,7 +66,7 @@ public class SparkJavaBasedTest {
                                 equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                 equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
                                 satisfies(
-                                    SemanticAttributes.HTTP_USER_AGENT,
+                                    SemanticAttributes.USER_AGENT_ORIGINAL,
                                     val -> val.isInstanceOf(String.class)),
                                 equalTo(SemanticAttributes.HTTP_ROUTE, "/param/:param"),
                                 equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),

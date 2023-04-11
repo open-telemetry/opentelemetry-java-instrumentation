@@ -106,7 +106,7 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
             "$SemanticAttributes.NET_SOCK_HOST_PORT" { it instanceof Long || it == null }
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_TARGET" "/$path"
             "$SemanticAttributes.HTTP_ROUTE" "/$route"

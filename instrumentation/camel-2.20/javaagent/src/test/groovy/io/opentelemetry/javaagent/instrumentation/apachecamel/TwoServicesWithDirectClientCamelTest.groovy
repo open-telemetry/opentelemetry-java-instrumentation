@@ -125,7 +125,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_TARGET" "/serviceTwo"
-            "$SemanticAttributes.HTTP_USER_AGENT" "Jakarta Commons-HttpClient/3.1"
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" "Jakarta Commons-HttpClient/3.1"
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
             "$SemanticAttributes.HTTP_ROUTE" "/serviceTwo"
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP

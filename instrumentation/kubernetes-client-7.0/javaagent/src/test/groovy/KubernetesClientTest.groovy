@@ -196,7 +196,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
       attributes {
         "$SemanticAttributes.HTTP_URL" url
         "$SemanticAttributes.HTTP_METHOD" "GET"
-        "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
+        "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
         "$SemanticAttributes.HTTP_STATUS_CODE" statusCode
         "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
