@@ -147,7 +147,7 @@ public abstract class AbstractR2dbcStatementTest {
                               .flatMapMany(result -> result.map((row, metadata) -> ""))
                               .concatWith(Mono.from(connection.close()).cast(String.class)))
                   .doFinally(e -> getTesting().runWithSpan("child", () -> {}))
-                  .blockLast();
+                  .blockLast(Duration.ofMinutes(1));
             });
 
     getTesting()
