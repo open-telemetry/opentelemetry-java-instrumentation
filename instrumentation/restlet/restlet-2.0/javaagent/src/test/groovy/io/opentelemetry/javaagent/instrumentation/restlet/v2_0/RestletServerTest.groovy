@@ -23,4 +23,9 @@ class RestletServerTest extends AbstractRestletServerTest implements AgentTestTr
     }
   }
 
+  @Override
+  boolean hasResponseCustomizer(ServerEndpoint endpoint) {
+    return true
+  }
+
 }
