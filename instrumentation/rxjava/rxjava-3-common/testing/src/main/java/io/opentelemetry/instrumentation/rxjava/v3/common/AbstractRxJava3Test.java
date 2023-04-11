@@ -501,7 +501,7 @@ public abstract class AbstractRxJava3Test {
   public void basicMaybeCancel() {
     createParentSpan(
         () ->
-            Maybe.just(1).map(this::addOne).toFlowable().subscribe(CancellingSubscriber.INSTANCE));
+            Maybe.just(1).toFlowable().map(this::addOne).subscribe(CancellingSubscriber.INSTANCE));
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -527,7 +527,7 @@ public abstract class AbstractRxJava3Test {
   public void basicSingleCancel() {
     createParentSpan(
         () ->
-            Single.just(1).map(this::addOne).toFlowable().subscribe(CancellingSubscriber.INSTANCE));
+            Single.just(1).toFlowable().map(this::addOne).subscribe(CancellingSubscriber.INSTANCE));
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -554,8 +554,8 @@ public abstract class AbstractRxJava3Test {
     createParentSpan(
         () ->
             Observable.just(1)
-                .map(this::addOne)
                 .toFlowable(BackpressureStrategy.LATEST)
+                .map(this::addOne)
                 .subscribe(CancellingSubscriber.INSTANCE));
     testing()
         .waitAndAssertTraces(
