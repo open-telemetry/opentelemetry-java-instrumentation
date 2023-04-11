@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.AkkaHttpServerSingletons.errorResponse;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.AkkaHttpServerSingletons.instrumenter;
 
+import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import akka.stream.Attributes;
@@ -22,8 +23,10 @@ import akka.stream.stage.GraphStage;
 import akka.stream.stage.GraphStageLogic;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
 
 public class AkkaFlowWrapper
     extends GraphStage<BidiShape<HttpResponse, HttpResponse, HttpRequest, HttpRequest>> {
@@ -134,6 +137,17 @@ public class AkkaFlowWrapper
                 // this may happen on a different thread from the one that opened the scope
                 // actor instrumentation will take care of the leaked scopes
                 tracingRequest.scope.close();
+
+                // akka response is immutable so the customizer just captures the added headers
+                AkkaHttpResponseMutator responseMutator = new AkkaHttpResponseMutator();
+                HttpServerResponseCustomizerHolder.getCustomizer()
+                    .customize(tracingRequest.context, response, responseMutator);
+                // build a new response with the added headers
+                List<HttpHeader> headers = responseMutator.getHeaders();
+                if (!headers.isEmpty()) {
+                  response = (HttpResponse) response.addHeaders(headers);
+                }
+
                 instrumenter().end(tracingRequest.context, tracingRequest.request, response, null);
               }
               push(responseOut, response);
