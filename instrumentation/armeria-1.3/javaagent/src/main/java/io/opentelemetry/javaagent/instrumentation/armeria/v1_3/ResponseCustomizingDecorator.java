@@ -17,9 +17,9 @@ import com.linecorp.armeria.server.SimpleDecoratingHttpService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 
-class ResponseCustomizerDecorator extends SimpleDecoratingHttpService {
+class ResponseCustomizingDecorator extends SimpleDecoratingHttpService {
 
-  ResponseCustomizerDecorator(HttpService delegate) {
+  ResponseCustomizingDecorator(HttpService delegate) {
     super(delegate);
   }
 
