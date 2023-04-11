@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class MyFacesInstrumentationModule extends InstrumentationModule {
   public MyFacesInstrumentationModule() {
-    super("myfaces", "myfaces-1.2");
+    super("jsf-myfaces", "jsf-myfaces-1.2");
   }
 
   @Override

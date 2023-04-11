@@ -29,7 +29,7 @@ import java.util.List;
 public class LibertyInstrumentationModule extends InstrumentationModule {
 
   public LibertyInstrumentationModule() {
-    super("liberty");
+    super("liberty", "liberty-20.0");
   }
 
   @Override
