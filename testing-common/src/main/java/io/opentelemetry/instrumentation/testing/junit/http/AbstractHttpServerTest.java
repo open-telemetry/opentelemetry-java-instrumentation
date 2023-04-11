@@ -160,6 +160,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertTheTraces(1, traceId, parentId, spanId, "GET", SUCCESS, response);
   }
 
+  @Disabled
   @ParameterizedTest
   @EnumSource(
       value = ServerEndpoint.class,

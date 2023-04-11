@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.server.HandlerFunction;
+import org.springframework.web.reactive.function.server.RequestPredicate;
 import org.springframework.web.reactive.function.server.RouterFunction;
 
 public class RouteOnSuccess implements Consumer<HandlerFunction<?>> {
@@ -24,8 +25,12 @@ public class RouteOnSuccess implements Consumer<HandlerFunction<?>> {
 
   @Nullable private final String route;
 
-  public RouteOnSuccess(RouterFunction<?> routerFunction) {
-    this.route = parseRoute(parsePredicateString(routerFunction));
+  public RouteOnSuccess(@Nullable RequestPredicate predicate, RouterFunction<?> routerFunction) {
+    String parsedRoute = parseRoute(parsePredicateString(routerFunction));
+    if (predicate != null) {
+      parsedRoute = predicate + parsedRoute;
+    }
+    this.route = parsedRoute;
   }
 
   @Override

@@ -5,13 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -24,7 +21,7 @@ import org.springframework.web.reactive.function.server.HandlerFunction;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import reactor.core.publisher.Mono;
 
-public class RouterFunctionInstrumentation implements TypeInstrumentation {
+public class DefaultRouterFunctionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -33,12 +30,8 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isAbstract())
-        .and(
-            extendsClass(
-                // TODO: this doesn't handle nested routes (DefaultNestedRouterFunction)
-                named(
-                    "org.springframework.web.reactive.function.server.RouterFunctions$DefaultRouterFunction")));
+    return named(
+        "org.springframework.web.reactive.function.server.RouterFunctions$DefaultRouterFunction");
   }
 
   @Override
@@ -67,7 +60,7 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false) Mono<HandlerFunction<?>> result,
         @Advice.Thrown Throwable throwable) {
       if (throwable == null) {
-        result = result.doOnNext(new RouteOnSuccess(thiz));
+        result = result.doOnNext(new RouteOnSuccess(null, thiz));
       }
     }
   }
