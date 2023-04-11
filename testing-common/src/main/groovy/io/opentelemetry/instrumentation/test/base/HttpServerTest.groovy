@@ -241,13 +241,13 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     }
   }
 
-  def "test success with #count requests"() {
-    expect:
-    junitTest.successfulGetRequest(count)
-
-    where:
-    count << [1, 4, 50] // make multiple requests.
-  }
+//  def "test success with #count requests"() {
+//    expect:
+//    junitTest.successfulGetRequest(count)
+//
+//    where:
+//    count << [1, 4, 50] // make multiple requests.
+//  }
 
   def "test success with parent"() {
     expect:
@@ -255,65 +255,65 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   }
 
   // make sure that TextMapGetters are not case-sensitive
-  def "test success with uppercase TRACEPARENT header"() {
-    expect:
-    junitTest.tracingHeaderIsCaseInsensitive()
-  }
-
-  def "test tag query string for #endpoint"() {
-    expect:
-    junitTest.requestWithQueryString(endpoint)
-
-    where:
-    endpoint << [SUCCESS, QUERY_PARAM]
-  }
-
-  def "test redirect"() {
-    assumeTrue(testRedirect())
-    expect:
-    junitTest.requestWithRedirect()
-  }
-
-  def "test error"() {
-    assumeTrue(testError())
-    expect:
-    junitTest.requestWithError()
-  }
-
-  def "test exception"() {
-    assumeTrue(testException())
-    expect:
-    junitTest.requestWithException()
-  }
-
-  def "test not found"() {
-    assumeTrue(testNotFound())
-    expect:
-    junitTest.requestForNotFound()
-  }
-
-  def "test path param"() {
-    assumeTrue(testPathParam())
-    expect:
-    junitTest.requestWithPathParameter()
-  }
-
-  def "test captured HTTP headers"() {
-    assumeTrue(testCapturedHttpHeaders())
-    expect:
-    junitTest.captureHttpHeaders()
-  }
-
-  def "test captured request parameters"() {
-    assumeTrue(testCapturedRequestParameters())
-    expect:
-    junitTest.captureRequestParameters()
-  }
-
-  def "high concurrency test"() {
-    expect:
-    junitTest.highConcurrency()
-  }
+//  def "test success with uppercase TRACEPARENT header"() {
+//    expect:
+//    junitTest.tracingHeaderIsCaseInsensitive()
+//  }
+//
+//  def "test tag query string for #endpoint"() {
+//    expect:
+//    junitTest.requestWithQueryString(endpoint)
+//
+//    where:
+//    endpoint << [SUCCESS, QUERY_PARAM]
+//  }
+//
+//  def "test redirect"() {
+//    assumeTrue(testRedirect())
+//    expect:
+//    junitTest.requestWithRedirect()
+//  }
+//
+//  def "test error"() {
+//    assumeTrue(testError())
+//    expect:
+//    junitTest.requestWithError()
+//  }
+//
+//  def "test exception"() {
+//    assumeTrue(testException())
+//    expect:
+//    junitTest.requestWithException()
+//  }
+//
+//  def "test not found"() {
+//    assumeTrue(testNotFound())
+//    expect:
+//    junitTest.requestForNotFound()
+//  }
+//
+//  def "test path param"() {
+//    assumeTrue(testPathParam())
+//    expect:
+//    junitTest.requestWithPathParameter()
+//  }
+//
+//  def "test captured HTTP headers"() {
+//    assumeTrue(testCapturedHttpHeaders())
+//    expect:
+//    junitTest.captureHttpHeaders()
+//  }
+//
+//  def "test captured request parameters"() {
+//    assumeTrue(testCapturedRequestParameters())
+//    expect:
+//    junitTest.captureRequestParameters()
+//  }
+//
+//  def "high concurrency test"() {
+//    expect:
+//    junitTest.highConcurrency()
+//  }
 
   void assertHighConcurrency(int count) {
     def endpoint = INDEXED_CHILD

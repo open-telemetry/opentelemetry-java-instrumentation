@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public enum ServerEndpoint {
-  SUCCESS("success", 200, "success"),
+  SUCCESS("test/success", 200, "success"),
   REDIRECT("redirect", 302, "/redirected"),
   ERROR("error-status", 500, "controller error"), // "error" is a special path for some frameworks
   EXCEPTION("exception", 500, "controller exception"),
