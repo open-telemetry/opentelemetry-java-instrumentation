@@ -27,12 +27,7 @@ import spock.lang.Unroll
 import javax.annotation.Nullable
 import java.util.concurrent.Callable
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.*
 import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
@@ -151,9 +146,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   /** A list of additional HTTP server span attributes extracted by the instrumentation per URI. */
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     [
-      SemanticAttributes.HTTP_ROUTE,
-      SemanticAttributes.NET_TRANSPORT,
-      SemanticAttributes.NET_SOCK_PEER_PORT
+        SemanticAttributes.HTTP_ROUTE,
+        SemanticAttributes.NET_TRANSPORT,
+        SemanticAttributes.NET_SOCK_PEER_PORT
     ] as Set
   }
 
@@ -225,13 +220,13 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     // the main trace assertion method to groovy to be able to call these assertions.
     @Override
     void assertTheTraces(
-      int size,
-      String traceId,
-      String parentId,
-      String spanId,
-      String method,
-      ServerEndpoint endpoint,
-      AggregatedHttpResponse response) {
+        int size,
+        String traceId,
+        String parentId,
+        String spanId,
+        String method,
+        ServerEndpoint endpoint,
+        AggregatedHttpResponse response) {
       HttpServerTest.this.assertTheTraces(size, traceId, parentId, spanId, method, endpoint, response)
     }
 
@@ -241,13 +236,13 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     }
   }
 
-//  def "test success with #count requests"() {
-//    expect:
-//    junitTest.successfulGetRequest(count)
-//
-//    where:
-//    count << [1, 4, 50] // make multiple requests.
-//  }
+  def "test success with #count requests"() {
+    expect:
+    junitTest.successfulGetRequest(count)
+
+    where:
+    count << [1, 4, 50] // make multiple requests.
+  }
 
   def "test success with parent"() {
     expect:
@@ -255,65 +250,65 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   }
 
   // make sure that TextMapGetters are not case-sensitive
-//  def "test success with uppercase TRACEPARENT header"() {
-//    expect:
-//    junitTest.tracingHeaderIsCaseInsensitive()
-//  }
-//
-//  def "test tag query string for #endpoint"() {
-//    expect:
-//    junitTest.requestWithQueryString(endpoint)
-//
-//    where:
-//    endpoint << [SUCCESS, QUERY_PARAM]
-//  }
-//
-//  def "test redirect"() {
-//    assumeTrue(testRedirect())
-//    expect:
-//    junitTest.requestWithRedirect()
-//  }
-//
-//  def "test error"() {
-//    assumeTrue(testError())
-//    expect:
-//    junitTest.requestWithError()
-//  }
-//
-//  def "test exception"() {
-//    assumeTrue(testException())
-//    expect:
-//    junitTest.requestWithException()
-//  }
-//
-//  def "test not found"() {
-//    assumeTrue(testNotFound())
-//    expect:
-//    junitTest.requestForNotFound()
-//  }
-//
-//  def "test path param"() {
-//    assumeTrue(testPathParam())
-//    expect:
-//    junitTest.requestWithPathParameter()
-//  }
-//
-//  def "test captured HTTP headers"() {
-//    assumeTrue(testCapturedHttpHeaders())
-//    expect:
-//    junitTest.captureHttpHeaders()
-//  }
-//
-//  def "test captured request parameters"() {
-//    assumeTrue(testCapturedRequestParameters())
-//    expect:
-//    junitTest.captureRequestParameters()
-//  }
-//
-//  def "high concurrency test"() {
-//    expect:
-//    junitTest.highConcurrency()
-//  }
+  def "test success with uppercase TRACEPARENT header"() {
+    expect:
+    junitTest.tracingHeaderIsCaseInsensitive()
+  }
+
+  def "test tag query string for #endpoint"() {
+    expect:
+    junitTest.requestWithQueryString(endpoint)
+
+    where:
+    endpoint << [SUCCESS, QUERY_PARAM]
+  }
+
+  def "test redirect"() {
+    assumeTrue(testRedirect())
+    expect:
+    junitTest.requestWithRedirect()
+  }
+
+  def "test error"() {
+    assumeTrue(testError())
+    expect:
+    junitTest.requestWithError()
+  }
+
+  def "test exception"() {
+    assumeTrue(testException())
+    expect:
+    junitTest.requestWithException()
+  }
+
+  def "test not found"() {
+    assumeTrue(testNotFound())
+    expect:
+    junitTest.requestForNotFound()
+  }
+
+  def "test path param"() {
+    assumeTrue(testPathParam())
+    expect:
+    junitTest.requestWithPathParameter()
+  }
+
+  def "test captured HTTP headers"() {
+    assumeTrue(testCapturedHttpHeaders())
+    expect:
+    junitTest.captureHttpHeaders()
+  }
+
+  def "test captured request parameters"() {
+    assumeTrue(testCapturedRequestParameters())
+    expect:
+    junitTest.captureRequestParameters()
+  }
+
+  def "high concurrency test"() {
+    expect:
+    junitTest.highConcurrency()
+  }
 
   void assertHighConcurrency(int count) {
     def endpoint = INDEXED_CHILD

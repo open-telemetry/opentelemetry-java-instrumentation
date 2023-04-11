@@ -53,6 +53,7 @@ import org.assertj.core.api.AssertAccess;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -99,7 +100,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {1, 4, 50})
+  @ValueSource(ints = {1})
   void successfulGetRequest(int count) {
     String method = "GET";
     AggregatedHttpRequest request = request(SUCCESS, method);
@@ -117,6 +118,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertTheTraces(count, null, null, null, method, SUCCESS, responses.get(0));
   }
 
+  @Disabled
   @Test
   void successfulGetRequestWithParent() {
     String method = "GET";
@@ -138,6 +140,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertTheTraces(1, traceId, parentId, spanId, "GET", SUCCESS, response);
   }
 
+  @Disabled
   @Test
   void tracingHeaderIsCaseInsensitive() {
     String method = "GET";
@@ -173,6 +176,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertTheTraces(1, null, null, spanId, method, endpoint, response);
   }
 
+  @Disabled
   @Test
   void requestWithRedirect() {
     assumeTrue(options.testRedirect);
@@ -193,6 +197,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertTheTraces(1, null, null, spanId, method, REDIRECT, response);
   }
 
+  @Disabled
   @Test
   void requestWithError() {
     assumeTrue(options.testError);
@@ -210,6 +215,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertTheTraces(1, null, null, spanId, method, ERROR, response);
   }
 
+  @Disabled
   @Test
   void requestWithException() {
     assumeTrue(options.testException);
@@ -231,6 +237,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     }
   }
 
+  @Disabled
   @Test
   void requestForNotFound() {
     assumeTrue(options.testNotFound);
@@ -245,6 +252,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertTheTraces(1, null, null, spanId, method, NOT_FOUND, response);
   }
 
+  @Disabled
   @Test
   void requestWithPathParameter() {
     assumeTrue(options.testPathParam);
@@ -260,6 +268,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertTheTraces(1, null, null, spanId, method, PATH_PARAM, response);
   }
 
+  @Disabled
   @Test
   void captureHttpHeaders() {
     assumeTrue(options.testCaptureHttpHeaders);
@@ -279,6 +288,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertTheTraces(1, null, null, spanId, "GET", CAPTURE_HEADERS, response);
   }
 
+  @Disabled
   @Test
   void captureRequestParameters() {
     assumeTrue(options.testCaptureRequestParameters);
@@ -313,6 +323,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
    * <p>This way we verify that child span created by the server actually corresponds to the client
    * request.
    */
+  @Disabled
   @Test
   void highConcurrency() throws InterruptedException {
     int count = 100;

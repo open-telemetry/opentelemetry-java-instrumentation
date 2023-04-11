@@ -30,11 +30,11 @@ public class RouteOnSuccess implements Consumer<HandlerFunction<?>> {
 
   @Override
   public void accept(HandlerFunction<?> handler) {
-    Context parentContext = Context.current();
     HttpRouteHolder.updateHttpRoute(
-        parentContext,
+        Context.current(),
         HttpRouteSource.CONTROLLER,
-        ServletContextPath.prepend(parentContext, route));
+        ServletContextPath::prepend,
+        route);
   }
 
   private static String parsePredicateString(RouterFunction<?> routerFunction) {
