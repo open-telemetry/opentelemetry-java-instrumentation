@@ -84,14 +84,11 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
         @Advice.This RouterFunction<?> thiz,
         @Advice.Return(readOnly = false) Mono<HandlerFunction<?>> result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
       scope.close();
-      instrumenter().end(context, thiz, null, throwable);
-
       if (throwable == null) {
         result = result.doOnNext(new RouteOnSuccess(thiz));
       }
