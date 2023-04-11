@@ -15,11 +15,16 @@ import java.lang.management.RuntimeMXBean;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /** Factory of a {@link Resource} which provides information about the current running process. */
 public final class ProcessResource {
 
   private static final Resource INSTANCE = buildResource();
+
+  // Note: This pattern doesn't support file paths with spaces in them.
+  private static final Pattern JAR_FILE_PATTERN =
+      Pattern.compile("^\\S+\\.(jar|war)", Pattern.CASE_INSENSITIVE);
 
   /**
    * Returns a factory for a {@link Resource} which provides information about the current running
@@ -87,10 +92,10 @@ public final class ProcessResource {
         // sun.java.command isn't well document and may not be available on all systems.
         String javaCommand = System.getProperty("sun.java.command");
         if (javaCommand != null) {
-          // TODO: add handling for windows paths.
-          if (javaCommand.startsWith("/")) {
-            // We are dealing with a `java -jar /path/to/some.jar` situation and need to add
-            javaCommand = "-jar " + javaCommand;
+          // This property doesn't include -jar when launching a jar directly.  Try to determine
+          // if that's the case and add it back in.
+          if (JAR_FILE_PATTERN.matcher(javaCommand).matches()) {
+            commandLine.append(" -jar");
           }
           commandLine.append(' ').append(javaCommand);
         }
