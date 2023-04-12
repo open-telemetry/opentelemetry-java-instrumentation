@@ -20,11 +20,12 @@ import java.util.regex.Pattern;
 /** Factory of a {@link Resource} which provides information about the current running process. */
 public final class ProcessResource {
 
-  private static final Resource INSTANCE = buildResource();
-
   // Note: This pattern doesn't support file paths with spaces in them.
+  // Important: This is statically used in buildResource, so must be declared/initialized first.
   private static final Pattern JAR_FILE_PATTERN =
       Pattern.compile("^\\S+\\.(jar|war)", Pattern.CASE_INSENSITIVE);
+
+  private static final Resource INSTANCE = buildResource();
 
   /**
    * Returns a factory for a {@link Resource} which provides information about the current running
