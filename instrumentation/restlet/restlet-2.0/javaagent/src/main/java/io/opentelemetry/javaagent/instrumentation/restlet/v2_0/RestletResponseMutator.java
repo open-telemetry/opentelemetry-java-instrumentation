@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.restlet.v2_0.internal.MessageAttributesA
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import java.util.Map;
 import org.restlet.Response;
-import org.restlet.data.Form;
+import org.restlet.util.Series;
 
 public enum RestletResponseMutator implements HttpServerResponseMutator<Response> {
   INSTANCE;
@@ -23,11 +23,19 @@ public enum RestletResponseMutator implements HttpServerResponseMutator<Response
       // should never happen in practice
       return;
     }
-    Form headers = (Form) attributes.computeIfAbsent(HEADERS_ATTRIBUTE, k -> new Form());
+    Series<?> headers = (Series<?>) attributes.get(HEADERS_ATTRIBUTE);
+    if (headers == null) {
+      headers = MessageAttributesAccessor.createHeaderSeries();
+      if (headers == null) {
+        // should never happen in practice; abort
+        return;
+      }
+      attributes.put(HEADERS_ATTRIBUTE, headers);
+    }
     String existing = headers.getValues(name);
     if (existing != null) {
       value = existing + "," + value;
     }
-    headers.set(name, value, /* ignoreCase= */ true);
+    MessageAttributesAccessor.setSeriesValue(headers, name, value);
   }
 }
