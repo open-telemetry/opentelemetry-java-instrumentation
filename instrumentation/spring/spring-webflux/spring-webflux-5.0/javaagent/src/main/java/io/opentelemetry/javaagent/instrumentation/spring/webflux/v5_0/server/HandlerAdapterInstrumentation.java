@@ -66,7 +66,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       Context parentContext = Context.current();
 
       HttpRouteHolder.updateHttpRoute(
-          parentContext, HttpRouteSource.CONTROLLER, httpRouteGetter(), exchange);
+          parentContext, HttpRouteSource.NESTED_CONTROLLER, httpRouteGetter(), exchange);
 
       if (handler == null) {
         return;
