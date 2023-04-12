@@ -5,7 +5,7 @@
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -134,7 +134,7 @@ public class RxJava3AsyncOperationEndStrategyTest {
 
       observer.dispose();
       verify(instrumenter).end(context, "request", null, null);
-      verify(span, times(0)).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+      verify(span, never()).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
     }
 
     @Test
@@ -150,7 +150,7 @@ public class RxJava3AsyncOperationEndStrategyTest {
       TestObserver<Void> observer = result.test();
 
       verifyNoInteractions(instrumenter);
-      verify(span, times(0)).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+      verify(span, never()).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
 
       observer.dispose();
 
@@ -191,15 +191,12 @@ public class RxJava3AsyncOperationEndStrategyTest {
 
     @Test
     void endsSpanOnAlreadyCompleted() {
-      UnicastProcessor<String> source = UnicastProcessor.create();
-      Maybe<String> maybe = source.firstElement();
-
       Maybe<?> result =
-          (Maybe<?>) underTest.end(instrumenter, Context.root(), "request", maybe, String.class);
+          (Maybe<?>)
+              underTest.end(
+                  instrumenter, Context.root(), "request", Maybe.just("response"), String.class);
       TestObserver<?> observer = result.test();
 
-      source.onNext("response");
-      source.onComplete();
       observer.assertComplete();
       verify(instrumenter).end(Context.root(), "request", "response", null);
     }
@@ -288,7 +285,7 @@ public class RxJava3AsyncOperationEndStrategyTest {
       observer.dispose();
 
       verify(instrumenter).end(context, "request", null, null);
-      verify(span, times(0)).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+      verify(span, never()).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
     }
 
     @Test
@@ -304,7 +301,7 @@ public class RxJava3AsyncOperationEndStrategyTest {
       TestObserver<?> observer = result.test();
 
       verifyNoInteractions(instrumenter);
-      verify(span, times(0)).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+      verify(span, never()).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
 
       observer.dispose();
 
@@ -415,7 +412,7 @@ public class RxJava3AsyncOperationEndStrategyTest {
       verifyNoInteractions(instrumenter);
 
       observer.dispose();
-      verify(span, times(0)).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+      verify(span, never()).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
       verify(instrumenter).end(context, "request", null, null);
     }
 
@@ -432,7 +429,7 @@ public class RxJava3AsyncOperationEndStrategyTest {
       TestObserver<?> observer = result.test();
 
       verifyNoInteractions(instrumenter);
-      verify(span, times(0)).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+      verify(span, never()).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
 
       observer.dispose();
 
@@ -555,7 +552,7 @@ public class RxJava3AsyncOperationEndStrategyTest {
       observer.dispose();
 
       verify(instrumenter).end(context, "request", null, null);
-      verify(span, times(0)).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+      verify(span, never()).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
     }
 
     @Test
@@ -571,7 +568,7 @@ public class RxJava3AsyncOperationEndStrategyTest {
       TestObserver<?> observer = result.test();
 
       verifyNoInteractions(instrumenter);
-      verify(span, times(0)).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+      verify(span, never()).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
 
       observer.dispose();
 
@@ -682,7 +679,7 @@ public class RxJava3AsyncOperationEndStrategyTest {
 
       observer.cancel();
 
-      verify(span, times(0)).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+      verify(span, never()).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
       verify(instrumenter).end(context, "request", null, null);
     }
 
@@ -699,7 +696,7 @@ public class RxJava3AsyncOperationEndStrategyTest {
       TestSubscriber<?> observer = result.test();
 
       verifyNoInteractions(instrumenter);
-      verify(span, times(0)).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+      verify(span, never()).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
 
       observer.cancel();
 
@@ -821,7 +818,7 @@ public class RxJava3AsyncOperationEndStrategyTest {
 
       observer.cancel();
 
-      verify(span, times(0)).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+      verify(span, never()).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
       verify(instrumenter).end(context, "request", null, null);
     }
 
@@ -838,7 +835,7 @@ public class RxJava3AsyncOperationEndStrategyTest {
       TestSubscriber<?> observer = result.sequential().test();
 
       verifyNoInteractions(instrumenter);
-      verify(span, times(0)).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+      verify(span, never()).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
 
       observer.cancel();
       verify(span).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
@@ -902,7 +899,7 @@ public class RxJava3AsyncOperationEndStrategyTest {
 
       observer.cancel();
 
-      verify(span, times(0)).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+      verify(span, never()).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
       verify(instrumenter).end(context, "request", null, null);
     }
 
@@ -919,7 +916,7 @@ public class RxJava3AsyncOperationEndStrategyTest {
       TestSubscriber<?> observer = result.test();
 
       verifyNoInteractions(instrumenter);
-      verify(span, times(0)).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+      verify(span, never()).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
 
       observer.cancel();
 
