@@ -13,8 +13,6 @@ import org.glassfish.grizzly.http.util.MimeHeaders;
 public enum GrizzlyHttpResponseMutator implements HttpServerResponseMutator<HttpResponsePacket> {
   INSTANCE;
 
-  GrizzlyHttpResponseMutator() {}
-
   @Override
   public void appendHeader(HttpResponsePacket response, String name, String value) {
     MimeHeaders headers = response.getHeaders();
