@@ -7,19 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.internal.logging;
 
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerBridge;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class Slf4jApplicationLoggerBridge implements InternalLogger.Factory {
 
-  private static final AtomicBoolean installed = new AtomicBoolean();
-
   public static void install() {
-    if (installed.compareAndSet(false, true)) {
-      ApplicationLoggerBridge.installApplicationLogger(new Slf4jApplicationLoggerBridge());
-    }
+    ApplicationLoggerBridge.installApplicationLogger(new Slf4jApplicationLoggerBridge());
   }
 
   @Override

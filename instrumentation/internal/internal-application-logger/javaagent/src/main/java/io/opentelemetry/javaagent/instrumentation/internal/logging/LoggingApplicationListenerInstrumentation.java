@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.internal.logging;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerFlags;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -15,27 +15,30 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LoggerFactoryInstrumentation implements TypeInstrumentation {
+public class LoggingApplicationListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.slf4j.LoggerFactory");
+    return namedOneOf(
+        // spring boot 1.x
+        "org.springframework.boot.logging.LoggingApplicationListener",
+        // spring boot 2.+
+        "org.springframework.boot.context.logging.LoggingApplicationListener");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // once a call to getILoggerFactory() exits we can be certain that slf4j is properly initialized
+    // the logger is properly initialized once this method exits
     transformer.applyAdviceToMethod(
-        named("getILoggerFactory").and(takesArguments(0)),
-        this.getClass().getName() + "$GetLoggerFactoryAdvice");
+        named("initialize"), this.getClass().getName() + "$InitializeAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class GetLoggerFactoryAdvice {
+  public static class InitializeAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit() {
-      if (ApplicationLoggerFlags.bridgeLoggerFactory()) {
+      if (ApplicationLoggerFlags.bridgeSpringBootLogging()) {
         Slf4jApplicationLoggerBridge.install();
       }
     }
