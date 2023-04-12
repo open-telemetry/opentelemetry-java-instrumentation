@@ -35,7 +35,10 @@ public final class ArmeriaSingletons {
             .build();
 
     CLIENT_DECORATOR = telemetry.newClientDecorator();
-    SERVER_DECORATOR = telemetry.newServiceDecorator();
+    SERVER_DECORATOR =
+        telemetry
+            .newServiceDecorator()
+            .compose(service -> new ResponseCustomizingDecorator(service));
   }
 
   private ArmeriaSingletons() {}
