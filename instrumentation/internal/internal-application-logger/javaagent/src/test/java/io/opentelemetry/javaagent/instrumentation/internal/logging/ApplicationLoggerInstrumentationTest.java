@@ -52,6 +52,7 @@ class ApplicationLoggerInstrumentationTest {
                     "-Dotel.sdk.disabled=true",
                     "-Dotel.javaagent.logging=application",
                     mainClassName))
+            .redirectErrorStream(true)
             .start();
     InputStream stdout = process.getInputStream();
 
