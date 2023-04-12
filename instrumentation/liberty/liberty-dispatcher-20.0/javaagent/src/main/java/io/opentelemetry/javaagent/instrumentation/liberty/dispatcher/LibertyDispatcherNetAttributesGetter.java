@@ -6,16 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
 public class LibertyDispatcherNetAttributesGetter
     implements NetServerAttributesGetter<LibertyRequest> {
-
-  @Override
-  public String getTransport(LibertyRequest request) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
 
   @Nullable
   @Override

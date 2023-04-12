@@ -12,8 +12,6 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import reactor.core.scheduler.Schedulers
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implements AgentTestTrait {
   @Override
   RedisClient createClient(String uri) {
@@ -44,7 +42,6 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
           kind SpanKind.CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -63,7 +60,6 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
           kind SpanKind.CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port

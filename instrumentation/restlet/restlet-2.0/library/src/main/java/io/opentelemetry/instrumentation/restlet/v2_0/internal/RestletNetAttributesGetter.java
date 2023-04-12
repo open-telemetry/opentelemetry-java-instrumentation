@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.restlet.v2_0.internal;
 import static java.lang.invoke.MethodType.methodType;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import javax.annotation.Nullable;
@@ -76,11 +75,6 @@ public final class RestletNetAttributesGetter implements NetServerAttributesGett
     GET_HOST_DOMAIN = getHostDomain;
     GET_SERVER_PORT = getServerPort;
     GET_SERVER_ADDRESS = getServerAddress;
-  }
-
-  @Override
-  public String getTransport(Request request) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable

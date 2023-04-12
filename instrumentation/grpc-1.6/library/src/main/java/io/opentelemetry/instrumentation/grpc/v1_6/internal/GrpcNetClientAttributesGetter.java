@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 import io.grpc.Status;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcRequest;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -19,11 +18,6 @@ import javax.annotation.Nullable;
  */
 public final class GrpcNetClientAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<GrpcRequest, Status> {
-
-  @Override
-  public String getTransport(GrpcRequest request, @Nullable Status response) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
 
   @Nullable
   @Override

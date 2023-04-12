@@ -101,7 +101,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           kind CLIENT
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -139,7 +138,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           name "GET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -190,7 +188,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           kind CLIENT
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -234,7 +231,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           name "RANDOMKEY"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -263,7 +259,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           name "COMMAND"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -311,7 +306,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -330,7 +324,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -369,7 +362,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -388,7 +380,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port

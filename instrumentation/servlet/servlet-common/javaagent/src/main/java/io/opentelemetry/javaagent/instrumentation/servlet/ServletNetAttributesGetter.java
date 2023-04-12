@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
 public class ServletNetAttributesGetter<REQUEST, RESPONSE>
@@ -16,12 +15,6 @@ public class ServletNetAttributesGetter<REQUEST, RESPONSE>
 
   public ServletNetAttributesGetter(ServletAccessor<REQUEST, RESPONSE> accessor) {
     this.accessor = accessor;
-  }
-
-  @Override
-  @Nullable
-  public String getTransport(ServletRequestContext<REQUEST> requestContext) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable

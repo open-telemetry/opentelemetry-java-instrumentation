@@ -63,7 +63,6 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
@@ -157,7 +156,6 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             kind SERVER
             childOf(span(0))
             attributes {
-              "$SemanticAttributes.NET_TRANSPORT" IP_TCP
               "net.protocol.name" "http"
               "net.protocol.version" "1.1"
               "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"

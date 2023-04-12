@@ -12,7 +12,6 @@ import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecification {
   public static final int DB_INDEX = 0
@@ -67,7 +66,6 @@ abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecific
           name "AUTH"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port

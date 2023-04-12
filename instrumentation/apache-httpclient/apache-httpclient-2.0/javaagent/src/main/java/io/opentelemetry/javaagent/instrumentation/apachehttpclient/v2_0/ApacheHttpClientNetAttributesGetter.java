@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpMethod;
@@ -14,11 +13,6 @@ import org.apache.commons.httpclient.HttpMethodBase;
 
 final class ApacheHttpClientNetAttributesGetter
     implements NetClientAttributesGetter<HttpMethod, HttpMethod> {
-
-  @Override
-  public String getTransport(HttpMethod request, @Nullable HttpMethod response) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
 
   @Override
   public String getProtocolName(HttpMethod request, @Nullable HttpMethod response) {

@@ -14,12 +14,6 @@ public class ElasticTransportNetResponseAttributesGetter
 
   @Override
   @Nullable
-  public String getTransport(ElasticTransportRequest request, @Nullable ActionResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String getPeerName(ElasticTransportRequest request) {
     return null;
   }

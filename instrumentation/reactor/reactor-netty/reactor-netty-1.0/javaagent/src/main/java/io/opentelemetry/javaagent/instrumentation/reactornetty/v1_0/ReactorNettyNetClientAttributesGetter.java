@@ -19,12 +19,6 @@ final class ReactorNettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getTransport(HttpClientConfig request, @Nullable HttpClientResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getProtocolName(HttpClientConfig request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
