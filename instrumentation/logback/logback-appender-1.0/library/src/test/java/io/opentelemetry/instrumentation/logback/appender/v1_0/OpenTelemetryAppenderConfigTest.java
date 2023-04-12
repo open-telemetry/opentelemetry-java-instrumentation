@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.GlobalLoggerProvider;
@@ -22,9 +22,9 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -115,8 +115,8 @@ class OpenTelemetryAppenderConfigTest {
     assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
     assertThat(logData.getEpochNanos())
-        .isGreaterThan(TimeUnit.MILLISECONDS.toNanos(start.toEpochMilli()))
-        .isLessThan(TimeUnit.MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
+        .isGreaterThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(start.toEpochMilli()))
+        .isLessThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
     assertThat(logData.getSeverity()).isEqualTo(Severity.INFO);
     assertThat(logData.getSeverityText()).isEqualTo("INFO");
     assertThat(logData.getAttributes().size())
@@ -142,8 +142,9 @@ class OpenTelemetryAppenderConfigTest {
     Long lineNumber = logData.getAttributes().get(SemanticAttributes.CODE_LINENO);
     assertThat(lineNumber).isGreaterThan(1);
 
-    String logMarker = logData.getAttributes().get(AttributeKey.stringKey("logback.marker"));
-    assertThat(logMarker).isEqualTo(markerName);
+    List<String> logMarker =
+        logData.getAttributes().get(AttributeKey.stringArrayKey("logback.marker"));
+    assertThat(logMarker).isEqualTo(Arrays.asList(markerName));
   }
 
   @Test
@@ -163,11 +164,9 @@ class OpenTelemetryAppenderConfigTest {
     assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
     assertThat(logData.getAttributes().size()).isEqualTo(2 + 4); // 4 code attributes
-    AssertionsForClassTypes.assertThat(
-            logData.getAttributes().get(AttributeKey.stringKey("logback.mdc.key1")))
+    assertThat(logData.getAttributes().get(AttributeKey.stringKey("logback.mdc.key1")))
         .isEqualTo("val1");
-    AssertionsForClassTypes.assertThat(
-            logData.getAttributes().get(AttributeKey.stringKey("logback.mdc.key2")))
+    assertThat(logData.getAttributes().get(AttributeKey.stringKey("logback.mdc.key2")))
         .isEqualTo("val2");
   }
 }

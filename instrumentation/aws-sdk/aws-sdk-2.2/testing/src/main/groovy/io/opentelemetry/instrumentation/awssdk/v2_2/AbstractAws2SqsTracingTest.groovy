@@ -97,11 +97,10 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Sqs"
             "rpc.method" "CreateQueue"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "http.user_agent" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP
@@ -122,11 +121,10 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.method" "SendMessage"
             "rpc.service" "Sqs"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "http.user_agent" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP
@@ -143,7 +141,6 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.method" "ReceiveMessage"
             "rpc.system" "aws-api"
             "rpc.service" "Sqs"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" { it.startsWith("http://localhost:$sqsPort") }
@@ -171,11 +168,10 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
             "rpc.system" "aws-api"
             "rpc.service" "Sqs"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "http.user_agent" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP

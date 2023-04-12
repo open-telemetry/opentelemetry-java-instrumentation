@@ -30,12 +30,9 @@ public abstract class AbstractThreadDispatchingHandler implements RecordedEventH
 
   @Override
   public void accept(RecordedEvent ev) {
-    grouper
-        .groupedName(ev)
-        .ifPresent(
-            groupedThreadName ->
-                perThread
-                    .computeIfAbsent(groupedThreadName, this::createPerThreadSummarizer)
-                    .accept(ev));
+    String groupedName = grouper.groupedName(ev);
+    if (groupedName != null) {
+      perThread.computeIfAbsent(groupedName, this::createPerThreadSummarizer).accept(ev);
+    }
   }
 }

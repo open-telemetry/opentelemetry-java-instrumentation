@@ -76,7 +76,9 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                                 attrs ->
                                     assertThat(attrs)
                                         .containsOnly(
-                                            entry(SemanticAttributes.FAAS_EXECUTION, "1-22-333"))),
+                                            entry(
+                                                SemanticAttributes.FAAS_INVOCATION_ID,
+                                                "1-22-333"))),
                     span ->
                         span.hasName("queue1 process")
                             .hasKind(SpanKind.CONSUMER)
@@ -129,7 +131,9 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                                 attrs ->
                                     assertThat(attrs)
                                         .containsOnly(
-                                            entry(SemanticAttributes.FAAS_EXECUTION, "1-22-333"))),
+                                            entry(
+                                                SemanticAttributes.FAAS_INVOCATION_ID,
+                                                "1-22-333"))),
                     span ->
                         span.hasName("multiple_sources process")
                             .hasKind(SpanKind.CONSUMER)

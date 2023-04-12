@@ -15,6 +15,7 @@ import java.net.SocketAddress;
 import javax.annotation.Nullable;
 import org.jboss.netty.channel.socket.DatagramChannel;
 import org.jboss.netty.handler.codec.http.HttpResponse;
+import org.jboss.netty.handler.codec.http.HttpVersion;
 
 final class NettyNetClientAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<HttpRequestAndChannel, HttpResponse> {
@@ -23,6 +24,19 @@ final class NettyNetClientAttributesGetter
   public String getTransport(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return requestAndChannel.channel() instanceof DatagramChannel ? IP_UDP : IP_TCP;
+  }
+
+  @Override
+  public String getProtocolName(
+      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse httpResponse) {
+    return requestAndChannel.request().getProtocolVersion().getProtocolName();
+  }
+
+  @Override
+  public String getProtocolVersion(
+      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse httpResponse) {
+    HttpVersion version = requestAndChannel.request().getProtocolVersion();
+    return version.getMajorVersion() + "." + version.getMinorVersion();
   }
 
   @Nullable

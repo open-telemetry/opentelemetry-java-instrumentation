@@ -153,7 +153,7 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           status ERROR
-          errorEvent(SQLGrammarException, "could not prepare statement")
+          errorEvent(SQLGrammarException, ~/could not prepare statement/)
           attributes {
             "hibernate.session_id" {
               sessionId = it

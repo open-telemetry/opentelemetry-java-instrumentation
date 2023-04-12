@@ -39,12 +39,6 @@ enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String
 
   @Nullable
   @Override
-  public String getFlavor(String s) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getTarget(String s) {
     return null;
   }

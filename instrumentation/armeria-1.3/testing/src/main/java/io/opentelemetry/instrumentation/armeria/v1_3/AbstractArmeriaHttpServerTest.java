@@ -176,7 +176,7 @@ public abstract class AbstractArmeriaHttpServerTest extends AbstractHttpServerTe
   }
 
   @Override
-  protected final void configure(HttpServerTestOptions options) {
+  protected void configure(HttpServerTestOptions options) {
     options.setExpectedHttpRoute(
         endpoint -> {
           if (endpoint == ServerEndpoint.NOT_FOUND) {

@@ -81,6 +81,8 @@ tasks.compileTestJava {
 }
 
 tasks.withType<Test>().configureEach {
+  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
   systemProperty("testLatestDeps", latestDepTest)
 
   // required on jdk17

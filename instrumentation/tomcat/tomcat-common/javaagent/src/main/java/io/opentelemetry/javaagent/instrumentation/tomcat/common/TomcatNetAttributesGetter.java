@@ -23,6 +23,26 @@ public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
+  public String getProtocolName(Request request) {
+    String protocol = messageBytesToString(request.protocol());
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(Request request) {
+    String protocol = messageBytesToString(request.protocol());
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getHostName(Request request) {
     return messageBytesToString(request.serverName());
   }

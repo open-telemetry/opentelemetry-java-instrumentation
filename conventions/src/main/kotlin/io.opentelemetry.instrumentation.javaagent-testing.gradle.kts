@@ -79,6 +79,8 @@ class JavaagentTestArgumentsProvider(
   override fun asArguments(): Iterable<String> = listOf(
     "-Dotel.javaagent.debug=true",
     "-javaagent:${agentShadowJar.absolutePath}",
+    // make the path to the javaagent available to tests
+    "-Dotel.javaagent.testing.javaagent-jar-path=${agentShadowJar.absolutePath}",
     "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.absolutePath}",
     "-Dotel.javaagent.testing.additional-library-ignores.enabled=false",
     "-Dotel.javaagent.testing.fail-on-context-leak=${findProperty("failOnContextLeak") != false}",

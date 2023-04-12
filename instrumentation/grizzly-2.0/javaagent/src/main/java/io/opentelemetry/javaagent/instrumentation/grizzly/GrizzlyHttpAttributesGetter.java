@@ -48,15 +48,6 @@ final class GrizzlyHttpAttributesGetter
     return toHeaderList(response.getHeaders().values(name));
   }
 
-  @Override
-  public String getFlavor(HttpRequestPacket request) {
-    String flavor = request.getProtocolString();
-    if (flavor.startsWith("HTTP/")) {
-      flavor = flavor.substring("HTTP/".length());
-    }
-    return flavor;
-  }
-
   @Nullable
   @Override
   public String getTarget(HttpRequestPacket request) {

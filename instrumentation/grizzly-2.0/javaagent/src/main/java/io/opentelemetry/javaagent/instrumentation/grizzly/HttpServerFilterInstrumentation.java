@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -42,6 +43,15 @@ public class HttpServerFilterInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PrepareResponseAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(
+        @Advice.Argument(0) FilterChainContext ctx,
+        @Advice.Argument(2) HttpResponsePacket response) {
+      Context context = GrizzlyStateStorage.getContext(ctx);
+      HttpServerResponseCustomizerHolder.getCustomizer()
+          .customize(context, response, GrizzlyHttpResponseMutator.INSTANCE);
+    }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(

@@ -40,7 +40,12 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(namedOneOf("openSession", "openStatelessSession"))
             .and(takesArguments(0))
-            .and(returns(namedOneOf("org.hibernate.Session", "org.hibernate.StatelessSession"))),
+            .and(
+                returns(
+                    namedOneOf(
+                        "org.hibernate.Session",
+                        "org.hibernate.StatelessSession",
+                        "org.hibernate.internal.SessionImpl"))),
         SessionFactoryInstrumentation.class.getName() + "$SessionFactoryAdvice");
   }
 

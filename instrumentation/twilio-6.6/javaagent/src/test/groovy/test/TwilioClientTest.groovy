@@ -249,8 +249,9 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           childOf span(1)
           attributes {
             "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
-            "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
@@ -316,8 +317,9 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           status ERROR
           attributes {
             "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
-            "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 500
@@ -329,8 +331,9 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           childOf span(1)
           attributes {
             "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
-            "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
@@ -403,8 +406,9 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           status ERROR
           attributes {
             "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
-            "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 500
@@ -416,8 +420,9 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           childOf span(1)
           attributes {
             "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
-            "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 200

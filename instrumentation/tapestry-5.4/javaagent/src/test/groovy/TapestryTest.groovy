@@ -7,14 +7,8 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
-import io.opentelemetry.testing.internal.armeria.client.ClientRequestContext
-import io.opentelemetry.testing.internal.armeria.client.DecoratingHttpClientFunction
-import io.opentelemetry.testing.internal.armeria.client.HttpClient
 import io.opentelemetry.testing.internal.armeria.client.WebClient
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
-import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames
-import io.opentelemetry.testing.internal.armeria.common.HttpRequest
-import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.WebAppContext
@@ -65,18 +59,7 @@ class TapestryTest extends AgentInstrumentationSpecification implements HttpServ
 
   def setup() {
     client = WebClient.builder(address)
-      .decorator(new DecoratingHttpClientFunction() {
-        // https://github.com/line/armeria/issues/2489
-        @Override
-        HttpResponse execute(HttpClient delegate, ClientRequestContext ctx, HttpRequest req) throws Exception {
-          return HttpResponse.from(delegate.execute(ctx, req).aggregate().thenApply { resp ->
-            if (resp.status().isRedirection()) {
-              return delegate.execute(ctx, HttpRequest.of(req.method(), URI.create(resp.headers().get(HttpHeaderNames.LOCATION)).path))
-            }
-            return resp.toHttpResponse()
-          })
-        }
-      })
+      .followRedirects()
       .build()
   }
 

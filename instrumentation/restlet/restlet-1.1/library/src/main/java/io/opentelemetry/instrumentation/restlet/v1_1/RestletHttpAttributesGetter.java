@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.restlet.v1_1;
 import static io.opentelemetry.instrumentation.restlet.v1_1.RestletHeadersGetter.getHeaders;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -48,24 +47,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
     if (headers == null) {
       return Collections.emptyList();
     }
-    return parametersToList(headers.subList(name, /* ignoreCase = */ true));
-  }
-
-  @Override
-  @Nullable
-  public String getFlavor(Request request) {
-    String version = (String) request.getAttributes().get("org.restlet.http.version");
-    switch (version) {
-      case "HTTP/1.0":
-        return SemanticAttributes.HttpFlavorValues.HTTP_1_0;
-      case "HTTP/1.1":
-        return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
-      case "HTTP/2.0":
-        return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
-      default:
-        // fall through
-    }
-    return null;
+    return parametersToList(headers.subList(name, /* ignoreCase= */ true));
   }
 
   @Override
@@ -79,7 +61,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
     if (headers == null) {
       return Collections.emptyList();
     }
-    return parametersToList(headers.subList(name, /* ignoreCase = */ true));
+    return parametersToList(headers.subList(name, /* ignoreCase= */ true));
   }
 
   // minimize memory overhead by not using streams

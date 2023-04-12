@@ -49,7 +49,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
 
   testImplementation("org.testcontainers:selenium")
-  testImplementation("org.seleniumhq.selenium:selenium-java:3.141.59")
+  testImplementation("org.seleniumhq.selenium:selenium-java:4.8.3")
 
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.35.v20201120")
 }
@@ -104,7 +104,7 @@ tasks {
     // add test app classes to classpath
     classpath = sourceSets.test.get().runtimeClasspath.plus(files("$buildDir/testapp/classes"))
 
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }
 

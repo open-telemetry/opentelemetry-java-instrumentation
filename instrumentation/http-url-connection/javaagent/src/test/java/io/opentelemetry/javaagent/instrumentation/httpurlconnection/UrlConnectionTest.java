@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -65,10 +66,11 @@ class UrlConnectionTest {
                         .hasException(thrown)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, PortUtils.UNUSABLE_PORT),
                             equalTo(SemanticAttributes.HTTP_URL, uri),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_FLAVOR, "1.1"))));
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"))));
   }
 }

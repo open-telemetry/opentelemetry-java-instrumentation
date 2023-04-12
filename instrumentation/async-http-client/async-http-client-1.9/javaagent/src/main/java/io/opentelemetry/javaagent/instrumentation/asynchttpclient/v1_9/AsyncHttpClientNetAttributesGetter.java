@@ -19,6 +19,18 @@ final class AsyncHttpClientNetAttributesGetter
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
+  @Nullable
+  @Override
+  public String getProtocolName(Request request, @Nullable Response response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(Request request, @Nullable Response response) {
+    return null;
+  }
+
   @Override
   public String getPeerName(Request request) {
     return request.getUri().getHost();

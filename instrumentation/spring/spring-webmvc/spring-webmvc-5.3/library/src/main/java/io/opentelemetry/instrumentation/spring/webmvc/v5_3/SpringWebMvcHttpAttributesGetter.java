@@ -32,19 +32,6 @@ enum SpringWebMvcHttpAttributesGetter
   }
 
   @Override
-  @Nullable
-  public String getFlavor(HttpServletRequest request) {
-    String flavor = request.getProtocol();
-    if (flavor == null) {
-      return null;
-    }
-    if (flavor.startsWith("HTTP/")) {
-      flavor = flavor.substring("HTTP/".length());
-    }
-    return flavor;
-  }
-
-  @Override
   public Integer getStatusCode(
       HttpServletRequest request, HttpServletResponse response, @Nullable Throwable error) {
 

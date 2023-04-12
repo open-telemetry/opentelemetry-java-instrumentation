@@ -25,6 +25,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -48,6 +49,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
+import org.assertj.core.api.AssertAccess;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -372,11 +374,15 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                   span -> assertHandlerSpan(span, "GET", endpoint).hasParent(trace.getSpan(1)));
             }
 
-            int parentIndex = spanAssertions.size() - 1;
+            int parentIndex = spanAssertions.size() - 2;
+            if (options.hasHandlerAsControllerParentSpan.test(endpoint)) {
+              parentIndex = parentIndex + 1;
+            }
+            int finalParentIndex = parentIndex;
             spanAssertions.add(
                 span ->
                     assertIndexedControllerSpan(span, requestId)
-                        .hasParent(trace.getSpan(parentIndex)));
+                        .hasParent(trace.getSpan(finalParentIndex)));
 
             trace.hasSpansSatisfyingExactly(spanAssertions);
           });
@@ -443,12 +449,17 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             }
 
             if (endpoint != NOT_FOUND) {
-              int parentIndex = spanAssertions.size() - 1;
+              int parentIndex = 0;
+              if (options.hasHandlerSpan.test(endpoint)
+                  && options.hasHandlerAsControllerParentSpan.test(endpoint)) {
+                parentIndex = spanAssertions.size() - 1;
+              }
+              int finalParentIndex = parentIndex;
               spanAssertions.add(
                   span -> {
                     assertControllerSpan(
                         span, endpoint == EXCEPTION ? options.expectedException : null);
-                    span.hasParent(trace.getSpan(parentIndex));
+                    span.hasParent(trace.getSpan(finalParentIndex));
                   });
             }
 
@@ -466,6 +477,17 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             }
 
             trace.hasSpansSatisfyingExactly(spanAssertions);
+
+            if (options.verifyServerSpanEndTime) {
+              List<SpanData> spanData = AssertAccess.getActual(trace);
+              if (spanData.size() > 1) {
+                SpanData rootSpan = spanData.get(0);
+                for (int j = 1; j < spanData.size(); j++) {
+                  assertThat(rootSpan.getEndEpochNanos())
+                      .isGreaterThanOrEqualTo(spanData.get(j).getEndEpochNanos());
+                }
+              }
+            }
           });
     }
 
@@ -558,12 +580,16 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_METHOD, method);
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_STATUS_CODE, endpoint.status);
 
-          if (attrs.get(SemanticAttributes.HTTP_FLAVOR) != null) {
+          if (attrs.get(NetAttributes.NET_PROTOCOL_NAME) != null) {
+            assertThat(attrs).containsEntry(NetAttributes.NET_PROTOCOL_NAME, "http");
+          }
+          if (attrs.get(NetAttributes.NET_PROTOCOL_VERSION) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
-                    SemanticAttributes.HTTP_FLAVOR, entry -> assertThat(entry).isIn("1.1", "2.0"));
+                    NetAttributes.NET_PROTOCOL_VERSION,
+                    entry -> assertThat(entry).isIn("1.1", "2.0"));
           }
-          assertThat(attrs).containsEntry(SemanticAttributes.HTTP_USER_AGENT, TEST_USER_AGENT);
+          assertThat(attrs).containsEntry(SemanticAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT);
 
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_SCHEME, "http");
           if (endpoint != INDEXED_CHILD) {

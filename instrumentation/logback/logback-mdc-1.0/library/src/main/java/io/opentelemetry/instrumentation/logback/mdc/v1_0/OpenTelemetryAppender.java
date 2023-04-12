@@ -28,7 +28,7 @@ import java.util.Map;
 
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     implements AppenderAttachable<ILoggingEvent> {
-  private volatile boolean addBaggage;
+  private boolean addBaggage;
 
   private final AppenderAttachableImpl<ILoggingEvent> aai = new AppenderAttachableImpl<>();
 

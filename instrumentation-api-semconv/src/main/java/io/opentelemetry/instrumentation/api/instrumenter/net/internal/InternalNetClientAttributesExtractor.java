@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.Locale;
 import java.util.function.BiPredicate;
 import javax.annotation.Nullable;
 
@@ -49,13 +50,14 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
 
     internalSet(
         attributes, SemanticAttributes.NET_TRANSPORT, getter.getTransport(request, response));
+    String protocolName = getter.getProtocolName(request, response);
+    if (protocolName != null) {
+      internalSet(
+          attributes, NetAttributes.NET_PROTOCOL_NAME, protocolName.toLowerCase(Locale.ROOT));
+    }
     internalSet(
         attributes,
-        SemanticAttributes.NET_APP_PROTOCOL_NAME,
-        getter.getProtocolName(request, response));
-    internalSet(
-        attributes,
-        SemanticAttributes.NET_APP_PROTOCOL_VERSION,
+        NetAttributes.NET_PROTOCOL_VERSION,
         getter.getProtocolVersion(request, response));
 
     String peerName = extractPeerName(request);

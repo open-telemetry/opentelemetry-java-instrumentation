@@ -11,7 +11,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_URL;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_USER_AGENT;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.USER_AGENT_ORIGINAL;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
@@ -43,7 +43,7 @@ final class ApiGatewayProxyAttributesExtractor
     Map<String, String> headers = lowercaseMap(request.getHeaders());
     String userAgent = headers.get("user-agent");
     if (userAgent != null) {
-      attributes.put(HTTP_USER_AGENT, userAgent);
+      attributes.put(USER_AGENT_ORIGINAL, userAgent);
     }
     String httpUrl = getHttpUrl(request, headers);
     if (httpUrl != null) {

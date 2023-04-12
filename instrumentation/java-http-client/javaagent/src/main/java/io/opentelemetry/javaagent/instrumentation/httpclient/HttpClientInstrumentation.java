@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.httpclient;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.httpclient.JavaHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -19,6 +19,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.httpclient.internal.CompletableFutureWrapper;
+import io.opentelemetry.instrumentation.httpclient.internal.ResponseConsumer;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -59,8 +61,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(named("sendAsync"))
             .and(isPublic())
-            .and(takesArgument(0, named("java.net.http.HttpRequest")))
-            .and(takesArgument(1, named("java.net.http.HttpResponse$BodyHandler"))),
+            .and(takesArgument(0, named("java.net.http.HttpRequest"))),
         HttpClientInstrumentation.class.getName() + "$SendAsyncAdvice");
   }
 
@@ -103,7 +104,6 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Argument(value = 1, readOnly = false) HttpResponse.BodyHandler<?> bodyHandler,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelParentContext") Context parentContext,
@@ -114,9 +114,6 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       }
 
       parentContext = currentContext();
-      if (bodyHandler != null) {
-        bodyHandler = new BodyHandlerWrapper<>(bodyHandler, parentContext);
-      }
       if (!instrumenter().shouldStart(parentContext, httpRequest)) {
         return;
       }
@@ -146,7 +143,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       if (throwable != null) {
         instrumenter().end(context, httpRequest, null, throwable);
       } else {
-        future = future.whenComplete(new ResponseConsumer(context, httpRequest));
+        future = future.whenComplete(new ResponseConsumer(instrumenter(), context, httpRequest));
         future = CompletableFutureWrapper.wrap(future, parentContext);
       }
     }

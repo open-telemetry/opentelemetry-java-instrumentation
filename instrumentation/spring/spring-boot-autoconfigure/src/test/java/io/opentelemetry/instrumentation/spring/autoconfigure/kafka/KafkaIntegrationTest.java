@@ -46,7 +46,7 @@ class KafkaIntegrationTest {
   @BeforeAll
   static void setUpKafka() {
     kafka =
-        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.1.9"))
+        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.2.10"))
             .withEnv("KAFKA_HEAP_OPTS", "-Xmx256m")
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));

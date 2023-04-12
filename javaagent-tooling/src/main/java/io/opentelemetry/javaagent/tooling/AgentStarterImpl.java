@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
@@ -13,7 +15,6 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
-import java.util.Iterator;
 import java.util.ServiceLoader;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -29,11 +30,16 @@ import org.objectweb.asm.Type;
 public class AgentStarterImpl implements AgentStarter {
   private final Instrumentation instrumentation;
   private final File javaagentFile;
+  private final boolean isSecurityManagerSupportEnabled;
   private ClassLoader extensionClassLoader;
 
-  public AgentStarterImpl(Instrumentation instrumentation, File javaagentFile) {
+  public AgentStarterImpl(
+      Instrumentation instrumentation,
+      File javaagentFile,
+      boolean isSecurityManagerSupportEnabled) {
     this.instrumentation = instrumentation;
     this.javaagentFile = javaagentFile;
+    this.isSecurityManagerSupportEnabled = isSecurityManagerSupportEnabled;
   }
 
   @Override
@@ -61,15 +67,26 @@ public class AgentStarterImpl implements AgentStarter {
 
   @Override
   public void start() {
-    extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader(), javaagentFile);
+    extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader());
 
-    Iterator<LoggingCustomizer> loggingCustomizers =
-        ServiceLoader.load(LoggingCustomizer.class, extensionClassLoader).iterator();
-    LoggingCustomizer loggingCustomizer;
-    if (loggingCustomizers.hasNext()) {
-      loggingCustomizer = loggingCustomizers.next();
-    } else {
-      loggingCustomizer = NoopLoggingCustomizer.INSTANCE;
+    String loggerImplementationName = ConfigPropertiesUtil.getString("otel.javaagent.logging");
+    // default to the built-in stderr slf4j-simple logger
+    if (loggerImplementationName == null) {
+      loggerImplementationName = "simple";
+    }
+
+    LoggingCustomizer loggingCustomizer = null;
+    for (LoggingCustomizer customizer :
+        ServiceLoader.load(LoggingCustomizer.class, extensionClassLoader)) {
+      if (customizer.name().equalsIgnoreCase(loggerImplementationName)) {
+        loggingCustomizer = customizer;
+        break;
+      }
+    }
+    // unsupported logger implementation; defaulting to noop
+    if (loggingCustomizer == null) {
+      logUnrecognizedLoggerImplWarning(loggerImplementationName);
+      loggingCustomizer = new NoopLoggingCustomizer();
     }
 
     Throwable startupError = null;
@@ -77,6 +94,12 @@ public class AgentStarterImpl implements AgentStarter {
       loggingCustomizer.init();
       AgentInstaller.installBytebuddyAgent(instrumentation, extensionClassLoader);
       WeakConcurrentMapCleaner.start();
+
+      // LazyStorage reads system properties. Initialize it here where we have permissions to avoid
+      // failing permission checks when it is initialized from user code.
+      if (System.getSecurityManager() != null) {
+        Context.current();
+      }
     } catch (Throwable t) {
       // this is logged below and not rethrown to avoid logging it twice
       startupError = t;
@@ -88,14 +111,22 @@ public class AgentStarterImpl implements AgentStarter {
     }
   }
 
+  @SuppressWarnings("SystemOut")
+  private static void logUnrecognizedLoggerImplWarning(String loggerImplementationName) {
+    System.err.println(
+        "Unrecognized value of 'otel.javaagent.logging': '"
+            + loggerImplementationName
+            + "'. The agent will use the no-op implementation.");
+  }
+
   @Override
   public ClassLoader getExtensionClassLoader() {
     return extensionClassLoader;
   }
 
-  private static ClassLoader createExtensionClassLoader(
-      ClassLoader agentClassLoader, File javaagentFile) {
-    return ExtensionClassLoader.getInstance(agentClassLoader, javaagentFile);
+  private ClassLoader createExtensionClassLoader(ClassLoader agentClassLoader) {
+    return ExtensionClassLoader.getInstance(
+        agentClassLoader, javaagentFile, isSecurityManagerSupportEnabled);
   }
 
   private static class LaunchHelperClassFileTransformer implements ClassFileTransformer {

@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.runtimemetricsjava8.MemoryPools;
 import io.opentelemetry.instrumentation.runtimemetricsjava8.Threads;
 import java.io.Closeable;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -31,6 +32,7 @@ public final class RuntimeMetrics implements Closeable {
   private final OpenTelemetry openTelemetry;
   private final List<RecordedEventHandler> recordedEventHandlers;
   private final RecordingStream recordingStream;
+  private final CountDownLatch startUpLatch = new CountDownLatch(1);
 
   @SuppressWarnings("CatchingUnchecked")
   RuntimeMetrics(
@@ -46,6 +48,7 @@ public final class RuntimeMetrics implements Closeable {
             handler.getThreshold().ifPresent(eventSettings::withThreshold);
             recordingStream.onEvent(handler.getEventName(), handler);
           });
+      recordingStream.onMetadata(event -> startUpLatch.countDown());
       Thread daemonRunner = new Thread(() -> recordingStream.start());
       daemonRunner.setDaemon(true);
       daemonRunner.start();
@@ -99,6 +102,11 @@ public final class RuntimeMetrics implements Closeable {
   // Visible for testing
   RecordingStream getRecordingStream() {
     return recordingStream;
+  }
+
+  // Visible for testing
+  CountDownLatch getStartUpLatch() {
+    return startUpLatch;
   }
 
   /** Stop recording JFR events. */

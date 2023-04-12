@@ -30,10 +30,9 @@ class SerialGcMemoryMetricTest {
   }
 
   @Test
-  void shouldHaveGcDurationMetrics() throws InterruptedException {
+  void shouldHaveGcDurationMetrics() {
     // TODO: Need a reliable way to test old and young gen GC in isolation.
     // Generate some JFR events
-    Thread.sleep(100);
     System.gc();
     Attributes minorGcAttributes = Attributes.of(ATTR_GC, "Copy", ATTR_ACTION, END_OF_MINOR_GC);
     Attributes majorGcAttributes =

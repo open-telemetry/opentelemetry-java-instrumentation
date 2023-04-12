@@ -98,7 +98,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .allowClass("sun.rmi.transport")
         .allowClass("sun.net.www.http.HttpClient");
 
-    builder.ignoreClass("org.slf4j.").allowClass("org.slf4j.MDC");
+    builder.ignoreClass("org.slf4j.");
 
     builder
         .ignoreClass("org.springframework.core.$Proxy")

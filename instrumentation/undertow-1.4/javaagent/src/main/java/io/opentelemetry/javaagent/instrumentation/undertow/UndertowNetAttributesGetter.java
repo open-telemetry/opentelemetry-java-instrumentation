@@ -21,6 +21,26 @@ public class UndertowNetAttributesGetter
 
   @Nullable
   @Override
+  public String getProtocolName(HttpServerExchange exchange) {
+    String protocol = exchange.getProtocol().toString();
+    if (protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(HttpServerExchange exchange) {
+    String protocol = exchange.getProtocol().toString();
+    if (protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getHostName(HttpServerExchange exchange) {
     return exchange.getHostName();
   }

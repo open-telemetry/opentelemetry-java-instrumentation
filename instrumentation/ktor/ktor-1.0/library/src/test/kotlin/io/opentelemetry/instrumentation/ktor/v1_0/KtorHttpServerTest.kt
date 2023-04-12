@@ -134,5 +134,8 @@ class KtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
         else -> expectedHttpRoute(it)
       }
     }
+    // ktor does not have a controller lifecycle so the server span ends immediately when the
+    // response is sent, which is before the controller span finishes.
+    options.setVerifyServerSpanEndTime(false)
   }
 }

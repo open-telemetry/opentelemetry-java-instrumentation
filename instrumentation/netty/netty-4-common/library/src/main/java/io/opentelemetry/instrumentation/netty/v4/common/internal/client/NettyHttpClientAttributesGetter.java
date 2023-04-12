@@ -40,16 +40,6 @@ final class NettyHttpClientAttributesGetter
   }
 
   @Override
-  public String getFlavor(
-      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
-    String flavor = requestAndChannel.request().getProtocolVersion().toString();
-    if (flavor.startsWith("HTTP/")) {
-      flavor = flavor.substring("HTTP/".length());
-    }
-    return flavor;
-  }
-
-  @Override
   public String getMethod(HttpRequestAndChannel requestAndChannel) {
     return requestAndChannel.request().getMethod().name();
   }

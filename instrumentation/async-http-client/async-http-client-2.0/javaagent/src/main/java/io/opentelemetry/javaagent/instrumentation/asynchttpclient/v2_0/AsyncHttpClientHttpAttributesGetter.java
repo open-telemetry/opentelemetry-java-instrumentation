@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.asynchttpclient.Response;
@@ -33,11 +32,6 @@ final class AsyncHttpClientHttpAttributesGetter
   public Integer getStatusCode(
       RequestContext requestContext, Response response, @Nullable Throwable error) {
     return response.getStatusCode();
-  }
-
-  @Override
-  public String getFlavor(RequestContext requestContext, @Nullable Response response) {
-    return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override

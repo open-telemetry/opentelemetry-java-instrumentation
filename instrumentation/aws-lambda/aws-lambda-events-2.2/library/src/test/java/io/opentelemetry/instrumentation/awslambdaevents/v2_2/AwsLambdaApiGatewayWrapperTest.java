@@ -101,13 +101,14 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 OpenTelemetryAssertions.assertThat(attrs)
                                     .containsOnly(
                                         entry(
-                                            ResourceAttributes.FAAS_ID,
+                                            ResourceAttributes.CLOUD_RESOURCE_ID,
                                             "arn:aws:lambda:us-east-1:123456789:function:test"),
                                         entry(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                                        entry(SemanticAttributes.FAAS_EXECUTION, "1-22-333"),
+                                        entry(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"),
                                         entry(SemanticAttributes.FAAS_TRIGGER, "http"),
                                         entry(SemanticAttributes.HTTP_METHOD, "GET"),
-                                        entry(SemanticAttributes.HTTP_USER_AGENT, "Test Client"),
+                                        entry(
+                                            SemanticAttributes.USER_AGENT_ORIGINAL, "Test Client"),
                                         entry(
                                             SemanticAttributes.HTTP_URL,
                                             "http://localhost:123/hello/world?a=b&c=d"),
@@ -141,10 +142,10 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 OpenTelemetryAssertions.assertThat(attrs)
                                     .containsOnly(
                                         entry(
-                                            ResourceAttributes.FAAS_ID,
+                                            ResourceAttributes.CLOUD_RESOURCE_ID,
                                             "arn:aws:lambda:us-east-1:123456789:function:test"),
                                         entry(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                                        entry(SemanticAttributes.FAAS_EXECUTION, "1-22-333"),
+                                        entry(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"),
                                         entry(SemanticAttributes.FAAS_TRIGGER, "http")))));
   }
 
@@ -175,10 +176,10 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 OpenTelemetryAssertions.assertThat(attrs)
                                     .containsOnly(
                                         entry(
-                                            ResourceAttributes.FAAS_ID,
+                                            ResourceAttributes.CLOUD_RESOURCE_ID,
                                             "arn:aws:lambda:us-east-1:123456789:function:test"),
                                         entry(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                                        entry(SemanticAttributes.FAAS_EXECUTION, "1-22-333"),
+                                        entry(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"),
                                         entry(SemanticAttributes.FAAS_TRIGGER, "http")))));
   }
 
@@ -209,10 +210,10 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 OpenTelemetryAssertions.assertThat(attrs)
                                     .containsOnly(
                                         entry(
-                                            ResourceAttributes.FAAS_ID,
+                                            ResourceAttributes.CLOUD_RESOURCE_ID,
                                             "arn:aws:lambda:us-east-1:123456789:function:test"),
                                         entry(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                                        entry(SemanticAttributes.FAAS_EXECUTION, "1-22-333"),
+                                        entry(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"),
                                         entry(SemanticAttributes.FAAS_TRIGGER, "http")))));
   }
 
@@ -246,10 +247,10 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 OpenTelemetryAssertions.assertThat(attrs)
                                     .containsOnly(
                                         entry(
-                                            ResourceAttributes.FAAS_ID,
+                                            ResourceAttributes.CLOUD_RESOURCE_ID,
                                             "arn:aws:lambda:us-east-1:123456789:function:test"),
                                         entry(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                                        entry(SemanticAttributes.FAAS_EXECUTION, "1-22-333"),
+                                        entry(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"),
                                         entry(SemanticAttributes.FAAS_TRIGGER, "http")))));
   }
 

@@ -25,5 +25,5 @@ dependencies {
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
-  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 }

@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class MojarraInstrumentationModule extends InstrumentationModule {
   public MojarraInstrumentationModule() {
-    super("mojarra", "mojarra-1.2");
+    super("jsf-mojarra", "jsf-mojarra-1.2");
   }
 
   @Override
