@@ -2,6 +2,108 @@
 
 ## Unreleased
 
+### Migration notes
+
+- Apache Pulsar instrumentation name is changed from `io.opentelemetry.apache-pulsar-2.8` to
+  `io.opentelemetry.pulsar-2.8` and Apache Camel instrumentation name is changed from
+  `io.opentelemetry.apache-camel-2.20` to `io.opentelemetry.camel-2.20`
+  ([#8195](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8195))
+- Mojarra instrumentation suppression key has changed from `mojarra` to `jsf-mojarra`
+  and MyFaces instrumentation suppression key has changed from `myfaces` to `jsf-myfaces`
+  ([#7811](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7811))
+
+### 🌟 New javaagent instrumentation
+
+- R2DBC
+  ([#7977](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7977))
+- Add JFR streaming metrics gatherer
+  ([#7886](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7886))
+- ZIO 2.0 instrumentation
+  ([#7980](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7980))
+
+### 🌟 New library instrumentation
+
+- R2DBC
+  ([#7977](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7977))
+- Add JFR streaming metrics gatherer
+  ([#7886](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7886))
+- Add library instrumentation for java http client
+  ([#8138](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8138))
+
+### 📈 Enhancements
+
+- Move X-Ray Env Variable propagation to span link instead of parent
+  ([#7970](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7970))
+- Reduce memory usage for ClassLoaderHasClassesNamedMatcher
+  ([#7866](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7866))
+- Remove password from db.user parsed from JDBC url
+  ([#8106](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8106))
+- Ignore appd agent classes
+  ([#8065](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8065))
+- Add http client metrics to apache http library instrumentation
+  ([#8128](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8128))
+- Instrument additional pulsar receive methods
+  ([#8171](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8171))
+- Support latest Hibernate 6 version
+  ([#8189](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8189))
+- Support spring boot service name detector when spring boot application is packaged in one jar
+  ([#8101](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8101))
+- Support parsing Spring boot service name when more than one yaml is defined
+  ([#8006](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8006))
+- Add option to capture logback key value pairs
+  ([#8074](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8074))
+- Bridge agent logs into application's slf4j logger
+  ([#7339](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7339),
+  [#8228](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8228))
+- Better container ID parsing
+  ([#8206](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8206))
+- Pulsar batch receive instrumentation
+  ([#8173](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8173))
+- Improve compatibility with SecurityManager
+  ([#7983](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7983))
+- Instrument akka-http bindAndHandle
+  ([#8174](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8174))
+- Spring scheduling: run error handler with the same context as task
+  ([#8220](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8220))
+- Switch from http.flavor to net.protocol.*
+  ([#8131](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8131),
+  [#8244](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8244))
+- Support latest Armeria release
+  ([#8247](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8247))
+- Populate `process.command_args` for Java 9+ and improve `process.command_line` for Java 8
+  ([#8130](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8130))
+
+### 🛠️ Bug fixes
+
+- Fix TracingCqlSession ClassCastException
+  ([#8041](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8041))
+- Kafka: avoid registering duplicate metrics reporter
+  ([#8099](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8099))
+- Prefix baggage key not value when adding it to logback mdc
+  ([#8066](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8066))
+- Fix error when using shardingsphere
+  ([#8110](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8110))
+- Fix order of cxf handlers to enable symmetric tracing around jaxws handler chain
+  ([#8160](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8160))
+- Fix javaagent armeria server instrumentation
+  ([#8281](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8281))
+
+### 🧰 Tooling
+
+- Add HttpServerResponseCustomizer support for various servers
+  ([#8094](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8094),
+  [#8095](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8095),
+  [#8265](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8265),
+  [#8264](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8264),
+  [#8273](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8273),
+  [#8263](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8263),
+  [#8274](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8274),
+  [#8272](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8272))
+- Add `removeJarVersionNumbers` build setting
+  ([#8116](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8116))
+- Add `disableShadowRelocate` build setting
+  ([#8117](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8117))
+
 ## Version 1.24.0 (2023-03-15)
 
 ### Migration notes
