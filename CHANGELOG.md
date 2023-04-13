@@ -83,6 +83,8 @@
   ([#8110](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8110))
 - Fix order of cxf handlers to enable symmetric tracing around jaxws handler chain
   ([#8160](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8160))
+- Fix javaagent armeria server instrumentation
+  ([#8281](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8281))
 
 ### 🧰 Tooling
 
