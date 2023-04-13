@@ -9,12 +9,12 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "1.8.20"
     id("org.xbib.gradle.plugin.jflex") version "1.7.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
-    id("org.graalvm.buildtools.native") version "0.9.20"
+    id("org.graalvm.buildtools.native") version "0.9.21"
   }
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.12.6"
+  id("com.gradle.enterprise") version "3.13"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "1.10"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.4.0"
 }
