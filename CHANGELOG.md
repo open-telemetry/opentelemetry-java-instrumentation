@@ -70,6 +70,8 @@
   [#8244](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8244))
 - Support latest Armeria release
   ([#8247](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8247))
+- Populate `process.command_args` for Java 9+ and improve `process.command_line` for Java 8
+  ([#8130](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8130))
 
 ### 🛠️ Bug fixes
 
