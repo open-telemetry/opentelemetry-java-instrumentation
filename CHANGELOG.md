@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.25.0 (2023-04-13)
+
 ### Migration notes
 
 - Apache Pulsar instrumentation name is changed from `io.opentelemetry.apache-pulsar-2.8` to
