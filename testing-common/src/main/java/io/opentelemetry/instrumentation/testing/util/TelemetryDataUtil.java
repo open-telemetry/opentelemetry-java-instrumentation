@@ -83,12 +83,7 @@ public final class TelemetryDataUtil {
   public static void assertScopeVersion(List<List<SpanData>> traces) {
     for (List<SpanData> trace : traces) {
       for (SpanData span : trace) {
-        if (!span.getInstrumentationScopeInfo().getName().equals("test")
-            // opencensusshim is the underlying opentelemetry-java instrumentation which is
-            // automatically emitted upon use and which does not set a version at this time
-            && !span.getInstrumentationScopeInfo()
-                .getName()
-                .equals("io.opentelemetry.opencensusshim")) {
+        if (!span.getInstrumentationScopeInfo().getName().equals("test")) {
           assertThat(span.getInstrumentationScopeInfo().getVersion())
               .as(
                   "Instrumentation version was empty; make sure that the instrumentation name matches the gradle module name")
