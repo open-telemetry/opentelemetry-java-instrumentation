@@ -20,10 +20,10 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-public class JmxMetricInsightInstallerTest {
-  public static final String PATH_TO_ALL_EXISTING_RULES = "src/main/resources/jmx/rules";
+class JmxMetricInsightInstallerTest {
+  private static final String PATH_TO_ALL_EXISTING_RULES = "src/main/resources/jmx/rules";
   private static RuleParser parser;
-  public static final Set<String> FILES_TO_BE_TESTED =
+  private static final Set<String> FILES_TO_BE_TESTED =
       new HashSet<>(
           Arrays.asList(
               "activemq.yaml",
@@ -46,14 +46,13 @@ public class JmxMetricInsightInstallerTest {
 
     // make sure we have correct number of files
     File[] existingRules = existingRulesDir.listFiles();
-    assertThat(existingRules.length == FILES_TO_BE_TESTED.size()).isTrue();
+    assertThat(existingRules).hasSize(FILES_TO_BE_TESTED.size());
 
     for (File file : existingRules) {
       // also make sure the files name are matching
-      if (!FILES_TO_BE_TESTED.contains(file.getName())) {
-        continue;
+      if (FILES_TO_BE_TESTED.contains(file.getName())) {
+        testRulesAreValid(file);
       }
-      testRulesAreValid(file);
     }
   }
 
