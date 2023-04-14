@@ -116,6 +116,18 @@ public abstract class ServerTestController {
         });
   }
 
+  @GetMapping("/nestedPath")
+  public Mono<String> nested_path(ServerHttpRequest request, ServerHttpResponse response) {
+    ServerEndpoint endpoint = ServerEndpoint.NESTED_PATH;
+
+    return wrapControllerMethod(
+        endpoint,
+        () -> {
+          setStatus(response, endpoint);
+          return endpoint.getBody();
+        });
+  }
+
   protected abstract <T> Mono<T> wrapControllerMethod(ServerEndpoint endpoint, Supplier<T> handler);
 
   private static void setStatus(ServerHttpResponse response, ServerEndpoint endpoint) {

@@ -51,6 +51,7 @@ public final class HttpServerTestOptions {
   boolean testNotFound = true;
   boolean testPathParam = false;
   boolean testCaptureHttpHeaders = true;
+  boolean testNestedPath = false;
   boolean testCaptureRequestParameters = false;
   boolean verifyServerSpanEndTime = true;
 
@@ -173,6 +174,12 @@ public final class HttpServerTestOptions {
   @CanIgnoreReturnValue
   public HttpServerTestOptions setTestCaptureHttpHeaders(boolean testCaptureHttpHeaders) {
     this.testCaptureHttpHeaders = testCaptureHttpHeaders;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setTestNestedPath(boolean testNestedPath) {
+    this.testNestedPath = testNestedPath;
     return this;
   }
 

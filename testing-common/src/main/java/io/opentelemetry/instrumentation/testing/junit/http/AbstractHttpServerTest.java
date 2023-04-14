@@ -299,6 +299,19 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertTheTraces(1, null, null, spanId, "POST", CAPTURE_PARAMETERS, response);
   }
 
+  @Test
+  void nestedPath() {
+    assumeTrue(options.testNestedPath);
+    String method = "GET";
+    AggregatedHttpRequest request = request(NESTED_PATH, method);
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+    assertThat(response.status().code()).isEqualTo(NESTED_PATH.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(NESTED_PATH.getBody());
+    assertResponseHasCustomizedHeaders(response, NESTED_PATH, null);
+
+    assertTheTraces(1, null, null, null, method, NESTED_PATH, response);
+  }
+
   /**
    * This test fires a bunch of parallel request to the fixed backend endpoint. That endpoint is
    * supposed to create a new child span in the context of the SERVER span. That child span is
