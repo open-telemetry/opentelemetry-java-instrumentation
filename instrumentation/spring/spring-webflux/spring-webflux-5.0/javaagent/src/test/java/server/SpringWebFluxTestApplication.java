@@ -74,6 +74,7 @@ public class SpringWebFluxTestApplication {
                         .map(SpringWebFluxTestApplication::tracedMethod)));
   }
 
+  @SuppressWarnings("deprecation") // testing instrumentation of deprecated class
   @Component
   public static class GreetingHandler {
     public static final String DEFAULT_RESPONSE = "HELLO";

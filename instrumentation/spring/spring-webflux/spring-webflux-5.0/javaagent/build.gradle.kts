@@ -53,9 +53,9 @@ dependencies {
 
   testImplementation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing"))
 
-  testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.0.0.RELEASE")
-  testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
-  testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.0.0.RELEASE")
+  testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.7.5")
+  testLibrary("org.springframework.boot:spring-boot-starter-test:2.7.5")
+  testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.7.5")
   testImplementation("org.spockframework:spock-spring:2.4-M1-groovy-4.0")
 }
 

@@ -113,6 +113,7 @@ public abstract class ServerTestRouteFactory {
                     })));
   }
 
+  @SuppressWarnings("deprecation") // testing instrumentation of deprecated class
   protected Mono<ServerResponse> respond(
       ServerEndpoint endpoint, BodyBuilder bodyBuilder, String body, Runnable spanAction) {
     if (bodyBuilder == null) {
