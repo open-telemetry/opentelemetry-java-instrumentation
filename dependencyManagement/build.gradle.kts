@@ -13,6 +13,7 @@ rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.25.0"
+val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
 val groovyVersion = "4.0.11"
@@ -33,7 +34,7 @@ val DEPENDENCY_BOMS = listOf(
   "com.google.guava:guava-bom:31.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
-  "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkVersion}-alpha",
+  "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
   "org.junit:junit-bom:5.9.2",
   "org.testcontainers:testcontainers-bom:1.18.0",
   "org.spockframework:spock-bom:2.4-M1-groovy-4.0"
