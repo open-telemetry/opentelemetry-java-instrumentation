@@ -26,7 +26,6 @@ import org.assertj.core.api.Assertions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.junit.jupiter.api.AfterAll;
@@ -166,9 +165,22 @@ public class ProcedureCallTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
-                            .hasException(
-                                new SQLGrammarException(
-                                    "could not prepare statement", new SQLException()))
+                            .hasEventsSatisfyingExactly(
+                                event ->
+                                    event
+                                        .hasName("exception")
+                                        .hasAttributesSatisfying(
+                                            attributes -> {
+                                              assertThat(attributes)
+                                                  .containsEntry(
+                                                      "exception.type",
+                                                      "org.hibernate.exception.SQLGrammarException");
+                                              String message =
+                                                  attributes.get(
+                                                      AttributeKey.stringKey("exception.message"));
+                                              assertThat(message)
+                                                  .startsWith("could not prepare statement");
+                                            }))
                             .hasAttributesSatisfying(
                                 attributes -> {
                                   Assertions.assertThat(
