@@ -62,7 +62,7 @@ public abstract class HandlerSpringWebFluxServerTest extends SpringWebFluxServer
                         equalTo(
                             EXCEPTION_TYPE,
                             "org.springframework.web.server.ResponseStatusException"),
-                        equalTo(EXCEPTION_MESSAGE, "404 NOT_FOUND"),
+                        equalTo(EXCEPTION_MESSAGE, "Response status 404"),
                         satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
       }
     }
