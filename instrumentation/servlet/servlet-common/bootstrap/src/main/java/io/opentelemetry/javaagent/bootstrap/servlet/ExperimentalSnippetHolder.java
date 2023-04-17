@@ -5,22 +5,24 @@
 
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 public class ExperimentalSnippetHolder {
 
-  private static volatile String snippet = "";
+  private static final AtomicReference<String> snippet = new AtomicReference<>("");
 
   private static boolean isSet = false;
 
-  public static void setSnippet(String snippet) {
-    if (isSet) {
-      return;
+  public static void setSnippet(String newValue) {
+    String oldValue = snippet.get();
+    while (!isSet) {
+      isSet = snippet.compareAndSet(oldValue, newValue);
+      oldValue = snippet.get();
     }
-    ExperimentalSnippetHolder.snippet = snippet;
-    isSet = true;
   }
 
   public static String getSnippet() {
-    return snippet;
+    return snippet.get();
   }
 
   private ExperimentalSnippetHolder() {}
