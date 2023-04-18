@@ -13,6 +13,8 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
+
 public final class SpringWebfluxServerInstrumentationTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
 
@@ -39,7 +41,7 @@ public final class SpringWebfluxServerInstrumentationTest
 
     options.setExpectedHttpRoute(
         endpoint -> {
-          if (endpoint == ServerEndpoint.PATH_PARAM) {
+          if (endpoint.equals(PATH_PARAM)) {
             return CONTEXT_PATH + "/path/{id}/param";
           }
           return expectedHttpRoute(endpoint);

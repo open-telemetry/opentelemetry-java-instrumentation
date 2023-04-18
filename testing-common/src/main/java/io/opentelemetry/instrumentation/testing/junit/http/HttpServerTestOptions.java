@@ -16,6 +16,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+
 public final class HttpServerTestOptions {
 
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
@@ -34,7 +36,7 @@ public final class HttpServerTestOptions {
   Function<ServerEndpoint, String> expectedHttpRoute = unused -> null;
   Function<ServerEndpoint, String> sockPeerAddr = unused -> "127.0.0.1";
   String contextPath = "";
-  Throwable expectedException = new Exception(ServerEndpoint.EXCEPTION.getBody());
+  Throwable expectedException = new Exception(EXCEPTION.getBody());
 
   Predicate<ServerEndpoint> hasHandlerSpan = unused -> false;
   Predicate<ServerEndpoint> hasResponseSpan = unused -> false;
