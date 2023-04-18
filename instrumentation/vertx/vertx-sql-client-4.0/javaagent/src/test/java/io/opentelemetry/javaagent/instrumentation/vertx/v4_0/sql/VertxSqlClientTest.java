@@ -175,9 +175,7 @@ class VertxSqlClientTest {
                                         equalTo(EXCEPTION_TYPE, PgException.class.getName()),
                                         satisfies(
                                             EXCEPTION_MESSAGE,
-                                            val ->
-                                                val.contains(
-                                                    "syntax error at or near")),
+                                            val -> val.contains("syntax error at or near")),
                                         satisfies(
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
