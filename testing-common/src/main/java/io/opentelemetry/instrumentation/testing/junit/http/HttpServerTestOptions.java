@@ -36,7 +36,7 @@ public final class HttpServerTestOptions {
   Function<ServerEndpoint, String> expectedHttpRoute = unused -> null;
   Function<ServerEndpoint, String> sockPeerAddr = unused -> "127.0.0.1";
   String contextPath = "";
-  Throwable expectedException = new Exception(EXCEPTION.getBody());
+  Throwable expectedException = new Exception(EXCEPTION.body);
 
   Predicate<ServerEndpoint> hasHandlerSpan = unused -> false;
   Predicate<ServerEndpoint> hasResponseSpan = unused -> false;
