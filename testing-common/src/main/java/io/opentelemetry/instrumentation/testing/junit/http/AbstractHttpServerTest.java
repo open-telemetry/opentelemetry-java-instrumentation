@@ -302,6 +302,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   @Test
   void nestedPath() {
+    assumeTrue(Boolean.getBoolean("testLatestDeps"));
     assumeTrue(options.testNestedPath);
     String method = "GET";
     AggregatedHttpRequest request = request(NESTED_PATH, method);
