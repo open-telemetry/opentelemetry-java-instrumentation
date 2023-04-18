@@ -6,13 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesGetter;
-import io.vertx.sqlclient.SqlConnectOptions;
 import javax.annotation.Nullable;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
 public enum VertxSqlClientAttributesGetter
     implements SqlClientAttributesGetter<VertxSqlClientRequest> {
   INSTANCE;
@@ -25,15 +20,13 @@ public enum VertxSqlClientAttributesGetter
   @Override
   @Nullable
   public String getUser(VertxSqlClientRequest request) {
-    SqlConnectOptions sqlConnectOptions = request.getSqlConnectOptions();
-    return sqlConnectOptions != null ? sqlConnectOptions.getUser() : null;
+    return request.getUser();
   }
 
   @Override
   @Nullable
   public String getName(VertxSqlClientRequest request) {
-    SqlConnectOptions sqlConnectOptions = request.getSqlConnectOptions();
-    return sqlConnectOptions != null ? sqlConnectOptions.getDatabase() : null;
+    return request.getDatabase();
   }
 
   @Override

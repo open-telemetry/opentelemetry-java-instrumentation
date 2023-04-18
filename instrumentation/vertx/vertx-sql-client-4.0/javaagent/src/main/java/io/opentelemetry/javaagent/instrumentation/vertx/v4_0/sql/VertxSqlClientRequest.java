@@ -20,7 +20,19 @@ public final class VertxSqlClientRequest {
     return statement;
   }
 
-  public SqlConnectOptions getSqlConnectOptions() {
-    return sqlConnectOptions;
+  public String getUser() {
+    return sqlConnectOptions != null ? sqlConnectOptions.getUser() : null;
+  }
+
+  public String getDatabase() {
+    return sqlConnectOptions != null ? sqlConnectOptions.getDatabase() : null;
+  }
+
+  public String getHost() {
+    return sqlConnectOptions != null ? sqlConnectOptions.getHost() : null;
+  }
+
+  public Integer getPort() {
+    return sqlConnectOptions != null ? sqlConnectOptions.getPort() : null;
   }
 }

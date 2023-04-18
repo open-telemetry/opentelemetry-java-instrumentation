@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.sqlclient.SqlConnectOptions;
 
 // Helper class for accessing virtual field on package private QueryExecutor class.
-public class QueryExecutorUtil {
+public final class QueryExecutorUtil {
   private static final VirtualField<QueryExecutor<?, ?, ?>, SqlConnectOptions> connectOptionsFiled =
       VirtualField.find(QueryExecutor.class, SqlConnectOptions.class);
 

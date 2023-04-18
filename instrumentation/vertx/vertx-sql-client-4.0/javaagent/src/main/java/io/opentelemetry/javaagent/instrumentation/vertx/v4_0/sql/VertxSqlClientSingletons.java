@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -16,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.vertx.sqlclient.SqlConnectOptions;
+import java.util.Map;
 
 public final class VertxSqlClientSingletons {
   public static final String OTEL_REQUEST_KEY = "otel.request";
@@ -57,6 +60,18 @@ public final class VertxSqlClientSingletons {
 
   public static SqlConnectOptions getSqlConnectOptions() {
     return connectOptions.get();
+  }
+
+  public static Scope endQuerySpan(Map<Object, Object> contextData, Throwable throwable) {
+    VertxSqlClientRequest otelRequest =
+        (VertxSqlClientRequest) contextData.remove(OTEL_REQUEST_KEY);
+    Context otelContext = (Context) contextData.remove(OTEL_CONTEXT_KEY);
+    Context otelParentContext = (Context) contextData.remove(OTEL_PARENT_CONTEXT_KEY);
+    if (otelRequest == null || otelContext == null || otelParentContext == null) {
+      return null;
+    }
+    instrumenter().end(otelContext, otelRequest, null, throwable);
+    return otelParentContext.makeCurrent();
   }
 
   private VertxSqlClientSingletons() {}

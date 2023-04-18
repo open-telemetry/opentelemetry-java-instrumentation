@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.vertx.sqlclient.SqlConnectOptions;
 import javax.annotation.Nullable;
 
 public enum VertxSqlClientNetAttributesGetter
@@ -22,14 +21,12 @@ public enum VertxSqlClientNetAttributesGetter
   @Nullable
   @Override
   public String getPeerName(VertxSqlClientRequest request) {
-    SqlConnectOptions sqlConnectOptions = request.getSqlConnectOptions();
-    return sqlConnectOptions != null ? sqlConnectOptions.getHost() : null;
+    return request.getHost();
   }
 
   @Nullable
   @Override
   public Integer getPeerPort(VertxSqlClientRequest request) {
-    SqlConnectOptions sqlConnectOptions = request.getSqlConnectOptions();
-    return sqlConnectOptions != null ? sqlConnectOptions.getPort() : null;
+    return request.getPort();
   }
 }
