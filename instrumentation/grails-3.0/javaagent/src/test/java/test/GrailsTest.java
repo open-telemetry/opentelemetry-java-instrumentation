@@ -5,9 +5,13 @@
 
 package test;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
@@ -103,18 +107,16 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
 
   @Override
   public String expectedHttpRoute(ServerEndpoint endpoint) {
-    switch (endpoint) {
-      case PATH_PARAM:
-        return getContextPath() + "/test/path";
-      case QUERY_PARAM:
-        return getContextPath() + "/test/query";
-      case ERROR:
-        return getContextPath() + "/test/error";
-      case NOT_FOUND:
-        return getContextPath() + "/**";
-      default:
-        return getContextPath() + "/test" + endpoint.getPath();
+    if (endpoint.equals(PATH_PARAM)) {
+      return getContextPath() + "/test/path";
+    } else if (endpoint.equals(QUERY_PARAM)) {
+      return getContextPath() + "/test/query";
+    } else if (endpoint.equals(ERROR)) {
+      return getContextPath() + "/test/error";
+    } else if (endpoint.equals(NOT_FOUND)) {
+      return getContextPath() + "/**";
     }
+    return getContextPath() + "/test" + endpoint.getPath();
   }
 
   ConfigurableApplicationContext startServer(int port) {
@@ -122,20 +124,18 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
   }
 
   private static String getHandlerSpanName(ServerEndpoint endpoint) {
-    switch (endpoint) {
-      case QUERY_PARAM:
-        return "TestController.query";
-      case PATH_PARAM:
-        return "TestController.path";
-      case CAPTURE_HEADERS:
-        return "TestController.captureHeaders";
-      case INDEXED_CHILD:
-        return "TestController.child";
-      case NOT_FOUND:
-        return "ResourceHttpRequestHandler.handleRequest";
-      default:
-        return "TestController." + endpoint.name().toLowerCase(Locale.ROOT);
+    if (endpoint.equals(QUERY_PARAM)) {
+      return "TestController.query";
+    } else if (endpoint.equals(PATH_PARAM)) {
+      return "TestController.path";
+    } else if (endpoint.equals(CAPTURE_HEADERS)) {
+      return "TestController.captureHeaders";
+    } else if (endpoint.equals(INDEXED_CHILD)) {
+      return "TestController.child";
+    } else if (endpoint.equals(NOT_FOUND)) {
+      return "ResourceHttpRequestHandler.handleRequest";
     }
+    return "TestController." + endpoint.name().toLowerCase(Locale.ROOT);
   }
 
   @Override

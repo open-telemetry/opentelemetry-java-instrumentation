@@ -55,7 +55,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
@@ -158,9 +157,6 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @ParameterizedTest
-  @EnumSource(
-      value = ServerEndpoint.class,
-      names = {"SUCCESS", "QUERY_PARAM"})
   void requestWithQueryString(ServerEndpoint endpoint) {
     String method = "GET";
     AggregatedHttpRequest request = request(endpoint, method);
@@ -672,13 +668,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       return null;
     }
 
-    switch (endpoint) {
-      case NOT_FOUND:
-        return null;
-      case PATH_PARAM:
-        return options.contextPath + "/path/:id/param";
-      default:
-        return endpoint.resolvePath(address).getPath();
+    if (endpoint == NOT_FOUND) {
+      return null;
+    } else if (endpoint == PATH_PARAM) {
+      return options.contextPath + "/path/:id/param";
+    } else {
+      return endpoint.resolvePath(address).getPath();
     }
   }
 }
