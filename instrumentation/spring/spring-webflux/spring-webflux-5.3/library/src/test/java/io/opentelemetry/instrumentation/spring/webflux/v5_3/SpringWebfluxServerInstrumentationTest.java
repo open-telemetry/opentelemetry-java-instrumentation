@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
+
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -12,8 +14,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.ConfigurableApplicationContext;
-
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 
 public final class SpringWebfluxServerInstrumentationTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {

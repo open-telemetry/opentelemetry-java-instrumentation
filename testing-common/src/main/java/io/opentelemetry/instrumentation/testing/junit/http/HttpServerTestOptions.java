@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -15,8 +17,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
-
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 
 public final class HttpServerTestOptions {
 
