@@ -13,7 +13,6 @@ public class ExperimentalSnippetHolder {
 
   public static void setSnippet(String newValue) {
     snippet.compareAndSet("", newValue);
-    System.out.println("setSnippet to " + getSnippet());
   }
 
   public static String getSnippet() {
