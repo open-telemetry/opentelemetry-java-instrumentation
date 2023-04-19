@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 import io.opentelemetry.api.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.Map;
 
 public class ServerEndpoint {
@@ -116,7 +117,7 @@ public class ServerEndpoint {
     }
   }
 
-  private static final Map<String, ServerEndpoint> PATH_MAP = null;
+  private static final Map<String, ServerEndpoint> PATH_MAP = new HashMap<>();
 
   static {
     PATH_MAP.put(SUCCESS.getPath(), SUCCESS);
