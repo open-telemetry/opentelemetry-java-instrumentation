@@ -65,6 +65,10 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
       Context parentContext = Context.current();
 
+      // HttpRouteSource.CONTROLLER has userFirst true, and it will make http.route updated once
+      // using the last portion of the nested path.
+      // HttpRouteSource.NESTED_CONTROLLER has useFirst false, and it will make http.route updated
+      // twice: 1st using the last portion of the nested path, 2nd time using the full nested path.
       HttpRouteHolder.updateHttpRoute(
           parentContext, HttpRouteSource.NESTED_CONTROLLER, httpRouteGetter(), exchange);
 
