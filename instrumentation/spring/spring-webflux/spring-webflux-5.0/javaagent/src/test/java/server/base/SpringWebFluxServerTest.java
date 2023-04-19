@@ -6,12 +6,18 @@
 package server.base;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NESTED_PATH;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -64,5 +70,19 @@ public abstract class SpringWebFluxServerTest
     options.setTestPathParam(true);
     options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasHandlerSpan(unused -> true);
+  }
+
+  @Test
+  void nestedPath() {
+    assumeTrue(Boolean.getBoolean("testLatestDeps"));
+
+    String method = "GET";
+    AggregatedHttpRequest request = request(NESTED_PATH, method);
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+    assertThat(response.status().code()).isEqualTo(NESTED_PATH.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(NESTED_PATH.getBody());
+    assertResponseHasCustomizedHeaders(response, NESTED_PATH, null);
+
+    assertTheTraces(1, null, null, null, method, NESTED_PATH, response);
   }
 }

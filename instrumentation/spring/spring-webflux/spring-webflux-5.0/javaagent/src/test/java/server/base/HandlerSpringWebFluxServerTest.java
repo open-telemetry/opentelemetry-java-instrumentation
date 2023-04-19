@@ -76,6 +76,5 @@ public abstract class HandlerSpringWebFluxServerTest extends SpringWebFluxServer
     // Mono that the controller returns completes) should end before the server span (which needs
     // the result of the Mono)
     options.setVerifyServerSpanEndTime(false);
-    options.setTestNestedPath(true);
   }
 }

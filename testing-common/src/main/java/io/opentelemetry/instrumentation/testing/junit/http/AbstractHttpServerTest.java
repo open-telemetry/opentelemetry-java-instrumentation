@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NESTED_PATH;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
@@ -95,7 +94,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return GlobalTraceUtil.runWithSpan("controller", () -> closure.get());
   }
 
-  private AggregatedHttpRequest request(ServerEndpoint uri, String method) {
+  protected AggregatedHttpRequest request(ServerEndpoint uri, String method) {
     return AggregatedHttpRequest.of(HttpMethod.valueOf(method), resolveAddress(uri));
   }
 
@@ -298,20 +297,6 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     String spanId = assertResponseHasCustomizedHeaders(response, CAPTURE_PARAMETERS, null);
     assertTheTraces(1, null, null, spanId, "POST", CAPTURE_PARAMETERS, response);
-  }
-
-  @Test
-  void nestedPath() {
-    assumeTrue(Boolean.getBoolean("testLatestDeps"));
-    assumeTrue(options.testNestedPath);
-    String method = "GET";
-    AggregatedHttpRequest request = request(NESTED_PATH, method);
-    AggregatedHttpResponse response = client.execute(request).aggregate().join();
-    assertThat(response.status().code()).isEqualTo(NESTED_PATH.getStatus());
-    assertThat(response.contentUtf8()).isEqualTo(NESTED_PATH.getBody());
-    assertResponseHasCustomizedHeaders(response, NESTED_PATH, null);
-
-    assertTheTraces(1, null, null, null, method, NESTED_PATH, response);
   }
 
   /**
