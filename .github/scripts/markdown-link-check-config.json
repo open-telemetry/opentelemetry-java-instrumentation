@@ -10,6 +10,9 @@
     },
     {
       "pattern" : "^https://kotlinlang\\.org/docs/coroutines-overview\\.html$"
+    },
+    {
+      "pattern" : "https://logback.qos.ch/manual/appenders.html"
     }
   ]
 }
