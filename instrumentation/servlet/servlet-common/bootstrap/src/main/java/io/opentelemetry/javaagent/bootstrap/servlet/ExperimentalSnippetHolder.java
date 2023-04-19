@@ -12,7 +12,8 @@ public class ExperimentalSnippetHolder {
   private static final AtomicReference<String> snippet = new AtomicReference<>("");
 
   public static void setSnippet(String newValue) {
-    snippet.compareAndSet(null, newValue);
+    snippet.compareAndSet("", newValue);
+    System.out.println("setSnippet to " + getSnippet());
   }
 
   public static String getSnippet() {
