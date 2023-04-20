@@ -5,7 +5,14 @@
 
 package server.base;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NESTED_PATH;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.context.annotation.Bean;
@@ -53,5 +60,19 @@ public class ImmediateHandlerSpringWebFluxServerTest extends HandlerSpringWebFlu
             return response;
           });
     }
+  }
+
+  @Test
+  void nestedPath() {
+    assumeTrue(Boolean.getBoolean("testLatestDeps"));
+
+    String method = "GET";
+    AggregatedHttpRequest request = request(NESTED_PATH, method);
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+    assertThat(response.status().code()).isEqualTo(NESTED_PATH.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(NESTED_PATH.getBody());
+    assertResponseHasCustomizedHeaders(response, NESTED_PATH, null);
+
+    assertTheTraces(1, null, null, null, method, NESTED_PATH, response);
   }
 }
