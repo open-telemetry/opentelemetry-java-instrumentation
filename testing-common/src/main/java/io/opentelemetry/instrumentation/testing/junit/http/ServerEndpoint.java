@@ -88,7 +88,7 @@ public class ServerEndpoint {
     this.fragment = uriObj.getFragment();
     this.status = status;
     this.body = body;
-    PATH_MAP.put(this.path, this);
+    PATH_MAP.put(this.getPath(), this);
   }
 
   public String getPath() {
