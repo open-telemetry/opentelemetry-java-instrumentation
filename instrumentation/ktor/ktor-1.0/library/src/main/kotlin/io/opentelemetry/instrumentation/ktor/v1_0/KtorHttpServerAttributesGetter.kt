@@ -9,7 +9,6 @@ import io.ktor.features.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 internal enum class KtorHttpServerAttributesGetter :
   HttpServerAttributesGetter<ApplicationRequest, ApplicationResponse> {
@@ -29,14 +28,6 @@ internal enum class KtorHttpServerAttributesGetter :
 
   override fun getResponseHeader(request: ApplicationRequest, response: ApplicationResponse, name: String): List<String> {
     return response.headers.allValues().getAll(name) ?: emptyList()
-  }
-
-  override fun getFlavor(request: ApplicationRequest): String? {
-    return when (request.httpVersion) {
-      "HTTP/1.1" -> SemanticAttributes.HttpFlavorValues.HTTP_1_1
-      "HTTP/2.0" -> SemanticAttributes.HttpFlavorValues.HTTP_2_0
-      else -> null
-    }
   }
 
   override fun getTarget(request: ApplicationRequest): String {

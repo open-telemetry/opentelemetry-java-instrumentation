@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 import java.util.concurrent.CountDownLatch
@@ -117,6 +119,43 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
             "code.namespace" "EnhancedClassTaskConfig"
             "code.function" "run"
           }
+        }
+      }
+    }
+  }
+
+  def "task with error test"() {
+    setup:
+    def context = new AnnotationConfigApplicationContext(TaskWithErrorConfig)
+    def task = context.getBean(TaskWithError)
+
+    task.blockUntilExecute()
+
+    expect:
+    assert task != null
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "TaskWithError.run"
+          hasNoParent()
+          status StatusCode.ERROR
+          attributes {
+            "job.system" "spring_scheduling"
+            "code.namespace" "TaskWithError"
+            "code.function" "run"
+          }
+          event(0) {
+            eventName "$SemanticAttributes.EXCEPTION_EVENT_NAME"
+            attributes {
+              "$SemanticAttributes.EXCEPTION_TYPE" IllegalStateException.getName()
+              "$SemanticAttributes.EXCEPTION_MESSAGE" "failure"
+              "$SemanticAttributes.EXCEPTION_STACKTRACE" String
+            }
+          }
+        }
+        span(1) {
+          name "error-handler"
+          childOf(span(0))
         }
       }
     }

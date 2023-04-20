@@ -26,6 +26,26 @@ public class ServletNetAttributesGetter<REQUEST, RESPONSE>
 
   @Nullable
   @Override
+  public String getProtocolName(ServletRequestContext<REQUEST> requestContext) {
+    String protocol = accessor.getRequestProtocol(requestContext.request());
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(ServletRequestContext<REQUEST> requestContext) {
+    String protocol = accessor.getRequestProtocol(requestContext.request());
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getHostName(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestServerName(requestContext.request());
   }

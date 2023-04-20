@@ -17,7 +17,8 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
 
   private boolean started = false;
 
-  protected Map<String, String> getAgentEnvironment(String jvmArgsEnvVarName) {
+  protected Map<String, String> getAgentEnvironment(
+      String jvmArgsEnvVarName, boolean setServiceName) {
     Map<String, String> environment = new HashMap<>();
     // while modern JVMs understand linux container memory limits, they do not understand windows
     // container memory limits yet, so we need to explicitly set max heap in order to prevent the
@@ -27,7 +28,9 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
     environment.put("OTEL_BSP_SCHEDULE_DELAY", "10ms");
     environment.put("OTEL_METRIC_EXPORT_INTERVAL", "1000");
     environment.put("OTEL_EXPORTER_OTLP_ENDPOINT", "http://" + BACKEND_ALIAS + ":8080");
-    environment.put("OTEL_RESOURCE_ATTRIBUTES", "service.name=smoke-test");
+    if (setServiceName) {
+      environment.put("OTEL_RESOURCE_ATTRIBUTES", "service.name=smoke-test");
+    }
     environment.put("OTEL_JAVAAGENT_DEBUG", "true");
     return environment;
   }

@@ -52,7 +52,7 @@ final class RestletHeadersGetter implements TextMapGetter<Request> {
   @Override
   public String get(Request carrier, String key) {
     Series<?> headers = getHeaders(carrier);
-    return headers == null ? null : headers.getFirstValue(key, /* ignoreCase = */ true);
+    return headers == null ? null : headers.getFirstValue(key, /* ignoreCase= */ true);
   }
 
   @SuppressWarnings("unchecked")

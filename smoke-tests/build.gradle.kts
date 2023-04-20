@@ -23,13 +23,13 @@ dependencies {
   api("org.spockframework:spock-core")
   api(project(":testing-common"))
 
-  implementation(platform("io.grpc:grpc-bom:1.53.0"))
+  implementation(platform("io.grpc:grpc-bom:1.54.0"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("com.google.protobuf:protobuf-java-util:3.22.0")
+  implementation("com.google.protobuf:protobuf-java-util:3.22.3")
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")
@@ -45,8 +45,7 @@ tasks {
   test {
     testLogging.showStandardStreams = true
 
-    // TODO investigate why smoke tests occasionally hang forever
-    //  this needs to be long enough so that smoke tests that are just running slow don"t time out
+    // this needs to be long enough so that smoke tests that are just running slow don't time out
     timeout.set(Duration.ofMinutes(60))
 
     // We enable/disable smoke tests based on the java version requests

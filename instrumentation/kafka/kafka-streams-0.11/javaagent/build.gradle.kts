@@ -1,6 +1,5 @@
 plugins {
   id("otel.javaagent-instrumentation")
-  id("org.unbroken-dome.test-sets")
 }
 
 muzzle {

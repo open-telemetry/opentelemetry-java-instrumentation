@@ -20,6 +20,26 @@ public interface NetServerAttributesGetter<REQUEST> {
   @Nullable
   String getTransport(REQUEST request);
 
+  /**
+   * Returns the application protocol used.
+   *
+   * <p>Examples: `amqp`, `http`, `mqtt`.
+   */
+  @Nullable
+  default String getProtocolName(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * Returns the version of the application protocol used.
+   *
+   * <p>Examples: `3.1.1`.
+   */
+  @Nullable
+  default String getProtocolVersion(REQUEST request) {
+    return null;
+  }
+
   @Nullable
   String getHostName(REQUEST request);
 

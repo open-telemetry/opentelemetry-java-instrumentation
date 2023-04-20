@@ -26,6 +26,11 @@ public final class Slf4jSimpleLoggingCustomizer implements LoggingCustomizer {
   private static final String SIMPLE_LOGGER_PREFIX = "org.slf4j.simpleLogger.log.";
 
   @Override
+  public String name() {
+    return "simple";
+  }
+
+  @Override
   public void init() {
     setSystemPropertyDefault(SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY, "true");
     setSystemPropertyDefault(

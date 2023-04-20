@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
@@ -57,7 +58,10 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
   @Test
   void testSendAndConsumeMessage() throws Throwable {
     ClientConfiguration clientConfiguration =
-        ClientConfiguration.newBuilder().setEndpoints(container.endpoints).build();
+        ClientConfiguration.newBuilder()
+            .setEndpoints(container.endpoints)
+            .setRequestTimeout(Duration.ofSeconds(10))
+            .build();
     // Inner topic of the container.
     String topic = "normal-topic-0";
     ClientServiceProvider provider = ClientServiceProvider.loadService();

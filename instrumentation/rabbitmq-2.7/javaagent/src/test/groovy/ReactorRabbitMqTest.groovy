@@ -14,6 +14,7 @@ class ReactorRabbitMqTest extends AgentInstrumentationSpecification implements W
 
   def setupSpec() {
     startRabbit()
+    connectionFactory.setAutomaticRecoveryEnabled(false)
   }
 
   def cleanupSpec() {

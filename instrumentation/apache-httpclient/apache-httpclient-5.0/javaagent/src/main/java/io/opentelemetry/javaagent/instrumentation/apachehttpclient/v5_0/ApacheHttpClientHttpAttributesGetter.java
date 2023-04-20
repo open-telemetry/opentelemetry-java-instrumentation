@@ -6,24 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.MessageHeaders;
-import org.apache.hc.core5.http.ProtocolVersion;
 import org.apache.hc.core5.net.URIAuthority;
 
 final class ApacheHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, HttpResponse> {
-  private static final Logger logger =
-      Logger.getLogger(ApacheHttpClientHttpAttributesGetter.class.getName());
 
   @Override
   public String getMethod(HttpRequest request) {
@@ -75,42 +69,8 @@ final class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  @Nullable
-  public String getFlavor(HttpRequest request, @Nullable HttpResponse response) {
-    ProtocolVersion protocolVersion = getVersion(request, response);
-    if (protocolVersion == null) {
-      return null;
-    }
-    String protocol = protocolVersion.getProtocol();
-    if (!protocol.equals("HTTP")) {
-      return null;
-    }
-    int major = protocolVersion.getMajor();
-    int minor = protocolVersion.getMinor();
-    if (major == 1 && minor == 0) {
-      return SemanticAttributes.HttpFlavorValues.HTTP_1_0;
-    }
-    if (major == 1 && minor == 1) {
-      return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
-    }
-    if (major == 2 && minor == 0) {
-      return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
-    }
-    logger.log(Level.FINE, "unexpected http protocol version: {0}", protocolVersion);
-    return null;
-  }
-
-  @Override
   public List<String> getResponseHeader(HttpRequest request, HttpResponse response, String name) {
     return getHeader(response, name);
-  }
-
-  private static ProtocolVersion getVersion(HttpRequest request, @Nullable HttpResponse response) {
-    ProtocolVersion protocolVersion = request.getVersion();
-    if (protocolVersion == null && response != null) {
-      protocolVersion = response.getVersion();
-    }
-    return protocolVersion;
   }
 
   private static List<String> getHeader(MessageHeaders messageHeaders, String name) {

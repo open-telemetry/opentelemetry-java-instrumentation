@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_1_1;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -109,11 +109,12 @@ class ReactorNettyBaseUrlOnlyTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_URL, uri + "/"),
-                            equalTo(SemanticAttributes.HTTP_FLAVOR, HTTP_1_1),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
                             satisfies(
                                 SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
                                 AbstractLongAssert::isNotNegative),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, server.httpPort()),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),

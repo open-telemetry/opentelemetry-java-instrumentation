@@ -19,10 +19,12 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
@@ -60,11 +62,6 @@ class HttpClientAttributesExtractorTest {
     }
 
     @Override
-    public String getFlavor(Map<String, String> request, Map<String, String> response) {
-      return request.get("flavor");
-    }
-
-    @Override
     public List<String> getResponseHeader(
         Map<String, String> request, Map<String, String> response, String name) {
       String value = response.get("header." + name);
@@ -79,7 +76,21 @@ class HttpClientAttributesExtractorTest {
     @Override
     public String getTransport(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return response.get("transport");
+      return response == null ? null : response.get("transport");
+    }
+
+    @Nullable
+    @Override
+    public String getProtocolName(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("protocolName");
+    }
+
+    @Nullable
+    @Override
+    public String getProtocolVersion(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("protocolVersion");
     }
 
     @Nullable
@@ -102,9 +113,10 @@ class HttpClientAttributesExtractorTest {
     request.put("method", "POST");
     request.put("url", "http://github.com");
     request.put("header.content-length", "10");
-    request.put("flavor", "http/2");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.custom-request-header", "123,456");
+    request.put("protocolName", "http");
+    request.put("protocolVersion", "1.1");
     request.put("peerName", "github.com");
     request.put("peerPort", "123");
 
@@ -114,12 +126,15 @@ class HttpClientAttributesExtractorTest {
     response.put("header.custom-response-header", "654,321");
     response.put("transport", IP_TCP);
 
+    ToIntFunction<Context> resendCountFromContext = context -> 2;
+
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.builder(
-                new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
-            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
-            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
-            .build();
+        new HttpClientAttributesExtractor<>(
+            new TestHttpClientAttributesGetter(),
+            new TestNetClientAttributesGetter(),
+            singletonList("Custom-Request-Header"),
+            singletonList("Custom-Response-Header"),
+            resendCountFromContext);
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -127,7 +142,7 @@ class HttpClientAttributesExtractorTest {
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_URL, "http://github.com"),
-            entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
+            entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")),
@@ -139,13 +154,15 @@ class HttpClientAttributesExtractorTest {
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
-            entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
+            entry(SemanticAttributes.HTTP_RESEND_COUNT, 2L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")),
-            entry(SemanticAttributes.NET_TRANSPORT, IP_TCP));
+            entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
+            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"));
   }
 
   @ParameterizedTest
@@ -267,5 +284,25 @@ class HttpClientAttributesExtractorTest {
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(arguments(80, "http://github.com"), arguments(443, "https://github.com"));
     }
+  }
+
+  @Test
+  void zeroResends() {
+    Map<String, String> request = new HashMap<>();
+
+    ToIntFunction<Context> resendCountFromContext = context -> 0;
+
+    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        new HttpClientAttributesExtractor<>(
+            new TestHttpClientAttributesGetter(),
+            new TestNetClientAttributesGetter(),
+            emptyList(),
+            emptyList(),
+            resendCountFromContext);
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, null, null);
+    assertThat(attributes.build()).isEmpty();
   }
 }

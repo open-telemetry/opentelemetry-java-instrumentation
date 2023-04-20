@@ -67,16 +67,28 @@ class CgroupV1ContainerIdExtractorTest {
     assertThat(result.orElse("fail")).isEqualTo(expectedContainerId);
   }
 
+  // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7437
+  @Test
+  void hostStyleCgroupFile() throws IOException {
+    String line = "1:name=systemd:/user.slice/user-0.slice/session-31207.scope";
+    when(filesystem.isReadable(V1_CGROUP_PATH)).thenReturn(true);
+    when(filesystem.lines(V1_CGROUP_PATH)).thenReturn(Stream.of(line));
+
+    CgroupV1ContainerIdExtractor extractor = new CgroupV1ContainerIdExtractor(filesystem);
+    Optional<String> result = extractor.extractContainerId();
+    assertThat(result).isEmpty();
+  }
+
   static Stream<Arguments> validLines() {
     return Stream.of(
         // with suffix
         arguments(
-            "13:name=systemd:/podruntime/docker/kubepods/ac679f8a8319c8cf7d38e1adf263bc08d23.aaaa",
-            "ac679f8a8319c8cf7d38e1adf263bc08d23"),
+            "13:name=systemd:/podruntime/docker/kubepods/ac679f8a8319c8cf7d38e1adf263bc08d231f2ff81abda3915f6e8ba4d64156a.aaaa",
+            "ac679f8a8319c8cf7d38e1adf263bc08d231f2ff81abda3915f6e8ba4d64156a"),
         // with prefix and suffix
         arguments(
-            "13:name=systemd:/podruntime/docker/kubepods/crio-dc679f8a8319c8cf7d38e1adf263bc08d23.stuff",
-            "dc679f8a8319c8cf7d38e1adf263bc08d23"),
+            "13:name=systemd:/podruntime/docker/kubepods/crio-dc679f8a8319c8cf7d38e1adf263bc08d234f0749ea715fb6ca3bb259db69956.stuff",
+            "dc679f8a8319c8cf7d38e1adf263bc08d234f0749ea715fb6ca3bb259db69956"),
         // just container id
         arguments(
             "13:name=systemd:/pod/d86d75589bf6cc254f3e2cc29debdf85dde404998aa128997a819ff991827356",
@@ -84,10 +96,10 @@ class CgroupV1ContainerIdExtractorTest {
         // with prefix
         arguments(
             "//\n"
-                + "1:name=systemd:/podruntime/docker/kubepods/docker-dc579f8a8319c8cf7d38e1adf263bc08d23"
-                + "2:name=systemd:/podruntime/docker/kubepods/docker-dc579f8a8319c8cf7d38e1adf263bc08d23"
-                + "3:name=systemd:/podruntime/docker/kubepods/docker-dc579f8a8319c8cf7d38e1adf263bc08d23",
-            "dc579f8a8319c8cf7d38e1adf263bc08d23"),
+                + "1:name=systemd:/podruntime/docker/kubepods/docker-dc579f8a8319c8cf7d38e1adf263bc08d230600179b07acfd7eaf9646778dc31"
+                + "2:name=systemd:/podruntime/docker/kubepods/docker-dc579f8a8319c8cf7d38e1adf263bc08d230600179b07acfd7eaf9646778dc31"
+                + "3:name=systemd:/podruntime/docker/kubepods/docker-dc579f8a8319c8cf7d38e1adf263bc08d230600179b07acfd7eaf9646778dc31",
+            "dc579f8a8319c8cf7d38e1adf263bc08d230600179b07acfd7eaf9646778dc31"),
         // with two dashes in prefix
         arguments(
             "11:perf_event:/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod4415fd05_2c0f_4533_909b_f2180dca8d7c.slice/cri-containerd-713a77a26fe2a38ebebd5709604a048c3d380db1eb16aa43aca0b2499e54733c.scope",

@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
@@ -32,6 +33,10 @@ public final class KafkaSingletons {
   private static final boolean METRICS_ENABLED =
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.kafka.metric-reporter.enabled", true);
+
+  private static final Pattern METRIC_REPORTER_PRESENT_PATTERN =
+      Pattern.compile(
+          "(^|,)" + Pattern.quote(OpenTelemetryMetricsReporter.class.getName()) + "($|,)");
 
   private static final Instrumenter<KafkaProducerRequest, RecordMetadata> PRODUCER_INSTRUMENTER;
   private static final Instrumenter<KafkaReceiveRequest, Void> CONSUMER_RECEIVE_INSTRUMENTER;
@@ -74,7 +79,13 @@ public final class KafkaSingletons {
     config.merge(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
         OpenTelemetryMetricsReporter.class.getName(),
-        (class1, class2) -> class1 + "," + class2);
+        (class1, class2) -> {
+          if (class1 instanceof String
+              && METRIC_REPORTER_PRESENT_PATTERN.matcher((String) class1).find()) {
+            return class1;
+          }
+          return class1 + "," + class2;
+        });
     config.put(
         OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
         new OpenTelemetrySupplier(GlobalOpenTelemetry.get()));

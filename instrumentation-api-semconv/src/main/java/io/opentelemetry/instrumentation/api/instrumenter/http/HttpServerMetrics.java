@@ -102,6 +102,8 @@ public final class HttpServerMetrics implements OperationListener {
           context);
       return;
     }
+    // it's important to use exactly the same attributes that were used when incrementing the active
+    // request count (otherwise it will split the timeseries)
     activeRequests.add(-1, applyActiveRequestsView(state.startAttributes()), context);
     Attributes durationAndSizeAttributes =
         applyServerDurationAndSizeView(state.startAttributes(), endAttributes);

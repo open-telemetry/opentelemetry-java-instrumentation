@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_2_0;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 
 import io.opentelemetry.api.common.Attributes;
@@ -17,6 +16,7 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -36,10 +36,11 @@ class HttpServerMetricsTest {
     Attributes requestAttributes =
         Attributes.builder()
             .put("http.method", "GET")
-            .put("http.flavor", HTTP_2_0)
             .put("http.target", "/")
             .put("http.scheme", "https")
             .put("net.transport", IP_TCP)
+            .put(NetAttributes.NET_PROTOCOL_NAME, "http")
+            .put(NetAttributes.NET_PROTOCOL_VERSION, "2.0")
             .put("net.host.name", "localhost")
             .put("net.host.port", 1234)
             .put("net.sock.family", "inet")
@@ -89,7 +90,6 @@ class HttpServerMetricsTest {
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
-                                            equalTo(SemanticAttributes.HTTP_FLAVOR, HTTP_2_0),
                                             equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_HOST_PORT, 1234L))
                                         .hasExemplarsSatisfying(
@@ -115,7 +115,6 @@ class HttpServerMetricsTest {
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
-                                            equalTo(SemanticAttributes.HTTP_FLAVOR, HTTP_2_0),
                                             equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_HOST_PORT, 1234L))
                                         .hasExemplarsSatisfying(
@@ -140,7 +139,6 @@ class HttpServerMetricsTest {
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
-                                            equalTo(SemanticAttributes.HTTP_FLAVOR, HTTP_2_0),
                                             equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_HOST_PORT, 1234L))
                                         .hasExemplarsSatisfying(
@@ -161,7 +159,8 @@ class HttpServerMetricsTest {
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
+                                            equalTo(NetAttributes.NET_PROTOCOL_NAME, "http"),
+                                            equalTo(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_HOST_PORT, 1234))
@@ -183,7 +182,8 @@ class HttpServerMetricsTest {
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
+                                            equalTo(NetAttributes.NET_PROTOCOL_NAME, "http"),
+                                            equalTo(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_HOST_PORT, 1234))
@@ -205,7 +205,8 @@ class HttpServerMetricsTest {
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
+                                            equalTo(NetAttributes.NET_PROTOCOL_NAME, "http"),
+                                            equalTo(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_HOST_PORT, 1234))

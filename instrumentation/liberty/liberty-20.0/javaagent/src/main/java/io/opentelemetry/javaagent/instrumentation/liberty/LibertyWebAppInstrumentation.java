@@ -12,9 +12,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Accessor;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -124,6 +126,9 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
       // Must be set here since Liberty RequestProcessors can use startAsync outside of servlet
       // scope.
       helper().setAsyncListenerResponse(requestInfo.getRequest(), requestInfo.getResponse());
+
+      HttpServerResponseCustomizerHolder.getCustomizer()
+          .customize(context, requestInfo.getResponse(), Servlet3Accessor.INSTANCE);
     }
   }
 }

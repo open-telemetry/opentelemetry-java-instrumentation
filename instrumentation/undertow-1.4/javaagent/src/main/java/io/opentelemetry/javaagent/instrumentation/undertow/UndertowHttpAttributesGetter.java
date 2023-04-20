@@ -27,16 +27,6 @@ public class UndertowHttpAttributesGetter
   }
 
   @Override
-  public String getFlavor(HttpServerExchange exchange) {
-    String flavor = exchange.getProtocol().toString();
-    // remove HTTP/ prefix to comply with semantic conventions
-    if (flavor.startsWith("HTTP/")) {
-      flavor = flavor.substring("HTTP/".length());
-    }
-    return flavor;
-  }
-
-  @Override
   public Integer getStatusCode(
       HttpServerExchange exchange, HttpServerExchange unused, @Nullable Throwable error) {
     return exchange.getStatusCode();

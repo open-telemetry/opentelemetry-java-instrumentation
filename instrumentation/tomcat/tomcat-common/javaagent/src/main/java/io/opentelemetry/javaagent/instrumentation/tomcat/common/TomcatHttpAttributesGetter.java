@@ -47,19 +47,6 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
 
   @Override
   @Nullable
-  public String getFlavor(Request request) {
-    String flavor = messageBytesToString(request.protocol());
-    if (flavor != null) {
-      // remove HTTP/ prefix to comply with semantic conventions
-      if (flavor.startsWith("HTTP/")) {
-        flavor = flavor.substring("HTTP/".length());
-      }
-    }
-    return flavor;
-  }
-
-  @Override
-  @Nullable
   public Integer getStatusCode(Request request, Response response, @Nullable Throwable error) {
     return response.getStatus();
   }

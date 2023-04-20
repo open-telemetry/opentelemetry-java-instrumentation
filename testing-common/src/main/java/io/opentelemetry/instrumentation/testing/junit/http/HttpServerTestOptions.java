@@ -39,6 +39,8 @@ public final class HttpServerTestOptions {
   Predicate<ServerEndpoint> hasHandlerSpan = unused -> false;
   Predicate<ServerEndpoint> hasResponseSpan = unused -> false;
   Predicate<ServerEndpoint> hasErrorPageSpans = unused -> false;
+  Predicate<ServerEndpoint> hasHandlerAsControllerParentSpan = unused -> true;
+  Predicate<ServerEndpoint> hasResponseCustomizer = unused -> false;
 
   Predicate<ServerEndpoint> hasExceptionOnServerSpan = endpoint -> !hasHandlerSpan.test(endpoint);
 
@@ -50,6 +52,7 @@ public final class HttpServerTestOptions {
   boolean testPathParam = false;
   boolean testCaptureHttpHeaders = true;
   boolean testCaptureRequestParameters = false;
+  boolean verifyServerSpanEndTime = true;
 
   HttpServerTestOptions() {}
 
@@ -111,9 +114,23 @@ public final class HttpServerTestOptions {
   }
 
   @CanIgnoreReturnValue
+  public HttpServerTestOptions setHasHandlerAsControllerParentSpan(
+      Predicate<ServerEndpoint> hasHandlerAsControllerParentSpan) {
+    this.hasHandlerAsControllerParentSpan = hasHandlerAsControllerParentSpan;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setHasExceptionOnServerSpan(
       Predicate<ServerEndpoint> hasExceptionOnServerSpan) {
     this.hasExceptionOnServerSpan = hasExceptionOnServerSpan;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setHasResponseCustomizer(
+      Predicate<ServerEndpoint> hasResponseCustomizer) {
+    this.hasResponseCustomizer = hasResponseCustomizer;
     return this;
   }
 
@@ -163,6 +180,12 @@ public final class HttpServerTestOptions {
   public HttpServerTestOptions setTestCaptureRequestParameters(
       boolean testCaptureRequestParameters) {
     this.testCaptureRequestParameters = testCaptureRequestParameters;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setVerifyServerSpanEndTime(boolean verifyServerSpanEndTime) {
+    this.verifyServerSpanEndTime = verifyServerSpanEndTime;
     return this;
   }
 

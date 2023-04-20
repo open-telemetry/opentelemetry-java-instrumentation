@@ -24,6 +24,26 @@ public final class RatpackNetServerAttributesGetter implements NetServerAttribut
 
   @Nullable
   @Override
+  public String getProtocolName(Request request) {
+    String protocol = request.getProtocol();
+    if (protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(Request request) {
+    String protocol = request.getProtocol();
+    if (protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getHostName(Request request) {
     PublicAddress publicAddress = getPublicAddress(request);
     return publicAddress == null ? null : publicAddress.get().getHost();

@@ -133,6 +133,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
       String agentPath,
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
+      boolean setServiceName,
       List<ResourceMapping> extraResources,
       List<Integer> extraPorts,
       TargetWaitStrategy waitStrategy,
@@ -148,7 +149,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     }
 
     List<String> environment = new ArrayList<>();
-    getAgentEnvironment(jvmArgsEnvVarName)
+    getAgentEnvironment(jvmArgsEnvVarName, setServiceName)
         .forEach((key, value) -> environment.add(key + "=" + value));
     extraEnv.forEach((key, value) -> environment.add(key + "=" + value));
 

@@ -8,11 +8,9 @@ package io.opentelemetry.instrumentation.armeria.v1_3;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.RequestContext;
-import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -50,16 +48,6 @@ enum ArmeriaHttpServerAttributesGetter
       return status.code();
     }
     return null;
-  }
-
-  @Override
-  public String getFlavor(RequestContext ctx) {
-    SessionProtocol protocol = ctx.sessionProtocol();
-    if (protocol.isMultiplex()) {
-      return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
-    } else {
-      return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
-    }
   }
 
   @Override

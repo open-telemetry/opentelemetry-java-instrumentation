@@ -98,7 +98,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .allowClass("sun.rmi.transport")
         .allowClass("sun.net.www.http.HttpClient");
 
-    builder.ignoreClass("org.slf4j.").allowClass("org.slf4j.MDC");
+    builder.ignoreClass("org.slf4j.");
 
     builder
         .ignoreClass("org.springframework.core.$Proxy")
@@ -130,6 +130,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .ignoreClassLoader("datadog.")
         .ignoreClassLoader("com.dynatrace.")
         .ignoreClassLoader("com.appdynamics.")
+        .ignoreClassLoader("com.singularity.")
         .ignoreClassLoader("com.newrelic.agent.")
         .ignoreClassLoader("com.newrelic.api.agent.")
         .ignoreClassLoader("com.nr.agent.");

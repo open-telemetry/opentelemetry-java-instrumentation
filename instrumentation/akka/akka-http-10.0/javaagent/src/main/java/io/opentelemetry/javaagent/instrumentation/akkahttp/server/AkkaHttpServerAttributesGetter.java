@@ -39,11 +39,6 @@ class AkkaHttpServerAttributesGetter
   }
 
   @Override
-  public String getFlavor(HttpRequest request) {
-    return AkkaHttpUtil.flavor(request);
-  }
-
-  @Override
   public String getTarget(HttpRequest request) {
     String target = request.uri().path().toString();
     Option<String> queryString = request.uri().rawQueryString();

@@ -37,24 +37,6 @@ enum RocketMqConsumerAttributeGetter implements MessagingAttributesGetter<Messag
 
   @Nullable
   @Override
-  public String getProtocol(MessageExt request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getProtocolVersion(MessageExt request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getUrl(MessageExt request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getConversationId(MessageExt request) {
     return null;
   }

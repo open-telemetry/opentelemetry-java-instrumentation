@@ -18,7 +18,7 @@ nullaway {
 
 tasks {
   withType<JavaCompile>().configureEach {
-    if (!name.toLowerCase().contains("test")) {
+    if (!name.contains("test", ignoreCase = true)) {
       options.errorprone.nullaway {
         severity.set(CheckSeverity.ERROR)
       }

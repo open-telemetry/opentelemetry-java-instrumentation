@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -72,25 +71,13 @@ public final class ApacheHttpClientRequest {
     return uri != null ? uri.toString() : null;
   }
 
-  public String getFlavor() {
+  String getProtocolName() {
+    return delegate.getProtocolVersion().getProtocol();
+  }
+
+  String getProtocolVersion() {
     ProtocolVersion protocolVersion = delegate.getProtocolVersion();
-    String protocol = protocolVersion.getProtocol();
-    if (!protocol.equals("HTTP")) {
-      return null;
-    }
-    int major = protocolVersion.getMajor();
-    int minor = protocolVersion.getMinor();
-    if (major == 1 && minor == 0) {
-      return SemanticAttributes.HttpFlavorValues.HTTP_1_0;
-    }
-    if (major == 1 && minor == 1) {
-      return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
-    }
-    if (major == 2 && minor == 0) {
-      return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
-    }
-    logger.log(FINE, "unexpected http protocol version: {0}", protocolVersion);
-    return null;
+    return protocolVersion.getMajor() + "." + protocolVersion.getMinor();
   }
 
   @Nullable

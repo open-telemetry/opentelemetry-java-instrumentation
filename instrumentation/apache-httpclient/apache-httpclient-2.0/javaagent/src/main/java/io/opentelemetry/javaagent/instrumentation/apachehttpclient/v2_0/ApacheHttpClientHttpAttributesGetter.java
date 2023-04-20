@@ -9,13 +9,11 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.StatusLine;
 
 final class ApacheHttpClientHttpAttributesGetter
@@ -68,17 +66,6 @@ final class ApacheHttpClientHttpAttributesGetter
   public Integer getStatusCode(HttpMethod request, HttpMethod response, @Nullable Throwable error) {
     StatusLine statusLine = response.getStatusLine();
     return statusLine == null ? null : statusLine.getStatusCode();
-  }
-
-  @Override
-  @Nullable
-  public String getFlavor(HttpMethod request, @Nullable HttpMethod response) {
-    if (request instanceof HttpMethodBase) {
-      return ((HttpMethodBase) request).isHttp11()
-          ? SemanticAttributes.HttpFlavorValues.HTTP_1_1
-          : SemanticAttributes.HttpFlavorValues.HTTP_1_0;
-    }
-    return null;
   }
 
   @Override

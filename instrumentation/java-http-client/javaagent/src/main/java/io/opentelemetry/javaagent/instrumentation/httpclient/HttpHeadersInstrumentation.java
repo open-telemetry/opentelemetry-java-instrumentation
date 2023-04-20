@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientSingletons.setter;
+import static io.opentelemetry.javaagent.instrumentation.httpclient.JavaHttpClientSingletons.setter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;

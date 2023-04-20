@@ -45,10 +45,17 @@ public enum JdbcConnectionUrlParser {
 
         String user = uri.getUserInfo();
         if (user != null) {
+          int colonIndex = user.indexOf(':');
+          if (colonIndex != -1) {
+            user = user.substring(0, colonIndex);
+          }
           builder.user(user);
         }
 
         String path = uri.getPath();
+        if (path == null) {
+          path = "";
+        }
         if (path.startsWith("/")) {
           path = path.substring(1);
         }

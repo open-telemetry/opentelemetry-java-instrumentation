@@ -18,7 +18,7 @@ final class NoopLoggerFactory implements InternalLogger.Factory {
     return new NoopLogger(name);
   }
 
-  private static final class NoopLogger extends InternalLogger {
+  private static final class NoopLogger implements InternalLogger {
 
     private final String name;
 
@@ -35,7 +35,7 @@ final class NoopLoggerFactory implements InternalLogger.Factory {
     public void log(Level level, String message, @Nullable Throwable error) {}
 
     @Override
-    protected String name() {
+    public String name() {
       return name;
     }
   }

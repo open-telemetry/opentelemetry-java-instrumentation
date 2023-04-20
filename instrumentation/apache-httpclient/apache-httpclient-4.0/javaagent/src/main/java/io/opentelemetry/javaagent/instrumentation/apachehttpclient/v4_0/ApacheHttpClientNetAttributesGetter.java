@@ -19,6 +19,17 @@ final class ApacheHttpClientNetAttributesGetter
   }
 
   @Override
+  public String getProtocolName(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+    return request.getProtocolName();
+  }
+
+  @Override
+  public String getProtocolVersion(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+    return request.getProtocolVersion();
+  }
+
+  @Override
   @Nullable
   public String getPeerName(ApacheHttpClientRequest request) {
     return request.getPeerName();

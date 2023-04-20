@@ -57,9 +57,19 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   @Override
   public HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     return HttpRequest.of(
-        RequestHeaders.builder(HttpMethod.valueOf(method), uri.toString())
+        RequestHeaders.builder()
+            .method(HttpMethod.valueOf(method))
+            .scheme(uri.getScheme())
+            .authority(uri.getAuthority())
+            .path(pathAndQuery(uri))
             .set(headers.entrySet())
             .build());
+  }
+
+  private static String pathAndQuery(URI uri) {
+    String path = uri.getPath();
+    String query = uri.getQuery();
+    return (path == null ? "" : path) + (query == null ? "" : "?" + query);
   }
 
   @Override

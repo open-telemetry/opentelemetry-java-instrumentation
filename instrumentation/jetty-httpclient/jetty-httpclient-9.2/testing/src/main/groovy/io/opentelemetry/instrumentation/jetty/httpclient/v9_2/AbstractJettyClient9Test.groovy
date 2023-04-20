@@ -5,10 +5,9 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2
 
-import io.opentelemetry.api.common.AttributeKey
+
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.eclipse.jetty.client.HttpClient
 import org.eclipse.jetty.client.api.ContentResponse
 import org.eclipse.jetty.client.api.Request
@@ -117,15 +116,6 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
   @Override
   boolean testRedirects() {
     false
-  }
-
-  @Override
-  Set<AttributeKey<?>> httpAttributes(URI uri) {
-    Set<AttributeKey<?>> extra = [
-      SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_TARGET,
-    ]
-    super.httpAttributes(uri) + extra
   }
 
   @Unroll

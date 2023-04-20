@@ -64,7 +64,6 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     this.capturedHeaders = lowercase(capturedHeaders);
   }
 
-  @SuppressWarnings("deprecation") // operationName
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     internalSet(attributes, SemanticAttributes.MESSAGING_SYSTEM, getter.getSystem(request));
@@ -82,15 +81,9 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
           SemanticAttributes.MESSAGING_DESTINATION_NAME,
           getter.getDestination(request));
     }
-    internalSet(attributes, SemanticAttributes.NET_APP_PROTOCOL_NAME, getter.getProtocol(request));
     internalSet(
         attributes,
-        SemanticAttributes.NET_APP_PROTOCOL_VERSION,
-        getter.getProtocolVersion(request));
-    internalSet(attributes, SemanticAttributes.MESSAGING_URL, getter.getUrl(request));
-    internalSet(
-        attributes,
-        SemanticAttributes.MESSAGING_CONVERSATION_ID,
+        SemanticAttributes.MESSAGING_MESSAGE_CONVERSATION_ID,
         getter.getConversationId(request));
     internalSet(
         attributes,

@@ -31,15 +31,6 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   boolean isTemporaryDestination(REQUEST request);
 
   @Nullable
-  String getProtocol(REQUEST request);
-
-  @Nullable
-  String getProtocolVersion(REQUEST request);
-
-  @Nullable
-  String getUrl(REQUEST request);
-
-  @Nullable
   String getConversationId(REQUEST request);
 
   @Nullable

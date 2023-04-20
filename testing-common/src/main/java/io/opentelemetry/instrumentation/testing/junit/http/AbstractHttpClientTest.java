@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -51,6 +52,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeAdapter<REQUEST> {
   public static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
   public static final Duration READ_TIMEOUT = Duration.ofSeconds(2);
+  public static final String TEST_REQUEST_HEADER = "X-Test-Request";
+  public static final String TEST_RESPONSE_HEADER = "X-Test-Response";
 
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
@@ -439,6 +442,34 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+        });
+  }
+
+  @Test
+  void captureHttpHeaders() throws Exception {
+    URI uri = resolveAddress("/success");
+    String method = "GET";
+    int responseCode =
+        doRequest(method, uri, Collections.singletonMap(TEST_REQUEST_HEADER, "test"));
+
+    assertThat(responseCode).isEqualTo(200);
+
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> {
+                assertClientSpan(span, uri, method, responseCode).hasNoParent();
+                span.hasAttributesSatisfying(
+                    attrs -> {
+                      assertThat(attrs)
+                          .containsEntry(
+                              "http.request.header.x_test_request", new String[] {"test"});
+                      assertThat(attrs)
+                          .containsEntry(
+                              "http.response.header.x_test_response", new String[] {"test"});
+                    });
+              },
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
   }
@@ -860,6 +891,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (attrs.get(SemanticAttributes.NET_TRANSPORT) != null) {
                 assertThat(attrs).containsEntry(SemanticAttributes.NET_TRANSPORT, IP_TCP);
               }
+              if (httpClientAttributes.contains(NetAttributes.NET_PROTOCOL_NAME)) {
+                assertThat(attrs).containsEntry(NetAttributes.NET_PROTOCOL_NAME, "http");
+              }
+              if (httpClientAttributes.contains(NetAttributes.NET_PROTOCOL_VERSION)) {
+                // TODO(anuraaga): Support HTTP/2
+                assertThat(attrs).containsEntry(NetAttributes.NET_PROTOCOL_VERSION, "1.1");
+              }
               if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
                 assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
               }
@@ -905,20 +943,20 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_METHOD)) {
                 assertThat(attrs).containsEntry(SemanticAttributes.HTTP_METHOD, method);
               }
-              if (httpClientAttributes.contains(SemanticAttributes.HTTP_FLAVOR)) {
-                // TODO(anuraaga): Support HTTP/2
-                assertThat(attrs)
-                    .containsEntry(
-                        SemanticAttributes.HTTP_FLAVOR,
-                        SemanticAttributes.HttpFlavorValues.HTTP_1_1);
-              }
-              if (httpClientAttributes.contains(SemanticAttributes.HTTP_USER_AGENT)) {
+              if (httpClientAttributes.contains(SemanticAttributes.USER_AGENT_ORIGINAL)) {
                 String userAgent = options.getUserAgent();
-                if (userAgent != null) {
+                if (userAgent != null
+                    || attrs.get(SemanticAttributes.USER_AGENT_ORIGINAL) != null) {
                   assertThat(attrs)
                       .hasEntrySatisfying(
-                          SemanticAttributes.HTTP_USER_AGENT,
-                          actual -> assertThat(actual).startsWith(userAgent));
+                          SemanticAttributes.USER_AGENT_ORIGINAL,
+                          actual -> {
+                            if (userAgent != null) {
+                              assertThat(actual).startsWith(userAgent);
+                            } else {
+                              assertThat(actual).isNull();
+                            }
+                          });
                 }
               }
               if (attrs.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH) != null) {
@@ -950,11 +988,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   }
 
   protected Set<AttributeKey<?>> httpAttributes(URI uri) {
+    // FIXME (mateusz) why is this not the same as HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES?
     Set<AttributeKey<?>> attributes = new HashSet<>();
+    attributes.add(NetAttributes.NET_PROTOCOL_NAME);
+    attributes.add(NetAttributes.NET_PROTOCOL_VERSION);
     attributes.add(SemanticAttributes.HTTP_URL);
     attributes.add(SemanticAttributes.HTTP_METHOD);
-    attributes.add(SemanticAttributes.HTTP_FLAVOR);
-    attributes.add(SemanticAttributes.HTTP_USER_AGENT);
+    attributes.add(SemanticAttributes.USER_AGENT_ORIGINAL);
     return attributes;
   }
 

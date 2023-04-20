@@ -21,7 +21,12 @@ import static java.util.stream.Collectors.toSet
 class SpringBootSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20211213.1570880324"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20230321.4484174638"
+  }
+
+  @Override
+  protected boolean getSetServiceName() {
+    return false
   }
 
   @Override
@@ -82,10 +87,17 @@ class SpringBootSmokeTest extends SmokeTest {
     metrics.hasMetricsNamed("process.runtime.jvm.memory.committed")
     metrics.hasMetricsNamed("process.runtime.jvm.memory.limit")
 
+    then: "service name is autodetected"
+    def serviceName = findResourceAttribute(traces, "service.name")
+      .map { it.stringValue }
+      .findAny()
+    serviceName.isPresent()
+    serviceName.get() == "otel-spring-test-app"
+
     cleanup:
     stopTarget()
 
     where:
-    jdk << [8, 11, 17]
+    jdk << [8, 11, 17, 19]
   }
 }

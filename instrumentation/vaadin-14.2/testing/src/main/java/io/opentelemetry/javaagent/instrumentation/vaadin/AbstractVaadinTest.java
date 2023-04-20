@@ -23,15 +23,15 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.openqa.selenium.By;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
@@ -94,10 +94,7 @@ public abstract class AbstractVaadinTest
 
   protected void prepareVaadinBaseDir(File baseDir) {}
 
-  protected static void copyResource(String resource, File destinationDirectory) {
-    int lastSlash = resource.lastIndexOf('/');
-    String fileName = lastSlash == -1 ? resource : resource.substring(lastSlash + 1);
-    Path destination = Paths.get(destinationDirectory.toURI()).resolve(fileName);
+  protected static void copyClasspathResource(String resource, Path destination) {
     if (!Files.exists(destination)) {
       try (InputStream inputStream = AbstractVaadinTest.class.getResourceAsStream(resource)) {
         Files.copy(inputStream, destination);
@@ -133,18 +130,18 @@ public abstract class AbstractVaadinTest
     // In development mode ui javascript is compiled when application starts
     // this involves downloading and installing npm and a bunch of packages
     // and running webpack. Wait until all of this is done before starting test.
-    driver.manage().timeouts().implicitlyWait(3, TimeUnit.MINUTES);
+    driver.manage().timeouts().implicitlyWait(Duration.ofMinutes(3));
     driver.get(address.resolve("main").toString());
     // wait for page to load
-    driver.findElementById("main.label");
+    driver.findElement(By.id("main.label"));
     // clear traces so test would start from clean state
     testing.clearData();
 
-    driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+    driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30));
   }
 
   private RemoteWebDriver getWebDriver() {
-    return browser.getWebDriver();
+    return new RemoteWebDriver(browser.getSeleniumAddress(), new ChromeOptions(), false);
   }
 
   abstract void assertFirstRequest();
@@ -188,16 +185,16 @@ public abstract class AbstractVaadinTest
     driver.get(address.resolve("main").toString());
 
     // wait for page to load
-    assertThat(driver.findElementById("main.label").getText()).isEqualTo("Main view");
+    assertThat(driver.findElement(By.id("main.label")).getText()).isEqualTo("Main view");
     assertFirstRequest();
 
     testing.clearData();
 
     // click a button to trigger calling java code in MainView
-    driver.findElementById("main.button").click();
+    driver.findElement(By.id("main.button")).click();
 
     // wait for page to load
-    assertThat(driver.findElementById("other.label").getText()).isEqualTo("Other view");
+    assertThat(driver.findElement(By.id("other.label")).getText()).isEqualTo("Other view");
     assertButtonClick();
 
     driver.close();

@@ -8,20 +8,30 @@ package io.opentelemetry.javaagent.extension.matcher;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.internal.ClassLoaderMatcherCacheHolder;
 import io.opentelemetry.javaagent.bootstrap.internal.InClassLoaderMatcher;
+import java.util.BitSet;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
-
-  private final Cache<ClassLoader, Boolean> cache = Cache.weak();
+  // caching is disabled for build time muzzle checks
+  // this field is set via reflection from ClassLoaderMatcher
+  static boolean useCache = true;
+  private static final AtomicInteger counter = new AtomicInteger();
 
   private final String[] resources;
+  // each matcher gets a unique index that is used for caching the matching status
+  private final int index = counter.getAndIncrement();
 
   ClassLoaderHasClassesNamedMatcher(String... classNames) {
     resources = classNames;
     for (int i = 0; i < resources.length; i++) {
       resources[i] = resources[i].replace(".", "/") + ".class";
     }
-    ClassLoaderMatcherCacheHolder.addCache(cache);
+    if (useCache) {
+      Manager.INSTANCE.add(this);
+    }
   }
 
   @Override
@@ -30,10 +40,14 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
       // Can't match the bootstrap class loader.
       return false;
     }
-    return cache.computeIfAbsent(cl, this::hasResources);
+    if (useCache) {
+      return Manager.INSTANCE.match(this, cl);
+    } else {
+      return hasResources(cl, resources);
+    }
   }
 
-  private boolean hasResources(ClassLoader cl) {
+  private static boolean hasResources(ClassLoader cl, String... resources) {
     boolean priorValue = InClassLoaderMatcher.getAndSet(true);
     try {
       for (String resource : resources) {
@@ -45,5 +59,44 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
       InClassLoaderMatcher.set(priorValue);
     }
     return true;
+  }
+
+  private static class Manager {
+    private static final BitSet EMPTY = new BitSet(0);
+    static final Manager INSTANCE = new Manager();
+    private final List<ClassLoaderHasClassesNamedMatcher> matchers = new CopyOnWriteArrayList<>();
+    // each matcher gets a bit in BitSet, that bit indicates whether current matcher matched or not
+    // for given class loader
+    private final Cache<ClassLoader, BitSet> enabled = Cache.weak();
+    private volatile boolean matchCalled = false;
+
+    Manager() {
+      ClassLoaderMatcherCacheHolder.addCache(enabled);
+    }
+
+    void add(ClassLoaderHasClassesNamedMatcher matcher) {
+      if (matchCalled) {
+        throw new IllegalStateException("All matchers should be create before match is called");
+      }
+      matchers.add(matcher);
+    }
+
+    boolean match(ClassLoaderHasClassesNamedMatcher matcher, ClassLoader cl) {
+      matchCalled = true;
+      BitSet set = enabled.get(cl);
+      if (set == null) {
+        set = new BitSet(counter.get());
+        for (ClassLoaderHasClassesNamedMatcher m : matchers) {
+          if (hasResources(cl, m.resources)) {
+            // set the bit corresponding to the matcher when it matched
+            set.set(m.index);
+          }
+        }
+        enabled.put(cl, set.isEmpty() ? EMPTY : set);
+      } else if (set.isEmpty()) {
+        return false;
+      }
+      return set.get(matcher.index);
+    }
   }
 }

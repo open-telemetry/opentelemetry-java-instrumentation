@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import javax.annotation.Nullable;
 
 /**
@@ -31,7 +32,13 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
    *
    * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
    * {@code response} is {@code null} or not.
+   *
+   * @deprecated Use {@link NetClientAttributesGetter#getProtocolName(Object, Object)} and {@link
+   *     NetClientAttributesGetter#getProtocolVersion(Object, Object)} instead.
    */
+  @Deprecated
   @Nullable
-  String getFlavor(REQUEST request, @Nullable RESPONSE response);
+  default String getFlavor(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
 }

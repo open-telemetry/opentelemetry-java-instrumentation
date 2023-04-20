@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.ratpack.v1_7;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 import ratpack.handling.Context;
@@ -45,22 +44,6 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   @Override
   public List<String> getRequestHeader(Request request, String name) {
     return request.getHeaders().getAll(name);
-  }
-
-  @Override
-  @Nullable
-  public String getFlavor(Request request) {
-    switch (request.getProtocol()) {
-      case "HTTP/1.0":
-        return SemanticAttributes.HttpFlavorValues.HTTP_1_0;
-      case "HTTP/1.1":
-        return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
-      case "HTTP/2.0":
-        return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
-      default:
-        // fall through
-    }
-    return null;
   }
 
   @Override

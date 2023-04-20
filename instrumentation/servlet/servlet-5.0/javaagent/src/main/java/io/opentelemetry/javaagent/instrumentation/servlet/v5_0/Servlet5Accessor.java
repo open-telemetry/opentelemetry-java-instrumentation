@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletAsyncListener;
 import jakarta.servlet.AsyncEvent;
@@ -20,7 +21,9 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
-public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, HttpServletResponse> {
+public class Servlet5Accessor
+    implements ServletAccessor<HttpServletRequest, HttpServletResponse>,
+        HttpServerResponseMutator<HttpServletResponse> {
   public static final Servlet5Accessor INSTANCE = new Servlet5Accessor();
 
   private Servlet5Accessor() {}
@@ -170,6 +173,11 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   @Override
   public boolean isServletException(Throwable throwable) {
     return throwable instanceof ServletException;
+  }
+
+  @Override
+  public void appendHeader(HttpServletResponse response, String name, String value) {
+    response.addHeader(name, value);
   }
 
   private static class Listener implements AsyncListener {

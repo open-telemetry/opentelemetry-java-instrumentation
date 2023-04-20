@@ -63,6 +63,7 @@ dependencies {
   baseJavaagentLibs(project(":javaagent-extension-api"))
 
   baseJavaagentLibs(project(":javaagent-tooling"))
+  baseJavaagentLibs(project(":javaagent-internal-logging-application"))
   baseJavaagentLibs(project(":javaagent-internal-logging-simple", configuration = "shadow"))
   baseJavaagentLibs(project(":muzzle"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
@@ -70,6 +71,7 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-api:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent"))
   baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-application-logger:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-lambda:javaagent"))
@@ -83,6 +85,7 @@ dependencies {
   //  in case there are dependencies (accidentally) pulled in by instrumentation modules
   //  but I couldn't get that to work
   licenseReportDependencies(project(":javaagent-tooling"))
+  licenseReportDependencies(project(":javaagent-internal-logging-application"))
   licenseReportDependencies(project(":javaagent-internal-logging-simple"))
   licenseReportDependencies(project(":javaagent-extension-api"))
 
@@ -216,6 +219,12 @@ tasks {
     dependsOn(shadowJar, baseJavaagentJar)
   }
 
+  if (findProperty("removeJarVersionNumbers") == "true") {
+    withType<AbstractArchiveTask>().configureEach {
+      archiveVersion.set("")
+    }
+  }
+
   withType<Test>().configureEach {
     dependsOn(shadowJar)
 
@@ -232,9 +241,17 @@ tasks {
     delete(rootProject.file("licenses"))
   }
 
+  val generateLicenseReportEnabled = gradle.startParameter.taskNames.any { it.equals("generateLicenseReport") }
   named("generateLicenseReport").configure {
     dependsOn(cleanLicenses)
     finalizedBy(":spotlessApply")
+    // disable licence report generation unless this task is explicitly run
+    // the files produced by this task are used by other tasks without declaring them as dependency
+    // which gradle considers an error
+    enabled = enabled && generateLicenseReportEnabled
+  }
+  if (generateLicenseReportEnabled) {
+    project.parent?.tasks?.getByName("spotlessMisc")?.dependsOn(named("generateLicenseReport"))
   }
 
   // Because we reconfigure publishing to only include the shadow jar, the Gradle metadata is not correct.

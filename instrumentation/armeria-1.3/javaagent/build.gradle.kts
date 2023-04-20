@@ -13,6 +13,7 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:armeria-1.3:library"))
+  testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
   library("com.linecorp.armeria:armeria:1.3.0")
 
