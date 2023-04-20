@@ -17,12 +17,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class JmxMetricInsightInstallerTest {
   private static final String PATH_TO_ALL_EXISTING_RULES = "src/main/resources/jmx/rules";
-  private static RuleParser parser;
   private static final Set<String> FILES_TO_BE_TESTED =
       new HashSet<>(
           Arrays.asList(
@@ -33,16 +31,13 @@ class JmxMetricInsightInstallerTest {
               "tomcat.yaml",
               "wildfly.yaml"));
 
-  @BeforeAll
-  static void setup() {
-    parser = RuleParser.get();
-    assertThat(parser == null).isFalse();
-  }
-
   @Test
   void testToVerifyExistingRulesAreValid() throws Exception {
     File existingRulesDir = new File(PATH_TO_ALL_EXISTING_RULES);
     assertThat(existingRulesDir == null).isFalse();
+
+    RuleParser parser = RuleParser.get();
+    assertThat(parser == null).isFalse();
 
     // make sure we have correct number of files
     File[] existingRules = existingRulesDir.listFiles();
@@ -51,12 +46,12 @@ class JmxMetricInsightInstallerTest {
     for (File file : existingRules) {
       // also make sure the files name are matching
       if (FILES_TO_BE_TESTED.contains(file.getName())) {
-        testRulesAreValid(file);
+        testRulesAreValid(file, parser);
       }
     }
   }
 
-  void testRulesAreValid(File file) throws Exception {
+  void testRulesAreValid(File file, RuleParser parser) throws Exception {
     InputStream inputStream = new FileInputStream(file);
     JmxConfig config = parser.loadConfig(inputStream);
     assertThat(config).isNotNull();
