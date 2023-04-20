@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ServerEndpoint {
+  private static final Map<String, ServerEndpoint> PATH_MAP = new HashMap<>();
   public static final ServerEndpoint SUCCESS =
       new ServerEndpoint("SUCCESS", "success", 200, "success");
   public static final ServerEndpoint REDIRECT =
@@ -126,8 +127,6 @@ public class ServerEndpoint {
       }
     }
   }
-
-  private static final Map<String, ServerEndpoint> PATH_MAP = new HashMap<>();
 
   public static ServerEndpoint[] values() {
     return PATH_MAP.values().toArray(new ServerEndpoint[0]);
