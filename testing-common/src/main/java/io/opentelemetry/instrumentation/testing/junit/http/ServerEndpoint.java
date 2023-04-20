@@ -12,32 +12,41 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ServerEndpoint {
-  public static final ServerEndpoint SUCCESS = new ServerEndpoint("success", 200, "success");
-  public static final ServerEndpoint REDIRECT = new ServerEndpoint("redirect", 302, "/redirected");
+  public static final ServerEndpoint SUCCESS =
+      new ServerEndpoint("SUCCESS", "success", 200, "success");
+  public static final ServerEndpoint REDIRECT =
+      new ServerEndpoint("REDIRECT", "redirect", 302, "/redirected");
   public static final ServerEndpoint ERROR =
       new ServerEndpoint(
-          "error-status", 500, "controller error"); // "error" is a special path for some frameworks
+          "ERROR",
+          "error-status",
+          500,
+          "controller error"); // "error" is a special path for some frameworks
   public static final ServerEndpoint EXCEPTION =
-      new ServerEndpoint("exception", 500, "controller exception");
-  public static final ServerEndpoint NOT_FOUND = new ServerEndpoint("notFound", 404, "not found");
+      new ServerEndpoint("EXCEPTION", "exception", 500, "controller exception");
+  public static final ServerEndpoint NOT_FOUND =
+      new ServerEndpoint("NOT_FOUND", "notFound", 404, "not found");
   public static final ServerEndpoint CAPTURE_HEADERS =
-      new ServerEndpoint("captureHeaders", 200, "headers captured");
+      new ServerEndpoint("CAPTURE_HEADERS", "captureHeaders", 200, "headers captured");
   public static final ServerEndpoint CAPTURE_PARAMETERS =
-      new ServerEndpoint("captureParameters", 200, "parameters captured");
+      new ServerEndpoint("CAPTURE_PARAMETERS", "captureParameters", 200, "parameters captured");
 
   // TODO: add tests for the following cases:
   public static final ServerEndpoint QUERY_PARAM =
-      new ServerEndpoint("query?some=query", 200, "some=query");
+      new ServerEndpoint("QUERY_PARAM", "query?some=query", 200, "some=query");
   // OkHttp never sends the fragment in the request, so these cases don't work.
   // FRAGMENT_PARAM("fragment#some-fragment", 200, "some-fragment"),
   // QUERY_FRAGMENT_PARAM("query/fragment?some=query#some-fragment", 200,
   // "some=query#some-fragment"),
-  public static final ServerEndpoint PATH_PARAM = new ServerEndpoint("path/123/param", 200, "123");
-  public static final ServerEndpoint AUTH_REQUIRED = new ServerEndpoint("authRequired", 200, null);
-  public static final ServerEndpoint LOGIN = new ServerEndpoint("login", 302, null);
+  public static final ServerEndpoint PATH_PARAM =
+      new ServerEndpoint("PATH_PARAM", "path/123/param", 200, "123");
+  public static final ServerEndpoint AUTH_REQUIRED =
+      new ServerEndpoint("AUTH_REQUIRED", "authRequired", 200, null);
+  public static final ServerEndpoint LOGIN = new ServerEndpoint("LOGIN", "login", 302, null);
   public static final ServerEndpoint AUTH_ERROR =
-      new ServerEndpoint("basicsecured/endpoint", 401, null);
-  public static final ServerEndpoint INDEXED_CHILD = new ServerEndpoint("child", 200, "");
+      new ServerEndpoint("AUTH_ERROR", "basicsecured/endpoint", 401, null);
+  public static final ServerEndpoint INDEXED_CHILD =
+      new ServerEndpoint("INDEXED_CHILD", "child", 200, "");
 
   public static final String ID_ATTRIBUTE_NAME = "test.request.id";
   public static final String ID_PARAMETER_NAME = "id";
@@ -70,8 +79,8 @@ public class ServerEndpoint {
     return name;
   }
 
-  ServerEndpoint(String uri, int status, String body) {
-    this.name = uri;
+  ServerEndpoint(String name, String uri, int status, String body) {
+    this.name = name;
     this.uriObj = URI.create(uri);
     this.path = uriObj.getPath();
     this.query = uriObj.getQuery();
