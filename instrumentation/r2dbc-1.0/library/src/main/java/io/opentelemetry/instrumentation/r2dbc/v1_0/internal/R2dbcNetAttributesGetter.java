@@ -17,12 +17,6 @@ public enum R2dbcNetAttributesGetter implements NetClientAttributesGetter<DbExec
 
   @Nullable
   @Override
-  public String getTransport(DbExecution request, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(DbExecution request) {
     return request.getHost();
   }

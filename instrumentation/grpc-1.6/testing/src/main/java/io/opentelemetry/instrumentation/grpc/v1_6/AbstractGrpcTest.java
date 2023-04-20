@@ -137,9 +137,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -179,9 +176,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -226,7 +220,6 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(
                                                     SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
@@ -256,7 +249,6 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.NET_PEER_PORT,
                                                     server.getPort()),
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -327,9 +319,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -369,9 +358,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -419,7 +405,6 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(
                                                     SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
@@ -449,7 +434,6 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.NET_PEER_PORT,
                                                     server.getPort()),
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -528,9 +512,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -570,9 +551,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -620,7 +598,6 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(
                                                     SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
@@ -650,7 +627,6 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.NET_PEER_PORT,
                                                     server.getPort()),
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -703,9 +679,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) status.getCode().value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -735,9 +708,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) status.getCode().value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -778,7 +748,6 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(
                                                     SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
@@ -808,7 +777,6 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.NET_PEER_PORT,
                                                     server.getPort()),
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -867,9 +835,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.UNKNOWN.getCode().value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -899,9 +864,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.UNKNOWN.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -937,7 +899,6 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(
                                                     SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
@@ -967,7 +928,6 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.NET_PEER_PORT,
                                                     server.getPort()),
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -1122,9 +1082,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -1164,9 +1121,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -1266,9 +1220,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayMultipleHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.CANCELLED.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -1309,9 +1260,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.CANCELLED.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -1409,9 +1357,6 @@ public abstract class AbstractGrpcTest {
                                         "grpc.reflection.v1alpha.ServerReflection"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "ServerReflectionInfo"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -1454,9 +1399,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -1540,9 +1482,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -1582,9 +1521,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),

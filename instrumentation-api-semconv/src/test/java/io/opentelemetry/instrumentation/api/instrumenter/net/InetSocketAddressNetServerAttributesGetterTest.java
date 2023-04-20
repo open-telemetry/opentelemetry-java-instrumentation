@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -24,11 +23,6 @@ class InetSocketAddressNetServerAttributesGetterTest {
 
   final InetSocketAddressNetServerAttributesGetter<Addresses> getter =
       new InetSocketAddressNetServerAttributesGetter<Addresses>() {
-
-        @Override
-        public String getTransport(Addresses request) {
-          return SemanticAttributes.NetTransportValues.IP_TCP;
-        }
 
         @Override
         public String getHostName(Addresses request) {
@@ -59,9 +53,7 @@ class InetSocketAddressNetServerAttributesGetterTest {
   void noInetSocketAddress() {
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), new Addresses(null, null));
-    assertThat(attributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP));
+    assertThat(attributes.build()).isEmpty();
   }
 
   @Test
@@ -84,7 +76,6 @@ class InetSocketAddressNetServerAttributesGetterTest {
 
     // then
     AttributesBuilder builder = Attributes.builder();
-    builder.put(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP);
     if (!request.isIpv4()) {
       builder.put(SemanticAttributes.NET_SOCK_FAMILY, "inet6");
     }
@@ -118,9 +109,7 @@ class InetSocketAddressNetServerAttributesGetterTest {
     extractor.onEnd(endAttributes, context, request, request, null);
 
     // then
-    assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP));
+    assertThat(startAttributes.build()).isEmpty();
 
     assertThat(endAttributes.build()).isEmpty();
   }

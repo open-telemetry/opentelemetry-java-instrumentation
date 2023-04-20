@@ -14,12 +14,6 @@ final class RedissonNetAttributesGetter
 
   @Nullable
   @Override
-  public String getTransport(RedissonRequest request, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(RedissonRequest redissonRequest) {
     return null;
   }

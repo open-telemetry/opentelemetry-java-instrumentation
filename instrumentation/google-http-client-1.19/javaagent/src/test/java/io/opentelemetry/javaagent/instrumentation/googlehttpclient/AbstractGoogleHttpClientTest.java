@@ -96,10 +96,7 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
                         .hasAttributesSatisfying(
                             attrs ->
                                 assertThat(attrs)
-                                    .hasSize(7)
-                                    .containsEntry(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP)
+                                    .hasSize(6)
                                     .containsEntry(SemanticAttributes.NET_PEER_NAME, "localhost")
                                     .hasEntrySatisfying(
                                         SemanticAttributes.NET_PEER_PORT,

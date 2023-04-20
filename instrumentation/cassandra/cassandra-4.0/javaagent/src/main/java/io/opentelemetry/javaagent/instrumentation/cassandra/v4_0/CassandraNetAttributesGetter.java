@@ -15,12 +15,6 @@ import javax.annotation.Nullable;
 final class CassandraNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<CassandraRequest, ExecutionInfo> {
 
-  @Override
-  @Nullable
-  public String getTransport(CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
-    return null;
-  }
-
   @Nullable
   @Override
   public String getPeerName(CassandraRequest request) {

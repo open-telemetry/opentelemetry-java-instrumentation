@@ -59,7 +59,6 @@ import static com.google.common.collect.ImmutableMap.of
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 @Unroll
 abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
@@ -161,7 +160,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
@@ -198,7 +196,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
@@ -234,7 +231,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
@@ -348,7 +344,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           kind operation != "SendMessage" ? CLIENT : PRODUCER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
@@ -439,7 +434,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           kind operation != "SendMessage" ? CLIENT : PRODUCER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
@@ -540,7 +534,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           errorEvent SdkClientException, "Unable to execute HTTP request: Read timed out"
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "$SemanticAttributes.HTTP_URL" "${server.httpUri()}${path}"

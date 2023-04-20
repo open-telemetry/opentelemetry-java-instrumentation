@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implements AgentTestTrait {
 
@@ -108,7 +107,6 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
           kind CLIENT
           status ERROR
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_PEER_NAME" uri.host

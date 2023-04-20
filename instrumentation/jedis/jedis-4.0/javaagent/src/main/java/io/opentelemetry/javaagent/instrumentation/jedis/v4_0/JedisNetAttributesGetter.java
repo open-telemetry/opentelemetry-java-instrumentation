@@ -6,18 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class JedisNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<JedisRequest, Void> {
-
-  @Override
-  public String getTransport(JedisRequest jedisRequest, @Nullable Void unused) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
 
   @Nullable
   @Override
