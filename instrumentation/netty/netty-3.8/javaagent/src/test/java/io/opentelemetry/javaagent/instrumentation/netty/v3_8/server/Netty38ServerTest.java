@@ -119,14 +119,14 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
                       () -> {
                         HttpResponse response;
                         ChannelBuffer responseContent;
-                        if (endpoint.equals(SUCCESS) || endpoint.equals(ERROR)) {
+                        if (endpoint == SUCCESS || endpoint == ERROR) {
                           responseContent =
                               ChannelBuffers.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
                           response =
                               new DefaultHttpResponse(
                                   HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
                           response.setContent(responseContent);
-                        } else if (endpoint.equals(INDEXED_CHILD)) {
+                        } else if (endpoint == INDEXED_CHILD) {
                           responseContent = ChannelBuffers.EMPTY_BUFFER;
                           endpoint.collectSpanAttributes(
                               name ->
@@ -136,21 +136,21 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
                               new DefaultHttpResponse(
                                   HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
                           response.setContent(responseContent);
-                        } else if (endpoint.equals(QUERY_PARAM)) {
+                        } else if (endpoint == QUERY_PARAM) {
                           responseContent =
                               ChannelBuffers.copiedBuffer(uri.getQuery(), CharsetUtil.UTF_8);
                           response =
                               new DefaultHttpResponse(
                                   HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
                           response.setContent(responseContent);
-                        } else if (endpoint.equals(REDIRECT)) {
+                        } else if (endpoint == REDIRECT) {
                           responseContent = ChannelBuffers.EMPTY_BUFFER;
                           response =
                               new DefaultHttpResponse(
                                   HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
                           response.setContent(responseContent);
                           response.headers().set(LOCATION, endpoint.getBody());
-                        } else if (endpoint.equals(CAPTURE_HEADERS)) {
+                        } else if (endpoint == CAPTURE_HEADERS) {
                           responseContent =
                               ChannelBuffers.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
                           response =
@@ -160,7 +160,7 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
                               .headers()
                               .set("X-Test-Response", request.headers().get("X-Test-Request"));
                           response.setContent(responseContent);
-                        } else if (endpoint.equals(EXCEPTION)) {
+                        } else if (endpoint == EXCEPTION) {
                           throw new IllegalArgumentException(endpoint.getBody());
                         } else {
                           responseContent =

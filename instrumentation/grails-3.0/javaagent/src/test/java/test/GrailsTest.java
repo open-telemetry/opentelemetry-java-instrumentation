@@ -107,13 +107,13 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
 
   @Override
   public String expectedHttpRoute(ServerEndpoint endpoint) {
-    if (endpoint.equals(PATH_PARAM)) {
+    if (endpoint == PATH_PARAM) {
       return getContextPath() + "/test/path";
-    } else if (endpoint.equals(QUERY_PARAM)) {
+    } else if (endpoint == QUERY_PARAM) {
       return getContextPath() + "/test/query";
-    } else if (endpoint.equals(ERROR)) {
+    } else if (endpoint == ERROR) {
       return getContextPath() + "/test/error";
-    } else if (endpoint.equals(NOT_FOUND)) {
+    } else if (endpoint == NOT_FOUND) {
       return getContextPath() + "/**";
     }
     return getContextPath() + "/test" + endpoint.getPath();
@@ -124,15 +124,15 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
   }
 
   private static String getHandlerSpanName(ServerEndpoint endpoint) {
-    if (endpoint.equals(QUERY_PARAM)) {
+    if (endpoint == QUERY_PARAM) {
       return "TestController.query";
-    } else if (endpoint.equals(PATH_PARAM)) {
+    } else if (endpoint == PATH_PARAM) {
       return "TestController.path";
-    } else if (endpoint.equals(CAPTURE_HEADERS)) {
+    } else if (endpoint == CAPTURE_HEADERS) {
       return "TestController.captureHeaders";
-    } else if (endpoint.equals(INDEXED_CHILD)) {
+    } else if (endpoint == INDEXED_CHILD) {
       return "TestController.child";
-    } else if (endpoint.equals(NOT_FOUND)) {
+    } else if (endpoint == NOT_FOUND) {
       return "ResourceHttpRequestHandler.handleRequest";
     }
     return "TestController." + endpoint.name().toLowerCase(Locale.ROOT);

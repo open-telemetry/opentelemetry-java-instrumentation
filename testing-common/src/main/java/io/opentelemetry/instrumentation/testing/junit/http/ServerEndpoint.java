@@ -87,6 +87,7 @@ public class ServerEndpoint {
     this.fragment = uriObj.getFragment();
     this.status = status;
     this.body = body;
+    PATH_MAP.put(this.path, this);
   }
 
   public String getPath() {
@@ -127,22 +128,6 @@ public class ServerEndpoint {
   }
 
   private static final Map<String, ServerEndpoint> PATH_MAP = new HashMap<>();
-
-  static {
-    PATH_MAP.put(SUCCESS.getPath(), SUCCESS);
-    PATH_MAP.put(REDIRECT.getPath(), REDIRECT);
-    PATH_MAP.put(ERROR.getPath(), ERROR);
-    PATH_MAP.put(EXCEPTION.getPath(), EXCEPTION);
-    PATH_MAP.put(NOT_FOUND.getPath(), NOT_FOUND);
-    PATH_MAP.put(CAPTURE_HEADERS.getPath(), CAPTURE_HEADERS);
-    PATH_MAP.put(CAPTURE_PARAMETERS.getPath(), CAPTURE_PARAMETERS);
-    PATH_MAP.put(QUERY_PARAM.getPath(), QUERY_PARAM);
-    PATH_MAP.put(PATH_PARAM.getPath(), PATH_PARAM);
-    PATH_MAP.put(AUTH_REQUIRED.getPath(), AUTH_REQUIRED);
-    PATH_MAP.put(LOGIN.getPath(), LOGIN);
-    PATH_MAP.put(AUTH_ERROR.getPath(), AUTH_ERROR);
-    PATH_MAP.put(INDEXED_CHILD.getPath(), INDEXED_CHILD);
-  }
 
   public static ServerEndpoint[] values() {
     return PATH_MAP.values().toArray(new ServerEndpoint[0]);

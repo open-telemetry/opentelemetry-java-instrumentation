@@ -113,12 +113,12 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
     private static Object handle(HttpRequest request, URI uri, ServerEndpoint endpoint) {
       ByteBuf content;
       FullHttpResponse response;
-      if (endpoint.equals(SUCCESS) || endpoint.equals(ERROR)) {
+      if (endpoint == SUCCESS || endpoint == ERROR) {
         content = Unpooled.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
         response =
             new DefaultFullHttpResponse(
                 HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
-      } else if (endpoint.equals(INDEXED_CHILD)) {
+      } else if (endpoint == INDEXED_CHILD) {
         content = Unpooled.EMPTY_BUFFER;
         endpoint.collectSpanAttributes(
             name ->
@@ -126,24 +126,24 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
         response =
             new DefaultFullHttpResponse(
                 HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
-      } else if (endpoint.equals(QUERY_PARAM)) {
+      } else if (endpoint == QUERY_PARAM) {
         content = Unpooled.copiedBuffer(uri.getQuery(), CharsetUtil.UTF_8);
         response =
             new DefaultFullHttpResponse(
                 HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
-      } else if (endpoint.equals(REDIRECT)) {
+      } else if (endpoint == REDIRECT) {
         content = Unpooled.EMPTY_BUFFER;
         response =
             new DefaultFullHttpResponse(
                 HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
         response.headers().set(HttpHeaderNames.LOCATION, endpoint.getBody());
-      } else if (endpoint.equals(CAPTURE_HEADERS)) {
+      } else if (endpoint == CAPTURE_HEADERS) {
         content = Unpooled.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
         response =
             new DefaultFullHttpResponse(
                 HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
         response.headers().set("X-Test-Response", request.headers().get("X-Test-Request"));
-      } else if (endpoint.equals(EXCEPTION)) {
+      } else if (endpoint == EXCEPTION) {
         throw new IllegalStateException(endpoint.getBody());
       } else {
         content = Unpooled.copiedBuffer(NOT_FOUND.getBody(), CharsetUtil.UTF_8);
