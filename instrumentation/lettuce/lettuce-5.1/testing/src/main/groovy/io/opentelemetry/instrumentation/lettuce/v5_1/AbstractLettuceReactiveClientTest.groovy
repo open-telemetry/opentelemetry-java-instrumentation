@@ -19,7 +19,6 @@ import java.util.function.Consumer
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecification {
   public static final int DB_INDEX = 0
