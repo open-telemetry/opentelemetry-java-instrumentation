@@ -23,7 +23,6 @@ import spock.lang.Shared
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
 
@@ -103,7 +102,6 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.transport" IP_TCP
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
@@ -127,7 +125,6 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.transport" IP_TCP
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
@@ -146,7 +143,6 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "http.url" { it.startsWith("http://localhost:$sqsPort") }
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.transport" IP_TCP
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
@@ -174,7 +170,6 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.transport" IP_TCP
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }

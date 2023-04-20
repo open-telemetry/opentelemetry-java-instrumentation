@@ -86,7 +86,6 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
           kind SpanKind.SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"

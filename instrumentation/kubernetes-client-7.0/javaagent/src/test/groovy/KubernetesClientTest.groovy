@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class KubernetesClientTest extends AgentInstrumentationSpecification {
   private static final String TEST_USER_AGENT = "test-user-agent"
@@ -198,7 +197,6 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.HTTP_METHOD" "GET"
         "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
         "$SemanticAttributes.HTTP_STATUS_CODE" statusCode
-        "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
         "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
         "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long

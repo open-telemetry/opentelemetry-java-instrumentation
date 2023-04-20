@@ -15,8 +15,9 @@ import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
 
-import static io.opentelemetry.api.trace.SpanKind.*
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 class RestCamelTest extends AgentInstrumentationSpecification implements RetryOnAddressAlreadyInUseTrait {
 
@@ -92,7 +93,6 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_ROUTE" "/api/{module}/unit/{unitId}"
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"

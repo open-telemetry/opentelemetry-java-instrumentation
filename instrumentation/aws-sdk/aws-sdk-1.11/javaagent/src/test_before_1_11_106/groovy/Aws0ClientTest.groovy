@@ -34,7 +34,6 @@ import java.time.Duration
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class Aws0ClientTest extends AgentInstrumentationSpecification {
 
@@ -105,7 +104,6 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_URL" "${server.httpUri()}"
             "$SemanticAttributes.HTTP_METHOD" "$method"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -170,7 +168,6 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_URL" "http://localhost:${UNUSABLE_PORT}"
             "$SemanticAttributes.HTTP_METHOD" "$method"
             "$SemanticAttributes.NET_PEER_PORT" 61
@@ -218,7 +215,6 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent IllegalStateException, "bad handler"
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_URL" "https://s3.amazonaws.com"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.NET_PEER_NAME" "s3.amazonaws.com"
@@ -261,7 +257,6 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_URL" "${server.httpUri()}"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()

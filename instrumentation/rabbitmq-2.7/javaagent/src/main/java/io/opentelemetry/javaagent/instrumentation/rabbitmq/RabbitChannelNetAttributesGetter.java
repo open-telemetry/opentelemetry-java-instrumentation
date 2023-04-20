@@ -14,12 +14,6 @@ public class RabbitChannelNetAttributesGetter
 
   @Nullable
   @Override
-  public String getTransport(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(ChannelAndMethod channelAndMethod) {
     return null;
   }

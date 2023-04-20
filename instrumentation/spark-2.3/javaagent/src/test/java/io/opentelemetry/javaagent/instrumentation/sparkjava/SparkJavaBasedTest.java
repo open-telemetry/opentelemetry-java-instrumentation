@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.sparkjava;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
@@ -69,7 +68,6 @@ public class SparkJavaBasedTest {
                                     SemanticAttributes.USER_AGENT_ORIGINAL,
                                     val -> val.isInstanceOf(String.class)),
                                 equalTo(SemanticAttributes.HTTP_ROUTE, "/param/:param"),
-                                equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
                                 equalTo(stringKey("net.protocol.name"), "http"),
                                 equalTo(stringKey("net.protocol.version"), "1.1"),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),

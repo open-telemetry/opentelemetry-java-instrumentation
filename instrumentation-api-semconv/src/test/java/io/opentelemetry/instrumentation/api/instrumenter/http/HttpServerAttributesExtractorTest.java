@@ -81,11 +81,6 @@ class HttpServerAttributesExtractorTest {
 
   static class TestNetServerAttributesGetter
       implements NetServerAttributesGetter<Map<String, Object>> {
-    @Nullable
-    @Override
-    public String getTransport(Map<String, Object> request) {
-      return (String) request.get("transport");
-    }
 
     @Nullable
     @Override
