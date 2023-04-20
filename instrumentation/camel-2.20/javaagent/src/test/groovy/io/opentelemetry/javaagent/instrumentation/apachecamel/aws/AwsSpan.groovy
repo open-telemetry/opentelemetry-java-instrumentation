@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class AwsSpan {
 
