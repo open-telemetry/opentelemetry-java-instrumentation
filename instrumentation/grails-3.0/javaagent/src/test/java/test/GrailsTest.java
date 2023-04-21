@@ -124,15 +124,15 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
   }
 
   private static String getHandlerSpanName(ServerEndpoint endpoint) {
-    if (endpoint == QUERY_PARAM) {
+    if (QUERY_PARAM.equals(endpoint)) {
       return "TestController.query";
-    } else if (endpoint == PATH_PARAM) {
+    } else if (PATH_PARAM.equals(endpoint)) {
       return "TestController.path";
-    } else if (endpoint == CAPTURE_HEADERS) {
+    } else if (CAPTURE_HEADERS.equals(endpoint)) {
       return "TestController.captureHeaders";
-    } else if (endpoint == INDEXED_CHILD) {
+    } else if (INDEXED_CHILD.equals(endpoint)) {
       return "TestController.child";
-    } else if (endpoint == NOT_FOUND) {
+    } else if (NOT_FOUND.equals(endpoint)) {
       return "ResourceHttpRequestHandler.handleRequest";
     }
     return "TestController." + endpoint.name().toLowerCase(Locale.ROOT);
