@@ -6,6 +6,7 @@
 package server.base;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NESTED_PATH;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 
@@ -49,10 +50,12 @@ public abstract class SpringWebFluxServerTest
 
   @Override
   public String expectedHttpRoute(ServerEndpoint endpoint) {
-    if (PATH_PARAM.equals(endpoint)) {
+    if (endpoint.equals(PATH_PARAM)) {
       return getContextPath() + "/path/{id}/param";
-    } else if (NOT_FOUND.equals(endpoint)) {
+    } else if (endpoint.equals(NOT_FOUND)) {
       return "/**";
+    } else if (endpoint.equals(NESTED_PATH)) {
+      return "/nestedPath/hello/world";
     }
     return super.expectedHttpRoute(endpoint);
   }
