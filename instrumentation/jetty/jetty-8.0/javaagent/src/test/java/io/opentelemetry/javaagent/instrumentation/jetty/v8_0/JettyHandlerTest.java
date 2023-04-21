@@ -89,7 +89,7 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
         unused ->
             Sets.difference(
                 DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(SemanticAttributes.HTTP_ROUTE)));
-    options.setHasResponseSpan(endpoint -> endpoint == REDIRECT || endpoint == ERROR);
+    options.setHasResponseSpan(endpoint -> REDIRECT.equals(endpoint) || ERROR.equals(endpoint));
     options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasResponseCustomizer(endpoint -> endpoint != EXCEPTION);
   }
@@ -97,9 +97,9 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    if (endpoint == REDIRECT) {
+    if (REDIRECT.equals(endpoint)) {
       span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"));
-    } else if (endpoint == ERROR) {
+    } else if (ERROR.equals(endpoint)) {
       span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
     }
     span.hasKind(SpanKind.INTERNAL).hasAttributesSatisfying(Attributes::isEmpty);
@@ -122,23 +122,23 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
   private static HttpServletResponse response(
       Request request, HttpServletResponse response, ServerEndpoint endpoint) throws IOException {
     response.setContentType("text/plain");
-    if (endpoint == SUCCESS) {
+    if (SUCCESS.equals(endpoint)) {
       response.setStatus(endpoint.getStatus());
       response.getWriter().print(endpoint.getBody());
-    } else if (endpoint == QUERY_PARAM) {
+    } else if (QUERY_PARAM.equals(endpoint)) {
       response.setStatus(endpoint.getStatus());
       response.getWriter().print(request.getQueryString());
-    } else if (endpoint == REDIRECT) {
+    } else if (REDIRECT.equals(endpoint)) {
       response.sendRedirect(endpoint.getBody());
-    } else if (endpoint == ERROR) {
+    } else if (ERROR.equals(endpoint)) {
       response.sendError(endpoint.getStatus(), endpoint.getBody());
-    } else if (endpoint == CAPTURE_HEADERS) {
+    } else if (CAPTURE_HEADERS.equals(endpoint)) {
       response.setHeader("X-Test-Response", request.getHeader("X-Test-Request"));
       response.setStatus(endpoint.getStatus());
       response.getWriter().print(endpoint.getBody());
-    } else if (endpoint == EXCEPTION) {
+    } else if (EXCEPTION.equals(endpoint)) {
       throw new IllegalStateException(endpoint.getBody());
-    } else if (endpoint == INDEXED_CHILD) {
+    } else if (INDEXED_CHILD.equals(endpoint)) {
       INDEXED_CHILD.collectSpanAttributes(name -> request.getParameter(name));
       response.setStatus(endpoint.getStatus());
       response.getWriter().print(endpoint.getBody());
