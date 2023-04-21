@@ -84,6 +84,57 @@ public class SqsBatchMessageHandlerTest {
   }
 
   @Test
+  public void simpleOTELUpstream() {
+    SQSEvent.SQSMessage sqsMessage = newMessage();
+
+    sqsMessage.setAttributes(
+        Collections.singletonMap(
+            "AWSTraceHeader", "00-ff000000000000000000000000000041-ff00000000000041-01"));
+
+    AtomicInteger counter = new AtomicInteger(0);
+
+    SqsBatchMessageHandler messageHandler =
+        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk()) {
+          @Override
+          protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+            counter.getAndIncrement();
+          }
+        };
+
+    Span parentSpan =
+        testing.getOpenTelemetrySdk().getTracer("test").spanBuilder("test").startSpan();
+
+    try (Scope scope = parentSpan.makeCurrent()) {
+      messageHandler.handleMessages(Collections.singletonList(sqsMessage));
+    }
+
+    parentSpan.end();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
+                span ->
+                    span.hasName("Batch Message Handler")
+                        .hasLinks(
+                            LinkData.create(
+                                SpanContext.createFromRemoteParent(
+                                    "ff000000000000000000000000000041",
+                                    "ff00000000000041",
+                                    TraceFlags.getSampled(),
+                                    TraceState.getDefault())))
+                        .hasTotalRecordedLinks(1)
+                        .hasAttribute(
+                            SemanticAttributes.MESSAGING_OPERATION, MessageOperation.RECEIVE.name())
+                        .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
+                        .hasTotalAttributeCount(2)
+                        .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
+                        .hasTraceId(parentSpan.getSpanContext().getTraceId())));
+
+    Assert.assertEquals(1, counter.get());
+  }
+
+  @Test
   public void multipleMessages() {
     List<SQSEvent.SQSMessage> sqsMessages = new LinkedList<>();
 

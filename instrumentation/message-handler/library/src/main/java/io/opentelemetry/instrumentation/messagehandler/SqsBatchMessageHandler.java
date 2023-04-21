@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
@@ -49,7 +50,48 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEven
   public SpanContext getParentSpanContext(SQSEvent.SQSMessage message) {
     String parentHeader = message.getAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
 
-    if (parentHeader != null) {
+    if (parentHeader == null) {
+      return null;
+    }
+
+    SpanContext spanContext = getParentSpanContextXRay(parentHeader);
+
+    if (spanContext != null) {
+      return spanContext;
+    }
+
+    spanContext = getParentSpanContextW3C(parentHeader);
+
+    if (spanContext != null) {
+      return spanContext;
+    }
+
+    logger.log(Level.WARNING, "Invalid upstream span context: {0}", parentHeader);
+    return null;
+  }
+
+  private static SpanContext getParentSpanContextW3C(String parentHeader) {
+      try {
+        Context w3cContext =
+            W3CTraceContextPropagator.getInstance()
+                .extract(
+                    Context.root(),
+                    Collections.singletonMap("traceparent", parentHeader),
+                    MapGetter.INSTANCE);
+
+        SpanContext messageSpanCtx = Span.fromContext(w3cContext).getSpanContext();
+
+        if (messageSpanCtx.isValid()) {
+          return messageSpanCtx;
+        } else {
+          return null;
+        }
+      } catch (RuntimeException e) {
+        return null;
+      }
+  }
+
+  private static SpanContext getParentSpanContextXRay(String parentHeader) {
       try {
         Context xrayContext =
             AwsXrayPropagator.getInstance()
@@ -62,13 +104,12 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEven
 
         if (messageSpanCtx.isValid()) {
           return messageSpanCtx;
+        } else {
+          return null;
         }
-      } catch (Throwable error) {
-        logger.log(Level.WARNING, "Invalid upstream span context: {0}", parentHeader);
+      } catch (RuntimeException e) {
+        return null;
       }
-    }
-
-    return null;
   }
 
   private enum MapGetter implements TextMapGetter<Map<String, String>> {
