@@ -11,6 +11,4 @@ dependencies {
   library("com.amazonaws:aws-lambda-java-events:2.2.1")
 
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
-
-  testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
 }

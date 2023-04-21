@@ -1,54 +1,30 @@
-# Library Instrumentation for Java HTTP Client
+# Message Handler
 
-Provides OpenTelemetry instrumentation for [Java HTTP Client](https://openjdk.org/groups/net/httpclient/intro.html).
+This package contains handlers to instrument message system spans.
 
-## Quickstart
+The handler will create a new messaging span, add span links to it, and set the messaging attributes behind the scene. These values are based off of the messages passed in.
 
-### Add these dependencies to your project
+The handler provides constructors to change the messaging operation and span name of the newly created messaging span.
 
-Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-java-http-client).
+## Available Handlers
+- `SQSBatchMessageHandlerTest` - processes messages from Amazon's SQS.
 
-For Maven, add to your `pom.xml` dependencies:
+## Using SQSBatchMessageHandlerTest
 
-```xml
-<dependencies>
-  <dependency>
-    <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-java-http-client</artifactId>
-    <version>OPENTELEMETRY_VERSION</version>
-  </dependency>
-</dependencies>
-```
-
-For Gradle, add to your dependencies:
-
-```groovy
-implementation("io.opentelemetry.instrumentation:opentelemetry-java-http-client:OPENTELEMETRY_VERSION")
-```
-
-### Usage
-
-The instrumentation library contains an `HttpClient` wrapper that provides OpenTelemetry-based spans
-and context propagation.
+1. Retrieve a collection of messages to process.
+2. Create a SQSBatchMessageHandler and provide the business logic on what to do with the messages.
+3. Call the handleMessages function and pass in your messages.
+4. It will call the doHandleMessages function you provided wrapped in the messaging span.
 
 ```java
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.httpclient.JavaHttpClientTelemetry;
-import java.net.http.HttpClient;
+Collection<SQSEvent.SQSMessage> sqsMessages;
 
-import java.util.concurrent.ExecutorService;
-
-public class JavaHttpClientConfiguration {
-
-  //Use this HttpClient implementation for making standard http client calls.
-  public HttpClient createTracedClient(OpenTelemetry openTelemetry) {
-    return JavaHttpClientTelemetry.builder(openTelemetry).build().newHttpClient(createClient());
+SQSBatchMessageHandler messageHandler = new SQSBatchMessageHandler(GlobalOpenTelemetry.get()) {
+  @Override
+  protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+    // Do my business logic
   }
+};
 
-  //your configuration of the Java HTTP Client goes here:
-  private HttpClient createClient() {
-    return HttpClient.newBuilder().build();
-  }
-}
+messageHandler.handleMessages(sqsMessages);
 ```
