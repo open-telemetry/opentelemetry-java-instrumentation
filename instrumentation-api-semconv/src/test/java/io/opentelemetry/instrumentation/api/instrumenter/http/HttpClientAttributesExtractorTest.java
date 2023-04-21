@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -74,13 +73,6 @@ class HttpClientAttributesExtractorTest {
 
     @Nullable
     @Override
-    public String getTransport(
-        Map<String, String> request, @Nullable Map<String, String> response) {
-      return response == null ? null : response.get("transport");
-    }
-
-    @Nullable
-    @Override
     public String getProtocolName(
         Map<String, String> request, @Nullable Map<String, String> response) {
       return request.get("protocolName");
@@ -124,7 +116,6 @@ class HttpClientAttributesExtractorTest {
     response.put("statusCode", "202");
     response.put("header.content-length", "20");
     response.put("header.custom-response-header", "654,321");
-    response.put("transport", IP_TCP);
 
     ToIntFunction<Context> resendCountFromContext = context -> 2;
 
@@ -160,7 +151,6 @@ class HttpClientAttributesExtractorTest {
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")),
-            entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
             entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
             entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"));
   }

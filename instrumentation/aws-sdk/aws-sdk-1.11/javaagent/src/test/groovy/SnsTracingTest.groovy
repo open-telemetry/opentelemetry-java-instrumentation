@@ -9,7 +9,6 @@ import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class SnsTracingTest extends AgentInstrumentationSpecification {
 
@@ -54,7 +53,6 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
@@ -79,7 +77,6 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
@@ -104,7 +101,6 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
@@ -128,7 +124,6 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
@@ -152,7 +147,6 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
@@ -175,7 +169,6 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
@@ -198,7 +191,6 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.url" String
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" String
-            "net.transport" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
@@ -226,7 +218,6 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -18,11 +17,6 @@ import org.eclipse.jetty.http.HttpVersion;
  */
 public class JettyHttpClientNetAttributesGetter
     implements NetClientAttributesGetter<Request, Response> {
-
-  @Override
-  public String getTransport(Request request, @Nullable Response response) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
 
   @Nullable
   @Override

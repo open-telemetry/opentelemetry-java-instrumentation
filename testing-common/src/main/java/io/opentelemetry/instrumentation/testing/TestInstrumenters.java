@@ -186,12 +186,6 @@ final class TestInstrumenters {
 
     @Nullable
     @Override
-    public String getTransport(String unused) {
-      return null;
-    }
-
-    @Nullable
-    @Override
     public String getHostName(String unused) {
       return null;
     }

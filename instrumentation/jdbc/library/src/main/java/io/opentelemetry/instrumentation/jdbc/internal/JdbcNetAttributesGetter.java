@@ -16,12 +16,6 @@ public final class JdbcNetAttributesGetter implements NetClientAttributesGetter<
 
   @Nullable
   @Override
-  public String getTransport(DbRequest request, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(DbRequest request) {
     return request.getDbInfo().getHost();
   }

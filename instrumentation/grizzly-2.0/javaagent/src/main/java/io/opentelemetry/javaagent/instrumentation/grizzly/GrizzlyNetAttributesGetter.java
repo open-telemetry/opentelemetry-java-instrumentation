@@ -10,14 +10,22 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import javax.annotation.Nullable;
+import org.glassfish.grizzly.Transport;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
+import org.glassfish.grizzly.nio.transport.UDPNIOTransport;
 
 final class GrizzlyNetAttributesGetter implements NetServerAttributesGetter<HttpRequestPacket> {
 
   @Override
   public String getTransport(HttpRequestPacket request) {
-    return request.getConnection().getTransport() instanceof TCPNIOTransport ? IP_TCP : IP_UDP;
+    Transport transport = request.getConnection().getTransport();
+    if (transport instanceof TCPNIOTransport) {
+      return IP_TCP;
+    } else if (transport instanceof UDPNIOTransport) {
+      return IP_UDP;
+    }
+    return null;
   }
 
   @Nullable

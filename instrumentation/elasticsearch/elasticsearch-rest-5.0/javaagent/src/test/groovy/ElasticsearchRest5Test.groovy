@@ -79,7 +79,6 @@ class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "GET"
             "$SemanticAttributes.DB_STATEMENT" "GET _cluster/health"
-            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
         span(1) {
@@ -87,7 +86,6 @@ class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
             "$SemanticAttributes.NET_PEER_PORT" httpHost.port
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -153,7 +151,6 @@ class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "GET"
             "$SemanticAttributes.DB_STATEMENT" "GET _cluster/health"
-            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
         span(2) {
@@ -161,7 +158,6 @@ class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(1)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
             "$SemanticAttributes.NET_PEER_PORT" httpHost.port
             "$SemanticAttributes.HTTP_METHOD" "GET"

@@ -92,18 +92,12 @@ public class OpenSearchRestTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "opensearch"),
                             equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "GET _cluster/health"),
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP)),
+                            equalTo(SemanticAttributes.DB_STATEMENT, "GET _cluster/health")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP),
                             equalTo(stringKey("net.protocol.name"), "http"),
                             equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
@@ -166,18 +160,12 @@ public class OpenSearchRestTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "opensearch"),
                             equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "GET _cluster/health"),
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP)),
+                            equalTo(SemanticAttributes.DB_STATEMENT, "GET _cluster/health")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP),
                             equalTo(stringKey("net.protocol.name"), "http"),
                             equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),

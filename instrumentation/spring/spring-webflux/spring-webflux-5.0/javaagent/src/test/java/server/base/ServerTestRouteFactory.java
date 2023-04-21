@@ -6,6 +6,8 @@
 package server.base;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
+import static org.springframework.web.reactive.function.server.RequestPredicates.path;
+import static org.springframework.web.reactive.function.server.RouterFunctions.nest;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 import io.opentelemetry.api.trace.Span;
@@ -98,7 +100,17 @@ public abstract class ServerTestRouteFactory {
                           request.headers().asHttpHeaders().getFirst("X-Test-Request")),
                   null,
                   null);
-            });
+            })
+        .andNest(
+            path("/nestedPath"),
+            nest(
+                path("/hello"),
+                route(
+                    path("/world"),
+                    request -> {
+                      ServerEndpoint endpoint = ServerEndpoint.NESTED_PATH;
+                      return respond(endpoint, null, null, null);
+                    })));
   }
 
   protected Mono<ServerResponse> respond(

@@ -152,7 +152,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     [
       SemanticAttributes.HTTP_ROUTE,
-      SemanticAttributes.NET_TRANSPORT,
       SemanticAttributes.NET_SOCK_PEER_PORT
     ] as Set
   }
