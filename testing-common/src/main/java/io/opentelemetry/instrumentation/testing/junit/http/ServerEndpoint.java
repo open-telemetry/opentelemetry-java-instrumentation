@@ -19,6 +19,11 @@ public enum ServerEndpoint {
   EXCEPTION("exception", 500, "controller exception"),
   NOT_FOUND("notFound", 404, "not found"),
   CAPTURE_HEADERS("captureHeaders", 200, "headers captured"),
+  NESTED_PATH(
+      "nestedPath/hello/world",
+      200,
+      "nested path"), // TODO (heya) move it to webflux test module after this has been converted to
+  // a class
   CAPTURE_PARAMETERS("captureParameters", 200, "parameters captured"),
 
   // TODO: add tests for the following cases:

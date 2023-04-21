@@ -52,6 +52,8 @@ public abstract class SpringWebFluxServerTest
         return getContextPath() + "/path/{id}/param";
       case NOT_FOUND:
         return "/**";
+      case NESTED_PATH:
+        return "/nestedPath/hello/world";
       default:
         return super.expectedHttpRoute(endpoint);
     }
