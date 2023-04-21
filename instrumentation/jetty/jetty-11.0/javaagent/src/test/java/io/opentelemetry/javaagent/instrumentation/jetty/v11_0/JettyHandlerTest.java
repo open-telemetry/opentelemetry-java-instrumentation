@@ -122,23 +122,23 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
   private static HttpServletResponse response(
       Request request, HttpServletResponse response, ServerEndpoint endpoint) throws IOException {
     response.setContentType("text/plain");
-    if (endpoint == SUCCESS) {
+    if (SUCCESS.equals(endpoint)) {
       response.setStatus(endpoint.getStatus());
       response.getWriter().print(endpoint.getBody());
-    } else if (endpoint == QUERY_PARAM) {
+    } else if (QUERY_PARAM.equals(endpoint)) {
       response.setStatus(endpoint.getStatus());
       response.getWriter().print(request.getQueryString());
-    } else if (endpoint == REDIRECT) {
+    } else if (REDIRECT.equals(endpoint)) {
       response.sendRedirect(endpoint.getBody());
-    } else if (endpoint == ERROR) {
+    } else if (ERROR.equals(endpoint)) {
       response.sendError(endpoint.getStatus(), endpoint.getBody());
-    } else if (endpoint == CAPTURE_HEADERS) {
+    } else if (CAPTURE_HEADERS.equals(endpoint)) {
       response.setHeader("X-Test-Response", request.getHeader("X-Test-Request"));
       response.setStatus(endpoint.getStatus());
       response.getWriter().print(endpoint.getBody());
-    } else if (endpoint == EXCEPTION) {
+    } else if (EXCEPTION.equals(endpoint)) {
       throw new IllegalStateException(endpoint.getBody());
-    } else if (endpoint == INDEXED_CHILD) {
+    } else if (INDEXED_CHILD.equals(endpoint)) {
       INDEXED_CHILD.collectSpanAttributes(name -> request.getParameter(name));
       response.setStatus(endpoint.getStatus());
       response.getWriter().print(endpoint.getBody());
