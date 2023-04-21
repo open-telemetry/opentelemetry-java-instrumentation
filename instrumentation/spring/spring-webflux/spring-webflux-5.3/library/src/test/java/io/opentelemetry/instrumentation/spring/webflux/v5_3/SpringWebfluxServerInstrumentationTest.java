@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
-
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -41,7 +39,7 @@ public final class SpringWebfluxServerInstrumentationTest
 
     options.setExpectedHttpRoute(
         endpoint -> {
-          if (PATH_PARAM.equals(endpoint)) {
+          if (endpoint == ServerEndpoint.PATH_PARAM) {
             return CONTEXT_PATH + "/path/{id}/param";
           }
           return expectedHttpRoute(endpoint);

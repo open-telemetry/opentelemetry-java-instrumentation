@@ -89,7 +89,7 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
         unused ->
             Sets.difference(
                 DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(SemanticAttributes.HTTP_ROUTE)));
-    options.setHasResponseSpan(endpoint -> REDIRECT.equals(endpoint) || ERROR.equals(endpoint));
+    options.setHasResponseSpan(endpoint -> endpoint == REDIRECT || endpoint == ERROR);
     options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasResponseCustomizer(endpoint -> endpoint != EXCEPTION);
   }
@@ -97,9 +97,9 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    if (REDIRECT.equals(endpoint)) {
+    if (endpoint == REDIRECT) {
       span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"));
-    } else if (ERROR.equals(endpoint)) {
+    } else if (endpoint == ERROR) {
       span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
     }
     span.hasKind(SpanKind.INTERNAL).hasAttributesSatisfying(Attributes::isEmpty);
