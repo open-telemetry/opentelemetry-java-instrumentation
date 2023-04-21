@@ -675,9 +675,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       return null;
     }
 
-    if (endpoint == NOT_FOUND) {
+    if (NOT_FOUND.equals(endpoint)) {
       return null;
-    } else if (endpoint == PATH_PARAM) {
+    } else if (PATH_PARAM.equals(endpoint)) {
       return options.contextPath + "/path/:id/param";
     } else {
       return endpoint.resolvePath(address).getPath();

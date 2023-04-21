@@ -49,9 +49,9 @@ public abstract class SpringWebFluxServerTest
 
   @Override
   public String expectedHttpRoute(ServerEndpoint endpoint) {
-    if (endpoint == PATH_PARAM) {
+    if (PATH_PARAM.equals(endpoint)) {
       return getContextPath() + "/path/{id}/param";
-    } else if (endpoint == NOT_FOUND) {
+    } else if (NOT_FOUND.equals(endpoint)) {
       return "/**";
     }
     return super.expectedHttpRoute(endpoint);

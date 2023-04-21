@@ -107,13 +107,13 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
 
   @Override
   public String expectedHttpRoute(ServerEndpoint endpoint) {
-    if (endpoint == PATH_PARAM) {
+    if (PATH_PARAM.equals(endpoint)) {
       return getContextPath() + "/test/path";
-    } else if (endpoint == QUERY_PARAM) {
+    } else if (QUERY_PARAM.equals(endpoint)) {
       return getContextPath() + "/test/query";
-    } else if (endpoint == ERROR) {
+    } else if (ERROR.equals(endpoint)) {
       return getContextPath() + "/test/error";
-    } else if (endpoint == NOT_FOUND) {
+    } else if (NOT_FOUND.equals(endpoint)) {
       return getContextPath() + "/**";
     }
     return getContextPath() + "/test" + endpoint.getPath();

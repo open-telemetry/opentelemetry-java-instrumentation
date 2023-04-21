@@ -41,7 +41,7 @@ public final class SpringWebfluxServerInstrumentationTest
 
     options.setExpectedHttpRoute(
         endpoint -> {
-          if (endpoint == PATH_PARAM) {
+          if (PATH_PARAM.equals(endpoint)) {
             return CONTEXT_PATH + "/path/{id}/param";
           }
           return expectedHttpRoute(endpoint);
