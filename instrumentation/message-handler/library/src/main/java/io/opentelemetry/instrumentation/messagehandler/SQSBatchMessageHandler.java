@@ -26,6 +26,14 @@ public abstract class SQSBatchMessageHandler extends BatchMessageHandler<SQSEven
     super(openTelemetry);
   }
 
+  public SQSBatchMessageHandler(OpenTelemetry openTelemetry, String messageOperation) {
+    super(openTelemetry, messageOperation);
+  }
+
+  public SQSBatchMessageHandler(OpenTelemetry openTelemetry, String messageOperation, String spanName) {
+    super(openTelemetry, messageOperation, spanName);
+  }
+
   @Override
   protected void addMessagingAttributes(SpanBuilder spanBuilder) {
     super.addMessagingAttributes(spanBuilder);

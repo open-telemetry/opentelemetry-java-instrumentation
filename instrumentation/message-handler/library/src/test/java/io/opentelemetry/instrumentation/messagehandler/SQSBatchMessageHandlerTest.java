@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -33,12 +34,11 @@ public class SQSBatchMessageHandlerTest {
   @Test
   public void simple() {
     SQSEvent.SQSMessage sqsMessage = newMessage();
-    SpanContext messageSpanContext = SpanContext.createFromRemoteParent(
-        "55555555123456789012345678901234",
-        "1234567890123456",
-        TraceFlags.getSampled(),
-        TraceState.getDefault());
-    sqsMessage.setAttributes(Collections.singletonMap("AWSTraceHeader", "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"));
+
+    sqsMessage.setAttributes(Collections.singletonMap(
+        "AWSTraceHeader",
+        "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"
+    ));
 
     AtomicInteger counter = new AtomicInteger(0);
 
@@ -51,7 +51,9 @@ public class SQSBatchMessageHandlerTest {
 
     Span parentSpan = testing.getOpenTelemetrySdk().getTracer("test").spanBuilder("test").startSpan();
 
-    messageHandler.handleMessages(Collections.singletonList(sqsMessage));
+    try (Scope scope = parentSpan.makeCurrent()) {
+      messageHandler.handleMessages(Collections.singletonList(sqsMessage));
+    }
 
     parentSpan.end();
 
@@ -59,16 +61,22 @@ public class SQSBatchMessageHandlerTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("test")),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
+                    span.hasName("test")
+                        .hasTotalAttributeCount(0)
+                        .hasTotalRecordedLinks(0),
                 span ->
                     span.hasName("Batch Message Handler")
-                        .hasLinks(LinkData.create(messageSpanContext))
+                        .hasLinks(LinkData.create(SpanContext.createFromRemoteParent(
+                            "55555555123456789012345678901234",
+                            "1234567890123456",
+                            TraceFlags.getSampled(),
+                            TraceState.getDefault())))
                         .hasTotalRecordedLinks(1)
                         .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, MessageOperation.RECEIVE.name())
                         .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
                         .hasTotalAttributeCount(2)
+                        .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
+                        .hasTraceId(parentSpan.getSpanContext().getTraceId())
             ));
 
     Assert.assertEquals(1, counter.get());
@@ -97,7 +105,9 @@ public class SQSBatchMessageHandlerTest {
 
     Span parentSpan = testing.getOpenTelemetrySdk().getTracer("test").spanBuilder("test").startSpan();
 
-    messageHandler.handleMessages(sqsMessages);
+    try (Scope scope = parentSpan.makeCurrent()) {
+      messageHandler.handleMessages(sqsMessages);
+    }
 
     parentSpan.end();
 
@@ -105,9 +115,9 @@ public class SQSBatchMessageHandlerTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("test")),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
+                    span.hasName("test")
+                        .hasTotalAttributeCount(0)
+                        .hasTotalRecordedLinks(0),
                 span ->
                     span.hasName("Batch Message Handler")
                         .hasLinks(
@@ -125,6 +135,167 @@ public class SQSBatchMessageHandlerTest {
                         .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, MessageOperation.RECEIVE.name())
                         .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
                         .hasTotalAttributeCount(2)
+                        .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
+                        .hasTraceId(parentSpan.getSpanContext().getTraceId())
+            ));
+
+    Assert.assertEquals(1, counter.get());
+  }
+
+  @Test
+  public void multipleRunsOfTheHandler() {
+    SQSEvent.SQSMessage sqsMessage1 = newMessage();
+    sqsMessage1.setAttributes(Collections.singletonMap("AWSTraceHeader", "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"));
+
+    SQSEvent.SQSMessage sqsMessage2 = newMessage();
+    sqsMessage2.setAttributes(Collections.singletonMap("AWSTraceHeader", "Root=1-44444444-123456789012345678901234;Parent=2481624816248161;Sampled=0"));
+
+    AtomicInteger counter = new AtomicInteger(0);
+
+    SQSBatchMessageHandler messageHandler = new SQSBatchMessageHandler(testing.getOpenTelemetrySdk(), MessageOperation.PROCESS.name()) {
+      @Override
+      protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+        counter.getAndIncrement();
+      }
+    };
+
+    Span parentSpan = testing.getOpenTelemetrySdk().getTracer("test").spanBuilder("test").startSpan();
+
+    try (Scope scope = parentSpan.makeCurrent()) {
+      messageHandler.handleMessages(Collections.singletonList(sqsMessage1));
+      messageHandler.handleMessages(Collections.singletonList(sqsMessage2));
+    }
+
+    parentSpan.end();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test")
+                        .hasTotalAttributeCount(0)
+                        .hasTotalRecordedLinks(0),
+                span ->
+                    span.hasName("Batch Message Handler")
+                        .hasLinks(
+                            LinkData.create(SpanContext.createFromRemoteParent(
+                                "55555555123456789012345678901234",
+                                "1234567890123456",
+                                TraceFlags.getSampled(),
+                                TraceState.getDefault())))
+                        .hasTotalRecordedLinks(1)
+                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, MessageOperation.PROCESS.name())
+                        .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
+                        .hasTotalAttributeCount(2)
+                        .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
+                        .hasTraceId(parentSpan.getSpanContext().getTraceId()),
+                span ->
+                    span.hasName("Batch Message Handler")
+                        .hasLinks(
+                            LinkData.create(SpanContext.createFromRemoteParent(
+                                "44444444123456789012345678901234",
+                                "2481624816248161",
+                                TraceFlags.getDefault(),
+                                TraceState.getDefault())))
+                        .hasTotalRecordedLinks(1)
+                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, MessageOperation.PROCESS.name())
+                        .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
+                        .hasTotalAttributeCount(2)
+                        .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
+                        .hasTraceId(parentSpan.getSpanContext().getTraceId())
+    ));
+
+    Assert.assertEquals(2, counter.get());
+  }
+
+  @Test
+  public void noMessages() {
+    AtomicInteger counter = new AtomicInteger(0);
+
+    SQSBatchMessageHandler messageHandler = new SQSBatchMessageHandler(testing.getOpenTelemetrySdk()) {
+      @Override
+      protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+        counter.getAndIncrement();
+      }
+    };
+
+    Span parentSpan = testing.getOpenTelemetrySdk().getTracer("test").spanBuilder("test").startSpan();
+
+    try (Scope scope = parentSpan.makeCurrent()) {
+      messageHandler.handleMessages(Collections.emptyList());
+    }
+
+    parentSpan.end();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test")
+                        .hasTotalAttributeCount(0)
+                        .hasTotalRecordedLinks(0),
+                span ->
+                    span.hasName("Batch Message Handler")
+                        .hasTotalRecordedLinks(0)
+                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, MessageOperation.RECEIVE.name())
+                        .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
+                        .hasTotalAttributeCount(2)
+                        .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
+                        .hasTraceId(parentSpan.getSpanContext().getTraceId())
+            ));
+
+    Assert.assertEquals(1, counter.get());
+  }
+
+  @Test
+  public void changeDefaults() {
+    SQSEvent.SQSMessage sqsMessage = newMessage();
+
+    sqsMessage.setAttributes(Collections.singletonMap(
+        "AWSTraceHeader",
+        "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"
+    ));
+
+    AtomicInteger counter = new AtomicInteger(0);
+
+    SQSBatchMessageHandler messageHandler = new SQSBatchMessageHandler(
+        testing.getOpenTelemetrySdk(),
+        MessageOperation.PROCESS.name(),
+        "New Name") {
+      @Override
+      protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+        counter.getAndIncrement();
+      }
+    };
+
+    Span parentSpan = testing.getOpenTelemetrySdk().getTracer("test").spanBuilder("test").startSpan();
+
+    try (Scope scope = parentSpan.makeCurrent()) {
+      messageHandler.handleMessages(Collections.singletonList(sqsMessage));
+    }
+
+    parentSpan.end();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test")
+                        .hasTotalAttributeCount(0)
+                        .hasTotalRecordedLinks(0),
+                span ->
+                    span.hasName("New Name")
+                        .hasLinks(LinkData.create(SpanContext.createFromRemoteParent(
+                            "55555555123456789012345678901234",
+                            "1234567890123456",
+                            TraceFlags.getSampled(),
+                            TraceState.getDefault())))
+                        .hasTotalRecordedLinks(1)
+                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, MessageOperation.PROCESS.name())
+                        .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
+                        .hasTotalAttributeCount(2)
+                        .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
+                        .hasTraceId(parentSpan.getSpanContext().getTraceId())
             ));
 
     Assert.assertEquals(1, counter.get());
