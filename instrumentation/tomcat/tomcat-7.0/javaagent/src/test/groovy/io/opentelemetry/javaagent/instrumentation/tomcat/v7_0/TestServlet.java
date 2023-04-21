@@ -13,6 +13,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
+
 public class TestServlet extends HttpServlet {
 
   @Override
@@ -24,13 +31,13 @@ public class TestServlet extends HttpServlet {
       HttpServerTest.controller(
           serverEndpoint,
           () -> {
-            if (serverEndpoint == ServerEndpoint.EXCEPTION) {
+            if (EXCEPTION.equals(serverEndpoint)) {
               throw new Exception(serverEndpoint.getBody());
             }
-            if (serverEndpoint == ServerEndpoint.CAPTURE_HEADERS) {
+            if (CAPTURE_HEADERS.equals(serverEndpoint)) {
               resp.setHeader("X-Test-Response", req.getHeader("X-Test-Request"));
             }
-            if (serverEndpoint == ServerEndpoint.CAPTURE_PARAMETERS) {
+            if (CAPTURE_PARAMETERS.equals(serverEndpoint)) {
               req.setCharacterEncoding("UTF8");
               String value = req.getParameter("test-parameter");
               if (!"test value õäöü".equals(value)) {
@@ -38,13 +45,13 @@ public class TestServlet extends HttpServlet {
                     "request parameter does not have expected value " + value);
               }
             }
-            if (serverEndpoint == ServerEndpoint.INDEXED_CHILD) {
+            if (INDEXED_CHILD.equals(serverEndpoint)) {
               ServerEndpoint.INDEXED_CHILD.collectSpanAttributes(req::getParameter);
             }
             resp.getWriter().print(serverEndpoint.getBody());
-            if (serverEndpoint == ServerEndpoint.REDIRECT) {
+            if (REDIRECT.equals(serverEndpoint)) {
               resp.sendRedirect(serverEndpoint.getBody());
-            } else if (serverEndpoint == ServerEndpoint.ERROR) {
+            } else if (ERROR.equals(serverEndpoint)) {
               resp.sendError(serverEndpoint.getStatus(), serverEndpoint.getBody());
             } else {
               resp.setStatus(serverEndpoint.getStatus());

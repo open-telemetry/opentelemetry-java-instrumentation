@@ -128,10 +128,6 @@ public class ServerEndpoint {
     }
   }
 
-  public static ServerEndpoint[] values() {
-    return PATH_MAP.values().toArray(new ServerEndpoint[0]);
-  }
-
   public static ServerEndpoint forPath(String path) {
     return PATH_MAP.get(path);
   }
