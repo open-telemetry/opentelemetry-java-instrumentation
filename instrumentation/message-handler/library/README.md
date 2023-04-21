@@ -19,7 +19,7 @@ The handler provides constructors to change the messaging operation and span nam
 ```java
 Collection<SQSEvent.SQSMessage> sqsMessages;
 
-SQSBatchMessageHandler messageHandler = new SQSBatchMessageHandler(GlobalOpenTelemetry.get()) {
+SqsBatchMessageHandler messageHandler = new SqsBatchMessageHandler(GlobalOpenTelemetry.get()) {
   @Override
   protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
     // Do my business logic

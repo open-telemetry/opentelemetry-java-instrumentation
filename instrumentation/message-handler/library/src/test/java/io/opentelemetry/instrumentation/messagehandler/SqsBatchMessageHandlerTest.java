@@ -26,7 +26,7 @@ import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class SQSBatchMessageHandlerTest {
+public class SqsBatchMessageHandlerTest {
 
   @RegisterExtension
   public static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -42,8 +42,8 @@ public class SQSBatchMessageHandlerTest {
 
     AtomicInteger counter = new AtomicInteger(0);
 
-    SQSBatchMessageHandler messageHandler =
-        new SQSBatchMessageHandler(testing.getOpenTelemetrySdk()) {
+    SqsBatchMessageHandler messageHandler =
+        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk()) {
           @Override
           protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
             counter.getAndIncrement();
@@ -103,8 +103,8 @@ public class SQSBatchMessageHandlerTest {
 
     AtomicInteger counter = new AtomicInteger(0);
 
-    SQSBatchMessageHandler messageHandler =
-        new SQSBatchMessageHandler(testing.getOpenTelemetrySdk()) {
+    SqsBatchMessageHandler messageHandler =
+        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk()) {
           @Override
           protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
             counter.getAndIncrement();
@@ -166,8 +166,8 @@ public class SQSBatchMessageHandlerTest {
 
     AtomicInteger counter = new AtomicInteger(0);
 
-    SQSBatchMessageHandler messageHandler =
-        new SQSBatchMessageHandler(testing.getOpenTelemetrySdk(), MessageOperation.PROCESS.name()) {
+    SqsBatchMessageHandler messageHandler =
+        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk(), MessageOperation.PROCESS.name()) {
           @Override
           protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
             counter.getAndIncrement();
@@ -228,8 +228,8 @@ public class SQSBatchMessageHandlerTest {
   public void noMessages() {
     AtomicInteger counter = new AtomicInteger(0);
 
-    SQSBatchMessageHandler messageHandler =
-        new SQSBatchMessageHandler(testing.getOpenTelemetrySdk()) {
+    SqsBatchMessageHandler messageHandler =
+        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk()) {
           @Override
           protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
             counter.getAndIncrement();
@@ -273,8 +273,8 @@ public class SQSBatchMessageHandlerTest {
 
     AtomicInteger counter = new AtomicInteger(0);
 
-    SQSBatchMessageHandler messageHandler =
-        new SQSBatchMessageHandler(
+    SqsBatchMessageHandler messageHandler =
+        new SqsBatchMessageHandler(
             testing.getOpenTelemetrySdk(), MessageOperation.PROCESS.name(), "New Name") {
           @Override
           protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
@@ -307,6 +307,50 @@ public class SQSBatchMessageHandlerTest {
                         .hasTotalRecordedLinks(1)
                         .hasAttribute(
                             SemanticAttributes.MESSAGING_OPERATION, MessageOperation.PROCESS.name())
+                        .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
+                        .hasTotalAttributeCount(2)
+                        .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
+                        .hasTraceId(parentSpan.getSpanContext().getTraceId())));
+
+    Assert.assertEquals(1, counter.get());
+  }
+
+  @Test
+  public void invalidUpstreamParent() {
+    SQSEvent.SQSMessage sqsMessage = newMessage();
+
+    sqsMessage.setAttributes(
+        Collections.singletonMap(
+            "AWSTraceHeader", "Root=1-55555555-invalid;Parent=1234567890123456;Sampled=1"));
+
+    AtomicInteger counter = new AtomicInteger(0);
+
+    SqsBatchMessageHandler messageHandler =
+        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk()) {
+          @Override
+          protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+            counter.getAndIncrement();
+          }
+        };
+
+    Span parentSpan =
+        testing.getOpenTelemetrySdk().getTracer("test").spanBuilder("test").startSpan();
+
+    try (Scope scope = parentSpan.makeCurrent()) {
+      messageHandler.handleMessages(Collections.singletonList(sqsMessage));
+    }
+
+    parentSpan.end();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
+                span ->
+                    span.hasName("Batch Message Handler")
+                        .hasTotalRecordedLinks(0)
+                        .hasAttribute(
+                            SemanticAttributes.MESSAGING_OPERATION, MessageOperation.RECEIVE.name())
                         .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
                         .hasTotalAttributeCount(2)
                         .hasParentSpanId(parentSpan.getSpanContext().getSpanId())

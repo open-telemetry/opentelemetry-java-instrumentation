@@ -17,20 +17,24 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public abstract class SQSBatchMessageHandler extends BatchMessageHandler<SQSEvent.SQSMessage> {
+public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEvent.SQSMessage> {
+  private static final Logger logger = Logger.getLogger(BatchMessageHandler.class.getName());
+
   private static final String AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY = "AWSTraceHeader";
   private static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 
-  public SQSBatchMessageHandler(OpenTelemetry openTelemetry) {
+  public SqsBatchMessageHandler(OpenTelemetry openTelemetry) {
     super(openTelemetry);
   }
 
-  public SQSBatchMessageHandler(OpenTelemetry openTelemetry, String messageOperation) {
+  public SqsBatchMessageHandler(OpenTelemetry openTelemetry, String messageOperation) {
     super(openTelemetry, messageOperation);
   }
 
-  public SQSBatchMessageHandler(
+  public SqsBatchMessageHandler(
       OpenTelemetry openTelemetry, String messageOperation, String spanName) {
     super(openTelemetry, messageOperation, spanName);
   }
@@ -46,17 +50,21 @@ public abstract class SQSBatchMessageHandler extends BatchMessageHandler<SQSEven
     String parentHeader = message.getAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
 
     if (parentHeader != null) {
-      Context xrayContext =
-          AwsXrayPropagator.getInstance()
-              .extract(
-                  Context.root(),
-                  Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
-                  MapGetter.INSTANCE);
+      try {
+        Context xrayContext =
+            AwsXrayPropagator.getInstance()
+                .extract(
+                    Context.root(),
+                    Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
+                    MapGetter.INSTANCE);
 
-      SpanContext messageSpanCtx = Span.fromContext(xrayContext).getSpanContext();
+        SpanContext messageSpanCtx = Span.fromContext(xrayContext).getSpanContext();
 
-      if (messageSpanCtx.isValid()) {
-        return messageSpanCtx;
+        if (messageSpanCtx.isValid()) {
+          return messageSpanCtx;
+        }
+      } catch (Throwable error) {
+        logger.log(Level.WARNING, "Invalid upstream span context: {0}", parentHeader);
       }
     }
 

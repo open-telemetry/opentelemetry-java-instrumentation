@@ -18,6 +18,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collection;
 
 public abstract class BatchMessageHandler<T> {
+
   protected String messagingOperation;
   protected OpenTelemetry openTelemetry;
   protected String spanName;
@@ -60,6 +61,8 @@ public abstract class BatchMessageHandler<T> {
             .setParent(Context.current().with(parentSpan))
             .setSpanKind(SpanKind.INTERNAL);
 
+    addMessagingAttributes(spanBuilder);
+
     for (T t : messages) {
       SpanContext spanContext = getParentSpanContext(t);
 
@@ -67,8 +70,6 @@ public abstract class BatchMessageHandler<T> {
         spanBuilder.addLink(spanContext);
       }
     }
-
-    addMessagingAttributes(spanBuilder);
 
     Span span = spanBuilder.startSpan();
 
