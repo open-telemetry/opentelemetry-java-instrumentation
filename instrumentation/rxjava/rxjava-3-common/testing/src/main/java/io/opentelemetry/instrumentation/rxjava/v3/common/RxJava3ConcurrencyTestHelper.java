@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.rxjava.v3.common;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.core.Single;
 import java.util.concurrent.CountDownLatch;
@@ -23,8 +23,10 @@ import java.util.concurrent.TimeUnit;
  * from different traces.
  */
 public class RxJava3ConcurrencyTestHelper {
+  private RxJava3ConcurrencyTestHelper() {}
+
   public static void launchAndWait(
-      Scheduler scheduler, int iterations, long timeoutMillis, InstrumentationTestRunner runner) {
+      Scheduler scheduler, int iterations, long timeoutMillis, InstrumentationExtension runner) {
     CountDownLatch latch = new CountDownLatch(iterations);
 
     for (int i = 0; i < iterations; i++) {
@@ -40,7 +42,7 @@ public class RxJava3ConcurrencyTestHelper {
     }
   }
 
-  private static void launchOuter(Iteration iteration, InstrumentationTestRunner runner) {
+  private static void launchOuter(Iteration iteration, InstrumentationExtension runner) {
     runner.runWithSpan(
         "outer",
         () -> {
@@ -58,7 +60,7 @@ public class RxJava3ConcurrencyTestHelper {
         });
   }
 
-  private static void launchInner(Iteration iteration, InstrumentationTestRunner runner) {
+  private static void launchInner(Iteration iteration, InstrumentationExtension runner) {
     runner.runWithSpan(
         "middle",
         () -> {
