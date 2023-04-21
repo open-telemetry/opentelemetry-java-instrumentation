@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -148,17 +147,11 @@ class PutGetTest {
                     span ->
                         span.hasName(verb.concat(" test-region"))
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                attributes -> {
-                                  assertThat(attributes)
-                                      .containsEntry(SemanticAttributes.DB_SYSTEM, "geode")
-                                      .containsEntry(SemanticAttributes.DB_NAME, "test-region")
-                                      .containsEntry(SemanticAttributes.DB_OPERATION, verb);
-                                  if (query != null) {
-                                    assertThat(attributes)
-                                        .containsEntry(SemanticAttributes.DB_STATEMENT, query);
-                                  }
-                                })));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(SemanticAttributes.DB_SYSTEM, "geode"),
+                                equalTo(SemanticAttributes.DB_NAME, "test-region"),
+                                equalTo(SemanticAttributes.DB_OPERATION, verb),
+                                equalTo(SemanticAttributes.DB_STATEMENT, query))));
   }
 
   static class Card implements DataSerializable {

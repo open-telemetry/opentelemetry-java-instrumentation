@@ -213,18 +213,11 @@ class ReactorNettyClientSslTest {
         .satisfiesExactly(
             event ->
                 assertThat(event)
-                    .hasAttributesSatisfying(
-                        attributes ->
-                            assertThat(attributes)
-                                .hasSize(3)
-                                .containsEntry(
-                                    SemanticAttributes.EXCEPTION_TYPE,
-                                    SSLHandshakeException.class.getCanonicalName())
-                                .hasEntrySatisfying(
-                                    SemanticAttributes.EXCEPTION_MESSAGE,
-                                    s -> assertThat(s).isNotEmpty())
-                                .hasEntrySatisfying(
-                                    SemanticAttributes.EXCEPTION_STACKTRACE,
-                                    s -> assertThat(s).isNotEmpty())));
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            SemanticAttributes.EXCEPTION_TYPE,
+                            SSLHandshakeException.class.getCanonicalName()),
+                        satisfies(SemanticAttributes.EXCEPTION_MESSAGE, s -> s.isNotEmpty()),
+                        satisfies(SemanticAttributes.EXCEPTION_STACKTRACE, s -> s.isNotEmpty())));
   }
 }

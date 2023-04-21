@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -121,11 +122,8 @@ public abstract class AbstractArquillianJaxWsTest {
       SpanDataAssert span, String service, String methodName) {
     return span.hasName(service + "Impl." + methodName)
         .hasKind(SpanKind.INTERNAL)
-        .hasAttributesSatisfying(
-            attrs -> {
-              assertThat(attrs)
-                  .containsEntry(SemanticAttributes.CODE_NAMESPACE, "test." + service + "Impl");
-              assertThat(attrs).containsEntry(SemanticAttributes.CODE_FUNCTION, methodName);
-            });
+        .hasAttributesSatisfyingExactly(
+            equalTo(SemanticAttributes.CODE_NAMESPACE, "test." + service + "Impl"),
+            equalTo(SemanticAttributes.CODE_FUNCTION, methodName));
   }
 }
