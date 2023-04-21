@@ -30,7 +30,8 @@ public abstract class SQSBatchMessageHandler extends BatchMessageHandler<SQSEven
     super(openTelemetry, messageOperation);
   }
 
-  public SQSBatchMessageHandler(OpenTelemetry openTelemetry, String messageOperation, String spanName) {
+  public SQSBatchMessageHandler(
+      OpenTelemetry openTelemetry, String messageOperation, String spanName) {
     super(openTelemetry, messageOperation, spanName);
   }
 

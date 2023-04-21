@@ -30,7 +30,8 @@ public abstract class BatchMessageHandler<T> {
     this(openTelemetry, messageOperation, "Batch Message Handler");
   }
 
-  public BatchMessageHandler(OpenTelemetry openTelemetry, String messageOperation, String spanName) {
+  public BatchMessageHandler(
+      OpenTelemetry openTelemetry, String messageOperation, String spanName) {
     this.openTelemetry = openTelemetry;
     this.spanName = spanName;
     this.messagingOperation = messageOperation;
@@ -46,17 +47,20 @@ public abstract class BatchMessageHandler<T> {
 
   public void handleMessages(Collection<T> messages) {
     TracerBuilder tracerBuilder =
-        openTelemetry.tracerBuilder("io.opentelemetry.message.handler")
+        openTelemetry
+            .tracerBuilder("io.opentelemetry.message.handler")
             .setInstrumentationVersion("1.0");
 
     Span parentSpan = Span.current();
 
-    SpanBuilder spanBuilder = tracerBuilder.build()
-        .spanBuilder(spanName)
-        .setParent(Context.current().with(parentSpan))
-        .setSpanKind(SpanKind.INTERNAL);
+    SpanBuilder spanBuilder =
+        tracerBuilder
+            .build()
+            .spanBuilder(spanName)
+            .setParent(Context.current().with(parentSpan))
+            .setSpanKind(SpanKind.INTERNAL);
 
-    for (T t: messages) {
+    for (T t : messages) {
       SpanContext spanContext = getParentSpanContext(t);
 
       if (spanContext != null) {
