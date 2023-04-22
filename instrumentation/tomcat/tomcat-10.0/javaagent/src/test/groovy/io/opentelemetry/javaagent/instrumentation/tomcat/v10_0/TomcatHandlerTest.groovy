@@ -33,7 +33,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 
 class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
 
-  private static final List<ServerEndpoint> serverEndpointsList = Arrays.asList(SUCCESS, REDIRECT,ERROR,EXCEPTION,NOT_FOUND,CAPTURE_HEADERS,CAPTURE_PARAMETERS,QUERY_PARAM,PATH_PARAM,AUTH_REQUIRED,LOGIN,AUTH_ERROR,INDEXED_CHILD);
+  private static final List<ServerEndpoint> serverEndpointsList = Arrays.asList(SUCCESS, REDIRECT, ERROR, EXCEPTION, NOT_FOUND, CAPTURE_HEADERS, CAPTURE_PARAMETERS, QUERY_PARAM, PATH_PARAM, AUTH_REQUIRED, LOGIN, AUTH_ERROR, INDEXED_CHILD)
 
   def "Tomcat starts"() {
     expect:
