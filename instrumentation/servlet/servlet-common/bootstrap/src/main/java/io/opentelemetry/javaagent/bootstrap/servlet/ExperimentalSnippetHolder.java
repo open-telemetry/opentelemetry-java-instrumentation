@@ -9,7 +9,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ExperimentalSnippetHolder {
 
-  private static final AtomicReference<String> snippet = new AtomicReference<>(System.getProperty("otel.experimental.javascript-snippet", ""));
+  private static final AtomicReference<String> snippet =
+      new AtomicReference<>(System.getProperty("otel.experimental.javascript-snippet", ""));
 
   public static void setSnippet(String newValue) {
     snippet.compareAndSet("", newValue);
