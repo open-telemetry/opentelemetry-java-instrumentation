@@ -19,7 +19,6 @@ import java.nio.file.Files
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.api.trace.StatusCode.UNSET
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
 
@@ -94,7 +93,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
@@ -165,7 +163,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
@@ -215,7 +212,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
@@ -313,7 +309,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
@@ -397,7 +392,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 500
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
@@ -460,7 +454,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 404
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"

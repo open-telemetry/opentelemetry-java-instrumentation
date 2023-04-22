@@ -51,7 +51,7 @@ class PrintStreamPersister implements ResultsPersister {
     display(results, "Min heap used (MB)", res -> format(res.getMinHeapUsedMB()));
     display(results, "Max heap used (MB)", res -> format(res.getMaxHeapUsedMB()));
     display(results, "Thread switch rate", res -> String.valueOf(res.maxThreadContextSwitchRate));
-    display(results, "GC time (ms)", res -> String.valueOf(res.totalGCTime));
+    display(results, "GC time (ms)", res -> String.valueOf(NANOSECONDS.toMillis(res.totalGCTime)));
     display(
         results,
         "GC pause time (ms)",

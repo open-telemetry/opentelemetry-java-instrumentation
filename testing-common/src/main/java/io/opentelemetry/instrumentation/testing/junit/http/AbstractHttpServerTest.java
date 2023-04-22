@@ -95,7 +95,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return GlobalTraceUtil.runWithSpan("controller", () -> closure.get());
   }
 
-  private AggregatedHttpRequest request(ServerEndpoint uri, String method) {
+  protected AggregatedHttpRequest request(ServerEndpoint uri, String method) {
     return AggregatedHttpRequest.of(HttpMethod.valueOf(method), resolveAddress(uri));
   }
 

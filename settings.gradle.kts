@@ -518,6 +518,7 @@ hideFromDependabot(":instrumentation:vertx:vertx-http-client:vertx-http-client-c
 hideFromDependabot(":instrumentation:vertx:vertx-kafka-client-3.6:javaagent")
 hideFromDependabot(":instrumentation:vertx:vertx-kafka-client-3.6:testing")
 hideFromDependabot(":instrumentation:vertx:vertx-rx-java-3.5:javaagent")
+hideFromDependabot(":instrumentation:vertx:vertx-sql-client-4.0:javaagent")
 hideFromDependabot(":instrumentation:vertx:vertx-web-3.0:javaagent")
 hideFromDependabot(":instrumentation:vertx:vertx-web-3.0:testing")
 hideFromDependabot(":instrumentation:vibur-dbcp-11.0:javaagent")

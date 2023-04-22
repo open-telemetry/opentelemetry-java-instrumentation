@@ -17,12 +17,6 @@ import javax.annotation.Nullable;
 public final class DubboNetServerAttributesGetter
     extends InetSocketAddressNetServerAttributesGetter<DubboRequest> {
 
-  @Override
-  @Nullable
-  public String getTransport(DubboRequest request) {
-    return null;
-  }
-
   @Nullable
   @Override
   public String getHostName(DubboRequest request) {

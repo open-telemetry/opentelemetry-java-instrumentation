@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import ratpack.http.client.HttpResponse;
 import ratpack.http.client.RequestSpec;
@@ -17,11 +16,6 @@ import ratpack.http.client.RequestSpec;
  */
 public final class RatpackNetClientAttributesGetter
     implements NetClientAttributesGetter<RequestSpec, HttpResponse> {
-
-  @Override
-  public String getTransport(RequestSpec request, @Nullable HttpResponse response) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
 
   @Override
   @Nullable

@@ -6,18 +6,12 @@
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 
 final class WebfluxServerNetAttributesGetter
     extends InetSocketAddressNetServerAttributesGetter<ServerWebExchange> {
-
-  @Override
-  public String getTransport(ServerWebExchange request) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
 
   @Nullable
   @Override

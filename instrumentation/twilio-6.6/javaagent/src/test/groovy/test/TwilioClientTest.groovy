@@ -248,7 +248,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(1)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
@@ -316,7 +315,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           childOf span(1)
           status ERROR
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
@@ -330,7 +328,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(1)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
@@ -405,7 +402,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           childOf span(1)
           status ERROR
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
@@ -419,7 +415,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(1)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
