@@ -17,7 +17,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class WithSpanAttributesInstrumentationTest {
+class AddingSpanAttributesInstrumentationTest {
 
   @RegisterExtension
   public static final AgentInstrumentationExtension testing =
@@ -29,7 +29,7 @@ class WithSpanAttributesInstrumentationTest {
     testing.runWithSpan(
         "root",
         () ->
-            new ExtractAttributesWithSpanAttributes()
+            new ExtractAttributesUsingAddingSpanAttributes()
                 .withSpanTakesPrecedence("foo", "bar", null, "baz"));
 
     assertThat(testing.waitForTraces(1))
@@ -45,7 +45,7 @@ class WithSpanAttributesInstrumentationTest {
                         span ->
                             assertThat(span)
                                 .hasName(
-                                    "ExtractAttributesWithSpanAttributes.withSpanTakesPrecedence")
+                                    "ExtractAttributesUsingAddingSpanAttributes.withSpanTakesPrecedence")
                                 .hasKind(SpanKind.INTERNAL)
                                 .hasParentSpanId(trace.get(0).getSpanId())
                                 .hasAttributesSatisfying(
@@ -54,7 +54,7 @@ class WithSpanAttributesInstrumentationTest {
                                             .containsOnly(
                                                 entry(
                                                     SemanticAttributes.CODE_NAMESPACE,
-                                                    ExtractAttributesWithSpanAttributes.class
+                                                    ExtractAttributesUsingAddingSpanAttributes.class
                                                         .getName()),
                                                 entry(
                                                     SemanticAttributes.CODE_FUNCTION,
@@ -72,7 +72,7 @@ class WithSpanAttributesInstrumentationTest {
     testing.runWithSpan(
         "root",
         () ->
-            new ExtractAttributesWithSpanAttributes()
+            new ExtractAttributesUsingAddingSpanAttributes()
                 .withSpanAttributes("foo", "bar", null, "baz"));
 
     assertThat(testing.waitForTraces(1))
@@ -99,7 +99,7 @@ class WithSpanAttributesInstrumentationTest {
   @Test
   void noExistingSpan() throws Exception {
 
-    new ExtractAttributesWithSpanAttributes().withSpanAttributes("foo", "bar", null, "baz");
+    new ExtractAttributesUsingAddingSpanAttributes().withSpanAttributes("foo", "bar", null, "baz");
 
     assertThat(testing.waitForTraces(0));
   }
@@ -112,7 +112,8 @@ class WithSpanAttributesInstrumentationTest {
         () -> {
           Span.current().setAttribute("implicitName", "willbegone");
           Span.current().setAttribute("keep", "willbekept");
-          new ExtractAttributesWithSpanAttributes().withSpanAttributes("foo", "bar", null, "baz");
+          new ExtractAttributesUsingAddingSpanAttributes()
+              .withSpanAttributes("foo", "bar", null, "baz");
         });
 
     assertThat(testing.waitForTraces(1))
@@ -145,7 +146,7 @@ class WithSpanAttributesInstrumentationTest {
         () -> {
           Span.current().setAttribute("implicitName", "willbegone");
           Span.current().setAttribute("keep", "willbekept");
-          new ExtractAttributesWithSpanAttributes()
+          new ExtractAttributesUsingAddingSpanAttributes()
               .withSpanAttributesParent("parentbegone", "parentbegone", null, "parentbegone");
         });
 

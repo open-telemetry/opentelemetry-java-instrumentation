@@ -25,18 +25,18 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class WithSpanAttributesInstrumentation implements TypeInstrumentation {
+public class AddingSpanAttributesInstrumentation implements TypeInstrumentation {
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   private final ElementMatcher.Junction<MethodDescription> annotatedParametersMatcher;
   // this matcher matches all methods that should be excluded from transformation
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
-  WithSpanAttributesInstrumentation() {
+  AddingSpanAttributesInstrumentation() {
     annotatedMethodMatcher =
         isAnnotatedWith(
                 named(
-                    "application.io.opentelemetry.instrumentation.annotations.WithSpanAttributes"))
+                    "application.io.opentelemetry.instrumentation.annotations.AddingSpanAttributes"))
             // Avoid repeat extraction if method is already annotation with WithSpan
             .and(
                 not(
@@ -64,10 +64,10 @@ public class WithSpanAttributesInstrumentation implements TypeInstrumentation {
 
     transformer.applyAdviceToMethod(
         tracedMethodsWithParameters,
-        WithSpanAttributesInstrumentation.class.getName() + "$WithSpanAttributesAdvice");
+        AddingSpanAttributesInstrumentation.class.getName() + "$AddingSpanAttributesAdvice");
   }
 
-  public static class WithSpanAttributesAdvice {
+  public static class AddingSpanAttributesAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

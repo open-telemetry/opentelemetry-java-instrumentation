@@ -5,13 +5,13 @@
 
 package io.opentelemetry.test.annotation;
 
+import io.opentelemetry.instrumentation.annotations.AddingSpanAttributes;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
-import io.opentelemetry.instrumentation.annotations.WithSpanAttributes;
 
-public class ExtractAttributesWithSpanAttributes {
+public class ExtractAttributesUsingAddingSpanAttributes {
 
-  @WithSpanAttributes
+  @AddingSpanAttributes
   public String withSpanAttributes(
       @SpanAttribute String implicitName,
       @SpanAttribute("explicitName") String parameter,
@@ -21,7 +21,7 @@ public class ExtractAttributesWithSpanAttributes {
     return "hello!";
   }
 
-  @WithSpanAttributes
+  @AddingSpanAttributes
   public String withSpanAttributesParent(
       @SpanAttribute String implicitName,
       @SpanAttribute("explicitName") String parameter,
@@ -32,7 +32,7 @@ public class ExtractAttributesWithSpanAttributes {
   }
 
   @WithSpan
-  @WithSpanAttributes
+  @AddingSpanAttributes
   public String withSpanTakesPrecedence(
       @SpanAttribute String implicitName,
       @SpanAttribute("explicitName") String parameter,

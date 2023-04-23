@@ -32,4 +32,4 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.METHOD, ElementType.CONSTRUCTOR})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface WithSpanAttributes {}
+public @interface AddingSpanAttributes {}
