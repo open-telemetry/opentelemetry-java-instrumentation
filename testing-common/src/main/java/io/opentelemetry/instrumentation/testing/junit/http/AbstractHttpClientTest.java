@@ -6,7 +6,9 @@
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -461,14 +463,12 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               span -> {
                 assertClientSpan(span, uri, method, responseCode).hasNoParent();
                 span.hasAttributesSatisfying(
-                    attrs -> {
-                      assertThat(attrs)
-                          .containsEntry(
-                              "http.request.header.x_test_request", new String[] {"test"});
-                      assertThat(attrs)
-                          .containsEntry(
-                              "http.response.header.x_test_response", new String[] {"test"});
-                    });
+                    equalTo(
+                        AttributeKey.stringArrayKey("http.request.header.x_test_request"),
+                        singletonList("test")),
+                    equalTo(
+                        AttributeKey.stringArrayKey("http.response.header.x_test_response"),
+                        singletonList("test")));
               },
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
@@ -707,15 +707,14 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                     span.hasName(rootSpan.getName())
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfying(
-                            attrs -> assertThat(attrs).containsEntry("test.request.id", requestId)),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(AttributeKey.longKey("test.request.id"), requestId)),
                 span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs).containsEntry("test.request.id", requestId)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(AttributeKey.longKey("test.request.id"), requestId)));
           });
     }
 
@@ -784,14 +783,14 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                     span.hasName(rootSpan.getName())
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfying(
-                            attrs -> assertThat(attrs).containsEntry("test.request.id", requestId)),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(AttributeKey.longKey("test.request.id"), requestId)),
                 span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
-                            attrs -> assertThat(attrs).containsEntry("test.request.id", requestId)),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(AttributeKey.longKey("test.request.id"), requestId)),
                 span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(rootSpan));
           });
     }
@@ -862,15 +861,14 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                     span.hasName(rootSpan.getName())
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfying(
-                            attrs -> assertThat(attrs).containsEntry("test.request.id", requestId)),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(AttributeKey.longKey("test.request.id"), requestId)),
                 span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs).containsEntry("test.request.id", requestId)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(AttributeKey.longKey("test.request.id"), requestId)));
           });
     }
 

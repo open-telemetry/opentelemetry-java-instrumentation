@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -78,21 +78,15 @@ public class AwsLambdaSqsMessageHandlerTest {
                 span ->
                     span.hasName("my_function")
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs)
-                                    .containsOnly(
-                                        entry(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"))),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
                     span.hasName("queue1 process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs)
-                                    .containsOnly(
-                                        entry(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
-                                        entry(SemanticAttributes.MESSAGING_OPERATION, "process")))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"))
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -110,16 +104,11 @@ public class AwsLambdaSqsMessageHandlerTest {
                     span.hasName("queue1 process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs)
-                                    .containsOnly(
-                                        entry(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
-                                        entry(SemanticAttributes.MESSAGING_OPERATION, "process"),
-                                        entry(SemanticAttributes.MESSAGING_MESSAGE_ID, "message1"),
-                                        entry(
-                                            SemanticAttributes.MESSAGING_DESTINATION_NAME,
-                                            "queue1")))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                            equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, "message1"),
+                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "queue1"))
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -131,16 +120,11 @@ public class AwsLambdaSqsMessageHandlerTest {
                     span.hasName("queue1 process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs)
-                                    .containsOnly(
-                                        entry(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
-                                        entry(SemanticAttributes.MESSAGING_OPERATION, "process"),
-                                        entry(SemanticAttributes.MESSAGING_MESSAGE_ID, "message2"),
-                                        entry(
-                                            SemanticAttributes.MESSAGING_DESTINATION_NAME,
-                                            "queue1")))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                            equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, "message2"),
+                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "queue1"))
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(

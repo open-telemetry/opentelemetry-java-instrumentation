@@ -24,6 +24,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -203,16 +204,14 @@ public abstract class AbstractGraphqlTest {
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
-                                        .hasName("exception")
-                                        .hasAttributesSatisfying(
-                                            attrs -> {
-                                              assertThat(attrs)
-                                                  .containsEntry("exception.type", "InvalidSyntax");
-                                              String message =
-                                                  attrs.get(
-                                                      AttributeKey.stringKey("exception.message"));
-                                              assertThat(message).startsWith("Invalid Syntax");
-                                            }))));
+                                        .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(
+                                                SemanticAttributes.EXCEPTION_TYPE, "InvalidSyntax"),
+                                            satisfies(
+                                                SemanticAttributes.EXCEPTION_MESSAGE,
+                                                message ->
+                                                    message.startsWith("Invalid Syntax"))))));
   }
 
   @Test
@@ -245,19 +244,16 @@ public abstract class AbstractGraphqlTest {
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
-                                        .hasName("exception")
-                                        .hasAttributesSatisfying(
-                                            attrs -> {
-                                              assertThat(attrs)
-                                                  .containsEntry(
-                                                      "exception.type", "ValidationError");
-                                              String message =
-                                                  attrs.get(
-                                                      AttributeKey.stringKey("exception.message"));
-                                              assertThat(message)
-                                                  .startsWith(
-                                                      "Validation error of type FieldUndefined");
-                                            }))));
+                                        .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(
+                                                SemanticAttributes.EXCEPTION_TYPE,
+                                                "ValidationError"),
+                                            satisfies(
+                                                SemanticAttributes.EXCEPTION_MESSAGE,
+                                                message ->
+                                                    message.startsWith(
+                                                        "Validation error of type FieldUndefined"))))));
   }
 
   @Test

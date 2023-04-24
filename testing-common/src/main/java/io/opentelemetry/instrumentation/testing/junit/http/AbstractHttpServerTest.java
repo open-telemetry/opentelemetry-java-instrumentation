@@ -16,6 +16,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -362,10 +363,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                     span.hasName(rootSpan.getName())
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs)
-                                    .containsEntry(ServerEndpoint.ID_ATTRIBUTE_NAME, requestId)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.longKey(ServerEndpoint.ID_ATTRIBUTE_NAME),
+                                requestId)));
             spanAssertions.add(
                 span -> assertIndexedServerSpan(span, requestId).hasParent(rootSpan));
 
@@ -643,11 +644,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertServerSpan(span, method, endpoint);
 
     span.hasAttributesSatisfying(
-        attrs ->
-            assertThat(attrs)
-                .containsEntry(
-                    SemanticAttributes.HTTP_TARGET,
-                    endpoint.resolvePath(address).getPath() + "?id=" + requestId));
+        equalTo(
+            SemanticAttributes.HTTP_TARGET,
+            endpoint.resolvePath(address).getPath() + "?id=" + requestId));
 
     return span;
   }
@@ -655,8 +654,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   protected SpanDataAssert assertIndexedControllerSpan(SpanDataAssert span, int requestId) {
     span.hasName("controller")
         .hasKind(SpanKind.INTERNAL)
-        .hasAttributesSatisfying(
-            attrs -> assertThat(attrs).containsEntry(ServerEndpoint.ID_ATTRIBUTE_NAME, requestId));
+        .hasAttributesSatisfyingExactly(
+            equalTo(AttributeKey.longKey(ServerEndpoint.ID_ATTRIBUTE_NAME), requestId));
     return span;
   }
 
