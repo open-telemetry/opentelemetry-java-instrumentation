@@ -64,7 +64,7 @@ public class SqsBatchMessageHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("Batch Message Handler")
+                    span.hasName("Batch Message")
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -115,7 +115,7 @@ public class SqsBatchMessageHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("Batch Message Handler")
+                    span.hasName("Batch Message")
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -176,7 +176,7 @@ public class SqsBatchMessageHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("Batch Message Handler")
+                    span.hasName("Batch Message")
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -240,7 +240,7 @@ public class SqsBatchMessageHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("Batch Message Handler")
+                    span.hasName("Batch Message")
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -256,7 +256,7 @@ public class SqsBatchMessageHandlerTest {
                         .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
                         .hasTraceId(parentSpan.getSpanContext().getTraceId()),
                 span ->
-                    span.hasName("Batch Message Handler")
+                    span.hasName("Batch Message")
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -301,7 +301,7 @@ public class SqsBatchMessageHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("Batch Message Handler")
+                    span.hasName("Batch Message")
                         .hasTotalRecordedLinks(0)
                         .hasAttribute(
                             SemanticAttributes.MESSAGING_OPERATION, MessageOperation.RECEIVE.name())
@@ -398,7 +398,7 @@ public class SqsBatchMessageHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("Batch Message Handler")
+                    span.hasName("Batch Message")
                         .hasTotalRecordedLinks(0)
                         .hasAttribute(
                             SemanticAttributes.MESSAGING_OPERATION, MessageOperation.RECEIVE.name())

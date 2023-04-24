@@ -18,7 +18,6 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collection;
 
 public abstract class BatchMessageHandler<T> {
-
   protected String messagingOperation;
   protected OpenTelemetry openTelemetry;
   protected String spanName;
@@ -28,7 +27,7 @@ public abstract class BatchMessageHandler<T> {
   }
 
   public BatchMessageHandler(OpenTelemetry openTelemetry, String messageOperation) {
-    this(openTelemetry, messageOperation, "Batch Message Handler");
+    this(openTelemetry, messageOperation, "Batch Message");
   }
 
   public BatchMessageHandler(
@@ -75,8 +74,8 @@ public abstract class BatchMessageHandler<T> {
 
     try (Scope scope = span.makeCurrent()) {
       doHandleMessages(messages);
+    } finally {
+      span.end();
     }
-
-    span.end();
   }
 }

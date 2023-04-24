@@ -54,13 +54,13 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEven
       return null;
     }
 
-    SpanContext spanContext = getParentSpanContextXRay(parentHeader);
+    SpanContext spanContext = getParentSpanContextW3C(parentHeader);
 
     if (spanContext != null) {
       return spanContext;
     }
 
-    spanContext = getParentSpanContextW3C(parentHeader);
+    spanContext = getParentSpanContextXRay(parentHeader);
 
     if (spanContext != null) {
       return spanContext;
