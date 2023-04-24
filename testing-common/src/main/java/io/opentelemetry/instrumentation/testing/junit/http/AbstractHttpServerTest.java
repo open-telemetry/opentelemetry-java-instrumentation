@@ -16,6 +16,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -48,6 +49,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.assertj.core.api.AssertAccess;
 import org.awaitility.Awaitility;
@@ -55,7 +57,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
@@ -94,7 +96,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return GlobalTraceUtil.runWithSpan("controller", () -> closure.get());
   }
 
-  private AggregatedHttpRequest request(ServerEndpoint uri, String method) {
+  protected AggregatedHttpRequest request(ServerEndpoint uri, String method) {
     return AggregatedHttpRequest.of(HttpMethod.valueOf(method), resolveAddress(uri));
   }
 
@@ -158,9 +160,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @ParameterizedTest
-  @EnumSource(
-      value = ServerEndpoint.class,
-      names = {"SUCCESS", "QUERY_PARAM"})
+  @MethodSource("provideServerEndpoints")
   void requestWithQueryString(ServerEndpoint endpoint) {
     String method = "GET";
     AggregatedHttpRequest request = request(endpoint, method);
@@ -171,6 +171,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     String spanId = assertResponseHasCustomizedHeaders(response, endpoint, null);
     assertTheTraces(1, null, null, spanId, method, endpoint, response);
+  }
+
+  private static Stream<ServerEndpoint> provideServerEndpoints() {
+    return Stream.of(ServerEndpoint.SUCCESS, ServerEndpoint.QUERY_PARAM);
   }
 
   @Test
@@ -362,10 +366,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                     span.hasName(rootSpan.getName())
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs)
-                                    .containsEntry(ServerEndpoint.ID_ATTRIBUTE_NAME, requestId)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.longKey(ServerEndpoint.ID_ATTRIBUTE_NAME),
+                                requestId)));
             spanAssertions.add(
                 span -> assertIndexedServerSpan(span, requestId).hasParent(rootSpan));
 
@@ -643,11 +647,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertServerSpan(span, method, endpoint);
 
     span.hasAttributesSatisfying(
-        attrs ->
-            assertThat(attrs)
-                .containsEntry(
-                    SemanticAttributes.HTTP_TARGET,
-                    endpoint.resolvePath(address).getPath() + "?id=" + requestId));
+        equalTo(
+            SemanticAttributes.HTTP_TARGET,
+            endpoint.resolvePath(address).getPath() + "?id=" + requestId));
 
     return span;
   }
@@ -655,8 +657,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   protected SpanDataAssert assertIndexedControllerSpan(SpanDataAssert span, int requestId) {
     span.hasName("controller")
         .hasKind(SpanKind.INTERNAL)
-        .hasAttributesSatisfying(
-            attrs -> assertThat(attrs).containsEntry(ServerEndpoint.ID_ATTRIBUTE_NAME, requestId));
+        .hasAttributesSatisfyingExactly(
+            equalTo(AttributeKey.longKey(ServerEndpoint.ID_ATTRIBUTE_NAME), requestId));
     return span;
   }
 
@@ -672,13 +674,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       return null;
     }
 
-    switch (endpoint) {
-      case NOT_FOUND:
-        return null;
-      case PATH_PARAM:
-        return options.contextPath + "/path/:id/param";
-      default:
-        return endpoint.resolvePath(address).getPath();
+    if (NOT_FOUND.equals(endpoint)) {
+      return null;
+    } else if (PATH_PARAM.equals(endpoint)) {
+      return options.contextPath + "/path/:id/param";
+    } else {
+      return endpoint.resolvePath(address).getPath();
     }
   }
 }

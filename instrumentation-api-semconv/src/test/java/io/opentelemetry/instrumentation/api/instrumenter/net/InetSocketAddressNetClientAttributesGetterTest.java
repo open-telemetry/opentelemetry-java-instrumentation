@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -25,10 +24,6 @@ class InetSocketAddressNetClientAttributesGetterTest {
   private final InetSocketAddressNetClientAttributesGetter<InetSocketAddress, InetSocketAddress>
       getter =
           new InetSocketAddressNetClientAttributesGetter<InetSocketAddress, InetSocketAddress>() {
-            @Override
-            public String getTransport(InetSocketAddress request, InetSocketAddress response) {
-              return SemanticAttributes.NetTransportValues.IP_TCP;
-            }
 
             @Override
             public String getPeerName(InetSocketAddress request) {
@@ -56,9 +51,7 @@ class InetSocketAddressNetClientAttributesGetterTest {
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onEnd(attributes, Context.root(), null, null, null);
-    assertThat(attributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP));
+    assertThat(attributes.build()).isEmpty();
   }
 
   @Test
@@ -82,7 +75,6 @@ class InetSocketAddressNetClientAttributesGetterTest {
     assertThat(startAttributes.build()).isEmpty();
 
     AttributesBuilder builder = Attributes.builder();
-    builder.put(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP);
     builder.put(SemanticAttributes.NET_SOCK_PEER_ADDR, address.getAddress().getHostAddress());
     if (!ipv4) {
       builder.put(SemanticAttributes.NET_SOCK_FAMILY, "inet6");
@@ -111,8 +103,6 @@ class InetSocketAddressNetClientAttributesGetterTest {
     // then
     assertThat(startAttributes.build()).isEmpty();
 
-    assertThat(endAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP));
+    assertThat(endAttributes.build()).isEmpty();
   }
 }

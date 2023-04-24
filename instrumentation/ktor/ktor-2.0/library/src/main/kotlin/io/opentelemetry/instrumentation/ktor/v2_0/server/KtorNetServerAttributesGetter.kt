@@ -8,12 +8,8 @@ package io.opentelemetry.instrumentation.ktor.v2_0.server
 import io.ktor.server.request.*
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter
 import io.opentelemetry.instrumentation.ktor.isIpAddress
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 internal class KtorNetServerAttributesGetter : NetServerAttributesGetter<ApplicationRequest> {
-  override fun getTransport(request: ApplicationRequest): String {
-    return SemanticAttributes.NetTransportValues.IP_TCP
-  }
 
   override fun getProtocolName(request: ApplicationRequest): String? =
     if (request.httpVersion.startsWith("HTTP/")) "http" else null

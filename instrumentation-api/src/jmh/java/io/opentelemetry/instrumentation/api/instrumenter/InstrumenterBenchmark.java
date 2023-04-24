@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
@@ -94,12 +93,6 @@ public class InstrumenterBenchmark {
 
     private static final InetSocketAddress PEER_ADDRESS =
         InetSocketAddress.createUnresolved("localhost", 8080);
-
-    @Nullable
-    @Override
-    public String getTransport(Void request, @Nullable Void response) {
-      return SemanticAttributes.NetTransportValues.IP_TCP;
-    }
 
     @Nullable
     @Override

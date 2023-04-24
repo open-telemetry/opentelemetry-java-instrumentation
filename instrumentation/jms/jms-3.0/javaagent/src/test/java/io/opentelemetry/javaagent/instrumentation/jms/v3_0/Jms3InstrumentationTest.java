@@ -138,7 +138,7 @@ class Jms3InstrumentationTest {
                   span.hasName(producerDestinationName + " send")
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfying(
+                      .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                           equalTo(
                               SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -157,7 +157,7 @@ class Jms3InstrumentationTest {
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -208,7 +208,7 @@ class Jms3InstrumentationTest {
                     span.hasName(producerDestinationName + " send")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -220,7 +220,7 @@ class Jms3InstrumentationTest {
                     span.hasName(actualDestinationName + " process")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -294,7 +294,7 @@ class Jms3InstrumentationTest {
                     span.hasName(producerDestinationName + " send")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -312,7 +312,7 @@ class Jms3InstrumentationTest {
                     span.hasName(actualDestinationName + " process")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,

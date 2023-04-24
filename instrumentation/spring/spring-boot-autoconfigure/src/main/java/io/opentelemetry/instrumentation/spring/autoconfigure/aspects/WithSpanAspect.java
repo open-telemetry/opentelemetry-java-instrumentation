@@ -50,7 +50,7 @@ abstract class WithSpanAspect {
             .addAttributesExtractor(
                 CodeAttributesExtractor.create(JointPointCodeAttributesExtractor.INSTANCE))
             .addAttributesExtractor(
-                MethodSpanAttributesExtractor.newInstance(
+                MethodSpanAttributesExtractor.create(
                     JoinPointRequest::method,
                     parameterAttributeNamesExtractor,
                     JoinPointRequest::args))

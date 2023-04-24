@@ -6,10 +6,11 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -179,16 +180,13 @@ class InstrumenterTest {
                             .hasParentSpanId(SpanId.getInvalid())
                             .hasStatus(StatusData.unset())
                             .hasLinks(expectedSpanLink())
-                            .hasAttributesSatisfying(
-                                attributes ->
-                                    assertThat(attributes)
-                                        .containsOnly(
-                                            attributeEntry("req1", "req1_value"),
-                                            attributeEntry("req2", "req2_2_value"),
-                                            attributeEntry("req3", "req3_value"),
-                                            attributeEntry("resp1", "resp1_value"),
-                                            attributeEntry("resp2", "resp2_2_value"),
-                                            attributeEntry("resp3", "resp3_value")))));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(AttributeKey.stringKey("req1"), "req1_value"),
+                                equalTo(AttributeKey.stringKey("req2"), "req2_2_value"),
+                                equalTo(AttributeKey.stringKey("req3"), "req3_value"),
+                                equalTo(AttributeKey.stringKey("resp1"), "resp1_value"),
+                                equalTo(AttributeKey.stringKey("resp2"), "resp2_2_value"),
+                                equalTo(AttributeKey.stringKey("resp3"), "resp3_value"))));
   }
 
   @Test
@@ -287,16 +285,13 @@ class InstrumenterTest {
                             .hasParentSpanId(SpanId.getInvalid())
                             .hasStatus(StatusData.unset())
                             .hasLinks(expectedSpanLink())
-                            .hasAttributesSatisfying(
-                                attributes ->
-                                    assertThat(attributes)
-                                        .containsOnly(
-                                            attributeEntry("req1", "req1_value"),
-                                            attributeEntry("req2", "req2_2_value"),
-                                            attributeEntry("req3", "req3_value"),
-                                            attributeEntry("resp1", "resp1_value"),
-                                            attributeEntry("resp2", "resp2_2_value"),
-                                            attributeEntry("resp3", "resp3_value")))));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(AttributeKey.stringKey("req1"), "req1_value"),
+                                equalTo(AttributeKey.stringKey("req2"), "req2_2_value"),
+                                equalTo(AttributeKey.stringKey("req3"), "req3_value"),
+                                equalTo(AttributeKey.stringKey("resp1"), "resp1_value"),
+                                equalTo(AttributeKey.stringKey("resp2"), "resp2_2_value"),
+                                equalTo(AttributeKey.stringKey("resp3"), "resp3_value"))));
   }
 
   @Test

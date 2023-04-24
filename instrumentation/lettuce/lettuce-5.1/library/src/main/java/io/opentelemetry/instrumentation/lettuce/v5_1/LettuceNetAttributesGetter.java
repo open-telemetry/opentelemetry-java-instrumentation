@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
-
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
 import io.opentelemetry.instrumentation.lettuce.v5_1.OpenTelemetryTracing.OpenTelemetryEndpoint;
 import java.net.InetSocketAddress;
@@ -14,11 +12,6 @@ import javax.annotation.Nullable;
 
 final class LettuceNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<OpenTelemetryEndpoint, Void> {
-
-  @Override
-  public String getTransport(OpenTelemetryEndpoint endpoint, @Nullable Void unused) {
-    return IP_TCP;
-  }
 
   @Nullable
   @Override

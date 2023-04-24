@@ -21,7 +21,6 @@ import spock.lang.Shared
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
 
@@ -80,7 +79,6 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.url" "http://localhost:$sqsPort"
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.transport" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
@@ -104,7 +102,6 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.url" "http://localhost:$sqsPort"
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.transport" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
@@ -127,7 +124,6 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.transport" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
@@ -155,7 +151,6 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.url" "http://localhost:$sqsPort"
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.transport" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long

@@ -6,18 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.Inet6Address;
 import javax.annotation.Nullable;
 import org.elasticsearch.client.Response;
 
 final class ElasticsearchRestNetResponseAttributesGetter
     implements NetClientAttributesGetter<ElasticsearchRestRequest, Response> {
-
-  @Override
-  public String getTransport(ElasticsearchRestRequest request, Response response) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
 
   @Override
   @Nullable

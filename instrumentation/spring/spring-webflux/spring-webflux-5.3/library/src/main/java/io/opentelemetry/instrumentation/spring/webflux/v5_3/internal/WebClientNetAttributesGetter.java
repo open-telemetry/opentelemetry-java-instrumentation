@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -17,11 +16,6 @@ import org.springframework.web.reactive.function.client.ClientResponse;
  */
 public final class WebClientNetAttributesGetter
     implements NetClientAttributesGetter<ClientRequest, ClientResponse> {
-
-  @Override
-  public String getTransport(ClientRequest request, @Nullable ClientResponse response) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
 
   @Nullable
   @Override

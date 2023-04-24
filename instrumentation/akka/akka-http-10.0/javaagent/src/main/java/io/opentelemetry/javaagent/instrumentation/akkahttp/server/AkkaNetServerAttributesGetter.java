@@ -15,12 +15,6 @@ class AkkaNetServerAttributesGetter implements NetServerAttributesGetter<HttpReq
 
   @Nullable
   @Override
-  public String getTransport(HttpRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getProtocolName(HttpRequest request) {
     return AkkaHttpUtil.protocolName(request);
   }

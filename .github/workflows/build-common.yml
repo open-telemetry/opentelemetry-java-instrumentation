@@ -147,7 +147,7 @@ jobs:
           - 8
           - 11
           - 17
-          - 19
+          - 20
         vm:
           - hotspot
           - openj9
@@ -158,7 +158,7 @@ jobs:
           - 3
         exclude:
           - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
-          - test-java-version: 19
+          - test-java-version: 20
             vm: openj9
       fail-fast: false
     steps:
