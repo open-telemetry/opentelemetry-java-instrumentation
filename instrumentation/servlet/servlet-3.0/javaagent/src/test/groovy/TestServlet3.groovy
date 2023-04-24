@@ -156,14 +156,14 @@ class TestServlet3 {
                 }
                 throw new ServletException(endpoint.body)
                 break
-              case HTML_PRINT_WRITER:
+              case AbstractServlet3Test.HTML_PRINT_WRITER:
                 resp.contentType = "text/html"
                 resp.status = endpoint.status
                 resp.setContentLength(endpoint.body.length())
                 resp.writer.print(endpoint.body)
                 context.complete()
                 break
-              case HTML_SERVLET_OUTPUT_STREAM:
+              case AbstractServlet3Test.HTML_SERVLET_OUTPUT_STREAM:
                 resp.contentType = "text/html"
                 resp.status = endpoint.status
                 resp.getOutputStream().print(endpoint.body)
@@ -225,13 +225,13 @@ class TestServlet3 {
               resp.status = endpoint.status
               resp.writer.print(endpoint.body)
               throw new ServletException(endpoint.body)
-            case HTML_PRINT_WRITER:
+            case AbstractServlet3Test.HTML_PRINT_WRITER:
               // intentionally testing setting status before contentType here to cover that case somewhere
               resp.status = endpoint.status
               resp.contentType = "text/html"
               resp.writer.print(endpoint.body)
               break
-            case HTML_SERVLET_OUTPUT_STREAM:
+            case AbstractServlet3Test.HTML_SERVLET_OUTPUT_STREAM:
               resp.contentType = "text/html"
               resp.status = endpoint.status
               resp.getOutputStream().print(endpoint.body)

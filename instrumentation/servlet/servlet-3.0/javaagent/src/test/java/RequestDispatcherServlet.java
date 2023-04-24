@@ -41,8 +41,8 @@ public class RequestDispatcherServlet {
       // for HTML test case, set the content type before calling include because
       // setContentType will be rejected if called inside of include
       // check https://statics.teams.cdn.office.net/evergreen-assets/safelinks/1/atp-safelinks.html
-      if (ServerEndpoint.forPath(target) == AbstractServlet3Test.HTML_PRINT_WRITER
-          || ServerEndpoint.forPath(target) == AbstractServlet3Test.HTML_SERVLET_OUTPUT_STREAM) {
+      if (ServerEndpoint.forPath(target) == ServerEndpoint.forPath("/htmlPrintWriter")
+          || ServerEndpoint.forPath(target) == ServerEndpoint.forPath("/htmlServletOutputStream")) {
         resp.setContentType("text/html");
       }
       dispatcher.include(req, resp);

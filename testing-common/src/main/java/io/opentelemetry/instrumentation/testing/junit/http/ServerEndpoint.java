@@ -91,6 +91,7 @@ public class ServerEndpoint {
     this.fragment = uriObj.getFragment();
     this.status = status;
     this.body = body;
+    System.out.println("create new" + name + "path " + this.getPath());
     PATH_MAP.put(this.getPath(), this);
   }
 
