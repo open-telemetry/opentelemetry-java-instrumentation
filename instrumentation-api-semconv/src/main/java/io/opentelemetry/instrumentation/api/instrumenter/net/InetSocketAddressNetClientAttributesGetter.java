@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
-import java.net.Inet6Address;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
@@ -27,48 +25,24 @@ public abstract class InetSocketAddressNetClientAttributesGetter<REQUEST, RESPON
   @Nullable
   @Override
   public String getSockFamily(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getPeerSocketAddress(request, response);
-    if (address == null) {
-      return null;
-    }
-    InetAddress remoteAddress = address.getAddress();
-    if (remoteAddress instanceof Inet6Address) {
-      return "inet6";
-    }
-    return null;
+    return InetSocketAddressUtil.getSockFamily(getPeerSocketAddress(request, response), null);
   }
 
   @Override
   @Nullable
   public final String getSockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getPeerSocketAddress(request, response);
-    if (address == null) {
-      return null;
-    }
-    InetAddress remoteAddress = address.getAddress();
-    if (remoteAddress != null) {
-      return remoteAddress.getHostAddress();
-    }
-    return null;
+    return InetSocketAddressUtil.getHostAddress(getPeerSocketAddress(request, response));
   }
 
   @Override
   @Nullable
   public String getSockPeerName(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getPeerSocketAddress(request, response);
-    if (address == null) {
-      return null;
-    }
-    return address.getHostString();
+    return InetSocketAddressUtil.getHostName(getPeerSocketAddress(request, response));
   }
 
   @Nullable
   @Override
   public Integer getSockPeerPort(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getPeerSocketAddress(request, response);
-    if (address == null) {
-      return null;
-    }
-    return address.getPort();
+    return InetSocketAddressUtil.getPort(getPeerSocketAddress(request, response));
   }
 }
