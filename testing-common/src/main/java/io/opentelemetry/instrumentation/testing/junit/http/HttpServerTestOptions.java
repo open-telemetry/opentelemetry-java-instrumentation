@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -31,7 +33,7 @@ public final class HttpServerTestOptions {
   Function<ServerEndpoint, String> expectedHttpRoute = unused -> null;
   Function<ServerEndpoint, String> sockPeerAddr = unused -> "127.0.0.1";
   String contextPath = "";
-  Throwable expectedException = new Exception(ServerEndpoint.EXCEPTION.getBody());
+  Throwable expectedException = new Exception(EXCEPTION.body);
 
   Predicate<ServerEndpoint> hasHandlerSpan = unused -> false;
   Predicate<ServerEndpoint> hasResponseSpan = unused -> false;

@@ -49,6 +49,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.assertj.core.api.AssertAccess;
 import org.awaitility.Awaitility;
@@ -56,7 +57,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
@@ -159,9 +160,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @ParameterizedTest
-  @EnumSource(
-      value = ServerEndpoint.class,
-      names = {"SUCCESS", "QUERY_PARAM"})
+  @MethodSource("provideServerEndpoints")
   void requestWithQueryString(ServerEndpoint endpoint) {
     String method = "GET";
     AggregatedHttpRequest request = request(endpoint, method);
@@ -172,6 +171,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     String spanId = assertResponseHasCustomizedHeaders(response, endpoint, null);
     assertTheTraces(1, null, null, spanId, method, endpoint, response);
+  }
+
+  private static Stream<ServerEndpoint> provideServerEndpoints() {
+    return Stream.of(ServerEndpoint.SUCCESS, ServerEndpoint.QUERY_PARAM);
   }
 
   @Test
@@ -671,13 +674,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       return null;
     }
 
-    switch (endpoint) {
-      case NOT_FOUND:
-        return null;
-      case PATH_PARAM:
-        return options.contextPath + "/path/:id/param";
-      default:
-        return endpoint.resolvePath(address).getPath();
+    if (NOT_FOUND.equals(endpoint)) {
+      return null;
+    } else if (PATH_PARAM.equals(endpoint)) {
+      return options.contextPath + "/path/:id/param";
+    } else {
+      return endpoint.resolvePath(address).getPath();
     }
   }
 }

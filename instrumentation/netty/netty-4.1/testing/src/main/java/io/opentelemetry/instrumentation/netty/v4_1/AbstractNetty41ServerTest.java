@@ -10,7 +10,14 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
 import com.google.common.collect.Sets;
 import io.netty.bootstrap.ServerBootstrap;
@@ -106,52 +113,43 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
     private static Object handle(HttpRequest request, URI uri, ServerEndpoint endpoint) {
       ByteBuf content;
       FullHttpResponse response;
-      switch (endpoint) {
-        case SUCCESS:
-        case ERROR:
-          content = Unpooled.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
-          response =
-              new DefaultFullHttpResponse(
-                  HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
-          break;
-        case INDEXED_CHILD:
-          content = Unpooled.EMPTY_BUFFER;
-          endpoint.collectSpanAttributes(
-              name ->
-                  new QueryStringDecoder(uri)
-                      .parameters().get(name).stream().findFirst().orElse(""));
-          response =
-              new DefaultFullHttpResponse(
-                  HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
-          break;
-        case QUERY_PARAM:
-          content = Unpooled.copiedBuffer(uri.getQuery(), CharsetUtil.UTF_8);
-          response =
-              new DefaultFullHttpResponse(
-                  HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
-          break;
-        case REDIRECT:
-          content = Unpooled.EMPTY_BUFFER;
-          response =
-              new DefaultFullHttpResponse(
-                  HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
-          response.headers().set(HttpHeaderNames.LOCATION, endpoint.getBody());
-          break;
-        case CAPTURE_HEADERS:
-          content = Unpooled.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
-          response =
-              new DefaultFullHttpResponse(
-                  HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
-          response.headers().set("X-Test-Response", request.headers().get("X-Test-Request"));
-          break;
-        case EXCEPTION:
-          throw new IllegalStateException(endpoint.getBody());
-        default:
-          content = Unpooled.copiedBuffer(NOT_FOUND.getBody(), CharsetUtil.UTF_8);
-          response =
-              new DefaultFullHttpResponse(
-                  HTTP_1_1, HttpResponseStatus.valueOf(NOT_FOUND.getStatus()), content);
-          break;
+      if (SUCCESS.equals(endpoint) || ERROR.equals(endpoint)) {
+        content = Unpooled.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
+        response =
+            new DefaultFullHttpResponse(
+                HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
+      } else if (INDEXED_CHILD.equals(endpoint)) {
+        content = Unpooled.EMPTY_BUFFER;
+        endpoint.collectSpanAttributes(
+            name ->
+                new QueryStringDecoder(uri).parameters().get(name).stream().findFirst().orElse(""));
+        response =
+            new DefaultFullHttpResponse(
+                HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
+      } else if (QUERY_PARAM.equals(endpoint)) {
+        content = Unpooled.copiedBuffer(uri.getQuery(), CharsetUtil.UTF_8);
+        response =
+            new DefaultFullHttpResponse(
+                HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
+      } else if (REDIRECT.equals(endpoint)) {
+        content = Unpooled.EMPTY_BUFFER;
+        response =
+            new DefaultFullHttpResponse(
+                HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
+        response.headers().set(HttpHeaderNames.LOCATION, endpoint.getBody());
+      } else if (CAPTURE_HEADERS.equals(endpoint)) {
+        content = Unpooled.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
+        response =
+            new DefaultFullHttpResponse(
+                HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
+        response.headers().set("X-Test-Response", request.headers().get("X-Test-Request"));
+      } else if (EXCEPTION.equals(endpoint)) {
+        throw new IllegalStateException(endpoint.getBody());
+      } else {
+        content = Unpooled.copiedBuffer(NOT_FOUND.getBody(), CharsetUtil.UTF_8);
+        response =
+            new DefaultFullHttpResponse(
+                HTTP_1_1, HttpResponseStatus.valueOf(NOT_FOUND.getStatus()), content);
       }
       response.headers().set(CONTENT_TYPE, "text/plain");
       response.headers().set(CONTENT_LENGTH, content.readableBytes());
