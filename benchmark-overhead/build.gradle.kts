@@ -22,7 +22,7 @@ dependencies {
   testImplementation("org.testcontainers:postgresql:1.18.0")
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
-  testImplementation("com.squareup.okhttp3:okhttp:4.10.0")
+  testImplementation("com.squareup.okhttp3:okhttp:4.11.0")
   testImplementation("org.jooq:joox:2.0.0")
   testImplementation("com.jayway.jsonpath:json-path:2.8.0")
   testImplementation("org.slf4j:slf4j-simple:2.0.7")
