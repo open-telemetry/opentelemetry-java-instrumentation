@@ -84,7 +84,7 @@ public class SqsBatchMessageHandlerTest {
   }
 
   @Test
-  public void simpleOTELUpstream() {
+  public void simpleOtelUpstream() {
     SQSEvent.SQSMessage sqsMessage = newMessage();
 
     sqsMessage.setAttributes(
