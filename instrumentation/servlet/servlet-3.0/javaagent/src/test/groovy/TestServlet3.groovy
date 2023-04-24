@@ -18,8 +18,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML_PRINT_WRITER
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML_SERVLET_OUTPUT_STREAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
@@ -73,13 +71,13 @@ class TestServlet3 {
             break
           case EXCEPTION:
             throw new ServletException(endpoint.body)
-          case HTML_PRINT_WRITER:
+          case AbstractServlet3Test.HTML_PRINT_WRITER:
             resp.contentType = "text/html"
             resp.status = endpoint.status
             resp.setContentLengthLong(endpoint.body.length())
             resp.writer.print(endpoint.body)
             break
-          case HTML_SERVLET_OUTPUT_STREAM:
+          case AbstractServlet3Test.HTML_SERVLET_OUTPUT_STREAM:
             resp.contentType = "text/html"
             resp.status = endpoint.status
             resp.setContentLength(endpoint.body.length())

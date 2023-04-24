@@ -18,8 +18,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML_PRINT_WRITER
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML_SERVLET_OUTPUT_STREAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT

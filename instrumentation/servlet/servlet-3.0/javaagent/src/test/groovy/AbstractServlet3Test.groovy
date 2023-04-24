@@ -17,8 +17,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML_PRINT_WRITER
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML_SERVLET_OUTPUT_STREAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
@@ -41,6 +39,32 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
   abstract void addServlet(CONTEXT context, String path, Class<Servlet> servlet)
 
+  public static final ServerEndpoint HTML_PRINT_WRITER =
+    new ServerEndpoint("HTML_PRINT_WRITER",  "htmlPrintWriter",
+      200,
+      "<!DOCTYPE html>\n"
+        + "<html lang=\"en\">\n"
+        + "<head>\n"
+        + "  <meta charset=\"UTF-8\">\n"
+        + "  <title>Title</title>\n"
+        + "</head>\n"
+        + "<body>\n"
+        + "<p>test works</p>\n"
+        + "</body>\n"
+        + "</html>");
+  public static final ServerEndpoint HTML_SERVLET_OUTPUT_STREAM =
+    new ServerEndpoint("HTML_SERVLET_OUTPUT_STREAM", "htmlServletOutputStream",
+      200,
+      "<!DOCTYPE html>\n"
+        + "<html lang=\"en\">\n"
+        + "<head>\n"
+        + "  <meta charset=\"UTF-8\">\n"
+        + "  <title>Title</title>\n"
+        + "</head>\n"
+        + "<body>\n"
+        + "<p>test works</p>\n"
+        + "</body>\n"
+        + "</html>");
   protected void setupServlets(CONTEXT context) {
     def servlet = servlet()
 
