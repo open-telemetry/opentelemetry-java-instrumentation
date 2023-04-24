@@ -54,13 +54,16 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEven
       return null;
     }
 
-    SpanContext spanContext = getParentSpanContextW3C(parentHeader);
+    // We do not know if the upstream is W3C or X-Ray format.
+    // We will first try to decode it as a X-Ray trace context.
+    // Then we will try to decode it as a W3C trace context.
+    SpanContext spanContext = getParentSpanContextXRay(parentHeader);
 
     if (spanContext != null) {
       return spanContext;
     }
 
-    spanContext = getParentSpanContextXRay(parentHeader);
+    spanContext = getParentSpanContextW3C(parentHeader);
 
     if (spanContext != null) {
       return spanContext;
