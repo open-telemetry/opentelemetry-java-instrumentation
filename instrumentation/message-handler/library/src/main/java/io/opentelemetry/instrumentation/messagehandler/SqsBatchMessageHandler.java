@@ -71,45 +71,45 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEven
   }
 
   private static SpanContext getParentSpanContextW3C(String parentHeader) {
-      try {
-        Context w3cContext =
-            W3CTraceContextPropagator.getInstance()
-                .extract(
-                    Context.root(),
-                    Collections.singletonMap("traceparent", parentHeader),
-                    MapGetter.INSTANCE);
+    try {
+      Context w3cContext =
+          W3CTraceContextPropagator.getInstance()
+              .extract(
+                  Context.root(),
+                  Collections.singletonMap("traceparent", parentHeader),
+                  MapGetter.INSTANCE);
 
-        SpanContext messageSpanCtx = Span.fromContext(w3cContext).getSpanContext();
+      SpanContext messageSpanCtx = Span.fromContext(w3cContext).getSpanContext();
 
-        if (messageSpanCtx.isValid()) {
-          return messageSpanCtx;
-        } else {
-          return null;
-        }
-      } catch (RuntimeException e) {
+      if (messageSpanCtx.isValid()) {
+        return messageSpanCtx;
+      } else {
         return null;
       }
+    } catch (RuntimeException e) {
+      return null;
+    }
   }
 
   private static SpanContext getParentSpanContextXRay(String parentHeader) {
-      try {
-        Context xrayContext =
-            AwsXrayPropagator.getInstance()
-                .extract(
-                    Context.root(),
-                    Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
-                    MapGetter.INSTANCE);
+    try {
+      Context xrayContext =
+          AwsXrayPropagator.getInstance()
+              .extract(
+                  Context.root(),
+                  Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
+                  MapGetter.INSTANCE);
 
-        SpanContext messageSpanCtx = Span.fromContext(xrayContext).getSpanContext();
+      SpanContext messageSpanCtx = Span.fromContext(xrayContext).getSpanContext();
 
-        if (messageSpanCtx.isValid()) {
-          return messageSpanCtx;
-        } else {
-          return null;
-        }
-      } catch (RuntimeException e) {
+      if (messageSpanCtx.isValid()) {
+        return messageSpanCtx;
+      } else {
         return null;
       }
+    } catch (RuntimeException e) {
+      return null;
+    }
   }
 
   private enum MapGetter implements TextMapGetter<Map<String, String>> {
