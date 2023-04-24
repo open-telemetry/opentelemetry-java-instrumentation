@@ -11,21 +11,23 @@ import application.io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
+import io.opentelemetry.instrumentation.api.annotation.support.SpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.util.SpanNames;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
-public final class WithSpanSingletons {
+public final class AnnotationSingletons {
 
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.opentelemetry-instrumentation-annotations-1.16";
 
-  private static final Logger logger = Logger.getLogger(WithSpanSingletons.class.getName());
+  private static final Logger logger = Logger.getLogger(AnnotationSingletons.class.getName());
   private static final Instrumenter<Method, Object> INSTRUMENTER = createInstrumenter();
   private static final Instrumenter<MethodRequest, Object> INSTRUMENTER_WITH_ATTRIBUTES =
       createInstrumenterWithAttributes();
+  private static final SpanAttributesExtractor ATTRIBUTES = createAttributesExtractor();
 
   public static Instrumenter<Method, Object> instrumenter() {
     return INSTRUMENTER;
@@ -35,26 +37,36 @@ public final class WithSpanSingletons {
     return INSTRUMENTER_WITH_ATTRIBUTES;
   }
 
+  public static SpanAttributesExtractor attributes() {
+    return ATTRIBUTES;
+  }
+
   private static Instrumenter<Method, Object> createInstrumenter() {
     return Instrumenter.builder(
-            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, WithSpanSingletons::spanNameFromMethod)
+            GlobalOpenTelemetry.get(),
+            INSTRUMENTATION_NAME,
+            AnnotationSingletons::spanNameFromMethod)
         .addAttributesExtractor(CodeAttributesExtractor.create(MethodCodeAttributesGetter.INSTANCE))
-        .buildInstrumenter(WithSpanSingletons::spanKindFromMethod);
+        .buildInstrumenter(AnnotationSingletons::spanKindFromMethod);
   }
 
   private static Instrumenter<MethodRequest, Object> createInstrumenterWithAttributes() {
     return Instrumenter.builder(
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
-            WithSpanSingletons::spanNameFromMethodRequest)
+            AnnotationSingletons::spanNameFromMethodRequest)
         .addAttributesExtractor(
             CodeAttributesExtractor.create(MethodRequestCodeAttributesGetter.INSTANCE))
         .addAttributesExtractor(
-            MethodSpanAttributesExtractor.newInstance(
+            MethodSpanAttributesExtractor.create(
                 MethodRequest::method,
                 WithSpanParameterAttributeNamesExtractor.INSTANCE,
                 MethodRequest::args))
-        .buildInstrumenter(WithSpanSingletons::spanKindFromMethodRequest);
+        .buildInstrumenter(AnnotationSingletons::spanKindFromMethodRequest);
+  }
+
+  private static SpanAttributesExtractor createAttributesExtractor() {
+    return SpanAttributesExtractor.create(WithSpanParameterAttributeNamesExtractor.INSTANCE);
   }
 
   private static SpanKind spanKindFromMethodRequest(MethodRequest request) {
@@ -92,5 +104,5 @@ public final class WithSpanSingletons {
     return spanName;
   }
 
-  private WithSpanSingletons() {}
+  private AnnotationSingletons() {}
 }

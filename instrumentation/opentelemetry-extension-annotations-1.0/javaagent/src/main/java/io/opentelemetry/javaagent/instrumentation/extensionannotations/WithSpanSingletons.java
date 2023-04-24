@@ -50,7 +50,7 @@ public final class WithSpanSingletons {
         .addAttributesExtractor(
             CodeAttributesExtractor.create(MethodRequestCodeAttributesGetter.INSTANCE))
         .addAttributesExtractor(
-            MethodSpanAttributesExtractor.newInstance(
+            MethodSpanAttributesExtractor.create(
                 MethodRequest::method,
                 WithSpanParameterAttributeNamesExtractor.INSTANCE,
                 MethodRequest::args))
