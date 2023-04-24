@@ -9,6 +9,7 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RequestPredicates.path;
 import static org.springframework.web.reactive.function.server.RouterFunctions.nest;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
+import static server.base.SpringWebFluxServerTest.NESTED_PATH;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
@@ -108,7 +109,7 @@ public abstract class ServerTestRouteFactory {
                 route(
                     path("/world"),
                     request -> {
-                      ServerEndpoint endpoint = ServerEndpoint.NESTED_PATH;
+                      ServerEndpoint endpoint = NESTED_PATH;
                       return respond(endpoint, null, null, null);
                     })));
   }

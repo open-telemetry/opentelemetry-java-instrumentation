@@ -6,7 +6,6 @@
 package server.base;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NESTED_PATH;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 
@@ -22,6 +21,10 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 public abstract class SpringWebFluxServerTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
+
+  protected static final ServerEndpoint NESTED_PATH =
+      new ServerEndpoint("NESTED_PATH", "nestedPath/hello/world", 200, "nested path");
+
   protected abstract Class<?> getApplicationClass();
 
   @RegisterExtension
