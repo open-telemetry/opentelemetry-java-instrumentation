@@ -13,6 +13,9 @@ import io.opentelemetry.instrumentation.jmx.yaml.RuleParser;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -33,33 +36,38 @@ class JmxMetricInsightInstallerTest {
 
   @Test
   void testToVerifyExistingRulesAreValid() throws Exception {
-    File existingRulesDir = new File(PATH_TO_ALL_EXISTING_RULES);
-    assertThat(existingRulesDir == null).isFalse();
-
     RuleParser parser = RuleParser.get();
     assertThat(parser == null).isFalse();
 
-    // make sure we have correct number of files
+    Path path = Paths.get(PATH_TO_ALL_EXISTING_RULES);
+    assertThat(Files.exists(path)).isTrue();
+
+    File existingRulesDir = path.toFile();
     File[] existingRules = existingRulesDir.listFiles();
-    assertThat(existingRules).hasSize(FILES_TO_BE_TESTED.size());
+    Set<String> filesChecked = new HashSet<>();
 
     for (File file : existingRules) {
-      // also make sure the files name are matching
-      if (FILES_TO_BE_TESTED.contains(file.getName())) {
+      // make sure we only test the files that we supposed to test
+      String fileName = file.getName();
+      if (FILES_TO_BE_TESTED.contains(fileName)) {
         testRulesAreValid(file, parser);
+        filesChecked.add(fileName);
       }
     }
+    // make sure we checked all the files that are supposed to be here
+    assertThat(filesChecked).isEqualTo(FILES_TO_BE_TESTED);
   }
 
   void testRulesAreValid(File file, RuleParser parser) throws Exception {
-    InputStream inputStream = new FileInputStream(file);
-    JmxConfig config = parser.loadConfig(inputStream);
-    assertThat(config).isNotNull();
+    try (InputStream inputStream = new FileInputStream(file)) {
+      JmxConfig config = parser.loadConfig(inputStream);
+      assertThat(config).isNotNull();
 
-    List<JmxRule> defs = config.getRules();
-    // make sure all the rules in that file are valid
-    for (JmxRule rule : defs) {
-      rule.buildMetricDef();
+      List<JmxRule> defs = config.getRules();
+      // make sure all the rules in that file are valid
+      for (JmxRule rule : defs) {
+        rule.buildMetricDef();
+      }
     }
   }
 }
