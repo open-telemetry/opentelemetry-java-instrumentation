@@ -43,9 +43,10 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
       NamingConvention namingConvention,
       Clock clock,
       DistributionStatisticConfig distributionStatisticConfig,
+      DistributionStatisticConfigModifier modifier,
       double scale,
       Meter otelMeter) {
-    super(id, clock, distributionStatisticConfig, scale, false);
+    super(id, clock, modifier.modify(distributionStatisticConfig), scale, false);
 
     if (isUsingMicrometerHistograms()) {
       measurements = new MicrometerHistogramMeasurements();

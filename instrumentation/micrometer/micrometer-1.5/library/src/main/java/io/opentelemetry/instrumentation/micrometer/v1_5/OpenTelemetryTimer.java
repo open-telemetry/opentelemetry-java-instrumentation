@@ -45,10 +45,17 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
       NamingConvention namingConvention,
       Clock clock,
       DistributionStatisticConfig distributionStatisticConfig,
+      DistributionStatisticConfigModifier modifier,
       PauseDetector pauseDetector,
       TimeUnit baseTimeUnit,
       Meter otelMeter) {
-    super(id, clock, distributionStatisticConfig, pauseDetector, TimeUnit.MILLISECONDS, false);
+    super(
+        id,
+        clock,
+        modifier.modify(distributionStatisticConfig),
+        pauseDetector,
+        baseTimeUnit,
+        false);
 
     if (isUsingMicrometerHistograms()) {
       measurements = new MicrometerHistogramMeasurements();

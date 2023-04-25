@@ -36,15 +36,25 @@ tasks {
     jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=seconds")
   }
 
+  val testHistogramGauges by registering(Test::class) {
+    filter {
+      includeTestsMatching("*HistogramGaugesTest")
+    }
+    include("**/*HistogramGaugesTest.*")
+    jvmArgs("-Dotel.instrumentation.micrometer.histogram-gauges.enabled=true")
+  }
+
   test {
     filter {
       excludeTestsMatching("*TimerSecondsTest")
       excludeTestsMatching("*PrometheusModeTest")
+      excludeTestsMatching("*HistogramGaugesTest")
     }
   }
 
   check {
     dependsOn(testBaseTimeUnit)
     dependsOn(testPrometheusMode)
+    dependsOn(testHistogramGauges)
   }
 }

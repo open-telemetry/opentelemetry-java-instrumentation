@@ -5,12 +5,11 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class NamingConventionTest extends AbstractNamingConventionTest {
+class TimerHistogramGaugesTest extends AbstractTimerHistogramGaugesTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -19,9 +18,9 @@ class NamingConventionTest extends AbstractNamingConventionTest {
   static final MicrometerTestingExtension micrometerExtension =
       new MicrometerTestingExtension(testing) {
         @Override
-        MeterRegistry configureMeterRegistry(MeterRegistry registry) {
-          registry.config().namingConvention(AbstractNamingConventionTest.namingConvention());
-          return registry;
+        OpenTelemetryMeterRegistryBuilder configureOtelRegistry(
+            OpenTelemetryMeterRegistryBuilder registry) {
+          return registry.setMicrometerHistogramGaugesEnabled(true);
         }
       };
 
