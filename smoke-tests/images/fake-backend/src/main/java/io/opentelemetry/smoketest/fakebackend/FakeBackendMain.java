@@ -95,7 +95,7 @@ public class FakeBackendMain {
                   return HttpResponse.of(HttpStatus.OK);
                 })
             .service(
-                "/get-traces",
+                "/v1/traces",
                 (ctx, req) -> {
                   var requests = traceCollector.getRequests();
                   var buf = new ByteBufOutputStream(ctx.alloc().buffer());
@@ -104,7 +104,7 @@ public class FakeBackendMain {
                       HttpStatus.OK, MediaType.JSON, HttpData.wrap(buf.buffer()));
                 })
             .service(
-                "/get-metrics",
+                "/v1/metrics",
                 (ctx, req) -> {
                   var requests = metricsCollector.getRequests();
                   var buf = new ByteBufOutputStream(ctx.alloc().buffer());
@@ -113,7 +113,7 @@ public class FakeBackendMain {
                       HttpStatus.OK, MediaType.JSON, HttpData.wrap(buf.buffer()));
                 })
             .service(
-                "/get-logs",
+                "/v1/logs",
                 (ctx, req) -> {
                   var requests = logsCollector.getRequests();
                   var buf = new ByteBufOutputStream(ctx.alloc().buffer());
