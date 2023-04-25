@@ -51,7 +51,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         + "<body>\n"
         + "<p>test works</p>\n"
         + "</body>\n"
-        + "</html>");
+        + "</html>")
   public static final ServerEndpoint HTML_SERVLET_OUTPUT_STREAM =
     new ServerEndpoint("HTML_SERVLET_OUTPUT_STREAM", "htmlServletOutputStream",
       200,
@@ -64,7 +64,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         + "<body>\n"
         + "<p>test works</p>\n"
         + "</body>\n"
-        + "</html>");
+        + "</html>")
   protected void setupServlets(CONTEXT context) {
     def servlet = servlet()
 
