@@ -47,7 +47,7 @@ public final class OkHttpTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    this.capturedRequestHeaders = requestHeaders;
+    capturedRequestHeaders = new ArrayList<>(requestHeaders);
     return this;
   }
 
@@ -58,7 +58,7 @@ public final class OkHttpTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
-    this.capturedResponseHeaders = responseHeaders;
+    capturedResponseHeaders = new ArrayList<>(responseHeaders);
     return this;
   }
 
