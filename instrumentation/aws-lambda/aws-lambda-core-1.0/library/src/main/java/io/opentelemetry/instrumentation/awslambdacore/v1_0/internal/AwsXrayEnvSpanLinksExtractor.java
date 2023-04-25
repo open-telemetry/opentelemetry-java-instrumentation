@@ -48,11 +48,7 @@ final class AwsXrayEnvSpanLinksExtractor implements SpanLinksExtractor<AwsLambda
       return;
     }
     Context xrayContext =
-        AwsXrayPropagator.getInstance()
-            .extract(
-                Context.root(),
-                contextMap,
-                MapGetter.INSTANCE);
+        AwsXrayPropagator.getInstance().extract(Context.root(), contextMap, MapGetter.INSTANCE);
     SpanContext envVarSpanCtx = Span.fromContext(xrayContext).getSpanContext();
     if (envVarSpanCtx.isValid()) {
       spanLinks.addLink(envVarSpanCtx, LINK_ATTRIBUTES);

@@ -46,6 +46,7 @@ class AwsXrayEnvSpanLinksExtractorTest {
     // then
     verifyNoInteractions(spanLinksBuilder);
   }
+
   @Test
   void shouldLinkAwsParentHeaderAndChooseSystemPropertyIfValidAndNotSampled() {
     // given
@@ -67,6 +68,7 @@ class AwsXrayEnvSpanLinksExtractorTest {
     assertThat(spanContext.getSpanId()).isEqualTo("0000000000000789");
     assertThat(spanContext.getTraceId()).isEqualTo("8a3c60f7d188f8fa79d48a391a778fa7");
   }
+
   @Test
   void shouldLinkAwsParentHeaderIfValidAndNotSampled() {
     // given
@@ -85,6 +87,7 @@ class AwsXrayEnvSpanLinksExtractorTest {
     assertThat(spanContext.getSpanId()).isEqualTo("0000000000000456");
     assertThat(spanContext.getTraceId()).isEqualTo("8a3c60f7d188f8fa79d48a391a778fa6");
   }
+
   @Test
   void shouldLinkAwsParentHeaderIfValidAndNotSampledSystemProperty() {
     // given
@@ -103,12 +106,13 @@ class AwsXrayEnvSpanLinksExtractorTest {
     assertThat(spanContext.getSpanId()).isEqualTo("0000000000000456");
     assertThat(spanContext.getTraceId()).isEqualTo("8a3c60f7d188f8fa79d48a391a778fa6");
   }
+
   @Test
   void shouldLinkAwsParentHeaderIfValidAndSampledSystemProperty() {
     // given
     SpanLinksBuilder spanLinksBuilder = mock(SpanLinksBuilder.class);
     systemProperties.set(
-        "_X_AMZN_TRACE_ID",
+        "com.amazonaws.xray.traceHeader",
         "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=1");
     // when
     AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
