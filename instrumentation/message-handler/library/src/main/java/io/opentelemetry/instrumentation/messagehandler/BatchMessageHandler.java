@@ -98,7 +98,7 @@ public abstract class BatchMessageHandler<T> {
     // We do not know if the upstream is W3C or X-Ray format.
     // We will first try to decode it as a X-Ray trace context.
     // Then we will try to decode it as a W3C trace context.
-    SpanContext spanContext = getParentSpanContextXRay(parentHeader);
+    SpanContext spanContext = getParentSpanContextXray(parentHeader);
 
     if (spanContext != null) {
       return spanContext;
@@ -135,7 +135,7 @@ public abstract class BatchMessageHandler<T> {
     }
   }
 
-  private static SpanContext getParentSpanContextXRay(String parentHeader) {
+  private static SpanContext getParentSpanContextXray(String parentHeader) {
     try {
       Context xrayContext =
           AwsXrayPropagator.getInstance()
