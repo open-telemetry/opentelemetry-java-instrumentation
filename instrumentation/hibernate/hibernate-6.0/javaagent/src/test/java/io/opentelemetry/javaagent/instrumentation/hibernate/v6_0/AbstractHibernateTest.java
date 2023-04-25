@@ -16,7 +16,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // testing instrumentation of deprecated class
 public abstract class AbstractHibernateTest {
   protected static SessionFactory sessionFactory;
   protected static List<Value> prepopulated;
@@ -33,7 +32,7 @@ public abstract class AbstractHibernateTest {
     prepopulated = new ArrayList<Value>();
     for (int i = 0; i < 5; i++) {
       prepopulated.add(new Value("Hello :) " + i));
-      writer.save(prepopulated.get(i));
+      writer.persist(prepopulated.get(i));
     }
     writer.getTransaction().commit();
     writer.close();

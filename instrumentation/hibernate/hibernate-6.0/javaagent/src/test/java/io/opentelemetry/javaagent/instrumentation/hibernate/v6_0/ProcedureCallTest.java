@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -21,8 +21,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-import org.assertj.core.api.Assertions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -33,7 +31,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // testing instrumentation of deprecated class
 public class ProcedureCallTest {
   protected static SessionFactory sessionFactory;
   protected static List<Value> prepopulated;
@@ -51,7 +48,7 @@ public class ProcedureCallTest {
     prepopulated = new ArrayList<>();
     for (int i = 0; i < 2; i++) {
       prepopulated.add(new Value("Hello :) " + i));
-      writer.save(prepopulated.get(i));
+      writer.persist(prepopulated.get(i));
     }
     writer.getTransaction().commit();
     writer.close();
@@ -74,7 +71,6 @@ public class ProcedureCallTest {
 
   @Test
   void testProcedureCall() {
-    AtomicReference<String> sessionId = new AtomicReference<>();
     testing.runWithSpan(
         "parent",
         () -> {
@@ -98,16 +94,10 @@ public class ProcedureCallTest {
                         span.hasName("ProcedureCall.getOutputs TEST_PROC")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfying(
-                                attributes -> {
-                                  Assertions.assertThat(
-                                          attributes.get(
-                                              AttributeKey.stringKey("hibernate.session_id")))
-                                      .isInstanceOf(String.class);
-                                  sessionId.set(
-                                      attributes.get(
-                                          AttributeKey.stringKey("hibernate.session_id")));
-                                }),
+                            .hasAttributesSatisfyingExactly(
+                                satisfies(
+                                    AttributeKey.stringKey("hibernate.session_id"),
+                                    val -> val.isInstanceOf(String.class))),
                     span ->
                         span.hasName("CALL test.TEST_PROC")
                             .hasKind(SpanKind.CLIENT)
@@ -123,18 +113,17 @@ public class ProcedureCallTest {
                         span.hasName("Transaction.commit")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfying(
-                                attributes -> {
-                                  assertThat(attributes)
-                                      .containsEntry(
-                                          AttributeKey.stringKey("hibernate.session_id"),
-                                          sessionId.get());
-                                })));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    AttributeKey.stringKey("hibernate.session_id"),
+                                    trace
+                                        .getSpan(1)
+                                        .getAttributes()
+                                        .get(AttributeKey.stringKey("hibernate.session_id"))))));
   }
 
   @Test
   void testFailingProcedureCall() {
-    AtomicReference<String> sessionId = new AtomicReference<>();
     testing.runWithSpan(
         "parent",
         () -> {
@@ -169,38 +158,31 @@ public class ProcedureCallTest {
                                 event ->
                                     event
                                         .hasName("exception")
-                                        .hasAttributesSatisfying(
-                                            attributes -> {
-                                              assertThat(attributes)
-                                                  .containsEntry(
-                                                      "exception.type",
-                                                      "org.hibernate.exception.SQLGrammarException");
-                                              String message =
-                                                  attributes.get(
-                                                      AttributeKey.stringKey("exception.message"));
-                                              assertThat(message)
-                                                  .startsWith("could not prepare statement");
-                                            }))
-                            .hasAttributesSatisfying(
-                                attributes -> {
-                                  Assertions.assertThat(
-                                          attributes.get(
-                                              AttributeKey.stringKey("hibernate.session_id")))
-                                      .isInstanceOf(String.class);
-                                  sessionId.set(
-                                      attributes.get(
-                                          AttributeKey.stringKey("hibernate.session_id")));
-                                }),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(
+                                                AttributeKey.stringKey("exception.type"),
+                                                "org.hibernate.exception.SQLGrammarException"),
+                                            satisfies(
+                                                AttributeKey.stringKey("exception.message"),
+                                                val ->
+                                                    val.startsWith("could not prepare statement")),
+                                            satisfies(
+                                                AttributeKey.stringKey("exception.stacktrace"),
+                                                val -> val.isNotNull())))
+                            .hasAttributesSatisfyingExactly(
+                                satisfies(
+                                    AttributeKey.stringKey("hibernate.session_id"),
+                                    val -> val.isInstanceOf(String.class))),
                     span ->
                         span.hasName("Transaction.commit")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfying(
-                                attributes -> {
-                                  assertThat(attributes)
-                                      .containsEntry(
-                                          AttributeKey.stringKey("hibernate.session_id"),
-                                          sessionId.get());
-                                })));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    AttributeKey.stringKey("hibernate.session_id"),
+                                    trace
+                                        .getSpan(1)
+                                        .getAttributes()
+                                        .get(AttributeKey.stringKey("hibernate.session_id"))))));
   }
 }

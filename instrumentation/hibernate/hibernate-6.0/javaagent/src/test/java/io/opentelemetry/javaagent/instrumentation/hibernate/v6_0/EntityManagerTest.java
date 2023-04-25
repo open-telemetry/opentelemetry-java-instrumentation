@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.junit.jupiter.api.Named.named;
@@ -23,11 +22,9 @@ import jakarta.persistence.Persistence;
 import jakarta.persistence.Query;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -39,7 +36,6 @@ public class EntityManagerTest extends AbstractHibernateTest {
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideHibernateActionParameters")
   void testHibernateAction(Parameter parameter) {
-    AtomicReference<String> sessionId = new AtomicReference<>();
     EntityManager entityManager = entityManagerFactory.createEntityManager();
     EntityTransaction entityTransaction = entityManager.getTransaction();
     entityTransaction.begin();
@@ -80,13 +76,19 @@ public class EntityManagerTest extends AbstractHibernateTest {
                     assertSessionSpan(
                         span,
                         trace.getSpan(0),
-                        sessionId,
                         "Session." + parameter.methodName + " " + parameter.resource),
                 span -> assertClientSpan(span, trace.getSpan(1), "SELECT db1.Value"),
                 span ->
                     assertClientSpan(
                         span, !parameter.flushOnCommit ? trace.getSpan(1) : trace.getSpan(3)),
-                span -> assertTransactionCommitSpan(span, trace.getSpan(0), sessionId));
+                span ->
+                    assertTransactionCommitSpan(
+                        span,
+                        trace.getSpan(0),
+                        trace
+                            .getSpan(1)
+                            .getAttributes()
+                            .get(AttributeKey.stringKey("hibernate.session_id"))));
           } else {
             trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -94,12 +96,18 @@ public class EntityManagerTest extends AbstractHibernateTest {
                     assertSessionSpan(
                         span,
                         trace.getSpan(0),
-                        sessionId,
                         "Session." + parameter.methodName + " " + parameter.resource),
                 span ->
                     assertClientSpan(
                         span, !parameter.flushOnCommit ? trace.getSpan(1) : trace.getSpan(2)),
-                span -> assertTransactionCommitSpan(span, trace.getSpan(0), sessionId));
+                span ->
+                    assertTransactionCommitSpan(
+                        span,
+                        trace.getSpan(0),
+                        trace
+                            .getSpan(1)
+                            .getAttributes()
+                            .get(AttributeKey.stringKey("hibernate.session_id"))));
           }
         });
   }
@@ -107,7 +115,6 @@ public class EntityManagerTest extends AbstractHibernateTest {
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideAttachesStateParameters")
   void testAttachesStateToQuery(Parameter parameter) {
-    AtomicReference<String> sessionId = new AtomicReference<>();
     testing.runWithSpan(
         "parent",
         () -> {
@@ -126,8 +133,7 @@ public class EntityManagerTest extends AbstractHibernateTest {
                 .hasSize(4)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        assertSessionSpan(span, trace.getSpan(0), sessionId, parameter.resource),
+                    span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),
                     span ->
                         span.hasName("SELECT db1.Value")
                             .hasKind(SpanKind.CLIENT)
@@ -142,7 +148,14 @@ public class EntityManagerTest extends AbstractHibernateTest {
                                     val -> val.isInstanceOf(String.class)),
                                 equalTo(SemanticAttributes.DB_OPERATION, "SELECT"),
                                 equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
-                    span -> assertTransactionCommitSpan(span, trace.getSpan(0), sessionId)));
+                    span ->
+                        assertTransactionCommitSpan(
+                            span,
+                            trace.getSpan(0),
+                            trace
+                                .getSpan(1)
+                                .getAttributes()
+                                .get(AttributeKey.stringKey("hibernate.session_id")))));
   }
 
   private static Stream<Arguments> provideHibernateActionParameters() {
@@ -305,27 +318,22 @@ public class EntityManagerTest extends AbstractHibernateTest {
   }
 
   private static SpanDataAssert assertSessionSpan(
-      SpanDataAssert span, SpanData parent, AtomicReference<String> sessionId, String spanName) {
+      SpanDataAssert span, SpanData parent, String spanName) {
     return span.hasName(spanName)
         .hasKind(SpanKind.INTERNAL)
         .hasParent(parent)
-        .hasAttributesSatisfying(
-            attributes -> {
-              Assertions.assertThat(attributes.get(AttributeKey.stringKey("hibernate.session_id")))
-                  .isInstanceOf(String.class);
-              sessionId.set(attributes.get(AttributeKey.stringKey("hibernate.session_id")));
-            });
+        .hasAttributesSatisfyingExactly(
+            satisfies(
+                AttributeKey.stringKey("hibernate.session_id"),
+                val -> val.isInstanceOf(String.class)));
   }
 
   private static SpanDataAssert assertTransactionCommitSpan(
-      SpanDataAssert span, SpanData parent, AtomicReference<String> sessionId) {
+      SpanDataAssert span, SpanData parent, String sessionId) {
     return span.hasName("Transaction.commit")
         .hasKind(SpanKind.INTERNAL)
         .hasParent(parent)
-        .hasAttributesSatisfying(
-            attributes -> {
-              assertThat(attributes)
-                  .containsEntry(AttributeKey.stringKey("hibernate.session_id"), sessionId.get());
-            });
+        .hasAttributesSatisfyingExactly(
+            equalTo(AttributeKey.stringKey("hibernate.session_id"), sessionId));
   }
 }

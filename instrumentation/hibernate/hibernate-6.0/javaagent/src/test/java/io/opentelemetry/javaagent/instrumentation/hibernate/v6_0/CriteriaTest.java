@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.junit.jupiter.api.Named.named;
@@ -18,10 +17,8 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import org.assertj.core.api.Assertions;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -42,7 +39,6 @@ public class CriteriaTest extends AbstractHibernateTest {
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideParameters")
   void testCriteriaQuery(Consumer<Query<Value>> interaction) {
-    AtomicReference<String> sessionId = new AtomicReference<>();
     testing.runWithSpan(
         "parent",
         () -> {
@@ -72,16 +68,10 @@ public class CriteriaTest extends AbstractHibernateTest {
                                 "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfying(
-                                attributes -> {
-                                  Assertions.assertThat(
-                                          attributes.get(
-                                              AttributeKey.stringKey("hibernate.session_id")))
-                                      .isInstanceOf(String.class);
-                                  sessionId.set(
-                                      attributes.get(
-                                          AttributeKey.stringKey("hibernate.session_id")));
-                                }),
+                            .hasAttributesSatisfyingExactly(
+                                satisfies(
+                                    AttributeKey.stringKey("hibernate.session_id"),
+                                    val -> val.isInstanceOf(String.class))),
                     span ->
                         span.hasName("SELECT db1.Value")
                             .hasKind(SpanKind.CLIENT)
@@ -100,12 +90,12 @@ public class CriteriaTest extends AbstractHibernateTest {
                         span.hasName("Transaction.commit")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfying(
-                                attributes -> {
-                                  assertThat(attributes)
-                                      .containsEntry(
-                                          AttributeKey.stringKey("hibernate.session_id"),
-                                          sessionId.get());
-                                })));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    AttributeKey.stringKey("hibernate.session_id"),
+                                    trace
+                                        .getSpan(1)
+                                        .getAttributes()
+                                        .get(AttributeKey.stringKey("hibernate.session_id"))))));
   }
 }

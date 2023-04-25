@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -23,7 +22,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import org.assertj.core.api.Assertions;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
@@ -78,7 +76,6 @@ public class SessionTest extends AbstractHibernateTest {
   }
 
   private static void assertTraces(Parameter parameter) {
-    AtomicReference<String> sessionId = new AtomicReference<>();
     testing.waitAndAssertTraces(
         trace ->
             trace
@@ -89,18 +86,22 @@ public class SessionTest extends AbstractHibernateTest {
                         assertSessionSpan(
                             span,
                             trace.getSpan(0),
-                            sessionId,
                             "Session." + parameter.methodName + " " + parameter.resource),
                     span -> assertClientSpan(span, trace.getSpan(1)),
                     span ->
                         assertSpanWithSessionId(
-                            span, trace.getSpan(0), "Transaction.commit", sessionId)));
+                            span,
+                            trace.getSpan(0),
+                            "Transaction.commit",
+                            trace
+                                .getSpan(1)
+                                .getAttributes()
+                                .get(AttributeKey.stringKey("hibernate.session_id")))));
   }
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideHibernateReplicateParameters")
   void testHibernateReplicate(Parameter parameter) {
-    AtomicReference<String> sessionId = new AtomicReference<>();
     testing.runWithSpan(
         "parent",
         () -> {
@@ -125,18 +126,22 @@ public class SessionTest extends AbstractHibernateTest {
                         assertSessionSpan(
                             span,
                             trace.getSpan(0),
-                            sessionId,
                             "Session." + parameter.methodName + " " + parameter.resource),
                     span -> assertClientSpan(span, trace.getSpan(1), "SELECT"),
                     span ->
                         assertSpanWithSessionId(
-                            span, trace.getSpan(0), "Transaction.commit", sessionId),
+                            span,
+                            trace.getSpan(0),
+                            "Transaction.commit",
+                            trace
+                                .getSpan(1)
+                                .getAttributes()
+                                .get(AttributeKey.stringKey("hibernate.session_id"))),
                     span -> assertClientSpan(span, trace.getSpan(3))));
   }
 
   @Test
   void testHibernateFailedReplicate() {
-    AtomicReference<String> sessionId = new AtomicReference<>();
     testing.runWithSpan(
         "parent",
         () -> {
@@ -166,25 +171,24 @@ public class SessionTest extends AbstractHibernateTest {
                             .hasException(
                                 new UnknownEntityTypeException(
                                     "Unable to locate persister: java.lang.Long"))
-                            .hasAttributesSatisfying(
-                                attributes -> {
-                                  Assertions.assertThat(
-                                          attributes.get(
-                                              AttributeKey.stringKey("hibernate.session_id")))
-                                      .isInstanceOf(String.class);
-                                  sessionId.set(
-                                      attributes.get(
-                                          AttributeKey.stringKey("hibernate.session_id")));
-                                }),
+                            .hasAttributesSatisfyingExactly(
+                                satisfies(
+                                    AttributeKey.stringKey("hibernate.session_id"),
+                                    val -> val.isInstanceOf(String.class))),
                     span ->
                         assertSpanWithSessionId(
-                            span, trace.getSpan(0), "Transaction.commit", sessionId)));
+                            span,
+                            trace.getSpan(0),
+                            "Transaction.commit",
+                            trace
+                                .getSpan(1)
+                                .getAttributes()
+                                .get(AttributeKey.stringKey("hibernate.session_id")))));
   }
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideHibernateCommitActionParameters")
   void testHibernateCommitAction(Parameter parameter) {
-    AtomicReference<String> sessionId = new AtomicReference<>();
     testing.runWithSpan(
         "parent",
         () -> {
@@ -209,18 +213,22 @@ public class SessionTest extends AbstractHibernateTest {
                         assertSessionSpan(
                             span,
                             trace.getSpan(0),
-                            sessionId,
                             "Session." + parameter.methodName + " " + parameter.resource),
                     span ->
                         assertSpanWithSessionId(
-                            span, trace.getSpan(0), "Transaction.commit", sessionId),
+                            span,
+                            trace.getSpan(0),
+                            "Transaction.commit",
+                            trace
+                                .getSpan(1)
+                                .getAttributes()
+                                .get(AttributeKey.stringKey("hibernate.session_id"))),
                     span -> assertClientSpan(span, trace.getSpan(2))));
   }
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideAttachesStateToQueryParameters")
   void testAttachesStateToQuery(Parameter parameter) {
-    AtomicReference<String> sessionId = new AtomicReference<>();
     testing.runWithSpan(
         "parent",
         () -> {
@@ -238,8 +246,7 @@ public class SessionTest extends AbstractHibernateTest {
                 .hasSize(4)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        assertSessionSpan(span, trace.getSpan(0), sessionId, parameter.resource),
+                    span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),
                     span ->
                         span.hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(1))
@@ -255,7 +262,13 @@ public class SessionTest extends AbstractHibernateTest {
                                 equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
                     span ->
                         assertSpanWithSessionId(
-                            span, trace.getSpan(0), "Transaction.commit", sessionId)));
+                            span,
+                            trace.getSpan(0),
+                            "Transaction.commit",
+                            trace
+                                .getSpan(1)
+                                .getAttributes()
+                                .get(AttributeKey.stringKey("hibernate.session_id")))));
   }
 
   @Test
@@ -290,34 +303,49 @@ public class SessionTest extends AbstractHibernateTest {
                 .hasSize(9)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("overlapping Sessions"),
-                    span ->
-                        assertSessionSpan(
-                            span,
-                            trace.getSpan(0),
-                            sessionId1,
-                            "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value"),
-                    span ->
-                        assertSessionSpan(
-                            span,
-                            trace.getSpan(0),
-                            sessionId2,
-                            "Session.insert io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value"),
+                    span -> {
+                      assertSessionSpan(
+                          span,
+                          trace.getSpan(0),
+                          "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value");
+                      sessionId1.set(
+                          trace
+                              .getSpan(1)
+                              .getAttributes()
+                              .get(AttributeKey.stringKey("hibernate.session_id")));
+                    },
+                    span -> {
+                      assertSessionSpan(
+                          span,
+                          trace.getSpan(0),
+                          "Session.insert io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value");
+                      sessionId2.set(
+                          trace
+                              .getSpan(2)
+                              .getAttributes()
+                              .get(AttributeKey.stringKey("hibernate.session_id")));
+                    },
                     span -> assertClientSpan(span, trace.getSpan(2), "INSERT"),
-                    span ->
-                        assertSessionSpan(
-                            span,
-                            trace.getSpan(0),
-                            sessionId3,
-                            "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value"),
+                    span -> {
+                      assertSessionSpan(
+                          span,
+                          trace.getSpan(0),
+                          "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value");
+                      sessionId3.set(
+                          trace
+                              .getSpan(4)
+                              .getAttributes()
+                              .get(AttributeKey.stringKey("hibernate.session_id")));
+                    },
                     span ->
                         assertSpanWithSessionId(
                             span,
                             trace.getSpan(0),
                             "Session.delete io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                            sessionId1),
+                            sessionId1.get()),
                     span ->
                         assertSpanWithSessionId(
-                            span, trace.getSpan(0), "Transaction.commit", sessionId1),
+                            span, trace.getSpan(0), "Transaction.commit", sessionId1.get()),
                     span -> assertClientSpan(span, trace.getSpan(6), "INSERT"),
                     span -> assertClientSpan(span, trace.getSpan(6), "DELETE")));
 
@@ -766,28 +794,23 @@ public class SessionTest extends AbstractHibernateTest {
   }
 
   private static SpanDataAssert assertSessionSpan(
-      SpanDataAssert span, SpanData parent, AtomicReference<String> sessionId, String spanName) {
+      SpanDataAssert span, SpanData parent, String spanName) {
     return span.hasName(spanName)
         .hasKind(SpanKind.INTERNAL)
         .hasParent(parent)
-        .hasAttributesSatisfying(
-            attributes -> {
-              Assertions.assertThat(attributes.get(AttributeKey.stringKey("hibernate.session_id")))
-                  .isInstanceOf(String.class);
-              sessionId.set(attributes.get(AttributeKey.stringKey("hibernate.session_id")));
-            });
+        .hasAttributesSatisfyingExactly(
+            satisfies(
+                AttributeKey.stringKey("hibernate.session_id"),
+                val -> val.isInstanceOf(String.class)));
   }
 
   private static SpanDataAssert assertSpanWithSessionId(
-      SpanDataAssert span, SpanData parent, String spanName, AtomicReference<String> sessionId) {
+      SpanDataAssert span, SpanData parent, String spanName, String sessionId) {
     return span.hasName(spanName)
         .hasKind(SpanKind.INTERNAL)
         .hasParent(parent)
-        .hasAttributesSatisfying(
-            attributes -> {
-              assertThat(attributes)
-                  .containsEntry(AttributeKey.stringKey("hibernate.session_id"), sessionId.get());
-            });
+        .hasAttributesSatisfyingExactly(
+            equalTo(AttributeKey.stringKey("hibernate.session_id"), sessionId));
   }
 
   private static SpanDataAssert assertClientSpan(SpanDataAssert span, SpanData parent) {
