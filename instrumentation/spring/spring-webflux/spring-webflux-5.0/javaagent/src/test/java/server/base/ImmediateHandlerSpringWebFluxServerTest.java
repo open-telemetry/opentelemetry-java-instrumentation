@@ -5,7 +5,6 @@
 
 package server.base;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NESTED_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 

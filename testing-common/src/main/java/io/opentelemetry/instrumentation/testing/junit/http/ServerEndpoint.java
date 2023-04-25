@@ -29,9 +29,6 @@ public class ServerEndpoint {
       new ServerEndpoint("NOT_FOUND", "notFound", 404, "not found");
   public static final ServerEndpoint CAPTURE_HEADERS =
       new ServerEndpoint("CAPTURE_HEADERS", "captureHeaders", 200, "headers captured");
-  // TODO (heya) move it to webflux test module after this has been converted to a class
-  public static final ServerEndpoint NESTED_PATH =
-      new ServerEndpoint("NESTED_PATH", "nestedPath/hello/world", 200, "nested path");
   public static final ServerEndpoint CAPTURE_PARAMETERS =
       new ServerEndpoint("CAPTURE_PARAMETERS", "captureParameters", 200, "parameters captured");
 
@@ -83,7 +80,7 @@ public class ServerEndpoint {
     return name;
   }
 
-  ServerEndpoint(String name, String uri, int status, String body) {
+  public ServerEndpoint(String name, String uri, int status, String body) {
     this.name = name;
     this.uriObj = URI.create(uri);
     this.path = uriObj.getPath();

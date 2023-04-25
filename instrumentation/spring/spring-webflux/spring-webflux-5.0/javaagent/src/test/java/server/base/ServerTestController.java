@@ -5,6 +5,8 @@
 
 package server.base;
 
+import static server.base.SpringWebFluxServerTest.NESTED_PATH;
+
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.net.URI;
 import java.util.function.Supplier;
@@ -118,7 +120,7 @@ public abstract class ServerTestController {
 
   @GetMapping("/nestedPath")
   public Mono<String> nested_path(ServerHttpRequest request, ServerHttpResponse response) {
-    ServerEndpoint endpoint = ServerEndpoint.NESTED_PATH;
+    ServerEndpoint endpoint = NESTED_PATH;
 
     return wrapControllerMethod(
         endpoint,
