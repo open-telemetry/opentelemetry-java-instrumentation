@@ -12,6 +12,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -22,6 +23,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.apache.commons.text.StringSubstitutor;
+import org.apache.commons.text.lookup.StringLookup;
 
 @AutoService(AutoConfigurationCustomizerProvider.class)
 public final class ConfigurationFileLoader implements AutoConfigurationCustomizerProvider {
@@ -34,18 +37,18 @@ public final class ConfigurationFileLoader implements AutoConfigurationCustomize
 
   @Override
   public void customize(AutoConfigurationCustomizer autoConfiguration) {
-    autoConfiguration.addPropertiesSupplier(ConfigurationFileLoader::getConfigFileContents);
+    autoConfiguration.addPropertiesCustomizer(ConfigurationFileLoader::getConfigFileContents);
   }
 
-  static Map<String, String> getConfigFileContents() {
+  static Map<String, String> getConfigFileContents(ConfigProperties configProperties) {
     if (configFileContents == null) {
-      configFileContents = loadConfigFile();
+      configFileContents = loadConfigFile(configProperties);
     }
     return configFileContents;
   }
 
   // visible for tests
-  static Map<String, String> loadConfigFile() {
+  static Map<String, String> loadConfigFile(ConfigProperties configProperties) {
     // Reading from system property first and from env after
     String configurationFilePath = ConfigPropertiesUtil.getString(CONFIGURATION_FILE_PROPERTY);
     if (configurationFilePath == null) {
@@ -76,8 +79,36 @@ public final class ConfigurationFileLoader implements AutoConfigurationCustomize
           configurationFilePath);
     }
 
+    StringSubstitutor strSubstitutor =
+        new StringSubstitutor(getStringLookup(configurationFilePath, configProperties));
+
     return properties.entrySet().stream()
-        .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toString()));
+        .collect(
+            Collectors.toMap(
+                e -> e.getKey().toString(), e -> strSubstitutor.replace(e.getValue().toString())));
+  }
+
+  private static StringLookup getStringLookup(
+      String configurationFilePath, ConfigProperties configProperties) {
+    return placeholder -> {
+      String systemProperty = System.getProperty(placeholder);
+      if (systemProperty != null) {
+        return systemProperty;
+      }
+      String enVar = System.getenv(placeholder);
+      if (enVar != null) {
+        return enVar;
+      }
+      String configProperty = configProperties.getString(placeholder);
+      if (configProperty != null) {
+        return configProperty;
+      }
+      logger.log(
+          SEVERE,
+          "Configuration file \"{0}\" cannot be correctly parsed. No value found to substitute for placeholder \"$'{'{1}'}'\".",
+          new Object[] {configurationFilePath, placeholder});
+      return null;
+    };
   }
 
   @Override

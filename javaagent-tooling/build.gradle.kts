@@ -41,6 +41,8 @@ dependencies {
 
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
+  implementation("org.apache.commons:commons-text:1.10.0")
+
   api("net.bytebuddy:byte-buddy-dep")
 
   annotationProcessor("com.google.auto.service:auto-service")
