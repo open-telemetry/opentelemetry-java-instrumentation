@@ -99,8 +99,9 @@ class VertxSqlClientTest {
 
   @Test
   void testSimpleSelect() throws Exception {
-    CompletableFuture<Object> result = new CompletableFuture<>();
-    result.whenComplete((rows, throwable) -> testing.runWithSpan("callback", () -> {}));
+    CompletableFuture<Object> future = new CompletableFuture<>();
+    CompletableFuture<Object> result =
+        future.whenComplete((rows, throwable) -> testing.runWithSpan("callback", () -> {}));
     testing.runWithSpan(
         "parent",
         () ->
@@ -108,9 +109,9 @@ class VertxSqlClientTest {
                 .execute(
                     rowSetAsyncResult -> {
                       if (rowSetAsyncResult.succeeded()) {
-                        result.complete(rowSetAsyncResult.result());
+                        future.complete(rowSetAsyncResult.result());
                       } else {
-                        result.completeExceptionally(rowSetAsyncResult.cause());
+                        future.completeExceptionally(rowSetAsyncResult.cause());
                       }
                     }));
     result.get(30, TimeUnit.SECONDS);
