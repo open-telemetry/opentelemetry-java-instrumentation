@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -24,7 +25,7 @@ public class ReflectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("jdk.internal.reflect.Reflection").or(named("sun.reflect.Reflection"));
+    return namedOneOf("jdk.internal.reflect.Reflection", "sun.reflect.Reflection");
   }
 
   @Override
