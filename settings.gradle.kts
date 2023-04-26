@@ -509,7 +509,7 @@ hideFromDependabot(":instrumentation:vibur-dbcp-11.0:javaagent")
 hideFromDependabot(":instrumentation:vibur-dbcp-11.0:library")
 hideFromDependabot(":instrumentation:vibur-dbcp-11.0:testing")
 hideFromDependabot(":instrumentation:wicket-8.0:javaagent")
-
+hideFromDependabot(":instrumentation:thrift:javaagent")
 // benchmark
 include(":benchmark-overhead-jmh")
 include(":benchmark-jfr-analyzer")
@@ -519,3 +519,4 @@ include(":benchmark-jfr-analyzer")
 fun hideFromDependabot(projectPath: String) {
   include(projectPath)
 }
+

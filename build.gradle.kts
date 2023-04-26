@@ -47,3 +47,17 @@ if (testPartition != null) {
     }
   }
 }
+
+allprojects {
+  repositories {
+//    maven {
+//      setUrl("https://maven.aliyun.com/nexus/content/groups/public/")
+//    }
+    mavenCentral()
+    mavenLocal()
+    jcenter {
+      setUrl("https://jcenter.bintray.com/")
+    }
+    google()
+  }
+}
