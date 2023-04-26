@@ -1,9 +1,14 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.thrift;
 
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
 import javax.annotation.Nullable;
 
-enum ThriftRpcAttributesGetter implements RpcAttributesGetter<ThriftRequest>{
+enum ThriftRpcAttributesGetter implements RpcAttributesGetter<ThriftRequest> {
   INSTANCE;
 
   @Override

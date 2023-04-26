@@ -1,35 +1,50 @@
-package io.opentelemetry.javaagent.instrumentation.thrift;
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-import io.opentelemetry.context.Context;
-import org.apache.thrift.async.AsyncMethodCallback;
+package io.opentelemetry.javaagent.instrumentation.thrift;
 
 import static io.opentelemetry.javaagent.instrumentation.thrift.ThriftSingletons.clientInstrumenter;
 
-public class AsyncMethodCallbackWrapper<T> implements AsyncMethodCallback<T> {
-  private AsyncMethodCallback innerCallback;
+import io.opentelemetry.context.Context;
+import org.apache.thrift.async.AsyncMethodCallback;
+import javax.annotation.Nullable;
+
+public final class AsyncMethodCallbackWrapper<T> implements AsyncMethodCallback<T> {
+  private final AsyncMethodCallback<T> innerCallback;
+  @Nullable
   public Context context;
+  @Nullable
   public ThriftRequest request;
-  public AsyncMethodCallbackWrapper(AsyncMethodCallback inner){
+
+  public AsyncMethodCallbackWrapper(AsyncMethodCallback<T> inner) {
     innerCallback = inner;
   }
 
-  public void SetContext(Context text){
+  public void setContext(Context text) {
     context = text;
   }
 
-  public Context getContext(){
+  @Nullable
+  public Context getContext() {
     return this.context;
   }
 
   @Override
   public void onComplete(T t) {
-    clientInstrumenter().end(context,request,0,null);
     innerCallback.onComplete(t);
+    if(context != null && request != null) {
+      clientInstrumenter().end(context, request, 0, null);
+    }
   }
 
   @Override
   public void onError(Exception e) {
     innerCallback.onError(e);
-    clientInstrumenter().end(context,request,0,e);
+    if(context != null && request != null) {
+      clientInstrumenter().end(context, request, 0, e);
+    }
+
   }
 }

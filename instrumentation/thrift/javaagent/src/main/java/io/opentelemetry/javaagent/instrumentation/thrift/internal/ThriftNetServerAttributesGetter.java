@@ -1,13 +1,22 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.thrift.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.thrift.ThriftRequest;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
+import javax.annotation.Nullable;
 
-public class ThriftNetServerAttributesGetter extends InetSocketAddressNetServerAttributesGetter<ThriftRequest>{
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class ThriftNetServerAttributesGetter
+    extends InetSocketAddressNetServerAttributesGetter<ThriftRequest> {
   @Override
   public String getTransport(ThriftRequest request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
