@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -26,7 +27,7 @@ import java.util.Map;
 final class AwsXrayEnvSpanLinksExtractor implements SpanLinksExtractor<AwsLambdaRequest> {
 
   private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
-
+  private static final String AWS_TRACE_HEADER_PROP = "com.amazonaws.xray.traceHeader";
   // lower-case map getter used for extraction
   private static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 
@@ -42,20 +43,37 @@ final class AwsXrayEnvSpanLinksExtractor implements SpanLinksExtractor<AwsLambda
   }
 
   public static void extract(SpanLinksBuilder spanLinks) {
-    String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
-    if (parentTraceHeader == null || parentTraceHeader.isEmpty()) {
+    Map<String, String> contextMap = getSystemPropertyOrEnvironmentVariable();
+    if (contextMap.isEmpty()) {
       return;
     }
     Context xrayContext =
-        AwsXrayPropagator.getInstance()
-            .extract(
-                Context.root(),
-                Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentTraceHeader),
-                MapGetter.INSTANCE);
+        AwsXrayPropagator.getInstance().extract(Context.root(), contextMap, MapGetter.INSTANCE);
     SpanContext envVarSpanCtx = Span.fromContext(xrayContext).getSpanContext();
     if (envVarSpanCtx.isValid()) {
       spanLinks.addLink(envVarSpanCtx, LINK_ATTRIBUTES);
     }
+  }
+
+  public static Map<String, String> getSystemPropertyOrEnvironmentVariable() {
+    String parentTraceEnvKeyEnvironment = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
+    String parentTraceHeaderProperty = System.getProperty(AWS_TRACE_HEADER_PROP);
+    boolean isEnvVariableEmptyOrNull = isEmptyOrNull(parentTraceEnvKeyEnvironment);
+    boolean isSystemPropertyEmptyOrNull = isEmptyOrNull(parentTraceHeaderProperty);
+
+    Map<String, String> contextMap = new HashMap<>();
+    if (!isSystemPropertyEmptyOrNull) {
+      contextMap.put(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentTraceHeaderProperty);
+      return contextMap;
+    } else if (!isEnvVariableEmptyOrNull) {
+      contextMap.put(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentTraceEnvKeyEnvironment);
+      return contextMap;
+    }
+    return Collections.emptyMap();
+  }
+
+  public static boolean isEmptyOrNull(String value) {
+    return value == null || value.isEmpty();
   }
 
   private enum MapGetter implements TextMapGetter<Map<String, String>> {
