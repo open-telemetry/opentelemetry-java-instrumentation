@@ -13,8 +13,10 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
+import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.SnippetInjectingResponseWrapper;
 import javax.servlet.Servlet;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -41,6 +43,12 @@ public class Servlet3Advice {
     }
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
+    String snippet = ExperimentalSnippetHolder.getSnippet();
+    if (!snippet.isEmpty()
+        && !((HttpServletResponse) response)
+            .containsHeader(SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
+      response = new SnippetInjectingResponseWrapper((HttpServletResponse) response, snippet);
+    }
     callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
     callDepth.getAndIncrement();
 
