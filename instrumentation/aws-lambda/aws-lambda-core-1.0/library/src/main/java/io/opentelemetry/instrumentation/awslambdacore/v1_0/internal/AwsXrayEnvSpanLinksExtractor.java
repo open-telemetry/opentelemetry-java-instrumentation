@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -55,21 +54,14 @@ final class AwsXrayEnvSpanLinksExtractor implements SpanLinksExtractor<AwsLambda
     }
   }
 
-  public static Map<String, String> getSystemPropertyOrEnvironmentVariable() {
-    String parentTraceEnvKeyEnvironment = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
-    String parentTraceHeaderProperty = System.getProperty(AWS_TRACE_HEADER_PROP);
-    boolean isEnvVariableEmptyOrNull = isEmptyOrNull(parentTraceEnvKeyEnvironment);
-    boolean isSystemPropertyEmptyOrNull = isEmptyOrNull(parentTraceHeaderProperty);
-
-    Map<String, String> contextMap = new HashMap<>();
-    if (!isSystemPropertyEmptyOrNull) {
-      contextMap.put(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentTraceHeaderProperty);
-      return contextMap;
-    } else if (!isEnvVariableEmptyOrNull) {
-      contextMap.put(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentTraceEnvKeyEnvironment);
-      return contextMap;
+  private static Map<String, String> getSystemPropertyOrEnvironmentVariable() {
+    String traceHeader = System.getProperty(AWS_TRACE_HEADER_PROP);
+    if (isEmptyOrNull(traceHeader)) {
+      traceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
     }
-    return Collections.emptyMap();
+    return isEmptyOrNull(traceHeader)
+        ? Collections.emptyMap()
+        : Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, traceHeader);
   }
 
   public static boolean isEmptyOrNull(String value) {
