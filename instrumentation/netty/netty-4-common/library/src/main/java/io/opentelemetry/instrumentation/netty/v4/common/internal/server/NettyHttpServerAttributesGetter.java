@@ -38,12 +38,21 @@ final class NettyHttpServerAttributesGetter
   }
 
   @Override
-  public String getTarget(HttpRequestAndChannel requestAndChannel) {
-    return requestAndChannel.request().getUri();
+  public String getScheme(HttpRequestAndChannel requestAndChannel) {
+    return HttpSchemeUtil.getScheme(requestAndChannel);
   }
 
   @Override
-  public String getScheme(HttpRequestAndChannel requestAndChannel) {
-    return HttpSchemeUtil.getScheme(requestAndChannel);
+  public String getPath(HttpRequestAndChannel requestAndChannel) {
+    String fullPath = requestAndChannel.request().getUri();
+    int separatorPos = fullPath.indexOf('?');
+    return separatorPos == -1 ? fullPath : fullPath.substring(0, separatorPos);
+  }
+
+  @Override
+  public String getQuery(HttpRequestAndChannel requestAndChannel) {
+    String fullPath = requestAndChannel.request().getUri();
+    int separatorPos = fullPath.indexOf('?');
+    return separatorPos == -1 ? null : fullPath.substring(separatorPos + 1);
   }
 }

@@ -44,18 +44,25 @@ class HttpServerAttributesExtractorTest {
     }
 
     @Override
-    public String getTarget(Map<String, Object> request) {
-      return (String) request.get("target");
+    public String getScheme(Map<String, Object> request) {
+      return (String) request.get("scheme");
+    }
+
+    @Nullable
+    @Override
+    public String getPath(Map<String, Object> request) {
+      return (String) request.get("path");
+    }
+
+    @Nullable
+    @Override
+    public String getQuery(Map<String, Object> request) {
+      return (String) request.get("query");
     }
 
     @Override
     public String getRoute(Map<String, Object> request) {
       return (String) request.get("route");
-    }
-
-    @Override
-    public String getScheme(Map<String, Object> request) {
-      return (String) request.get("scheme");
     }
 
     @Override
@@ -112,7 +119,8 @@ class HttpServerAttributesExtractorTest {
     Map<String, Object> request = new HashMap<>();
     request.put("method", "POST");
     request.put("url", "http://github.com");
-    request.put("target", "/repositories/1");
+    request.put("path", "/repositories/1");
+    request.put("query", "details=true");
     request.put("scheme", "http");
     request.put("header.content-length", "10");
     request.put("route", "/repositories/{id}");
@@ -147,7 +155,7 @@ class HttpServerAttributesExtractorTest {
             entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
-            entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
+            entry(SemanticAttributes.HTTP_TARGET, "/repositories/1?details=true"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
             entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
@@ -163,7 +171,7 @@ class HttpServerAttributesExtractorTest {
             entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
-            entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
+            entry(SemanticAttributes.HTTP_TARGET, "/repositories/1?details=true"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
             entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
@@ -287,6 +295,40 @@ class HttpServerAttributesExtractorTest {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(arguments(80, "http"), arguments(443, "https"));
+    }
+  }
+
+  @ParameterizedTest
+  @ArgumentsSource(PathAndQueryArgumentSource.class)
+  void computeTargetFromPathAndQuery(String path, String query, String expectedTarget) {
+    Map<String, Object> request = new HashMap<>();
+    request.put("path", path);
+    request.put("query", query);
+
+    AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
+        HttpServerAttributesExtractor.create(
+            new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    if (expectedTarget == null) {
+      assertThat(attributes.build()).doesNotContainKey(SemanticAttributes.HTTP_TARGET);
+    } else {
+      assertThat(attributes.build()).containsEntry(SemanticAttributes.HTTP_TARGET, expectedTarget);
+    }
+  }
+
+  static class PathAndQueryArgumentSource implements ArgumentsProvider {
+
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return Stream.of(
+          arguments(null, null, null),
+          arguments("path", null, "path"),
+          arguments("path", "", "path"),
+          arguments(null, "query", "?query"),
+          arguments("path", "query", "path?query"));
     }
   }
 }
