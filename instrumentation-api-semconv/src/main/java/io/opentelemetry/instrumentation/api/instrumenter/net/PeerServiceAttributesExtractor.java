@@ -60,7 +60,7 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     String peerName = attributesGetter.getPeerName(request);
     String peerService = mapToPeerService(peerName);
     if (peerService == null) {
-      String sockPeerName = attributesGetter.sockPeerName(request, response);
+      String sockPeerName = attributesGetter.getSockPeerName(request, response);
       peerService = mapToPeerService(sockPeerName);
     }
     if (peerService != null) {
