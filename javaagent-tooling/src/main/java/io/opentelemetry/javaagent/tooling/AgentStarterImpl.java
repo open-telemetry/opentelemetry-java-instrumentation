@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
+import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.io.File;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -69,7 +69,8 @@ public class AgentStarterImpl implements AgentStarter {
   public void start() {
     extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader());
 
-    String loggerImplementationName = ConfigPropertiesUtil.getString("otel.javaagent.logging");
+    String loggerImplementationName =
+        EarlyInitAgentConfig.INSTANCE.getString("otel.javaagent.logging");
     // default to the built-in stderr slf4j-simple logger
     if (loggerImplementationName == null) {
       loggerImplementationName = "simple";

@@ -14,9 +14,8 @@ import java.util.Map;
  */
 public final class EarlyInitAgentConfig {
 
-  public static EarlyInitAgentConfig create() {
-    return new EarlyInitAgentConfig(ConfigurationFileLoader.getConfigFileContents());
-  }
+  public static final EarlyInitAgentConfig INSTANCE =
+      new EarlyInitAgentConfig(ConfigurationFileLoader.getConfigFileContents());
 
   private final Map<String, String> configFileContents;
 
@@ -29,5 +28,12 @@ public final class EarlyInitAgentConfig {
     boolean configFileValue =
         configFileValueStr == null ? defaultValue : Boolean.parseBoolean(configFileValueStr);
     return ConfigPropertiesUtil.getBoolean(propertyName, configFileValue);
+  }
+
+  public String getString(String propertyName) {
+    String configPropertiesUtilValue = ConfigPropertiesUtil.getString(propertyName);
+    return configPropertiesUtilValue != null
+        ? configPropertiesUtilValue
+        : configFileContents.get(propertyName);
   }
 }

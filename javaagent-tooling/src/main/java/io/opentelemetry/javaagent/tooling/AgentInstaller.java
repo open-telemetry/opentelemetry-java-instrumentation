@@ -90,8 +90,7 @@ public class AgentInstaller {
     }
 
     logVersionInfo();
-    EarlyInitAgentConfig agentConfig = EarlyInitAgentConfig.create();
-    if (agentConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
+    if (EarlyInitAgentConfig.INSTANCE.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
       setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
       installBytebuddyAgent(inst, extensionClassLoader, agentListeners);
