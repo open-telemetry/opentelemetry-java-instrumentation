@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 1.25.1 (2023-04-27)
 
 - Fix apache pulsar instrumentation missing from the Java agent
   ([#8378](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8378))
