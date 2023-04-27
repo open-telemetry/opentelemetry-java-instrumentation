@@ -2,4 +2,4 @@
 
 | System property | Type | Default | Description |
 |---|---|---|---|
-| `otel.instrumentation.pulsar.experimental-span-attributes` | `Boolean | `false` | Enable the capture of experimental span attributes. |
+| `otel.instrumentation.pulsar.experimental-span-attributes` | `Boolean` | `false` | Enable the capture of experimental span attributes. |
