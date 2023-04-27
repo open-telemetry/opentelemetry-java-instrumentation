@@ -35,10 +35,10 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
     return publicAddress.get().getScheme();
   }
 
-  @Nullable
   @Override
   public String getPath(Request request) {
-    return request.getPath();
+    String path = request.getPath();
+    return path.startsWith("/") ? path : "/" + path;
   }
 
   @Nullable
