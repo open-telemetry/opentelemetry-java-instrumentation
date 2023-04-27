@@ -147,6 +147,6 @@ class PeerServiceAttributesExtractorTest {
     assertThat(startAttributes.build()).isEmpty();
     assertThat(endAttributes.build())
         .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "myService"));
-    verify(netAttributesExtractor, never()).sockPeerName(any(), any());
+    verify(netAttributesExtractor, never()).getSockPeerName(any(), any());
   }
 }
