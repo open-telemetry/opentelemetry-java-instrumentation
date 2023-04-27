@@ -18,8 +18,12 @@ the second Monday of the month (roughly a few of days after the monthly minor re
 
 ## Preparing a new major or minor release
 
-* Check that [dependabot has run](https://github.com/open-telemetry/opentelemetry-java-instrumentation/network/updates)
-  sometime in the past day (this link is only accessible if you have write access to the repository).
+* Check that
+  [dependabot has run](https://github.com/open-telemetry/opentelemetry-java-instrumentation/network/updates)
+  sometime in the past day (this link is only accessible if you have write access to the
+  repository), and check that all
+  [dependabot PRs](https://github.com/open-telemetry/opentelemetry-java-contrib/pulls/app%2Fdependabot)
+  have been merged.
 * Close the [release milestone](https://github.com/open-telemetry/opentelemetry-java-instrumentation/milestones)
   if there is one.
 * Merge a pull request to `main` updating the `CHANGELOG.md`.
