@@ -66,6 +66,7 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     if (peerService != null) {
       attributes.put(SemanticAttributes.PEER_SERVICE, peerService);
     }
+  }
 
   @Nullable
   private String mapToPeerService(String endpoint) {
