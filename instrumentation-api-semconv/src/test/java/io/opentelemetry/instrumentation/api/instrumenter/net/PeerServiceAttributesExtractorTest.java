@@ -107,7 +107,7 @@ class PeerServiceAttributesExtractorTest {
     PeerServiceAttributesExtractor<String, String> underTest =
         new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
 
-    when(netAttributesExtractor.sockPeerName(any(), any())).thenReturn("example.com");
+    when(netAttributesExtractor.getSockPeerName(any(), any())).thenReturn("example.com");
 
     Context context = Context.root();
 
