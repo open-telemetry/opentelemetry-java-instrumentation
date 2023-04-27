@@ -89,17 +89,13 @@ public final class ConfigurationFileLoader implements AutoConfigurationCustomize
 
   private static StringLookup getStringLookup(String configurationFilePath) {
     return placeholder -> {
-      String systemProperty = System.getProperty(placeholder);
-      if (systemProperty != null) {
-        return systemProperty;
-      }
-      String enVar = System.getenv(placeholder);
-      if (enVar != null) {
-        return enVar;
+      String substitution = ConfigPropertiesUtil.getString(placeholder);
+      if (substitution != null) {
+        return substitution;
       }
       logger.log(
           SEVERE,
-          "Configuration file \"{0}\" cannot be correctly parsed. No value found to substitute for placeholder \"$'{'{1}'}'\".",
+          "Configuration file \"{0}\" cannot be fully parsed. No value found to substitute for placeholder \"$'{'{1}'}'\".",
           new Object[] {configurationFilePath, placeholder});
       return null;
     };
