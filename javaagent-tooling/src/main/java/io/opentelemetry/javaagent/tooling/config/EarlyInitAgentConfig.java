@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
-import io.opentelemetry.javaagent.tooling.EmptyConfigProperties;
 import java.util.Map;
 
 /**
@@ -16,8 +15,7 @@ import java.util.Map;
 public final class EarlyInitAgentConfig {
 
   public static EarlyInitAgentConfig create() {
-    return new EarlyInitAgentConfig(
-        ConfigurationFileLoader.getConfigFileContents(EmptyConfigProperties.INSTANCE));
+    return new EarlyInitAgentConfig(ConfigurationFileLoader.getConfigFileContents());
   }
 
   private final Map<String, String> configFileContents;

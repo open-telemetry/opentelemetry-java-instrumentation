@@ -12,7 +12,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -37,18 +36,18 @@ public final class ConfigurationFileLoader implements AutoConfigurationCustomize
 
   @Override
   public void customize(AutoConfigurationCustomizer autoConfiguration) {
-    autoConfiguration.addPropertiesCustomizer(ConfigurationFileLoader::getConfigFileContents);
+    autoConfiguration.addPropertiesSupplier(ConfigurationFileLoader::getConfigFileContents);
   }
 
-  static Map<String, String> getConfigFileContents(ConfigProperties configProperties) {
+  static Map<String, String> getConfigFileContents() {
     if (configFileContents == null) {
-      configFileContents = loadConfigFile(configProperties);
+      configFileContents = loadConfigFile();
     }
     return configFileContents;
   }
 
   // visible for tests
-  static Map<String, String> loadConfigFile(ConfigProperties configProperties) {
+  static Map<String, String> loadConfigFile() {
     // Reading from system property first and from env after
     String configurationFilePath = ConfigPropertiesUtil.getString(CONFIGURATION_FILE_PROPERTY);
     if (configurationFilePath == null) {
@@ -80,7 +79,7 @@ public final class ConfigurationFileLoader implements AutoConfigurationCustomize
     }
 
     StringSubstitutor strSubstitutor =
-        new StringSubstitutor(getStringLookup(configurationFilePath, configProperties));
+        new StringSubstitutor(getStringLookup(configurationFilePath));
 
     return properties.entrySet().stream()
         .collect(
@@ -88,8 +87,7 @@ public final class ConfigurationFileLoader implements AutoConfigurationCustomize
                 e -> e.getKey().toString(), e -> strSubstitutor.replace(e.getValue().toString())));
   }
 
-  private static StringLookup getStringLookup(
-      String configurationFilePath, ConfigProperties configProperties) {
+  private static StringLookup getStringLookup(String configurationFilePath) {
     return placeholder -> {
       String systemProperty = System.getProperty(placeholder);
       if (systemProperty != null) {
@@ -98,10 +96,6 @@ public final class ConfigurationFileLoader implements AutoConfigurationCustomize
       String enVar = System.getenv(placeholder);
       if (enVar != null) {
         return enVar;
-      }
-      String configProperty = configProperties.getString(placeholder);
-      if (configProperty != null) {
-        return configProperty;
       }
       logger.log(
           SEVERE,
