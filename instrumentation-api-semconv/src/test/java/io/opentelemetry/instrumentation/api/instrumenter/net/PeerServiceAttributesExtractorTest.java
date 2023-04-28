@@ -95,6 +95,7 @@ class PeerServiceAttributesExtractorTest {
     assertThat(startAttributes.build()).isEmpty();
     assertThat(endAttributes.build())
         .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "myService"));
+    verify(netAttributesExtractor, never()).getSockPeerName(any(), any());
   }
   
   @Test
@@ -121,32 +122,5 @@ class PeerServiceAttributesExtractorTest {
     assertThat(startAttributes.build()).isEmpty();
     assertThat(endAttributes.build())
         .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "myService"));
-  }
-
-  @Test
-  void shouldSetNoSockPeerNameIfPeerNameMatches() {
-    // given
-    Map<String, String> peerServiceMapping = new HashMap<>();
-    peerServiceMapping.put("example.com", "myService");
-    peerServiceMapping.put("unmatched.com", "someOtherService");
-
-    PeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
-
-    when(netAttributesExtractor.peerName(any(), any())).thenReturn("example.com");
-
-    Context context = Context.root();
-
-    // when
-    AttributesBuilder startAttributes = Attributes.builder();
-    underTest.onStart(startAttributes, context, "request");
-    AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, context, "request", "response", null);
-
-    // then
-    assertThat(startAttributes.build()).isEmpty();
-    assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "myService"));
-    verify(netAttributesExtractor, never()).getSockPeerName(any(), any());
   }
 }
