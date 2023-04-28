@@ -11,7 +11,7 @@ muzzle {
 }
 
 dependencies {
-  implementation("org.apache.thrift:libthrift:0.14.1")
+  library(("org.apache.thrift:libthrift:0.14.1")
 }
 
 

@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isSystemClassLoader;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
@@ -70,7 +69,6 @@ public class MethodInstrumentation implements TypeInstrumentation {
 
       context = instrumenter().start(parentContext, classAndMethod);
       scope = context.makeCurrent();
-
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

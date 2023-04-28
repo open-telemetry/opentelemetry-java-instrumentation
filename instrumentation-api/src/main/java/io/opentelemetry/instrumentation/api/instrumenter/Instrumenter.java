@@ -105,14 +105,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
    */
   public boolean shouldStart(Context parentContext, REQUEST request) {
     if (!enabled) {
-      System.out.println("!enabled");
       return false;
     }
     SpanKind spanKind = spanKindExtractor.extract(request);
     boolean suppressed = spanSuppressor.shouldSuppress(parentContext, spanKind);
 
     if (suppressed) {
-      System.out.println("Suppressed");
       supportability.recordSuppressedSpan(spanKind, instrumentationName);
     }
     return !suppressed;
