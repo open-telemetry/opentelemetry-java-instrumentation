@@ -6,7 +6,11 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Instant;
@@ -23,11 +27,15 @@ public final class InstrumenterUtil {
   private static final Logger logger = Logger.getLogger(InstrumenterUtil.class.getName());
 
   private static final Method startAndEndMethod;
+  private static final Method buildUpstreamInstrumenterMethod;
+  private static final Method buildDownstreamInstrumenterMethod;
 
   static {
-    Method method = null;
+    Method startAndEnd = null;
+    Method buildUpstreamInstrumenter = null;
+    Method buildDownstreamInstrumenter = null;
     try {
-      method =
+      startAndEnd =
           Instrumenter.class.getDeclaredMethod(
               "startAndEnd",
               Context.class,
@@ -36,12 +44,24 @@ public final class InstrumenterUtil {
               Throwable.class,
               Instant.class,
               Instant.class);
-      method.setAccessible(true);
+      startAndEnd.setAccessible(true);
+      buildUpstreamInstrumenter =
+          InstrumenterBuilder.class.getDeclaredMethod(
+              "buildUpstreamInstrumenter", TextMapGetter.class, SpanKindExtractor.class);
+      buildUpstreamInstrumenter.setAccessible(true);
+      buildDownstreamInstrumenter =
+          InstrumenterBuilder.class.getDeclaredMethod(
+              "buildDownstreamInstrumenter", TextMapSetter.class, SpanKindExtractor.class);
+      buildDownstreamInstrumenter.setAccessible(true);
     } catch (NoSuchMethodException e) {
       logger.log(
-          Level.WARNING, "Could not get Instrumenter#startAndEnd() method with reflection", e);
+          Level.WARNING,
+          "Could not get Instrumenter and InstrumenterBuilder methods with reflection",
+          e);
     }
-    startAndEndMethod = method;
+    startAndEndMethod = startAndEnd;
+    buildUpstreamInstrumenterMethod = buildUpstreamInstrumenter;
+    buildDownstreamInstrumenterMethod = buildDownstreamInstrumenter;
   }
 
   public static <REQUEST, RESPONSE> Context startAndEnd(
@@ -54,7 +74,7 @@ public final class InstrumenterUtil {
       Instant endTime) {
 
     if (startAndEndMethod == null) {
-      // already logged a warning when this class initialized
+      logger.log(Level.WARNING, "Could not get Instrumenter#startAndEnd() method with reflection");
       return parentContext;
     }
     try {
@@ -64,6 +84,52 @@ public final class InstrumenterUtil {
     } catch (InvocationTargetException | IllegalAccessException e) {
       logger.log(Level.WARNING, "Error occurred when calling Instrumenter#startAndEnd()", e);
       return parentContext;
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> buildUpstreamInstrumenter(
+      InstrumenterBuilder<REQUEST, RESPONSE> builder,
+      TextMapGetter<REQUEST> getter,
+      SpanKindExtractor<REQUEST> spanKindExtractor) {
+    if (buildUpstreamInstrumenterMethod == null) {
+      logger.log(
+          Level.WARNING,
+          "Could not get InstrumenterBuilder#buildUpstreamInstrumenter() method with reflection");
+      return builder.buildInstrumenter(spanKindExtractor);
+    }
+    try {
+      return (Instrumenter<REQUEST, RESPONSE>)
+          buildUpstreamInstrumenterMethod.invoke(builder, getter, spanKindExtractor);
+    } catch (InvocationTargetException | IllegalAccessException e) {
+      logger.log(
+          Level.WARNING,
+          "Error occurred when calling InstrumenterBuilder#buildUpstreamInstrumenter()",
+          e);
+      return builder.buildInstrumenter(spanKindExtractor);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> buildDownstreamInstrumenter(
+      InstrumenterBuilder<REQUEST, RESPONSE> builder,
+      TextMapSetter<REQUEST> setter,
+      SpanKindExtractor<REQUEST> spanKindExtractor) {
+    if (buildDownstreamInstrumenterMethod == null) {
+      logger.log(
+          Level.WARNING,
+          "Could not get InstrumenterBuilder#buildDownstreamInstrumenter() method with reflection");
+      return builder.buildInstrumenter(spanKindExtractor);
+    }
+    try {
+      return (Instrumenter<REQUEST, RESPONSE>)
+          buildDownstreamInstrumenterMethod.invoke(builder, setter, spanKindExtractor);
+    } catch (InvocationTargetException | IllegalAccessException e) {
+      logger.log(
+          Level.WARNING,
+          "Error occurred when calling InstrumenterBuilder#buildDownstreamInstrumenter()",
+          e);
+      return builder.buildInstrumenter(spanKindExtractor);
     }
   }
 
