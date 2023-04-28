@@ -1,15 +1,18 @@
 {
-  "retryOn429" : true,
-  "aliveStatusCodes" : [
+  "retryOn429": true,
+  "aliveStatusCodes": [
     200,
     403
   ],
-  "ignorePatterns" : [
+  "ignorePatterns": [
     {
-      "pattern" : "https://github.com/open-telemetry/opentelemetry-java-instrumentation/network/updates"
+      "pattern": "https://github.com/open-telemetry/opentelemetry-java-instrumentation/network/updates"
     },
     {
-      "pattern" : "^https://kotlinlang\\.org/docs/coroutines-overview\\.html$"
+      "pattern": "^https://github.com/open-telemetry/opentelemetry-java-contrib/pulls/app%2Fdependabot$"
+    },
+    {
+      "pattern": "^https://kotlinlang\\.org/docs/coroutines-overview\\.html$"
     }
   ]
 }
