@@ -20,6 +20,8 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
@@ -187,7 +189,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   /**
    * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#CLIENT client} spans
-   * and inject context into requests.
+   * and inject context into requests with the passed {@link TextMapSetter}.
    */
   public Instrumenter<REQUEST, RESPONSE> buildClientInstrumenter(TextMapSetter<REQUEST> setter) {
     return buildInstrumenter(
@@ -197,7 +199,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   /**
    * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#SERVER server} spans
-   * and extract context from requests.
+   * and extract context from requests with the passed {@link TextMapGetter}.
    */
   public Instrumenter<REQUEST, RESPONSE> buildServerInstrumenter(TextMapGetter<REQUEST> getter) {
     return buildInstrumenter(
@@ -207,7 +209,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   /**
    * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#PRODUCER producer}
-   * spans and inject context into requests.
+   * spans and inject context into requests with the passed {@link TextMapSetter}.
    */
   public Instrumenter<REQUEST, RESPONSE> buildProducerInstrumenter(TextMapSetter<REQUEST> setter) {
     return buildInstrumenter(
@@ -217,12 +219,38 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   /**
    * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#CONSUMER consumer}
-   * spans and extract context from requests.
+   * spans and extract context from requests with the passed {@link TextMapGetter}.
    */
   public Instrumenter<REQUEST, RESPONSE> buildConsumerInstrumenter(TextMapGetter<REQUEST> getter) {
     return buildInstrumenter(
         InstrumenterConstructor.propagatingFromUpstream(requireNonNull(getter, "getter")),
         SpanKindExtractor.alwaysConsumer());
+  }
+
+  /**
+   * Returns a new {@link Instrumenter} which will create spans with kind determined by the passed
+   * {@link SpanKindExtractor} and extract context from requests with the passed {@link
+   * TextMapGetter}.
+   */
+  // TODO: candidate for public API
+  Instrumenter<REQUEST, RESPONSE> buildUpstreamInstrumenter(
+      TextMapGetter<REQUEST> getter, SpanKindExtractor<REQUEST> spanKindExtractor) {
+    return buildInstrumenter(
+        InstrumenterConstructor.propagatingFromUpstream(requireNonNull(getter, "getter")),
+        spanKindExtractor);
+  }
+
+  /**
+   * Returns a new {@link Instrumenter} which will create spans with kind determined by the passed
+   * {@link SpanKindExtractor} and inject context into requests with the passed {@link
+   * TextMapSetter}.
+   */
+  // TODO: candidate for public API
+  Instrumenter<REQUEST, RESPONSE> buildDownstreamInstrumenter(
+      TextMapSetter<REQUEST> setter, SpanKindExtractor<REQUEST> spanKindExtractor) {
+    return buildInstrumenter(
+        InstrumenterConstructor.propagatingToDownstream(requireNonNull(setter, "setter")),
+        spanKindExtractor);
   }
 
   /**
@@ -320,5 +348,26 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         TextMapGetter<RQ> getter) {
       return builder -> new PropagatingFromUpstreamInstrumenter<>(builder, getter);
     }
+  }
+
+  static {
+    InstrumenterUtil.setInstrumenterBuilderAccess(
+        new InstrumenterBuilderAccess() {
+          @Override
+          public <RQ, RS> Instrumenter<RQ, RS> buildUpstreamInstrumenter(
+              InstrumenterBuilder<RQ, RS> builder,
+              TextMapGetter<RQ> getter,
+              SpanKindExtractor<RQ> spanKindExtractor) {
+            return builder.buildUpstreamInstrumenter(getter, spanKindExtractor);
+          }
+
+          @Override
+          public <RQ, RS> Instrumenter<RQ, RS> buildDownstreamInstrumenter(
+              InstrumenterBuilder<RQ, RS> builder,
+              TextMapSetter<RQ> setter,
+              SpanKindExtractor<RQ> spanKindExtractor) {
+            return builder.buildDownstreamInstrumenter(setter, spanKindExtractor);
+          }
+        });
   }
 }
