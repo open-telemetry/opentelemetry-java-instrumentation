@@ -11,11 +11,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.time.Instant;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -24,44 +20,16 @@ import javax.annotation.Nullable;
  */
 public final class InstrumenterUtil {
 
-  private static final Logger logger = Logger.getLogger(InstrumenterUtil.class.getName());
+  private static InstrumenterAccess instrumenterAccess;
+  private static InstrumenterBuilderAccess instrumenterBuilderAccess;
 
-  private static final Method startAndEndMethod;
-  private static final Method buildUpstreamInstrumenterMethod;
-  private static final Method buildDownstreamInstrumenterMethod;
+  public static void setInstrumenterAccess(InstrumenterAccess instrumenterAccess) {
+    InstrumenterUtil.instrumenterAccess = instrumenterAccess;
+  }
 
-  static {
-    Method startAndEnd = null;
-    Method buildUpstreamInstrumenter = null;
-    Method buildDownstreamInstrumenter = null;
-    try {
-      startAndEnd =
-          Instrumenter.class.getDeclaredMethod(
-              "startAndEnd",
-              Context.class,
-              Object.class,
-              Object.class,
-              Throwable.class,
-              Instant.class,
-              Instant.class);
-      startAndEnd.setAccessible(true);
-      buildUpstreamInstrumenter =
-          InstrumenterBuilder.class.getDeclaredMethod(
-              "buildUpstreamInstrumenter", TextMapGetter.class, SpanKindExtractor.class);
-      buildUpstreamInstrumenter.setAccessible(true);
-      buildDownstreamInstrumenter =
-          InstrumenterBuilder.class.getDeclaredMethod(
-              "buildDownstreamInstrumenter", TextMapSetter.class, SpanKindExtractor.class);
-      buildDownstreamInstrumenter.setAccessible(true);
-    } catch (NoSuchMethodException e) {
-      logger.log(
-          Level.WARNING,
-          "Could not get Instrumenter and InstrumenterBuilder methods with reflection",
-          e);
-    }
-    startAndEndMethod = startAndEnd;
-    buildUpstreamInstrumenterMethod = buildUpstreamInstrumenter;
-    buildDownstreamInstrumenterMethod = buildDownstreamInstrumenter;
+  public static void setInstrumenterBuilderAccess(
+      InstrumenterBuilderAccess instrumenterBuilderAccess) {
+    InstrumenterUtil.instrumenterBuilderAccess = instrumenterBuilderAccess;
   }
 
   public static <REQUEST, RESPONSE> Context startAndEnd(
@@ -72,65 +40,26 @@ public final class InstrumenterUtil {
       @Nullable Throwable error,
       Instant startTime,
       Instant endTime) {
-
-    if (startAndEndMethod == null) {
-      logger.log(Level.WARNING, "Could not get Instrumenter#startAndEnd() method with reflection");
-      return parentContext;
-    }
-    try {
-      return (Context)
-          startAndEndMethod.invoke(
-              instrumenter, parentContext, request, response, error, startTime, endTime);
-    } catch (InvocationTargetException | IllegalAccessException e) {
-      logger.log(Level.WARNING, "Error occurred when calling Instrumenter#startAndEnd()", e);
-      return parentContext;
-    }
+    // instrumenterAccess is guaranteed to be non-null here
+    return instrumenterAccess.startAndEnd(
+        instrumenter, parentContext, request, response, error, startTime, endTime);
   }
 
-  @SuppressWarnings("unchecked")
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> buildUpstreamInstrumenter(
       InstrumenterBuilder<REQUEST, RESPONSE> builder,
       TextMapGetter<REQUEST> getter,
       SpanKindExtractor<REQUEST> spanKindExtractor) {
-    if (buildUpstreamInstrumenterMethod == null) {
-      logger.log(
-          Level.WARNING,
-          "Could not get InstrumenterBuilder#buildUpstreamInstrumenter() method with reflection");
-      return builder.buildInstrumenter(spanKindExtractor);
-    }
-    try {
-      return (Instrumenter<REQUEST, RESPONSE>)
-          buildUpstreamInstrumenterMethod.invoke(builder, getter, spanKindExtractor);
-    } catch (InvocationTargetException | IllegalAccessException e) {
-      logger.log(
-          Level.WARNING,
-          "Error occurred when calling InstrumenterBuilder#buildUpstreamInstrumenter()",
-          e);
-      return builder.buildInstrumenter(spanKindExtractor);
-    }
+    // instrumenterBuilderAccess is guaranteed to be non-null here
+    return instrumenterBuilderAccess.buildUpstreamInstrumenter(builder, getter, spanKindExtractor);
   }
 
-  @SuppressWarnings("unchecked")
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> buildDownstreamInstrumenter(
       InstrumenterBuilder<REQUEST, RESPONSE> builder,
       TextMapSetter<REQUEST> setter,
       SpanKindExtractor<REQUEST> spanKindExtractor) {
-    if (buildDownstreamInstrumenterMethod == null) {
-      logger.log(
-          Level.WARNING,
-          "Could not get InstrumenterBuilder#buildDownstreamInstrumenter() method with reflection");
-      return builder.buildInstrumenter(spanKindExtractor);
-    }
-    try {
-      return (Instrumenter<REQUEST, RESPONSE>)
-          buildDownstreamInstrumenterMethod.invoke(builder, setter, spanKindExtractor);
-    } catch (InvocationTargetException | IllegalAccessException e) {
-      logger.log(
-          Level.WARNING,
-          "Error occurred when calling InstrumenterBuilder#buildDownstreamInstrumenter()",
-          e);
-      return builder.buildInstrumenter(spanKindExtractor);
-    }
+    // instrumenterBuilderAccess is guaranteed to be non-null here
+    return instrumenterBuilderAccess.buildDownstreamInstrumenter(
+        builder, setter, spanKindExtractor);
   }
 
   private InstrumenterUtil() {}

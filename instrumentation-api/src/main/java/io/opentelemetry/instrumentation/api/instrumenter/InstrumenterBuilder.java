@@ -20,6 +20,8 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
@@ -346,5 +348,26 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         TextMapGetter<RQ> getter) {
       return builder -> new PropagatingFromUpstreamInstrumenter<>(builder, getter);
     }
+  }
+
+  static {
+    InstrumenterUtil.setInstrumenterBuilderAccess(
+        new InstrumenterBuilderAccess() {
+          @Override
+          public <RQ, RS> Instrumenter<RQ, RS> buildUpstreamInstrumenter(
+              InstrumenterBuilder<RQ, RS> builder,
+              TextMapGetter<RQ> getter,
+              SpanKindExtractor<RQ> spanKindExtractor) {
+            return builder.buildUpstreamInstrumenter(getter, spanKindExtractor);
+          }
+
+          @Override
+          public <RQ, RS> Instrumenter<RQ, RS> buildDownstreamInstrumenter(
+              InstrumenterBuilder<RQ, RS> builder,
+              TextMapSetter<RQ> setter,
+              SpanKindExtractor<RQ> spanKindExtractor) {
+            return builder.buildDownstreamInstrumenter(setter, spanKindExtractor);
+          }
+        });
   }
 }
