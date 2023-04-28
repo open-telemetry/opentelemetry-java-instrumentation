@@ -129,7 +129,6 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
               MethodType.methodType(void.class),
               SnippetInjectingResponseWrapper.class);
     } catch (NoSuchMethodException | IllegalAccessException e) {
-      logger.log(FINE, "SnippetInjectingResponseWrapper setContentLengthLong", e);
       return null;
     }
   }
