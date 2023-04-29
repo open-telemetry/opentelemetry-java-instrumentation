@@ -10,7 +10,6 @@ import io.opencensus.trace.Tracing;
 import io.opencensus.trace.samplers.Samplers;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
@@ -74,8 +73,6 @@ public class JavaagentInstrumentationTest {
 
     Tracing.getExportComponent().shutdown();
 
-    SpanContext outerContext = SpanConverterProxy.mapSpanContext(outerSpan.getContext());
-
     // expecting 1 trace with 3 spans
     testing.waitAndAssertTraces(
         ta ->
@@ -94,7 +91,7 @@ public class JavaagentInstrumentationTest {
                 // middle span
                 sa ->
                     sa.hasName("mid-span")
-                        .hasParentSpanId(outerContext.getSpanId())
+                        .hasParent(ta.getSpan(0))
                         .hasAttribute(AttributeKey.booleanKey("middle"), true)
                         .hasAttributesSatisfying(
                             OpenTelemetryAssertions.satisfies(
@@ -104,7 +101,7 @@ public class JavaagentInstrumentationTest {
                 // inner span
                 sa ->
                     sa.hasName("inner-span")
-                        .hasParentSpanId(midSpan.getSpanContext().getSpanId())
+                        .hasParent(ta.getSpan(1))
                         .hasAttribute(AttributeKey.booleanKey("inner"), true)
                         .hasAttributesSatisfying(
                             OpenTelemetryAssertions.satisfies(
@@ -151,8 +148,6 @@ public class JavaagentInstrumentationTest {
 
     Tracing.getExportComponent().shutdown();
 
-    SpanContext midContext = SpanConverterProxy.mapSpanContext(midSpan.getContext());
-
     // expecting 1 trace with 3 spans
     testing.waitAndAssertTraces(
         ta ->
@@ -171,7 +166,7 @@ public class JavaagentInstrumentationTest {
                 // middle span
                 sa ->
                     sa.hasName("mid-span")
-                        .hasParentSpanId(outerSpan.getSpanContext().getSpanId())
+                        .hasParent(ta.getSpan(0))
                         .hasAttribute(AttributeKey.booleanKey("middle"), true)
                         .hasAttributesSatisfying(
                             OpenTelemetryAssertions.satisfies(
@@ -181,7 +176,7 @@ public class JavaagentInstrumentationTest {
                 // inner span
                 sa ->
                     sa.hasName("inner-span")
-                        .hasParentSpanId(midContext.getSpanId())
+                        .hasParent(ta.getSpan(1))
                         .hasAttribute(AttributeKey.booleanKey("inner"), true)
                         .hasAttributesSatisfying(
                             OpenTelemetryAssertions.satisfies(
@@ -225,7 +220,7 @@ public class JavaagentInstrumentationTest {
                         .hasAttribute(AttributeKey.booleanKey("present-on-otel"), true),
                 span ->
                     span.hasName("oc-span")
-                        .hasParentSpanId(otelSpan.getSpanContext().getSpanId())
+                        .hasParent(trace.getSpan(0))
                         .hasAttribute(AttributeKey.booleanKey("present-on-oc"), true)));
   }
 
@@ -250,8 +245,6 @@ public class JavaagentInstrumentationTest {
 
     Tracing.getExportComponent().shutdown();
 
-    SpanContext ocContext = SpanConverterProxy.mapSpanContext(ocSpan.getContext());
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -261,7 +254,7 @@ public class JavaagentInstrumentationTest {
                         .hasAttribute(AttributeKey.booleanKey("present-on-oc"), true),
                 span ->
                     span.hasName("otel-span")
-                        .hasParentSpanId(ocContext.getSpanId())
+                        .hasParent(trace.getSpan(0))
                         .hasAttribute(AttributeKey.booleanKey("present-on-otel"), true)));
   }
 
@@ -295,9 +288,6 @@ public class JavaagentInstrumentationTest {
 
     Tracing.getExportComponent().shutdown();
 
-    SpanContext outerContext = SpanConverterProxy.mapSpanContext(outerSpan.getContext());
-    SpanContext midContext = SpanConverterProxy.mapSpanContext(midSpan.getContext());
-
     // expecting 1 trace with 3 spans
     testing.waitAndAssertTraces(
         ta ->
@@ -316,7 +306,7 @@ public class JavaagentInstrumentationTest {
                 // middle span
                 sa ->
                     sa.hasName("mid-span")
-                        .hasParentSpanId(outerContext.getSpanId())
+                        .hasParent(ta.getSpan(0))
                         .hasAttribute(AttributeKey.booleanKey("middle"), true)
                         .hasAttributesSatisfying(
                             OpenTelemetryAssertions.satisfies(
@@ -326,7 +316,7 @@ public class JavaagentInstrumentationTest {
                 // inner span
                 sa ->
                     sa.hasName("inner-span")
-                        .hasParentSpanId(midContext.getSpanId())
+                        .hasParent(ta.getSpan(1))
                         .hasAttribute(AttributeKey.booleanKey("inner"), true)
                         .hasAttributesSatisfying(
                             OpenTelemetryAssertions.satisfies(
