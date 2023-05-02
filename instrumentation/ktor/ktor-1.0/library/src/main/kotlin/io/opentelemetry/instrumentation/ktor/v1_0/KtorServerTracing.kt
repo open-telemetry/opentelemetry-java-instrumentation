@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
 import kotlinx.coroutines.withContext
 
 class KtorServerTracing private constructor(
@@ -44,7 +45,7 @@ class KtorServerTracing private constructor(
       (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse> = { a -> a }
 
     internal var spanKindExtractor:
-      (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<in ApplicationRequest> = { a -> a }
+      (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest> = { a -> a }
 
     fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
       this.openTelemetry = openTelemetry
@@ -57,7 +58,7 @@ class KtorServerTracing private constructor(
     }
 
     fun setSpanKindExtractor(
-      extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<in ApplicationRequest>
+      extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>
     ) {
       this.spanKindExtractor = extractor
     }
@@ -122,7 +123,8 @@ class KtorServerTracing private constructor(
         addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
       }
 
-      val instrumenter = instrumenterBuilder.buildIncomingInstrumenter(
+      val instrumenter = InstrumenterUtil.buildUpstreamInstrumenter(
+        instrumenterBuilder,
         ApplicationRequestGetter,
         configuration.spanKindExtractor(SpanKindExtractor.alwaysServer())
       )
