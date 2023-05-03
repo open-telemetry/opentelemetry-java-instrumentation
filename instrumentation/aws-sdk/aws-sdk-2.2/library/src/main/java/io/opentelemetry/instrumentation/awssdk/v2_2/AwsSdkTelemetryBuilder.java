@@ -66,7 +66,7 @@ public final class AwsSdkTelemetryBuilder {
    * #setUseConfiguredPropagatorForMessaging(boolean)}
    */
   @CanIgnoreReturnValue
-  AwsSdkTelemetryBuilder setUseXRayPropagator(boolean useMessagingPropagator) {
+  AwsSdkTelemetryBuilder setUseXrayPropagator(boolean useMessagingPropagator) {
     this.useXrayPropagator = useMessagingPropagator;
     return this;
   }

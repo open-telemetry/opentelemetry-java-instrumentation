@@ -211,11 +211,11 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   }
 
   private SdkRequest modifySqsReceiveMessageRequest(SdkRequest request) {
-    boolean hasXRayAttribute = true;
+    boolean hasXrayAttribute = true;
     List<String> existingAttributeNames = null;
     if (useXrayPropagator) {
       existingAttributeNames = SqsReceiveMessageRequestAccess.getAttributeNames(request);
-      hasXRayAttribute =
+      hasXrayAttribute =
           existingAttributeNames.contains(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
     }
 
@@ -227,14 +227,14 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       hasMessageAttribute = existingMessageAttributeNames.containsAll(messagingPropagator.fields());
     }
 
-    if (hasMessageAttribute && hasXRayAttribute) {
+    if (hasMessageAttribute && hasXrayAttribute) {
       return request;
     }
 
     SdkRequest.Builder builder = request.toBuilder();
-    if (!hasXRayAttribute) {
+    if (!hasXrayAttribute) {
       List<String> attributeNames = new ArrayList<>(existingAttributeNames);
-      if (!hasXRayAttribute) {
+      if (!hasXrayAttribute) {
         attributeNames.add(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
       }
       SqsReceiveMessageRequestAccess.attributeNamesWithStrings(builder, attributeNames);
