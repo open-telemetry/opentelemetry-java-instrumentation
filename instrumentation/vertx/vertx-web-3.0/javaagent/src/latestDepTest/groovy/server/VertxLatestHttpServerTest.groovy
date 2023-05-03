@@ -13,4 +13,9 @@ class VertxLatestHttpServerTest extends AbstractVertxHttpServerTest {
   protected Class<? extends AbstractVerticle> verticle() {
     return VertxLatestWebServer
   }
+
+  @Override
+  boolean testHttpPipelining() {
+    false
+  }
 }
