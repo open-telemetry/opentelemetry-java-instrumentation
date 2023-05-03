@@ -32,9 +32,14 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
       ConfigPropertiesUtil.getBoolean(
           "otel.instrumentation.aws-sdk.experimental-span-attributes", false);
 
+  private static final boolean USE_MESSAGING_PROPAGATOR =
+      ConfigPropertiesUtil.getBoolean(
+          "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
+
   private final ExecutionInterceptor delegate =
       AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureExperimentalSpanAttributes(CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES)
+          .setUseConfiguredPropagatorForMessaging(USE_MESSAGING_PROPAGATOR)
           .build()
           .newExecutionInterceptor();
 
