@@ -96,9 +96,4 @@ class PlayAsyncServerTest extends PlayServerTest {
         .build()
     }
   }
-
-  @Override
-  boolean testHttpPipelining() {
-    false
-  }
 }
