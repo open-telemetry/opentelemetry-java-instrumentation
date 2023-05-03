@@ -42,7 +42,7 @@ final class AwsXrayEnvSpanLinksExtractor implements SpanLinksExtractor<AwsLambda
   }
 
   public static void extract(SpanLinksBuilder spanLinks) {
-    Map<String, String> contextMap = getSystemPropertyOrEnvironmentVariable();
+    Map<String, String> contextMap = getTraceHeaderMap();
     if (contextMap.isEmpty()) {
       return;
     }
@@ -54,7 +54,7 @@ final class AwsXrayEnvSpanLinksExtractor implements SpanLinksExtractor<AwsLambda
     }
   }
 
-  private static Map<String, String> getSystemPropertyOrEnvironmentVariable() {
+  private static Map<String, String> getTraceHeaderMap() {
     String traceHeader = System.getProperty(AWS_TRACE_HEADER_PROP);
     if (isEmptyOrNull(traceHeader)) {
       traceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
@@ -64,7 +64,7 @@ final class AwsXrayEnvSpanLinksExtractor implements SpanLinksExtractor<AwsLambda
         : Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, traceHeader);
   }
 
-  public static boolean isEmptyOrNull(String value) {
+  private static boolean isEmptyOrNull(String value) {
     return value == null || value.isEmpty();
   }
 
