@@ -149,7 +149,7 @@ public abstract class BaseRxJava2WithSpanTest {
     List<List<SpanData>> traces = testing().waitForTraces(0);
     assertThat(traces).isEmpty();
 
-    observer.dispose();
+    observer.cancel();
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -294,7 +294,7 @@ public abstract class BaseRxJava2WithSpanTest {
     List<List<SpanData>> traces = testing().waitForTraces(0);
     assertThat(traces).isEmpty();
 
-    observer.dispose();
+    observer.cancel();
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -420,7 +420,7 @@ public abstract class BaseRxJava2WithSpanTest {
     List<List<SpanData>> traces = testing().waitForTraces(0);
     assertThat(traces).isEmpty();
 
-    observer.dispose();
+    observer.cancel();
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -568,7 +568,7 @@ public abstract class BaseRxJava2WithSpanTest {
     traces = testing().waitForTraces(0);
     assertThat(traces).isEmpty();
 
-    observer.dispose();
+    observer.cancel();
     testing()
         .waitAndAssertTraces(
             trace ->
