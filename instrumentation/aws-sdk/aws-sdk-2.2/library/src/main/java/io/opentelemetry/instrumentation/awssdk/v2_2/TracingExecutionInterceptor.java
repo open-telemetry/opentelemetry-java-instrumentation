@@ -222,9 +222,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     boolean hasMessageAttribute = true;
     List<String> existingMessageAttributeNames = null;
     if (messagingPropagator != null) {
-      existingMessageAttributeNames = SqsReceiveMessageRequestAccess.getMessageAttributeNames(request);
-      hasMessageAttribute =
-          existingMessageAttributeNames.containsAll(messagingPropagator.fields());
+      existingMessageAttributeNames =
+          SqsReceiveMessageRequestAccess.getMessageAttributeNames(request);
+      hasMessageAttribute = existingMessageAttributeNames.containsAll(messagingPropagator.fields());
     }
 
     if (hasMessageAttribute && hasXRayAttribute) {

@@ -94,7 +94,8 @@ final class SqsReceiveMessageRequestAccess {
     }
   }
 
-  static void messageAttributeNames(SdkRequest.Builder builder, List<String> messageAttributeNames) {
+  static void messageAttributeNames(
+      SdkRequest.Builder builder, List<String> messageAttributeNames) {
     if (MESSAGE_ATTRIBUTE_NAMES == null) {
       return;
     }
