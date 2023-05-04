@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
+import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.io.File;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -67,9 +67,10 @@ public class AgentStarterImpl implements AgentStarter {
 
   @Override
   public void start() {
-    extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader());
+    EarlyInitAgentConfig earlyConfig = EarlyInitAgentConfig.create();
+    extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader(), earlyConfig);
 
-    String loggerImplementationName = ConfigPropertiesUtil.getString("otel.javaagent.logging");
+    String loggerImplementationName = earlyConfig.getString("otel.javaagent.logging");
     // default to the built-in stderr slf4j-simple logger
     if (loggerImplementationName == null) {
       loggerImplementationName = "simple";
@@ -91,8 +92,10 @@ public class AgentStarterImpl implements AgentStarter {
 
     Throwable startupError = null;
     try {
-      loggingCustomizer.init();
-      AgentInstaller.installBytebuddyAgent(instrumentation, extensionClassLoader);
+      loggingCustomizer.init(earlyConfig);
+      earlyConfig.logEarlyConfigErrorsIfAny();
+
+      AgentInstaller.installBytebuddyAgent(instrumentation, extensionClassLoader, earlyConfig);
       WeakConcurrentMapCleaner.start();
 
       // LazyStorage reads system properties. Initialize it here where we have permissions to avoid
@@ -124,9 +127,10 @@ public class AgentStarterImpl implements AgentStarter {
     return extensionClassLoader;
   }
 
-  private ClassLoader createExtensionClassLoader(ClassLoader agentClassLoader) {
+  private ClassLoader createExtensionClassLoader(
+      ClassLoader agentClassLoader, EarlyInitAgentConfig earlyConfig) {
     return ExtensionClassLoader.getInstance(
-        agentClassLoader, javaagentFile, isSecurityManagerSupportEnabled);
+        agentClassLoader, javaagentFile, isSecurityManagerSupportEnabled, earlyConfig);
   }
 
   private static class LaunchHelperClassFileTransformer implements ClassFileTransformer {
