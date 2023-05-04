@@ -91,6 +91,11 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   }
 
   @Override
+  boolean testHttpPipelining() {
+    false
+  }
+
+  @Override
   boolean verifyServerSpanEndTime() {
     // server spans are ended inside of the controller spans
     return false

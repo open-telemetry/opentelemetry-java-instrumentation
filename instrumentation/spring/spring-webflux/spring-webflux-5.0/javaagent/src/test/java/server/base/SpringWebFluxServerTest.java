@@ -68,5 +68,6 @@ public abstract class SpringWebFluxServerTest
     options.setTestPathParam(true);
     options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasHandlerSpan(unused -> true);
+    options.setTestHttpPipelining(false);
   }
 }

@@ -51,6 +51,7 @@ public final class HttpServerTestOptions {
   boolean testPathParam = false;
   boolean testCaptureHttpHeaders = true;
   boolean testCaptureRequestParameters = false;
+  boolean testHttpPipelining = true;
   boolean verifyServerSpanEndTime = true;
 
   HttpServerTestOptions() {}
@@ -179,6 +180,12 @@ public final class HttpServerTestOptions {
   public HttpServerTestOptions setTestCaptureRequestParameters(
       boolean testCaptureRequestParameters) {
     this.testCaptureRequestParameters = testCaptureRequestParameters;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setTestHttpPipelining(boolean testHttpPipelining) {
+    this.testHttpPipelining = testHttpPipelining;
     return this;
   }
 
