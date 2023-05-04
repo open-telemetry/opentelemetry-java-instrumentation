@@ -36,7 +36,7 @@ public final class Slf4jSimpleLoggingCustomizer implements LoggingCustomizer {
     setSystemPropertyDefault(
         SIMPLE_LOGGER_DATE_TIME_FORMAT_PROPERTY, SIMPLE_LOGGER_DATE_TIME_FORMAT_DEFAULT);
 
-    if (earlyConfig.getBoolean("otel.javaagent.debut", false)) {
+    if (earlyConfig.getBoolean("otel.javaagent.debug", false)) {
       setSystemPropertyDefault(SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY, "DEBUG");
       setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "okhttp3.internal.http2", "INFO");
     }
