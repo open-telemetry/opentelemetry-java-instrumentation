@@ -85,11 +85,6 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
   }
 
   @Override
-  boolean testHttpPipelining() {
-    false
-  }
-
-  @Override
   boolean verifyServerSpanEndTime() {
     // server spans are ended inside of the controller spans
     return false
