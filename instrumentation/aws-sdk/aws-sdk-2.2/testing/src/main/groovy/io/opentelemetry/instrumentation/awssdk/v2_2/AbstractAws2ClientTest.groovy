@@ -397,18 +397,17 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             </CreateQueueResponse>
             """
           return HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, content)
-        } else {
-          def content = """
-            {
-              "QueueUrl":"https://queue.amazonaws.com/123456789012/MyQueue"
-            }
-            """
-          ResponseHeaders headers = ResponseHeaders.builder(HttpStatus.OK)
-            .contentType(MediaType.PLAIN_TEXT_UTF_8)
-            .add("x-amzn-RequestId", "7a62c49f-347e-4fc4-9331-6e8e7a96aa73")
-            .build()
-          return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content))
         }
+        def content = """
+          {
+            "QueueUrl":"https://queue.amazonaws.com/123456789012/MyQueue"
+          }
+          """
+        ResponseHeaders headers = ResponseHeaders.builder(HttpStatus.OK)
+          .contentType(MediaType.PLAIN_TEXT_UTF_8)
+          .add("x-amzn-RequestId", "7a62c49f-347e-4fc4-9331-6e8e7a96aa73")
+          .build()
+        return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content))
       }
     "Sqs"     | "SendMessage"       | "POST" | ""                    | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsClient.builder()     | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) } | {
       if (!Boolean.getBoolean("testLatestDeps")) {
@@ -423,20 +422,19 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           </SendMessageResponse>
           """
         return HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, content)
-      } else {
-        def content = """
-            {
-              "MD5OfMessageBody":"d41d8cd98f00b204e9800998ecf8427e",
-              "MD5OfMessageAttributes":"3ae8f24a165a8cedc005670c81a27295",
-              "MessageId":"5fea7756-0ea4-451a-a703-a558b933e274"
-            }
-            """
-        ResponseHeaders headers = ResponseHeaders.builder(HttpStatus.OK)
-          .contentType(MediaType.PLAIN_TEXT_UTF_8)
-          .add("x-amzn-RequestId", "27daac76-34dd-47df-bd01-1f6e873584a0")
-          .build()
-        return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content))
       }
+      def content = """
+          {
+            "MD5OfMessageBody":"d41d8cd98f00b204e9800998ecf8427e",
+            "MD5OfMessageAttributes":"3ae8f24a165a8cedc005670c81a27295",
+            "MessageId":"5fea7756-0ea4-451a-a703-a558b933e274"
+          }
+          """
+      ResponseHeaders headers = ResponseHeaders.builder(HttpStatus.OK)
+        .contentType(MediaType.PLAIN_TEXT_UTF_8)
+        .add("x-amzn-RequestId", "27daac76-34dd-47df-bd01-1f6e873584a0")
+        .build()
+      return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content))
     }
     "Ec2"     | "AllocateAddress"   | "POST" | ""                    | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2Client.builder()     | { c -> c.allocateAddress() }                                                                     | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
@@ -528,18 +526,17 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             </CreateQueueResponse>
             """
         return HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, content)
-      } else {
-        def content = """
-            {
-              "QueueUrl":"https://queue.amazonaws.com/123456789012/MyQueue"
-            }
-            """
-        ResponseHeaders headers = ResponseHeaders.builder(HttpStatus.OK)
-          .contentType(MediaType.PLAIN_TEXT_UTF_8)
-          .add("x-amzn-RequestId", "7a62c49f-347e-4fc4-9331-6e8e7a96aa73")
-          .build()
-        return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content))
       }
+      def content = """
+          {
+            "QueueUrl":"https://queue.amazonaws.com/123456789012/MyQueue"
+          }
+          """
+      ResponseHeaders headers = ResponseHeaders.builder(HttpStatus.OK)
+        .contentType(MediaType.PLAIN_TEXT_UTF_8)
+        .add("x-amzn-RequestId", "7a62c49f-347e-4fc4-9331-6e8e7a96aa73")
+        .build()
+      return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content))
     }
     "Sqs"   | "SendMessage"       | "POST" | ""                            | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsAsyncClient.builder() | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) }                                 | {
       if (!Boolean.getBoolean("testLatestDeps")) {
@@ -554,20 +551,19 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           </SendMessageResponse>
           """
         return HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, content)
-      } else {
-        def content = """
-            {
-              "MD5OfMessageBody":"d41d8cd98f00b204e9800998ecf8427e",
-              "MD5OfMessageAttributes":"3ae8f24a165a8cedc005670c81a27295",
-              "MessageId":"5fea7756-0ea4-451a-a703-a558b933e274"
-            }
-            """
-        ResponseHeaders headers = ResponseHeaders.builder(HttpStatus.OK)
-          .contentType(MediaType.PLAIN_TEXT_UTF_8)
-          .add("x-amzn-RequestId", "27daac76-34dd-47df-bd01-1f6e873584a0")
-          .build()
-        return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content))
       }
+      def content = """
+          {
+            "MD5OfMessageBody":"d41d8cd98f00b204e9800998ecf8427e",
+            "MD5OfMessageAttributes":"3ae8f24a165a8cedc005670c81a27295",
+            "MessageId":"5fea7756-0ea4-451a-a703-a558b933e274"
+          }
+          """
+      ResponseHeaders headers = ResponseHeaders.builder(HttpStatus.OK)
+        .contentType(MediaType.PLAIN_TEXT_UTF_8)
+        .add("x-amzn-RequestId", "27daac76-34dd-47df-bd01-1f6e873584a0")
+        .build()
+      return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content))
     }
     "Ec2"   | "AllocateAddress"   | "POST" | ""                            | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2AsyncClient.builder() | { c -> c.allocateAddress() }                                                                                                     | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
