@@ -158,7 +158,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     Instant timestamp = event.getInstant();
     if (timestamp != null) {
-      builder.setEpoch(
+      builder.setTimestamp(
           TimeUnit.MILLISECONDS.toNanos(timestamp.getEpochMillisecond())
               + timestamp.getNanoOfMillisecond(),
           TimeUnit.NANOSECONDS);

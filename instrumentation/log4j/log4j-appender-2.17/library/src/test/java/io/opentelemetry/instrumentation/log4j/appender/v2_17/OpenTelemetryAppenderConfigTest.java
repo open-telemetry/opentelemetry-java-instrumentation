@@ -142,7 +142,7 @@ class OpenTelemetryAppenderConfigTest {
             equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "Error!"),
             satisfies(SemanticAttributes.EXCEPTION_STACKTRACE, v -> v.contains("logWithExtras")));
 
-    assertThat(logDataList.get(0).getEpochNanos())
+    assertThat(logDataList.get(0).getTimestampEpochNanos())
         .isGreaterThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(start.toEpochMilli()))
         .isLessThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
   }
