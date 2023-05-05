@@ -115,8 +115,16 @@ class ConfigurationFileLoaderTest {
       assertEquals("$", substitutionReplacer.replace("$$"));
     }
 
+    @Test
+    @SetSystemProperty(key = "PLACEHOLDER", value = "hello, world!")
     void escapedPlaceholderShouldReturnSingleDollarPlaceholder() {
       assertEquals("${PLACEHOLDER}", substitutionReplacer.replace("$${PLACEHOLDER}"));
+    }
+
+    @Test
+    @SetSystemProperty(key = "PLACEHOLDER", value = "hello, world!")
+    void escapedPlaceholderShouldReturnSingleDollarSubstitution() {
+      assertEquals("$hello, world!", substitutionReplacer.replace("$$${PLACEHOLDER}"));
     }
   }
 }
