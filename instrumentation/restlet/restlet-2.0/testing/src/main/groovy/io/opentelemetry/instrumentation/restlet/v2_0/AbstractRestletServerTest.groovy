@@ -176,11 +176,6 @@ abstract class AbstractRestletServerTest extends HttpServerTest<Server> {
   }
 
   @Override
-  boolean testHttpPipelining() {
-    false
-  }
-
-  @Override
   String expectedHttpRoute(ServerEndpoint endpoint) {
     switch (endpoint) {
       case PATH_PARAM:
