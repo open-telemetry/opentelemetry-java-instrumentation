@@ -20,10 +20,9 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import org.apache.commons.text.StringSubstitutor;
-import org.apache.commons.text.lookup.StringLookup;
 
 @AutoService(AutoConfigurationCustomizerProvider.class)
 public final class ConfigurationFileLoader implements AutoConfigurationCustomizerProvider {
@@ -78,32 +77,71 @@ public final class ConfigurationFileLoader implements AutoConfigurationCustomize
           configurationFilePath);
     }
 
-    StringSubstitutor strSubstitutor =
-        new StringSubstitutor(getStringLookup(configurationFilePath));
+    SubstitutionReplacer substitutorReplacer = new SubstitutionReplacer(configurationFilePath);
 
     return properties.entrySet().stream()
         .collect(
             Collectors.toMap(
-                e -> e.getKey().toString(), e -> strSubstitutor.replace(e.getValue().toString())));
-  }
-
-  private static StringLookup getStringLookup(String configurationFilePath) {
-    return placeholder -> {
-      String substitution = ConfigPropertiesUtil.getString(placeholder);
-      if (substitution != null) {
-        return substitution;
-      }
-      logger.log(
-          SEVERE,
-          "Configuration file \"{0}\" cannot be fully parsed. No value found to substitute for placeholder \"$'{'{1}'}'\".",
-          new Object[] {configurationFilePath, placeholder});
-      return null;
-    };
+                e -> e.getKey().toString(),
+                e -> substitutorReplacer.replace(e.getValue().toString())));
   }
 
   @Override
   public int order() {
     // make sure it runs after all the user-provided customizers
     return Integer.MAX_VALUE;
+  }
+
+  static class SubstitutionReplacer {
+    private final String configurationFilePath;
+    private final Function<String, String> replacer;
+
+    SubstitutionReplacer(String configurationFilePath) {
+      this.configurationFilePath = configurationFilePath;
+      this.replacer = s -> s != null && !"".equals(s) ? ConfigPropertiesUtil.getString(s) : null;
+    }
+
+    String replace(String input) {
+      StringBuilder outputBuilder = new StringBuilder();
+
+      for (int i = 0; i < input.length(); i++) {
+        if (Character.valueOf(input.charAt(i)).equals('$') // Escaped $
+            && input.length() > i + 1
+            && Character.valueOf(input.charAt(i + 1)).equals('$')) {
+          i++;
+          outputBuilder.append('$');
+        } else if (Character.valueOf(input.charAt(i)).equals('$') // placeholder start
+            && input.length() > i + 1
+            && Character.valueOf(input.charAt(i + 1)).equals('{')) {
+
+          StringBuilder placeholderBuilder = new StringBuilder();
+          for (i = i + 2;
+              i < input.length() && !Character.valueOf(input.charAt(i)).equals('}');
+              i++) {
+            placeholderBuilder.append(input.charAt(i));
+          }
+          // finished before end of input string => properly formatted placeholder
+          if (i < input.length()) {
+            String placeholder = placeholderBuilder.toString();
+            String substitutionValue = replacer.apply(placeholder);
+            if (substitutionValue != null) {
+              outputBuilder.append(substitutionValue);
+            } else {
+              logger.log(
+                  SEVERE,
+                  "Configuration file \"{0}\" cannot be fully parsed. No value found to substitute for placeholder \"$'{'{1}'}'\".",
+                  new Object[] {configurationFilePath, placeholder});
+              outputBuilder.append("${").append(placeholder).append("}");
+            }
+          } else { // end of input string before } found => not properly formatted placeholder
+            outputBuilder.append("${");
+            outputBuilder.append(placeholderBuilder);
+          }
+        } else {
+          outputBuilder.append(input.charAt(i));
+        }
+      }
+      return outputBuilder.toString();
+    }
   }
 }

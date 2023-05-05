@@ -1,7 +1,7 @@
 
 #javaagent
 ##Dependency License Report
-_2023-04-26 18:12:26 BST_
+_2023-04-25 05:53:06 UTC_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -164,99 +164,85 @@ _2023-04-26 18:12:26 BST_
 > - **Embedded license files**: [byte-buddy-dep-1.14.4.jar/META-INF/LICENSE](byte-buddy-dep-1.14.4.jar/META-INF/LICENSE)
     - [byte-buddy-dep-1.14.4.jar/META-INF/NOTICE](byte-buddy-dep-1.14.4.jar/META-INF/NOTICE)
 
-**37** **Group:** `org.apache.commons` **Name:** `commons-lang3` **Version:** `3.12.0`
-> - **Project URL**: [https://commons.apache.org/proper/commons-lang/](https://commons.apache.org/proper/commons-lang/)
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
-> - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [commons-lang3-3.12.0.jar/META-INF/LICENSE.txt](commons-lang3-3.12.0.jar/META-INF/LICENSE.txt)
-    - [commons-lang3-3.12.0.jar/META-INF/NOTICE.txt](commons-lang3-3.12.0.jar/META-INF/NOTICE.txt)
-
-**38** **Group:** `org.apache.commons` **Name:** `commons-text` **Version:** `1.10.0`
-> - **Project URL**: [https://commons.apache.org/proper/commons-text](https://commons.apache.org/proper/commons-text)
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
-> - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [commons-text-1.10.0.jar/META-INF/LICENSE.txt](commons-text-1.10.0.jar/META-INF/LICENSE.txt)
-    - [commons-text-1.10.0.jar/META-INF/NOTICE.txt](commons-text-1.10.0.jar/META-INF/NOTICE.txt)
-
-**39** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
+**37** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**40** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib` **Version:** `1.8.20`
+**38** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib` **Version:** `1.8.20`
 > - **POM Project URL**: [https://kotlinlang.org/](https://kotlinlang.org/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**41** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib-common` **Version:** `1.8.20`
+**39** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib-common` **Version:** `1.8.20`
 > - **POM Project URL**: [https://kotlinlang.org/](https://kotlinlang.org/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**42** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib-jdk7` **Version:** `1.8.20`
+**40** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib-jdk7` **Version:** `1.8.20`
 > - **POM Project URL**: [https://kotlinlang.org/](https://kotlinlang.org/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**43** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib-jdk8` **Version:** `1.8.20`
+**41** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib-jdk8` **Version:** `1.8.20`
 > - **POM Project URL**: [https://kotlinlang.org/](https://kotlinlang.org/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**44** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.5`
+**42** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.5`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**45** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.5`
+**43** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.5`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**46** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.5`
+**44** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.5`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**47** **Group:** `org.snakeyaml` **Name:** `snakeyaml-engine` **Version:** `2.6`
+**45** **Group:** `org.snakeyaml` **Name:** `snakeyaml-engine` **Version:** `2.6`
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM Project URL**: [https://bitbucket.org/snakeyaml/snakeyaml-engine](https://bitbucket.org/snakeyaml/snakeyaml-engine)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 ## MIT License
 
-**48** **Group:** `ch.randelshofer` **Name:** `fastdoubleparser` **Version:** `0.8.0`
+**46** **Group:** `ch.randelshofer` **Name:** `fastdoubleparser` **Version:** `0.8.0`
 > - **POM Project URL**: [https://github.com/wrandelshofer/FastDoubleParser](https://github.com/wrandelshofer/FastDoubleParser)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 
-**49** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.7`
+**47** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.7`
 > - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 > - **Embedded license files**: [slf4j-api-2.0.7.jar/META-INF/LICENSE.txt](slf4j-api-2.0.7.jar/META-INF/LICENSE.txt)
 
-**50** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.7`
+**48** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.7`
 > - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 > - **Embedded license files**: [slf4j-simple-2.0.7.jar/META-INF/LICENSE.txt](slf4j-simple-2.0.7.jar/META-INF/LICENSE.txt)
 
 ## The 3-Clause BSD License
 
-**51** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.5`
+**49** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.5`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**52** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.5`
+**50** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.5`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**53** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.5`
+**51** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.5`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
@@ -265,4 +251,4 @@ _2023-04-26 18:12:26 BST_
 
 ## Unknown
 
-**54** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.0.0`
+**52** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.0.0`
