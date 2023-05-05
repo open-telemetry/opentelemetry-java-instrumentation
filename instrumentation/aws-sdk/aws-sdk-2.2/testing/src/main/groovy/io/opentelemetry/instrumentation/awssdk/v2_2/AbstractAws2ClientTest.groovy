@@ -7,9 +7,11 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.testing.internal.armeria.common.HttpData
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
 import io.opentelemetry.testing.internal.armeria.common.MediaType
+import io.opentelemetry.testing.internal.armeria.common.ResponseHeaders
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
@@ -52,6 +54,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import spock.lang.Shared
 import spock.lang.Unroll
 
+import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.concurrent.Future
 
@@ -326,7 +329,13 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
       .region(Region.AP_NORTHEAST_1)
       .credentialsProvider(CREDENTIALS_PROVIDER)
       .build()
-    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body))
+
+    if (body instanceof Closure) {
+      server.enqueue(body.call())
+    } else {
+      server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body))
+    }
+
     def response = call.call(client)
 
     if (response instanceof Future) {
@@ -379,22 +388,54 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     "S3"      | "CreateBucket"      | "PUT"  | path("somebucket")            | "UNKNOWN"                              | S3Client.builder()      | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }              | ""
     "S3"      | "GetObject"         | "GET"  | path("somebucket", "somekey") | "UNKNOWN"                              | S3Client.builder()      | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build()) }     | ""
     "Kinesis" | "DeleteStream"      | "POST" | ""                            | "UNKNOWN"                              | KinesisClient.builder() | { c -> c.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build()) }          | ""
-    "Sqs"     | "CreateQueue"       | "POST" | ""                            | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsClient.builder()     | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }              | """
-        <CreateQueueResponse>
-            <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>
-            <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
-        </CreateQueueResponse>
-        """
-    "Sqs"     | "SendMessage"       | "POST" | ""                    | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsClient.builder()     | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) } | """
-        <SendMessageResponse>
-            <SendMessageResult>
-                <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
-                <MD5OfMessageAttributes>3ae8f24a165a8cedc005670c81a27295</MD5OfMessageAttributes>
-                <MessageId>5fea7756-0ea4-451a-a703-a558b933e274</MessageId>
-            </SendMessageResult>
-            <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>
-        </SendMessageResponse>
-        """
+    "Sqs"     | "CreateQueue"       | "POST" | ""                            | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsClient.builder()     | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }              | {
+        if (!Boolean.getBoolean("testLatestDeps")) {
+          def content = """
+            <CreateQueueResponse>
+                <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>
+                <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
+            </CreateQueueResponse>
+            """
+          return HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, content)
+        }
+        def content = """
+          {
+            "QueueUrl":"https://queue.amazonaws.com/123456789012/MyQueue"
+          }
+          """
+        ResponseHeaders headers = ResponseHeaders.builder(HttpStatus.OK)
+          .contentType(MediaType.PLAIN_TEXT_UTF_8)
+          .add("x-amzn-RequestId", "7a62c49f-347e-4fc4-9331-6e8e7a96aa73")
+          .build()
+        return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content))
+      }
+    "Sqs"     | "SendMessage"       | "POST" | ""                    | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsClient.builder()     | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) } | {
+      if (!Boolean.getBoolean("testLatestDeps")) {
+        def content = """
+          <SendMessageResponse>
+              <SendMessageResult>
+                  <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
+                  <MD5OfMessageAttributes>3ae8f24a165a8cedc005670c81a27295</MD5OfMessageAttributes>
+                  <MessageId>5fea7756-0ea4-451a-a703-a558b933e274</MessageId>
+              </SendMessageResult>
+              <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>
+          </SendMessageResponse>
+          """
+        return HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, content)
+      }
+      def content = """
+          {
+            "MD5OfMessageBody":"d41d8cd98f00b204e9800998ecf8427e",
+            "MD5OfMessageAttributes":"3ae8f24a165a8cedc005670c81a27295",
+            "MessageId":"5fea7756-0ea4-451a-a703-a558b933e274"
+          }
+          """
+      ResponseHeaders headers = ResponseHeaders.builder(HttpStatus.OK)
+        .contentType(MediaType.PLAIN_TEXT_UTF_8)
+        .add("x-amzn-RequestId", "27daac76-34dd-47df-bd01-1f6e873584a0")
+        .build()
+      return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content))
+    }
     "Ec2"     | "AllocateAddress"   | "POST" | ""                    | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2Client.builder()     | { c -> c.allocateAddress() }                                                                     | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
            <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
@@ -417,7 +458,13 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
       .region(Region.AP_NORTHEAST_1)
       .credentialsProvider(CREDENTIALS_PROVIDER)
       .build()
-    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body))
+
+    if (body instanceof Closure) {
+      server.enqueue(body.call())
+    } else {
+      server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body))
+    }
+
     def response = call.call(client)
 
     if (response instanceof Future) {
@@ -470,22 +517,54 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     "S3"    | "GetObject"         | "GET"  | path("somebucket", "somekey") | "UNKNOWN"                              | S3AsyncClient.builder()  | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build(), AsyncResponseTransformer.toBytes()) } | "1234567890"
     // Kinesis seems to expect an http2 response which is incompatible with our test server.
     // "Kinesis"  | "DeleteStream"      | "POST" | "/"                   | "UNKNOWN"                              | KinesisAsyncClient.builder()  | { c -> c.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build()) }                                          | ""
-    "Sqs"   | "CreateQueue"       | "POST" | ""                            | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsAsyncClient.builder() | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }                                              | """
-        <CreateQueueResponse>
-            <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>
-            <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
-        </CreateQueueResponse>
-        """
-    "Sqs"   | "SendMessage"       | "POST" | ""                            | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsAsyncClient.builder() | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) }                                 | """
-        <SendMessageResponse>
-            <SendMessageResult>
-                <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
-                <MD5OfMessageAttributes>3ae8f24a165a8cedc005670c81a27295</MD5OfMessageAttributes>
-                <MessageId>5fea7756-0ea4-451a-a703-a558b933e274</MessageId>
-            </SendMessageResult>
-            <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>
-        </SendMessageResponse>
-        """
+    "Sqs"   | "CreateQueue"       | "POST" | ""                            | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsAsyncClient.builder() | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }                                              | {
+      if (!Boolean.getBoolean("testLatestDeps")) {
+        def content = """
+            <CreateQueueResponse>
+                <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>
+                <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
+            </CreateQueueResponse>
+            """
+        return HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, content)
+      }
+      def content = """
+          {
+            "QueueUrl":"https://queue.amazonaws.com/123456789012/MyQueue"
+          }
+          """
+      ResponseHeaders headers = ResponseHeaders.builder(HttpStatus.OK)
+        .contentType(MediaType.PLAIN_TEXT_UTF_8)
+        .add("x-amzn-RequestId", "7a62c49f-347e-4fc4-9331-6e8e7a96aa73")
+        .build()
+      return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content))
+    }
+    "Sqs"   | "SendMessage"       | "POST" | ""                            | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsAsyncClient.builder() | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) }                                 | {
+      if (!Boolean.getBoolean("testLatestDeps")) {
+        def content = """
+          <SendMessageResponse>
+              <SendMessageResult>
+                  <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
+                  <MD5OfMessageAttributes>3ae8f24a165a8cedc005670c81a27295</MD5OfMessageAttributes>
+                  <MessageId>5fea7756-0ea4-451a-a703-a558b933e274</MessageId>
+              </SendMessageResult>
+              <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>
+          </SendMessageResponse>
+          """
+        return HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, content)
+      }
+      def content = """
+          {
+            "MD5OfMessageBody":"d41d8cd98f00b204e9800998ecf8427e",
+            "MD5OfMessageAttributes":"3ae8f24a165a8cedc005670c81a27295",
+            "MessageId":"5fea7756-0ea4-451a-a703-a558b933e274"
+          }
+          """
+      ResponseHeaders headers = ResponseHeaders.builder(HttpStatus.OK)
+        .contentType(MediaType.PLAIN_TEXT_UTF_8)
+        .add("x-amzn-RequestId", "27daac76-34dd-47df-bd01-1f6e873584a0")
+        .build()
+      return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content))
+    }
     "Ec2"   | "AllocateAddress"   | "POST" | ""                            | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2AsyncClient.builder() | { c -> c.allocateAddress() }                                                                                                     | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
            <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 

@@ -25,7 +25,7 @@ dependencies {
   testImplementation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testImplementation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
-  latestDepTestLibrary("software.amazon.awssdk:aws-json-protocol:2.17.+")
+  latestDepTestLibrary("software.amazon.awssdk:aws-json-protocol:+")
   latestDepTestLibrary("software.amazon.awssdk:aws-core:+")
   latestDepTestLibrary("software.amazon.awssdk:dynamodb:+")
   latestDepTestLibrary("software.amazon.awssdk:ec2:+")
