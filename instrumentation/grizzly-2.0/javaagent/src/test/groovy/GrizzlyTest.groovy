@@ -68,11 +68,6 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
     false
   }
 
-  @Override
-  boolean testHttpPipelining() {
-    false
-  }
-
   static class SimpleExceptionMapper implements ExceptionMapper<Throwable> {
 
     @Override
