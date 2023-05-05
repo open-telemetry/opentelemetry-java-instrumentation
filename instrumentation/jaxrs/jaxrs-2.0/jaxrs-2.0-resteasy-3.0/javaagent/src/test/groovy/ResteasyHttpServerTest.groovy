@@ -33,9 +33,4 @@ class ResteasyHttpServerTest extends JaxRsHttpServerTest<UndertowJaxrsServer> {
   boolean shouldTestCompletableStageAsync() {
     false
   }
-
-  @Override
-  boolean testHttpPipelining() {
-    false
-  }
 }

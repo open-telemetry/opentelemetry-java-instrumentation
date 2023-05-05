@@ -27,9 +27,4 @@ class ResteasyHttpServerTest extends JaxRsHttpServerTest<UndertowJaxrsServer> {
   void stopServer(UndertowJaxrsServer server) {
     server.stop()
   }
-
-  @Override
-  boolean testHttpPipelining() {
-    false
-  }
 }
