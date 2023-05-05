@@ -23,8 +23,8 @@ public class UndertowInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class added in 1.4
-    return hasClassesNamed("io.undertow.attribute.NullAttribute");
+    // class added in 1.4.0
+    return hasClassesNamed("io.undertow.client.ALPNClientSelector");
   }
 
   @Override
