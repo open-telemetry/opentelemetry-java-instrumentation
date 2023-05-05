@@ -62,7 +62,6 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
         unused ->
             Sets.difference(
                 DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(SemanticAttributes.HTTP_ROUTE)));
-    options.setTestHttpPipelining(false);
   }
 
   @Override

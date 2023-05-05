@@ -68,11 +68,6 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
     return false
   }
 
-  @Override
-  boolean testHttpPipelining() {
-    false
-  }
-
   protected Class<AbstractVerticle> verticle() {
     return VertxReactiveWebServer
   }

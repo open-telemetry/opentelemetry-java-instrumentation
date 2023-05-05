@@ -55,7 +55,6 @@ class FinatraServerLatestTest extends AbstractHttpServerTest[HttpServer] {
       override def test(endpoint: ServerEndpoint): Boolean =
         endpoint != ServerEndpoint.NOT_FOUND
     })
-    options.setTestHttpPipelining(false)
   }
 
   override protected def assertHandlerSpan(
