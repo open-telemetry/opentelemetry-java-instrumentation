@@ -92,7 +92,7 @@ public final class LoggingEventMapper {
 
     // time
     long timestamp = loggingEvent.getTimeStamp();
-    builder.setEpoch(timestamp, TimeUnit.MILLISECONDS);
+    builder.setTimestamp(timestamp, TimeUnit.MILLISECONDS);
 
     // level
     Level level = loggingEvent.getLevel();

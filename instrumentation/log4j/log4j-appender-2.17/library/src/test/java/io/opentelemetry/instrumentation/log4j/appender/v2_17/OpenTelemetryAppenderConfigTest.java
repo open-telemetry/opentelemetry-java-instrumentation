@@ -19,9 +19,9 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.logs.export.InMemoryLogRecordExporter;
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.time.Instant;
@@ -81,7 +81,7 @@ class OpenTelemetryAppenderConfigTest {
             .setMessage(new FormattedMessage("log message 1", (Object) null))
             .build());
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList)
         .satisfiesExactly(logRecordData -> assertThat(logDataList.get(0)).hasBody("log message 1"));
   }
@@ -90,7 +90,7 @@ class OpenTelemetryAppenderConfigTest {
   void logNoSpan() {
     logger.info("log message 1");
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
     assertThat(logDataList.get(0))
         .hasResource(resource)
@@ -107,7 +107,7 @@ class OpenTelemetryAppenderConfigTest {
 
     Span span2 = runWithSpan("span2", () -> logger.info("log message 3"));
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(3);
     assertThat(logDataList.get(0).getSpanContext()).isEqualTo(span1.getSpanContext());
     assertThat(logDataList.get(1).getSpanContext()).isEqualTo(SpanContext.getInvalid());
@@ -129,7 +129,7 @@ class OpenTelemetryAppenderConfigTest {
     Instant start = Instant.now();
     logger.info("log message 1", new IllegalStateException("Error!"));
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
     assertThat(logDataList.get(0))
         .hasResource(resource)
@@ -142,7 +142,7 @@ class OpenTelemetryAppenderConfigTest {
             equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "Error!"),
             satisfies(SemanticAttributes.EXCEPTION_STACKTRACE, v -> v.contains("logWithExtras")));
 
-    assertThat(logDataList.get(0).getEpochNanos())
+    assertThat(logDataList.get(0).getTimestampEpochNanos())
         .isGreaterThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(start.toEpochMilli()))
         .isLessThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
   }
@@ -157,7 +157,7 @@ class OpenTelemetryAppenderConfigTest {
       ThreadContext.clearMap();
     }
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
     assertThat(logDataList.get(0))
         .hasResource(resource)
@@ -175,7 +175,7 @@ class OpenTelemetryAppenderConfigTest {
     message.put("key2", "val2");
     logger.info(message);
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
     assertThat(logDataList.get(0))
         .hasResource(resource)
@@ -192,7 +192,7 @@ class OpenTelemetryAppenderConfigTest {
     message.put("message", "val2");
     logger.info(message);
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
     assertThat(logDataList.get(0))
         .hasResource(resource)
@@ -208,7 +208,7 @@ class OpenTelemetryAppenderConfigTest {
 
     logger.info(marker, "Message");
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     LogRecordData logData = logDataList.get(0);
     assertThat(logData.getAttributes().get(stringKey("log4j.marker"))).isEqualTo(markerName);
   }
@@ -220,7 +220,7 @@ class OpenTelemetryAppenderConfigTest {
     message.put("key2", "val2");
     logger.info(message);
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
     assertThat(logDataList.get(0))
         .hasResource(resource)
