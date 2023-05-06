@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.logging.application;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerBridge;
 import io.opentelemetry.javaagent.tooling.LoggingCustomizer;
+import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 
 @AutoService(LoggingCustomizer.class)
 public final class ApplicationLoggingCustomizer implements LoggingCustomizer {
@@ -20,10 +20,9 @@ public final class ApplicationLoggingCustomizer implements LoggingCustomizer {
   }
 
   @Override
-  public void init() {
+  public void init(EarlyInitAgentConfig earlyConfig) {
     int limit =
-        ConfigPropertiesUtil.getInt(
-            "otel.javaagent.logging.application.logs-buffer-max-records", 2048);
+        earlyConfig.getInt("otel.javaagent.logging.application.logs-buffer-max-records", 2048);
     InMemoryLogStore inMemoryLogStore = new InMemoryLogStore(limit);
     ApplicationLoggerFactory loggerFactory = new ApplicationLoggerFactory(inMemoryLogStore);
     // register a shutdown hook that'll dump the logs to stderr in case something goes wrong

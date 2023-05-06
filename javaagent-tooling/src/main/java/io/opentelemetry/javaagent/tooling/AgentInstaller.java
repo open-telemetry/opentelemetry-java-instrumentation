@@ -80,7 +80,8 @@ public class AgentInstaller {
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
 
-  public static void installBytebuddyAgent(Instrumentation inst, ClassLoader extensionClassLoader) {
+  public static void installBytebuddyAgent(
+      Instrumentation inst, ClassLoader extensionClassLoader, EarlyInitAgentConfig earlyConfig) {
     addByteBuddyRawSetting();
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
@@ -90,8 +91,7 @@ public class AgentInstaller {
     }
 
     logVersionInfo();
-    EarlyInitAgentConfig agentConfig = EarlyInitAgentConfig.create();
-    if (agentConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
+    if (earlyConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
       setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
       installBytebuddyAgent(inst, extensionClassLoader, agentListeners);

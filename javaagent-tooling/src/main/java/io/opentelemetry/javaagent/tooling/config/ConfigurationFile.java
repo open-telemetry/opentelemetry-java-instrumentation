@@ -8,10 +8,7 @@ package io.opentelemetry.javaagent.tooling.config;
 import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.SEVERE;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
-import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
-import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -22,22 +19,20 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
-@AutoService(AutoConfigurationCustomizerProvider.class)
-public final class ConfigurationFileLoader implements AutoConfigurationCustomizerProvider {
-
-  private static final Logger logger = Logger.getLogger(ConfigurationFileLoader.class.getName());
+final class ConfigurationFile {
 
   static final String CONFIGURATION_FILE_PROPERTY = "otel.javaagent.configuration-file";
 
   private static Map<String, String> configFileContents;
 
-  @Override
-  public void customize(AutoConfigurationCustomizer autoConfiguration) {
-    autoConfiguration.addPropertiesSupplier(ConfigurationFileLoader::getConfigFileContents);
-  }
+  // this class is used early, and must not use logging in most of its methods
+  // in case any file loading/parsing error occurs, we save the error message and log it later, when
+  // the logging subsystem is initialized
+  @Nullable private static String fileLoadErrorMessage;
 
-  static Map<String, String> getConfigFileContents() {
+  static Map<String, String> getProperties() {
     if (configFileContents == null) {
       configFileContents = loadConfigFile();
     }
@@ -59,7 +54,7 @@ public final class ConfigurationFileLoader implements AutoConfigurationCustomize
     // Configuration properties file is optional
     File configurationFile = new File(configurationFilePath);
     if (!configurationFile.exists()) {
-      logger.log(SEVERE, "Configuration file \"{0}\" not found.", configurationFilePath);
+      fileLoadErrorMessage = "Configuration file \"" + configurationFilePath + "\" not found.";
       return emptyMap();
     }
 
@@ -68,21 +63,24 @@ public final class ConfigurationFileLoader implements AutoConfigurationCustomize
         new InputStreamReader(new FileInputStream(configurationFile), StandardCharsets.UTF_8)) {
       properties.load(reader);
     } catch (FileNotFoundException fnf) {
-      logger.log(SEVERE, "Configuration file \"{0}\" not found.", configurationFilePath);
+      fileLoadErrorMessage = "Configuration file \"" + configurationFilePath + "\" not found.";
     } catch (IOException ioe) {
-      logger.log(
-          SEVERE,
-          "Configuration file \"{0}\" cannot be accessed or correctly parsed.",
-          configurationFilePath);
+      fileLoadErrorMessage =
+          "Configuration file \""
+              + configurationFilePath
+              + "\" cannot be accessed or correctly parsed.";
     }
 
     return properties.entrySet().stream()
         .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toString()));
   }
 
-  @Override
-  public int order() {
-    // make sure it runs after all the user-provided customizers
-    return Integer.MAX_VALUE;
+  static void logErrorIfAny() {
+    if (fileLoadErrorMessage != null) {
+      Logger.getLogger(ConfigurationPropertiesSupplier.class.getName())
+          .log(SEVERE, fileLoadErrorMessage);
+    }
   }
+
+  private ConfigurationFile() {}
 }

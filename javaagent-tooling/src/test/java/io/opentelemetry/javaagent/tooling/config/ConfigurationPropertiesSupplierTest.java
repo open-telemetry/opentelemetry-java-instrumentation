@@ -26,8 +26,8 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junitpioneer.jupiter.ClearSystemProperty;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
-@ClearSystemProperty(key = ConfigurationFileLoader.CONFIGURATION_FILE_PROPERTY)
-class ConfigurationFileLoaderTest {
+@ClearSystemProperty(key = ConfigurationFile.CONFIGURATION_FILE_PROPERTY)
+class ConfigurationPropertiesSupplierTest {
 
   @BeforeAll
   @AfterAll
@@ -44,7 +44,7 @@ class ConfigurationFileLoaderTest {
     // given
     Path configFile = tempDir.resolve("test-config.properties");
     Files.write(configFile, singleton("custom.key = 42"));
-    System.setProperty(ConfigurationFileLoader.CONFIGURATION_FILE_PROPERTY, configFile.toString());
+    System.setProperty(ConfigurationFile.CONFIGURATION_FILE_PROPERTY, configFile.toString());
 
     // when
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
