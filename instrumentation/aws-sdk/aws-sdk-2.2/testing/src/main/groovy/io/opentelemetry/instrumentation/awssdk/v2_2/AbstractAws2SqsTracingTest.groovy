@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
-import org.junit.Assume
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.client.builder.SdkClientBuilder
@@ -65,9 +64,6 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
   }
 
   def "simple sqs producer-consumer services"() {
-    // sqs implementation used for testing does not work with the latest aws sqs client
-    Assume.assumeFalse(Boolean.getBoolean("testLatestDeps"))
-
     setup:
     CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
       .queueName("testSdkSqs")
