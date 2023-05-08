@@ -75,58 +75,6 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   }
 
   @Override
-  public void afterMarshalling(
-      Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
-
-    // Since we merge the HTTP attributes into an already started span instead of creating a
-    // full child span, we have to do some dirty work here.
-    //
-    // As per HTTP conventions, we should actually only create spans for the "physical" requests but
-    // not for the encompassing logical request, see
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/trace/semantic_conventions/http.md#http-request-retries-and-redirects
-    // Specific AWS SDK conventions also don't mention this peculiar hybrid span convention, see
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/trace/semantic_conventions/instrumentation/aws-sdk.md
-    //
-    // TODO: Consider removing net+http conventions & relying on lower-level client instrumentation
-
-    io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
-    if (otelContext == null) {
-      // No context, no sense in doing anything else (but this is not expected)
-      return;
-    }
-
-    SdkHttpRequest httpRequest = context.httpRequest();
-    executionAttributes.putAttribute(SDK_HTTP_REQUEST_ATTRIBUTE, httpRequest);
-
-    // We ought to pass the parent of otelContext here, but we didn't store it, and it shouldn't
-    // make a difference (unless we start supporting the http.resend_count attribute in this
-    // instrumentation, which, logically, we can't on this level of abstraction)
-    onHttpRequestAvailable(executionAttributes, otelContext, Span.fromContext(otelContext));
-  }
-
-  private static void onHttpResponseAvailable(
-      ExecutionAttributes executionAttributes,
-      io.opentelemetry.context.Context otelContext,
-      Span span,
-      SdkHttpResponse httpResponse) {
-    // For the httpAttributesExtractor dance, see afterMarshalling
-    AttributesBuilder builder = Attributes.builder(); // NB: UnsafeAttributes are package-private
-    AwsSdkInstrumenterFactory.httpAttributesExtractor.onEnd(
-        builder, otelContext, executionAttributes, httpResponse, null);
-    span.setAllAttributes(builder.build());
-  }
-
-  private static void onHttpRequestAvailable(
-      ExecutionAttributes executionAttributes,
-      io.opentelemetry.context.Context parentContext,
-      Span span) {
-    AttributesBuilder builder = Attributes.builder(); // NB: UnsafeAttributes are package-private
-    AwsSdkInstrumenterFactory.httpAttributesExtractor.onStart(
-        builder, parentContext, executionAttributes);
-    span.setAllAttributes(builder.build());
-  }
-
-  @Override
   public SdkRequest modifyRequest(
       Context.ModifyRequest context, ExecutionAttributes executionAttributes) {
 
@@ -170,9 +118,6 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (SqsReceiveMessageRequestAccess.isInstance(request)) {
       return modifySqsReceiveMessageRequest(request);
     } else if (messagingPropagator != null) {
-      if (otelContext == null) {
-        return request;
-      }
       if (SqsSendMessageRequestAccess.isInstance(request)) {
         return injectIntoSqsSendMessageRequest(request, otelContext);
       }
@@ -249,6 +194,58 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       SqsReceiveMessageRequestAccess.messageAttributeNames(builder, messageAttributeNames);
     }
     return builder.build();
+  }
+
+  @Override
+  public void afterMarshalling(
+      Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
+
+    // Since we merge the HTTP attributes into an already started span instead of creating a
+    // full child span, we have to do some dirty work here.
+    //
+    // As per HTTP conventions, we should actually only create spans for the "physical" requests but
+    // not for the encompassing logical request, see
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/trace/semantic_conventions/http.md#http-request-retries-and-redirects
+    // Specific AWS SDK conventions also don't mention this peculiar hybrid span convention, see
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/trace/semantic_conventions/instrumentation/aws-sdk.md
+    //
+    // TODO: Consider removing net+http conventions & relying on lower-level client instrumentation
+
+    io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
+    if (otelContext == null) {
+      // No context, no sense in doing anything else (but this is not expected)
+      return;
+    }
+
+    SdkHttpRequest httpRequest = context.httpRequest();
+    executionAttributes.putAttribute(SDK_HTTP_REQUEST_ATTRIBUTE, httpRequest);
+
+    // We ought to pass the parent of otelContext here, but we didn't store it, and it shouldn't
+    // make a difference (unless we start supporting the http.resend_count attribute in this
+    // instrumentation, which, logically, we can't on this level of abstraction)
+    onHttpRequestAvailable(executionAttributes, otelContext, Span.fromContext(otelContext));
+  }
+
+  private static void onHttpResponseAvailable(
+      ExecutionAttributes executionAttributes,
+      io.opentelemetry.context.Context otelContext,
+      Span span,
+      SdkHttpResponse httpResponse) {
+    // For the httpAttributesExtractor dance, see afterMarshalling
+    AttributesBuilder builder = Attributes.builder(); // NB: UnsafeAttributes are package-private
+    AwsSdkInstrumenterFactory.httpAttributesExtractor.onEnd(
+        builder, otelContext, executionAttributes, httpResponse, null);
+    span.setAllAttributes(builder.build());
+  }
+
+  private static void onHttpRequestAvailable(
+      ExecutionAttributes executionAttributes,
+      io.opentelemetry.context.Context parentContext,
+      Span span) {
+    AttributesBuilder builder = Attributes.builder(); // NB: UnsafeAttributes are package-private
+    AwsSdkInstrumenterFactory.httpAttributesExtractor.onStart(
+        builder, parentContext, executionAttributes);
+    span.setAllAttributes(builder.build());
   }
 
   @Override
