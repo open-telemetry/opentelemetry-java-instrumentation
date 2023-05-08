@@ -2,6 +2,44 @@
 
 ## Unreleased
 
+### Migration notes
+
+### 🌟 New javaagent instrumentation
+
+- Add instrumentation for vertx-sql-client
+  ([#8311](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8311))
+
+### 🌟 New library instrumentation
+
+### 📈 Enhancements
+
+- Make net.transport an optional attribute
+  ([#8279](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8279))
+- AddingSpanAttributes annotation
+  ([#7787](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7787))
+- JavaScript Snippet Injection
+  ([#7650](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7650))
+- Updating Sockpeer service.
+  ([#7888](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7888))
+- Set up EarlyInitAgentConfig even earlier
+  ([#8413](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8413))
+
+### 🛠️ Bug fixes
+
+- Fix nested http.route
+  ([#8282](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8282))
+- Fix undertow instrumentation with http pipelining
+  ([#8400](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8400))
+- Fix http pipelining on Grizzly
+  ([#8411](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8411))
+- Fix http pipelining Netty 4.1 server
+  ([#8412](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8412))
+
+### 🧰 Tooling
+
+- Introduce new incubating `InstrumenterBuilder` methods
+  ([#8392](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8392))
+
 ## Version 1.25.1 (2023-04-27)
 
 - Fix apache pulsar instrumentation missing from the Java agent
