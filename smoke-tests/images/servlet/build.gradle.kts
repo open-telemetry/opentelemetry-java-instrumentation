@@ -36,7 +36,7 @@ val targets = mapOf(
     ImageTarget(listOf("21.0.0.12"), listOf("hotspot"), listOf("8", "11", "17"), mapOf("release" to "2021-11-17_1256")),
     ImageTarget(listOf("21.0.0.12"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "2021-11-17_1256")),
     // Java 19 is not supported until 22.0.0.10
-    ImageTarget(listOf("22.0.0.12"), listOf("hotspot"), listOf("8", "11", "17", "20", "21"), mapOf("release" to "22.0.0.12")),
+    ImageTarget(listOf("22.0.0.12"), listOf("hotspot"), listOf("8", "11", "17", "20"), mapOf("release" to "22.0.0.12")),
     ImageTarget(listOf("22.0.0.12"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "22.0.0.12")),
     ImageTarget(listOf("23.0.0.3"), listOf("hotspot"), listOf("8", "11", "17", "20", "21"), mapOf("release" to "23.0.0.3")),
     ImageTarget(listOf("23.0.0.3"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "23.0.0.3")),
