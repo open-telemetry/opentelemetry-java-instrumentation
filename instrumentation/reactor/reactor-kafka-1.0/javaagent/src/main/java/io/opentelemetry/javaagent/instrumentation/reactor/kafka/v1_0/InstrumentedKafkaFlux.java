@@ -38,7 +38,7 @@ final class InstrumentedKafkaFlux<R extends ConsumerRecord<?, ?>> extends FluxOp
 
     private final CoreSubscriber<ConsumerRecord<?, ?>> actual;
     private final Context currentContext;
-    private Subscription s;
+    private Subscription subscription;
 
     InstrumentedSubscriber(CoreSubscriber<ConsumerRecord<?, ?>> actual) {
       this.actual = actual;
@@ -49,8 +49,8 @@ final class InstrumentedKafkaFlux<R extends ConsumerRecord<?, ?>> extends FluxOp
 
     @Override
     public void onSubscribe(Subscription s) {
-      if (Operators.validate(this.s, s)) {
-        this.s = s;
+      if (Operators.validate(this.subscription, s)) {
+        this.subscription = s;
 
         actual.onSubscribe(this);
       }
@@ -102,12 +102,12 @@ final class InstrumentedKafkaFlux<R extends ConsumerRecord<?, ?>> extends FluxOp
 
     @Override
     public void request(long l) {
-      s.request(l);
+      subscription.request(l);
     }
 
     @Override
     public void cancel() {
-      s.cancel();
+      subscription.cancel();
     }
 
     @SuppressWarnings("rawtypes") // that's how the method is defined
@@ -117,7 +117,7 @@ final class InstrumentedKafkaFlux<R extends ConsumerRecord<?, ?>> extends FluxOp
         return actual;
       }
       if (key == Attr.PARENT) {
-        return s;
+        return subscription;
       }
       return null;
     }

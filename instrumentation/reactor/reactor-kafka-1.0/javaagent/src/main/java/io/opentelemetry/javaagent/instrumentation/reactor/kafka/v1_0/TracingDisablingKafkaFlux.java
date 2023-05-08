@@ -28,7 +28,7 @@ public final class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
       implements CoreSubscriber<T>, Subscription, Scannable {
 
     private final CoreSubscriber<T> actual;
-    private Subscription s;
+    private Subscription subscription;
 
     TracingDisablingSubscriber(CoreSubscriber<T> actual) {
       this.actual = actual;
@@ -36,8 +36,8 @@ public final class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
 
     @Override
     public void onSubscribe(Subscription s) {
-      if (Operators.validate(this.s, s)) {
-        this.s = s;
+      if (Operators.validate(this.subscription, s)) {
+        this.subscription = s;
 
         actual.onSubscribe(this);
       }
@@ -70,12 +70,12 @@ public final class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
 
     @Override
     public void request(long l) {
-      s.request(l);
+      subscription.request(l);
     }
 
     @Override
     public void cancel() {
-      s.cancel();
+      subscription.cancel();
     }
 
     @SuppressWarnings("rawtypes") // that's how the method is defined
@@ -85,7 +85,7 @@ public final class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
         return actual;
       }
       if (key == Attr.PARENT) {
-        return s;
+        return subscription;
       }
       return null;
     }
