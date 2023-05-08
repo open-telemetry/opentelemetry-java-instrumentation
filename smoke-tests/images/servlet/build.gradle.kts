@@ -26,7 +26,7 @@ val targets = mapOf(
   "jetty" to listOf(
     ImageTarget(listOf("9.4.51"), listOf("hotspot"), listOf("8", "11", "17", "20", "21"), mapOf("sourceVersion" to "9.4.51.v20230217")),
     ImageTarget(listOf("9.4.51"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("sourceVersion" to "9.4.51.v20230217")),
-    ImageTarget(listOf("10.0.15"), listOf("hotspot"), listOf("11", "17", "19", "20", "21"), mapOf("sourceVersion" to "10.0.7")),
+    ImageTarget(listOf("10.0.15"), listOf("hotspot"), listOf("11", "17", "20", "21"), mapOf("sourceVersion" to "10.0.7")),
     ImageTarget(listOf("10.0.15"), listOf("openj9"), listOf("11", "17", "18"), mapOf("sourceVersion" to "10.0.7")),
     ImageTarget(listOf("11.0.15"), listOf("hotspot"), listOf("11", "17", "20", "21"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
     ImageTarget(listOf("11.0.15"), listOf("openj9"), listOf("11", "17", "18"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
@@ -60,7 +60,7 @@ val targets = mapOf(
     ImageTarget(listOf("7.1.4"), listOf("hotspot", "openj9"), listOf("8")),
     ImageTarget(listOf("8.0.14"), listOf("hotspot"), listOf("8", "11", "17", "20", "21")),
     ImageTarget(listOf("8.0.14"), listOf("openj9"), listOf("8", "11", "17", "18")),
-    ImageTarget(listOf("9.0.0"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), war = "servlet-5.0"),
+    ImageTarget(listOf("9.0.0"), listOf("hotspot"), listOf("8", "11", "17", "20", "21"), war = "servlet-5.0"),
     ImageTarget(listOf("9.0.0"), listOf("openj9"), listOf("8", "11", "17", "18"), war = "servlet-5.0"),
   ),
   "websphere" to listOf(
@@ -153,7 +153,7 @@ fun configureImage(
   val image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-$server:$version-jdk$jdk$vmSuffix$platformSuffix-$extraTag"
 
   val jdkImage = if (vm == "hotspot") {
-    if (jdk == "20") {
+    if (jdk == "21") {
       // "The only tags which will continue to receive updates beyond July 2022 will be Early Access
       // builds (which are sourced from jdk.java.net), as those are not published/supported by any
       // of the above projects."
