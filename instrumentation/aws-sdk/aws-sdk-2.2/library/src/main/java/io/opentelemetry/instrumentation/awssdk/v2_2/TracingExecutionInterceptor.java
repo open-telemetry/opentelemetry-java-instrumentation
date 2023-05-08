@@ -235,9 +235,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     SdkRequest.Builder builder = request.toBuilder();
     if (!hasXrayAttribute) {
       List<String> attributeNames = new ArrayList<>(existingAttributeNames);
-      if (!hasXrayAttribute) {
-        attributeNames.add(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
-      }
+      attributeNames.add(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
       SqsReceiveMessageRequestAccess.attributeNamesWithStrings(builder, attributeNames);
     }
     if (messagingPropagator != null) {
