@@ -55,8 +55,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter;
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
-  @Nullable
-  private final TextMapPropagator messagingPropagator;
+  @Nullable private final TextMapPropagator messagingPropagator;
   private final boolean useXrayPropagator;
   private final FieldMapper fieldMapper;
 
