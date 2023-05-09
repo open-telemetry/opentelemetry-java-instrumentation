@@ -44,7 +44,7 @@ val targets = mapOf(
   "payara" to listOf(
     ImageTarget(listOf("5.2020.6"), listOf("hotspot", "openj9"), listOf("8", "11")),
     ImageTarget(listOf("5.2021.8"), listOf("hotspot", "openj9"), listOf("8", "11")),
-    ImageTarget(listOf("6.2023.4"), listOf("hotspot", "openj9"), listOf("8", "11", "17"))
+    ImageTarget(listOf("6.2023.4"), listOf("hotspot", "openj9"), listOf("11", "17"), war = "servlet-5.0")
   ),
   "tomcat" to listOf(
     ImageTarget(listOf("7.0.109"), listOf("hotspot", "openj9"), listOf("8"), mapOf("majorVersion" to "7")),
@@ -52,24 +52,26 @@ val targets = mapOf(
     ImageTarget(listOf("8.5.88"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "8")),
     ImageTarget(listOf("9.0.74"), listOf("hotspot"), listOf("8", "11", "17", "20", "21"), mapOf("majorVersion" to "9")),
     ImageTarget(listOf("9.0.74"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "9")),
-    ImageTarget(listOf("10.1.8"), listOf("hotspot"), listOf("8", "11", "17", "20", "21"), mapOf("majorVersion" to "10"), "servlet-5.0"),
-    ImageTarget(listOf("10.1.8"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "10"), "servlet-5.0"),
+    ImageTarget(listOf("10.1.8"), listOf("hotspot"), listOf("11", "17", "20", "21"), mapOf("majorVersion" to "10"), "servlet-5.0"),
+    ImageTarget(listOf("10.1.8"), listOf("openj9"), listOf("11", "17", "18"), mapOf("majorVersion" to "10"), "servlet-5.0"),
   ),
   "tomee" to listOf(
     ImageTarget(listOf("7.0.9"), listOf("hotspot", "openj9"), listOf("8")),
     ImageTarget(listOf("7.1.4"), listOf("hotspot", "openj9"), listOf("8")),
     ImageTarget(listOf("8.0.14"), listOf("hotspot"), listOf("8", "11", "17", "20", "21")),
     ImageTarget(listOf("8.0.14"), listOf("openj9"), listOf("8", "11", "17", "18")),
-    ImageTarget(listOf("9.0.0"), listOf("hotspot"), listOf("8", "11", "17", "20", "21"), war = "servlet-5.0"),
-    ImageTarget(listOf("9.0.0"), listOf("openj9"), listOf("8", "11", "17", "18"), war = "servlet-5.0"),
+    ImageTarget(listOf("9.0.0"), listOf("hotspot"), listOf("11", "17", "20", "21"), war = "servlet-5.0"),
+    ImageTarget(listOf("9.0.0"), listOf("openj9"), listOf("11", "17", "18"), war = "servlet-5.0"),
   ),
   "websphere" to listOf(
     ImageTarget(listOf("8.5.5.22", "9.0.5.14"), listOf("openj9"), listOf("8"), windows = false),
   ),
   "wildfly" to listOf(
     ImageTarget(listOf("13.0.0.Final"), listOf("hotspot", "openj9"), listOf("8")),
-    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "28.0.0.Final"), listOf("hotspot"), listOf("8", "11", "17", "20", "21")),
-    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "28.0.0.Final"), listOf("openj9"), listOf("8", "11", "17", "18")),
+    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final"), listOf("hotspot"), listOf("8", "11", "17", "20", "21")),
+    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final"), listOf("openj9"), listOf("8", "11", "17", "18")),
+    ImageTarget(listOf("28.0.0.Final"), listOf("hotspot"), listOf("11", "17", "20", "21"), war = "servlet-5.0"),
+    ImageTarget(listOf("28.0.0.Final"), listOf("openj9"), listOf("11", "17", "18"), war = "servlet-5.0"),
   ),
 )
 
