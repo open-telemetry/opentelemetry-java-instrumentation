@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.reactor.v3_1;
 
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
 import static java.lang.invoke.MethodType.methodType;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,6 +22,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -404,6 +406,68 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
                     span.hasName("inner")
                         .hasParent(trace.getSpan(0))
                         .hasAttributes(attributeEntry("onNext", true))));
+  }
+
+  @Test
+  void doesNotLeakContextOnRetry() {
+    // retry calls subscribe again from onError where we have active context, check that this
+    // context is not used as parent for retried operations
+    AtomicBoolean beforeRetry = new AtomicBoolean(true);
+    Flux<Integer> publish =
+        Flux.create(
+            sink -> {
+              for (int i = 0; i < 2; i++) {
+                Span s =
+                    tracer
+                        .spanBuilder(
+                            "produce " + (beforeRetry.get() ? "before" : "after") + " retry " + i)
+                        .startSpan();
+                try (Scope scope = s.makeCurrent()) {
+                  sink.next(i);
+                } finally {
+                  s.end();
+                }
+              }
+            });
+
+    Flux.defer(() -> publish.delaySubscription(Duration.ofMillis(1)))
+        .doOnNext(
+            message -> {
+              tracer.spanBuilder("process " + message).startSpan().end();
+            })
+        .handle(
+            (message, sink) -> {
+              if (message == 1 && beforeRetry.compareAndSet(true, false)) {
+                sink.error(new RuntimeException("Message has error"));
+              } else {
+                sink.next(message);
+              }
+            })
+        .retry()
+        .subscribe();
+
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName(
+            "produce before retry 0",
+            "produce before retry 1",
+            "produce after retry 0",
+            "produce after retry 1"),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("produce before retry 0").hasNoParent(),
+                span -> span.hasName("process 0").hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("produce before retry 1").hasNoParent(),
+                span -> span.hasName("process 1").hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("produce after retry 0").hasNoParent(),
+                span -> span.hasName("process 0").hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("produce after retry 1").hasNoParent(),
+                span -> span.hasName("process 1").hasParent(trace.getSpan(0))));
   }
 
   @SuppressWarnings("unchecked")
