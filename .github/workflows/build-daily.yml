@@ -47,8 +47,10 @@ jobs:
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
       success: |
-        needs.common.result == 'success' &&
-        needs.test-latest-deps.result == 'success' &&
-        needs.muzzle.result == 'success' &&
-        needs.markdown-link-check.result == 'success' &&
-        needs.misspell-check.result == 'success'
+        ${{
+          needs.common.result == 'success' &&
+          needs.test-latest-deps.result == 'success' &&
+          needs.muzzle.result == 'success' &&
+          needs.markdown-link-check.result == 'success' &&
+          needs.misspell-check.result == 'success'
+        }}

@@ -51,4 +51,4 @@ jobs:
     if: always()
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
-      success: needs.run-overhead-tests.result == 'success'
+      success: ${{ needs.run-overhead-tests.result == 'success' }}

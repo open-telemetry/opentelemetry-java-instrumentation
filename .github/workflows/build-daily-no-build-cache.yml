@@ -34,4 +34,8 @@ jobs:
     if: always()
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
-      success: needs.common.result == 'success' && needs.test-latest-deps.result == 'success'
+      success: |
+        ${{
+          needs.common.result == 'success' &&
+          needs.test-latest-deps.result == 'success'
+        }}
