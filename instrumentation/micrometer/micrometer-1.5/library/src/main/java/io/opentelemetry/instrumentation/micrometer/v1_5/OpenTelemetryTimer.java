@@ -66,10 +66,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
             .histogramBuilder(name)
             .setDescription(Bridging.description(id))
             .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit));
-    // micrometer Timers always specify buckets in nanoseconds, we need to convert them to base unit
-    double timeUnitMultiplier = TimeUtils.nanosToUnit(1, baseTimeUnit);
-    setExplicitBucketsIfConfigured(
-        otelHistogramBuilder, distributionStatisticConfig, timeUnitMultiplier);
+    setExplicitBucketsIfConfigured(otelHistogramBuilder, distributionStatisticConfig, baseTimeUnit);
     this.otelHistogram = otelHistogramBuilder.build();
     this.observableMax =
         otelMeter

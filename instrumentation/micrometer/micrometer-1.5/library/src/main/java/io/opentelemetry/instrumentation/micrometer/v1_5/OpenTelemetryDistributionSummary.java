@@ -62,7 +62,7 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
             .histogramBuilder(name)
             .setDescription(Bridging.description(id))
             .setUnit(baseUnit(id));
-    setExplicitBucketsIfConfigured(otelHistogramBuilder, distributionStatisticConfig, 1.0);
+    setExplicitBucketsIfConfigured(otelHistogramBuilder, distributionStatisticConfig);
     this.otelHistogram = otelHistogramBuilder.build();
     this.observableMax =
         otelMeter
