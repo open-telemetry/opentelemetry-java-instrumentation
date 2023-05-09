@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import reactor.core.publisher.Mono;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -114,6 +115,10 @@ public abstract class AbstractR2dbcStatementTest {
               .withExposedPorts(props.port)
               .withLogConsumer(new Slf4jLogConsumer(logger))
               .withStartupTimeout(Duration.ofMinutes(2));
+      if (props == POSTGRESQL) {
+        container.waitingFor(
+            Wait.forLogMessage(".*database system is ready to accept connections.*", 2));
+      }
       container.start();
       port = container.getMappedPort(props.port);
     }
