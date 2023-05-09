@@ -99,10 +99,6 @@ class Tomcat9Jdk17Openj9 extends TomcatSmokeTest {
 class Tomcat9Jdk18Openj9 extends TomcatSmokeTest {
 }
 
-@AppServer(version = "10.1.8", jdk = "8")
-class Tomcat10Jdk8 extends TomcatSmokeTest {
-}
-
 @AppServer(version = "10.1.8", jdk = "11")
 class Tomcat10Jdk11 extends TomcatSmokeTest {
 }
@@ -117,10 +113,6 @@ class Tomcat10Jdk20 extends TomcatSmokeTest {
 
 @AppServer(version = "10.1.8", jdk = "21")
 class Tomcat10Jdk21 extends TomcatSmokeTest {
-}
-
-@AppServer(version = "10.1.8", jdk = "8-openj9")
-class Tomcat10Jdk8Openj9 extends TomcatSmokeTest {
 }
 
 @AppServer(version = "10.1.8", jdk = "11-openj9")
