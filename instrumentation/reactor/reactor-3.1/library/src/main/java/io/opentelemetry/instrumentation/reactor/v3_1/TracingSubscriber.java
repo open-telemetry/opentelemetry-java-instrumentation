@@ -68,8 +68,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
     if (!hasContextToPropagate && fluxRetrySubscriberClass == subscriber.getClass()) {
       // clear context for retry to avoid having retried operations run with currently active
       // context as parent context
-      withActiveSpan(
-          io.opentelemetry.context.Context.root(), () -> subscriber.onError(throwable));
+      withActiveSpan(io.opentelemetry.context.Context.root(), () -> subscriber.onError(throwable));
     } else {
       withActiveSpan(() -> subscriber.onError(throwable));
     }
