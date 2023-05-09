@@ -19,7 +19,7 @@
   ([#7787](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7787))
 - JavaScript Snippet Injection
   ([#7650](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7650))
-- Updating Sockpeer service.
+- Updating Sockpeer service
   ([#7888](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7888))
 - Set up EarlyInitAgentConfig even earlier
   ([#8413](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8413))
