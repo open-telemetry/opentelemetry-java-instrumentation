@@ -11,7 +11,8 @@ muzzle {
 }
 
 dependencies {
-  library(("org.apache.thrift:libthrift:0.14.1")
+  compileOnly("org.apache.thrift:libthrift:0.14.1")
+//  testImplementation(project(":instrumentation:thrift:testing"))
 }
 
 

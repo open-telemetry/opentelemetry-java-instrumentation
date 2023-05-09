@@ -25,6 +25,8 @@ import javax.annotation.Nullable;
 @SuppressWarnings({"serial"})
 public final class ServerInProtocolWrapper extends AbstractProtocolWrapper {
   public ThriftRequest request;
+
+  public Context clientContext;
   @Nullable
   public Context context;
   @Nullable
@@ -33,6 +35,7 @@ public final class ServerInProtocolWrapper extends AbstractProtocolWrapper {
   public ServerInProtocolWrapper(TProtocol protocol) {
     super(protocol);
     request = new ThriftRequest(protocol);
+    clientContext = Context.current();
   }
 
   @Nullable
@@ -92,17 +95,17 @@ public final class ServerInProtocolWrapper extends AbstractProtocolWrapper {
           String b = readString();
           request.setAttachment(a, b);
         }
-        Context context = Context.current();
+        clientContext = Context.current();
         GlobalOpenTelemetry.get()
             .getPropagators()
             .getTextMapPropagator()
-            .extract(context, request, ThriftHeaderGetter.INSTANCE);
-        if (!serverInstrumenter().shouldStart(context, request)) {
+            .extract(clientContext, request, ThriftHeaderGetter.INSTANCE);
+
+        if (!serverInstrumenter().shouldStart(clientContext, request)) {
           return readFieldBegin();
         }
-        context = serverInstrumenter().start(context, request);
+        context = serverInstrumenter().start(clientContext, request);
         serverInstrumenter().end(context, request, 0, null);
-        this.context = context;
         try {
           scope = context.makeCurrent();
         } catch (Throwable e) {

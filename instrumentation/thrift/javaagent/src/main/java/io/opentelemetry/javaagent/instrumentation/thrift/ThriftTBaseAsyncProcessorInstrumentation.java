@@ -18,6 +18,7 @@ import java.lang.reflect.Field;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.thrift.TBaseAsyncProcessor;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.server.AbstractNonblockingServer;
 import org.apache.thrift.transport.TNonblockingSocket;
@@ -38,7 +39,8 @@ public final class ThriftTBaseAsyncProcessorInstrumentation implements TypeInstr
   public static class ProcessAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(0) AbstractNonblockingServer.AsyncFrameBuffer fb) {
+        @Advice.Argument(0) AbstractNonblockingServer.AsyncFrameBuffer fb,
+        @Advice.This TBaseAsyncProcessor processor) {
       try {
         TProtocol inpot = fb.getInputProtocol();
         Field field = AbstractNonblockingServer.FrameBuffer.class.getDeclaredField("trans_");
