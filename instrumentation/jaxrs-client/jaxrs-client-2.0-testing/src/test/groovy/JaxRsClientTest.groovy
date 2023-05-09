@@ -174,12 +174,21 @@ class CxfClientTest extends JaxRsClientTest {
   Throwable clientSpanError(URI uri, Throwable exception) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
+        if (exception.getCause() instanceof ConnectException) {
+          exception = exception.getCause()
+        }
+        break
       case "https://192.0.2.1/": // non routable address
         if (exception.getCause() != null) {
           exception = exception.getCause()
         }
     }
     return exception
+  }
+
+  @Override
+  boolean testWithClientParent() {
+    !Boolean.getBoolean("testLatestDeps")
   }
 
   @Override
@@ -191,6 +200,7 @@ class CxfClientTest extends JaxRsClientTest {
   ClientBuilder builder() {
     return new ClientBuilderImpl()
       .property("http.connection.timeout", (long) CONNECT_TIMEOUT_MS)
+      .property("org.apache.cxf.transport.http.forceVersion", "1.1")
   }
 
   @Override
