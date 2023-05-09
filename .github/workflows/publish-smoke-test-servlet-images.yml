@@ -76,8 +76,10 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PextraTag=${{ needs.prepare.outputs.tag }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
 
-  open-issue-on-failure:
+  workflow-notification:
     needs:
       - publish
-    if: failure() && github.run_attempt == 1
-    uses: ./.github/workflows/reusable-open-issue-on-failure.yml
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.publish.result == 'success' }}
