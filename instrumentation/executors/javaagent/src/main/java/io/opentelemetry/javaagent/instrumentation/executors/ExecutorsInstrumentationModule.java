@@ -13,9 +13,13 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ExecutorInstrumentationModule extends InstrumentationModule {
-  public ExecutorInstrumentationModule() {
-    super("executor");
+public class ExecutorsInstrumentationModule extends InstrumentationModule {
+
+  public ExecutorsInstrumentationModule() {
+    super(
+        "executors",
+        // TODO: remove that after release 1.26.0
+        "executor");
   }
 
   @Override
