@@ -3,8 +3,6 @@ plugins {
 }
 
 dependencies {
-  testInstrumentation(project(":instrumentation:http-url-connection:javaagent"))
-
   testImplementation("javax.ws.rs:javax.ws.rs-api:2.0.1")
 
   testLibrary("org.glassfish.jersey.core:jersey-client:2.0")
@@ -17,6 +15,8 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.2.3")
 
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:http-url-connection:javaagent"))
+  testInstrumentation(project(":instrumentation:java-http-client:javaagent"))
 
   latestDepTestLibrary("org.glassfish.jersey.inject:jersey-hk2:2.+")
   latestDepTestLibrary("org.glassfish.jersey.core:jersey-client:2.+")
@@ -31,4 +31,6 @@ tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.net=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }
