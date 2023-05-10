@@ -18,6 +18,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -838,7 +839,7 @@ public class SessionTest extends AbstractHibernateTest {
             equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
             satisfies(
                 SemanticAttributes.DB_STATEMENT,
-                stringAssert -> stringAssert.startsWith(verb.toLowerCase())),
+                stringAssert -> stringAssert.startsWith(verb.toLowerCase(Locale.ROOT))),
             equalTo(SemanticAttributes.DB_OPERATION, verb),
             equalTo(SemanticAttributes.DB_SQL_TABLE, "Value"));
   }
