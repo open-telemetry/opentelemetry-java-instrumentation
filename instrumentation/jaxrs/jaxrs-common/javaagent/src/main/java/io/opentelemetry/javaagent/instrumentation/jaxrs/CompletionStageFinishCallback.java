@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.function.BiFunction;
@@ -22,6 +23,7 @@ public class CompletionStageFinishCallback<T> implements BiFunction<T, Throwable
   }
 
   @Override
+  @CanIgnoreReturnValue
   public T apply(T result, Throwable throwable) {
     instrumenter.end(context, handlerData, null, throwable);
     return result;

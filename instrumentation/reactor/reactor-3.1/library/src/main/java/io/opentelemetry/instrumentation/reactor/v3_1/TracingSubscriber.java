@@ -32,6 +32,8 @@ import reactor.util.context.Context;
  * https://github.com/opentracing-contrib/java-reactor/blob/master/src/main/java/io/opentracing/contrib/reactor/TracedSubscriber.java
  */
 public class TracingSubscriber<T> implements CoreSubscriber<T> {
+  private static final Class<?> fluxRetrySubscriberClass = getFluxRetrySubscriberClass();
+  private static final Class<?> fluxRetryWhenSubscriberClass = getFluxRetryWhenSubscriberClass();
   private final io.opentelemetry.context.Context traceContext;
   private final Subscriber<? super T> subscriber;
   private final Context context;
@@ -64,7 +66,15 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
 
   @Override
   public void onError(Throwable throwable) {
-    withActiveSpan(() -> subscriber.onError(throwable));
+    if (!hasContextToPropagate
+        && (fluxRetrySubscriberClass == subscriber.getClass()
+            || fluxRetryWhenSubscriberClass == subscriber.getClass())) {
+      // clear context for retry to avoid having retried operations run with currently active
+      // context as parent context
+      withActiveSpan(io.opentelemetry.context.Context.root(), () -> subscriber.onError(throwable));
+    } else {
+      withActiveSpan(() -> subscriber.onError(throwable));
+    }
   }
 
   @Override
@@ -78,12 +88,32 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   }
 
   private void withActiveSpan(Runnable runnable) {
-    if (hasContextToPropagate) {
-      try (Scope ignored = traceContext.makeCurrent()) {
+    withActiveSpan(hasContextToPropagate ? traceContext : null, runnable);
+  }
+
+  private static void withActiveSpan(io.opentelemetry.context.Context context, Runnable runnable) {
+    if (context != null) {
+      try (Scope ignored = context.makeCurrent()) {
         runnable.run();
       }
     } else {
       runnable.run();
+    }
+  }
+
+  private static Class<?> getFluxRetrySubscriberClass() {
+    try {
+      return Class.forName("reactor.core.publisher.FluxRetry$RetrySubscriber");
+    } catch (ClassNotFoundException exception) {
+      return null;
+    }
+  }
+
+  private static Class<?> getFluxRetryWhenSubscriberClass() {
+    try {
+      return Class.forName("reactor.core.publisher.FluxRetryWhen$RetryWhenMainSubscriber");
+    } catch (ClassNotFoundException exception) {
+      return null;
     }
   }
 }

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.internal.reflection;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -41,6 +42,7 @@ public class ClassInstrumentation implements TypeInstrumentation {
                   }
 
                   @Override
+                  @CanIgnoreReturnValue
                   public int mergeReader(int flags) {
                     return flags;
                   }

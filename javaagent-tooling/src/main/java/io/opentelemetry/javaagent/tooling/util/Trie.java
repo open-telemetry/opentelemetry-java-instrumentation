@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.util;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import javax.annotation.Nullable;
 
 /** A prefix tree that maps from the longest matching prefix to a value {@code V}. */
@@ -40,6 +41,7 @@ public interface Trie<V> {
   interface Builder<V> {
 
     /** Associate {@code value} with the string {@code str}. */
+    @CanIgnoreReturnValue
     Builder<V> put(CharSequence str, V value);
 
     Trie<V> build();

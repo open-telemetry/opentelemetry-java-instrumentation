@@ -144,50 +144,62 @@ public abstract class HttpClientTestOptions {
 
     Builder setTestErrorWithCallback(boolean value);
 
+    @CanIgnoreReturnValue
     default Builder disableTestWithClientParent() {
       return setTestWithClientParent(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestRedirects() {
       return setTestRedirects(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestCircularRedirects() {
       return setTestCircularRedirects(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestReusedRequest() {
       return setTestReusedRequest(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestConnectionFailure() {
       return setTestConnectionFailure(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder enableTestReadTimeout() {
       return setTestReadTimeout(true);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestRemoteConnection() {
       return setTestRemoteConnection(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestHttps() {
       return setTestHttps(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestCallback() {
       return setTestCallback(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestCallbackWithParent() {
       return setTestCallbackWithParent(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestErrorWithCallback() {
       return setTestErrorWithCallback(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder enableTestCallbackWithImplicitParent() {
       return setTestCallbackWithImplicitParent(true);
     }

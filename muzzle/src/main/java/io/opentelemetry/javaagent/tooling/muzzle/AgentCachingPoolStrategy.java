@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
@@ -295,6 +296,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public TypePool.Resolution register(String className, TypePool.Resolution resolution) {
       if (OBJECT_NAME.equals(className)) {
         return resolution;
@@ -331,6 +333,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
 
     @Override
+    @CanIgnoreReturnValue
     protected TypePool.Resolution doCache(String name, TypePool.Resolution resolution) {
       return resolution;
     }
