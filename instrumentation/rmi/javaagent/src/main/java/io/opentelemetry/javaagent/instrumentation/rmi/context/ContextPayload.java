@@ -41,6 +41,7 @@ public class ContextPayload {
     return payload;
   }
 
+  @SuppressWarnings("BanSerializableRead")
   public static ContextPayload read(ObjectInput oi) throws IOException {
     try {
       Object object = oi.readObject();

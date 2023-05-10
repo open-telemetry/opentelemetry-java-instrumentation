@@ -19,6 +19,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
@@ -599,6 +600,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     testing.waitAndAssertTraces(assertions);
   }
 
+  @CanIgnoreReturnValue
   protected SpanDataAssert assertControllerSpan(SpanDataAssert span, Throwable expectedException) {
     span.hasName("controller").hasKind(SpanKind.INTERNAL);
     if (expectedException != null) {
@@ -626,6 +628,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         "errorPageSpanAssertions not implemented in " + getClass().getName());
   }
 
+  @CanIgnoreReturnValue
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
 
@@ -742,6 +745,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return name;
   }
 
+  @CanIgnoreReturnValue
   protected SpanDataAssert assertIndexedServerSpan(SpanDataAssert span, int requestId) {
     ServerEndpoint endpoint = INDEXED_CHILD;
     String method = "GET";
@@ -755,6 +759,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return span;
   }
 
+  @CanIgnoreReturnValue
   protected SpanDataAssert assertIndexedControllerSpan(SpanDataAssert span, int requestId) {
     span.hasName("controller")
         .hasKind(SpanKind.INTERNAL)

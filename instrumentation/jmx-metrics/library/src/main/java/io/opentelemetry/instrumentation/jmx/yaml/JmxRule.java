@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.yaml;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.jmx.engine.BeanAttributeExtractor;
 import io.opentelemetry.instrumentation.jmx.engine.BeanGroup;
 import io.opentelemetry.instrumentation.jmx.engine.MetricAttribute;
@@ -79,6 +80,7 @@ public class JmxRule extends MetricStructure {
     this.prefix = validatePrefix(prefix.trim());
   }
 
+  @CanIgnoreReturnValue
   private String validatePrefix(String prefix) {
     // Do not accept empty string.
     // While it is theoretically acceptable, it probably indicates a user error.
@@ -98,6 +100,7 @@ public class JmxRule extends MetricStructure {
     this.mapping = validateAttributeMapping(mapping);
   }
 
+  @CanIgnoreReturnValue
   private static Map<String, Metric> validateAttributeMapping(Map<String, Metric> mapping) {
     if (mapping.isEmpty()) {
       throw new IllegalStateException("No MBean attributes specified");

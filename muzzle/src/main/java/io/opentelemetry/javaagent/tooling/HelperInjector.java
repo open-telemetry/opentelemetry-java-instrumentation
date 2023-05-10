@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
@@ -179,6 +180,7 @@ public class HelperInjector implements Transformer {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public DynamicType.Builder<?> transform(
       DynamicType.Builder<?> builder,
       TypeDescription typeDescription,

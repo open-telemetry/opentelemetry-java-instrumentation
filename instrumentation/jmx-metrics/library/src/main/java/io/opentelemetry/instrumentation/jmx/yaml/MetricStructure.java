@@ -5,11 +5,13 @@
 
 package io.opentelemetry.instrumentation.jmx.yaml;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.jmx.engine.MetricAttribute;
 import io.opentelemetry.instrumentation.jmx.engine.MetricAttributeExtractor;
 import io.opentelemetry.instrumentation.jmx.engine.MetricInfo;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -37,7 +39,7 @@ abstract class MetricStructure {
 
   public void setType(String t) {
     // Do not complain about case variations
-    t = t.trim().toUpperCase();
+    t = t.trim().toUpperCase(Locale.ROOT);
     this.metricType = MetricInfo.Type.valueOf(t);
   }
 
@@ -49,6 +51,7 @@ abstract class MetricStructure {
     this.unit = validateUnit(unit.trim());
   }
 
+  @CanIgnoreReturnValue
   private String validateUnit(String unit) {
     requireNonEmpty(unit, "Metric unit is empty");
     return unit;

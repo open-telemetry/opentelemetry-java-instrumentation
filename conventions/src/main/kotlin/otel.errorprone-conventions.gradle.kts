@@ -123,6 +123,10 @@ tasks {
           // Allow underscore in test-type method names
           disable("MemberName")
         }
+        if (project.path.endsWith(":testing")) {
+          // This check causes too many failures, ignore the ones in testing modules
+          disable("CanIgnoreReturnValueSuggester")
+        }
       }
     }
   }

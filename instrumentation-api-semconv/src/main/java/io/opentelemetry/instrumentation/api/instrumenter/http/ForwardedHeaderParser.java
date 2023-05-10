@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import java.util.Locale;
 import javax.annotation.Nullable;
 
 final class ForwardedHeaderParser {
@@ -12,7 +13,7 @@ final class ForwardedHeaderParser {
   /** Extract proto (aka scheme) from "Forwarded" http header. */
   @Nullable
   static String extractProtoFromForwardedHeader(String forwarded) {
-    int start = forwarded.toLowerCase().indexOf("proto=");
+    int start = forwarded.toLowerCase(Locale.ROOT).indexOf("proto=");
     if (start < 0) {
       return null;
     }
@@ -32,7 +33,7 @@ final class ForwardedHeaderParser {
   /** Extract client IP address from "Forwarded" http header. */
   @Nullable
   static String extractClientIpFromForwardedHeader(String forwarded) {
-    int start = forwarded.toLowerCase().indexOf("for=");
+    int start = forwarded.toLowerCase(Locale.ROOT).indexOf("for=");
     if (start < 0) {
       return null;
     }

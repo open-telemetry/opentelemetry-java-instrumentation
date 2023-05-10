@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.util.Map;
 import java.util.Objects;
@@ -26,6 +27,7 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
   @Nullable private String clientId;
 
   @Override
+  @CanIgnoreReturnValue
   public ProducerRecord<K, V> onSend(ProducerRecord<K, V> producerRecord) {
     telemetry.buildAndInjectSpan(producerRecord, clientId);
     return producerRecord;
