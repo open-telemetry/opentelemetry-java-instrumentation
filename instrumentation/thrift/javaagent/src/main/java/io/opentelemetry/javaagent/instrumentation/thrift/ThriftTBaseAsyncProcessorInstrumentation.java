@@ -40,8 +40,9 @@ public final class ThriftTBaseAsyncProcessorInstrumentation implements TypeInstr
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) AbstractNonblockingServer.AsyncFrameBuffer fb,
-        @Advice.This TBaseAsyncProcessor processor) {
+        @Advice.This TBaseAsyncProcessor<?> processor) {
       try {
+
         TProtocol inpot = fb.getInputProtocol();
         Field field = AbstractNonblockingServer.FrameBuffer.class.getDeclaredField("trans_");
         field.setAccessible(true);

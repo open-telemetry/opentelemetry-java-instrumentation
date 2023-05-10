@@ -11,8 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
-
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Field;
@@ -41,6 +41,9 @@ public final class ThriftClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArguments(1)),
         ThriftClientInstrumentation.class.getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(returns(void.class)),
+    ThriftClientInstrumentation.class.getName() + "$ClientOneWayAdvice");
   }
 
   @SuppressWarnings({"unchecked"})
@@ -75,7 +78,6 @@ public final class ThriftClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ClientReceiveAdvice {
-
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.This TServiceClient client)
         throws NoSuchFieldException, IllegalAccessException {
@@ -84,6 +86,21 @@ public final class ThriftClientInstrumentation implements TypeInstrumentation {
       ClientOutProtocolWrapper tmp = (ClientOutProtocolWrapper) field.get(client);
       if (tmp.context != null) {
         clientInstrumenter().end(tmp.context, tmp.request, 0, null);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ClientOneWayAdvice {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void methodExit(@Advice.This TServiceClient client)
+        throws NoSuchFieldException, IllegalAccessException {
+      Field field = TServiceClient.class.getDeclaredField("oprot_");
+      field.setAccessible(true);
+      ClientOutProtocolWrapper tmp = (ClientOutProtocolWrapper) field.get(client);
+      if (tmp.context != null) {
+        clientInstrumenter().end(tmp.context, tmp.request, 0, null);
+        tmp.context = null;
       }
     }
   }

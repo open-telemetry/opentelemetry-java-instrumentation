@@ -6,11 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.thrift;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.instrumentation.thrift.ThriftSingletons.clientInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.thrift.ThriftSingletons.serverInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -22,8 +20,7 @@ import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TNonblockingSocket;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+
 
 public final class ThriftTBaseProcessorInstrumentation implements TypeInstrumentation {
   @Override
@@ -44,6 +41,7 @@ public final class ThriftTBaseProcessorInstrumentation implements TypeInstrument
         @Advice.Argument(1) TProtocol inpot, @Advice.This ProcessFunction<?, ?> processFunction) {
       if (inpot instanceof ServerInProtocolWrapper) {
         TTransport transport = ((ServerInProtocolWrapper) inpot).getRTransport();
+
         if (transport instanceof TSocket) {
           ((ServerInProtocolWrapper) inpot).request.host =
               ((TSocket) transport).getSocket().getInetAddress().toString();
@@ -59,6 +57,7 @@ public final class ThriftTBaseProcessorInstrumentation implements TypeInstrument
           ((ServerInProtocolWrapper) inpot).request.port =
               ((TNonblockingSocket) transport).getSocketChannel().socket().getPort();
         }
+
         ((ServerInProtocolWrapper) inpot).request.methodName = processFunction.getMethodName();
       }
     }
@@ -66,7 +65,7 @@ public final class ThriftTBaseProcessorInstrumentation implements TypeInstrument
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(1) TProtocol inpot, @Advice.This ProcessFunction<?, ?> processFunction)
-        throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        {
       if (inpot instanceof ServerInProtocolWrapper) {
         ((ServerInProtocolWrapper) inpot).request.methodName = processFunction.getMethodName();
         Context context = ((ServerInProtocolWrapper) inpot).context;
@@ -76,11 +75,6 @@ public final class ThriftTBaseProcessorInstrumentation implements TypeInstrument
         }
         if(((ServerInProtocolWrapper) inpot).scope != null) {
           ((ServerInProtocolWrapper) inpot).scope.close();
-        }
-        Method isOneway = processFunction.getClass().getDeclaredMethod("isOneway");
-        isOneway.setAccessible(true);
-        if((boolean)isOneway.invoke(processFunction,null)){
-          clientInstrumenter().end(((ServerInProtocolWrapper) inpot).clientContext, ((ServerInProtocolWrapper) inpot).request, 0, null);
         }
       }
     }

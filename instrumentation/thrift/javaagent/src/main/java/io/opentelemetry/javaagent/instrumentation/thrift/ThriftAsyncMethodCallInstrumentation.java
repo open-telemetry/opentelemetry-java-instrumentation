@@ -44,7 +44,6 @@ public final class ThriftAsyncMethodCallInstrumentation implements TypeInstrumen
     public static void methodEnter(
         @Advice.Argument(0) TProtocol protocol, @Advice.This TAsyncMethodCall<Object> methodCall) {
       try {
-        System.out.println(protocol.getClass().toString());
         if (protocol instanceof ClientOutProtocolWrapper) {
           ((ClientOutProtocolWrapper) protocol).request.methodName =
               methodCall.getClass().getSimpleName();

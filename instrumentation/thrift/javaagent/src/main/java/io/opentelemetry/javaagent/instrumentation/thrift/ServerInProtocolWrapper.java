@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.thrift;
 
 import static io.opentelemetry.javaagent.instrumentation.thrift.ThriftSingletons.serverInstrumenter;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -46,6 +45,7 @@ public final class ServerInProtocolWrapper extends AbstractProtocolWrapper {
       } else if (this.trans_ instanceof TNonblockingSocket) {
         return this.trans_;
       } else {
+
         return getInner(this.trans_);
       }
     } catch (Throwable e) {
@@ -96,11 +96,10 @@ public final class ServerInProtocolWrapper extends AbstractProtocolWrapper {
           request.setAttachment(a, b);
         }
         clientContext = Context.current();
-        GlobalOpenTelemetry.get()
+        clientContext=GlobalOpenTelemetry.get()
             .getPropagators()
             .getTextMapPropagator()
             .extract(clientContext, request, ThriftHeaderGetter.INSTANCE);
-
         if (!serverInstrumenter().shouldStart(clientContext, request)) {
           return readFieldBegin();
         }

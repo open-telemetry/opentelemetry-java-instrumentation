@@ -6,8 +6,7 @@ plugins {
 
 dependencies {
   api(project(":testing-common"))
-  implementation("io.opentelemetry:opentelemetry-api")
-  compileOnly("org.apache.thrift:libthrift:0.14.1")
+  implementation("org.apache.thrift:libthrift:0.14.1")
 }
 
 

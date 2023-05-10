@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributes
 import io.opentelemetry.javaagent.instrumentation.thrift.internal.ThriftNetServerAttributesGetter;
 
 public final class ThriftSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.thrift-0.14.1";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.thrift";
 
   private static final Instrumenter<ThriftRequest, Integer> CLIENT_INSTRUMENTER;
   private static final Instrumenter<ThriftRequest, Integer> SERVER_INSTRUMENTER;

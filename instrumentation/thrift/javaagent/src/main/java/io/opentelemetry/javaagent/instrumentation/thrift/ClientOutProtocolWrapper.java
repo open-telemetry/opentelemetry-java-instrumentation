@@ -34,13 +34,11 @@ public final class ClientOutProtocolWrapper extends AbstractProtocolWrapper {
     this.request.methodName = message.name;
     super.writeMessageBegin(message);
     injected = false;
-    //    System.out.println("WriteMessageBegin");
   }
 
   @Override
   public final void writeFieldStop() throws TException {
     if (!injected) {
-      Thread.dumpStack();
       Context context = Context.current();
       if (!clientInstrumenter().shouldStart(context, request)) {
         return;
@@ -57,6 +55,7 @@ public final class ClientOutProtocolWrapper extends AbstractProtocolWrapper {
         clientInstrumenter().end(context, request, 0, e);
       } finally {
         injected = true;
+
       }
     }
     super.writeFieldStop();
