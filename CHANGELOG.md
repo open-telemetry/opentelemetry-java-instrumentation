@@ -35,7 +35,7 @@
   ([#8400](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8400))
 - Fix http pipelining on Grizzly
   ([#8411](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8411))
-- Fix http pipelining Netty 4.1 server
+- Fix http pipelining on Netty 4.1 server
   ([#8412](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8412))
 
 ### 🧰 Tooling
