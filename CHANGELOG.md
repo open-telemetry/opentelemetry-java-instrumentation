@@ -37,6 +37,10 @@
   ([#8411](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8411))
 - Fix http pipelining on Netty 4.1 server
   ([#8412](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8412))
+- Allow transforming classes with missing field types
+  ([#8393](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8393))
+- Fix reactor flux retry context leak
+  ([#8456](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8456))
 
 ### 🧰 Tooling
 
