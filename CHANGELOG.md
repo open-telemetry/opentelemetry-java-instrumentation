@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.26.0 (2023-05-10)
+
 ### Migration notes
 
 - `java.util.concurrent` executors instrumentation suppression key has changed from `executor` to `executors`
