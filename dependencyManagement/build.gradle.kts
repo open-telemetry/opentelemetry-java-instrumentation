@@ -42,7 +42,7 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.0.1"
 val autoValueVersion = "1.10.1"
-val errorProneVersion = "2.19.0"
+val errorProneVersion = "2.19.1"
 val byteBuddyVersion = "1.14.4"
 val asmVersion = "9.5"
 val jmhVersion = "1.36"
