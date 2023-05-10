@@ -4,7 +4,7 @@
 
 ### Migration notes
 
-- Mojarra instrumentation suppression key has changed from `executor` to `executors`
+- `java.util.concurrent` executors instrumentation suppression key has changed from `executor` to `executors`
   ([#8451](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8451))
 
 ### 🌟 New javaagent instrumentation
