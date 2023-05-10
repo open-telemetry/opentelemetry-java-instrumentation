@@ -28,5 +28,6 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
     super.configure(options);
     options.setHasResponseCustomizer(
         endpoint -> ServerEndpoint.NOT_FOUND != endpoint && ServerEndpoint.EXCEPTION != endpoint);
+    options.setTestHttpPipelining(false);
   }
 }

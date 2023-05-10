@@ -6,6 +6,8 @@
 package server.base;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -19,6 +21,10 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 public abstract class SpringWebFluxServerTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
+
+  protected static final ServerEndpoint NESTED_PATH =
+      new ServerEndpoint("NESTED_PATH", "nestedPath/hello/world", 200, "nested path");
+
   protected abstract Class<?> getApplicationClass();
 
   @RegisterExtension
@@ -47,14 +53,14 @@ public abstract class SpringWebFluxServerTest
 
   @Override
   public String expectedHttpRoute(ServerEndpoint endpoint) {
-    switch (endpoint) {
-      case PATH_PARAM:
-        return getContextPath() + "/path/{id}/param";
-      case NOT_FOUND:
-        return "/**";
-      default:
-        return super.expectedHttpRoute(endpoint);
+    if (endpoint.equals(PATH_PARAM)) {
+      return getContextPath() + "/path/{id}/param";
+    } else if (endpoint.equals(NOT_FOUND)) {
+      return "/**";
+    } else if (endpoint.equals(NESTED_PATH)) {
+      return "/nestedPath/hello/world";
     }
+    return super.expectedHttpRoute(endpoint);
   }
 
   @Override
@@ -62,5 +68,6 @@ public abstract class SpringWebFluxServerTest
     options.setTestPathParam(true);
     options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasHandlerSpan(unused -> true);
+    options.setTestHttpPipelining(false);
   }
 }

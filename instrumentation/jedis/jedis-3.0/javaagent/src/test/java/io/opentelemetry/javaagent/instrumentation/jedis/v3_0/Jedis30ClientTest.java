@@ -66,10 +66,7 @@ class Jedis30ClientTest {
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP))));
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))));
   }
 
   @Test
@@ -91,10 +88,7 @@ class Jedis30ClientTest {
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP))),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -106,10 +100,7 @@ class Jedis30ClientTest {
                             equalTo(SemanticAttributes.DB_OPERATION, "GET"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP))));
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))));
   }
 
   @Test
@@ -131,10 +122,7 @@ class Jedis30ClientTest {
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP))),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -146,9 +134,6 @@ class Jedis30ClientTest {
                             equalTo(SemanticAttributes.DB_OPERATION, "RANDOMKEY"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP))));
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))));
   }
 }

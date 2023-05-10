@@ -19,4 +19,9 @@ class RatpackForkedHttpServerTest extends AbstractRatpackForkedHttpServerTest im
   boolean hasResponseCustomizer(ServerEndpoint endpoint) {
     true
   }
+
+  @Override
+  boolean testHttpPipelining() {
+    false
+  }
 }

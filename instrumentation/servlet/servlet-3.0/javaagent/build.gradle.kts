@@ -23,6 +23,7 @@ dependencies {
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
 
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
+  testImplementation(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   testLibrary("org.eclipse.jetty:jetty-server:8.0.0.v20110901")
   testLibrary("org.eclipse.jetty:jetty-servlet:8.0.0.v20110901")

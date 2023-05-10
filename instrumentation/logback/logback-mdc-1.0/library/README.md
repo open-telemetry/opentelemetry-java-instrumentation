@@ -44,7 +44,7 @@ logback.xml:
   </appender>
 
   <!-- Just wrap your logging appender, for example ConsoleAppender, with OpenTelemetryAppender -->
-  <appender name="OTEL" class="io.opentelemetry.instrumentation.logback.v1_0.OpenTelemetryAppender">
+  <appender name="OTEL" class="io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender">
     <appender-ref ref="CONSOLE"/>
   </appender>
   ...

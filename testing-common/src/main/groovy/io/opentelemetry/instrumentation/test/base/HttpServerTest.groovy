@@ -144,6 +144,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     true
   }
 
+  boolean testHttpPipelining() {
+    true
+  }
+
   boolean verifyServerSpanEndTime() {
     return true
   }
@@ -152,7 +156,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     [
       SemanticAttributes.HTTP_ROUTE,
-      SemanticAttributes.NET_TRANSPORT,
       SemanticAttributes.NET_SOCK_PEER_PORT
     ] as Set
   }
@@ -218,6 +221,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       options.testPathParam = testPathParam()
       options.testCaptureHttpHeaders = testCapturedHttpHeaders()
       options.testCaptureRequestParameters = testCapturedRequestParameters()
+      options.testHttpPipelining = testHttpPipelining()
     }
 
     // Override trace assertion method. We can call java assertions from groovy but not the other
@@ -313,6 +317,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   def "high concurrency test"() {
     expect:
     junitTest.highConcurrency()
+  }
+
+  def "http pipelining test"() {
+    assumeTrue(testHttpPipelining())
+    expect:
+    junitTest.httpPipelining()
   }
 
   void assertHighConcurrency(int count) {

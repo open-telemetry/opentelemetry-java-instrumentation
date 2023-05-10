@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 
 // only one LoggingCustomizer is allowed, and its presence will suppress the
@@ -21,7 +22,7 @@ public interface LoggingCustomizer {
   // note that if this throws an exception, it will end up calling onStartupFailure, because
   // otherwise that exception will bubble up to OpenTelemetryAgent where a distro cannot control the
   // logging of it.
-  void init();
+  void init(EarlyInitAgentConfig earlyConfig);
 
   /**
    * Register a callback which will be called on synchronous startup success.
@@ -34,7 +35,7 @@ public interface LoggingCustomizer {
 
   /**
    * Register a callback which will be called on synchronous startup failure (including if {@link
-   * #init()} fails).
+   * #init(EarlyInitAgentConfig)} fails).
    *
    * <p>Synchronous startup may or may not include running {@link
    * io.opentelemetry.javaagent.extension.AgentListener#afterAgent(

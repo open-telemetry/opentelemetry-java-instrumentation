@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class AwsSpan {
 
@@ -35,7 +34,6 @@ class AwsSpan {
         "net.protocol.name" "http"
         "net.protocol.version" "1.1"
         "net.peer.name" String
-        "net.transport" IP_TCP
         "net.peer.port" { it == null || it instanceof Number }
       }
     }
@@ -68,7 +66,6 @@ class AwsSpan {
         "net.protocol.version" "1.1"
         "net.peer.name" String
         "net.peer.port" { it == null || it instanceof Number }
-        "net.transport" IP_TCP
       }
     }
   }
@@ -95,7 +92,6 @@ class AwsSpan {
         "net.protocol.version" "1.1"
         "net.peer.name" String
         "net.peer.port" { it == null || it instanceof Number }
-        "net.transport" IP_TCP
       }
     }
   }

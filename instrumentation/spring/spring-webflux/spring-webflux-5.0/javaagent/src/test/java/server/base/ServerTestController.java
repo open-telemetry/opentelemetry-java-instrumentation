@@ -5,6 +5,8 @@
 
 package server.base;
 
+import static server.base.SpringWebFluxServerTest.NESTED_PATH;
+
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.net.URI;
 import java.util.function.Supplier;
@@ -112,6 +114,18 @@ public abstract class ServerTestController {
           response
               .getHeaders()
               .set("X-Test-Response", request.getHeaders().getFirst("X-Test-Request"));
+          return endpoint.getBody();
+        });
+  }
+
+  @GetMapping("/nestedPath")
+  public Mono<String> nested_path(ServerHttpRequest request, ServerHttpResponse response) {
+    ServerEndpoint endpoint = NESTED_PATH;
+
+    return wrapControllerMethod(
+        endpoint,
+        () -> {
+          setStatus(response, endpoint);
           return endpoint.getBody();
         });
   }

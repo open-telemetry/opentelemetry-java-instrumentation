@@ -6,18 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.Inet6Address;
 import javax.annotation.Nullable;
 import org.opensearch.client.Response;
 
 final class OpenSearchRestNetResponseAttributesGetter
     implements NetClientAttributesGetter<OpenSearchRestRequest, Response> {
-
-  @Override
-  public String getTransport(OpenSearchRestRequest request, Response response) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
 
   @Override
   @Nullable

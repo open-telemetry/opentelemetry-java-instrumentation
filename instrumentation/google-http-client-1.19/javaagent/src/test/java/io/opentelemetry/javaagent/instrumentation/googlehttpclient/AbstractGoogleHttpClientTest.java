@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -93,23 +95,15 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs)
-                                    .hasSize(7)
-                                    .containsEntry(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP)
-                                    .containsEntry(SemanticAttributes.NET_PEER_NAME, "localhost")
-                                    .hasEntrySatisfying(
-                                        SemanticAttributes.NET_PEER_PORT,
-                                        port -> assertThat(port).isPositive())
-                                    .containsEntry(SemanticAttributes.HTTP_URL, uri.toString())
-                                    .containsEntry(SemanticAttributes.HTTP_METHOD, "GET")
-                                    .containsEntry(SemanticAttributes.HTTP_STATUS_CODE, 500)
-                                    .hasEntrySatisfying(
-                                        SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                                        length -> assertThat(length).isPositive())),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                            satisfies(SemanticAttributes.NET_PEER_PORT, port -> port.isPositive()),
+                            equalTo(SemanticAttributes.HTTP_URL, uri.toString()),
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 500),
+                            satisfies(
+                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                length -> length.isPositive())),
                 span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(0))));
   }
 

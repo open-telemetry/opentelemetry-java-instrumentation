@@ -35,9 +35,10 @@ jobs:
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v2
 
-  open-issue-on-failure:
-    # open an issue on failure because it can be easy to miss CI failure notifications
+  workflow-notification:
     needs:
       - analyze
-    if: failure() && github.run_attempt == 1
-    uses: ./.github/workflows/reusable-open-issue-on-failure.yml
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.analyze.result == 'success' }}

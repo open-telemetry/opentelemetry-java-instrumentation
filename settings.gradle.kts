@@ -6,17 +6,17 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.3.1"
     id("com.gradle.plugin-publish") version "1.2.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
-    id("org.jetbrains.kotlin.jvm") version "1.8.20"
+    id("org.jetbrains.kotlin.jvm") version "1.8.21"
     id("org.xbib.gradle.plugin.jflex") version "1.7.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
-    id("org.graalvm.buildtools.native") version "0.9.20"
+    id("org.graalvm.buildtools.native") version "0.9.21"
   }
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.12.6"
+  id("com.gradle.enterprise") version "3.13.2"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "1.10"
-  id("org.gradle.toolchains.foojay-resolver-convention") version "0.4.0"
+  id("org.gradle.toolchains.foojay-resolver-convention") version "0.5.0"
 }
 
 dependencyResolutionManagement {
@@ -378,6 +378,7 @@ hideFromDependabot(":instrumentation:okhttp:okhttp-2.2:javaagent")
 hideFromDependabot(":instrumentation:okhttp:okhttp-3.0:javaagent")
 hideFromDependabot(":instrumentation:okhttp:okhttp-3.0:library")
 hideFromDependabot(":instrumentation:okhttp:okhttp-3.0:testing")
+hideFromDependabot(":instrumentation:opencensus-shim:testing")
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")
@@ -459,6 +460,7 @@ hideFromDependabot(":instrumentation:servlet:servlet-common:javaagent")
 hideFromDependabot(":instrumentation:servlet:servlet-javax-common:javaagent")
 hideFromDependabot(":instrumentation:servlet:servlet-2.2:javaagent")
 hideFromDependabot(":instrumentation:servlet:servlet-3.0:javaagent")
+hideFromDependabot(":instrumentation:servlet:servlet-3.0:javaagent-unit-tests")
 hideFromDependabot(":instrumentation:servlet:servlet-5.0:javaagent")
 hideFromDependabot(":instrumentation:spark-2.3:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-batch-3.0:javaagent")
@@ -518,6 +520,7 @@ hideFromDependabot(":instrumentation:vertx:vertx-http-client:vertx-http-client-c
 hideFromDependabot(":instrumentation:vertx:vertx-kafka-client-3.6:javaagent")
 hideFromDependabot(":instrumentation:vertx:vertx-kafka-client-3.6:testing")
 hideFromDependabot(":instrumentation:vertx:vertx-rx-java-3.5:javaagent")
+hideFromDependabot(":instrumentation:vertx:vertx-sql-client-4.0:javaagent")
 hideFromDependabot(":instrumentation:vertx:vertx-web-3.0:javaagent")
 hideFromDependabot(":instrumentation:vertx:vertx-web-3.0:testing")
 hideFromDependabot(":instrumentation:vibur-dbcp-11.0:javaagent")

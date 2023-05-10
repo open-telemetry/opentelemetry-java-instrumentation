@@ -12,9 +12,19 @@ import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 /** Factory of a {@link Resource} which provides information about the current running process. */
 public final class ProcessResource {
+
+  // Note: This pattern doesn't support file paths with spaces in them.
+  // Important: This is statically used in buildResource, so must be declared/initialized first.
+  private static final Pattern JAR_FILE_PATTERN =
+      Pattern.compile("^\\S+\\.(jar|war)", Pattern.CASE_INSENSITIVE);
 
   private static final Resource INSTANCE = buildResource();
 
@@ -63,17 +73,36 @@ public final class ProcessResource {
           .append("bin")
           .append(File.separatorChar)
           .append("java");
-      if (osName != null && osName.toLowerCase().startsWith("windows")) {
+      if (osName != null && osName.toLowerCase(Locale.ROOT).startsWith("windows")) {
         executablePath.append(".exe");
       }
 
       attributes.put(ResourceAttributes.PROCESS_EXECUTABLE_PATH, executablePath.toString());
 
-      StringBuilder commandLine = new StringBuilder(executablePath);
-      for (String arg : runtime.getInputArguments()) {
-        commandLine.append(' ').append(arg);
+      String[] args = ProcessArguments.getProcessArguments();
+      // This will only work with Java 9+ but provides everything except the executablePath.
+      if (args.length > 0) {
+        List<String> commandArgs = new ArrayList<>(args.length + 1);
+        commandArgs.add(executablePath.toString());
+        commandArgs.addAll(Arrays.asList(args));
+        attributes.put(ResourceAttributes.PROCESS_COMMAND_ARGS, commandArgs);
+      } else { // Java 8
+        StringBuilder commandLine = new StringBuilder(executablePath);
+        for (String arg : runtime.getInputArguments()) {
+          commandLine.append(' ').append(arg);
+        }
+        // sun.java.command isn't well document and may not be available on all systems.
+        String javaCommand = System.getProperty("sun.java.command");
+        if (javaCommand != null) {
+          // This property doesn't include -jar when launching a jar directly.  Try to determine
+          // if that's the case and add it back in.
+          if (JAR_FILE_PATTERN.matcher(javaCommand).matches()) {
+            commandLine.append(" -jar");
+          }
+          commandLine.append(' ').append(javaCommand);
+        }
+        attributes.put(ResourceAttributes.PROCESS_COMMAND_LINE, commandLine.toString());
       }
-      attributes.put(ResourceAttributes.PROCESS_COMMAND_LINE, commandLine.toString());
     }
 
     return Resource.create(attributes.build(), ResourceAttributes.SCHEMA_URL);

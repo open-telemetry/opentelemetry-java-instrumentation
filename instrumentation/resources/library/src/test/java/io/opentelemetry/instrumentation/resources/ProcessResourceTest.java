@@ -31,6 +31,8 @@ class ProcessResourceTest {
     assertThat(attributes.get(ResourceAttributes.PROCESS_EXECUTABLE_PATH)).matches(".*[/\\\\]java");
     assertThat(attributes.get(ResourceAttributes.PROCESS_COMMAND_LINE))
         .contains(attributes.get(ResourceAttributes.PROCESS_EXECUTABLE_PATH));
+    // With Java 9+ and a compiled jar, ResourceAttributes.PROCESS_COMMAND_ARGS
+    // will be set instead of ResourceAttributes.PROCESS_COMMAND_LINE
   }
 
   @Test
@@ -45,6 +47,8 @@ class ProcessResourceTest {
         .matches(".*[/\\\\]java\\.exe");
     assertThat(attributes.get(ResourceAttributes.PROCESS_COMMAND_LINE))
         .contains(attributes.get(ResourceAttributes.PROCESS_EXECUTABLE_PATH));
+    // With Java 9+ and a compiled jar, ResourceAttributes.PROCESS_COMMAND_ARGS
+    // will be set instead of ResourceAttributes.PROCESS_COMMAND_LINE
   }
 
   @Nested

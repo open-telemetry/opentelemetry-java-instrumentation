@@ -68,9 +68,16 @@ jobs:
         with:
           arguments: ":smoke-tests:images:fake-backend:dockerPush -PextraTag=${{ env.TAG }}"
 
-  open-issue-on-failure:
+  workflow-notification:
     needs:
       - publishLinux
       - publishWindows
-    if: failure() && github.run_attempt == 1
-    uses: ./.github/workflows/reusable-open-issue-on-failure.yml
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: |
+        ${{
+          needs.publishLinux.result == 'success' &&
+          needs.publishWindows.result == 'success'
+        }}
+

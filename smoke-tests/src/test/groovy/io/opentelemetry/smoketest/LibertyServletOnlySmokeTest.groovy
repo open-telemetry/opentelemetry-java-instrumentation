@@ -35,3 +35,7 @@ class LibertyServletOnly21Jdk11 extends LibertySmokeTest {
 @AppServer(version = "22.0.0.12", jdk = "11")
 class LibertyServletOnly22Jdk11 extends LibertySmokeTest {
 }
+
+@AppServer(version = "23.0.0.3", jdk = "11")
+class LibertyServletOnly23Jdk11 extends LibertySmokeTest {
+}

@@ -5,7 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.forPath;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
@@ -88,7 +95,7 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
           return attributes;
         });
 
-    options.setExpectedException(new IllegalArgumentException(ServerEndpoint.EXCEPTION.getBody()));
+    options.setExpectedException(new IllegalArgumentException(EXCEPTION.getBody()));
     options.setHasResponseCustomizer(serverEndpoint -> true);
   }
 
@@ -112,66 +119,56 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
                       () -> {
                         HttpResponse response;
                         ChannelBuffer responseContent;
-                        switch (endpoint) {
-                          case SUCCESS:
-                          case ERROR:
-                            responseContent =
-                                ChannelBuffers.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
-                            response =
-                                new DefaultHttpResponse(
-                                    HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
-                            response.setContent(responseContent);
-                            break;
-                          case INDEXED_CHILD:
-                            responseContent = ChannelBuffers.EMPTY_BUFFER;
-                            endpoint.collectSpanAttributes(
-                                name ->
-                                    new QueryStringDecoder(uri)
-                                        .getParameters().get(name).stream()
-                                            .findFirst()
-                                            .orElse(null));
-                            response =
-                                new DefaultHttpResponse(
-                                    HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
-                            response.setContent(responseContent);
-                            break;
-                          case QUERY_PARAM:
-                            responseContent =
-                                ChannelBuffers.copiedBuffer(uri.getQuery(), CharsetUtil.UTF_8);
-                            response =
-                                new DefaultHttpResponse(
-                                    HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
-                            response.setContent(responseContent);
-                            break;
-                          case REDIRECT:
-                            responseContent = ChannelBuffers.EMPTY_BUFFER;
-                            response =
-                                new DefaultHttpResponse(
-                                    HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
-                            response.setContent(responseContent);
-                            response.headers().set(LOCATION, endpoint.getBody());
-                            break;
-                          case CAPTURE_HEADERS:
-                            responseContent =
-                                ChannelBuffers.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
-                            response =
-                                new DefaultHttpResponse(
-                                    HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
-                            response
-                                .headers()
-                                .set("X-Test-Response", request.headers().get("X-Test-Request"));
-                            response.setContent(responseContent);
-                            break;
-                          case EXCEPTION:
-                            throw new IllegalArgumentException(endpoint.getBody());
-                          default:
-                            responseContent =
-                                ChannelBuffers.copiedBuffer(NOT_FOUND.getBody(), CharsetUtil.UTF_8);
-                            response =
-                                new DefaultHttpResponse(
-                                    HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
-                            response.setContent(responseContent);
-                            break;
+                        if (SUCCESS.equals(endpoint) || ERROR.equals(endpoint)) {
+                          responseContent =
+                              ChannelBuffers.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
+                          response =
+                              new DefaultHttpResponse(
+                                  HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
+                          response.setContent(responseContent);
+                        } else if (INDEXED_CHILD.equals(endpoint)) {
+                          responseContent = ChannelBuffers.EMPTY_BUFFER;
+                          endpoint.collectSpanAttributes(
+                              name ->
+                                  new QueryStringDecoder(uri)
+                                      .getParameters().get(name).stream().findFirst().orElse(null));
+                          response =
+                              new DefaultHttpResponse(
+                                  HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
+                          response.setContent(responseContent);
+                        } else if (QUERY_PARAM.equals(endpoint)) {
+                          responseContent =
+                              ChannelBuffers.copiedBuffer(uri.getQuery(), CharsetUtil.UTF_8);
+                          response =
+                              new DefaultHttpResponse(
+                                  HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
+                          response.setContent(responseContent);
+                        } else if (REDIRECT.equals(endpoint)) {
+                          responseContent = ChannelBuffers.EMPTY_BUFFER;
+                          response =
+                              new DefaultHttpResponse(
+                                  HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
+                          response.setContent(responseContent);
+                          response.headers().set(LOCATION, endpoint.getBody());
+                        } else if (CAPTURE_HEADERS.equals(endpoint)) {
+                          responseContent =
+                              ChannelBuffers.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
+                          response =
+                              new DefaultHttpResponse(
+                                  HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
+                          response
+                              .headers()
+                              .set("X-Test-Response", request.headers().get("X-Test-Request"));
+                          response.setContent(responseContent);
+                        } else if (EXCEPTION.equals(endpoint)) {
+                          throw new IllegalArgumentException(endpoint.getBody());
+                        } else {
+                          responseContent =
+                              ChannelBuffers.copiedBuffer(NOT_FOUND.getBody(), CharsetUtil.UTF_8);
+                          response =
+                              new DefaultHttpResponse(
+                                  HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
+                          response.setContent(responseContent);
                         }
                         response.headers().set(CONTENT_TYPE, "text/plain");
                         if (responseContent != null) {

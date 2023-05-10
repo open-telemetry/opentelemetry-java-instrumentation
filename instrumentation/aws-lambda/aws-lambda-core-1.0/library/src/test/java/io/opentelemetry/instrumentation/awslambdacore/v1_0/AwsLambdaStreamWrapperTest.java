@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -16,7 +16,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -80,16 +79,12 @@ public class AwsLambdaStreamWrapperTest {
                 span ->
                     span.hasName("my_function")
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                OpenTelemetryAssertions.assertThat(attrs)
-                                    .containsOnly(
-                                        entry(
-                                            ResourceAttributes.CLOUD_RESOURCE_ID,
-                                            "arn:aws:lambda:us-east-1:123456789:function:test"),
-                                        entry(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                                        entry(
-                                            SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333")))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                ResourceAttributes.CLOUD_RESOURCE_ID,
+                                "arn:aws:lambda:us-east-1:123456789:function:test"),
+                            equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
@@ -112,16 +107,12 @@ public class AwsLambdaStreamWrapperTest {
                         .hasKind(SpanKind.SERVER)
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                OpenTelemetryAssertions.assertThat(attrs)
-                                    .containsOnly(
-                                        entry(
-                                            ResourceAttributes.CLOUD_RESOURCE_ID,
-                                            "arn:aws:lambda:us-east-1:123456789:function:test"),
-                                        entry(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                                        entry(
-                                            SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333")))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                ResourceAttributes.CLOUD_RESOURCE_ID,
+                                "arn:aws:lambda:us-east-1:123456789:function:test"),
+                            equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   public static final class TestRequestHandler implements RequestStreamHandler {

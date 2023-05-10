@@ -65,9 +65,6 @@ class Jedis40ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(
@@ -92,9 +89,6 @@ class Jedis40ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(
@@ -109,9 +103,6 @@ class Jedis40ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "GET foo"),
                             equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(
@@ -136,9 +127,6 @@ class Jedis40ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(
@@ -153,9 +141,6 @@ class Jedis40ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "RANDOMKEY"),
                             equalTo(SemanticAttributes.DB_OPERATION, "RANDOMKEY"),
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(

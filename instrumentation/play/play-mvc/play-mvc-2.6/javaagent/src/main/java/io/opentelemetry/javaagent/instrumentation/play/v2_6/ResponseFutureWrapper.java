@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.play.v2_6;
 
 import static io.opentelemetry.javaagent.instrumentation.play.v2_6.Play26Singletons.instrumenter;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import play.api.mvc.Result;
 import scala.concurrent.ExecutionContext;
@@ -21,6 +22,7 @@ public final class ResponseFutureWrapper {
     return future.transform(
         new AbstractFunction1<Result, Result>() {
           @Override
+          @CanIgnoreReturnValue
           public Result apply(Result result) {
             instrumenter().end(context, null, null, null);
             return result;
@@ -28,6 +30,7 @@ public final class ResponseFutureWrapper {
         },
         new AbstractFunction1<Throwable, Throwable>() {
           @Override
+          @CanIgnoreReturnValue
           public Throwable apply(Throwable throwable) {
             instrumenter().end(context, null, null, throwable);
             return throwable;

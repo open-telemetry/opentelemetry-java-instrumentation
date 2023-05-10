@@ -74,10 +74,6 @@ tasks {
       dependsOn(testing.suites)
     }
   }
-
-  withType<Test>().configureEach {
-    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
-  }
 }
 
 // play-test depends on websocket-client

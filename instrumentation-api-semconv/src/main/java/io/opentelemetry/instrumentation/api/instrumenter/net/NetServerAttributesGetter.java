@@ -18,7 +18,9 @@ import javax.annotation.Nullable;
 public interface NetServerAttributesGetter<REQUEST> {
 
   @Nullable
-  String getTransport(REQUEST request);
+  default String getTransport(REQUEST request) {
+    return null;
+  }
 
   /**
    * Returns the application protocol used.

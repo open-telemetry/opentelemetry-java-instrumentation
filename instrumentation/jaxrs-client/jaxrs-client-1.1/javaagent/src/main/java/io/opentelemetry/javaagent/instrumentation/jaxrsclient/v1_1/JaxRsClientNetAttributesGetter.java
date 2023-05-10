@@ -8,16 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1;
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
 final class JaxRsClientNetAttributesGetter
     implements NetClientAttributesGetter<ClientRequest, ClientResponse> {
-
-  @Override
-  public String getTransport(ClientRequest request, @Nullable ClientResponse response) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
 
   @Override
   @Nullable

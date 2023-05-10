@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -73,25 +73,18 @@ public class AwsLambdaSqsEventWrapperTest {
                 span ->
                     span.hasName("my_function")
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs)
-                                    .containsOnly(
-                                        entry(
-                                            ResourceAttributes.CLOUD_RESOURCE_ID,
-                                            "arn:aws:lambda:us-east-1:123456789:function:test"),
-                                        entry(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                                        entry(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"))),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                ResourceAttributes.CLOUD_RESOURCE_ID,
+                                "arn:aws:lambda:us-east-1:123456789:function:test"),
+                            equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
                     span.hasName("otel process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs)
-                                    .containsOnly(
-                                        entry(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
-                                        entry(
-                                            SemanticAttributes.MESSAGING_OPERATION, "process")))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"))));
   }
 
   public static final class TestRequestHandler implements RequestHandler<SQSEvent, Void> {

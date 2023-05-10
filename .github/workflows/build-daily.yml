@@ -36,12 +36,21 @@ jobs:
   misspell-check:
     uses: ./.github/workflows/reusable-misspell-check.yml
 
-  open-issue-on-failure:
+  workflow-notification:
     needs:
       - common
       - test-latest-deps
       - muzzle
       - markdown-link-check
       - misspell-check
-    if: failure() && github.run_attempt == 1
-    uses: ./.github/workflows/reusable-open-issue-on-failure.yml
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: |
+        ${{
+          needs.common.result == 'success' &&
+          needs.test-latest-deps.result == 'success' &&
+          needs.muzzle.result == 'success' &&
+          needs.markdown-link-check.result == 'success' &&
+          needs.misspell-check.result == 'success'
+        }}

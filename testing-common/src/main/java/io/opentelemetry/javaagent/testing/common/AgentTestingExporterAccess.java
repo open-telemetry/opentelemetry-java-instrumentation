@@ -405,7 +405,7 @@ public final class AgentTestingExporterAccess {
     return TestLogRecordData.builder()
         .setResource(resource)
         .setInstrumentationScopeInfo(instrumentationScopeInfo)
-        .setEpoch(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
+        .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
         .setSpanContext(
             SpanContext.create(
                 bytesToHex(logRecord.getTraceId().toByteArray()),

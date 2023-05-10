@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.azurecore.v1_14;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
-import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
@@ -51,8 +51,9 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule {
   public static class EmptyTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
-      return named("com.azure.core.http.policy.AfterRetryPolicyProvider")
-          .or(named("com.azure.core.util.tracing.Tracer"));
+      return namedOneOf(
+          "com.azure.core.http.policy.AfterRetryPolicyProvider",
+          "com.azure.core.util.tracing.Tracer");
     }
 
     @Override

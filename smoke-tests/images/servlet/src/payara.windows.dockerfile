@@ -6,12 +6,13 @@ ARG version
 
 ADD https://s3-eu-west-1.amazonaws.com/payara.fish/Payara+Downloads/${version}/payara-${version}.zip /server.zip
 RUN ["powershell", "-Command", "expand-archive -Path /server.zip -DestinationPath /server"]
-RUN ["powershell", "-Command", "remove-item -Path /server/payara5/glassfish/modules/phonehome-bootstrap.jar"]
+RUN ["powershell", "-Command", "Get-ChildItem -Path /server/ -filter payara* | Rename-Item -NewName payara"]
+RUN ["powershell", "-Command", "remove-item -Path /server/payara/glassfish/modules/phonehome-bootstrap.jar"]
 
 FROM ${jdkImage}-windowsservercore-ltsc2022
 
 # Make /server the base directory to simplify all further paths
-COPY --from=builder /server/payara5 /server
+COPY --from=builder /server/payara /server
 COPY app.war /server/glassfish/domains/domain1/autodeploy/
 COPY launch.bat /server/
 WORKDIR /server

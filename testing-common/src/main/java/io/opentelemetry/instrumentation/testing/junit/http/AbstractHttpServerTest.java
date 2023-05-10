@@ -16,8 +16,10 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
@@ -35,19 +37,39 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
+import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames;
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import io.opentelemetry.testing.internal.armeria.common.HttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.common.QueryParams;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
+import io.opentelemetry.testing.internal.io.netty.bootstrap.Bootstrap;
+import io.opentelemetry.testing.internal.io.netty.buffer.Unpooled;
+import io.opentelemetry.testing.internal.io.netty.channel.Channel;
+import io.opentelemetry.testing.internal.io.netty.channel.ChannelHandlerContext;
+import io.opentelemetry.testing.internal.io.netty.channel.ChannelInitializer;
+import io.opentelemetry.testing.internal.io.netty.channel.ChannelOption;
+import io.opentelemetry.testing.internal.io.netty.channel.ChannelPipeline;
+import io.opentelemetry.testing.internal.io.netty.channel.EventLoopGroup;
+import io.opentelemetry.testing.internal.io.netty.channel.SimpleChannelInboundHandler;
+import io.opentelemetry.testing.internal.io.netty.channel.nio.NioEventLoopGroup;
+import io.opentelemetry.testing.internal.io.netty.channel.socket.SocketChannel;
+import io.opentelemetry.testing.internal.io.netty.channel.socket.nio.NioSocketChannel;
+import io.opentelemetry.testing.internal.io.netty.handler.codec.http.DefaultFullHttpRequest;
+import io.opentelemetry.testing.internal.io.netty.handler.codec.http.DefaultHttpResponse;
+import io.opentelemetry.testing.internal.io.netty.handler.codec.http.HttpClientCodec;
+import io.opentelemetry.testing.internal.io.netty.handler.codec.http.HttpObject;
+import io.opentelemetry.testing.internal.io.netty.handler.codec.http.HttpVersion;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.assertj.core.api.AssertAccess;
 import org.awaitility.Awaitility;
@@ -55,7 +77,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
@@ -94,7 +116,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return GlobalTraceUtil.runWithSpan("controller", () -> closure.get());
   }
 
-  private AggregatedHttpRequest request(ServerEndpoint uri, String method) {
+  protected AggregatedHttpRequest request(ServerEndpoint uri, String method) {
     return AggregatedHttpRequest.of(HttpMethod.valueOf(method), resolveAddress(uri));
   }
 
@@ -158,9 +180,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @ParameterizedTest
-  @EnumSource(
-      value = ServerEndpoint.class,
-      names = {"SUCCESS", "QUERY_PARAM"})
+  @MethodSource("provideServerEndpoints")
   void requestWithQueryString(ServerEndpoint endpoint) {
     String method = "GET";
     AggregatedHttpRequest request = request(endpoint, method);
@@ -171,6 +191,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     String spanId = assertResponseHasCustomizedHeaders(response, endpoint, null);
     assertTheTraces(1, null, null, spanId, method, endpoint, response);
+  }
+
+  private static Stream<ServerEndpoint> provideServerEndpoints() {
+    return Stream.of(ServerEndpoint.SUCCESS, ServerEndpoint.QUERY_PARAM);
   }
 
   @Test
@@ -346,6 +370,88 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertHighConcurrency(count);
   }
 
+  @Test
+  void httpPipelining() throws InterruptedException {
+    assumeTrue(options.testHttpPipelining);
+
+    int count = 10;
+    CountDownLatch countDownLatch = new CountDownLatch(count);
+    ServerEndpoint endpoint = INDEXED_CHILD;
+    TextMapPropagator propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator();
+    TextMapSetter<DefaultFullHttpRequest> setter =
+        (request, key, value) -> request.headers().set(key, value);
+
+    EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+    try {
+      Bootstrap bootstrap = buildBootstrap(eventLoopGroup);
+      Channel channel = bootstrap.connect(address.getHost(), port).sync().channel();
+      channel
+          .pipeline()
+          .addLast(
+              new SimpleChannelInboundHandler<HttpObject>() {
+
+                @Override
+                protected void channelRead0(
+                    ChannelHandlerContext channelHandlerContext, HttpObject httpObject) {
+                  if (httpObject instanceof DefaultHttpResponse) {
+                    countDownLatch.countDown();
+                  }
+                }
+              });
+
+      for (int i = 0; i < count; i++) {
+        int index = i;
+        String target =
+            endpoint.resolvePath(address).getPath().toString()
+                + "?"
+                + ServerEndpoint.ID_PARAMETER_NAME
+                + "="
+                + index;
+
+        testing.runWithSpan(
+            "client " + index,
+            () -> {
+              Span.current().setAttribute(ServerEndpoint.ID_ATTRIBUTE_NAME, index);
+              DefaultFullHttpRequest request =
+                  new DefaultFullHttpRequest(
+                      HttpVersion.HTTP_1_1,
+                      io.opentelemetry.testing.internal.io.netty.handler.codec.http.HttpMethod
+                          .valueOf("GET"),
+                      target,
+                      Unpooled.EMPTY_BUFFER);
+              request.headers().set(HttpHeaderNames.HOST, address.getHost() + ":" + port);
+              request.headers().set(HttpHeaderNames.USER_AGENT, TEST_USER_AGENT);
+              request.headers().set(HttpHeaderNames.X_FORWARDED_FOR, TEST_CLIENT_IP);
+
+              propagator.inject(Context.current(), request, setter);
+              channel.writeAndFlush(request);
+            });
+      }
+
+      countDownLatch.await(30, TimeUnit.SECONDS);
+      assertHighConcurrency(count);
+    } finally {
+      eventLoopGroup.shutdownGracefully().await(10, TimeUnit.SECONDS);
+    }
+  }
+
+  private static Bootstrap buildBootstrap(EventLoopGroup eventLoopGroup) {
+    Bootstrap bootstrap = new Bootstrap();
+    bootstrap
+        .group(eventLoopGroup)
+        .channel(NioSocketChannel.class)
+        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) TimeUnit.SECONDS.toMillis(10))
+        .handler(
+            new ChannelInitializer<SocketChannel>() {
+              @Override
+              protected void initChannel(SocketChannel socketChannel) {
+                ChannelPipeline pipeline = socketChannel.pipeline();
+                pipeline.addLast(new HttpClientCodec());
+              }
+            });
+    return bootstrap;
+  }
+
   protected void assertHighConcurrency(int count) {
     ServerEndpoint endpoint = INDEXED_CHILD;
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
@@ -362,10 +468,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                     span.hasName(rootSpan.getName())
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs)
-                                    .containsEntry(ServerEndpoint.ID_ATTRIBUTE_NAME, requestId)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.longKey(ServerEndpoint.ID_ATTRIBUTE_NAME),
+                                requestId)));
             spanAssertions.add(
                 span -> assertIndexedServerSpan(span, requestId).hasParent(rootSpan));
 
@@ -494,6 +600,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     testing.waitAndAssertTraces(assertions);
   }
 
+  @CanIgnoreReturnValue
   protected SpanDataAssert assertControllerSpan(SpanDataAssert span, Throwable expectedException) {
     span.hasName("controller").hasKind(SpanKind.INTERNAL);
     if (expectedException != null) {
@@ -521,6 +628,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         "errorPageSpanAssertions not implemented in " + getClass().getName());
   }
 
+  @CanIgnoreReturnValue
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
 
@@ -637,26 +745,26 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return name;
   }
 
+  @CanIgnoreReturnValue
   protected SpanDataAssert assertIndexedServerSpan(SpanDataAssert span, int requestId) {
     ServerEndpoint endpoint = INDEXED_CHILD;
     String method = "GET";
     assertServerSpan(span, method, endpoint);
 
     span.hasAttributesSatisfying(
-        attrs ->
-            assertThat(attrs)
-                .containsEntry(
-                    SemanticAttributes.HTTP_TARGET,
-                    endpoint.resolvePath(address).getPath() + "?id=" + requestId));
+        equalTo(
+            SemanticAttributes.HTTP_TARGET,
+            endpoint.resolvePath(address).getPath() + "?id=" + requestId));
 
     return span;
   }
 
+  @CanIgnoreReturnValue
   protected SpanDataAssert assertIndexedControllerSpan(SpanDataAssert span, int requestId) {
     span.hasName("controller")
         .hasKind(SpanKind.INTERNAL)
-        .hasAttributesSatisfying(
-            attrs -> assertThat(attrs).containsEntry(ServerEndpoint.ID_ATTRIBUTE_NAME, requestId));
+        .hasAttributesSatisfyingExactly(
+            equalTo(AttributeKey.longKey(ServerEndpoint.ID_ATTRIBUTE_NAME), requestId));
     return span;
   }
 
@@ -672,13 +780,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       return null;
     }
 
-    switch (endpoint) {
-      case NOT_FOUND:
-        return null;
-      case PATH_PARAM:
-        return options.contextPath + "/path/:id/param";
-      default:
-        return endpoint.resolvePath(address).getPath();
+    if (NOT_FOUND.equals(endpoint)) {
+      return null;
+    } else if (PATH_PARAM.equals(endpoint)) {
+      return options.contextPath + "/path/:id/param";
+    } else {
+      return endpoint.resolvePath(address).getPath();
     }
   }
 }
