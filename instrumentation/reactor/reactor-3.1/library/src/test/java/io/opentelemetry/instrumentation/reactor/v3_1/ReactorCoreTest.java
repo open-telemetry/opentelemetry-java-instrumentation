@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -28,6 +29,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.reactivestreams.Publisher;
 import reactor.core.Scannable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -408,8 +412,9 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
                         .hasAttributes(attributeEntry("onNext", true))));
   }
 
-  @Test
-  void doesNotLeakContextOnRetry() {
+  @ParameterizedTest
+  @ValueSource(strings = {"retry", "retryWhen"})
+  void doesNotLeakContextOnRetry(String retryKind) {
     // retry calls subscribe again from onError where we have active context, check that this
     // context is not used as parent for retried operations
     AtomicBoolean beforeRetry = new AtomicBoolean(true);
@@ -417,34 +422,37 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
         Flux.create(
             sink -> {
               for (int i = 0; i < 2; i++) {
-                Span s =
-                    tracer
-                        .spanBuilder(
-                            "produce " + (beforeRetry.get() ? "before" : "after") + " retry " + i)
-                        .startSpan();
-                try (Scope scope = s.makeCurrent()) {
-                  sink.next(i);
-                } finally {
-                  s.end();
-                }
+                int index = i;
+                testing.runWithSpan(
+                    "produce " + (beforeRetry.get() ? "before" : "after") + " retry " + i,
+                    () -> sink.next(index));
               }
             });
 
-    Flux.defer(() -> publish.delaySubscription(Duration.ofMillis(1)))
-        .doOnNext(
-            message -> {
-              tracer.spanBuilder("process " + message).startSpan().end();
-            })
-        .handle(
-            (message, sink) -> {
-              if (message == 1 && beforeRetry.compareAndSet(true, false)) {
-                sink.error(new RuntimeException("Message has error"));
-              } else {
-                sink.next(message);
-              }
-            })
-        .retry()
-        .subscribe();
+    Flux<Integer> flux =
+        Flux.defer(() -> publish.delaySubscription(Duration.ofMillis(1)))
+            .doOnNext(message -> testing.runWithSpan("process " + message, () -> {}))
+            .handle(
+                (message, sink) -> {
+                  if (message == 1 && beforeRetry.compareAndSet(true, false)) {
+                    sink.error(new RuntimeException("Message has error"));
+                  } else {
+                    sink.next(message);
+                  }
+                });
+
+    switch (retryKind) {
+      case "retry":
+        flux = flux.retry();
+        break;
+      case "retryWhen":
+        flux = retryWhen(flux);
+        break;
+      default:
+        throw new IllegalStateException("Unsupported retry kind " + retryKind);
+    }
+
+    flux.subscribe();
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName(
@@ -468,6 +476,67 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("produce after retry 1").hasNoParent(),
                 span -> span.hasName("process 1").hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void retryWithParentSpan() {
+    AtomicBoolean beforeRetry = new AtomicBoolean(true);
+    Flux<Integer> publish =
+        Flux.create(
+            sink ->
+                testing.runWithSpan(
+                    "produce " + (beforeRetry.get() ? "before" : "after") + " retry",
+                    () -> sink.next(0)));
+
+    Flux<Object> flux =
+        Flux.defer(() -> publish.delaySubscription(Duration.ofMillis(1)))
+            .doOnNext(message -> testing.runWithSpan("process", () -> {}))
+            .handle(
+                (message, sink) -> {
+                  if (beforeRetry.compareAndSet(true, false)) {
+                    sink.error(new RuntimeException("Message has error"));
+                  } else {
+                    sink.next(message);
+                  }
+                })
+            .retry();
+
+    testing.runWithSpan("parent", () -> flux.subscribe());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("produce before retry").hasParent(trace.getSpan(0)),
+                span -> span.hasName("process").hasParent(trace.getSpan(0)),
+                span -> span.hasName("produce after retry").hasParent(trace.getSpan(0)),
+                span -> span.hasName("process").hasParent(trace.getSpan(0))));
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> Flux<T> retryWhen(Flux<T> flux) {
+    try {
+      Method method = Flux.class.getMethod("retryWhen", Function.class);
+      Function<Flux<Throwable>, ? extends Publisher<?>> function =
+          err -> Flux.create(sink -> sink.next(-1));
+      return (Flux<T>) method.invoke(flux, function);
+    } catch (NoSuchMethodException exception) {
+      // ignore
+    } catch (Exception exception) {
+      throw new IllegalStateException(exception);
+    }
+
+    try {
+      Class<?> retryClass = Class.forName("reactor.util.retry.Retry");
+      Method retryWhenMethod = Flux.class.getMethod("retryWhen", retryClass);
+      Method retrySpecMethod = retryClass.getMethod("indefinitely");
+      return (Flux<T>) retryWhenMethod.invoke(flux, retrySpecMethod.invoke(retryClass));
+    } catch (ClassNotFoundException | NoSuchMethodException exception) {
+      // ignore
+    } catch (Exception exception) {
+      throw new IllegalStateException(exception);
+    }
+    throw new IllegalStateException("Could not find retryWhen method");
   }
 
   @SuppressWarnings("unchecked")
