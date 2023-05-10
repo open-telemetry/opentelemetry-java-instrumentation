@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.Locale;
 
 public abstract class ControllerSpringWebFluxServerTest extends SpringWebFluxServerTest {
 
@@ -26,7 +27,7 @@ public abstract class ControllerSpringWebFluxServerTest extends SpringWebFluxSer
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
     String handlerSpanName =
-        ServerTestController.class.getSimpleName() + "." + endpoint.name().toLowerCase();
+        ServerTestController.class.getSimpleName() + "." + endpoint.name().toLowerCase(Locale.ROOT);
     if (endpoint == NOT_FOUND) {
       handlerSpanName = "ResourceWebHandler.handle";
     }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.field;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import net.bytebuddy.agent.builder.AgentBuilder.Identified.Extendable;
 
 final class NoopVirtualFieldImplementationInstaller implements VirtualFieldImplementationInstaller {
@@ -15,11 +16,13 @@ final class NoopVirtualFieldImplementationInstaller implements VirtualFieldImple
   private NoopVirtualFieldImplementationInstaller() {}
 
   @Override
+  @CanIgnoreReturnValue
   public Extendable rewriteVirtualFieldsCalls(Extendable builder) {
     return builder;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Extendable injectFields(Extendable builder) {
     return builder;
   }

@@ -15,6 +15,7 @@ import java.lang.management.RuntimeMXBean;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /** Factory of a {@link Resource} which provides information about the current running process. */
@@ -72,7 +73,7 @@ public final class ProcessResource {
           .append("bin")
           .append(File.separatorChar)
           .append("java");
-      if (osName != null && osName.toLowerCase().startsWith("windows")) {
+      if (osName != null && osName.toLowerCase(Locale.ROOT).startsWith("windows")) {
         executablePath.append(".exe");
       }
 

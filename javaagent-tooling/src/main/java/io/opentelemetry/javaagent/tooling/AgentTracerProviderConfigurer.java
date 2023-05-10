@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.tooling.AgentInstaller.JAVAAGENT_ENABLE
 import static java.util.Collections.emptyList;
 
 import com.google.auto.service.AutoService;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
@@ -27,6 +28,7 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
         AgentTracerProviderConfigurer::configure);
   }
 
+  @CanIgnoreReturnValue
   private static SdkTracerProviderBuilder configure(
       SdkTracerProviderBuilder sdkTracerProviderBuilder, ConfigProperties config) {
     if (!config.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {

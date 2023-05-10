@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.integration.v4_1;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
@@ -137,6 +138,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Message<?> postReceive(Message<?> message, MessageChannel messageChannel) {
     return message;
   }
@@ -146,6 +148,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
       Message<?> message, MessageChannel messageChannel, Exception e) {}
 
   @Override
+  @CanIgnoreReturnValue
   public Message<?> beforeHandle(
       Message<?> message, MessageChannel channel, MessageHandler handler) {
 

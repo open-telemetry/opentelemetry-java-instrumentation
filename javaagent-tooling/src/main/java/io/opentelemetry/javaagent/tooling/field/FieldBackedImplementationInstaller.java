@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldDetector;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
@@ -256,6 +257,7 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
     INSTANCE;
 
     @Override
+    @CanIgnoreReturnValue
     public DynamicType.Builder<?> transform(
         DynamicType.Builder<?> builder,
         TypeDescription typeDescription,

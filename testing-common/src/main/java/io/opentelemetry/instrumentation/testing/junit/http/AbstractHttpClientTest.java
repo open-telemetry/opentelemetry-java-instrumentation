@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -1010,6 +1011,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     return null;
   }
 
+  @CanIgnoreReturnValue
   protected Throwable clientSpanError(URI uri, Throwable exception) {
     return exception;
   }

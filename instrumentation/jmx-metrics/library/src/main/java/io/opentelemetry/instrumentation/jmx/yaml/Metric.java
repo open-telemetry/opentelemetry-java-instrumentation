@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.yaml;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.jmx.engine.MetricInfo;
 import javax.annotation.Nullable;
 
@@ -28,6 +29,7 @@ public class Metric extends MetricStructure {
     this.metric = validateMetricName(metric.trim());
   }
 
+  @CanIgnoreReturnValue
   private String validateMetricName(String name) {
     requireNonEmpty(name, "The metric name is empty");
     return name;

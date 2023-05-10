@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 
 /**
@@ -26,5 +27,6 @@ public interface VirtualFieldMappingsBuilder {
    * @return {@code this}.
    * @see VirtualField
    */
+  @CanIgnoreReturnValue
   VirtualFieldMappingsBuilder register(String typeName, String fieldTypeName);
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -20,6 +21,7 @@ final class SpanSuppressors {
     INSTANCE;
 
     @Override
+    @CanIgnoreReturnValue
     public Context storeInContext(Context context, SpanKind spanKind, Span span) {
       return context;
     }
