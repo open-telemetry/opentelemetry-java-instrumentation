@@ -10,19 +10,17 @@ import static io.opentelemetry.javaagent.instrumentation.thrift.ThriftSingletons
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import javax.annotation.Nullable;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TMessage;
 import org.apache.thrift.protocol.TProtocol;
-import javax.annotation.Nullable;
 
 @SuppressWarnings({"serial"})
 public final class ClientOutProtocolWrapper extends AbstractProtocolWrapper {
   public ThriftRequest request;
   private boolean injected = true;
-  @Nullable
-  public Scope scope;
-  @Nullable
-  public Context context;
+  @Nullable public Scope scope;
+  @Nullable public Context context;
 
   public ClientOutProtocolWrapper(TProtocol protocol) {
     super(protocol);
@@ -55,7 +53,6 @@ public final class ClientOutProtocolWrapper extends AbstractProtocolWrapper {
         clientInstrumenter().end(context, request, 0, e);
       } finally {
         injected = true;
-
       }
     }
     super.writeFieldStop();

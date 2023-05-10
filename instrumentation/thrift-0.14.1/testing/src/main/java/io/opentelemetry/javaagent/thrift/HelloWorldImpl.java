@@ -1,24 +1,29 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.thrift;
 
 import io.opentelemetry.javaagent.thrift.thrifttest.Account;
 import io.opentelemetry.javaagent.thrift.thrifttest.HelloWorldService;
 import io.opentelemetry.javaagent.thrift.thrifttest.User;
 import io.opentelemetry.javaagent.thrift.thrifttest.userAccount;
-import org.apache.thrift.TException;
 import java.util.concurrent.TimeUnit;
+import org.apache.thrift.TException;
 
 public class HelloWorldImpl implements HelloWorldService.Iface {
 
   @Override
   public String sayHello(String zone, String name) throws TException {
-    return "Hello "+zone+"s' "+name;
+    return "Hello " + zone + "s' " + name;
   }
 
   @Override
   public String withDelay(int delay) throws TException {
     try {
       TimeUnit.SECONDS.sleep(delay);
-    }catch (InterruptedException e){
+    } catch (InterruptedException e) {
       throw new AssertionError(e);
     }
     return "delay " + delay;
@@ -40,9 +45,7 @@ public class HelloWorldImpl implements HelloWorldService.Iface {
   }
 
   @Override
-  public void oneWay() throws TException {
-
-  }
+  public void oneWay() throws TException {}
 
   @Override
   public void oneWayWithError() throws TException {
@@ -51,6 +54,6 @@ public class HelloWorldImpl implements HelloWorldService.Iface {
 
   @Override
   public userAccount data(User user, Account account) throws TException {
-    return new userAccount(user,account);
+    return new userAccount(user, account);
   }
 }

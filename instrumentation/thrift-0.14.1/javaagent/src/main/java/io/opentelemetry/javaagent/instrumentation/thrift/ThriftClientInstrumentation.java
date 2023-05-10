@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Field;
@@ -43,7 +44,7 @@ public final class ThriftClientInstrumentation implements TypeInstrumentation {
         ThriftClientInstrumentation.class.getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         isMethod().and(returns(void.class)),
-    ThriftClientInstrumentation.class.getName() + "$ClientOneWayAdvice");
+        ThriftClientInstrumentation.class.getName() + "$ClientOneWayAdvice");
   }
 
   @SuppressWarnings({"unchecked"})

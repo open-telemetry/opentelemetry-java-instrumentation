@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.thrift;
 
+import javax.annotation.Nullable;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.server.ServerContext;
 import org.apache.thrift.server.TServerEventHandler;
 import org.apache.thrift.transport.TTransport;
-import javax.annotation.Nullable;
 
 public final class ThriftServerEventHandler implements TServerEventHandler {
   public TServerEventHandler innerEventHandler;

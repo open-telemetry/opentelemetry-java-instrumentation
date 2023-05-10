@@ -8,12 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.thrift;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TField;
 import org.apache.thrift.protocol.TMap;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TType;
-import javax.annotation.Nullable;
 
 public final class ThriftRequest {
   public TProtocol iport;

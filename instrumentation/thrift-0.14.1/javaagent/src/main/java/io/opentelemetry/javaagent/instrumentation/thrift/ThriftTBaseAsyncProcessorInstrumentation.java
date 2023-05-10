@@ -66,11 +66,11 @@ public final class ThriftTBaseAsyncProcessorInstrumentation implements TypeInstr
       if (inpot instanceof ServerInProtocolWrapper) {
         Context context = ((ServerInProtocolWrapper) inpot).context;
         ThriftRequest request = ((ServerInProtocolWrapper) inpot).request;
-        if(context!= null && request != null) {
+        if (context != null && request != null) {
           serverInstrumenter().end(context, request, 0, null);
         }
         Thread.dumpStack();
-        if(((ServerInProtocolWrapper) inpot).scope != null) {
+        if (((ServerInProtocolWrapper) inpot).scope != null) {
           ((ServerInProtocolWrapper) inpot).scope.close();
         }
       }

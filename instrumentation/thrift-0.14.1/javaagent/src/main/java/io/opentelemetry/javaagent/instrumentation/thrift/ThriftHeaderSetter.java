@@ -13,7 +13,7 @@ public enum ThriftHeaderSetter implements TextMapSetter<ThriftRequest> {
 
   @Override
   public void set(@Nullable ThriftRequest request, String key, String value) {
-    if(request != null) {
+    if (request != null) {
       request.setAttachment(key, value);
     }
   }
