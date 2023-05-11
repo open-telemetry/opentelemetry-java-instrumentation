@@ -22,12 +22,6 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   }
 
   @Override
-  public String getTarget(Request request) {
-    // Uri is the path + query string, not a full URL
-    return request.getUri();
-  }
-
-  @Override
   @Nullable
   public String getScheme(Request request) {
     Context ratpackContext = request.get(Context.class);
@@ -39,6 +33,18 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
       return null;
     }
     return publicAddress.get().getScheme();
+  }
+
+  @Override
+  public String getPath(Request request) {
+    String path = request.getPath();
+    return path.startsWith("/") ? path : "/" + path;
+  }
+
+  @Nullable
+  @Override
+  public String getQuery(Request request) {
+    return request.getQuery();
   }
 
   @Override
