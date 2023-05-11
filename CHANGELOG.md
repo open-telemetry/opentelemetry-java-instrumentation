@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 1.26.0 (2023-05-10)
 
 ### Migration notes
 
