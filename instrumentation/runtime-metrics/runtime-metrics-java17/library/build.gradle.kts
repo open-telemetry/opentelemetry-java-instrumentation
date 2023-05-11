@@ -14,7 +14,7 @@ tasks.create("generateDocs", JavaExec::class) {
   group = "build"
   description = "Generate table for README.md"
   classpath = sourceSets.test.get().runtimeClasspath
-  mainClass.set("io.opentelemetry.instrumentation.runtimemetricsjava17.GenerateDocs")
+  mainClass.set("io.opentelemetry.instrumentation.runtimemetrics.GenerateDocs")
   systemProperties.set("jfr.readme.path", project.projectDir.toString() + "/README.md")
 }
 tasks {
