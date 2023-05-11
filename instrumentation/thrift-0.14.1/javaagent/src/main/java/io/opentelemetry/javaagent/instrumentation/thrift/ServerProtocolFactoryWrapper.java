@@ -14,12 +14,12 @@ public final class ServerProtocolFactoryWrapper implements TProtocolFactory {
   public TProtocolFactory innerProtocolFactoryWrapper;
 
   @Override
-  public TProtocol getProtocol(TTransport tTransport) {
-    TProtocol protocol = innerProtocolFactoryWrapper.getProtocol(tTransport);
+  public TProtocol getProtocol(TTransport transport) {
+    TProtocol protocol = innerProtocolFactoryWrapper.getProtocol(transport);
     if (protocol instanceof ServerInProtocolWrapper) {
       return protocol;
     }
-    return new ServerInProtocolWrapper(innerProtocolFactoryWrapper.getProtocol(tTransport));
+    return new ServerInProtocolWrapper(innerProtocolFactoryWrapper.getProtocol(transport));
   }
 
   public ServerProtocolFactoryWrapper(TProtocolFactory inner) {

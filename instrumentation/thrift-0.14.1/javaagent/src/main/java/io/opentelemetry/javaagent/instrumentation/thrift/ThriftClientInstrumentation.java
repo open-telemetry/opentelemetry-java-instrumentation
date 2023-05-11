@@ -66,7 +66,6 @@ public final class ThriftClientInstrumentation implements TypeInstrumentation {
                 "arg_" + args.fieldForId(i), args.getFieldValue(args.fieldForId(i)).toString());
             i++;
           } catch (Throwable e) {
-            System.out.println(e.toString());
             break;
           }
         } else {
@@ -110,14 +109,13 @@ public final class ThriftClientInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
-        @Advice.This TServiceClient client, @Advice.Argument(0) TProtocol protocol) {
-      try {
+        @Advice.This TServiceClient client, @Advice.Argument(0) TProtocol protocol)
+        throws NoSuchFieldException, IllegalAccessException {
+
         Field field = TServiceClient.class.getDeclaredField("oprot_");
         field.setAccessible(true);
         field.set(client, new ClientOutProtocolWrapper(protocol));
-      } catch (Throwable e) {
-        System.out.println(e.toString());
-      }
+
     }
   }
 }

@@ -5,8 +5,8 @@ plugins {
 muzzle {
   pass {
     group.set("org.apache.thrift")
-    module.set("apache-thrift")
-    versions.set("0.14.1")
+    module.set("libthrift")
+    versions.set("[0.14.1,)")
   }
 }
 

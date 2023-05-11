@@ -31,9 +31,9 @@ public final class ThriftServerEventHandler implements TServerEventHandler {
 
   @Override
   @Nullable
-  public ServerContext createContext(TProtocol tProtocol, TProtocol tProtocol1) {
+  public ServerContext createContext(TProtocol protocol, TProtocol protocol1) {
     if (innerEventHandler != null) {
-      return innerEventHandler.createContext(tProtocol, tProtocol1);
+      return innerEventHandler.createContext(protocol, protocol1);
     }
     return null;
   }
@@ -48,9 +48,9 @@ public final class ThriftServerEventHandler implements TServerEventHandler {
 
   @Override
   public void processContext(
-      ServerContext serverContext, TTransport tTransport, TTransport tTransport1) {
+      ServerContext serverContext, TTransport transport, TTransport transport1) {
     if (innerEventHandler != null) {
-      innerEventHandler.processContext(serverContext, tTransport, tTransport1);
+      innerEventHandler.processContext(serverContext, transport, transport1);
     }
   }
 }

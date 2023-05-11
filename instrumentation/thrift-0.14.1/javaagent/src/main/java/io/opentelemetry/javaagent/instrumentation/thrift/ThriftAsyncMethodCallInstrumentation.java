@@ -32,18 +32,18 @@ public final class ThriftAsyncMethodCallInstrumentation implements TypeInstrumen
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(named("write_args")).and(takesArguments(1)),
-        ThriftAsyncMethodCallInstrumentation.class.getName() + "$methodAdvice");
+        ThriftAsyncMethodCallInstrumentation.class.getName() + "$MethodAdvice");
     transformer.applyAdviceToMethod(
         isConstructor(),
         ThriftAsyncMethodCallInstrumentation.class.getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings({"unused"})
-  public static class methodAdvice {
+  public static class MethodAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(0) TProtocol protocol, @Advice.This TAsyncMethodCall<Object> methodCall) {
-      try {
+        @Advice.Argument(0) TProtocol protocol, @Advice.This TAsyncMethodCall<Object> methodCall)
+        throws IllegalAccessException {
         if (protocol instanceof ClientOutProtocolWrapper) {
           ((ClientOutProtocolWrapper) protocol).request.methodName =
               methodCall.getClass().getSimpleName();
@@ -54,16 +54,13 @@ public final class ThriftAsyncMethodCallInstrumentation implements TypeInstrumen
                 .request.addArgs("arg_" + f.getName(), tmp.toString());
           }
         }
-      } catch (Throwable e) {
-        System.out.println(e.toString());
-      }
     }
 
     @SuppressWarnings({"unchecked"})
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) TProtocol protocol, @Advice.This TAsyncMethodCall<?> methodCall) {
-      try {
+        @Advice.Argument(0) TProtocol protocol, @Advice.This TAsyncMethodCall<?> methodCall)
+        throws NoSuchFieldException, IllegalAccessException {
         if (protocol instanceof ClientOutProtocolWrapper) {
           Field field = TAsyncMethodCall.class.getDeclaredField("callback");
           field.setAccessible(true);
@@ -76,9 +73,6 @@ public final class ThriftAsyncMethodCallInstrumentation implements TypeInstrumen
                 ((ClientOutProtocolWrapper) protocol).request;
           }
         }
-      } catch (Throwable e) {
-        System.out.println(e.toString());
-      }
     }
   }
 
@@ -91,16 +85,12 @@ public final class ThriftAsyncMethodCallInstrumentation implements TypeInstrumen
       Field field = TAsyncMethodCall.class.getDeclaredField("callback");
       field.setAccessible(true);
       AsyncMethodCallback<Object> callback = (AsyncMethodCallback<Object>) field.get(methodCall);
-      try {
         if (callback instanceof AsyncMethodCallbackWrapper) {
           return;
         }
         AsyncMethodCallbackWrapper<Object> asyncMethodCallback =
             new AsyncMethodCallbackWrapper<Object>(callback);
         field.set(methodCall, asyncMethodCallback);
-      } catch (Throwable e) {
-        System.out.println(e.toString());
-      }
     }
   }
 }

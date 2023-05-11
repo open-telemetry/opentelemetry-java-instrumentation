@@ -47,16 +47,15 @@ public final class ThriftAsyncClientInstrumentation implements TypeInstrumentati
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This TAsyncClient client,
-        @Advice.FieldValue("___protocolFactory") TProtocolFactory inputTProtocolFactory) {
-      try {
+        @Advice.FieldValue("___protocolFactory") TProtocolFactory inputProtocolFactory)
+        throws NoSuchFieldException, IllegalAccessException {
+
         Field field = TAsyncClient.class.getDeclaredField("___protocolFactory");
         field.setAccessible(true);
         ClientProtocolFactoryWrapper factoryWrapper =
-            new ClientProtocolFactoryWrapper(inputTProtocolFactory);
+            new ClientProtocolFactoryWrapper(inputProtocolFactory);
         field.set(client, factoryWrapper);
-      } catch (Throwable e) {
-        System.out.println(e.toString());
-      }
+
     }
   }
 }

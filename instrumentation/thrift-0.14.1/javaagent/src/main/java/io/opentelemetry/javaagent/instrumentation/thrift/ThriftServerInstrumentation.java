@@ -21,7 +21,7 @@ import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TServerEventHandler;
 
-public final class ThriftTServerInstrumentation implements TypeInstrumentation {
+public final class ThriftServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("org.apache.thrift.server.TServer"))
@@ -32,9 +32,9 @@ public final class ThriftTServerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(named("getProtocol")),
-        ThriftTServerInstrumentation.class.getName() + "$ServerAdvice");
+        ThriftServerInstrumentation.class.getName() + "$ServerAdvice");
     transformer.applyAdviceToMethod(
-        isConstructor(), ThriftTServerInstrumentation.class.getName() + "$ConstructorAdvice");
+        isConstructor(), ThriftServerInstrumentation.class.getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -50,16 +50,15 @@ public final class ThriftTServerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This TServer server,
-        @Advice.FieldValue("inputProtocolFactory_") TProtocolFactory inputTProtocolFactory) {
-      try {
+        @Advice.FieldValue("inputProtocolFactory_") TProtocolFactory inputProtocolFactory)
+        throws IllegalAccessException, NoSuchFieldException {
+
         Field field = TServer.class.getDeclaredField("inputProtocolFactory_");
         field.setAccessible(true);
         ServerProtocolFactoryWrapper factoryWrapper =
-            new ServerProtocolFactoryWrapper(inputTProtocolFactory);
+            new ServerProtocolFactoryWrapper(inputProtocolFactory);
         field.set(server, factoryWrapper);
-      } catch (Throwable e) {
-        System.out.println(e.toString());
-      }
+
     }
   }
 
@@ -68,14 +67,13 @@ public final class ThriftTServerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This TServer server,
-        @Advice.FieldValue("eventHandler_") TServerEventHandler eventHandler) {
-      try {
+        @Advice.FieldValue("eventHandler_") TServerEventHandler eventHandler)
+        throws NoSuchFieldException, IllegalAccessException {
+
         Field eventHandleField = TServer.class.getDeclaredField("eventHandler_");
         eventHandleField.setAccessible(true);
         eventHandleField.set(server, new ThriftServerEventHandler(eventHandler));
-      } catch (Throwable e) {
-        System.out.println(e.toString());
-      }
+
     }
   }
 }

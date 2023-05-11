@@ -23,10 +23,10 @@ public final class ThriftInstrumentationModule extends InstrumentationModule {
 
     return asList(
         new ThriftClientInstrumentation(),
-        new ThriftTServerInstrumentation(),
-        new ThriftTBaseProcessorInstrumentation(),
+        new ThriftServerInstrumentation(),
+        new ThriftBaseProcessorInstrumentation(),
         new ThriftAsyncClientInstrumentation(),
-        new ThriftTBaseAsyncProcessorInstrumentation(),
+        new ThriftBaseAsyncProcessorInstrumentation(),
         new ThriftAsyncMethodCallInstrumentation());
   }
 }

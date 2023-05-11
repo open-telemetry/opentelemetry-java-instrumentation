@@ -37,7 +37,7 @@ public final class ServerInProtocolWrapper extends AbstractProtocolWrapper {
   }
 
   @Nullable
-  public TTransport getRTransport() {
+  public TTransport getRawTransport() {
     try {
       if (this.trans_ instanceof TSocket) {
         return this.trans_;
@@ -48,7 +48,6 @@ public final class ServerInProtocolWrapper extends AbstractProtocolWrapper {
         return getInner(this.trans_);
       }
     } catch (Throwable e) {
-      System.out.println(e.toString());
       return null;
     }
   }
@@ -108,14 +107,11 @@ public final class ServerInProtocolWrapper extends AbstractProtocolWrapper {
         try {
           scope = context.makeCurrent();
         } catch (Throwable e) {
-          System.out.println(e.toString());
           if (scope != null) {
             scope.close();
           }
           serverInstrumenter().end(context, request, 0, e);
         }
-      } catch (Throwable e) {
-        System.out.println(e.toString());
       } finally {
         super.readMapEnd();
         super.readFieldEnd();

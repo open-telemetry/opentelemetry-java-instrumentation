@@ -1,2 +1,9 @@
 Comparing source compatibility of  against 
-No changes.
+---! REMOVED ANNOTATION: PUBLIC(-) ABSTRACT(-) io.opentelemetry.instrumentation.annotations.AddingSpanAttributes  (not serializable)
+	---  CLASS FILE FORMAT VERSION: n.a. <- 52.0
+	---! REMOVED INTERFACE: java.lang.annotation.Annotation
+	---! REMOVED SUPERCLASS: java.lang.Object
+	---  REMOVED ANNOTATION: java.lang.annotation.Target
+		---  REMOVED ELEMENT: value=java.lang.annotation.ElementType.METHOD,java.lang.annotation.ElementType.CONSTRUCTOR (-)
+	---  REMOVED ANNOTATION: java.lang.annotation.Retention
+		---  REMOVED ELEMENT: value=java.lang.annotation.RetentionPolicy.RUNTIME (-)
