@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## Version 1.26.0 (2023-05-10)
+## Version 1.26.0 (2023-05-11)
 
 ### Migration notes
 
