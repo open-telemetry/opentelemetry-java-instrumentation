@@ -12,10 +12,16 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attri
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Metrics;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.metrics.internal.aggregator.ExplicitBucketHistogramUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractDistributionSummaryTest {
+
+  static final double[] DEFAULT_BUCKETS =
+      ExplicitBucketHistogramUtils.DEFAULT_HISTOGRAM_BUCKET_BOUNDARIES.stream()
+          .mapToDouble(d -> d)
+          .toArray();
 
   protected abstract InstrumentationExtension testing();
 
@@ -57,7 +63,8 @@ public abstract class AbstractDistributionSummaryTest {
                                             point
                                                 .hasSum(7)
                                                 .hasCount(3)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributes(attributeEntry("tag", "value"))
+                                                .hasBucketBoundaries(DEFAULT_BUCKETS)))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -135,7 +142,9 @@ public abstract class AbstractDistributionSummaryTest {
                                             points
                                                 .hasSum(555.5)
                                                 .hasCount(4)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributes(attributeEntry("tag", "value"))
+                                                .hasBucketBoundaries(1, 10, 100, 1000)
+                                                .hasBucketCounts(1, 1, 1, 1, 0)))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
