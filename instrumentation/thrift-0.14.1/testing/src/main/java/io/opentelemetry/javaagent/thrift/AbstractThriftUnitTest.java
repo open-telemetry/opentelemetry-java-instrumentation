@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.thrift.thrifttest.Account;
 import io.opentelemetry.javaagent.thrift.thrifttest.HelloWorldService;
 import io.opentelemetry.javaagent.thrift.thrifttest.User;
-import io.opentelemetry.javaagent.thrift.thrifttest.userAccount;
+import io.opentelemetry.javaagent.thrift.thrifttest.UserAccount;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import org.apache.thrift.TException;
@@ -58,8 +58,8 @@ public abstract class AbstractThriftUnitTest {
   }
 
   @Test
-  public void SyncClientTSimpleServer() throws TException {
-    startTSimpleServer();
+  public void syncClientSimpleServer() throws TException {
+    startSimpleServer();
     TTransport transport = new TSocket("localhost", port);
     transport.open();
     TProtocol protocol = new TBinaryProtocol(transport);
@@ -67,7 +67,6 @@ public abstract class AbstractThriftUnitTest {
     HelloWorldService.Client client = new HelloWorldService.Client(protocol);
     String response = testing().runWithSpan("parent", () -> client.sayHello("US", "Bob"));
     assertThat(response).isEqualTo("Hello " + "US" + "s' " + "Bob");
-    System.out.println("???");
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -93,7 +92,7 @@ public abstract class AbstractThriftUnitTest {
   }
 
   @Test
-  public void NonBlockClientNonBlockingServer() throws TException {
+  public void nonBlockClientNonBlockingServer() throws TException {
     startNonBlockingServer();
     TTransport transport = new TSocket("localhost", port);
     TFramedTransport framedTransport = new TFramedTransport(transport);
@@ -128,7 +127,7 @@ public abstract class AbstractThriftUnitTest {
   }
 
   @Test
-  public void ManyCallParallel() throws TException {
+  public void manyCallParallel() throws TException {
     startNonBlockingServer();
     for (int i = 0; i < 4; i++) {
       new Thread(
@@ -184,7 +183,7 @@ public abstract class AbstractThriftUnitTest {
   }
 
   @Test
-  public void AsyncClientNonBlockingServer() throws TException, IOException {
+  public void asyncClientNonBlockingServer() throws TException, IOException {
     startNonBlockingServer();
     TAsyncClientManager clientManager = new TAsyncClientManager();
     TProtocolFactory protocolFactory = new TBinaryProtocol.Factory();
@@ -230,7 +229,7 @@ public abstract class AbstractThriftUnitTest {
   }
 
   @Test
-  public void AsyncMany() throws TException, IOException {
+  public void asyncMany() throws TException, IOException {
     startNonBlockingServer();
     for (int i = 1; i < 4; i++) {
       TAsyncClientManager clientManager = new TAsyncClientManager();
@@ -279,7 +278,7 @@ public abstract class AbstractThriftUnitTest {
   }
 
   @Test
-  public void AsyncClientAsyncServer() throws TException, IOException {
+  public void asyncClientAsyncServer() throws TException, IOException {
     startAsyncServer();
     TAsyncClientManager clientManager = new TAsyncClientManager();
     TProtocolFactory protocolFactory = new TBinaryProtocol.Factory();
@@ -325,7 +324,7 @@ public abstract class AbstractThriftUnitTest {
 
   @Test
   public void withNoArgs() throws TException {
-    startTSimpleServer();
+    startSimpleServer();
     TTransport transport = new TSocket("localhost", port);
     transport.open();
     TProtocol protocol = new TBinaryProtocol(transport);
@@ -437,7 +436,7 @@ public abstract class AbstractThriftUnitTest {
 
   @Test
   public void oneWay() throws TException {
-    startTSimpleServer();
+    startSimpleServer();
     TTransport transport = new TSocket("localhost", port);
     transport.open();
     TProtocol protocol = new TBinaryProtocol(transport);
@@ -471,14 +470,14 @@ public abstract class AbstractThriftUnitTest {
 
   @Test
   public void withStruct() throws TException {
-    startTSimpleServer();
+    startSimpleServer();
     TTransport transport = new TSocket("localhost", port);
     transport.open();
     TProtocol protocol = new TBinaryProtocol(transport);
     User user = new User("Bob", "1", 20);
     Account account = new Account("US", "123456");
     HelloWorldService.Client client = new HelloWorldService.Client(protocol);
-    userAccount response = testing().runWithSpan("parent", () -> client.data(user, account));
+    UserAccount response = testing().runWithSpan("parent", () -> client.data(user, account));
 
     assertThat(response.user).isEqualTo(user);
     assertThat(response.account).isEqualTo(account);
@@ -551,7 +550,7 @@ public abstract class AbstractThriftUnitTest {
         .start();
   }
 
-  private void startTSimpleServer() throws TTransportException {
+  private void startSimpleServer() throws TTransportException {
     HelloWorldImpl impl = new HelloWorldImpl();
     // 接口与实现类的绑定关系在这里完成
     HelloWorldService.Processor<HelloWorldImpl> processor =
@@ -565,7 +564,6 @@ public abstract class AbstractThriftUnitTest {
               @Override
               public void run() {
                 server.serve();
-                System.out.println("at");
               }
             })
         .start();

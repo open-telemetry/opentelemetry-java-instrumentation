@@ -9,7 +9,7 @@ import com.google.common.base.VerifyException;
 import io.opentelemetry.javaagent.thrift.thrifttest.Account;
 import io.opentelemetry.javaagent.thrift.thrifttest.HelloWorldService;
 import io.opentelemetry.javaagent.thrift.thrifttest.User;
-import io.opentelemetry.javaagent.thrift.thrifttest.userAccount;
+import io.opentelemetry.javaagent.thrift.thrifttest.UserAccount;
 import java.util.concurrent.TimeUnit;
 import org.apache.thrift.TException;
 import org.apache.thrift.async.AsyncMethodCallback;
@@ -56,9 +56,9 @@ public class HelloWorldAsyncImpl implements HelloWorldService.AsyncIface {
   }
 
   @Override
-  public void data(User user, Account account, AsyncMethodCallback<userAccount> resultHandler)
+  public void data(User user, Account account, AsyncMethodCallback<UserAccount> resultHandler)
       throws TException {
-    resultHandler.onComplete(new userAccount(user, account));
+    resultHandler.onComplete(new UserAccount(user, account));
     ;
   }
 }

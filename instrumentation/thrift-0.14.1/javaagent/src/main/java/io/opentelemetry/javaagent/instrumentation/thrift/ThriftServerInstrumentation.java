@@ -53,12 +53,11 @@ public final class ThriftServerInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("inputProtocolFactory_") TProtocolFactory inputProtocolFactory)
         throws IllegalAccessException, NoSuchFieldException {
 
-        Field field = TServer.class.getDeclaredField("inputProtocolFactory_");
-        field.setAccessible(true);
-        ServerProtocolFactoryWrapper factoryWrapper =
-            new ServerProtocolFactoryWrapper(inputProtocolFactory);
-        field.set(server, factoryWrapper);
-
+      Field field = TServer.class.getDeclaredField("inputProtocolFactory_");
+      field.setAccessible(true);
+      ServerProtocolFactoryWrapper factoryWrapper =
+          new ServerProtocolFactoryWrapper(inputProtocolFactory);
+      field.set(server, factoryWrapper);
     }
   }
 
@@ -70,10 +69,9 @@ public final class ThriftServerInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("eventHandler_") TServerEventHandler eventHandler)
         throws NoSuchFieldException, IllegalAccessException {
 
-        Field eventHandleField = TServer.class.getDeclaredField("eventHandler_");
-        eventHandleField.setAccessible(true);
-        eventHandleField.set(server, new ThriftServerEventHandler(eventHandler));
-
+      Field eventHandleField = TServer.class.getDeclaredField("eventHandler_");
+      eventHandleField.setAccessible(true);
+      eventHandleField.set(server, new ThriftServerEventHandler(eventHandler));
     }
   }
 }

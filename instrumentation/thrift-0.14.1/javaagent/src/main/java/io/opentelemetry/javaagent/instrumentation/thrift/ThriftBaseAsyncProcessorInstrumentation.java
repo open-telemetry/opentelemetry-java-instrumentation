@@ -43,18 +43,16 @@ public final class ThriftBaseAsyncProcessorInstrumentation implements TypeInstru
         @Advice.This TBaseAsyncProcessor<?> processor)
         throws NoSuchFieldException, IllegalAccessException {
 
-        TProtocol inpot = fb.getInputProtocol();
-        Field field = AbstractNonblockingServer.FrameBuffer.class.getDeclaredField("trans_");
-        field.setAccessible(true);
-        TNonblockingSocket trans = (TNonblockingSocket) field.get(fb);
-        ((ServerInProtocolWrapper) inpot).request.host =
-            trans.getSocketChannel().socket().getInetAddress().getHostAddress();
-        ((ServerInProtocolWrapper) inpot).request.port =
-            trans.getSocketChannel().socket().getPort();
-        Field field2 = AbstractNonblockingServer.FrameBuffer.class.getDeclaredField("inProt_");
-        field2.setAccessible(true);
-        field2.set(fb, inpot);
-
+      TProtocol inpot = fb.getInputProtocol();
+      Field field = AbstractNonblockingServer.FrameBuffer.class.getDeclaredField("trans_");
+      field.setAccessible(true);
+      TNonblockingSocket trans = (TNonblockingSocket) field.get(fb);
+      ((ServerInProtocolWrapper) inpot).request.host =
+          trans.getSocketChannel().socket().getInetAddress().getHostAddress();
+      ((ServerInProtocolWrapper) inpot).request.port = trans.getSocketChannel().socket().getPort();
+      Field field2 = AbstractNonblockingServer.FrameBuffer.class.getDeclaredField("inProt_");
+      field2.setAccessible(true);
+      field2.set(fb, inpot);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

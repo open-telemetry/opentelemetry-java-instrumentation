@@ -29,7 +29,7 @@ public class HelloWorldService {
 
     public void oneWayWithError() throws org.apache.thrift.TException;
 
-    public userAccount data(User user, Account account) throws org.apache.thrift.TException;
+    public UserAccount data(User user, Account account) throws org.apache.thrift.TException;
   }
 
   public interface AsyncIface {
@@ -66,7 +66,7 @@ public class HelloWorldService {
     public void data(
         User user,
         Account account,
-        org.apache.thrift.async.AsyncMethodCallback<userAccount> resultHandler)
+        org.apache.thrift.async.AsyncMethodCallback<UserAccount> resultHandler)
         throws org.apache.thrift.TException;
   }
 
@@ -104,14 +104,14 @@ public class HelloWorldService {
 
     public void send_sayHello(java.lang.String zone, java.lang.String name)
         throws org.apache.thrift.TException {
-      sayHello_args args = new sayHello_args();
+      SayHelloArgs args = new SayHelloArgs();
       args.setZone(zone);
       args.setName(name);
       sendBase("sayHello", args);
     }
 
     public java.lang.String recv_sayHello() throws org.apache.thrift.TException {
-      sayHello_result result = new sayHello_result();
+      SayHelloResult result = new SayHelloResult();
       receiveBase(result, "sayHello");
       if (result.isSetSuccess()) {
         return result.success;
@@ -128,13 +128,13 @@ public class HelloWorldService {
     }
 
     public void send_withDelay(int delay) throws org.apache.thrift.TException {
-      withDelay_args args = new withDelay_args();
+      WithDelayArgs args = new WithDelayArgs();
       args.setDelay(delay);
       sendBase("withDelay", args);
     }
 
     public java.lang.String recv_withDelay() throws org.apache.thrift.TException {
-      withDelay_result result = new withDelay_result();
+      WithDelayResult result = new WithDelayResult();
       receiveBase(result, "withDelay");
       if (result.isSetSuccess()) {
         return result.success;
@@ -151,12 +151,12 @@ public class HelloWorldService {
     }
 
     public void send_withoutArgs() throws org.apache.thrift.TException {
-      withoutArgs_args args = new withoutArgs_args();
+      WithoutArgsArgs args = new WithoutArgsArgs();
       sendBase("withoutArgs", args);
     }
 
     public java.lang.String recv_withoutArgs() throws org.apache.thrift.TException {
-      withoutArgs_result result = new withoutArgs_result();
+      WithoutArgsResult result = new WithoutArgsResult();
       receiveBase(result, "withoutArgs");
       if (result.isSetSuccess()) {
         return result.success;
@@ -173,12 +173,12 @@ public class HelloWorldService {
     }
 
     public void send_withError() throws org.apache.thrift.TException {
-      withError_args args = new withError_args();
+      WithErrorArgs args = new WithErrorArgs();
       sendBase("withError", args);
     }
 
     public java.lang.String recv_withError() throws org.apache.thrift.TException {
-      withError_result result = new withError_result();
+      WithErrorResult result = new WithErrorResult();
       receiveBase(result, "withError");
       if (result.isSetSuccess()) {
         return result.success;
@@ -196,13 +196,13 @@ public class HelloWorldService {
     }
 
     public void send_withCollisioin(java.lang.String input) throws org.apache.thrift.TException {
-      withCollisioin_args args = new withCollisioin_args();
+      WithCollisioinArgs args = new WithCollisioinArgs();
       args.setInput(input);
       sendBase("withCollisioin", args);
     }
 
     public java.lang.String recv_withCollisioin() throws org.apache.thrift.TException {
-      withCollisioin_result result = new withCollisioin_result();
+      WithCollisioinResult result = new WithCollisioinResult();
       receiveBase(result, "withCollisioin");
       if (result.isSetSuccess()) {
         return result.success;
@@ -218,7 +218,7 @@ public class HelloWorldService {
     }
 
     public void send_oneWay() throws org.apache.thrift.TException {
-      oneWay_args args = new oneWay_args();
+      OneWayArgs args = new OneWayArgs();
       sendBaseOneway("oneWay", args);
     }
 
@@ -228,25 +228,25 @@ public class HelloWorldService {
     }
 
     public void send_oneWayWithError() throws org.apache.thrift.TException {
-      oneWayWithError_args args = new oneWayWithError_args();
+      OneWayWithErrorArgs args = new OneWayWithErrorArgs();
       sendBaseOneway("oneWayWithError", args);
     }
 
     @Override
-    public userAccount data(User user, Account account) throws org.apache.thrift.TException {
+    public UserAccount data(User user, Account account) throws org.apache.thrift.TException {
       send_data(user, account);
       return recv_data();
     }
 
     public void send_data(User user, Account account) throws org.apache.thrift.TException {
-      data_args args = new data_args();
+      DataArgs args = new DataArgs();
       args.setUser(user);
       args.setAccount(account);
       sendBase("data", args);
     }
 
-    public userAccount recv_data() throws org.apache.thrift.TException {
-      data_result result = new data_result();
+    public UserAccount recv_data() throws org.apache.thrift.TException {
+      DataResult result = new DataResult();
       receiveBase(result, "data");
       if (result.isSetSuccess()) {
         return result.success;
@@ -291,18 +291,18 @@ public class HelloWorldService {
         org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler)
         throws org.apache.thrift.TException {
       checkReady();
-      sayHello_call method_call =
-          new sayHello_call(zone, name, resultHandler, this, ___protocolFactory, ___transport);
-      this.___currentMethod = method_call;
-      ___manager.call(method_call);
+      SayHelloCall methodCall =
+          new SayHelloCall(zone, name, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = methodCall;
+      ___manager.call(methodCall);
     }
 
-    public static class sayHello_call
+    public static class SayHelloCall
         extends org.apache.thrift.async.TAsyncMethodCall<java.lang.String> {
       private java.lang.String zone;
       private java.lang.String name;
 
-      public sayHello_call(
+      public SayHelloCall(
           java.lang.String zone,
           java.lang.String name,
           org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler,
@@ -321,7 +321,7 @@ public class HelloWorldService {
         prot.writeMessageBegin(
             new org.apache.thrift.protocol.TMessage(
                 "sayHello", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        sayHello_args args = new sayHello_args();
+        SayHelloArgs args = new SayHelloArgs();
         args.setZone(zone);
         args.setName(name);
         args.write(prot);
@@ -346,17 +346,17 @@ public class HelloWorldService {
         int delay, org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler)
         throws org.apache.thrift.TException {
       checkReady();
-      withDelay_call method_call =
-          new withDelay_call(delay, resultHandler, this, ___protocolFactory, ___transport);
-      this.___currentMethod = method_call;
-      ___manager.call(method_call);
+      WithDelayCall methodCall =
+          new WithDelayCall(delay, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = methodCall;
+      ___manager.call(methodCall);
     }
 
-    public static class withDelay_call
+    public static class WithDelayCall
         extends org.apache.thrift.async.TAsyncMethodCall<java.lang.String> {
       private int delay;
 
-      public withDelay_call(
+      public WithDelayCall(
           int delay,
           org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler,
           org.apache.thrift.async.TAsyncClient client,
@@ -373,7 +373,7 @@ public class HelloWorldService {
         prot.writeMessageBegin(
             new org.apache.thrift.protocol.TMessage(
                 "withDelay", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        withDelay_args args = new withDelay_args();
+        WithDelayArgs args = new WithDelayArgs();
         args.setDelay(delay);
         args.write(prot);
         prot.writeMessageEnd();
@@ -397,15 +397,15 @@ public class HelloWorldService {
         org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler)
         throws org.apache.thrift.TException {
       checkReady();
-      withoutArgs_call method_call =
-          new withoutArgs_call(resultHandler, this, ___protocolFactory, ___transport);
-      this.___currentMethod = method_call;
-      ___manager.call(method_call);
+      WithoutArgsCall methodCall =
+          new WithoutArgsCall(resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = methodCall;
+      ___manager.call(methodCall);
     }
 
-    public static class withoutArgs_call
+    public static class WithoutArgsCall
         extends org.apache.thrift.async.TAsyncMethodCall<java.lang.String> {
-      public withoutArgs_call(
+      public WithoutArgsCall(
           org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler,
           org.apache.thrift.async.TAsyncClient client,
           org.apache.thrift.protocol.TProtocolFactory protocolFactory,
@@ -420,7 +420,7 @@ public class HelloWorldService {
         prot.writeMessageBegin(
             new org.apache.thrift.protocol.TMessage(
                 "withoutArgs", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        withoutArgs_args args = new withoutArgs_args();
+        WithoutArgsArgs args = new WithoutArgsArgs();
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -443,15 +443,15 @@ public class HelloWorldService {
         org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler)
         throws org.apache.thrift.TException {
       checkReady();
-      withError_call method_call =
-          new withError_call(resultHandler, this, ___protocolFactory, ___transport);
-      this.___currentMethod = method_call;
-      ___manager.call(method_call);
+      WithErrorCall methodCall =
+          new WithErrorCall(resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = methodCall;
+      ___manager.call(methodCall);
     }
 
-    public static class withError_call
+    public static class WithErrorCall
         extends org.apache.thrift.async.TAsyncMethodCall<java.lang.String> {
-      public withError_call(
+      public WithErrorCall(
           org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler,
           org.apache.thrift.async.TAsyncClient client,
           org.apache.thrift.protocol.TProtocolFactory protocolFactory,
@@ -466,7 +466,7 @@ public class HelloWorldService {
         prot.writeMessageBegin(
             new org.apache.thrift.protocol.TMessage(
                 "withError", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        withError_args args = new withError_args();
+        WithErrorArgs args = new WithErrorArgs();
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -490,17 +490,17 @@ public class HelloWorldService {
         org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler)
         throws org.apache.thrift.TException {
       checkReady();
-      withCollisioin_call method_call =
-          new withCollisioin_call(input, resultHandler, this, ___protocolFactory, ___transport);
-      this.___currentMethod = method_call;
-      ___manager.call(method_call);
+      WithCollisioinCall methodCall =
+          new WithCollisioinCall(input, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = methodCall;
+      ___manager.call(methodCall);
     }
 
-    public static class withCollisioin_call
+    public static class WithCollisioinCall
         extends org.apache.thrift.async.TAsyncMethodCall<java.lang.String> {
       private java.lang.String input;
 
-      public withCollisioin_call(
+      public WithCollisioinCall(
           java.lang.String input,
           org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler,
           org.apache.thrift.async.TAsyncClient client,
@@ -517,7 +517,7 @@ public class HelloWorldService {
         prot.writeMessageBegin(
             new org.apache.thrift.protocol.TMessage(
                 "withCollisioin", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        withCollisioin_args args = new withCollisioin_args();
+        WithCollisioinArgs args = new WithCollisioinArgs();
         args.setInput(input);
         args.write(prot);
         prot.writeMessageEnd();
@@ -540,14 +540,13 @@ public class HelloWorldService {
     public void oneWay(org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler)
         throws org.apache.thrift.TException {
       checkReady();
-      oneWay_call method_call =
-          new oneWay_call(resultHandler, this, ___protocolFactory, ___transport);
-      this.___currentMethod = method_call;
-      ___manager.call(method_call);
+      OneWayCall methodCall = new OneWayCall(resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = methodCall;
+      ___manager.call(methodCall);
     }
 
-    public static class oneWay_call extends org.apache.thrift.async.TAsyncMethodCall<Void> {
-      public oneWay_call(
+    public static class OneWayCall extends org.apache.thrift.async.TAsyncMethodCall<Void> {
+      public OneWayCall(
           org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler,
           org.apache.thrift.async.TAsyncClient client,
           org.apache.thrift.protocol.TProtocolFactory protocolFactory,
@@ -562,7 +561,7 @@ public class HelloWorldService {
         prot.writeMessageBegin(
             new org.apache.thrift.protocol.TMessage(
                 "oneWay", org.apache.thrift.protocol.TMessageType.ONEWAY, 0));
-        oneWay_args args = new oneWay_args();
+        OneWayArgs args = new OneWayArgs();
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -584,15 +583,14 @@ public class HelloWorldService {
     public void oneWayWithError(org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler)
         throws org.apache.thrift.TException {
       checkReady();
-      oneWayWithError_call method_call =
-          new oneWayWithError_call(resultHandler, this, ___protocolFactory, ___transport);
-      this.___currentMethod = method_call;
-      ___manager.call(method_call);
+      OneWayWithErrorCall methodCall =
+          new OneWayWithErrorCall(resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = methodCall;
+      ___manager.call(methodCall);
     }
 
-    public static class oneWayWithError_call
-        extends org.apache.thrift.async.TAsyncMethodCall<Void> {
-      public oneWayWithError_call(
+    public static class OneWayWithErrorCall extends org.apache.thrift.async.TAsyncMethodCall<Void> {
+      public OneWayWithErrorCall(
           org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler,
           org.apache.thrift.async.TAsyncClient client,
           org.apache.thrift.protocol.TProtocolFactory protocolFactory,
@@ -607,7 +605,7 @@ public class HelloWorldService {
         prot.writeMessageBegin(
             new org.apache.thrift.protocol.TMessage(
                 "oneWayWithError", org.apache.thrift.protocol.TMessageType.ONEWAY, 0));
-        oneWayWithError_args args = new oneWayWithError_args();
+        OneWayWithErrorArgs args = new OneWayWithErrorArgs();
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -629,23 +627,23 @@ public class HelloWorldService {
     public void data(
         User user,
         Account account,
-        org.apache.thrift.async.AsyncMethodCallback<userAccount> resultHandler)
+        org.apache.thrift.async.AsyncMethodCallback<UserAccount> resultHandler)
         throws org.apache.thrift.TException {
       checkReady();
-      data_call method_call =
-          new data_call(user, account, resultHandler, this, ___protocolFactory, ___transport);
-      this.___currentMethod = method_call;
-      ___manager.call(method_call);
+      DataCall dataCall =
+          new DataCall(user, account, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = dataCall;
+      ___manager.call(dataCall);
     }
 
-    public static class data_call extends org.apache.thrift.async.TAsyncMethodCall<userAccount> {
+    public static class DataCall extends org.apache.thrift.async.TAsyncMethodCall<UserAccount> {
       private User user;
       private Account account;
 
-      public data_call(
+      public DataCall(
           User user,
           Account account,
-          org.apache.thrift.async.AsyncMethodCallback<userAccount> resultHandler,
+          org.apache.thrift.async.AsyncMethodCallback<UserAccount> resultHandler,
           org.apache.thrift.async.TAsyncClient client,
           org.apache.thrift.protocol.TProtocolFactory protocolFactory,
           org.apache.thrift.transport.TNonblockingTransport transport)
@@ -661,7 +659,7 @@ public class HelloWorldService {
         prot.writeMessageBegin(
             new org.apache.thrift.protocol.TMessage(
                 "data", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        data_args args = new data_args();
+        DataArgs args = new DataArgs();
         args.setUser(user);
         args.setAccount(account);
         args.write(prot);
@@ -669,7 +667,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public userAccount getResult() throws org.apache.thrift.TException {
+      public UserAccount getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new java.lang.IllegalStateException("Method call not finished!");
         }
@@ -714,26 +712,26 @@ public class HelloWorldService {
                         java.lang.String,
                         org.apache.thrift.ProcessFunction<I, ? extends org.apache.thrift.TBase>>
                     processMap) {
-      processMap.put("sayHello", new sayHello());
-      processMap.put("withDelay", new withDelay());
-      processMap.put("withoutArgs", new withoutArgs());
-      processMap.put("withError", new withError());
-      processMap.put("withCollisioin", new withCollisioin());
-      processMap.put("oneWay", new oneWay());
-      processMap.put("oneWayWithError", new oneWayWithError());
-      processMap.put("data", new data());
+      processMap.put("sayHello", new SayHello());
+      processMap.put("withDelay", new WithDelay());
+      processMap.put("withoutArgs", new WithoutArgs());
+      processMap.put("withError", new WithError());
+      processMap.put("withCollisioin", new WithCollisioin());
+      processMap.put("oneWay", new OneWay());
+      processMap.put("oneWayWithError", new OneWayWithError());
+      processMap.put("data", new Data());
       return processMap;
     }
 
-    public static class sayHello<I extends Iface>
-        extends org.apache.thrift.ProcessFunction<I, sayHello_args> {
-      public sayHello() {
+    public static class SayHello<I extends Iface>
+        extends org.apache.thrift.ProcessFunction<I, SayHelloArgs> {
+      public SayHello() {
         super("sayHello");
       }
 
       @Override
-      public sayHello_args getEmptyArgsInstance() {
-        return new sayHello_args();
+      public SayHelloArgs getEmptyArgsInstance() {
+        return new SayHelloArgs();
       }
 
       @Override
@@ -747,23 +745,23 @@ public class HelloWorldService {
       }
 
       @Override
-      public sayHello_result getResult(I iface, sayHello_args args)
+      public SayHelloResult getResult(I iface, SayHelloArgs args)
           throws org.apache.thrift.TException {
-        sayHello_result result = new sayHello_result();
+        SayHelloResult result = new SayHelloResult();
         result.success = iface.sayHello(args.zone, args.name);
         return result;
       }
     }
 
-    public static class withDelay<I extends Iface>
-        extends org.apache.thrift.ProcessFunction<I, withDelay_args> {
-      public withDelay() {
+    public static class WithDelay<I extends Iface>
+        extends org.apache.thrift.ProcessFunction<I, WithDelayArgs> {
+      public WithDelay() {
         super("withDelay");
       }
 
       @Override
-      public withDelay_args getEmptyArgsInstance() {
-        return new withDelay_args();
+      public WithDelayArgs getEmptyArgsInstance() {
+        return new WithDelayArgs();
       }
 
       @Override
@@ -777,23 +775,23 @@ public class HelloWorldService {
       }
 
       @Override
-      public withDelay_result getResult(I iface, withDelay_args args)
+      public WithDelayResult getResult(I iface, WithDelayArgs args)
           throws org.apache.thrift.TException {
-        withDelay_result result = new withDelay_result();
+        WithDelayResult result = new WithDelayResult();
         result.success = iface.withDelay(args.delay);
         return result;
       }
     }
 
-    public static class withoutArgs<I extends Iface>
-        extends org.apache.thrift.ProcessFunction<I, withoutArgs_args> {
-      public withoutArgs() {
+    public static class WithoutArgs<I extends Iface>
+        extends org.apache.thrift.ProcessFunction<I, WithoutArgsArgs> {
+      public WithoutArgs() {
         super("withoutArgs");
       }
 
       @Override
-      public withoutArgs_args getEmptyArgsInstance() {
-        return new withoutArgs_args();
+      public WithoutArgsArgs getEmptyArgsInstance() {
+        return new WithoutArgsArgs();
       }
 
       @Override
@@ -807,23 +805,23 @@ public class HelloWorldService {
       }
 
       @Override
-      public withoutArgs_result getResult(I iface, withoutArgs_args args)
+      public WithoutArgsResult getResult(I iface, WithoutArgsArgs args)
           throws org.apache.thrift.TException {
-        withoutArgs_result result = new withoutArgs_result();
+        WithoutArgsResult result = new WithoutArgsResult();
         result.success = iface.withoutArgs();
         return result;
       }
     }
 
-    public static class withError<I extends Iface>
-        extends org.apache.thrift.ProcessFunction<I, withError_args> {
-      public withError() {
+    public static class WithError<I extends Iface>
+        extends org.apache.thrift.ProcessFunction<I, WithErrorArgs> {
+      public WithError() {
         super("withError");
       }
 
       @Override
-      public withError_args getEmptyArgsInstance() {
-        return new withError_args();
+      public WithErrorArgs getEmptyArgsInstance() {
+        return new WithErrorArgs();
       }
 
       @Override
@@ -837,23 +835,23 @@ public class HelloWorldService {
       }
 
       @Override
-      public withError_result getResult(I iface, withError_args args)
+      public WithErrorResult getResult(I iface, WithErrorArgs args)
           throws org.apache.thrift.TException {
-        withError_result result = new withError_result();
+        WithErrorResult result = new WithErrorResult();
         result.success = iface.withError();
         return result;
       }
     }
 
-    public static class withCollisioin<I extends Iface>
-        extends org.apache.thrift.ProcessFunction<I, withCollisioin_args> {
-      public withCollisioin() {
+    public static class WithCollisioin<I extends Iface>
+        extends org.apache.thrift.ProcessFunction<I, WithCollisioinArgs> {
+      public WithCollisioin() {
         super("withCollisioin");
       }
 
       @Override
-      public withCollisioin_args getEmptyArgsInstance() {
-        return new withCollisioin_args();
+      public WithCollisioinArgs getEmptyArgsInstance() {
+        return new WithCollisioinArgs();
       }
 
       @Override
@@ -867,23 +865,23 @@ public class HelloWorldService {
       }
 
       @Override
-      public withCollisioin_result getResult(I iface, withCollisioin_args args)
+      public WithCollisioinResult getResult(I iface, WithCollisioinArgs args)
           throws org.apache.thrift.TException {
-        withCollisioin_result result = new withCollisioin_result();
+        WithCollisioinResult result = new WithCollisioinResult();
         result.success = iface.withCollisioin(args.input);
         return result;
       }
     }
 
-    public static class oneWay<I extends Iface>
-        extends org.apache.thrift.ProcessFunction<I, oneWay_args> {
-      public oneWay() {
+    public static class OneWay<I extends Iface>
+        extends org.apache.thrift.ProcessFunction<I, OneWayArgs> {
+      public OneWay() {
         super("oneWay");
       }
 
       @Override
-      public oneWay_args getEmptyArgsInstance() {
-        return new oneWay_args();
+      public OneWayArgs getEmptyArgsInstance() {
+        return new OneWayArgs();
       }
 
       @Override
@@ -897,22 +895,22 @@ public class HelloWorldService {
       }
 
       @Override
-      public org.apache.thrift.TBase getResult(I iface, oneWay_args args)
+      public org.apache.thrift.TBase getResult(I iface, OneWayArgs args)
           throws org.apache.thrift.TException {
         iface.oneWay();
         return null;
       }
     }
 
-    public static class oneWayWithError<I extends Iface>
-        extends org.apache.thrift.ProcessFunction<I, oneWayWithError_args> {
-      public oneWayWithError() {
+    public static class OneWayWithError<I extends Iface>
+        extends org.apache.thrift.ProcessFunction<I, OneWayWithErrorArgs> {
+      public OneWayWithError() {
         super("oneWayWithError");
       }
 
       @Override
-      public oneWayWithError_args getEmptyArgsInstance() {
-        return new oneWayWithError_args();
+      public OneWayWithErrorArgs getEmptyArgsInstance() {
+        return new OneWayWithErrorArgs();
       }
 
       @Override
@@ -926,22 +924,22 @@ public class HelloWorldService {
       }
 
       @Override
-      public org.apache.thrift.TBase getResult(I iface, oneWayWithError_args args)
+      public org.apache.thrift.TBase getResult(I iface, OneWayWithErrorArgs args)
           throws org.apache.thrift.TException {
         iface.oneWayWithError();
         return null;
       }
     }
 
-    public static class data<I extends Iface>
-        extends org.apache.thrift.ProcessFunction<I, data_args> {
-      public data() {
+    public static class Data<I extends Iface>
+        extends org.apache.thrift.ProcessFunction<I, DataArgs> {
+      public Data() {
         super("data");
       }
 
       @Override
-      public data_args getEmptyArgsInstance() {
-        return new data_args();
+      public DataArgs getEmptyArgsInstance() {
+        return new DataArgs();
       }
 
       @Override
@@ -955,8 +953,8 @@ public class HelloWorldService {
       }
 
       @Override
-      public data_result getResult(I iface, data_args args) throws org.apache.thrift.TException {
-        data_result result = new data_result();
+      public DataResult getResult(I iface, DataArgs args) throws org.apache.thrift.TException {
+        DataResult result = new DataResult();
         result.success = iface.data(args.user, args.account);
         return result;
       }
@@ -997,26 +995,26 @@ public class HelloWorldService {
                         org.apache.thrift.AsyncProcessFunction<
                             I, ? extends org.apache.thrift.TBase, ?>>
                     processMap) {
-      processMap.put("sayHello", new sayHello());
-      processMap.put("withDelay", new withDelay());
-      processMap.put("withoutArgs", new withoutArgs());
-      processMap.put("withError", new withError());
-      processMap.put("withCollisioin", new withCollisioin());
-      processMap.put("oneWay", new oneWay());
-      processMap.put("oneWayWithError", new oneWayWithError());
-      processMap.put("data", new data());
+      processMap.put("sayHello", new SayHello());
+      processMap.put("withDelay", new WithDelay());
+      processMap.put("withoutArgs", new WithoutArgs());
+      processMap.put("withError", new WithError());
+      processMap.put("withCollisioin", new WithCollisioin());
+      processMap.put("oneWay", new OneWay());
+      processMap.put("oneWayWithError", new OneWayWithError());
+      processMap.put("data", new Data());
       return processMap;
     }
 
-    public static class sayHello<I extends AsyncIface>
-        extends org.apache.thrift.AsyncProcessFunction<I, sayHello_args, java.lang.String> {
-      public sayHello() {
+    public static class SayHello<I extends AsyncIface>
+        extends org.apache.thrift.AsyncProcessFunction<I, SayHelloArgs, java.lang.String> {
+      public SayHello() {
         super("sayHello");
       }
 
       @Override
-      public sayHello_args getEmptyArgsInstance() {
-        return new sayHello_args();
+      public SayHelloArgs getEmptyArgsInstance() {
+        return new SayHelloArgs();
       }
 
       @Override
@@ -1027,7 +1025,7 @@ public class HelloWorldService {
         return new org.apache.thrift.async.AsyncMethodCallback<java.lang.String>() {
           @Override
           public void onComplete(java.lang.String o) {
-            sayHello_result result = new sayHello_result();
+            SayHelloResult result = new SayHelloResult();
             result.success = o;
             try {
               fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY, seqid);
@@ -1044,7 +1042,7 @@ public class HelloWorldService {
           public void onError(java.lang.Exception e) {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TSerializable msg;
-            sayHello_result result = new sayHello_result();
+            SayHelloResult result = new SayHelloResult();
             if (e instanceof org.apache.thrift.transport.TTransportException) {
               _LOGGER.error("TTransportException inside handler", e);
               fb.close();
@@ -1078,22 +1076,22 @@ public class HelloWorldService {
       @Override
       public void start(
           I iface,
-          sayHello_args args,
+          SayHelloArgs args,
           org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler)
           throws org.apache.thrift.TException {
         iface.sayHello(args.zone, args.name, resultHandler);
       }
     }
 
-    public static class withDelay<I extends AsyncIface>
-        extends org.apache.thrift.AsyncProcessFunction<I, withDelay_args, java.lang.String> {
-      public withDelay() {
+    public static class WithDelay<I extends AsyncIface>
+        extends org.apache.thrift.AsyncProcessFunction<I, WithDelayArgs, java.lang.String> {
+      public WithDelay() {
         super("withDelay");
       }
 
       @Override
-      public withDelay_args getEmptyArgsInstance() {
-        return new withDelay_args();
+      public WithDelayArgs getEmptyArgsInstance() {
+        return new WithDelayArgs();
       }
 
       @Override
@@ -1104,7 +1102,7 @@ public class HelloWorldService {
         return new org.apache.thrift.async.AsyncMethodCallback<java.lang.String>() {
           @Override
           public void onComplete(java.lang.String o) {
-            withDelay_result result = new withDelay_result();
+            WithDelayResult result = new WithDelayResult();
             result.success = o;
             try {
               fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY, seqid);
@@ -1121,7 +1119,7 @@ public class HelloWorldService {
           public void onError(java.lang.Exception e) {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TSerializable msg;
-            withDelay_result result = new withDelay_result();
+            WithDelayResult result = new WithDelayResult();
             if (e instanceof org.apache.thrift.transport.TTransportException) {
               _LOGGER.error("TTransportException inside handler", e);
               fb.close();
@@ -1155,22 +1153,22 @@ public class HelloWorldService {
       @Override
       public void start(
           I iface,
-          withDelay_args args,
+          WithDelayArgs args,
           org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler)
           throws org.apache.thrift.TException {
         iface.withDelay(args.delay, resultHandler);
       }
     }
 
-    public static class withoutArgs<I extends AsyncIface>
-        extends org.apache.thrift.AsyncProcessFunction<I, withoutArgs_args, java.lang.String> {
-      public withoutArgs() {
+    public static class WithoutArgs<I extends AsyncIface>
+        extends org.apache.thrift.AsyncProcessFunction<I, WithoutArgsArgs, java.lang.String> {
+      public WithoutArgs() {
         super("withoutArgs");
       }
 
       @Override
-      public withoutArgs_args getEmptyArgsInstance() {
-        return new withoutArgs_args();
+      public WithoutArgsArgs getEmptyArgsInstance() {
+        return new WithoutArgsArgs();
       }
 
       @Override
@@ -1181,7 +1179,7 @@ public class HelloWorldService {
         return new org.apache.thrift.async.AsyncMethodCallback<java.lang.String>() {
           @Override
           public void onComplete(java.lang.String o) {
-            withoutArgs_result result = new withoutArgs_result();
+            WithoutArgsResult result = new WithoutArgsResult();
             result.success = o;
             try {
               fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY, seqid);
@@ -1198,7 +1196,7 @@ public class HelloWorldService {
           public void onError(java.lang.Exception e) {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TSerializable msg;
-            withoutArgs_result result = new withoutArgs_result();
+            WithoutArgsResult result = new WithoutArgsResult();
             if (e instanceof org.apache.thrift.transport.TTransportException) {
               _LOGGER.error("TTransportException inside handler", e);
               fb.close();
@@ -1232,22 +1230,22 @@ public class HelloWorldService {
       @Override
       public void start(
           I iface,
-          withoutArgs_args args,
+          WithoutArgsArgs args,
           org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler)
           throws org.apache.thrift.TException {
         iface.withoutArgs(resultHandler);
       }
     }
 
-    public static class withError<I extends AsyncIface>
-        extends org.apache.thrift.AsyncProcessFunction<I, withError_args, java.lang.String> {
-      public withError() {
+    public static class WithError<I extends AsyncIface>
+        extends org.apache.thrift.AsyncProcessFunction<I, WithErrorArgs, java.lang.String> {
+      public WithError() {
         super("withError");
       }
 
       @Override
-      public withError_args getEmptyArgsInstance() {
-        return new withError_args();
+      public WithErrorArgs getEmptyArgsInstance() {
+        return new WithErrorArgs();
       }
 
       @Override
@@ -1258,7 +1256,7 @@ public class HelloWorldService {
         return new org.apache.thrift.async.AsyncMethodCallback<java.lang.String>() {
           @Override
           public void onComplete(java.lang.String o) {
-            withError_result result = new withError_result();
+            WithErrorResult result = new WithErrorResult();
             result.success = o;
             try {
               fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY, seqid);
@@ -1275,7 +1273,7 @@ public class HelloWorldService {
           public void onError(java.lang.Exception e) {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TSerializable msg;
-            withError_result result = new withError_result();
+            WithErrorResult result = new WithErrorResult();
             if (e instanceof org.apache.thrift.transport.TTransportException) {
               _LOGGER.error("TTransportException inside handler", e);
               fb.close();
@@ -1309,22 +1307,22 @@ public class HelloWorldService {
       @Override
       public void start(
           I iface,
-          withError_args args,
+          WithErrorArgs args,
           org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler)
           throws org.apache.thrift.TException {
         iface.withError(resultHandler);
       }
     }
 
-    public static class withCollisioin<I extends AsyncIface>
-        extends org.apache.thrift.AsyncProcessFunction<I, withCollisioin_args, java.lang.String> {
-      public withCollisioin() {
+    public static class WithCollisioin<I extends AsyncIface>
+        extends org.apache.thrift.AsyncProcessFunction<I, WithCollisioinArgs, java.lang.String> {
+      public WithCollisioin() {
         super("withCollisioin");
       }
 
       @Override
-      public withCollisioin_args getEmptyArgsInstance() {
-        return new withCollisioin_args();
+      public WithCollisioinArgs getEmptyArgsInstance() {
+        return new WithCollisioinArgs();
       }
 
       @Override
@@ -1335,7 +1333,7 @@ public class HelloWorldService {
         return new org.apache.thrift.async.AsyncMethodCallback<java.lang.String>() {
           @Override
           public void onComplete(java.lang.String o) {
-            withCollisioin_result result = new withCollisioin_result();
+            WithCollisioinResult result = new WithCollisioinResult();
             result.success = o;
             try {
               fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY, seqid);
@@ -1352,7 +1350,7 @@ public class HelloWorldService {
           public void onError(java.lang.Exception e) {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TSerializable msg;
-            withCollisioin_result result = new withCollisioin_result();
+            WithCollisioinResult result = new WithCollisioinResult();
             if (e instanceof org.apache.thrift.transport.TTransportException) {
               _LOGGER.error("TTransportException inside handler", e);
               fb.close();
@@ -1386,22 +1384,22 @@ public class HelloWorldService {
       @Override
       public void start(
           I iface,
-          withCollisioin_args args,
+          WithCollisioinArgs args,
           org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler)
           throws org.apache.thrift.TException {
         iface.withCollisioin(args.input, resultHandler);
       }
     }
 
-    public static class oneWay<I extends AsyncIface>
-        extends org.apache.thrift.AsyncProcessFunction<I, oneWay_args, Void> {
-      public oneWay() {
+    public static class OneWay<I extends AsyncIface>
+        extends org.apache.thrift.AsyncProcessFunction<I, OneWayArgs, Void> {
+      public OneWay() {
         super("oneWay");
       }
 
       @Override
-      public oneWay_args getEmptyArgsInstance() {
-        return new oneWay_args();
+      public OneWayArgs getEmptyArgsInstance() {
+        return new OneWayArgs();
       }
 
       @Override
@@ -1432,23 +1430,21 @@ public class HelloWorldService {
 
       @Override
       public void start(
-          I iface,
-          oneWay_args args,
-          org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler)
+          I iface, OneWayArgs args, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler)
           throws org.apache.thrift.TException {
         iface.oneWay(resultHandler);
       }
     }
 
-    public static class oneWayWithError<I extends AsyncIface>
-        extends org.apache.thrift.AsyncProcessFunction<I, oneWayWithError_args, Void> {
-      public oneWayWithError() {
+    public static class OneWayWithError<I extends AsyncIface>
+        extends org.apache.thrift.AsyncProcessFunction<I, OneWayWithErrorArgs, Void> {
+      public OneWayWithError() {
         super("oneWayWithError");
       }
 
       @Override
-      public oneWayWithError_args getEmptyArgsInstance() {
-        return new oneWayWithError_args();
+      public OneWayWithErrorArgs getEmptyArgsInstance() {
+        return new OneWayWithErrorArgs();
       }
 
       @Override
@@ -1480,33 +1476,33 @@ public class HelloWorldService {
       @Override
       public void start(
           I iface,
-          oneWayWithError_args args,
+          OneWayWithErrorArgs args,
           org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler)
           throws org.apache.thrift.TException {
         iface.oneWayWithError(resultHandler);
       }
     }
 
-    public static class data<I extends AsyncIface>
-        extends org.apache.thrift.AsyncProcessFunction<I, data_args, userAccount> {
-      public data() {
+    public static class Data<I extends AsyncIface>
+        extends org.apache.thrift.AsyncProcessFunction<I, DataArgs, UserAccount> {
+      public Data() {
         super("data");
       }
 
       @Override
-      public data_args getEmptyArgsInstance() {
-        return new data_args();
+      public DataArgs getEmptyArgsInstance() {
+        return new DataArgs();
       }
 
       @Override
-      public org.apache.thrift.async.AsyncMethodCallback<userAccount> getResultHandler(
+      public org.apache.thrift.async.AsyncMethodCallback<UserAccount> getResultHandler(
           final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb,
           final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
-        return new org.apache.thrift.async.AsyncMethodCallback<userAccount>() {
+        return new org.apache.thrift.async.AsyncMethodCallback<UserAccount>() {
           @Override
-          public void onComplete(userAccount o) {
-            data_result result = new data_result();
+          public void onComplete(UserAccount o) {
+            DataResult result = new DataResult();
             result.success = o;
             try {
               fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY, seqid);
@@ -1523,7 +1519,7 @@ public class HelloWorldService {
           public void onError(java.lang.Exception e) {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TSerializable msg;
-            data_result result = new data_result();
+            DataResult result = new DataResult();
             if (e instanceof org.apache.thrift.transport.TTransportException) {
               _LOGGER.error("TTransportException inside handler", e);
               fb.close();
@@ -1557,8 +1553,8 @@ public class HelloWorldService {
       @Override
       public void start(
           I iface,
-          data_args args,
-          org.apache.thrift.async.AsyncMethodCallback<userAccount> resultHandler)
+          DataArgs args,
+          org.apache.thrift.async.AsyncMethodCallback<UserAccount> resultHandler)
           throws org.apache.thrift.TException {
         iface.data(args.user, args.account, resultHandler);
       }
@@ -1566,11 +1562,11 @@ public class HelloWorldService {
   }
 
   @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-  public static class sayHello_args
-      implements org.apache.thrift.TBase<sayHello_args, sayHello_args._Fields>,
+  public static class SayHelloArgs
+      implements org.apache.thrift.TBase<SayHelloArgs, SayHelloArgs.Fields>,
           java.io.Serializable,
           Cloneable,
-          Comparable<sayHello_args> {
+          Comparable<SayHelloArgs> {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
         new org.apache.thrift.protocol.TStruct("sayHello_args");
 
@@ -1582,9 +1578,9 @@ public class HelloWorldService {
             "name", org.apache.thrift.protocol.TType.STRING, (short) 2);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY =
-        new sayHello_argsStandardSchemeFactory();
+        new SayHelloArgsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY =
-        new sayHello_argsTupleSchemeFactory();
+        new SayHelloArgsTupleSchemeFactory();
 
     public @org.apache.thrift.annotation.Nullable java.lang.String zone; // required
     public @org.apache.thrift.annotation.Nullable java.lang.String name; // required
@@ -1593,22 +1589,22 @@ public class HelloWorldService {
      * The set of fields this struct contains, along with convenience methods for finding and
      * manipulating them.
      */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    public enum Fields implements org.apache.thrift.TFieldIdEnum {
       ZONE((short) 1, "zone"),
       NAME((short) 2, "name");
 
-      private static final java.util.Map<java.lang.String, _Fields> byName =
-          new java.util.HashMap<java.lang.String, _Fields>();
+      private static final java.util.Map<java.lang.String, Fields> byName =
+          new java.util.HashMap<java.lang.String, Fields>();
 
       static {
-        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+        for (Fields field : java.util.EnumSet.allOf(Fields.class)) {
           byName.put(field.getFieldName(), field);
         }
       }
 
       /** Find the _Fields constant that matches fieldId, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByThriftId(int fieldId) {
+      public static Fields findByThriftId(int fieldId) {
         switch (fieldId) {
           case 1: // ZONE
             return ZONE;
@@ -1622,54 +1618,55 @@ public class HelloWorldService {
       /**
        * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
        */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null)
+      public static Fields findByThriftIdOrThrow(int fieldId) {
+        Fields fields = findByThriftId(fieldId);
+        if (fields == null) {
           throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        }
         return fields;
       }
 
       /** Find the _Fields constant that matches name, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByName(java.lang.String name) {
+      public static Fields findByName(java.lang.String name) {
         return byName.get(name);
       }
 
-      private final short _thriftId;
-      private final java.lang.String _fieldName;
+      private final short thriftId;
+      private final java.lang.String fieldName;
 
-      _Fields(short thriftId, java.lang.String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
+      Fields(short thriftId, java.lang.String fieldName) {
+        this.thriftId = thriftId;
+        this.fieldName = fieldName;
       }
 
       @Override
       public short getThriftFieldId() {
-        return _thriftId;
+        return thriftId;
       }
 
       @Override
       public java.lang.String getFieldName() {
-        return _fieldName;
+        return fieldName;
       }
     }
 
     // isset id assignments
-    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData>
+    public static final java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData>
         metaDataMap;
 
     static {
-      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
-          new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+          new java.util.EnumMap<Fields, org.apache.thrift.meta_data.FieldMetaData>(Fields.class);
       tmpMap.put(
-          _Fields.ZONE,
+          Fields.ZONE,
           new org.apache.thrift.meta_data.FieldMetaData(
               "zone",
               org.apache.thrift.TFieldRequirementType.DEFAULT,
               new org.apache.thrift.meta_data.FieldValueMetaData(
                   org.apache.thrift.protocol.TType.STRING)));
       tmpMap.put(
-          _Fields.NAME,
+          Fields.NAME,
           new org.apache.thrift.meta_data.FieldMetaData(
               "name",
               org.apache.thrift.TFieldRequirementType.DEFAULT,
@@ -1677,19 +1674,19 @@ public class HelloWorldService {
                   org.apache.thrift.protocol.TType.STRING)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(
-          sayHello_args.class, metaDataMap);
+          SayHelloArgs.class, metaDataMap);
     }
 
-    public sayHello_args() {}
+    public SayHelloArgs() {}
 
-    public sayHello_args(java.lang.String zone, java.lang.String name) {
+    public SayHelloArgs(java.lang.String zone, java.lang.String name) {
       this();
       this.zone = zone;
       this.name = name;
     }
 
     /** Performs a deep copy on <i>other</i>. */
-    public sayHello_args(sayHello_args other) {
+    public SayHelloArgs(SayHelloArgs other) {
       if (other.isSetZone()) {
         this.zone = other.zone;
       }
@@ -1699,8 +1696,8 @@ public class HelloWorldService {
     }
 
     @Override
-    public sayHello_args deepCopy() {
-      return new sayHello_args(this);
+    public SayHelloArgs deepCopy() {
+      return new SayHelloArgs(this);
     }
 
     @Override
@@ -1714,7 +1711,7 @@ public class HelloWorldService {
       return this.zone;
     }
 
-    public sayHello_args setZone(@org.apache.thrift.annotation.Nullable java.lang.String zone) {
+    public SayHelloArgs setZone(@org.apache.thrift.annotation.Nullable java.lang.String zone) {
       this.zone = zone;
       return this;
     }
@@ -1739,7 +1736,7 @@ public class HelloWorldService {
       return this.name;
     }
 
-    public sayHello_args setName(@org.apache.thrift.annotation.Nullable java.lang.String name) {
+    public SayHelloArgs setName(@org.apache.thrift.annotation.Nullable java.lang.String name) {
       this.name = name;
       return this;
     }
@@ -1761,7 +1758,7 @@ public class HelloWorldService {
 
     @Override
     public void setFieldValue(
-        _Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
+        Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
       switch (field) {
         case ZONE:
           if (value == null) {
@@ -1783,7 +1780,7 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public java.lang.Object getFieldValue(_Fields field) {
+    public java.lang.Object getFieldValue(Fields field) {
       switch (field) {
         case ZONE:
           return getZone();
@@ -1799,7 +1796,7 @@ public class HelloWorldService {
      * otherwise
      */
     @Override
-    public boolean isSet(_Fields field) {
+    public boolean isSet(Fields field) {
       if (field == null) {
         throw new java.lang.IllegalArgumentException();
       }
@@ -1815,26 +1812,40 @@ public class HelloWorldService {
 
     @Override
     public boolean equals(java.lang.Object that) {
-      if (that instanceof sayHello_args) return this.equals((sayHello_args) that);
+      if (that instanceof SayHelloArgs) {
+        return this.equals((SayHelloArgs) that);
+      }
       return false;
     }
 
-    public boolean equals(sayHello_args that) {
-      if (that == null) return false;
-      if (this == that) return true;
-
-      boolean this_present_zone = true && this.isSetZone();
-      boolean that_present_zone = true && that.isSetZone();
-      if (this_present_zone || that_present_zone) {
-        if (!(this_present_zone && that_present_zone)) return false;
-        if (!this.zone.equals(that.zone)) return false;
+    public boolean equals(SayHelloArgs that) {
+      if (that == null) {
+        return false;
+      }
+      if (this == that) {
+        return true;
       }
 
-      boolean this_present_name = true && this.isSetName();
-      boolean that_present_name = true && that.isSetName();
-      if (this_present_name || that_present_name) {
-        if (!(this_present_name && that_present_name)) return false;
-        if (!this.name.equals(that.name)) return false;
+      boolean thisPresentZone = true && this.isSetZone();
+      boolean thatPresentZone = true && that.isSetZone();
+      if (thisPresentZone || thatPresentZone) {
+        if (!(thisPresentZone && thatPresentZone)) {
+          return false;
+        }
+        if (!this.zone.equals(that.zone)) {
+          return false;
+        }
+      }
+
+      boolean thisPresentName = true && this.isSetName();
+      boolean thatPresentName = true && that.isSetName();
+      if (thisPresentName || thatPresentName) {
+        if (!(thisPresentName && thatPresentName)) {
+          return false;
+        }
+        if (!this.name.equals(that.name)) {
+          return false;
+        }
       }
 
       return true;
@@ -1845,16 +1856,20 @@ public class HelloWorldService {
       int hashCode = 1;
 
       hashCode = hashCode * 8191 + ((isSetZone()) ? 131071 : 524287);
-      if (isSetZone()) hashCode = hashCode * 8191 + zone.hashCode();
+      if (isSetZone()) {
+        hashCode = hashCode * 8191 + zone.hashCode();
+      }
 
       hashCode = hashCode * 8191 + ((isSetName()) ? 131071 : 524287);
-      if (isSetName()) hashCode = hashCode * 8191 + name.hashCode();
+      if (isSetName()) {
+        hashCode = hashCode * 8191 + name.hashCode();
+      }
 
       return hashCode;
     }
 
     @Override
-    public int compareTo(sayHello_args other) {
+    public int compareTo(SayHelloArgs other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -1886,8 +1901,8 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
+    public Fields fieldForId(int fieldId) {
+      return Fields.findByThriftId(fieldId);
     }
 
     @Override
@@ -1914,7 +1929,9 @@ public class HelloWorldService {
         sb.append(this.zone);
       }
       first = false;
-      if (!first) sb.append(", ");
+      if (!first) {
+        sb.append(", ");
+      }
       sb.append("name:");
       if (this.name == null) {
         sb.append("null");
@@ -1952,19 +1969,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class sayHello_argsStandardSchemeFactory
+    private static class SayHelloArgsStandardSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public sayHello_argsStandardScheme getScheme() {
-        return new sayHello_argsStandardScheme();
+      public SayHelloArgsStandardScheme getScheme() {
+        return new SayHelloArgsStandardScheme();
       }
     }
 
-    private static class sayHello_argsStandardScheme
-        extends org.apache.thrift.scheme.StandardScheme<sayHello_args> {
+    private static class SayHelloArgsStandardScheme
+        extends org.apache.thrift.scheme.StandardScheme<SayHelloArgs> {
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol iprot, sayHello_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol iprot, SayHelloArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
@@ -2003,7 +2020,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol oprot, sayHello_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol oprot, SayHelloArgs struct)
           throws org.apache.thrift.TException {
         struct.validate();
 
@@ -2023,19 +2040,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class sayHello_argsTupleSchemeFactory
+    private static class SayHelloArgsTupleSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public sayHello_argsTupleScheme getScheme() {
-        return new sayHello_argsTupleScheme();
+      public SayHelloArgsTupleScheme getScheme() {
+        return new SayHelloArgsTupleScheme();
       }
     }
 
-    private static class sayHello_argsTupleScheme
-        extends org.apache.thrift.scheme.TupleScheme<sayHello_args> {
+    private static class SayHelloArgsTupleScheme
+        extends org.apache.thrift.scheme.TupleScheme<SayHelloArgs> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, sayHello_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol prot, SayHelloArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -2056,7 +2073,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, sayHello_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol prot, SayHelloArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -2082,11 +2099,11 @@ public class HelloWorldService {
   }
 
   @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-  public static class sayHello_result
-      implements org.apache.thrift.TBase<sayHello_result, sayHello_result._Fields>,
+  public static class SayHelloResult
+      implements org.apache.thrift.TBase<SayHelloResult, SayHelloResult.Fields>,
           java.io.Serializable,
           Cloneable,
-          Comparable<sayHello_result> {
+          Comparable<SayHelloResult> {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
         new org.apache.thrift.protocol.TStruct("sayHello_result");
 
@@ -2095,9 +2112,9 @@ public class HelloWorldService {
             "success", org.apache.thrift.protocol.TType.STRING, (short) 0);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY =
-        new sayHello_resultStandardSchemeFactory();
+        new SayHelloResultStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY =
-        new sayHello_resultTupleSchemeFactory();
+        new SayHelloResultTupleSchemeFactory();
 
     public @org.apache.thrift.annotation.Nullable java.lang.String success; // required
 
@@ -2105,21 +2122,21 @@ public class HelloWorldService {
      * The set of fields this struct contains, along with convenience methods for finding and
      * manipulating them.
      */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    public enum Fields implements org.apache.thrift.TFieldIdEnum {
       SUCCESS((short) 0, "success");
 
-      private static final java.util.Map<java.lang.String, _Fields> byName =
-          new java.util.HashMap<java.lang.String, _Fields>();
+      private static final java.util.Map<java.lang.String, Fields> byName =
+          new java.util.HashMap<java.lang.String, Fields>();
 
       static {
-        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+        for (Fields field : java.util.EnumSet.allOf(Fields.class)) {
           byName.put(field.getFieldName(), field);
         }
       }
 
       /** Find the _Fields constant that matches fieldId, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByThriftId(int fieldId) {
+      public static Fields findByThriftId(int fieldId) {
         switch (fieldId) {
           case 0: // SUCCESS
             return SUCCESS;
@@ -2131,47 +2148,48 @@ public class HelloWorldService {
       /**
        * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
        */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null)
+      public static Fields findByThriftIdOrThrow(int fieldId) {
+        Fields fields = findByThriftId(fieldId);
+        if (fields == null) {
           throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        }
         return fields;
       }
 
       /** Find the _Fields constant that matches name, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByName(java.lang.String name) {
+      public static Fields findByName(java.lang.String name) {
         return byName.get(name);
       }
 
-      private final short _thriftId;
-      private final java.lang.String _fieldName;
+      private final short thriftId;
+      private final java.lang.String fieldName;
 
-      _Fields(short thriftId, java.lang.String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
+      Fields(short thriftId, java.lang.String fieldName) {
+        this.thriftId = thriftId;
+        this.fieldName = fieldName;
       }
 
       @Override
       public short getThriftFieldId() {
-        return _thriftId;
+        return thriftId;
       }
 
       @Override
       public java.lang.String getFieldName() {
-        return _fieldName;
+        return fieldName;
       }
     }
 
     // isset id assignments
-    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData>
+    public static final java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData>
         metaDataMap;
 
     static {
-      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
-          new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+          new java.util.EnumMap<Fields, org.apache.thrift.meta_data.FieldMetaData>(Fields.class);
       tmpMap.put(
-          _Fields.SUCCESS,
+          Fields.SUCCESS,
           new org.apache.thrift.meta_data.FieldMetaData(
               "success",
               org.apache.thrift.TFieldRequirementType.DEFAULT,
@@ -2179,26 +2197,26 @@ public class HelloWorldService {
                   org.apache.thrift.protocol.TType.STRING)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(
-          sayHello_result.class, metaDataMap);
+          SayHelloResult.class, metaDataMap);
     }
 
-    public sayHello_result() {}
+    public SayHelloResult() {}
 
-    public sayHello_result(java.lang.String success) {
+    public SayHelloResult(java.lang.String success) {
       this();
       this.success = success;
     }
 
     /** Performs a deep copy on <i>other</i>. */
-    public sayHello_result(sayHello_result other) {
+    public SayHelloResult(SayHelloResult other) {
       if (other.isSetSuccess()) {
         this.success = other.success;
       }
     }
 
     @Override
-    public sayHello_result deepCopy() {
-      return new sayHello_result(this);
+    public SayHelloResult deepCopy() {
+      return new SayHelloResult(this);
     }
 
     @Override
@@ -2211,7 +2229,7 @@ public class HelloWorldService {
       return this.success;
     }
 
-    public sayHello_result setSuccess(
+    public SayHelloResult setSuccess(
         @org.apache.thrift.annotation.Nullable java.lang.String success) {
       this.success = success;
       return this;
@@ -2234,7 +2252,7 @@ public class HelloWorldService {
 
     @Override
     public void setFieldValue(
-        _Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
+        Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
       switch (field) {
         case SUCCESS:
           if (value == null) {
@@ -2248,7 +2266,7 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public java.lang.Object getFieldValue(_Fields field) {
+    public java.lang.Object getFieldValue(Fields field) {
       switch (field) {
         case SUCCESS:
           return getSuccess();
@@ -2261,7 +2279,7 @@ public class HelloWorldService {
      * otherwise
      */
     @Override
-    public boolean isSet(_Fields field) {
+    public boolean isSet(Fields field) {
       if (field == null) {
         throw new java.lang.IllegalArgumentException();
       }
@@ -2275,19 +2293,29 @@ public class HelloWorldService {
 
     @Override
     public boolean equals(java.lang.Object that) {
-      if (that instanceof sayHello_result) return this.equals((sayHello_result) that);
+      if (that instanceof SayHelloResult) {
+        return this.equals((SayHelloResult) that);
+      }
       return false;
     }
 
-    public boolean equals(sayHello_result that) {
-      if (that == null) return false;
-      if (this == that) return true;
+    public boolean equals(SayHelloResult that) {
+      if (that == null) {
+        return false;
+      }
+      if (this == that) {
+        return true;
+      }
 
-      boolean this_present_success = true && this.isSetSuccess();
-      boolean that_present_success = true && that.isSetSuccess();
-      if (this_present_success || that_present_success) {
-        if (!(this_present_success && that_present_success)) return false;
-        if (!this.success.equals(that.success)) return false;
+      boolean thisPresentSuccess = true && this.isSetSuccess();
+      boolean thatPresentSuccess = true && that.isSetSuccess();
+      if (thisPresentSuccess || thatPresentSuccess) {
+        if (!(thisPresentSuccess && thatPresentSuccess)) {
+          return false;
+        }
+        if (!this.success.equals(that.success)) {
+          return false;
+        }
       }
 
       return true;
@@ -2298,13 +2326,15 @@ public class HelloWorldService {
       int hashCode = 1;
 
       hashCode = hashCode * 8191 + ((isSetSuccess()) ? 131071 : 524287);
-      if (isSetSuccess()) hashCode = hashCode * 8191 + success.hashCode();
+      if (isSetSuccess()) {
+        hashCode = hashCode * 8191 + success.hashCode();
+      }
 
       return hashCode;
     }
 
     @Override
-    public int compareTo(sayHello_result other) {
+    public int compareTo(SayHelloResult other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -2326,8 +2356,8 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
+    public Fields fieldForId(int fieldId) {
+      return Fields.findByThriftId(fieldId);
     }
 
     @Override
@@ -2383,19 +2413,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class sayHello_resultStandardSchemeFactory
+    private static class SayHelloResultStandardSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public sayHello_resultStandardScheme getScheme() {
-        return new sayHello_resultStandardScheme();
+      public SayHelloResultStandardScheme getScheme() {
+        return new SayHelloResultStandardScheme();
       }
     }
 
-    private static class sayHello_resultStandardScheme
-        extends org.apache.thrift.scheme.StandardScheme<sayHello_result> {
+    private static class SayHelloResultStandardScheme
+        extends org.apache.thrift.scheme.StandardScheme<SayHelloResult> {
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol iprot, sayHello_result struct)
+      public void read(org.apache.thrift.protocol.TProtocol iprot, SayHelloResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
@@ -2426,7 +2456,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol oprot, sayHello_result struct)
+      public void write(org.apache.thrift.protocol.TProtocol oprot, SayHelloResult struct)
           throws org.apache.thrift.TException {
         struct.validate();
 
@@ -2441,19 +2471,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class sayHello_resultTupleSchemeFactory
+    private static class SayHelloResultTupleSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public sayHello_resultTupleScheme getScheme() {
-        return new sayHello_resultTupleScheme();
+      public SayHelloResultTupleScheme getScheme() {
+        return new SayHelloResultTupleScheme();
       }
     }
 
-    private static class sayHello_resultTupleScheme
-        extends org.apache.thrift.scheme.TupleScheme<sayHello_result> {
+    private static class SayHelloResultTupleScheme
+        extends org.apache.thrift.scheme.TupleScheme<SayHelloResult> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, sayHello_result struct)
+      public void write(org.apache.thrift.protocol.TProtocol prot, SayHelloResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -2468,7 +2498,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, sayHello_result struct)
+      public void read(org.apache.thrift.protocol.TProtocol prot, SayHelloResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -2490,11 +2520,11 @@ public class HelloWorldService {
   }
 
   @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-  public static class withDelay_args
-      implements org.apache.thrift.TBase<withDelay_args, withDelay_args._Fields>,
+  public static class WithDelayArgs
+      implements org.apache.thrift.TBase<WithDelayArgs, WithDelayArgs.Fields>,
           java.io.Serializable,
           Cloneable,
-          Comparable<withDelay_args> {
+          Comparable<WithDelayArgs> {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
         new org.apache.thrift.protocol.TStruct("withDelay_args");
 
@@ -2503,9 +2533,9 @@ public class HelloWorldService {
             "delay", org.apache.thrift.protocol.TType.I32, (short) 1);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY =
-        new withDelay_argsStandardSchemeFactory();
+        new WithDelayArgsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY =
-        new withDelay_argsTupleSchemeFactory();
+        new WithDelayArgsTupleSchemeFactory();
 
     public int delay; // required
 
@@ -2513,21 +2543,21 @@ public class HelloWorldService {
      * The set of fields this struct contains, along with convenience methods for finding and
      * manipulating them.
      */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    public enum Fields implements org.apache.thrift.TFieldIdEnum {
       DELAY((short) 1, "delay");
 
-      private static final java.util.Map<java.lang.String, _Fields> byName =
-          new java.util.HashMap<java.lang.String, _Fields>();
+      private static final java.util.Map<java.lang.String, Fields> byName =
+          new java.util.HashMap<java.lang.String, Fields>();
 
       static {
-        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+        for (Fields field : java.util.EnumSet.allOf(Fields.class)) {
           byName.put(field.getFieldName(), field);
         }
       }
 
       /** Find the _Fields constant that matches fieldId, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByThriftId(int fieldId) {
+      public static Fields findByThriftId(int fieldId) {
         switch (fieldId) {
           case 1: // DELAY
             return DELAY;
@@ -2539,49 +2569,50 @@ public class HelloWorldService {
       /**
        * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
        */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null)
+      public static Fields findByThriftIdOrThrow(int fieldId) {
+        Fields fields = findByThriftId(fieldId);
+        if (fields == null) {
           throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        }
         return fields;
       }
 
       /** Find the _Fields constant that matches name, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByName(java.lang.String name) {
+      public static Fields findByName(java.lang.String name) {
         return byName.get(name);
       }
 
-      private final short _thriftId;
-      private final java.lang.String _fieldName;
+      private final short thriftId;
+      private final java.lang.String fieldName;
 
-      _Fields(short thriftId, java.lang.String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
+      Fields(short thriftId, java.lang.String fieldName) {
+        this.thriftId = thriftId;
+        this.fieldName = fieldName;
       }
 
       @Override
       public short getThriftFieldId() {
-        return _thriftId;
+        return thriftId;
       }
 
       @Override
       public java.lang.String getFieldName() {
-        return _fieldName;
+        return fieldName;
       }
     }
 
     // isset id assignments
     private static final int __DELAY_ISSET_ID = 0;
-    private byte __isset_bitfield = 0;
-    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData>
+    private byte issetBitfield = 0;
+    public static final java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData>
         metaDataMap;
 
     static {
-      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
-          new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+          new java.util.EnumMap<Fields, org.apache.thrift.meta_data.FieldMetaData>(Fields.class);
       tmpMap.put(
-          _Fields.DELAY,
+          Fields.DELAY,
           new org.apache.thrift.meta_data.FieldMetaData(
               "delay",
               org.apache.thrift.TFieldRequirementType.DEFAULT,
@@ -2589,26 +2620,26 @@ public class HelloWorldService {
                   org.apache.thrift.protocol.TType.I32)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(
-          withDelay_args.class, metaDataMap);
+          WithDelayArgs.class, metaDataMap);
     }
 
-    public withDelay_args() {}
+    public WithDelayArgs() {}
 
-    public withDelay_args(int delay) {
+    public WithDelayArgs(int delay) {
       this();
       this.delay = delay;
       setDelayIsSet(true);
     }
 
     /** Performs a deep copy on <i>other</i>. */
-    public withDelay_args(withDelay_args other) {
-      __isset_bitfield = other.__isset_bitfield;
+    public WithDelayArgs(WithDelayArgs other) {
+      issetBitfield = other.issetBitfield;
       this.delay = other.delay;
     }
 
     @Override
-    public withDelay_args deepCopy() {
-      return new withDelay_args(this);
+    public WithDelayArgs deepCopy() {
+      return new WithDelayArgs(this);
     }
 
     @Override
@@ -2621,30 +2652,29 @@ public class HelloWorldService {
       return this.delay;
     }
 
-    public withDelay_args setDelay(int delay) {
+    public WithDelayArgs setDelay(int delay) {
       this.delay = delay;
       setDelayIsSet(true);
       return this;
     }
 
     public void unsetDelay() {
-      __isset_bitfield =
-          org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __DELAY_ISSET_ID);
+      issetBitfield = org.apache.thrift.EncodingUtils.clearBit(issetBitfield, __DELAY_ISSET_ID);
     }
 
     /** Returns true if field delay is set (has been assigned a value) and false otherwise */
     public boolean isSetDelay() {
-      return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __DELAY_ISSET_ID);
+      return org.apache.thrift.EncodingUtils.testBit(issetBitfield, __DELAY_ISSET_ID);
     }
 
     public void setDelayIsSet(boolean value) {
-      __isset_bitfield =
-          org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __DELAY_ISSET_ID, value);
+      issetBitfield =
+          org.apache.thrift.EncodingUtils.setBit(issetBitfield, __DELAY_ISSET_ID, value);
     }
 
     @Override
     public void setFieldValue(
-        _Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
+        Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
       switch (field) {
         case DELAY:
           if (value == null) {
@@ -2658,7 +2688,7 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public java.lang.Object getFieldValue(_Fields field) {
+    public java.lang.Object getFieldValue(Fields field) {
       switch (field) {
         case DELAY:
           return getDelay();
@@ -2671,7 +2701,7 @@ public class HelloWorldService {
      * otherwise
      */
     @Override
-    public boolean isSet(_Fields field) {
+    public boolean isSet(Fields field) {
       if (field == null) {
         throw new java.lang.IllegalArgumentException();
       }
@@ -2685,19 +2715,29 @@ public class HelloWorldService {
 
     @Override
     public boolean equals(java.lang.Object that) {
-      if (that instanceof withDelay_args) return this.equals((withDelay_args) that);
+      if (that instanceof WithDelayArgs) {
+        return this.equals((WithDelayArgs) that);
+      }
       return false;
     }
 
-    public boolean equals(withDelay_args that) {
-      if (that == null) return false;
-      if (this == that) return true;
+    public boolean equals(WithDelayArgs that) {
+      if (that == null) {
+        return false;
+      }
+      if (this == that) {
+        return true;
+      }
 
-      boolean this_present_delay = true;
-      boolean that_present_delay = true;
-      if (this_present_delay || that_present_delay) {
-        if (!(this_present_delay && that_present_delay)) return false;
-        if (this.delay != that.delay) return false;
+      boolean thisPresentDelay = true;
+      boolean thatPresentDelay = true;
+      if (thisPresentDelay || thatPresentDelay) {
+        if (!(thisPresentDelay && thatPresentDelay)) {
+          return false;
+        }
+        if (this.delay != that.delay) {
+          return false;
+        }
       }
 
       return true;
@@ -2713,7 +2753,7 @@ public class HelloWorldService {
     }
 
     @Override
-    public int compareTo(withDelay_args other) {
+    public int compareTo(WithDelayArgs other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -2735,8 +2775,8 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
+    public Fields fieldForId(int fieldId) {
+      return Fields.findByThriftId(fieldId);
     }
 
     @Override
@@ -2783,7 +2823,7 @@ public class HelloWorldService {
       try {
         // it doesn't seem like you should have to do this, but java serialization is wacky, and
         // doesn't call the default constructor.
-        __isset_bitfield = 0;
+        issetBitfield = 0;
         read(
             new org.apache.thrift.protocol.TCompactProtocol(
                 new org.apache.thrift.transport.TIOStreamTransport(in)));
@@ -2792,19 +2832,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class withDelay_argsStandardSchemeFactory
+    private static class WithDelayArgsStandardSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withDelay_argsStandardScheme getScheme() {
-        return new withDelay_argsStandardScheme();
+      public WithDelayArgsStandardScheme getScheme() {
+        return new WithDelayArgsStandardScheme();
       }
     }
 
-    private static class withDelay_argsStandardScheme
-        extends org.apache.thrift.scheme.StandardScheme<withDelay_args> {
+    private static class WithDelayArgsStandardScheme
+        extends org.apache.thrift.scheme.StandardScheme<WithDelayArgs> {
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol iprot, withDelay_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol iprot, WithDelayArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
@@ -2835,7 +2875,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol oprot, withDelay_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol oprot, WithDelayArgs struct)
           throws org.apache.thrift.TException {
         struct.validate();
 
@@ -2848,19 +2888,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class withDelay_argsTupleSchemeFactory
+    private static class WithDelayArgsTupleSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withDelay_argsTupleScheme getScheme() {
-        return new withDelay_argsTupleScheme();
+      public WithDelayArgsTupleScheme getScheme() {
+        return new WithDelayArgsTupleScheme();
       }
     }
 
-    private static class withDelay_argsTupleScheme
-        extends org.apache.thrift.scheme.TupleScheme<withDelay_args> {
+    private static class WithDelayArgsTupleScheme
+        extends org.apache.thrift.scheme.TupleScheme<WithDelayArgs> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, withDelay_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol prot, WithDelayArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -2875,7 +2915,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, withDelay_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol prot, WithDelayArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -2897,11 +2937,11 @@ public class HelloWorldService {
   }
 
   @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-  public static class withDelay_result
-      implements org.apache.thrift.TBase<withDelay_result, withDelay_result._Fields>,
+  public static class WithDelayResult
+      implements org.apache.thrift.TBase<WithDelayResult, WithDelayResult.Fields>,
           java.io.Serializable,
           Cloneable,
-          Comparable<withDelay_result> {
+          Comparable<WithDelayResult> {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
         new org.apache.thrift.protocol.TStruct("withDelay_result");
 
@@ -2910,9 +2950,9 @@ public class HelloWorldService {
             "success", org.apache.thrift.protocol.TType.STRING, (short) 0);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY =
-        new withDelay_resultStandardSchemeFactory();
+        new WithDelayResultStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY =
-        new withDelay_resultTupleSchemeFactory();
+        new WithDelayResultTupleSchemeFactory();
 
     public @org.apache.thrift.annotation.Nullable java.lang.String success; // required
 
@@ -2920,21 +2960,21 @@ public class HelloWorldService {
      * The set of fields this struct contains, along with convenience methods for finding and
      * manipulating them.
      */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    public enum Fields implements org.apache.thrift.TFieldIdEnum {
       SUCCESS((short) 0, "success");
 
-      private static final java.util.Map<java.lang.String, _Fields> byName =
-          new java.util.HashMap<java.lang.String, _Fields>();
+      private static final java.util.Map<java.lang.String, Fields> byName =
+          new java.util.HashMap<java.lang.String, Fields>();
 
       static {
-        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+        for (Fields field : java.util.EnumSet.allOf(Fields.class)) {
           byName.put(field.getFieldName(), field);
         }
       }
 
       /** Find the _Fields constant that matches fieldId, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByThriftId(int fieldId) {
+      public static Fields findByThriftId(int fieldId) {
         switch (fieldId) {
           case 0: // SUCCESS
             return SUCCESS;
@@ -2946,47 +2986,48 @@ public class HelloWorldService {
       /**
        * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
        */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null)
+      public static Fields findByThriftIdOrThrow(int fieldId) {
+        Fields fields = findByThriftId(fieldId);
+        if (fields == null) {
           throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        }
         return fields;
       }
 
       /** Find the _Fields constant that matches name, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByName(java.lang.String name) {
+      public static Fields findByName(java.lang.String name) {
         return byName.get(name);
       }
 
-      private final short _thriftId;
-      private final java.lang.String _fieldName;
+      private final short thriftId;
+      private final java.lang.String fieldName;
 
-      _Fields(short thriftId, java.lang.String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
+      Fields(short thriftId, java.lang.String fieldName) {
+        this.thriftId = thriftId;
+        this.fieldName = fieldName;
       }
 
       @Override
       public short getThriftFieldId() {
-        return _thriftId;
+        return thriftId;
       }
 
       @Override
       public java.lang.String getFieldName() {
-        return _fieldName;
+        return fieldName;
       }
     }
 
     // isset id assignments
-    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData>
+    public static final java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData>
         metaDataMap;
 
     static {
-      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
-          new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+          new java.util.EnumMap<Fields, org.apache.thrift.meta_data.FieldMetaData>(Fields.class);
       tmpMap.put(
-          _Fields.SUCCESS,
+          Fields.SUCCESS,
           new org.apache.thrift.meta_data.FieldMetaData(
               "success",
               org.apache.thrift.TFieldRequirementType.DEFAULT,
@@ -2994,26 +3035,26 @@ public class HelloWorldService {
                   org.apache.thrift.protocol.TType.STRING)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(
-          withDelay_result.class, metaDataMap);
+          WithDelayResult.class, metaDataMap);
     }
 
-    public withDelay_result() {}
+    public WithDelayResult() {}
 
-    public withDelay_result(java.lang.String success) {
+    public WithDelayResult(java.lang.String success) {
       this();
       this.success = success;
     }
 
     /** Performs a deep copy on <i>other</i>. */
-    public withDelay_result(withDelay_result other) {
+    public WithDelayResult(WithDelayResult other) {
       if (other.isSetSuccess()) {
         this.success = other.success;
       }
     }
 
     @Override
-    public withDelay_result deepCopy() {
-      return new withDelay_result(this);
+    public WithDelayResult deepCopy() {
+      return new WithDelayResult(this);
     }
 
     @Override
@@ -3026,7 +3067,7 @@ public class HelloWorldService {
       return this.success;
     }
 
-    public withDelay_result setSuccess(
+    public WithDelayResult setSuccess(
         @org.apache.thrift.annotation.Nullable java.lang.String success) {
       this.success = success;
       return this;
@@ -3049,7 +3090,7 @@ public class HelloWorldService {
 
     @Override
     public void setFieldValue(
-        _Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
+        Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
       switch (field) {
         case SUCCESS:
           if (value == null) {
@@ -3063,7 +3104,7 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public java.lang.Object getFieldValue(_Fields field) {
+    public java.lang.Object getFieldValue(Fields field) {
       switch (field) {
         case SUCCESS:
           return getSuccess();
@@ -3076,7 +3117,7 @@ public class HelloWorldService {
      * otherwise
      */
     @Override
-    public boolean isSet(_Fields field) {
+    public boolean isSet(Fields field) {
       if (field == null) {
         throw new java.lang.IllegalArgumentException();
       }
@@ -3090,19 +3131,29 @@ public class HelloWorldService {
 
     @Override
     public boolean equals(java.lang.Object that) {
-      if (that instanceof withDelay_result) return this.equals((withDelay_result) that);
+      if (that instanceof WithDelayResult) {
+        return this.equals((WithDelayResult) that);
+      }
       return false;
     }
 
-    public boolean equals(withDelay_result that) {
-      if (that == null) return false;
-      if (this == that) return true;
+    public boolean equals(WithDelayResult that) {
+      if (that == null) {
+        return false;
+      }
+      if (this == that) {
+        return true;
+      }
 
-      boolean this_present_success = true && this.isSetSuccess();
-      boolean that_present_success = true && that.isSetSuccess();
-      if (this_present_success || that_present_success) {
-        if (!(this_present_success && that_present_success)) return false;
-        if (!this.success.equals(that.success)) return false;
+      boolean thisPresentSuccess = true && this.isSetSuccess();
+      boolean thatPresentSuccess = true && that.isSetSuccess();
+      if (thisPresentSuccess || thatPresentSuccess) {
+        if (!(thisPresentSuccess && thatPresentSuccess)) {
+          return false;
+        }
+        if (!this.success.equals(that.success)) {
+          return false;
+        }
       }
 
       return true;
@@ -3113,13 +3164,15 @@ public class HelloWorldService {
       int hashCode = 1;
 
       hashCode = hashCode * 8191 + ((isSetSuccess()) ? 131071 : 524287);
-      if (isSetSuccess()) hashCode = hashCode * 8191 + success.hashCode();
+      if (isSetSuccess()) {
+        hashCode = hashCode * 8191 + success.hashCode();
+      }
 
       return hashCode;
     }
 
     @Override
-    public int compareTo(withDelay_result other) {
+    public int compareTo(WithDelayResult other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -3141,8 +3194,8 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
+    public Fields fieldForId(int fieldId) {
+      return Fields.findByThriftId(fieldId);
     }
 
     @Override
@@ -3198,19 +3251,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class withDelay_resultStandardSchemeFactory
+    private static class WithDelayResultStandardSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withDelay_resultStandardScheme getScheme() {
-        return new withDelay_resultStandardScheme();
+      public WithDelayResultStandardScheme getScheme() {
+        return new WithDelayResultStandardScheme();
       }
     }
 
-    private static class withDelay_resultStandardScheme
-        extends org.apache.thrift.scheme.StandardScheme<withDelay_result> {
+    private static class WithDelayResultStandardScheme
+        extends org.apache.thrift.scheme.StandardScheme<WithDelayResult> {
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol iprot, withDelay_result struct)
+      public void read(org.apache.thrift.protocol.TProtocol iprot, WithDelayResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
@@ -3241,7 +3294,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol oprot, withDelay_result struct)
+      public void write(org.apache.thrift.protocol.TProtocol oprot, WithDelayResult struct)
           throws org.apache.thrift.TException {
         struct.validate();
 
@@ -3256,19 +3309,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class withDelay_resultTupleSchemeFactory
+    private static class WithDelayResultTupleSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withDelay_resultTupleScheme getScheme() {
-        return new withDelay_resultTupleScheme();
+      public WithDelayResultTupleScheme getScheme() {
+        return new WithDelayResultTupleScheme();
       }
     }
 
-    private static class withDelay_resultTupleScheme
-        extends org.apache.thrift.scheme.TupleScheme<withDelay_result> {
+    private static class WithDelayResultTupleScheme
+        extends org.apache.thrift.scheme.TupleScheme<WithDelayResult> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, withDelay_result struct)
+      public void write(org.apache.thrift.protocol.TProtocol prot, WithDelayResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -3283,7 +3336,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, withDelay_result struct)
+      public void read(org.apache.thrift.protocol.TProtocol prot, WithDelayResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -3305,38 +3358,38 @@ public class HelloWorldService {
   }
 
   @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-  public static class withoutArgs_args
-      implements org.apache.thrift.TBase<withoutArgs_args, withoutArgs_args._Fields>,
+  public static class WithoutArgsArgs
+      implements org.apache.thrift.TBase<WithoutArgsArgs, WithoutArgsArgs.Fields>,
           java.io.Serializable,
           Cloneable,
-          Comparable<withoutArgs_args> {
+          Comparable<WithoutArgsArgs> {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
         new org.apache.thrift.protocol.TStruct("withoutArgs_args");
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY =
-        new withoutArgs_argsStandardSchemeFactory();
+        new WithoutArgsArgsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY =
-        new withoutArgs_argsTupleSchemeFactory();
+        new WithoutArgsArgsTupleSchemeFactory();
 
     /**
      * The set of fields this struct contains, along with convenience methods for finding and
      * manipulating them.
      */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    public enum Fields implements org.apache.thrift.TFieldIdEnum {
       ;
 
-      private static final java.util.Map<java.lang.String, _Fields> byName =
-          new java.util.HashMap<java.lang.String, _Fields>();
+      private static final java.util.Map<java.lang.String, Fields> byName =
+          new java.util.HashMap<java.lang.String, Fields>();
 
       static {
-        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+        for (Fields field : java.util.EnumSet.allOf(Fields.class)) {
           byName.put(field.getFieldName(), field);
         }
       }
 
       /** Find the _Fields constant that matches fieldId, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByThriftId(int fieldId) {
+      public static Fields findByThriftId(int fieldId) {
         switch (fieldId) {
           default:
             return null;
@@ -3346,57 +3399,58 @@ public class HelloWorldService {
       /**
        * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
        */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null)
+      public static Fields findByThriftIdOrThrow(int fieldId) {
+        Fields fields = findByThriftId(fieldId);
+        if (fields == null) {
           throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        }
         return fields;
       }
 
       /** Find the _Fields constant that matches name, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByName(java.lang.String name) {
+      public static Fields findByName(java.lang.String name) {
         return byName.get(name);
       }
 
-      private final short _thriftId;
-      private final java.lang.String _fieldName;
+      private final short thriftId;
+      private final java.lang.String fieldName;
 
-      _Fields(short thriftId, java.lang.String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
+      Fields(short thriftId, java.lang.String fieldName) {
+        this.thriftId = thriftId;
+        this.fieldName = fieldName;
       }
 
       @Override
       public short getThriftFieldId() {
-        return _thriftId;
+        return thriftId;
       }
 
       @Override
       public java.lang.String getFieldName() {
-        return _fieldName;
+        return fieldName;
       }
     }
 
-    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData>
+    public static final java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData>
         metaDataMap;
 
     static {
-      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
-          new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+          new java.util.EnumMap<Fields, org.apache.thrift.meta_data.FieldMetaData>(Fields.class);
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(
-          withoutArgs_args.class, metaDataMap);
+          WithoutArgsArgs.class, metaDataMap);
     }
 
-    public withoutArgs_args() {}
+    public WithoutArgsArgs() {}
 
     /** Performs a deep copy on <i>other</i>. */
-    public withoutArgs_args(withoutArgs_args other) {}
+    public WithoutArgsArgs(WithoutArgsArgs other) {}
 
     @Override
-    public withoutArgs_args deepCopy() {
-      return new withoutArgs_args(this);
+    public WithoutArgsArgs deepCopy() {
+      return new WithoutArgsArgs(this);
     }
 
     @Override
@@ -3404,16 +3458,12 @@ public class HelloWorldService {
 
     @Override
     public void setFieldValue(
-        _Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
-      switch (field) {
-      }
-    }
+        Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {}
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public java.lang.Object getFieldValue(_Fields field) {
-      switch (field) {
-      }
+    public java.lang.Object getFieldValue(Fields field) {
+
       throw new java.lang.IllegalStateException();
     }
 
@@ -3422,25 +3472,29 @@ public class HelloWorldService {
      * otherwise
      */
     @Override
-    public boolean isSet(_Fields field) {
+    public boolean isSet(Fields field) {
       if (field == null) {
         throw new java.lang.IllegalArgumentException();
       }
 
-      switch (field) {
-      }
       throw new java.lang.IllegalStateException();
     }
 
     @Override
     public boolean equals(java.lang.Object that) {
-      if (that instanceof withoutArgs_args) return this.equals((withoutArgs_args) that);
+      if (that instanceof WithoutArgsArgs) {
+        return this.equals((WithoutArgsArgs) that);
+      }
       return false;
     }
 
-    public boolean equals(withoutArgs_args that) {
-      if (that == null) return false;
-      if (this == that) return true;
+    public boolean equals(WithoutArgsArgs that) {
+      if (that == null) {
+        return false;
+      }
+      if (this == that) {
+        return true;
+      }
 
       return true;
     }
@@ -3453,7 +3507,7 @@ public class HelloWorldService {
     }
 
     @Override
-    public int compareTo(withoutArgs_args other) {
+    public int compareTo(WithoutArgsArgs other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -3465,8 +3519,8 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
+    public Fields fieldForId(int fieldId) {
+      return Fields.findByThriftId(fieldId);
     }
 
     @Override
@@ -3516,19 +3570,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class withoutArgs_argsStandardSchemeFactory
+    private static class WithoutArgsArgsStandardSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withoutArgs_argsStandardScheme getScheme() {
-        return new withoutArgs_argsStandardScheme();
+      public WithoutArgsArgsStandardScheme getScheme() {
+        return new WithoutArgsArgsStandardScheme();
       }
     }
 
-    private static class withoutArgs_argsStandardScheme
-        extends org.apache.thrift.scheme.StandardScheme<withoutArgs_args> {
+    private static class WithoutArgsArgsStandardScheme
+        extends org.apache.thrift.scheme.StandardScheme<WithoutArgsArgs> {
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol iprot, withoutArgs_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol iprot, WithoutArgsArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
@@ -3551,7 +3605,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol oprot, withoutArgs_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol oprot, WithoutArgsArgs struct)
           throws org.apache.thrift.TException {
         struct.validate();
 
@@ -3561,26 +3615,26 @@ public class HelloWorldService {
       }
     }
 
-    private static class withoutArgs_argsTupleSchemeFactory
+    private static class WithoutArgsArgsTupleSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withoutArgs_argsTupleScheme getScheme() {
-        return new withoutArgs_argsTupleScheme();
+      public WithoutArgsArgsTupleScheme getScheme() {
+        return new WithoutArgsArgsTupleScheme();
       }
     }
 
-    private static class withoutArgs_argsTupleScheme
-        extends org.apache.thrift.scheme.TupleScheme<withoutArgs_args> {
+    private static class WithoutArgsArgsTupleScheme
+        extends org.apache.thrift.scheme.TupleScheme<WithoutArgsArgs> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, withoutArgs_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol prot, WithoutArgsArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, withoutArgs_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol prot, WithoutArgsArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -3597,11 +3651,11 @@ public class HelloWorldService {
   }
 
   @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-  public static class withoutArgs_result
-      implements org.apache.thrift.TBase<withoutArgs_result, withoutArgs_result._Fields>,
+  public static class WithoutArgsResult
+      implements org.apache.thrift.TBase<WithoutArgsResult, WithoutArgsResult.Fields>,
           java.io.Serializable,
           Cloneable,
-          Comparable<withoutArgs_result> {
+          Comparable<WithoutArgsResult> {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
         new org.apache.thrift.protocol.TStruct("withoutArgs_result");
 
@@ -3610,9 +3664,9 @@ public class HelloWorldService {
             "success", org.apache.thrift.protocol.TType.STRING, (short) 0);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY =
-        new withoutArgs_resultStandardSchemeFactory();
+        new WithoutArgsResultStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY =
-        new withoutArgs_resultTupleSchemeFactory();
+        new WithoutArgsResultTupleSchemeFactory();
 
     public @org.apache.thrift.annotation.Nullable java.lang.String success; // required
 
@@ -3620,21 +3674,21 @@ public class HelloWorldService {
      * The set of fields this struct contains, along with convenience methods for finding and
      * manipulating them.
      */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    public enum Fields implements org.apache.thrift.TFieldIdEnum {
       SUCCESS((short) 0, "success");
 
-      private static final java.util.Map<java.lang.String, _Fields> byName =
-          new java.util.HashMap<java.lang.String, _Fields>();
+      private static final java.util.Map<java.lang.String, Fields> byName =
+          new java.util.HashMap<java.lang.String, Fields>();
 
       static {
-        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+        for (Fields field : java.util.EnumSet.allOf(Fields.class)) {
           byName.put(field.getFieldName(), field);
         }
       }
 
       /** Find the _Fields constant that matches fieldId, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByThriftId(int fieldId) {
+      public static Fields findByThriftId(int fieldId) {
         switch (fieldId) {
           case 0: // SUCCESS
             return SUCCESS;
@@ -3646,47 +3700,48 @@ public class HelloWorldService {
       /**
        * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
        */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null)
+      public static Fields findByThriftIdOrThrow(int fieldId) {
+        Fields fields = findByThriftId(fieldId);
+        if (fields == null) {
           throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        }
         return fields;
       }
 
       /** Find the _Fields constant that matches name, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByName(java.lang.String name) {
+      public static Fields findByName(java.lang.String name) {
         return byName.get(name);
       }
 
-      private final short _thriftId;
-      private final java.lang.String _fieldName;
+      private final short thriftId;
+      private final java.lang.String fieldName;
 
-      _Fields(short thriftId, java.lang.String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
+      Fields(short thriftId, java.lang.String fieldName) {
+        this.thriftId = thriftId;
+        this.fieldName = fieldName;
       }
 
       @Override
       public short getThriftFieldId() {
-        return _thriftId;
+        return thriftId;
       }
 
       @Override
       public java.lang.String getFieldName() {
-        return _fieldName;
+        return fieldName;
       }
     }
 
     // isset id assignments
-    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData>
+    public static final java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData>
         metaDataMap;
 
     static {
-      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
-          new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+          new java.util.EnumMap<Fields, org.apache.thrift.meta_data.FieldMetaData>(Fields.class);
       tmpMap.put(
-          _Fields.SUCCESS,
+          Fields.SUCCESS,
           new org.apache.thrift.meta_data.FieldMetaData(
               "success",
               org.apache.thrift.TFieldRequirementType.DEFAULT,
@@ -3694,26 +3749,26 @@ public class HelloWorldService {
                   org.apache.thrift.protocol.TType.STRING)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(
-          withoutArgs_result.class, metaDataMap);
+          WithoutArgsResult.class, metaDataMap);
     }
 
-    public withoutArgs_result() {}
+    public WithoutArgsResult() {}
 
-    public withoutArgs_result(java.lang.String success) {
+    public WithoutArgsResult(java.lang.String success) {
       this();
       this.success = success;
     }
 
     /** Performs a deep copy on <i>other</i>. */
-    public withoutArgs_result(withoutArgs_result other) {
+    public WithoutArgsResult(WithoutArgsResult other) {
       if (other.isSetSuccess()) {
         this.success = other.success;
       }
     }
 
     @Override
-    public withoutArgs_result deepCopy() {
-      return new withoutArgs_result(this);
+    public WithoutArgsResult deepCopy() {
+      return new WithoutArgsResult(this);
     }
 
     @Override
@@ -3726,7 +3781,7 @@ public class HelloWorldService {
       return this.success;
     }
 
-    public withoutArgs_result setSuccess(
+    public WithoutArgsResult setSuccess(
         @org.apache.thrift.annotation.Nullable java.lang.String success) {
       this.success = success;
       return this;
@@ -3749,7 +3804,7 @@ public class HelloWorldService {
 
     @Override
     public void setFieldValue(
-        _Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
+        Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
       switch (field) {
         case SUCCESS:
           if (value == null) {
@@ -3763,7 +3818,7 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public java.lang.Object getFieldValue(_Fields field) {
+    public java.lang.Object getFieldValue(Fields field) {
       switch (field) {
         case SUCCESS:
           return getSuccess();
@@ -3776,7 +3831,7 @@ public class HelloWorldService {
      * otherwise
      */
     @Override
-    public boolean isSet(_Fields field) {
+    public boolean isSet(Fields field) {
       if (field == null) {
         throw new java.lang.IllegalArgumentException();
       }
@@ -3790,19 +3845,29 @@ public class HelloWorldService {
 
     @Override
     public boolean equals(java.lang.Object that) {
-      if (that instanceof withoutArgs_result) return this.equals((withoutArgs_result) that);
+      if (that instanceof WithoutArgsResult) {
+        return this.equals((WithoutArgsResult) that);
+      }
       return false;
     }
 
-    public boolean equals(withoutArgs_result that) {
-      if (that == null) return false;
-      if (this == that) return true;
+    public boolean equals(WithoutArgsResult that) {
+      if (that == null) {
+        return false;
+      }
+      if (this == that) {
+        return true;
+      }
 
-      boolean this_present_success = true && this.isSetSuccess();
-      boolean that_present_success = true && that.isSetSuccess();
-      if (this_present_success || that_present_success) {
-        if (!(this_present_success && that_present_success)) return false;
-        if (!this.success.equals(that.success)) return false;
+      boolean thisPresentSuccess = true && this.isSetSuccess();
+      boolean thatPresentSuccess = true && that.isSetSuccess();
+      if (thisPresentSuccess || thatPresentSuccess) {
+        if (!(thisPresentSuccess && thatPresentSuccess)) {
+          return false;
+        }
+        if (!this.success.equals(that.success)) {
+          return false;
+        }
       }
 
       return true;
@@ -3813,13 +3878,15 @@ public class HelloWorldService {
       int hashCode = 1;
 
       hashCode = hashCode * 8191 + ((isSetSuccess()) ? 131071 : 524287);
-      if (isSetSuccess()) hashCode = hashCode * 8191 + success.hashCode();
+      if (isSetSuccess()) {
+        hashCode = hashCode * 8191 + success.hashCode();
+      }
 
       return hashCode;
     }
 
     @Override
-    public int compareTo(withoutArgs_result other) {
+    public int compareTo(WithoutArgsResult other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -3841,8 +3908,8 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
+    public Fields fieldForId(int fieldId) {
+      return Fields.findByThriftId(fieldId);
     }
 
     @Override
@@ -3898,19 +3965,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class withoutArgs_resultStandardSchemeFactory
+    private static class WithoutArgsResultStandardSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withoutArgs_resultStandardScheme getScheme() {
-        return new withoutArgs_resultStandardScheme();
+      public WithoutArgsResultStandardScheme getScheme() {
+        return new WithoutArgsResultStandardScheme();
       }
     }
 
-    private static class withoutArgs_resultStandardScheme
-        extends org.apache.thrift.scheme.StandardScheme<withoutArgs_result> {
+    private static class WithoutArgsResultStandardScheme
+        extends org.apache.thrift.scheme.StandardScheme<WithoutArgsResult> {
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol iprot, withoutArgs_result struct)
+      public void read(org.apache.thrift.protocol.TProtocol iprot, WithoutArgsResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
@@ -3941,7 +4008,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol oprot, withoutArgs_result struct)
+      public void write(org.apache.thrift.protocol.TProtocol oprot, WithoutArgsResult struct)
           throws org.apache.thrift.TException {
         struct.validate();
 
@@ -3956,19 +4023,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class withoutArgs_resultTupleSchemeFactory
+    private static class WithoutArgsResultTupleSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withoutArgs_resultTupleScheme getScheme() {
-        return new withoutArgs_resultTupleScheme();
+      public WithoutArgsResultTupleScheme getScheme() {
+        return new WithoutArgsResultTupleScheme();
       }
     }
 
-    private static class withoutArgs_resultTupleScheme
-        extends org.apache.thrift.scheme.TupleScheme<withoutArgs_result> {
+    private static class WithoutArgsResultTupleScheme
+        extends org.apache.thrift.scheme.TupleScheme<WithoutArgsResult> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, withoutArgs_result struct)
+      public void write(org.apache.thrift.protocol.TProtocol prot, WithoutArgsResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -3983,7 +4050,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, withoutArgs_result struct)
+      public void read(org.apache.thrift.protocol.TProtocol prot, WithoutArgsResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -4005,38 +4072,38 @@ public class HelloWorldService {
   }
 
   @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-  public static class withError_args
-      implements org.apache.thrift.TBase<withError_args, withError_args._Fields>,
+  public static class WithErrorArgs
+      implements org.apache.thrift.TBase<WithErrorArgs, WithErrorArgs.Fields>,
           java.io.Serializable,
           Cloneable,
-          Comparable<withError_args> {
+          Comparable<WithErrorArgs> {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
         new org.apache.thrift.protocol.TStruct("withError_args");
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY =
-        new withError_argsStandardSchemeFactory();
+        new WithErrorArgsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY =
-        new withError_argsTupleSchemeFactory();
+        new WithErrorArgsTupleSchemeFactory();
 
     /**
      * The set of fields this struct contains, along with convenience methods for finding and
      * manipulating them.
      */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    public enum Fields implements org.apache.thrift.TFieldIdEnum {
       ;
 
-      private static final java.util.Map<java.lang.String, _Fields> byName =
-          new java.util.HashMap<java.lang.String, _Fields>();
+      private static final java.util.Map<java.lang.String, Fields> byName =
+          new java.util.HashMap<java.lang.String, Fields>();
 
       static {
-        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+        for (Fields field : java.util.EnumSet.allOf(Fields.class)) {
           byName.put(field.getFieldName(), field);
         }
       }
 
       /** Find the _Fields constant that matches fieldId, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByThriftId(int fieldId) {
+      public static Fields findByThriftId(int fieldId) {
         switch (fieldId) {
           default:
             return null;
@@ -4046,57 +4113,58 @@ public class HelloWorldService {
       /**
        * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
        */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null)
+      public static Fields findByThriftIdOrThrow(int fieldId) {
+        Fields fields = findByThriftId(fieldId);
+        if (fields == null) {
           throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        }
         return fields;
       }
 
       /** Find the _Fields constant that matches name, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByName(java.lang.String name) {
+      public static Fields findByName(java.lang.String name) {
         return byName.get(name);
       }
 
-      private final short _thriftId;
-      private final java.lang.String _fieldName;
+      private final short thriftId;
+      private final java.lang.String fieldName;
 
-      _Fields(short thriftId, java.lang.String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
+      Fields(short thriftId, java.lang.String fieldName) {
+        this.thriftId = thriftId;
+        this.fieldName = fieldName;
       }
 
       @Override
       public short getThriftFieldId() {
-        return _thriftId;
+        return thriftId;
       }
 
       @Override
       public java.lang.String getFieldName() {
-        return _fieldName;
+        return fieldName;
       }
     }
 
-    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData>
+    public static final java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData>
         metaDataMap;
 
     static {
-      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
-          new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+          new java.util.EnumMap<Fields, org.apache.thrift.meta_data.FieldMetaData>(Fields.class);
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(
-          withError_args.class, metaDataMap);
+          WithErrorArgs.class, metaDataMap);
     }
 
-    public withError_args() {}
+    public WithErrorArgs() {}
 
     /** Performs a deep copy on <i>other</i>. */
-    public withError_args(withError_args other) {}
+    public WithErrorArgs(WithErrorArgs other) {}
 
     @Override
-    public withError_args deepCopy() {
-      return new withError_args(this);
+    public WithErrorArgs deepCopy() {
+      return new WithErrorArgs(this);
     }
 
     @Override
@@ -4104,16 +4172,11 @@ public class HelloWorldService {
 
     @Override
     public void setFieldValue(
-        _Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
-      switch (field) {
-      }
-    }
+        Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {}
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public java.lang.Object getFieldValue(_Fields field) {
-      switch (field) {
-      }
+    public java.lang.Object getFieldValue(Fields field) {
       throw new java.lang.IllegalStateException();
     }
 
@@ -4122,25 +4185,28 @@ public class HelloWorldService {
      * otherwise
      */
     @Override
-    public boolean isSet(_Fields field) {
+    public boolean isSet(Fields field) {
       if (field == null) {
         throw new java.lang.IllegalArgumentException();
-      }
-
-      switch (field) {
       }
       throw new java.lang.IllegalStateException();
     }
 
     @Override
     public boolean equals(java.lang.Object that) {
-      if (that instanceof withError_args) return this.equals((withError_args) that);
+      if (that instanceof WithErrorArgs) {
+        return this.equals((WithErrorArgs) that);
+      }
       return false;
     }
 
-    public boolean equals(withError_args that) {
-      if (that == null) return false;
-      if (this == that) return true;
+    public boolean equals(WithErrorArgs that) {
+      if (that == null) {
+        return false;
+      }
+      if (this == that) {
+        return true;
+      }
 
       return true;
     }
@@ -4153,7 +4219,7 @@ public class HelloWorldService {
     }
 
     @Override
-    public int compareTo(withError_args other) {
+    public int compareTo(WithErrorArgs other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -4165,8 +4231,8 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
+    public Fields fieldForId(int fieldId) {
+      return Fields.findByThriftId(fieldId);
     }
 
     @Override
@@ -4216,19 +4282,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class withError_argsStandardSchemeFactory
+    private static class WithErrorArgsStandardSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withError_argsStandardScheme getScheme() {
-        return new withError_argsStandardScheme();
+      public WithErrorArgsStandardScheme getScheme() {
+        return new WithErrorArgsStandardScheme();
       }
     }
 
-    private static class withError_argsStandardScheme
-        extends org.apache.thrift.scheme.StandardScheme<withError_args> {
+    private static class WithErrorArgsStandardScheme
+        extends org.apache.thrift.scheme.StandardScheme<WithErrorArgs> {
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol iprot, withError_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol iprot, WithErrorArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
@@ -4251,7 +4317,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol oprot, withError_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol oprot, WithErrorArgs struct)
           throws org.apache.thrift.TException {
         struct.validate();
 
@@ -4261,26 +4327,26 @@ public class HelloWorldService {
       }
     }
 
-    private static class withError_argsTupleSchemeFactory
+    private static class WithErrorArgsTupleSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withError_argsTupleScheme getScheme() {
-        return new withError_argsTupleScheme();
+      public WithErrorArgsTupleScheme getScheme() {
+        return new WithErrorArgsTupleScheme();
       }
     }
 
-    private static class withError_argsTupleScheme
-        extends org.apache.thrift.scheme.TupleScheme<withError_args> {
+    private static class WithErrorArgsTupleScheme
+        extends org.apache.thrift.scheme.TupleScheme<WithErrorArgs> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, withError_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol prot, WithErrorArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, withError_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol prot, WithErrorArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -4297,11 +4363,11 @@ public class HelloWorldService {
   }
 
   @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-  public static class withError_result
-      implements org.apache.thrift.TBase<withError_result, withError_result._Fields>,
+  public static class WithErrorResult
+      implements org.apache.thrift.TBase<WithErrorResult, WithErrorResult.Fields>,
           java.io.Serializable,
           Cloneable,
-          Comparable<withError_result> {
+          Comparable<WithErrorResult> {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
         new org.apache.thrift.protocol.TStruct("withError_result");
 
@@ -4310,9 +4376,9 @@ public class HelloWorldService {
             "success", org.apache.thrift.protocol.TType.STRING, (short) 0);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY =
-        new withError_resultStandardSchemeFactory();
+        new WithErrorResultStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY =
-        new withError_resultTupleSchemeFactory();
+        new WithErrorResultTupleSchemeFactory();
 
     public @org.apache.thrift.annotation.Nullable java.lang.String success; // required
 
@@ -4320,21 +4386,21 @@ public class HelloWorldService {
      * The set of fields this struct contains, along with convenience methods for finding and
      * manipulating them.
      */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    public enum Fields implements org.apache.thrift.TFieldIdEnum {
       SUCCESS((short) 0, "success");
 
-      private static final java.util.Map<java.lang.String, _Fields> byName =
-          new java.util.HashMap<java.lang.String, _Fields>();
+      private static final java.util.Map<java.lang.String, Fields> byName =
+          new java.util.HashMap<java.lang.String, Fields>();
 
       static {
-        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+        for (Fields field : java.util.EnumSet.allOf(Fields.class)) {
           byName.put(field.getFieldName(), field);
         }
       }
 
       /** Find the _Fields constant that matches fieldId, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByThriftId(int fieldId) {
+      public static Fields findByThriftId(int fieldId) {
         switch (fieldId) {
           case 0: // SUCCESS
             return SUCCESS;
@@ -4346,47 +4412,48 @@ public class HelloWorldService {
       /**
        * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
        */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null)
+      public static Fields findByThriftIdOrThrow(int fieldId) {
+        Fields fields = findByThriftId(fieldId);
+        if (fields == null) {
           throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        }
         return fields;
       }
 
       /** Find the _Fields constant that matches name, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByName(java.lang.String name) {
+      public static Fields findByName(java.lang.String name) {
         return byName.get(name);
       }
 
-      private final short _thriftId;
-      private final java.lang.String _fieldName;
+      private final short thriftId;
+      private final java.lang.String fieldName;
 
-      _Fields(short thriftId, java.lang.String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
+      Fields(short thriftId, java.lang.String fieldName) {
+        this.thriftId = thriftId;
+        this.fieldName = fieldName;
       }
 
       @Override
       public short getThriftFieldId() {
-        return _thriftId;
+        return thriftId;
       }
 
       @Override
       public java.lang.String getFieldName() {
-        return _fieldName;
+        return fieldName;
       }
     }
 
     // isset id assignments
-    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData>
+    public static final java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData>
         metaDataMap;
 
     static {
-      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
-          new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+          new java.util.EnumMap<Fields, org.apache.thrift.meta_data.FieldMetaData>(Fields.class);
       tmpMap.put(
-          _Fields.SUCCESS,
+          Fields.SUCCESS,
           new org.apache.thrift.meta_data.FieldMetaData(
               "success",
               org.apache.thrift.TFieldRequirementType.DEFAULT,
@@ -4394,26 +4461,26 @@ public class HelloWorldService {
                   org.apache.thrift.protocol.TType.STRING)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(
-          withError_result.class, metaDataMap);
+          WithErrorResult.class, metaDataMap);
     }
 
-    public withError_result() {}
+    public WithErrorResult() {}
 
-    public withError_result(java.lang.String success) {
+    public WithErrorResult(java.lang.String success) {
       this();
       this.success = success;
     }
 
     /** Performs a deep copy on <i>other</i>. */
-    public withError_result(withError_result other) {
+    public WithErrorResult(WithErrorResult other) {
       if (other.isSetSuccess()) {
         this.success = other.success;
       }
     }
 
     @Override
-    public withError_result deepCopy() {
-      return new withError_result(this);
+    public WithErrorResult deepCopy() {
+      return new WithErrorResult(this);
     }
 
     @Override
@@ -4426,7 +4493,7 @@ public class HelloWorldService {
       return this.success;
     }
 
-    public withError_result setSuccess(
+    public WithErrorResult setSuccess(
         @org.apache.thrift.annotation.Nullable java.lang.String success) {
       this.success = success;
       return this;
@@ -4449,7 +4516,7 @@ public class HelloWorldService {
 
     @Override
     public void setFieldValue(
-        _Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
+        Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
       switch (field) {
         case SUCCESS:
           if (value == null) {
@@ -4463,7 +4530,7 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public java.lang.Object getFieldValue(_Fields field) {
+    public java.lang.Object getFieldValue(Fields field) {
       switch (field) {
         case SUCCESS:
           return getSuccess();
@@ -4476,7 +4543,7 @@ public class HelloWorldService {
      * otherwise
      */
     @Override
-    public boolean isSet(_Fields field) {
+    public boolean isSet(Fields field) {
       if (field == null) {
         throw new java.lang.IllegalArgumentException();
       }
@@ -4490,19 +4557,29 @@ public class HelloWorldService {
 
     @Override
     public boolean equals(java.lang.Object that) {
-      if (that instanceof withError_result) return this.equals((withError_result) that);
+      if (that instanceof WithErrorResult) {
+        return this.equals((WithErrorResult) that);
+      }
       return false;
     }
 
-    public boolean equals(withError_result that) {
-      if (that == null) return false;
-      if (this == that) return true;
+    public boolean equals(WithErrorResult that) {
+      if (that == null) {
+        return false;
+      }
+      if (this == that) {
+        return true;
+      }
 
-      boolean this_present_success = true && this.isSetSuccess();
-      boolean that_present_success = true && that.isSetSuccess();
-      if (this_present_success || that_present_success) {
-        if (!(this_present_success && that_present_success)) return false;
-        if (!this.success.equals(that.success)) return false;
+      boolean thisPresentSuccess = true && this.isSetSuccess();
+      boolean thatPresentSuccess = true && that.isSetSuccess();
+      if (thisPresentSuccess || thatPresentSuccess) {
+        if (!(thisPresentSuccess && thatPresentSuccess)) {
+          return false;
+        }
+        if (!this.success.equals(that.success)) {
+          return false;
+        }
       }
 
       return true;
@@ -4513,13 +4590,15 @@ public class HelloWorldService {
       int hashCode = 1;
 
       hashCode = hashCode * 8191 + ((isSetSuccess()) ? 131071 : 524287);
-      if (isSetSuccess()) hashCode = hashCode * 8191 + success.hashCode();
+      if (isSetSuccess()) {
+        hashCode = hashCode * 8191 + success.hashCode();
+      }
 
       return hashCode;
     }
 
     @Override
-    public int compareTo(withError_result other) {
+    public int compareTo(WithErrorResult other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -4541,8 +4620,8 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
+    public Fields fieldForId(int fieldId) {
+      return Fields.findByThriftId(fieldId);
     }
 
     @Override
@@ -4598,19 +4677,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class withError_resultStandardSchemeFactory
+    private static class WithErrorResultStandardSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withError_resultStandardScheme getScheme() {
-        return new withError_resultStandardScheme();
+      public WithErrorResultStandardScheme getScheme() {
+        return new WithErrorResultStandardScheme();
       }
     }
 
-    private static class withError_resultStandardScheme
-        extends org.apache.thrift.scheme.StandardScheme<withError_result> {
+    private static class WithErrorResultStandardScheme
+        extends org.apache.thrift.scheme.StandardScheme<WithErrorResult> {
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol iprot, withError_result struct)
+      public void read(org.apache.thrift.protocol.TProtocol iprot, WithErrorResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
@@ -4641,7 +4720,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol oprot, withError_result struct)
+      public void write(org.apache.thrift.protocol.TProtocol oprot, WithErrorResult struct)
           throws org.apache.thrift.TException {
         struct.validate();
 
@@ -4656,19 +4735,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class withError_resultTupleSchemeFactory
+    private static class WithErrorResultTupleSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withError_resultTupleScheme getScheme() {
-        return new withError_resultTupleScheme();
+      public WithErrorResultTupleScheme getScheme() {
+        return new WithErrorResultTupleScheme();
       }
     }
 
-    private static class withError_resultTupleScheme
-        extends org.apache.thrift.scheme.TupleScheme<withError_result> {
+    private static class WithErrorResultTupleScheme
+        extends org.apache.thrift.scheme.TupleScheme<WithErrorResult> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, withError_result struct)
+      public void write(org.apache.thrift.protocol.TProtocol prot, WithErrorResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -4683,7 +4762,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, withError_result struct)
+      public void read(org.apache.thrift.protocol.TProtocol prot, WithErrorResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -4705,11 +4784,11 @@ public class HelloWorldService {
   }
 
   @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-  public static class withCollisioin_args
-      implements org.apache.thrift.TBase<withCollisioin_args, withCollisioin_args._Fields>,
+  public static class WithCollisioinArgs
+      implements org.apache.thrift.TBase<WithCollisioinArgs, WithCollisioinArgs.Fields>,
           java.io.Serializable,
           Cloneable,
-          Comparable<withCollisioin_args> {
+          Comparable<WithCollisioinArgs> {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
         new org.apache.thrift.protocol.TStruct("withCollisioin_args");
 
@@ -4718,9 +4797,9 @@ public class HelloWorldService {
             "input", org.apache.thrift.protocol.TType.STRING, (short) 3333);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY =
-        new withCollisioin_argsStandardSchemeFactory();
+        new WithCollisioinArgsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY =
-        new withCollisioin_argsTupleSchemeFactory();
+        new WithCollisioinArgsTupleSchemeFactory();
 
     public @org.apache.thrift.annotation.Nullable java.lang.String input; // required
 
@@ -4728,21 +4807,21 @@ public class HelloWorldService {
      * The set of fields this struct contains, along with convenience methods for finding and
      * manipulating them.
      */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    public enum Fields implements org.apache.thrift.TFieldIdEnum {
       INPUT((short) 3333, "input");
 
-      private static final java.util.Map<java.lang.String, _Fields> byName =
-          new java.util.HashMap<java.lang.String, _Fields>();
+      private static final java.util.Map<java.lang.String, Fields> byName =
+          new java.util.HashMap<java.lang.String, Fields>();
 
       static {
-        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+        for (Fields field : java.util.EnumSet.allOf(Fields.class)) {
           byName.put(field.getFieldName(), field);
         }
       }
 
       /** Find the _Fields constant that matches fieldId, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByThriftId(int fieldId) {
+      public static Fields findByThriftId(int fieldId) {
         switch (fieldId) {
           case 3333: // INPUT
             return INPUT;
@@ -4754,47 +4833,48 @@ public class HelloWorldService {
       /**
        * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
        */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null)
+      public static Fields findByThriftIdOrThrow(int fieldId) {
+        Fields fields = findByThriftId(fieldId);
+        if (fields == null) {
           throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        }
         return fields;
       }
 
       /** Find the _Fields constant that matches name, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByName(java.lang.String name) {
+      public static Fields findByName(java.lang.String name) {
         return byName.get(name);
       }
 
-      private final short _thriftId;
-      private final java.lang.String _fieldName;
+      private final short thriftId;
+      private final java.lang.String fieldName;
 
-      _Fields(short thriftId, java.lang.String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
+      Fields(short thriftId, java.lang.String fieldName) {
+        this.thriftId = thriftId;
+        this.fieldName = fieldName;
       }
 
       @Override
       public short getThriftFieldId() {
-        return _thriftId;
+        return thriftId;
       }
 
       @Override
       public java.lang.String getFieldName() {
-        return _fieldName;
+        return fieldName;
       }
     }
 
     // isset id assignments
-    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData>
+    public static final java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData>
         metaDataMap;
 
     static {
-      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
-          new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+          new java.util.EnumMap<Fields, org.apache.thrift.meta_data.FieldMetaData>(Fields.class);
       tmpMap.put(
-          _Fields.INPUT,
+          Fields.INPUT,
           new org.apache.thrift.meta_data.FieldMetaData(
               "input",
               org.apache.thrift.TFieldRequirementType.DEFAULT,
@@ -4802,26 +4882,26 @@ public class HelloWorldService {
                   org.apache.thrift.protocol.TType.STRING)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(
-          withCollisioin_args.class, metaDataMap);
+          WithCollisioinArgs.class, metaDataMap);
     }
 
-    public withCollisioin_args() {}
+    public WithCollisioinArgs() {}
 
-    public withCollisioin_args(java.lang.String input) {
+    public WithCollisioinArgs(java.lang.String input) {
       this();
       this.input = input;
     }
 
     /** Performs a deep copy on <i>other</i>. */
-    public withCollisioin_args(withCollisioin_args other) {
+    public WithCollisioinArgs(WithCollisioinArgs other) {
       if (other.isSetInput()) {
         this.input = other.input;
       }
     }
 
     @Override
-    public withCollisioin_args deepCopy() {
-      return new withCollisioin_args(this);
+    public WithCollisioinArgs deepCopy() {
+      return new WithCollisioinArgs(this);
     }
 
     @Override
@@ -4834,7 +4914,7 @@ public class HelloWorldService {
       return this.input;
     }
 
-    public withCollisioin_args setInput(
+    public WithCollisioinArgs setInput(
         @org.apache.thrift.annotation.Nullable java.lang.String input) {
       this.input = input;
       return this;
@@ -4857,7 +4937,7 @@ public class HelloWorldService {
 
     @Override
     public void setFieldValue(
-        _Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
+        Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
       switch (field) {
         case INPUT:
           if (value == null) {
@@ -4871,7 +4951,7 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public java.lang.Object getFieldValue(_Fields field) {
+    public java.lang.Object getFieldValue(Fields field) {
       switch (field) {
         case INPUT:
           return getInput();
@@ -4884,7 +4964,7 @@ public class HelloWorldService {
      * otherwise
      */
     @Override
-    public boolean isSet(_Fields field) {
+    public boolean isSet(Fields field) {
       if (field == null) {
         throw new java.lang.IllegalArgumentException();
       }
@@ -4898,19 +4978,29 @@ public class HelloWorldService {
 
     @Override
     public boolean equals(java.lang.Object that) {
-      if (that instanceof withCollisioin_args) return this.equals((withCollisioin_args) that);
+      if (that instanceof WithCollisioinArgs) {
+        return this.equals((WithCollisioinArgs) that);
+      }
       return false;
     }
 
-    public boolean equals(withCollisioin_args that) {
-      if (that == null) return false;
-      if (this == that) return true;
+    public boolean equals(WithCollisioinArgs that) {
+      if (that == null) {
+        return false;
+      }
+      if (this == that) {
+        return true;
+      }
 
-      boolean this_present_input = true && this.isSetInput();
-      boolean that_present_input = true && that.isSetInput();
-      if (this_present_input || that_present_input) {
-        if (!(this_present_input && that_present_input)) return false;
-        if (!this.input.equals(that.input)) return false;
+      boolean thisPresentInput = true && this.isSetInput();
+      boolean thatPresentInput = true && that.isSetInput();
+      if (thisPresentInput || thatPresentInput) {
+        if (!(thisPresentInput && thatPresentInput)) {
+          return false;
+        }
+        if (!this.input.equals(that.input)) {
+          return false;
+        }
       }
 
       return true;
@@ -4921,13 +5011,15 @@ public class HelloWorldService {
       int hashCode = 1;
 
       hashCode = hashCode * 8191 + ((isSetInput()) ? 131071 : 524287);
-      if (isSetInput()) hashCode = hashCode * 8191 + input.hashCode();
+      if (isSetInput()) {
+        hashCode = hashCode * 8191 + input.hashCode();
+      }
 
       return hashCode;
     }
 
     @Override
-    public int compareTo(withCollisioin_args other) {
+    public int compareTo(WithCollisioinArgs other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -4949,8 +5041,8 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
+    public Fields fieldForId(int fieldId) {
+      return Fields.findByThriftId(fieldId);
     }
 
     @Override
@@ -5007,19 +5099,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class withCollisioin_argsStandardSchemeFactory
+    private static class WithCollisioinArgsStandardSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withCollisioin_argsStandardScheme getScheme() {
-        return new withCollisioin_argsStandardScheme();
+      public WithCollisioinArgsStandardScheme getScheme() {
+        return new WithCollisioinArgsStandardScheme();
       }
     }
 
-    private static class withCollisioin_argsStandardScheme
-        extends org.apache.thrift.scheme.StandardScheme<withCollisioin_args> {
+    private static class WithCollisioinArgsStandardScheme
+        extends org.apache.thrift.scheme.StandardScheme<WithCollisioinArgs> {
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol iprot, withCollisioin_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol iprot, WithCollisioinArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
@@ -5050,7 +5142,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol oprot, withCollisioin_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol oprot, WithCollisioinArgs struct)
           throws org.apache.thrift.TException {
         struct.validate();
 
@@ -5065,19 +5157,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class withCollisioin_argsTupleSchemeFactory
+    private static class WithCollisioinArgsTupleSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withCollisioin_argsTupleScheme getScheme() {
-        return new withCollisioin_argsTupleScheme();
+      public WithCollisioinArgsTupleScheme getScheme() {
+        return new WithCollisioinArgsTupleScheme();
       }
     }
 
-    private static class withCollisioin_argsTupleScheme
-        extends org.apache.thrift.scheme.TupleScheme<withCollisioin_args> {
+    private static class WithCollisioinArgsTupleScheme
+        extends org.apache.thrift.scheme.TupleScheme<WithCollisioinArgs> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, withCollisioin_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol prot, WithCollisioinArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -5092,7 +5184,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, withCollisioin_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol prot, WithCollisioinArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -5114,11 +5206,11 @@ public class HelloWorldService {
   }
 
   @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-  public static class withCollisioin_result
-      implements org.apache.thrift.TBase<withCollisioin_result, withCollisioin_result._Fields>,
+  public static class WithCollisioinResult
+      implements org.apache.thrift.TBase<WithCollisioinResult, WithCollisioinResult.Fields>,
           java.io.Serializable,
           Cloneable,
-          Comparable<withCollisioin_result> {
+          Comparable<WithCollisioinResult> {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
         new org.apache.thrift.protocol.TStruct("withCollisioin_result");
 
@@ -5127,9 +5219,9 @@ public class HelloWorldService {
             "success", org.apache.thrift.protocol.TType.STRING, (short) 0);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY =
-        new withCollisioin_resultStandardSchemeFactory();
+        new WithCollisioinResultStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY =
-        new withCollisioin_resultTupleSchemeFactory();
+        new WithCollisioinResultTupleSchemeFactory();
 
     public @org.apache.thrift.annotation.Nullable java.lang.String success; // required
 
@@ -5137,21 +5229,21 @@ public class HelloWorldService {
      * The set of fields this struct contains, along with convenience methods for finding and
      * manipulating them.
      */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    public enum Fields implements org.apache.thrift.TFieldIdEnum {
       SUCCESS((short) 0, "success");
 
-      private static final java.util.Map<java.lang.String, _Fields> byName =
-          new java.util.HashMap<java.lang.String, _Fields>();
+      private static final java.util.Map<java.lang.String, Fields> byName =
+          new java.util.HashMap<java.lang.String, Fields>();
 
       static {
-        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+        for (Fields field : java.util.EnumSet.allOf(Fields.class)) {
           byName.put(field.getFieldName(), field);
         }
       }
 
       /** Find the _Fields constant that matches fieldId, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByThriftId(int fieldId) {
+      public static Fields findByThriftId(int fieldId) {
         switch (fieldId) {
           case 0: // SUCCESS
             return SUCCESS;
@@ -5163,47 +5255,48 @@ public class HelloWorldService {
       /**
        * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
        */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null)
+      public static Fields findByThriftIdOrThrow(int fieldId) {
+        Fields fields = findByThriftId(fieldId);
+        if (fields == null) {
           throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        }
         return fields;
       }
 
       /** Find the _Fields constant that matches name, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByName(java.lang.String name) {
+      public static Fields findByName(java.lang.String name) {
         return byName.get(name);
       }
 
-      private final short _thriftId;
-      private final java.lang.String _fieldName;
+      private final short thriftId;
+      private final java.lang.String fieldName;
 
-      _Fields(short thriftId, java.lang.String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
+      Fields(short thriftId, java.lang.String fieldName) {
+        this.thriftId = thriftId;
+        this.fieldName = fieldName;
       }
 
       @Override
       public short getThriftFieldId() {
-        return _thriftId;
+        return thriftId;
       }
 
       @Override
       public java.lang.String getFieldName() {
-        return _fieldName;
+        return fieldName;
       }
     }
 
     // isset id assignments
-    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData>
+    public static final java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData>
         metaDataMap;
 
     static {
-      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
-          new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+          new java.util.EnumMap<Fields, org.apache.thrift.meta_data.FieldMetaData>(Fields.class);
       tmpMap.put(
-          _Fields.SUCCESS,
+          Fields.SUCCESS,
           new org.apache.thrift.meta_data.FieldMetaData(
               "success",
               org.apache.thrift.TFieldRequirementType.DEFAULT,
@@ -5211,26 +5304,26 @@ public class HelloWorldService {
                   org.apache.thrift.protocol.TType.STRING)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(
-          withCollisioin_result.class, metaDataMap);
+          WithCollisioinResult.class, metaDataMap);
     }
 
-    public withCollisioin_result() {}
+    public WithCollisioinResult() {}
 
-    public withCollisioin_result(java.lang.String success) {
+    public WithCollisioinResult(java.lang.String success) {
       this();
       this.success = success;
     }
 
     /** Performs a deep copy on <i>other</i>. */
-    public withCollisioin_result(withCollisioin_result other) {
+    public WithCollisioinResult(WithCollisioinResult other) {
       if (other.isSetSuccess()) {
         this.success = other.success;
       }
     }
 
     @Override
-    public withCollisioin_result deepCopy() {
-      return new withCollisioin_result(this);
+    public WithCollisioinResult deepCopy() {
+      return new WithCollisioinResult(this);
     }
 
     @Override
@@ -5243,7 +5336,7 @@ public class HelloWorldService {
       return this.success;
     }
 
-    public withCollisioin_result setSuccess(
+    public WithCollisioinResult setSuccess(
         @org.apache.thrift.annotation.Nullable java.lang.String success) {
       this.success = success;
       return this;
@@ -5266,7 +5359,7 @@ public class HelloWorldService {
 
     @Override
     public void setFieldValue(
-        _Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
+        Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
       switch (field) {
         case SUCCESS:
           if (value == null) {
@@ -5280,7 +5373,7 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public java.lang.Object getFieldValue(_Fields field) {
+    public java.lang.Object getFieldValue(Fields field) {
       switch (field) {
         case SUCCESS:
           return getSuccess();
@@ -5293,7 +5386,7 @@ public class HelloWorldService {
      * otherwise
      */
     @Override
-    public boolean isSet(_Fields field) {
+    public boolean isSet(Fields field) {
       if (field == null) {
         throw new java.lang.IllegalArgumentException();
       }
@@ -5307,19 +5400,29 @@ public class HelloWorldService {
 
     @Override
     public boolean equals(java.lang.Object that) {
-      if (that instanceof withCollisioin_result) return this.equals((withCollisioin_result) that);
+      if (that instanceof WithCollisioinResult) {
+        return this.equals((WithCollisioinResult) that);
+      }
       return false;
     }
 
-    public boolean equals(withCollisioin_result that) {
-      if (that == null) return false;
-      if (this == that) return true;
+    public boolean equals(WithCollisioinResult that) {
+      if (that == null) {
+        return false;
+      }
+      if (this == that) {
+        return true;
+      }
 
-      boolean this_present_success = true && this.isSetSuccess();
-      boolean that_present_success = true && that.isSetSuccess();
-      if (this_present_success || that_present_success) {
-        if (!(this_present_success && that_present_success)) return false;
-        if (!this.success.equals(that.success)) return false;
+      boolean thisPresentSuccess = true && this.isSetSuccess();
+      boolean thatPresentSuccess = true && that.isSetSuccess();
+      if (thisPresentSuccess || thatPresentSuccess) {
+        if (!(thisPresentSuccess && thatPresentSuccess)) {
+          return false;
+        }
+        if (!this.success.equals(that.success)) {
+          return false;
+        }
       }
 
       return true;
@@ -5330,13 +5433,15 @@ public class HelloWorldService {
       int hashCode = 1;
 
       hashCode = hashCode * 8191 + ((isSetSuccess()) ? 131071 : 524287);
-      if (isSetSuccess()) hashCode = hashCode * 8191 + success.hashCode();
+      if (isSetSuccess()) {
+        hashCode = hashCode * 8191 + success.hashCode();
+      }
 
       return hashCode;
     }
 
     @Override
-    public int compareTo(withCollisioin_result other) {
+    public int compareTo(WithCollisioinResult other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -5358,8 +5463,8 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
+    public Fields fieldForId(int fieldId) {
+      return Fields.findByThriftId(fieldId);
     }
 
     @Override
@@ -5415,19 +5520,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class withCollisioin_resultStandardSchemeFactory
+    private static class WithCollisioinResultStandardSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withCollisioin_resultStandardScheme getScheme() {
-        return new withCollisioin_resultStandardScheme();
+      public WithCollisioinResultStandardScheme getScheme() {
+        return new WithCollisioinResultStandardScheme();
       }
     }
 
-    private static class withCollisioin_resultStandardScheme
-        extends org.apache.thrift.scheme.StandardScheme<withCollisioin_result> {
+    private static class WithCollisioinResultStandardScheme
+        extends org.apache.thrift.scheme.StandardScheme<WithCollisioinResult> {
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol iprot, withCollisioin_result struct)
+      public void read(org.apache.thrift.protocol.TProtocol iprot, WithCollisioinResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
@@ -5458,7 +5563,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol oprot, withCollisioin_result struct)
+      public void write(org.apache.thrift.protocol.TProtocol oprot, WithCollisioinResult struct)
           throws org.apache.thrift.TException {
         struct.validate();
 
@@ -5473,19 +5578,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class withCollisioin_resultTupleSchemeFactory
+    private static class WithCollisioinResultTupleSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public withCollisioin_resultTupleScheme getScheme() {
-        return new withCollisioin_resultTupleScheme();
+      public WithCollisioinResultTupleScheme getScheme() {
+        return new WithCollisioinResultTupleScheme();
       }
     }
 
-    private static class withCollisioin_resultTupleScheme
-        extends org.apache.thrift.scheme.TupleScheme<withCollisioin_result> {
+    private static class WithCollisioinResultTupleScheme
+        extends org.apache.thrift.scheme.TupleScheme<WithCollisioinResult> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, withCollisioin_result struct)
+      public void write(org.apache.thrift.protocol.TProtocol prot, WithCollisioinResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -5500,7 +5605,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, withCollisioin_result struct)
+      public void read(org.apache.thrift.protocol.TProtocol prot, WithCollisioinResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -5522,38 +5627,38 @@ public class HelloWorldService {
   }
 
   @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-  public static class oneWay_args
-      implements org.apache.thrift.TBase<oneWay_args, oneWay_args._Fields>,
+  public static class OneWayArgs
+      implements org.apache.thrift.TBase<OneWayArgs, OneWayArgs.Fields>,
           java.io.Serializable,
           Cloneable,
-          Comparable<oneWay_args> {
+          Comparable<OneWayArgs> {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
         new org.apache.thrift.protocol.TStruct("oneWay_args");
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY =
-        new oneWay_argsStandardSchemeFactory();
+        new OneWayArgsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY =
-        new oneWay_argsTupleSchemeFactory();
+        new OneWayArgsTupleSchemeFactory();
 
     /**
      * The set of fields this struct contains, along with convenience methods for finding and
      * manipulating them.
      */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    public enum Fields implements org.apache.thrift.TFieldIdEnum {
       ;
 
-      private static final java.util.Map<java.lang.String, _Fields> byName =
-          new java.util.HashMap<java.lang.String, _Fields>();
+      private static final java.util.Map<java.lang.String, Fields> byName =
+          new java.util.HashMap<java.lang.String, Fields>();
 
       static {
-        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+        for (Fields field : java.util.EnumSet.allOf(Fields.class)) {
           byName.put(field.getFieldName(), field);
         }
       }
 
       /** Find the _Fields constant that matches fieldId, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByThriftId(int fieldId) {
+      public static Fields findByThriftId(int fieldId) {
         switch (fieldId) {
           default:
             return null;
@@ -5563,57 +5668,57 @@ public class HelloWorldService {
       /**
        * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
        */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null)
+      public static Fields findByThriftIdOrThrow(int fieldId) {
+        Fields fields = findByThriftId(fieldId);
+        if (fields == null) {
           throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        }
         return fields;
       }
 
       /** Find the _Fields constant that matches name, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByName(java.lang.String name) {
+      public static Fields findByName(java.lang.String name) {
         return byName.get(name);
       }
 
-      private final short _thriftId;
-      private final java.lang.String _fieldName;
+      private final short thriftId;
+      private final java.lang.String fieldName;
 
-      _Fields(short thriftId, java.lang.String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
+      Fields(short thriftId, java.lang.String fieldName) {
+        this.thriftId = thriftId;
+        this.fieldName = fieldName;
       }
 
       @Override
       public short getThriftFieldId() {
-        return _thriftId;
+        return thriftId;
       }
 
       @Override
       public java.lang.String getFieldName() {
-        return _fieldName;
+        return fieldName;
       }
     }
 
-    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData>
+    public static final java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData>
         metaDataMap;
 
     static {
-      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
-          new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+          new java.util.EnumMap<Fields, org.apache.thrift.meta_data.FieldMetaData>(Fields.class);
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(
-          oneWay_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(OneWayArgs.class, metaDataMap);
     }
 
-    public oneWay_args() {}
+    public OneWayArgs() {}
 
     /** Performs a deep copy on <i>other</i>. */
-    public oneWay_args(oneWay_args other) {}
+    public OneWayArgs(OneWayArgs other) {}
 
     @Override
-    public oneWay_args deepCopy() {
-      return new oneWay_args(this);
+    public OneWayArgs deepCopy() {
+      return new OneWayArgs(this);
     }
 
     @Override
@@ -5621,16 +5726,11 @@ public class HelloWorldService {
 
     @Override
     public void setFieldValue(
-        _Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
-      switch (field) {
-      }
-    }
+        Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {}
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public java.lang.Object getFieldValue(_Fields field) {
-      switch (field) {
-      }
+    public java.lang.Object getFieldValue(Fields field) {
       throw new java.lang.IllegalStateException();
     }
 
@@ -5639,25 +5739,29 @@ public class HelloWorldService {
      * otherwise
      */
     @Override
-    public boolean isSet(_Fields field) {
+    public boolean isSet(Fields field) {
       if (field == null) {
         throw new java.lang.IllegalArgumentException();
       }
 
-      switch (field) {
-      }
       throw new java.lang.IllegalStateException();
     }
 
     @Override
     public boolean equals(java.lang.Object that) {
-      if (that instanceof oneWay_args) return this.equals((oneWay_args) that);
+      if (that instanceof OneWayArgs) {
+        return this.equals((OneWayArgs) that);
+      }
       return false;
     }
 
-    public boolean equals(oneWay_args that) {
-      if (that == null) return false;
-      if (this == that) return true;
+    public boolean equals(OneWayArgs that) {
+      if (that == null) {
+        return false;
+      }
+      if (this == that) {
+        return true;
+      }
 
       return true;
     }
@@ -5670,7 +5774,7 @@ public class HelloWorldService {
     }
 
     @Override
-    public int compareTo(oneWay_args other) {
+    public int compareTo(OneWayArgs other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -5682,8 +5786,8 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
+    public Fields fieldForId(int fieldId) {
+      return Fields.findByThriftId(fieldId);
     }
 
     @Override
@@ -5733,19 +5837,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class oneWay_argsStandardSchemeFactory
+    private static class OneWayArgsStandardSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public oneWay_argsStandardScheme getScheme() {
-        return new oneWay_argsStandardScheme();
+      public OneWayArgsStandardScheme getScheme() {
+        return new OneWayArgsStandardScheme();
       }
     }
 
-    private static class oneWay_argsStandardScheme
-        extends org.apache.thrift.scheme.StandardScheme<oneWay_args> {
+    private static class OneWayArgsStandardScheme
+        extends org.apache.thrift.scheme.StandardScheme<OneWayArgs> {
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol iprot, oneWay_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol iprot, OneWayArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
@@ -5768,7 +5872,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol oprot, oneWay_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol oprot, OneWayArgs struct)
           throws org.apache.thrift.TException {
         struct.validate();
 
@@ -5778,26 +5882,26 @@ public class HelloWorldService {
       }
     }
 
-    private static class oneWay_argsTupleSchemeFactory
+    private static class OneWayArgsTupleSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public oneWay_argsTupleScheme getScheme() {
-        return new oneWay_argsTupleScheme();
+      public OneWayArgsTupleScheme getScheme() {
+        return new OneWayArgsTupleScheme();
       }
     }
 
-    private static class oneWay_argsTupleScheme
-        extends org.apache.thrift.scheme.TupleScheme<oneWay_args> {
+    private static class OneWayArgsTupleScheme
+        extends org.apache.thrift.scheme.TupleScheme<OneWayArgs> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, oneWay_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol prot, OneWayArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, oneWay_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol prot, OneWayArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -5814,38 +5918,38 @@ public class HelloWorldService {
   }
 
   @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-  public static class oneWayWithError_args
-      implements org.apache.thrift.TBase<oneWayWithError_args, oneWayWithError_args._Fields>,
+  public static class OneWayWithErrorArgs
+      implements org.apache.thrift.TBase<OneWayWithErrorArgs, OneWayWithErrorArgs.Fields>,
           java.io.Serializable,
           Cloneable,
-          Comparable<oneWayWithError_args> {
+          Comparable<OneWayWithErrorArgs> {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
         new org.apache.thrift.protocol.TStruct("oneWayWithError_args");
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY =
-        new oneWayWithError_argsStandardSchemeFactory();
+        new OneWayWithErrorArgsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY =
-        new oneWayWithError_argsTupleSchemeFactory();
+        new OneWayWithErrorArgsTupleSchemeFactory();
 
     /**
      * The set of fields this struct contains, along with convenience methods for finding and
      * manipulating them.
      */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    public enum Fields implements org.apache.thrift.TFieldIdEnum {
       ;
 
-      private static final java.util.Map<java.lang.String, _Fields> byName =
-          new java.util.HashMap<java.lang.String, _Fields>();
+      private static final java.util.Map<java.lang.String, Fields> byName =
+          new java.util.HashMap<java.lang.String, Fields>();
 
       static {
-        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+        for (Fields field : java.util.EnumSet.allOf(Fields.class)) {
           byName.put(field.getFieldName(), field);
         }
       }
 
       /** Find the _Fields constant that matches fieldId, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByThriftId(int fieldId) {
+      public static Fields findByThriftId(int fieldId) {
         switch (fieldId) {
           default:
             return null;
@@ -5855,57 +5959,58 @@ public class HelloWorldService {
       /**
        * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
        */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null)
+      public static Fields findByThriftIdOrThrow(int fieldId) {
+        Fields fields = findByThriftId(fieldId);
+        if (fields == null) {
           throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        }
         return fields;
       }
 
       /** Find the _Fields constant that matches name, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByName(java.lang.String name) {
+      public static Fields findByName(java.lang.String name) {
         return byName.get(name);
       }
 
-      private final short _thriftId;
-      private final java.lang.String _fieldName;
+      private final short thriftId;
+      private final java.lang.String fieldName;
 
-      _Fields(short thriftId, java.lang.String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
+      Fields(short thriftId, java.lang.String fieldName) {
+        this.thriftId = thriftId;
+        this.fieldName = fieldName;
       }
 
       @Override
       public short getThriftFieldId() {
-        return _thriftId;
+        return thriftId;
       }
 
       @Override
       public java.lang.String getFieldName() {
-        return _fieldName;
+        return fieldName;
       }
     }
 
-    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData>
+    public static final java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData>
         metaDataMap;
 
     static {
-      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
-          new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+          new java.util.EnumMap<Fields, org.apache.thrift.meta_data.FieldMetaData>(Fields.class);
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(
-          oneWayWithError_args.class, metaDataMap);
+          OneWayWithErrorArgs.class, metaDataMap);
     }
 
-    public oneWayWithError_args() {}
+    public OneWayWithErrorArgs() {}
 
     /** Performs a deep copy on <i>other</i>. */
-    public oneWayWithError_args(oneWayWithError_args other) {}
+    public OneWayWithErrorArgs(OneWayWithErrorArgs other) {}
 
     @Override
-    public oneWayWithError_args deepCopy() {
-      return new oneWayWithError_args(this);
+    public OneWayWithErrorArgs deepCopy() {
+      return new OneWayWithErrorArgs(this);
     }
 
     @Override
@@ -5913,16 +6018,11 @@ public class HelloWorldService {
 
     @Override
     public void setFieldValue(
-        _Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
-      switch (field) {
-      }
-    }
+        Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {}
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public java.lang.Object getFieldValue(_Fields field) {
-      switch (field) {
-      }
+    public java.lang.Object getFieldValue(Fields field) {
       throw new java.lang.IllegalStateException();
     }
 
@@ -5931,25 +6031,29 @@ public class HelloWorldService {
      * otherwise
      */
     @Override
-    public boolean isSet(_Fields field) {
+    public boolean isSet(Fields field) {
       if (field == null) {
         throw new java.lang.IllegalArgumentException();
       }
 
-      switch (field) {
-      }
       throw new java.lang.IllegalStateException();
     }
 
     @Override
     public boolean equals(java.lang.Object that) {
-      if (that instanceof oneWayWithError_args) return this.equals((oneWayWithError_args) that);
+      if (that instanceof OneWayWithErrorArgs) {
+        return this.equals((OneWayWithErrorArgs) that);
+      }
       return false;
     }
 
-    public boolean equals(oneWayWithError_args that) {
-      if (that == null) return false;
-      if (this == that) return true;
+    public boolean equals(OneWayWithErrorArgs that) {
+      if (that == null) {
+        return false;
+      }
+      if (this == that) {
+        return true;
+      }
 
       return true;
     }
@@ -5962,7 +6066,7 @@ public class HelloWorldService {
     }
 
     @Override
-    public int compareTo(oneWayWithError_args other) {
+    public int compareTo(OneWayWithErrorArgs other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -5974,8 +6078,8 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
+    public Fields fieldForId(int fieldId) {
+      return Fields.findByThriftId(fieldId);
     }
 
     @Override
@@ -6025,19 +6129,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class oneWayWithError_argsStandardSchemeFactory
+    private static class OneWayWithErrorArgsStandardSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public oneWayWithError_argsStandardScheme getScheme() {
-        return new oneWayWithError_argsStandardScheme();
+      public OneWayWithErrorArgsStandardScheme getScheme() {
+        return new OneWayWithErrorArgsStandardScheme();
       }
     }
 
-    private static class oneWayWithError_argsStandardScheme
-        extends org.apache.thrift.scheme.StandardScheme<oneWayWithError_args> {
+    private static class OneWayWithErrorArgsStandardScheme
+        extends org.apache.thrift.scheme.StandardScheme<OneWayWithErrorArgs> {
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol iprot, oneWayWithError_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol iprot, OneWayWithErrorArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
@@ -6060,7 +6164,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol oprot, oneWayWithError_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol oprot, OneWayWithErrorArgs struct)
           throws org.apache.thrift.TException {
         struct.validate();
 
@@ -6070,26 +6174,26 @@ public class HelloWorldService {
       }
     }
 
-    private static class oneWayWithError_argsTupleSchemeFactory
+    private static class OneWayWithErrorArgsTupleSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public oneWayWithError_argsTupleScheme getScheme() {
-        return new oneWayWithError_argsTupleScheme();
+      public OneWayWithErrorArgsTupleScheme getScheme() {
+        return new OneWayWithErrorArgsTupleScheme();
       }
     }
 
-    private static class oneWayWithError_argsTupleScheme
-        extends org.apache.thrift.scheme.TupleScheme<oneWayWithError_args> {
+    private static class OneWayWithErrorArgsTupleScheme
+        extends org.apache.thrift.scheme.TupleScheme<OneWayWithErrorArgs> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, oneWayWithError_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol prot, OneWayWithErrorArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, oneWayWithError_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol prot, OneWayWithErrorArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -6106,11 +6210,11 @@ public class HelloWorldService {
   }
 
   @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-  public static class data_args
-      implements org.apache.thrift.TBase<data_args, data_args._Fields>,
+  public static class DataArgs
+      implements org.apache.thrift.TBase<DataArgs, DataArgs.Fields>,
           java.io.Serializable,
           Cloneable,
-          Comparable<data_args> {
+          Comparable<DataArgs> {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
         new org.apache.thrift.protocol.TStruct("data_args");
 
@@ -6122,9 +6226,9 @@ public class HelloWorldService {
             "account", org.apache.thrift.protocol.TType.STRUCT, (short) 2);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY =
-        new data_argsStandardSchemeFactory();
+        new DataArgsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY =
-        new data_argsTupleSchemeFactory();
+        new DataArgsTupleSchemeFactory();
 
     public @org.apache.thrift.annotation.Nullable User user; // required
     public @org.apache.thrift.annotation.Nullable Account account; // required
@@ -6133,22 +6237,22 @@ public class HelloWorldService {
      * The set of fields this struct contains, along with convenience methods for finding and
      * manipulating them.
      */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    public enum Fields implements org.apache.thrift.TFieldIdEnum {
       USER((short) 1, "user"),
       ACCOUNT((short) 2, "account");
 
-      private static final java.util.Map<java.lang.String, _Fields> byName =
-          new java.util.HashMap<java.lang.String, _Fields>();
+      private static final java.util.Map<java.lang.String, Fields> byName =
+          new java.util.HashMap<java.lang.String, Fields>();
 
       static {
-        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+        for (Fields field : java.util.EnumSet.allOf(Fields.class)) {
           byName.put(field.getFieldName(), field);
         }
       }
 
       /** Find the _Fields constant that matches fieldId, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByThriftId(int fieldId) {
+      public static Fields findByThriftId(int fieldId) {
         switch (fieldId) {
           case 1: // USER
             return USER;
@@ -6162,73 +6266,74 @@ public class HelloWorldService {
       /**
        * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
        */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null)
+      public static Fields findByThriftIdOrThrow(int fieldId) {
+        Fields fields = findByThriftId(fieldId);
+        if (fields == null) {
           throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        }
         return fields;
       }
 
       /** Find the _Fields constant that matches name, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByName(java.lang.String name) {
+      public static Fields findByName(java.lang.String name) {
         return byName.get(name);
       }
 
-      private final short _thriftId;
-      private final java.lang.String _fieldName;
+      private final short thriftId;
+      private final java.lang.String fieldName;
 
-      _Fields(short thriftId, java.lang.String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
+      Fields(short thriftId, java.lang.String fieldName) {
+        this.thriftId = thriftId;
+        this.fieldName = fieldName;
       }
 
       @Override
       public short getThriftFieldId() {
-        return _thriftId;
+        return thriftId;
       }
 
       @Override
       public java.lang.String getFieldName() {
-        return _fieldName;
+        return fieldName;
       }
     }
 
     // isset id assignments
-    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData>
+    public static final java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData>
         metaDataMap;
 
     static {
-      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
-          new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+          new java.util.EnumMap<Fields, org.apache.thrift.meta_data.FieldMetaData>(Fields.class);
       tmpMap.put(
-          _Fields.USER,
+          Fields.USER,
           new org.apache.thrift.meta_data.FieldMetaData(
               "user",
               org.apache.thrift.TFieldRequirementType.DEFAULT,
               new org.apache.thrift.meta_data.StructMetaData(
                   org.apache.thrift.protocol.TType.STRUCT, User.class)));
       tmpMap.put(
-          _Fields.ACCOUNT,
+          Fields.ACCOUNT,
           new org.apache.thrift.meta_data.FieldMetaData(
               "account",
               org.apache.thrift.TFieldRequirementType.DEFAULT,
               new org.apache.thrift.meta_data.StructMetaData(
                   org.apache.thrift.protocol.TType.STRUCT, Account.class)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(data_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(DataArgs.class, metaDataMap);
     }
 
-    public data_args() {}
+    public DataArgs() {}
 
-    public data_args(User user, Account account) {
+    public DataArgs(User user, Account account) {
       this();
       this.user = user;
       this.account = account;
     }
 
     /** Performs a deep copy on <i>other</i>. */
-    public data_args(data_args other) {
+    public DataArgs(DataArgs other) {
       if (other.isSetUser()) {
         this.user = new User(other.user);
       }
@@ -6238,8 +6343,8 @@ public class HelloWorldService {
     }
 
     @Override
-    public data_args deepCopy() {
-      return new data_args(this);
+    public DataArgs deepCopy() {
+      return new DataArgs(this);
     }
 
     @Override
@@ -6253,7 +6358,7 @@ public class HelloWorldService {
       return this.user;
     }
 
-    public data_args setUser(@org.apache.thrift.annotation.Nullable User user) {
+    public DataArgs setUser(@org.apache.thrift.annotation.Nullable User user) {
       this.user = user;
       return this;
     }
@@ -6278,7 +6383,7 @@ public class HelloWorldService {
       return this.account;
     }
 
-    public data_args setAccount(@org.apache.thrift.annotation.Nullable Account account) {
+    public DataArgs setAccount(@org.apache.thrift.annotation.Nullable Account account) {
       this.account = account;
       return this;
     }
@@ -6300,7 +6405,7 @@ public class HelloWorldService {
 
     @Override
     public void setFieldValue(
-        _Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
+        Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
       switch (field) {
         case USER:
           if (value == null) {
@@ -6322,7 +6427,7 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public java.lang.Object getFieldValue(_Fields field) {
+    public java.lang.Object getFieldValue(Fields field) {
       switch (field) {
         case USER:
           return getUser();
@@ -6338,7 +6443,7 @@ public class HelloWorldService {
      * otherwise
      */
     @Override
-    public boolean isSet(_Fields field) {
+    public boolean isSet(Fields field) {
       if (field == null) {
         throw new java.lang.IllegalArgumentException();
       }
@@ -6354,26 +6459,40 @@ public class HelloWorldService {
 
     @Override
     public boolean equals(java.lang.Object that) {
-      if (that instanceof data_args) return this.equals((data_args) that);
+      if (that instanceof DataArgs) {
+        return this.equals((DataArgs) that);
+      }
       return false;
     }
 
-    public boolean equals(data_args that) {
-      if (that == null) return false;
-      if (this == that) return true;
-
-      boolean this_present_user = true && this.isSetUser();
-      boolean that_present_user = true && that.isSetUser();
-      if (this_present_user || that_present_user) {
-        if (!(this_present_user && that_present_user)) return false;
-        if (!this.user.equals(that.user)) return false;
+    public boolean equals(DataArgs that) {
+      if (that == null) {
+        return false;
+      }
+      if (this == that) {
+        return true;
       }
 
-      boolean this_present_account = true && this.isSetAccount();
-      boolean that_present_account = true && that.isSetAccount();
-      if (this_present_account || that_present_account) {
-        if (!(this_present_account && that_present_account)) return false;
-        if (!this.account.equals(that.account)) return false;
+      boolean thisPresentUser = true && this.isSetUser();
+      boolean thatPresentUser = true && that.isSetUser();
+      if (thisPresentUser || thatPresentUser) {
+        if (!(thisPresentUser && thatPresentUser)) {
+          return false;
+        }
+        if (!this.user.equals(that.user)) {
+          return false;
+        }
+      }
+
+      boolean thisPresentAccount = true && this.isSetAccount();
+      boolean thatPresentAccount = true && that.isSetAccount();
+      if (thisPresentAccount || thatPresentAccount) {
+        if (!(thisPresentAccount && thatPresentAccount)) {
+          return false;
+        }
+        if (!this.account.equals(that.account)) {
+          return false;
+        }
       }
 
       return true;
@@ -6384,16 +6503,20 @@ public class HelloWorldService {
       int hashCode = 1;
 
       hashCode = hashCode * 8191 + ((isSetUser()) ? 131071 : 524287);
-      if (isSetUser()) hashCode = hashCode * 8191 + user.hashCode();
+      if (isSetUser()) {
+        hashCode = hashCode * 8191 + user.hashCode();
+      }
 
       hashCode = hashCode * 8191 + ((isSetAccount()) ? 131071 : 524287);
-      if (isSetAccount()) hashCode = hashCode * 8191 + account.hashCode();
+      if (isSetAccount()) {
+        hashCode = hashCode * 8191 + account.hashCode();
+      }
 
       return hashCode;
     }
 
     @Override
-    public int compareTo(data_args other) {
+    public int compareTo(DataArgs other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -6425,8 +6548,8 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
+    public Fields fieldForId(int fieldId) {
+      return Fields.findByThriftId(fieldId);
     }
 
     @Override
@@ -6453,7 +6576,9 @@ public class HelloWorldService {
         sb.append(this.user);
       }
       first = false;
-      if (!first) sb.append(", ");
+      if (!first) {
+        sb.append(", ");
+      }
       sb.append("account:");
       if (this.account == null) {
         sb.append("null");
@@ -6497,19 +6622,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class data_argsStandardSchemeFactory
+    private static class DataArgsStandardSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public data_argsStandardScheme getScheme() {
-        return new data_argsStandardScheme();
+      public DataArgsStandardScheme getScheme() {
+        return new DataArgsStandardScheme();
       }
     }
 
-    private static class data_argsStandardScheme
-        extends org.apache.thrift.scheme.StandardScheme<data_args> {
+    private static class DataArgsStandardScheme
+        extends org.apache.thrift.scheme.StandardScheme<DataArgs> {
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol iprot, data_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol iprot, DataArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
@@ -6550,7 +6675,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol oprot, data_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol oprot, DataArgs struct)
           throws org.apache.thrift.TException {
         struct.validate();
 
@@ -6570,19 +6695,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class data_argsTupleSchemeFactory
+    private static class DataArgsTupleSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public data_argsTupleScheme getScheme() {
-        return new data_argsTupleScheme();
+      public DataArgsTupleScheme getScheme() {
+        return new DataArgsTupleScheme();
       }
     }
 
-    private static class data_argsTupleScheme
-        extends org.apache.thrift.scheme.TupleScheme<data_args> {
+    private static class DataArgsTupleScheme
+        extends org.apache.thrift.scheme.TupleScheme<DataArgs> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, data_args struct)
+      public void write(org.apache.thrift.protocol.TProtocol prot, DataArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -6603,7 +6728,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, data_args struct)
+      public void read(org.apache.thrift.protocol.TProtocol prot, DataArgs struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -6631,11 +6756,11 @@ public class HelloWorldService {
   }
 
   @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-  public static class data_result
-      implements org.apache.thrift.TBase<data_result, data_result._Fields>,
+  public static class DataResult
+      implements org.apache.thrift.TBase<DataResult, DataResult.Fields>,
           java.io.Serializable,
           Cloneable,
-          Comparable<data_result> {
+          Comparable<DataResult> {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
         new org.apache.thrift.protocol.TStruct("data_result");
 
@@ -6644,31 +6769,31 @@ public class HelloWorldService {
             "success", org.apache.thrift.protocol.TType.STRUCT, (short) 0);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY =
-        new data_resultStandardSchemeFactory();
+        new DataResultStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY =
-        new data_resultTupleSchemeFactory();
+        new DataResultTupleSchemeFactory();
 
-    public @org.apache.thrift.annotation.Nullable userAccount success; // required
+    public @org.apache.thrift.annotation.Nullable UserAccount success; // required
 
     /**
      * The set of fields this struct contains, along with convenience methods for finding and
      * manipulating them.
      */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    public enum Fields implements org.apache.thrift.TFieldIdEnum {
       SUCCESS((short) 0, "success");
 
-      private static final java.util.Map<java.lang.String, _Fields> byName =
-          new java.util.HashMap<java.lang.String, _Fields>();
+      private static final java.util.Map<java.lang.String, Fields> byName =
+          new java.util.HashMap<java.lang.String, Fields>();
 
       static {
-        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+        for (Fields field : java.util.EnumSet.allOf(Fields.class)) {
           byName.put(field.getFieldName(), field);
         }
       }
 
       /** Find the _Fields constant that matches fieldId, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByThriftId(int fieldId) {
+      public static Fields findByThriftId(int fieldId) {
         switch (fieldId) {
           case 0: // SUCCESS
             return SUCCESS;
@@ -6680,74 +6805,74 @@ public class HelloWorldService {
       /**
        * Find the _Fields constant that matches fieldId, throwing an exception if it is not found.
        */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null)
+      public static Fields findByThriftIdOrThrow(int fieldId) {
+        Fields fields = findByThriftId(fieldId);
+        if (fields == null) {
           throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        }
         return fields;
       }
 
       /** Find the _Fields constant that matches name, or null if its not found. */
       @org.apache.thrift.annotation.Nullable
-      public static _Fields findByName(java.lang.String name) {
+      public static Fields findByName(java.lang.String name) {
         return byName.get(name);
       }
 
-      private final short _thriftId;
-      private final java.lang.String _fieldName;
+      private final short thriftId;
+      private final java.lang.String fieldName;
 
-      _Fields(short thriftId, java.lang.String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
+      Fields(short thriftId, java.lang.String fieldName) {
+        this.thriftId = thriftId;
+        this.fieldName = fieldName;
       }
 
       @Override
       public short getThriftFieldId() {
-        return _thriftId;
+        return thriftId;
       }
 
       @Override
       public java.lang.String getFieldName() {
-        return _fieldName;
+        return fieldName;
       }
     }
 
     // isset id assignments
-    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData>
+    public static final java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData>
         metaDataMap;
 
     static {
-      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
-          new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      java.util.Map<Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+          new java.util.EnumMap<Fields, org.apache.thrift.meta_data.FieldMetaData>(Fields.class);
       tmpMap.put(
-          _Fields.SUCCESS,
+          Fields.SUCCESS,
           new org.apache.thrift.meta_data.FieldMetaData(
               "success",
               org.apache.thrift.TFieldRequirementType.DEFAULT,
               new org.apache.thrift.meta_data.StructMetaData(
-                  org.apache.thrift.protocol.TType.STRUCT, userAccount.class)));
+                  org.apache.thrift.protocol.TType.STRUCT, UserAccount.class)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(
-          data_result.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(DataResult.class, metaDataMap);
     }
 
-    public data_result() {}
+    public DataResult() {}
 
-    public data_result(userAccount success) {
+    public DataResult(UserAccount success) {
       this();
       this.success = success;
     }
 
     /** Performs a deep copy on <i>other</i>. */
-    public data_result(data_result other) {
+    public DataResult(DataResult other) {
       if (other.isSetSuccess()) {
-        this.success = new userAccount(other.success);
+        this.success = new UserAccount(other.success);
       }
     }
 
     @Override
-    public data_result deepCopy() {
-      return new data_result(this);
+    public DataResult deepCopy() {
+      return new DataResult(this);
     }
 
     @Override
@@ -6756,11 +6881,11 @@ public class HelloWorldService {
     }
 
     @org.apache.thrift.annotation.Nullable
-    public userAccount getSuccess() {
+    public UserAccount getSuccess() {
       return this.success;
     }
 
-    public data_result setSuccess(@org.apache.thrift.annotation.Nullable userAccount success) {
+    public DataResult setSuccess(@org.apache.thrift.annotation.Nullable UserAccount success) {
       this.success = success;
       return this;
     }
@@ -6782,13 +6907,13 @@ public class HelloWorldService {
 
     @Override
     public void setFieldValue(
-        _Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
+        Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
       switch (field) {
         case SUCCESS:
           if (value == null) {
             unsetSuccess();
           } else {
-            setSuccess((userAccount) value);
+            setSuccess((UserAccount) value);
           }
           break;
       }
@@ -6796,7 +6921,7 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public java.lang.Object getFieldValue(_Fields field) {
+    public java.lang.Object getFieldValue(Fields field) {
       switch (field) {
         case SUCCESS:
           return getSuccess();
@@ -6809,7 +6934,7 @@ public class HelloWorldService {
      * otherwise
      */
     @Override
-    public boolean isSet(_Fields field) {
+    public boolean isSet(Fields field) {
       if (field == null) {
         throw new java.lang.IllegalArgumentException();
       }
@@ -6823,19 +6948,29 @@ public class HelloWorldService {
 
     @Override
     public boolean equals(java.lang.Object that) {
-      if (that instanceof data_result) return this.equals((data_result) that);
+      if (that instanceof DataResult) {
+        return this.equals((DataResult) that);
+      }
       return false;
     }
 
-    public boolean equals(data_result that) {
-      if (that == null) return false;
-      if (this == that) return true;
+    public boolean equals(DataResult that) {
+      if (that == null) {
+        return false;
+      }
+      if (this == that) {
+        return true;
+      }
 
-      boolean this_present_success = true && this.isSetSuccess();
-      boolean that_present_success = true && that.isSetSuccess();
-      if (this_present_success || that_present_success) {
-        if (!(this_present_success && that_present_success)) return false;
-        if (!this.success.equals(that.success)) return false;
+      boolean thisPresentSuccess = true && this.isSetSuccess();
+      boolean thatPresentSuccess = true && that.isSetSuccess();
+      if (thisPresentSuccess || thatPresentSuccess) {
+        if (!(thisPresentSuccess && thatPresentSuccess)) {
+          return false;
+        }
+        if (!this.success.equals(that.success)) {
+          return false;
+        }
       }
 
       return true;
@@ -6846,13 +6981,15 @@ public class HelloWorldService {
       int hashCode = 1;
 
       hashCode = hashCode * 8191 + ((isSetSuccess()) ? 131071 : 524287);
-      if (isSetSuccess()) hashCode = hashCode * 8191 + success.hashCode();
+      if (isSetSuccess()) {
+        hashCode = hashCode * 8191 + success.hashCode();
+      }
 
       return hashCode;
     }
 
     @Override
-    public int compareTo(data_result other) {
+    public int compareTo(DataResult other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -6874,8 +7011,8 @@ public class HelloWorldService {
 
     @org.apache.thrift.annotation.Nullable
     @Override
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
+    public Fields fieldForId(int fieldId) {
+      return Fields.findByThriftId(fieldId);
     }
 
     @Override
@@ -6934,19 +7071,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class data_resultStandardSchemeFactory
+    private static class DataResultStandardSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public data_resultStandardScheme getScheme() {
-        return new data_resultStandardScheme();
+      public DataResultStandardScheme getScheme() {
+        return new DataResultStandardScheme();
       }
     }
 
-    private static class data_resultStandardScheme
-        extends org.apache.thrift.scheme.StandardScheme<data_result> {
+    private static class DataResultStandardScheme
+        extends org.apache.thrift.scheme.StandardScheme<DataResult> {
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol iprot, data_result struct)
+      public void read(org.apache.thrift.protocol.TProtocol iprot, DataResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
@@ -6958,7 +7095,7 @@ public class HelloWorldService {
           switch (schemeField.id) {
             case 0: // SUCCESS
               if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-                struct.success = new userAccount();
+                struct.success = new UserAccount();
                 struct.success.read(iprot);
                 struct.setSuccessIsSet(true);
               } else {
@@ -6978,7 +7115,7 @@ public class HelloWorldService {
       }
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol oprot, data_result struct)
+      public void write(org.apache.thrift.protocol.TProtocol oprot, DataResult struct)
           throws org.apache.thrift.TException {
         struct.validate();
 
@@ -6993,19 +7130,19 @@ public class HelloWorldService {
       }
     }
 
-    private static class data_resultTupleSchemeFactory
+    private static class DataResultTupleSchemeFactory
         implements org.apache.thrift.scheme.SchemeFactory {
       @Override
-      public data_resultTupleScheme getScheme() {
-        return new data_resultTupleScheme();
+      public DataResultTupleScheme getScheme() {
+        return new DataResultTupleScheme();
       }
     }
 
-    private static class data_resultTupleScheme
-        extends org.apache.thrift.scheme.TupleScheme<data_result> {
+    private static class DataResultTupleScheme
+        extends org.apache.thrift.scheme.TupleScheme<DataResult> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, data_result struct)
+      public void write(org.apache.thrift.protocol.TProtocol prot, DataResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
@@ -7020,13 +7157,13 @@ public class HelloWorldService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, data_result struct)
+      public void read(org.apache.thrift.protocol.TProtocol prot, DataResult struct)
           throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot =
             (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.success = new userAccount();
+          struct.success = new UserAccount();
           struct.success.read(iprot);
           struct.setSuccessIsSet(true);
         }

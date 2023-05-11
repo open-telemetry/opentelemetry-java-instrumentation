@@ -112,10 +112,9 @@ public final class ThriftClientInstrumentation implements TypeInstrumentation {
         @Advice.This TServiceClient client, @Advice.Argument(0) TProtocol protocol)
         throws NoSuchFieldException, IllegalAccessException {
 
-        Field field = TServiceClient.class.getDeclaredField("oprot_");
-        field.setAccessible(true);
-        field.set(client, new ClientOutProtocolWrapper(protocol));
-
+      Field field = TServiceClient.class.getDeclaredField("oprot_");
+      field.setAccessible(true);
+      field.set(client, new ClientOutProtocolWrapper(protocol));
     }
   }
 }

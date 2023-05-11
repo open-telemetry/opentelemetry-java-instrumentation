@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.thrift;
 import io.opentelemetry.javaagent.thrift.thrifttest.Account;
 import io.opentelemetry.javaagent.thrift.thrifttest.HelloWorldService;
 import io.opentelemetry.javaagent.thrift.thrifttest.User;
-import io.opentelemetry.javaagent.thrift.thrifttest.userAccount;
+import io.opentelemetry.javaagent.thrift.thrifttest.UserAccount;
 import java.util.concurrent.TimeUnit;
 import org.apache.thrift.TException;
 
@@ -53,7 +53,7 @@ public class HelloWorldImpl implements HelloWorldService.Iface {
   }
 
   @Override
-  public userAccount data(User user, Account account) throws TException {
-    return new userAccount(user, account);
+  public UserAccount data(User user, Account account) throws TException {
+    return new UserAccount(user, account);
   }
 }
