@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import javax.annotation.Nullable;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
@@ -43,22 +42,13 @@ enum WebfluxServerHttpAttributesGetter
 
   @Nullable
   @Override
-  public String getFlavor(ServerWebExchange request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getTarget(ServerWebExchange request) {
     String path = request.getRequest().getURI().getPath();
     String query = request.getRequest().getURI().getQuery();
     if (path == null && query == null) {
       return null;
     }
-    if (query != null) {
-      query = "?" + query;
-    }
-    return Optional.ofNullable(path).orElse("") + Optional.ofNullable(query).orElse("");
+    return (path == null ? "" : path) + (query == null ? "" : "?" + query);
   }
 
   @Nullable

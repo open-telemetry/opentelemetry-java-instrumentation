@@ -11,6 +11,8 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterAccess;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -249,5 +251,23 @@ public class Instrumenter<REQUEST, RESPONSE> {
       return System.nanoTime();
     }
     return TimeUnit.SECONDS.toNanos(time.getEpochSecond()) + time.getNano();
+  }
+
+  static {
+    InstrumenterUtil.setInstrumenterAccess(
+        new InstrumenterAccess() {
+          @Override
+          public <RQ, RS> Context startAndEnd(
+              Instrumenter<RQ, RS> instrumenter,
+              Context parentContext,
+              RQ request,
+              @Nullable RS response,
+              @Nullable Throwable error,
+              Instant startTime,
+              Instant endTime) {
+            return instrumenter.startAndEnd(
+                parentContext, request, response, error, startTime, endTime);
+          }
+        });
   }
 }

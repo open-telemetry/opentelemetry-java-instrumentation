@@ -12,13 +12,6 @@ muzzle {
   }
 }
 
-tasks {
-  test {
-    dependsOn("myfaces12Test")
-    dependsOn("myfaces2Test")
-  }
-}
-
 dependencies {
   compileOnly("org.apache.myfaces.core:myfaces-api:1.2.12")
   compileOnly("javax.el:el-api:1.0")

@@ -8,7 +8,6 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class CouchbaseSpanUtil {
   // Reusable span assertion method.  Cannot directly override AbstractCouchbaseTest.assertCouchbaseSpan because
@@ -34,7 +33,6 @@ class CouchbaseSpanUtil {
         "$SemanticAttributes.DB_STATEMENT" statement
         "$SemanticAttributes.DB_OPERATION"(operation ?: spanName)
 
-        "$SemanticAttributes.NET_TRANSPORT" { it == null || it == IP_TCP }
         // Because of caching, not all requests hit the server so these attributes may be absent
         "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
         "$SemanticAttributes.NET_SOCK_PEER_NAME" { it == "localhost" || it == "127.0.0.1" || it == null }

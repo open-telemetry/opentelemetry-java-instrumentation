@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import jodd.http.HttpRequest;
 import jodd.http.HttpResponse;
@@ -15,8 +14,23 @@ final class JoddHttpNetAttributesGetter
     implements NetClientAttributesGetter<HttpRequest, HttpResponse> {
 
   @Override
-  public String getTransport(HttpRequest request, @Nullable HttpResponse response) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
+  public String getProtocolName(HttpRequest request, @Nullable HttpResponse response) {
+    return "http";
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(HttpRequest request, @Nullable HttpResponse response) {
+    String httpVersion = request.httpVersion();
+    if (httpVersion == null && response != null) {
+      httpVersion = response.httpVersion();
+    }
+    if (httpVersion != null) {
+      if (httpVersion.contains("/")) {
+        httpVersion = httpVersion.substring(httpVersion.lastIndexOf("/") + 1);
+      }
+    }
+    return httpVersion;
   }
 
   @Override

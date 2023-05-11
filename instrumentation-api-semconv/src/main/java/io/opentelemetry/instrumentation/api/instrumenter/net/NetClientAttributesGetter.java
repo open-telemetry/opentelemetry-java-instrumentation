@@ -18,9 +18,10 @@ import javax.annotation.Nullable;
 public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
-  String getTransport(REQUEST request, @Nullable RESPONSE response);
+  default String getTransport(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
 
-  // TODO: make required after the 1.24 release
   /**
    * Returns the application protocol used.
    *
@@ -31,7 +32,6 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
     return null;
   }
 
-  // TODO: make required after the 1.24 release
   /**
    * Returns the version of the application protocol used.
    *

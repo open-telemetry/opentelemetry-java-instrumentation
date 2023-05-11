@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.CLOUD_ACCOUNT_ID;
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.FAAS_ID;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_EXECUTION;
+import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.CLOUD_RESOURCE_ID;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_INVOCATION_ID;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -49,10 +49,10 @@ public final class AwsLambdaFunctionAttributesExtractor
       io.opentelemetry.context.Context parentContext,
       AwsLambdaRequest request) {
     Context awsContext = request.getAwsContext();
-    attributes.put(FAAS_EXECUTION, awsContext.getAwsRequestId());
+    attributes.put(FAAS_INVOCATION_ID, awsContext.getAwsRequestId());
     String arn = getFunctionArn(awsContext);
     if (arn != null) {
-      attributes.put(FAAS_ID, arn);
+      attributes.put(CLOUD_RESOURCE_ID, arn);
       attributes.put(CLOUD_ACCOUNT_ID, getAccountId(arn));
     }
   }

@@ -9,6 +9,8 @@ import com.linecorp.armeria.server.ServerBuilder;
 import io.opentelemetry.instrumentation.armeria.v1_3.AbstractArmeriaHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
@@ -19,5 +21,13 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
   @Override
   protected ServerBuilder configureServer(ServerBuilder sb) {
     return sb;
+  }
+
+  @Override
+  protected void configure(HttpServerTestOptions options) {
+    super.configure(options);
+    options.setHasResponseCustomizer(
+        endpoint -> ServerEndpoint.NOT_FOUND != endpoint && ServerEndpoint.EXCEPTION != endpoint);
+    options.setTestHttpPipelining(false);
   }
 }

@@ -5,29 +5,59 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.asynchttpclient.Response;
+import org.asynchttpclient.netty.request.NettyRequest;
 
 final class AsyncHttpClientNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<RequestContext, Response> {
 
+  @Nullable
   @Override
-  public String getTransport(RequestContext request, @Nullable Response response) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
+  public String getProtocolName(RequestContext request, @Nullable Response response) {
+    HttpVersion httpVersion = getHttpVersion(request);
+    if (httpVersion == null) {
+      return null;
+    }
+    return httpVersion.protocolName();
   }
 
   @Nullable
   @Override
-  public String getPeerName(RequestContext requestContext) {
-    return requestContext.getRequest().getUri().getHost();
+  public String getProtocolVersion(RequestContext request, @Nullable Response response) {
+    HttpVersion httpVersion = getHttpVersion(request);
+    if (httpVersion == null) {
+      return null;
+    }
+    return httpVersion.majorVersion() + "." + httpVersion.minorVersion();
+  }
+
+  @Nullable
+  private static HttpVersion getHttpVersion(RequestContext request) {
+    NettyRequest nettyRequest = request.getNettyRequest();
+    if (nettyRequest == null) {
+      return null;
+    }
+    HttpRequest httpRequest = nettyRequest.getHttpRequest();
+    if (httpRequest == null) {
+      return null;
+    }
+    return httpRequest.getProtocolVersion();
+  }
+
+  @Nullable
+  @Override
+  public String getPeerName(RequestContext request) {
+    return request.getRequest().getUri().getHost();
   }
 
   @Override
-  public Integer getPeerPort(RequestContext requestContext) {
-    return requestContext.getRequest().getUri().getPort();
+  public Integer getPeerPort(RequestContext request) {
+    return request.getRequest().getUri().getPort();
   }
 
   @Override

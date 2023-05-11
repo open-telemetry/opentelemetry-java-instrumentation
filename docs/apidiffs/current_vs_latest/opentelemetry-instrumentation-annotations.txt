@@ -1,2 +1,9 @@
 Comparing source compatibility of  against 
-No changes.
++++  NEW ANNOTATION: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.annotations.AddingSpanAttributes  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW INTERFACE: java.lang.annotation.Annotation
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW ANNOTATION: java.lang.annotation.Target
+		+++  NEW ELEMENT: value=java.lang.annotation.ElementType.METHOD,java.lang.annotation.ElementType.CONSTRUCTOR (+)
+	+++  NEW ANNOTATION: java.lang.annotation.Retention
+		+++  NEW ELEMENT: value=java.lang.annotation.RetentionPolicy.RUNTIME (+)

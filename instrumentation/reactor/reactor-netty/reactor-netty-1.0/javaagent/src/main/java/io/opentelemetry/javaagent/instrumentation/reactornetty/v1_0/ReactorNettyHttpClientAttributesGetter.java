@@ -57,19 +57,6 @@ final class ReactorNettyHttpClientAttributesGetter
     return uri != null && !uri.isEmpty() && !uri.startsWith("/");
   }
 
-  @Nullable
-  @Override
-  public String getFlavor(HttpClientConfig request, @Nullable HttpClientResponse response) {
-    if (response != null) {
-      String flavor = response.version().text();
-      if (flavor.startsWith("HTTP/")) {
-        flavor = flavor.substring("HTTP/".length());
-      }
-      return flavor;
-    }
-    return null;
-  }
-
   @Override
   public String getMethod(HttpClientConfig request) {
     return request.method().name();

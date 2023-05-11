@@ -8,15 +8,33 @@ package io.opentelemetry.instrumentation.restlet.v1_1;
 import com.noelios.restlet.http.HttpCall;
 import com.noelios.restlet.http.HttpRequest;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.restlet.data.Request;
 
 final class RestletNetAttributesGetter implements NetServerAttributesGetter<Request> {
 
+  @Nullable
   @Override
-  public String getTransport(Request request) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
+  public String getProtocolName(Request request) {
+    String protocol = getProtocolString(request);
+    if (protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(Request request) {
+    String protocol = getProtocolString(request);
+    if (protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
+  }
+
+  private static String getProtocolString(Request request) {
+    return (String) request.getAttributes().get("org.restlet.http.version");
   }
 
   @Nullable

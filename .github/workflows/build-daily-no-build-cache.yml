@@ -27,9 +27,15 @@ jobs:
   # markdown-link-check and misspell-check are not included here because they don't use gradle cache
   # anyway and so are already covered by the normal daily build
 
-  open-issue-on-failure:
+  workflow-notification:
     needs:
       - common
       - test-latest-deps
-    if: failure() && github.run_attempt == 1
-    uses: ./.github/workflows/reusable-open-issue-on-failure.yml
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: |
+        ${{
+          needs.common.result == 'success' &&
+          needs.test-latest-deps.result == 'success'
+        }}

@@ -66,7 +66,7 @@ public final class JavaUtilLoggingHelper {
     // time
     // TODO (trask) use getInstant() for more precision on Java 9
     long timestamp = logRecord.getMillis();
-    builder.setEpoch(timestamp, TimeUnit.MILLISECONDS);
+    builder.setTimestamp(timestamp, TimeUnit.MILLISECONDS);
 
     // level
     Level level = logRecord.getLevel();

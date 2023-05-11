@@ -42,7 +42,7 @@ public class AkkaDispatcherInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext enterDispatch(@Advice.Argument(1) Envelope envelope) {
       Context context = Java8BytecodeBridge.currentContext();
-      if (ExecutorAdviceHelper.shouldPropagateContext(context, envelope)) {
+      if (ExecutorAdviceHelper.shouldPropagateContext(context, envelope.message())) {
         VirtualField<Envelope, PropagatedContext> virtualField =
             VirtualField.find(Envelope.class, PropagatedContext.class);
         return ExecutorAdviceHelper.attachContextToTask(context, virtualField, envelope);

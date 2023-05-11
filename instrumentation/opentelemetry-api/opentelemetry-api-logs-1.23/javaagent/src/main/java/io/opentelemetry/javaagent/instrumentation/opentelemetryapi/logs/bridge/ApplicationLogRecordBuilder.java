@@ -25,15 +25,27 @@ class ApplicationLogRecordBuilder implements LogRecordBuilder {
 
   @Override
   @CanIgnoreReturnValue
-  public LogRecordBuilder setEpoch(long l, TimeUnit timeUnit) {
-    agentLogRecordBuilder.setEpoch(l, timeUnit);
+  public LogRecordBuilder setTimestamp(long l, TimeUnit timeUnit) {
+    agentLogRecordBuilder.setTimestamp(l, timeUnit);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public LogRecordBuilder setEpoch(Instant instant) {
-    agentLogRecordBuilder.setEpoch(instant);
+  public LogRecordBuilder setTimestamp(Instant instant) {
+    agentLogRecordBuilder.setTimestamp(instant);
+    return this;
+  }
+
+  @Override
+  public LogRecordBuilder setObservedTimestamp(long l, TimeUnit timeUnit) {
+    agentLogRecordBuilder.setObservedTimestamp(l, timeUnit);
+    return this;
+  }
+
+  @Override
+  public LogRecordBuilder setObservedTimestamp(Instant instant) {
+    agentLogRecordBuilder.setObservedTimestamp(instant);
     return this;
   }
 

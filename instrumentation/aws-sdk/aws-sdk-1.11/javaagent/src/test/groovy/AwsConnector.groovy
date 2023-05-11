@@ -3,6 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import com.amazonaws.auth.AWSCredentialsProvider
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.BucketNotificationConfiguration
@@ -45,22 +49,28 @@ class AwsConnector {
     awsConnector.localstack.start()
     awsConnector.localstack.followOutput(new Slf4jLogConsumer(LoggerFactory.getLogger("test")))
 
+    AWSCredentialsProvider credentialsProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsConnector.localstack .getAccessKey(), awsConnector.localstack.getSecretKey()))
+
     awsConnector.sqsClient = AmazonSQSAsyncClient.asyncBuilder()
-      .withEndpointConfiguration(awsConnector.localstack.getEndpointConfiguration(LocalStackContainer.Service.SQS))
-      .withCredentials(awsConnector.localstack.getDefaultCredentialsProvider())
+      .withEndpointConfiguration(getEndpointConfiguration(awsConnector.localstack, LocalStackContainer.Service.SQS))
+      .withCredentials(credentialsProvider)
       .build()
 
     awsConnector.s3Client = AmazonS3Client.builder()
-      .withEndpointConfiguration(awsConnector.localstack.getEndpointConfiguration(LocalStackContainer.Service.S3))
-      .withCredentials(awsConnector.localstack.getDefaultCredentialsProvider())
+      .withEndpointConfiguration(getEndpointConfiguration(awsConnector.localstack, LocalStackContainer.Service.S3))
+      .withCredentials(credentialsProvider)
       .build()
 
     awsConnector.snsClient = AmazonSNSAsyncClient.asyncBuilder()
-      .withEndpointConfiguration(awsConnector.localstack.getEndpointConfiguration(LocalStackContainer.Service.SNS))
-      .withCredentials(awsConnector.localstack.getDefaultCredentialsProvider())
+      .withEndpointConfiguration(getEndpointConfiguration(awsConnector.localstack, LocalStackContainer.Service.SNS))
+      .withCredentials(credentialsProvider)
       .build()
 
     return awsConnector
+  }
+
+  static AwsClientBuilder.EndpointConfiguration getEndpointConfiguration(LocalStackContainer localstack, LocalStackContainer.Service service) {
+    return new AwsClientBuilder.EndpointConfiguration(localstack.getEndpointOverride(service).toString(), localstack.getRegion())
   }
 
   static liveAws() {

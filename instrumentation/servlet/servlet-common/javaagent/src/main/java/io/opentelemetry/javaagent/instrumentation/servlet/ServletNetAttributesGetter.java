@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
 public class ServletNetAttributesGetter<REQUEST, RESPONSE>
@@ -18,10 +17,24 @@ public class ServletNetAttributesGetter<REQUEST, RESPONSE>
     this.accessor = accessor;
   }
 
-  @Override
   @Nullable
-  public String getTransport(ServletRequestContext<REQUEST> requestContext) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
+  @Override
+  public String getProtocolName(ServletRequestContext<REQUEST> requestContext) {
+    String protocol = accessor.getRequestProtocol(requestContext.request());
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(ServletRequestContext<REQUEST> requestContext) {
+    String protocol = accessor.getRequestProtocol(requestContext.request());
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
   }
 
   @Nullable

@@ -24,49 +24,54 @@ val extraTag = findProperty("extraTag")
 // Dockerfile name, args key passes raw arguments to docker build
 val targets = mapOf(
   "jetty" to listOf(
-    ImageTarget(listOf("9.4.39"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), mapOf("sourceVersion" to "9.4.39.v20210325")),
-    ImageTarget(listOf("9.4.39"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("sourceVersion" to "9.4.39.v20210325")),
-    ImageTarget(listOf("10.0.7"), listOf("hotspot"), listOf("11", "17", "19", "20"), mapOf("sourceVersion" to "10.0.7")),
-    ImageTarget(listOf("10.0.7"), listOf("openj9"), listOf("11", "17", "18"), mapOf("sourceVersion" to "10.0.7")),
-    ImageTarget(listOf("11.0.7"), listOf("hotspot"), listOf("11", "17", "19", "20"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
-    ImageTarget(listOf("11.0.7"), listOf("openj9"), listOf("11", "17", "18"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
+    ImageTarget(listOf("9.4.51"), listOf("hotspot"), listOf("8", "11", "17", "20", "21"), mapOf("sourceVersion" to "9.4.51.v20230217")),
+    ImageTarget(listOf("9.4.51"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("sourceVersion" to "9.4.51.v20230217")),
+    ImageTarget(listOf("10.0.15"), listOf("hotspot"), listOf("11", "17", "20", "21"), mapOf("sourceVersion" to "10.0.7")),
+    ImageTarget(listOf("10.0.15"), listOf("openj9"), listOf("11", "17", "18"), mapOf("sourceVersion" to "10.0.7")),
+    ImageTarget(listOf("11.0.15"), listOf("hotspot"), listOf("11", "17", "20", "21"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
+    ImageTarget(listOf("11.0.15"), listOf("openj9"), listOf("11", "17", "18"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
   ),
   "liberty" to listOf(
     ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11"), mapOf("release" to "2020-11-11_0736")),
     ImageTarget(listOf("21.0.0.12"), listOf("hotspot"), listOf("8", "11", "17"), mapOf("release" to "2021-11-17_1256")),
     ImageTarget(listOf("21.0.0.12"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "2021-11-17_1256")),
     // Java 19 is not supported until 22.0.0.10
-    ImageTarget(listOf("22.0.0.12"), listOf("hotspot"), listOf("8", "11", "17", "19"), mapOf("release" to "22.0.0.12")),
+    ImageTarget(listOf("22.0.0.12"), listOf("hotspot"), listOf("8", "11", "17", "20"), mapOf("release" to "22.0.0.12")),
     ImageTarget(listOf("22.0.0.12"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "22.0.0.12")),
+    ImageTarget(listOf("23.0.0.3"), listOf("hotspot"), listOf("8", "11", "17", "20"), mapOf("release" to "23.0.0.3")),
+    ImageTarget(listOf("23.0.0.3"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "23.0.0.3")),
   ),
   "payara" to listOf(
     ImageTarget(listOf("5.2020.6"), listOf("hotspot", "openj9"), listOf("8", "11")),
     ImageTarget(listOf("5.2021.8"), listOf("hotspot", "openj9"), listOf("8", "11")),
+    ImageTarget(listOf("6.2023.4"), listOf("hotspot", "openj9"), listOf("11", "17"), war = "servlet-5.0")
   ),
   "tomcat" to listOf(
     ImageTarget(listOf("7.0.109"), listOf("hotspot", "openj9"), listOf("8"), mapOf("majorVersion" to "7")),
-    ImageTarget(listOf("8.5.72"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), mapOf("majorVersion" to "8")),
-    ImageTarget(listOf("8.5.72"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "8")),
-    ImageTarget(listOf("9.0.54"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), mapOf("majorVersion" to "9")),
-    ImageTarget(listOf("9.0.54"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "9")),
-    ImageTarget(listOf("10.0.12"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), mapOf("majorVersion" to "10"), "servlet-5.0"),
-    ImageTarget(listOf("10.0.12"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "10"), "servlet-5.0"),
+    ImageTarget(listOf("8.5.88"), listOf("hotspot"), listOf("8", "11", "17", "20", "21"), mapOf("majorVersion" to "8")),
+    ImageTarget(listOf("8.5.88"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "8")),
+    ImageTarget(listOf("9.0.74"), listOf("hotspot"), listOf("8", "11", "17", "20", "21"), mapOf("majorVersion" to "9")),
+    ImageTarget(listOf("9.0.74"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "9")),
+    ImageTarget(listOf("10.1.8"), listOf("hotspot"), listOf("11", "17", "20", "21"), mapOf("majorVersion" to "10"), "servlet-5.0"),
+    ImageTarget(listOf("10.1.8"), listOf("openj9"), listOf("11", "17", "18"), mapOf("majorVersion" to "10"), "servlet-5.0"),
   ),
   "tomee" to listOf(
     ImageTarget(listOf("7.0.9"), listOf("hotspot", "openj9"), listOf("8")),
     ImageTarget(listOf("7.1.4"), listOf("hotspot", "openj9"), listOf("8")),
-    ImageTarget(listOf("8.0.8"), listOf("hotspot"), listOf("8", "11", "17", "19", "20")),
-    ImageTarget(listOf("8.0.8"), listOf("openj9"), listOf("8", "11", "17", "18")),
-    ImageTarget(listOf("9.0.0-M7"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), war = "servlet-5.0"),
-    ImageTarget(listOf("9.0.0-M7"), listOf("openj9"), listOf("8", "11", "17", "18"), war = "servlet-5.0"),
+    ImageTarget(listOf("8.0.14"), listOf("hotspot"), listOf("8", "11", "17", "20", "21")),
+    ImageTarget(listOf("8.0.14"), listOf("openj9"), listOf("8", "11", "17", "18")),
+    ImageTarget(listOf("9.0.0"), listOf("hotspot"), listOf("11", "17", "20", "21"), war = "servlet-5.0"),
+    ImageTarget(listOf("9.0.0"), listOf("openj9"), listOf("11", "17", "18"), war = "servlet-5.0"),
   ),
   "websphere" to listOf(
     ImageTarget(listOf("8.5.5.22", "9.0.5.14"), listOf("openj9"), listOf("8"), windows = false),
   ),
   "wildfly" to listOf(
     ImageTarget(listOf("13.0.0.Final"), listOf("hotspot", "openj9"), listOf("8")),
-    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "25.0.1.Final"), listOf("hotspot"), listOf("8", "11", "17", "19", "20")),
-    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "25.0.1.Final"), listOf("openj9"), listOf("8", "11", "17", "18")),
+    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final"), listOf("hotspot"), listOf("8", "11", "17", "20", "21")),
+    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final"), listOf("openj9"), listOf("8", "11", "17", "18")),
+    ImageTarget(listOf("28.0.0.Final"), listOf("hotspot"), listOf("11", "17", "20", "21"), war = "servlet-5.0"),
+    ImageTarget(listOf("28.0.0.Final"), listOf("openj9"), listOf("11", "17", "18"), war = "servlet-5.0"),
   ),
 )
 
@@ -150,7 +155,7 @@ fun configureImage(
   val image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-$server:$version-jdk$jdk$vmSuffix$platformSuffix-$extraTag"
 
   val jdkImage = if (vm == "hotspot") {
-    if (jdk == "20") {
+    if (jdk == "21") {
       // "The only tags which will continue to receive updates beyond July 2022 will be Early Access
       // builds (which are sourced from jdk.java.net), as those are not published/supported by any
       // of the above projects."

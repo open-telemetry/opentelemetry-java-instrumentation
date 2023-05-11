@@ -21,11 +21,6 @@ class AkkaHttpClientAttributesGetter
   }
 
   @Override
-  public String getFlavor(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
-    return AkkaHttpUtil.flavor(httpRequest);
-  }
-
-  @Override
   public String getMethod(HttpRequest httpRequest) {
     return httpRequest.method().value();
   }

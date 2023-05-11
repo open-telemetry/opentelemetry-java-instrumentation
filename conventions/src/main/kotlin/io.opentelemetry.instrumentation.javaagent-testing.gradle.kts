@@ -79,6 +79,8 @@ class JavaagentTestArgumentsProvider(
   override fun asArguments(): Iterable<String> = listOf(
     "-Dotel.javaagent.debug=true",
     "-javaagent:${agentShadowJar.absolutePath}",
+    // make the path to the javaagent available to tests
+    "-Dotel.javaagent.testing.javaagent-jar-path=${agentShadowJar.absolutePath}",
     "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.absolutePath}",
     "-Dotel.javaagent.testing.additional-library-ignores.enabled=false",
     "-Dotel.javaagent.testing.fail-on-context-leak=${findProperty("failOnContextLeak") != false}",
@@ -154,7 +156,7 @@ plugins.withId("maven-publish") {
 }
 
 configurations.configureEach {
-  if (name.toLowerCase().endsWith("testruntimeclasspath")) {
+  if (name.endsWith("testruntimeclasspath", ignoreCase = true)) {
     // Added by agent, don't let Gradle bring it in when running tests.
     exclude("io.opentelemetry.javaagent", "opentelemetry-javaagent-bootstrap")
   }

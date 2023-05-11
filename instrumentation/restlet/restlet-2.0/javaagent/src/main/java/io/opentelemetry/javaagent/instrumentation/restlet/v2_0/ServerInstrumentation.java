@@ -16,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -78,6 +79,9 @@ public class ServerInstrumentation implements TypeInstrumentation {
       if (Status.CLIENT_ERROR_NOT_FOUND.equals(response.getStatus())) {
         HttpRouteHolder.updateHttpRoute(context, CONTROLLER, serverSpanName(), "/*");
       }
+
+      HttpServerResponseCustomizerHolder.getCustomizer()
+          .customize(context, response, RestletResponseMutator.INSTANCE);
 
       if (exception != null) {
         instrumenter().end(context, request, response, exception);

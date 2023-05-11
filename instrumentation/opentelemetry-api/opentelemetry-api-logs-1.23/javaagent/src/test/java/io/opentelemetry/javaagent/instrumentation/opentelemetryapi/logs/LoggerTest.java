@@ -57,8 +57,8 @@ class LoggerTest {
 
     logger
         .logRecordBuilder()
-        .setEpoch(1, TimeUnit.SECONDS)
-        .setEpoch(Instant.now())
+        .setTimestamp(1, TimeUnit.SECONDS)
+        .setTimestamp(Instant.now())
         .setContext(Context.current().with(Span.wrap(spanContext)))
         .setSeverity(Severity.DEBUG)
         .setSeverityText("debug")
@@ -77,7 +77,7 @@ class LoggerTest {
                               .isEqualTo(instrumentationName);
                           assertThat(logRecordData.getInstrumentationScopeInfo().getVersion())
                               .isEqualTo("1.2.3");
-                          assertThat(logRecordData.getEpochNanos()).isGreaterThan(0);
+                          assertThat(logRecordData.getTimestampEpochNanos()).isGreaterThan(0);
                           assertThat(logRecordData.getSpanContext()).isEqualTo(spanContext);
                           assertThat(logRecordData.getSeverity()).isEqualTo(Severity.DEBUG);
                           assertThat(logRecordData.getSeverityText()).isEqualTo("debug");

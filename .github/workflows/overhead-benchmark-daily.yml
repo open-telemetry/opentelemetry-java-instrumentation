@@ -45,8 +45,10 @@ jobs:
           committer_name: opentelemetrybot
           committer_email: 107717825+opentelemetrybot@users.noreply.github.com
 
-  open-issue-on-failure:
+  workflow-notification:
     needs:
       - run-overhead-tests
-    if: failure() && github.run_attempt == 1
-    uses: ./.github/workflows/reusable-open-issue-on-failure.yml
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.run-overhead-tests.result == 'success' }}

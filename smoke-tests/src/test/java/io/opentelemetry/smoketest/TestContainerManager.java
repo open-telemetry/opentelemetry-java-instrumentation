@@ -6,6 +6,7 @@
 package io.opentelemetry.smoketest;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 import org.testcontainers.containers.output.OutputFrame;
@@ -23,6 +24,7 @@ public interface TestContainerManager {
       String agentPath,
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
+      boolean setServiceName,
       List<ResourceMapping> extraResources,
       List<Integer> extraPorts,
       TargetWaitStrategy waitStrategy,
@@ -32,6 +34,6 @@ public interface TestContainerManager {
 
   static boolean useWindowsContainers() {
     return !"1".equals(System.getenv("USE_LINUX_CONTAINERS"))
-        && System.getProperty("os.name").toLowerCase().contains("windows");
+        && System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
   }
 }

@@ -73,7 +73,6 @@ class ElasticsearchRest6Test extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "GET"
             "$SemanticAttributes.DB_STATEMENT" "GET _cluster/health"
-            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
         span(1) {
@@ -81,11 +80,11 @@ class ElasticsearchRest6Test extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
             "$SemanticAttributes.NET_PEER_PORT" httpHost.port
             "$SemanticAttributes.HTTP_METHOD" "GET"
-            "$SemanticAttributes.HTTP_FLAVOR" SemanticAttributes.HttpFlavorValues.HTTP_1_1
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.HTTP_URL" "${httpHost.toURI()}/_cluster/health"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
@@ -145,7 +144,6 @@ class ElasticsearchRest6Test extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "GET"
             "$SemanticAttributes.DB_STATEMENT" "GET _cluster/health"
-            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
         span(2) {
@@ -153,11 +151,11 @@ class ElasticsearchRest6Test extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(1)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
             "$SemanticAttributes.NET_PEER_PORT" httpHost.port
             "$SemanticAttributes.HTTP_METHOD" "GET"
-            "$SemanticAttributes.HTTP_FLAVOR" SemanticAttributes.HttpFlavorValues.HTTP_1_1
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.HTTP_URL" "${httpHost.toURI()}/_cluster/health"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long

@@ -12,12 +12,12 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_FLAVOR
 import kotlinx.coroutines.*
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.net.URI
@@ -58,7 +58,7 @@ class KtorHttpClientTest : AbstractHttpClientTest<HttpRequestBuilder>() {
       // related issue https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/5722
       disableTestRedirects()
 
-      setHttpAttributes { DEFAULT_HTTP_ATTRIBUTES - HTTP_FLAVOR }
+      setHttpAttributes { DEFAULT_HTTP_ATTRIBUTES - setOf(NetAttributes.NET_PROTOCOL_NAME, NetAttributes.NET_PROTOCOL_VERSION) }
 
       setSingleConnectionFactory { host, port ->
         KtorHttpClientSingleConnection(host, port) { installTracing() }

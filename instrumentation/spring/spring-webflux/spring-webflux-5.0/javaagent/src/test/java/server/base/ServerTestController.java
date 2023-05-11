@@ -5,9 +5,11 @@
 
 package server.base;
 
+import static server.base.SpringWebFluxServerTest.NESTED_PATH;
+
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.net.URI;
-import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -116,7 +118,19 @@ public abstract class ServerTestController {
         });
   }
 
-  protected abstract <T> Mono<T> wrapControllerMethod(ServerEndpoint endpoint, Callable<T> handler);
+  @GetMapping("/nestedPath")
+  public Mono<String> nested_path(ServerHttpRequest request, ServerHttpResponse response) {
+    ServerEndpoint endpoint = NESTED_PATH;
+
+    return wrapControllerMethod(
+        endpoint,
+        () -> {
+          setStatus(response, endpoint);
+          return endpoint.getBody();
+        });
+  }
+
+  protected abstract <T> Mono<T> wrapControllerMethod(ServerEndpoint endpoint, Supplier<T> handler);
 
   private static void setStatus(ServerHttpResponse response, ServerEndpoint endpoint) {
     response.setStatusCode(HttpStatus.resolve(endpoint.getStatus()));

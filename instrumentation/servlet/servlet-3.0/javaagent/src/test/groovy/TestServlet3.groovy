@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+
 import javax.servlet.RequestDispatcher
 import javax.servlet.ServletException
 import javax.servlet.annotation.WebServlet
@@ -70,6 +71,19 @@ class TestServlet3 {
             break
           case EXCEPTION:
             throw new ServletException(endpoint.body)
+          case AbstractServlet3Test.HTML_PRINT_WRITER:
+            resp.contentType = "text/html"
+            resp.status = endpoint.status
+            resp.setContentLengthLong(endpoint.body.length())
+            resp.writer.print(endpoint.body)
+            break
+          case AbstractServlet3Test.HTML_SERVLET_OUTPUT_STREAM:
+            resp.contentType = "text/html"
+            resp.status = endpoint.status
+            resp.setContentLength(endpoint.body.length())
+            byte[] body = endpoint.body.getBytes()
+            resp.getOutputStream().write(body, 0, body.length)
+            break
         }
       }
     }
@@ -141,6 +155,20 @@ class TestServlet3 {
                   writer.close()
                 }
                 throw new ServletException(endpoint.body)
+                break
+              case AbstractServlet3Test.HTML_PRINT_WRITER:
+                resp.contentType = "text/html"
+                resp.status = endpoint.status
+                resp.setContentLength(endpoint.body.length())
+                resp.writer.print(endpoint.body)
+                context.complete()
+                break
+              case AbstractServlet3Test.HTML_SERVLET_OUTPUT_STREAM:
+                resp.contentType = "text/html"
+                resp.status = endpoint.status
+                resp.getOutputStream().print(endpoint.body)
+                context.complete()
+                break
             }
           }
         } finally {
@@ -197,6 +225,17 @@ class TestServlet3 {
               resp.status = endpoint.status
               resp.writer.print(endpoint.body)
               throw new ServletException(endpoint.body)
+            case AbstractServlet3Test.HTML_PRINT_WRITER:
+              // intentionally testing setting status before contentType here to cover that case somewhere
+              resp.status = endpoint.status
+              resp.contentType = "text/html"
+              resp.writer.print(endpoint.body)
+              break
+            case AbstractServlet3Test.HTML_SERVLET_OUTPUT_STREAM:
+              resp.contentType = "text/html"
+              resp.status = endpoint.status
+              resp.getOutputStream().print(endpoint.body)
+              break
           }
         }
       } finally {

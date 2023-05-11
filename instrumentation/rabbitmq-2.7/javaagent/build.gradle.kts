@@ -34,5 +34,5 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.rabbitmq.experimental-span-attributes=true")
   jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
 
-  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 }

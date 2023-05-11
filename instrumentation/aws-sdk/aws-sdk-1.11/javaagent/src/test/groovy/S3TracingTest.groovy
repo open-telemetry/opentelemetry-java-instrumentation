@@ -9,7 +9,6 @@ import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class S3TracingTest extends AgentInstrumentationSpecification {
 
@@ -57,12 +56,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.queue.name" queueName
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -82,12 +81,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "http.flavor" "1.1"
             "http.method" "PUT"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -107,12 +106,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -132,12 +131,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -157,12 +156,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "http.flavor" "1.1"
             "http.method" "PUT"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -181,12 +180,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -205,12 +204,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "http.flavor" "1.1"
             "http.method" "PUT"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -227,13 +226,13 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
-            "http.user_agent" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -257,12 +256,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -281,12 +280,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "http.flavor" "1.1"
             "http.method" "GET"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -305,12 +304,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "http.flavor" "1.1"
             "http.method" "DELETE"
             "http.status_code" 204
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -329,12 +328,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "http.flavor" "1.1"
             "http.method" "DELETE"
             "http.status_code" 204
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -353,12 +352,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -407,12 +406,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.queue.name" queueName
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -431,12 +430,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -455,12 +454,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "http.flavor" "1.1"
             "http.method" "PUT"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -478,12 +477,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.method" "CreateTopic"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -501,12 +500,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.method" "Subscribe"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -525,12 +524,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -548,12 +547,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.method" "SetTopicAttributes"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -572,12 +571,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "http.flavor" "1.1"
             "http.method" "PUT"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -597,12 +596,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -621,12 +620,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "http.flavor" "1.1"
             "http.method" "PUT"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -649,12 +648,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -673,13 +672,13 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
-            "http.user_agent" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -698,12 +697,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "http.flavor" "1.1"
             "http.method" "GET"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -722,12 +721,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "http.flavor" "1.1"
             "http.method" "DELETE"
             "http.status_code" 204
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -746,12 +745,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "http.flavor" "1.1"
             "http.method" "DELETE"
             "http.status_code" 204
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -770,12 +769,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }

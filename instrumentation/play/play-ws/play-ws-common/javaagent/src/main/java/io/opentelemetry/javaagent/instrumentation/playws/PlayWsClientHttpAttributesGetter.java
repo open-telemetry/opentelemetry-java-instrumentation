@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.playws;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 import play.shaded.ahc.org.asynchttpclient.Request;
@@ -33,11 +32,6 @@ final class PlayWsClientHttpAttributesGetter
   @Override
   public Integer getStatusCode(Request request, Response response, @Nullable Throwable error) {
     return response.getStatusCode();
-  }
-
-  @Override
-  public String getFlavor(Request request, @Nullable Response response) {
-    return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override

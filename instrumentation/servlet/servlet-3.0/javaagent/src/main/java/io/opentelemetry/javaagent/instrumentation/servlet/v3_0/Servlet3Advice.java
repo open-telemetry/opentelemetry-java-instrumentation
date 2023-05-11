@@ -5,15 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.getSnippetInjectionHelper;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.helper;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.SnippetInjectingResponseWrapper;
 import javax.servlet.Servlet;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -40,6 +43,12 @@ public class Servlet3Advice {
     }
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
+    String snippet = getSnippetInjectionHelper().getSnippet();
+    if (!snippet.isEmpty()
+        && !((HttpServletResponse) response)
+            .containsHeader(SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
+      response = new SnippetInjectingResponseWrapper((HttpServletResponse) response, snippet);
+    }
     callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
     callDepth.getAndIncrement();
 
@@ -73,6 +82,12 @@ public class Servlet3Advice {
     contextToUpdate =
         helper().updateContext(contextToUpdate, httpServletRequest, mappingResolver, servlet);
     scope = contextToUpdate.makeCurrent();
+
+    if (context != null) {
+      // Only trigger response customizer once, so only if server span was created here
+      HttpServerResponseCustomizerHolder.getCustomizer()
+          .customize(contextToUpdate, (HttpServletResponse) response, Servlet3Accessor.INSTANCE);
+    }
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

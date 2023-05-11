@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -91,24 +92,17 @@ public class OpenSearchRestTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "opensearch"),
                             equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "GET _cluster/health"),
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP)),
+                            equalTo(SemanticAttributes.DB_STATEMENT, "GET _cluster/health")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
                             equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(
-                                SemanticAttributes.HTTP_FLAVOR,
-                                SemanticAttributes.HttpFlavorValues.HTTP_1_1),
                             equalTo(
                                 SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
@@ -166,24 +160,17 @@ public class OpenSearchRestTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "opensearch"),
                             equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "GET _cluster/health"),
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP)),
+                            equalTo(SemanticAttributes.DB_STATEMENT, "GET _cluster/health")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SemanticAttributes.NET_TRANSPORT,
-                                SemanticAttributes.NetTransportValues.IP_TCP),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
                             equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(
-                                SemanticAttributes.HTTP_FLAVOR,
-                                SemanticAttributes.HttpFlavorValues.HTTP_1_1),
                             equalTo(
                                 SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),

@@ -54,7 +54,7 @@ abstract class AppServerTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
     String platformSuffix = windows ? "-windows" : ""
-    String extraTag = windows ? "20230302.4309128636" : "20230301.4309128636"
+    String extraTag = "20230418.4737426282"
     String fullSuffix = "${serverVersion}-jdk$jdk$platformSuffix-$extraTag"
     return getTargetImagePrefix() + ":" + fullSuffix
   }
@@ -121,7 +121,8 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes("http.target", "/app/headers") == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes("http.flavor", "1.1") == 3
+    traces.countFilteredAttributes("net.protocol.name", "http") == 3
+    traces.countFilteredAttributes("net.protocol.version", "1.1") == 3
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 3
@@ -229,7 +230,8 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes("http.target", "/app/WEB-INF/web.xml") == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes("http.flavor", "1.1") == 1
+    traces.countFilteredAttributes("net.protocol.name", "http") == 1
+    traces.countFilteredAttributes("net.protocol.version", "1.1") == 1
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
@@ -306,7 +308,8 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes("http.target", "/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless") == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes("http.flavor", "1.1") == 1
+    traces.countFilteredAttributes("net.protocol.name", "http") == 1
+    traces.countFilteredAttributes("net.protocol.version", "1.1") == 1
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
@@ -353,7 +356,8 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes("http.target", "/app/headers") == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes("http.flavor", "1.1") == 3
+    traces.countFilteredAttributes("net.protocol.name", "http") == 3
+    traces.countFilteredAttributes("net.protocol.version", "1.1") == 3
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 3

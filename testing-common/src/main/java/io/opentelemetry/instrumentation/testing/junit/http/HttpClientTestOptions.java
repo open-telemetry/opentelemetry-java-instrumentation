@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.Arrays;
@@ -24,12 +25,13 @@ public abstract class HttpClientTestOptions {
       Collections.unmodifiableSet(
           new HashSet<>(
               Arrays.asList(
+                  NetAttributes.NET_PROTOCOL_NAME,
+                  NetAttributes.NET_PROTOCOL_VERSION,
                   SemanticAttributes.NET_PEER_NAME,
                   SemanticAttributes.NET_PEER_PORT,
                   SemanticAttributes.HTTP_URL,
                   SemanticAttributes.HTTP_METHOD,
-                  SemanticAttributes.HTTP_FLAVOR,
-                  SemanticAttributes.HTTP_USER_AGENT)));
+                  SemanticAttributes.USER_AGENT_ORIGINAL)));
 
   public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =
       (uri, method) -> method;
@@ -142,50 +144,62 @@ public abstract class HttpClientTestOptions {
 
     Builder setTestErrorWithCallback(boolean value);
 
+    @CanIgnoreReturnValue
     default Builder disableTestWithClientParent() {
       return setTestWithClientParent(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestRedirects() {
       return setTestRedirects(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestCircularRedirects() {
       return setTestCircularRedirects(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestReusedRequest() {
       return setTestReusedRequest(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestConnectionFailure() {
       return setTestConnectionFailure(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder enableTestReadTimeout() {
       return setTestReadTimeout(true);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestRemoteConnection() {
       return setTestRemoteConnection(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestHttps() {
       return setTestHttps(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestCallback() {
       return setTestCallback(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestCallbackWithParent() {
       return setTestCallbackWithParent(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder disableTestErrorWithCallback() {
       return setTestErrorWithCallback(false);
     }
 
+    @CanIgnoreReturnValue
     default Builder enableTestCallbackWithImplicitParent() {
       return setTestCallbackWithImplicitParent(true);
     }

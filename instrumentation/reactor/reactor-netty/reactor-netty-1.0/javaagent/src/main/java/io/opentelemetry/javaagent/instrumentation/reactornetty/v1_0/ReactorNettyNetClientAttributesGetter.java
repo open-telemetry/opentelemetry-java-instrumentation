@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
+import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -18,8 +19,22 @@ final class ReactorNettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getTransport(HttpClientConfig request, @Nullable HttpClientResponse response) {
-    return null;
+  public String getProtocolName(HttpClientConfig request, @Nullable HttpClientResponse response) {
+    if (response == null) {
+      return null;
+    }
+    return response.version().protocolName();
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(
+      HttpClientConfig request, @Nullable HttpClientResponse response) {
+    if (response == null) {
+      return null;
+    }
+    HttpVersion version = response.version();
+    return version.majorVersion() + "." + version.minorVersion();
   }
 
   @Nullable

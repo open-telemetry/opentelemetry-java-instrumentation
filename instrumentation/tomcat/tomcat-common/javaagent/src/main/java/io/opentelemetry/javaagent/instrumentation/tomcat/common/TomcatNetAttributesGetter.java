@@ -8,17 +8,30 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 import static io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatHelper.messageBytesToString;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.Request;
 
 public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Request> {
 
-  @Override
   @Nullable
-  public String getTransport(Request request) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
+  @Override
+  public String getProtocolName(Request request) {
+    String protocol = messageBytesToString(request.protocol());
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(Request request) {
+    String protocol = messageBytesToString(request.protocol());
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
   }
 
   @Nullable

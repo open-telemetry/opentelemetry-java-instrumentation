@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.netty.v4_1.internal.server;
 
 import static io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerRequestTracingHandler.HTTP_SERVER_REQUEST;
 
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
@@ -35,10 +34,13 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       AttributeKey.valueOf(HttpServerResponseTracingHandler.class, "http-server-response");
 
   private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
+  private final HttpServerResponseBeforeCommitHandler beforeCommitHandler;
 
   public HttpServerResponseTracingHandler(
-      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter) {
+      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter,
+      HttpServerResponseBeforeCommitHandler beforeCommitHandler) {
     this.instrumenter = instrumenter;
+    this.beforeCommitHandler = beforeCommitHandler;
   }
 
   @Override
@@ -65,23 +67,25 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       // Going to finish the span after the write of the last content finishes.
       if (msg instanceof FullHttpResponse) {
         // Headers and body all sent together, we have the response information in the msg.
+        beforeCommitHandler.handle(context, (HttpResponse) msg);
+        contextAttr.set(null);
+        HttpRequestAndChannel request = ctx.channel().attr(HTTP_SERVER_REQUEST).getAndSet(null);
         writePromise.addListener(
-            future -> end(ctx.channel(), (FullHttpResponse) msg, writePromise));
+            future -> end(context, request, (FullHttpResponse) msg, writePromise));
       } else {
         // Body sent after headers. We stored the response information in the context when
         // encountering HttpResponse (which was not FullHttpResponse since it's not
         // LastHttpContent).
-        writePromise.addListener(
-            future ->
-                end(
-                    ctx.channel(),
-                    ctx.channel().attr(HTTP_SERVER_RESPONSE).getAndSet(null),
-                    writePromise));
+        contextAttr.set(null);
+        HttpRequestAndChannel request = ctx.channel().attr(HTTP_SERVER_REQUEST).getAndSet(null);
+        HttpResponse response = ctx.channel().attr(HTTP_SERVER_RESPONSE).getAndSet(null);
+        writePromise.addListener(future -> end(context, request, response, writePromise));
       }
     } else {
       writePromise = prm;
       if (msg instanceof HttpResponse) {
         // Headers before body has been sent, store them to use when finishing the span.
+        beforeCommitHandler.handle(context, (HttpResponse) msg);
         ctx.channel().attr(HTTP_SERVER_RESPONSE).set((HttpResponse) msg);
       }
     }
@@ -89,20 +93,24 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
     try (Scope ignored = context.makeCurrent()) {
       super.write(ctx, msg, writePromise);
     } catch (Throwable throwable) {
-      end(ctx.channel(), null, throwable);
+      contextAttr.set(null);
+      HttpRequestAndChannel request = ctx.channel().attr(HTTP_SERVER_REQUEST).getAndSet(null);
+      end(context, request, null, throwable);
       throw throwable;
     }
   }
 
-  private void end(Channel channel, HttpResponse response, ChannelFuture future) {
+  private void end(
+      Context context, HttpRequestAndChannel request, HttpResponse response, ChannelFuture future) {
     Throwable error = future.isSuccess() ? null : future.cause();
-    end(channel, response, error);
+    end(context, request, response, error);
   }
 
-  // make sure to remove the server context on end() call
-  private void end(Channel channel, @Nullable HttpResponse response, @Nullable Throwable error) {
-    Context context = channel.attr(AttributeKeys.SERVER_CONTEXT).getAndSet(null);
-    HttpRequestAndChannel request = channel.attr(HTTP_SERVER_REQUEST).getAndSet(null);
+  private void end(
+      Context context,
+      HttpRequestAndChannel request,
+      @Nullable HttpResponse response,
+      @Nullable Throwable error) {
     error = NettyErrorHolder.getOrDefault(context, error);
     instrumenter.end(context, request, response, error);
   }

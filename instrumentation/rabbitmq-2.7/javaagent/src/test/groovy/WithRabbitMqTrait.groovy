@@ -27,7 +27,7 @@ trait WithRabbitMqTrait {
     rabbitMqContainer.start()
 
     connectionFactory = new ConnectionFactory(
-      host: rabbitMqContainer.containerIpAddress,
+      host: rabbitMqContainer.host,
       port: rabbitMqContainer.getMappedPort(5672)
     )
   }

@@ -5,11 +5,19 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-enum NoopLoggingCustomizer implements LoggingCustomizer {
-  INSTANCE;
+import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
+
+@AutoService(LoggingCustomizer.class)
+public final class NoopLoggingCustomizer implements LoggingCustomizer {
 
   @Override
-  public void init() {}
+  public String name() {
+    return "none";
+  }
+
+  @Override
+  public void init(EarlyInitAgentConfig earlyConfig) {}
 
   @Override
   @SuppressWarnings("SystemOut")

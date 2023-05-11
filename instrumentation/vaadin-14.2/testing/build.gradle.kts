@@ -7,5 +7,5 @@ dependencies {
 
   api("org.testcontainers:selenium")
   implementation(project(":testing-common"))
-  implementation("org.seleniumhq.selenium:selenium-java:3.141.59")
+  implementation("org.seleniumhq.selenium:selenium-java:4.8.3")
 }

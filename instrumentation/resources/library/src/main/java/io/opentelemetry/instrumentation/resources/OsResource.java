@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
+import java.util.Locale;
 import javax.annotation.Nullable;
 
 /** Factory of a {@link Resource} which provides information about the current operating system. */
@@ -60,7 +61,7 @@ public final class OsResource {
 
   @Nullable
   private static String getOs(String os) {
-    os = os.toLowerCase();
+    os = os.toLowerCase(Locale.ROOT);
     if (os.startsWith("windows")) {
       return ResourceAttributes.OsTypeValues.WINDOWS;
     } else if (os.startsWith("linux")) {

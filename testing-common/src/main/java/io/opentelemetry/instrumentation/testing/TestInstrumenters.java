@@ -164,12 +164,6 @@ final class TestInstrumenters {
 
     @Nullable
     @Override
-    public String getFlavor(String unused) {
-      return null;
-    }
-
-    @Nullable
-    @Override
     public String getTarget(String unused) {
       return null;
     }
@@ -189,12 +183,6 @@ final class TestInstrumenters {
 
   private enum NetServerGetter implements NetServerAttributesGetter<String> {
     INSTANCE;
-
-    @Nullable
-    @Override
-    public String getTransport(String unused) {
-      return null;
-    }
 
     @Nullable
     @Override

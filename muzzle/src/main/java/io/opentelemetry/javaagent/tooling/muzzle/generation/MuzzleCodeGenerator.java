@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle.generation;
 
 import static java.util.logging.Level.INFO;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
@@ -66,6 +67,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public int mergeReader(int flags) {
     return flags;
   }

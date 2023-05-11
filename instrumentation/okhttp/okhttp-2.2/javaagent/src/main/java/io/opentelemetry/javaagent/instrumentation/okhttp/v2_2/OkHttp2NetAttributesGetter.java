@@ -8,15 +8,45 @@ package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
 public final class OkHttp2NetAttributesGetter
     implements NetClientAttributesGetter<Request, Response> {
 
+  @Nullable
   @Override
-  public String getTransport(Request request, @Nullable Response response) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
+  public String getProtocolName(Request request, @Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
+    switch (response.protocol()) {
+      case HTTP_1_0:
+      case HTTP_1_1:
+      case HTTP_2:
+        return "http";
+      case SPDY_3:
+        return "spdy";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(Request request, @Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
+    switch (response.protocol()) {
+      case HTTP_1_0:
+        return "1.0";
+      case HTTP_1_1:
+        return "1.1";
+      case HTTP_2:
+        return "2.0";
+      case SPDY_3:
+        return "3.1";
+    }
+    return null;
   }
 
   @Override

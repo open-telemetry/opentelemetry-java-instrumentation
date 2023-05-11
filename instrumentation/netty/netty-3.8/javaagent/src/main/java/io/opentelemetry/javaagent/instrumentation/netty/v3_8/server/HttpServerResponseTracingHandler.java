@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -38,6 +39,7 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
 
     Throwable error = null;
     try (Scope ignored = context.makeCurrent()) {
+      customizeResponse(context, response);
       super.writeRequested(ctx, msg);
     } catch (Throwable t) {
       error = t;
@@ -45,6 +47,15 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
     } finally {
       error = NettyErrorHolder.getOrDefault(context, error);
       instrumenter().end(context, request, response, error);
+    }
+  }
+
+  private static void customizeResponse(Context context, HttpResponse response) {
+    try {
+      HttpServerResponseCustomizerHolder.getCustomizer()
+          .customize(context, response, NettyHttpResponseMutator.INSTANCE);
+    } catch (Throwable ignore) {
+      // Ignore.
     }
   }
 }

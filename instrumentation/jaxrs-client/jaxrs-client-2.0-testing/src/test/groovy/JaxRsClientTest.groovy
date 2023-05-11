@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implements AgentTestTrait {
 
@@ -108,15 +107,15 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
           kind CLIENT
           status ERROR
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_PEER_NAME" uri.host
             "$SemanticAttributes.NET_PEER_PORT" uri.port > 0 ? uri.port : { it == null || it == 443 }
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
             "$SemanticAttributes.HTTP_URL" "${uri}"
             "$SemanticAttributes.HTTP_METHOD" method
             "$SemanticAttributes.HTTP_STATUS_CODE" statusCode
-            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-            "$SemanticAttributes.HTTP_USER_AGENT" { it == null || it instanceof String }
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" { it == null || it instanceof String }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
@@ -175,12 +174,21 @@ class CxfClientTest extends JaxRsClientTest {
   Throwable clientSpanError(URI uri, Throwable exception) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
+        if (exception.getCause() instanceof ConnectException) {
+          exception = exception.getCause()
+        }
+        break
       case "https://192.0.2.1/": // non routable address
         if (exception.getCause() != null) {
           exception = exception.getCause()
         }
     }
     return exception
+  }
+
+  @Override
+  boolean testWithClientParent() {
+    !Boolean.getBoolean("testLatestDeps")
   }
 
   @Override
@@ -192,6 +200,7 @@ class CxfClientTest extends JaxRsClientTest {
   ClientBuilder builder() {
     return new ClientBuilderImpl()
       .property("http.connection.timeout", (long) CONNECT_TIMEOUT_MS)
+      .property("org.apache.cxf.transport.http.forceVersion", "1.1")
   }
 
   @Override

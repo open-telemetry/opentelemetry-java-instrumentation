@@ -206,7 +206,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     List<String> userAgent =
         AwsSdkInstrumenterFactory.httpAttributesGetter.getRequestHeader(request, "User-Agent");
     if (!userAgent.isEmpty()) {
-      span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, userAgent.get(0));
+      span.setAttribute(SemanticAttributes.USER_AGENT_ORIGINAL, userAgent.get(0));
     }
   }
 

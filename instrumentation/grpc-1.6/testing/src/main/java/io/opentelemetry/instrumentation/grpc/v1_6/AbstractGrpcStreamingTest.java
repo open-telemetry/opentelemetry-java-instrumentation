@@ -181,9 +181,6 @@ public abstract class AbstractGrpcStreamingTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "Conversation"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -201,9 +198,6 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -225,7 +219,6 @@ public abstract class AbstractGrpcStreamingTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(
                                                     SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(
@@ -256,7 +249,6 @@ public abstract class AbstractGrpcStreamingTest {
                                                 equalTo(
                                                     SemanticAttributes.NET_PEER_PORT,
                                                     server.getPort()),
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_METHOD, "Conversation"),
                                                 equalTo(

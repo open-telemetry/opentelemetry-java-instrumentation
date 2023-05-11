@@ -26,8 +26,6 @@ public final class ArmeriaSingletons {
         ArmeriaTelemetry.builder(GlobalOpenTelemetry.get())
             .setCapturedClientRequestHeaders(CommonConfig.get().getClientRequestHeaders())
             .setCapturedClientResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-            .setCapturedServerRequestHeaders(CommonConfig.get().getServerRequestHeaders())
-            .setCapturedServerResponseHeaders(CommonConfig.get().getServerResponseHeaders())
             .addClientAttributeExtractor(
                 PeerServiceAttributesExtractor.create(
                     new ArmeriaNetClientAttributesGetter(),
@@ -35,7 +33,7 @@ public final class ArmeriaSingletons {
             .build();
 
     CLIENT_DECORATOR = telemetry.newClientDecorator();
-    SERVER_DECORATOR = telemetry.newServiceDecorator();
+    SERVER_DECORATOR = service -> new ServerDecorator(service);
   }
 
   private ArmeriaSingletons() {}
