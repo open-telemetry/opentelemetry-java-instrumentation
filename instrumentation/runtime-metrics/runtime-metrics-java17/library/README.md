@@ -1,5 +1,5 @@
 
-The main entry point is the `RuntimeMetrics` class in the package `io.opentelemetry.instrumentation.runtimemetrics`:
+The main entry point is the `RuntimeMetrics` class in the package `io.opentelemetry.instrumentation.runtimemetrics.java17`:
 
 ```java
 // Initialize JfrTelemetry
@@ -12,7 +12,7 @@ runtimeMetrics.close();
 `RuntimeMetrics` uses two underlying implementations to gather the full set of metric data, JFR and JMX.
 The metrics gathered by the two implementations are mutually exclusive and the union of them produces
 the full set of available metrics.
-The JMX component is reused from the `io.opentelemetry.instrumentation.runtimemetrics` package.
+The JMX component is reused from the `io.opentelemetry.instrumentation.runtimemetrics.java8` package.
 The JFR component uses JFR streaming and is only available in JAVA 17.
 It works by subscribing to certain JFR events, and using relevant bits of information
 from the events to produce telemetry data like metrics. The code is divided into "handlers", which

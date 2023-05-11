@@ -26,6 +26,7 @@
   ([#7888](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7888))
 - Set up EarlyInitAgentConfig even earlier
   ([#8413](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8413))
+- Add runtime-metrics-java17 ([#8165](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8165) and [#7886](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7886))
 
 ### 🛠️ Bug fixes
 
