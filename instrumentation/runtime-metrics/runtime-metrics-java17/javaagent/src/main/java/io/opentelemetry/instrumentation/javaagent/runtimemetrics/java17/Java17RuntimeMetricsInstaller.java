@@ -27,12 +27,12 @@ public class Java17RuntimeMetricsInstaller implements AgentListener {
     By default don't use any JFR metrics. May change this once semantic conventions are updated.
     If enabled, default to only the metrics not already covered by runtime-metrics-java8
     */
-
+    boolean defaultEnabled = config.getBoolean("otel.instrumentation.common.default-enabled", true);
     if (config.getBoolean("otel.instrumentation.runtime-metrics-java17.enable-all", false)) {
       runtimeMetrics = RuntimeMetrics.builder(openTelemetry).enableAllFeatures().build();
     } else if (config.getBoolean("otel.instrumentation.runtime-metrics-java17.enabled", false)) {
       runtimeMetrics = RuntimeMetrics.create(openTelemetry);
-    } else {
+    } else if (config.getBoolean("otel.instrumentation.runtime-metrics.enabled", defaultEnabled)) {
       // This only uses metrics gathered by JMX
       runtimeMetrics = RuntimeMetrics.builder(openTelemetry).disableAllFeatures().build();
     }
