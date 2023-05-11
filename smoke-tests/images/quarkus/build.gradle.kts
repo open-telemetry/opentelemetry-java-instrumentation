@@ -12,7 +12,7 @@ plugins {
   id("otel.java-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("io.quarkus") version "3.0.2.Final"
+  id("io.quarkus") version "3.0.3.Final"
 }
 
 dependencies {
