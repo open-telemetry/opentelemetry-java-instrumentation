@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 
 import io.kubernetes.client.openapi.ApiResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 import okhttp3.Request;
@@ -30,11 +29,6 @@ class KubernetesHttpAttributesGetter
   @Override
   public List<String> getRequestHeader(Request request, String name) {
     return request.headers(name);
-  }
-
-  @Override
-  public String getFlavor(Request request, @Nullable ApiResponse<?> apiResponse) {
-    return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override

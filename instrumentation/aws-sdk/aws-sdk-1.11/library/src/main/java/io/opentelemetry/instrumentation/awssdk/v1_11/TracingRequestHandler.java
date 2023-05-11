@@ -10,6 +10,7 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.handlers.HandlerContextKey;
 import com.amazonaws.handlers.RequestHandler2;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -47,6 +48,7 @@ final class TracingRequestHandler extends RequestHandler2 {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public AmazonWebServiceRequest beforeMarshalling(AmazonWebServiceRequest request) {
     if (SqsReceiveMessageRequestAccess.isInstance(request)) {
       if (!SqsReceiveMessageRequestAccess.getAttributeNames(request)

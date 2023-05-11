@@ -10,7 +10,6 @@ import static java.util.Collections.emptyList;
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -40,11 +39,6 @@ final class JaxRsClientHttpAttributesGetter
       stringHeaders.add(String.valueOf(headerValue));
     }
     return stringHeaders;
-  }
-
-  @Override
-  public String getFlavor(ClientRequest httpRequest, @Nullable ClientResponse httpResponse) {
-    return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override

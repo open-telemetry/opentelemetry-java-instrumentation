@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.HttpURLConnection;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -31,11 +30,6 @@ class HttpUrlHttpAttributesGetter
   public List<String> getRequestHeader(HttpURLConnection connection, String name) {
     String value = connection.getRequestProperty(name);
     return value == null ? emptyList() : singletonList(value);
-  }
-
-  @Override
-  public String getFlavor(HttpURLConnection connection, @Nullable Integer statusCode) {
-    return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override

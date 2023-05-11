@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.undertow.server.HttpServerExchange;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -14,9 +13,24 @@ import javax.annotation.Nullable;
 public class UndertowNetAttributesGetter
     extends InetSocketAddressNetServerAttributesGetter<HttpServerExchange> {
 
+  @Nullable
   @Override
-  public String getTransport(HttpServerExchange exchange) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
+  public String getProtocolName(HttpServerExchange exchange) {
+    String protocol = exchange.getProtocol().toString();
+    if (protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(HttpServerExchange exchange) {
+    String protocol = exchange.getProtocol().toString();
+    if (protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
   }
 
   @Nullable

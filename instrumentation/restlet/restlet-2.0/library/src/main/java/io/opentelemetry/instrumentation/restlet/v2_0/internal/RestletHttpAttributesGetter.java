@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.restlet.v2_0.internal;
 import static io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHeadersGetter.getHeaders;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -51,22 +50,6 @@ public enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
       return Collections.emptyList();
     }
     return Arrays.asList(headers.getValuesArray(name, true));
-  }
-
-  @Override
-  @Nullable
-  public String getFlavor(Request request) {
-    switch (request.getProtocol().toString()) {
-      case "HTTP/1.0":
-        return SemanticAttributes.HttpFlavorValues.HTTP_1_0;
-      case "HTTP/1.1":
-        return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
-      case "HTTP/2.0":
-        return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
-      default:
-        // fall through
-    }
-    return null;
   }
 
   @Override

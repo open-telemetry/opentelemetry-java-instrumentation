@@ -3,11 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.Dsl
 import org.asynchttpclient.Request
@@ -64,14 +62,5 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   @Override
   boolean testRedirects() {
     false
-  }
-
-  @Override
-  Set<AttributeKey<?>> httpAttributes(URI uri) {
-    Set<AttributeKey<?>> extra = [
-      SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_TARGET
-    ]
-    super.httpAttributes(uri) + extra
   }
 }

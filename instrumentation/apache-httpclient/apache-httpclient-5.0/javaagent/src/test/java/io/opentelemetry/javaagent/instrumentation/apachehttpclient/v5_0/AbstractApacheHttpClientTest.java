@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.HashSet;
@@ -35,16 +36,17 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
     optionsBuilder.setHttpAttributes(this::getHttpAttributes);
   }
 
-  protected Set<AttributeKey<?>> getHttpAttributes(URI endpoint) {
-    Set<AttributeKey<?>> attributes = new HashSet<>();
-    attributes.add(SemanticAttributes.NET_PEER_NAME);
-    attributes.add(SemanticAttributes.NET_PEER_PORT);
-    attributes.add(SemanticAttributes.HTTP_URL);
-    attributes.add(SemanticAttributes.HTTP_METHOD);
-    if (endpoint.toString().contains("/success")) {
-      attributes.add(SemanticAttributes.HTTP_FLAVOR);
+  protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
+    Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+    // unopened port or non routable address; or timeout
+    // circular redirects don't report protocol information as well
+    if ("http://localhost:61/".equals(uri.toString())
+        || "https://192.0.2.1/".equals(uri.toString())
+        || uri.toString().contains("/read-timeout")
+        || uri.toString().contains("/circular-redirect")) {
+      attributes.remove(stringKey("net.protocol.name"));
+      attributes.remove(stringKey("net.protocol.version"));
     }
-    attributes.add(SemanticAttributes.HTTP_USER_AGENT);
     return attributes;
   }
 

@@ -22,13 +22,15 @@ import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.ClassFileTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import io.opentelemetry.javaagent.bootstrap.InstrumentedTaskClasses;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizer;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
-import io.opentelemetry.javaagent.tooling.bytebuddy.SafeTypeStrategy;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesBridge;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
@@ -56,6 +58,8 @@ import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.dynamic.VisibilityBridgeStrategy;
+import net.bytebuddy.dynamic.scaffold.InstrumentedType;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.utility.JavaModule;
 
@@ -77,7 +81,8 @@ public class AgentInstaller {
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
 
-  public static void installBytebuddyAgent(Instrumentation inst, ClassLoader extensionClassLoader) {
+  public static void installBytebuddyAgent(
+      Instrumentation inst, ClassLoader extensionClassLoader, EarlyInitAgentConfig earlyConfig) {
     addByteBuddyRawSetting();
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
@@ -87,8 +92,7 @@ public class AgentInstaller {
     }
 
     logVersionInfo();
-    EarlyInitAgentConfig agentConfig = EarlyInitAgentConfig.create();
-    if (agentConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
+    if (earlyConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
       setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
       installBytebuddyAgent(inst, extensionClassLoader, agentListeners);
@@ -128,11 +132,12 @@ public class AgentInstaller {
         new AgentBuilder.Default(
                 // default method graph compiler inspects the class hierarchy, we don't need it, so
                 // we use a simpler and faster strategy instead
-                new ByteBuddy().with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE))
+                new ByteBuddy()
+                    .with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE)
+                    .with(VisibilityBridgeStrategy.Default.NEVER)
+                    .with(InstrumentedType.Factory.Default.FROZEN))
+            .with(AgentBuilder.TypeStrategy.Default.DECORATE)
             .disableClassFormatChanges()
-            // disableClassFormatChanges sets type strategy to TypeStrategy.Default.REDEFINE_FROZEN
-            // we'll wrap it with our own strategy
-            .with(new SafeTypeStrategy(AgentBuilder.TypeStrategy.Default.REDEFINE_FROZEN))
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .with(new RedefinitionDiscoveryStrategy())
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
@@ -181,6 +186,8 @@ public class AgentInstaller {
 
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
+
+    addHttpServerResponseCustomizers(extensionClassLoader);
 
     runAfterAgentListeners(agentListeners, autoConfiguredSdk);
   }
@@ -232,6 +239,23 @@ public class AgentInstaller {
             (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) -> {
               return HelperInjector.isInjectedClass(classLoader, typeDescription.getName());
             });
+  }
+
+  private static void addHttpServerResponseCustomizers(ClassLoader extensionClassLoader) {
+    List<HttpServerResponseCustomizer> customizers =
+        load(HttpServerResponseCustomizer.class, extensionClassLoader);
+
+    HttpServerResponseCustomizerHolder.setCustomizer(
+        new HttpServerResponseCustomizer() {
+          @Override
+          public <T> void customize(
+              Context serverContext, T response, HttpServerResponseMutator<T> responseMutator) {
+
+            for (HttpServerResponseCustomizer modifier : customizers) {
+              modifier.customize(serverContext, response, responseMutator);
+            }
+          }
+        });
   }
 
   private static void runAfterAgentListeners(

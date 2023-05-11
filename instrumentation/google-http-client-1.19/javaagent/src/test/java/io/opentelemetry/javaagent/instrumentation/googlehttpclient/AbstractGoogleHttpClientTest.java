@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -13,6 +16,7 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.util.ClassInfo;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -22,8 +26,10 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -89,26 +95,15 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs)
-                                    .hasSize(8)
-                                    .containsEntry(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP)
-                                    .containsEntry(SemanticAttributes.NET_PEER_NAME, "localhost")
-                                    .hasEntrySatisfying(
-                                        SemanticAttributes.NET_PEER_PORT,
-                                        port -> assertThat(port).isPositive())
-                                    .containsEntry(SemanticAttributes.HTTP_URL, uri.toString())
-                                    .containsEntry(SemanticAttributes.HTTP_METHOD, "GET")
-                                    .containsEntry(SemanticAttributes.HTTP_STATUS_CODE, 500)
-                                    .hasEntrySatisfying(
-                                        SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                                        length -> assertThat(length).isPositive())
-                                    .containsEntry(
-                                        SemanticAttributes.HTTP_FLAVOR,
-                                        SemanticAttributes.HttpFlavorValues.HTTP_1_1)),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                            satisfies(SemanticAttributes.NET_PEER_PORT, port -> port.isPositive()),
+                            equalTo(SemanticAttributes.HTTP_URL, uri.toString()),
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 500),
+                            satisfies(
+                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                length -> length.isPositive())),
                 span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(0))));
   }
 
@@ -124,5 +119,14 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
 
     // Circular redirects don't throw an exception with Google Http Client
     optionsBuilder.disableTestCircularRedirects();
+
+    optionsBuilder.setHttpAttributes(
+        uri -> {
+          Set<AttributeKey<?>> attributes =
+              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          attributes.remove(stringKey("net.protocol.name"));
+          attributes.remove(stringKey("net.protocol.version"));
+          return attributes;
+        });
   }
 }

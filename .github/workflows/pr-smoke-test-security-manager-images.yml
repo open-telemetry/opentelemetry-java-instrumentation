@@ -1,0 +1,14 @@
+name: PR build Security Manager test app images for smoke tests
+
+on:
+  pull_request:
+    paths:
+      - 'smoke-tests/images/security-manager/**'
+      - '.github/workflows/pr-smoke-test-security-manager-images.yml'
+
+jobs:
+  build:
+    uses: ./.github/workflows/reusable-smoke-test-images.yml
+    with:
+      project: ":smoke-tests:images:security-manager"
+      cache-read-only: true

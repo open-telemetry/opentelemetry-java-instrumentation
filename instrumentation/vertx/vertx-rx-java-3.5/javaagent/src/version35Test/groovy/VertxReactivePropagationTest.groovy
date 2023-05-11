@@ -63,7 +63,9 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_TRANSPORT" { it == null || it == IP_TCP }
+            "net.protocol.name" "http"
+            "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
@@ -73,8 +75,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-            "$SemanticAttributes.HTTP_USER_AGENT" String
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" "/listProducts"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
@@ -156,7 +157,9 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             kind SERVER
             childOf(span(0))
             attributes {
-              "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+              "$SemanticAttributes.NET_TRANSPORT" { it == null || it == IP_TCP }
+              "net.protocol.name" "http"
+              "net.protocol.version" "1.1"
               "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
               "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
               "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
@@ -166,8 +169,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
               "$SemanticAttributes.HTTP_METHOD" "GET"
               "$SemanticAttributes.HTTP_STATUS_CODE" 200
               "$SemanticAttributes.HTTP_SCHEME" "http"
-              "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-              "$SemanticAttributes.HTTP_USER_AGENT" String
+              "$SemanticAttributes.USER_AGENT_ORIGINAL" String
               "$SemanticAttributes.HTTP_ROUTE" "/listProducts"
               "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
               "${TEST_REQUEST_ID_ATTRIBUTE}" requestId

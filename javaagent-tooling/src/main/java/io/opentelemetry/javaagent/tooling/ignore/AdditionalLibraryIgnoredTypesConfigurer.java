@@ -177,7 +177,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.util.")
-        .allowClass("org.springframework.util.concurrent.");
+        .allowClass("org.springframework.util.concurrent.")
+        .allowClass("org.springframework.util.ConcurrentLruCache$AddTask");
 
     builder
         .ignoreClass("org.springframework.web.")

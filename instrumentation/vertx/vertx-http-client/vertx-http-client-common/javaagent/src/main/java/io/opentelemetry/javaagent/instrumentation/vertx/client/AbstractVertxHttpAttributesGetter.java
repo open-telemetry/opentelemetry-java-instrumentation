@@ -14,12 +14,6 @@ import javax.annotation.Nullable;
 public abstract class AbstractVertxHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpClientRequest, HttpClientResponse> {
 
-  @Nullable
-  @Override
-  public String getFlavor(HttpClientRequest request, @Nullable HttpClientResponse response) {
-    return null;
-  }
-
   @Override
   public List<String> getRequestHeader(HttpClientRequest request, String name) {
     return request.headers().getAll(name);

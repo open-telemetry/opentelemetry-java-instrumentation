@@ -38,12 +38,6 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # vaadin 14 tests fail with node 18
-      - name: Set up Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
       # vaadin tests use pnpm
       - name: Cache pnpm modules
         uses: actions/cache@v3
@@ -55,6 +49,24 @@ jobs:
         run: |
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
+      - name: List tests
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: >
+            check -x spotlessCheck
+            listTestsInPartition
+            -PtestPartition=${{ matrix.test-partition }}
+            -PtestLatestDeps=true
+          cache-read-only: true
+
+      - name: Set test tasks
+        run: |
+          echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
+
       - name: Test
         uses: gradle/gradle-build-action@v2
         env:
@@ -63,9 +75,8 @@ jobs:
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
           arguments: >
-            test
+            ${{ env.test-tasks }}
             -PtestLatestDeps=true
-            -PtestPartition=${{ matrix.test-partition }}
             ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache

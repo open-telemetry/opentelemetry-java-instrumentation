@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -29,11 +28,6 @@ final class GoogleHttpClientHttpAttributesGetter
   @Override
   public List<String> getRequestHeader(HttpRequest httpRequest, String name) {
     return httpRequest.getHeaders().getHeaderStringValues(name);
-  }
-
-  @Override
-  public String getFlavor(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
-    return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override

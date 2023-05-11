@@ -57,15 +57,20 @@ jobs:
           VERSION: ${{ needs.check-versions.outputs.latest-version }}
         run: ./.github/scripts/update-sdk-version.sh $VERSION
 
+      - name: Use CLA approved github bot
+        run: .github/scripts/use-cla-approved-github-bot.sh
+
       - name: Update license report
         uses: gradle/gradle-build-action@v2
         with:
           arguments: generateLicenseReport
 
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
+      - name: Undo license report clean
+        if: failure()
+        run: git checkout -- licenses
 
       - name: Create pull request against main
+        if: success() || failure()
         env:
           VERSION: ${{ needs.check-versions.outputs.latest-version }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows

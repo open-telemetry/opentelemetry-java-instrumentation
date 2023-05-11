@@ -78,9 +78,7 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
 
   @Override
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    [
-      SemanticAttributes.NET_TRANSPORT
-    ] as Set
+    [] as Set
   }
 
   @Override
@@ -109,6 +107,11 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
   @Override
   boolean hasResponseSpan(ServerEndpoint endpoint) {
     endpoint == REDIRECT || endpoint == ERROR
+  }
+
+  @Override
+  boolean hasResponseCustomizer(ServerEndpoint endpoint) {
+    true
   }
 
   @Override

@@ -86,7 +86,7 @@ final class CgroupV1ContainerIdExtractor {
       containerId = lastSection.substring(startIdx, endIdx);
     }
 
-    if (OtelEncodingUtils.isValidBase16String(containerId) && !containerId.isEmpty()) {
+    if (OtelEncodingUtils.isValidBase16String(containerId) && (containerId.length() == 64)) {
       return Optional.of(containerId);
     } else {
       return Optional.empty();

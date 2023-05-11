@@ -47,7 +47,7 @@ tasks {
     exclude("/META-INF/services/javax.servlet.ServletContainerInitializer")
     doFirst {
       configurations.configureEach {
-        if (name.toLowerCase().endsWith("testruntimeclasspath")) {
+        if (name.lowercase().endsWith("testruntimeclasspath")) {
           val logbackJar = find { it.name.contains("logback-classic") }
           from(zipTree(logbackJar))
         }

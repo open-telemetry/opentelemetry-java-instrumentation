@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.Locale;
 import java.util.function.BiPredicate;
 
 /**
@@ -34,12 +35,12 @@ public final class InternalNetServerAttributesExtractor<REQUEST> {
   public void onStart(AttributesBuilder attributes, REQUEST request) {
 
     internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.getTransport(request));
-    internalSet(
-        attributes, SemanticAttributes.NET_APP_PROTOCOL_NAME, getter.getProtocolName(request));
-    internalSet(
-        attributes,
-        SemanticAttributes.NET_APP_PROTOCOL_VERSION,
-        getter.getProtocolVersion(request));
+    String protocolName = getter.getProtocolName(request);
+    if (protocolName != null) {
+      internalSet(
+          attributes, NetAttributes.NET_PROTOCOL_NAME, protocolName.toLowerCase(Locale.ROOT));
+    }
+    internalSet(attributes, NetAttributes.NET_PROTOCOL_VERSION, getter.getProtocolVersion(request));
 
     boolean setSockFamily = false;
 

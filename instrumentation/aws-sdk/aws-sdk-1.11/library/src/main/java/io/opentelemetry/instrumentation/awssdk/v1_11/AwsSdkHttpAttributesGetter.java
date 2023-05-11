@@ -11,7 +11,6 @@ import static java.util.Collections.singletonList;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -20,12 +19,6 @@ class AwsSdkHttpAttributesGetter implements HttpClientAttributesGetter<Request<?
   @Override
   public String getUrl(Request<?> request) {
     return request.getEndpoint().toString();
-  }
-
-  @Override
-  @Nullable
-  public String getFlavor(Request<?> request, @Nullable Response<?> response) {
-    return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override

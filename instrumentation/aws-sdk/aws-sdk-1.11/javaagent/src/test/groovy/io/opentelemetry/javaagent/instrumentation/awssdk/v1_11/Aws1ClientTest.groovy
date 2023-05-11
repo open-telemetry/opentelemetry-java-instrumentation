@@ -19,7 +19,6 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
   @Override
@@ -97,10 +96,8 @@ class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
           errorEvent IllegalStateException, "bad handler"
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_URL" "https://s3.amazonaws.com"
             "$SemanticAttributes.HTTP_METHOD" "HEAD"
-            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.NET_PEER_NAME" "s3.amazonaws.com"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "Amazon S3"

@@ -8,34 +8,51 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 import io.opentelemetry.api.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-public enum ServerEndpoint {
-  SUCCESS("success", 200, "success"),
-  REDIRECT("redirect", 302, "/redirected"),
-  ERROR("error-status", 500, "controller error"), // "error" is a special path for some frameworks
-  EXCEPTION("exception", 500, "controller exception"),
-  NOT_FOUND("notFound", 404, "not found"),
-  CAPTURE_HEADERS("captureHeaders", 200, "headers captured"),
-  CAPTURE_PARAMETERS("captureParameters", 200, "parameters captured"),
+public class ServerEndpoint {
+  private static final Map<String, ServerEndpoint> PATH_MAP = new HashMap<>();
+  public static final ServerEndpoint SUCCESS =
+      new ServerEndpoint("SUCCESS", "success", 200, "success");
+  public static final ServerEndpoint REDIRECT =
+      new ServerEndpoint("REDIRECT", "redirect", 302, "/redirected");
+  public static final ServerEndpoint ERROR =
+      new ServerEndpoint(
+          "ERROR",
+          "error-status",
+          500,
+          "controller error"); // "error" is a special path for some frameworks
+  public static final ServerEndpoint EXCEPTION =
+      new ServerEndpoint("EXCEPTION", "exception", 500, "controller exception");
+  public static final ServerEndpoint NOT_FOUND =
+      new ServerEndpoint("NOT_FOUND", "notFound", 404, "not found");
+  public static final ServerEndpoint CAPTURE_HEADERS =
+      new ServerEndpoint("CAPTURE_HEADERS", "captureHeaders", 200, "headers captured");
+  public static final ServerEndpoint CAPTURE_PARAMETERS =
+      new ServerEndpoint("CAPTURE_PARAMETERS", "captureParameters", 200, "parameters captured");
 
   // TODO: add tests for the following cases:
-  QUERY_PARAM("query?some=query", 200, "some=query"),
+  public static final ServerEndpoint QUERY_PARAM =
+      new ServerEndpoint("QUERY_PARAM", "query?some=query", 200, "some=query");
   // OkHttp never sends the fragment in the request, so these cases don't work.
   // FRAGMENT_PARAM("fragment#some-fragment", 200, "some-fragment"),
   // QUERY_FRAGMENT_PARAM("query/fragment?some=query#some-fragment", 200,
   // "some=query#some-fragment"),
-  PATH_PARAM("path/123/param", 200, "123"),
-  AUTH_REQUIRED("authRequired", 200, null),
-  LOGIN("login", 302, null),
-  AUTH_ERROR("basicsecured/endpoint", 401, null),
-  INDEXED_CHILD("child", 200, "");
+  public static final ServerEndpoint PATH_PARAM =
+      new ServerEndpoint("PATH_PARAM", "path/123/param", 200, "123");
+  public static final ServerEndpoint AUTH_REQUIRED =
+      new ServerEndpoint("AUTH_REQUIRED", "authRequired", 200, null);
+  public static final ServerEndpoint LOGIN = new ServerEndpoint("LOGIN", "login", 302, null);
+  public static final ServerEndpoint AUTH_ERROR =
+      new ServerEndpoint("AUTH_ERROR", "basicsecured/endpoint", 401, null);
+  public static final ServerEndpoint INDEXED_CHILD =
+      new ServerEndpoint("INDEXED_CHILD", "child", 200, "");
 
   public static final String ID_ATTRIBUTE_NAME = "test.request.id";
   public static final String ID_PARAMETER_NAME = "id";
 
+  private final String name;
   private final URI uriObj;
   private final String path;
   final String query;
@@ -59,13 +76,19 @@ public enum ServerEndpoint {
     return body;
   }
 
-  ServerEndpoint(String uri, int status, String body) {
+  public String name() {
+    return name;
+  }
+
+  public ServerEndpoint(String name, String uri, int status, String body) {
+    this.name = name;
     this.uriObj = URI.create(uri);
     this.path = uriObj.getPath();
     this.query = uriObj.getQuery();
     this.fragment = uriObj.getFragment();
     this.status = status;
     this.body = body;
+    PATH_MAP.put(this.getPath(), this);
   }
 
   public String getPath() {
@@ -104,9 +127,6 @@ public enum ServerEndpoint {
       }
     }
   }
-
-  private static final Map<String, ServerEndpoint> PATH_MAP =
-      Arrays.stream(values()).collect(Collectors.toMap(x -> x.getPath(), x -> x));
 
   public static ServerEndpoint forPath(String path) {
     return PATH_MAP.get(path);

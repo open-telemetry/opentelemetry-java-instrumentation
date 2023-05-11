@@ -59,6 +59,11 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
   }
 
   @Override
+  boolean hasResponseCustomizer(ServerEndpoint endpoint) {
+    true
+  }
+
+  @Override
   boolean testCapturedHttpHeaders() {
     false
   }

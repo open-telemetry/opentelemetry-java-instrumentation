@@ -1,0 +1,37 @@
+# this is useful because notifications for scheduled workflows are only sent to the user who
+# initially created the given workflow
+name: Reusable - Workflow notification
+
+on:
+  workflow_call:
+    inputs:
+      success:
+        type: boolean
+        required: true
+
+jobs:
+  workflow-notification:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Open issue or add comment if issue already open
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          number=$(gh issue list --search "Workflow failed: $GITHUB_WORKFLOW" --limit 1 --json number -q .[].number)
+
+          echo $number
+          echo ${{ inputs.success }}
+
+          if [[ $number ]]; then
+            if [[ "${{ inputs.success }}" == "true" ]]; then
+              gh issue close $number
+            else
+              gh issue comment $number \
+                               --body "See [$GITHUB_WORKFLOW #$GITHUB_RUN_NUMBER](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
+            fi
+          elif [[ "${{ inputs.success }}" == "false" ]]; then
+            gh issue create --title "Workflow failed: $GITHUB_WORKFLOW (#$GITHUB_RUN_NUMBER)" \
+                            --body "See [$GITHUB_WORKFLOW #$GITHUB_RUN_NUMBER](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
+          fi

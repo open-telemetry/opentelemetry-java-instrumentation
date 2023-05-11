@@ -141,7 +141,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
               "$SemanticAttributes.DB_NAME" "test"
               "$SemanticAttributes.DB_USER" "sa"
               "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$SemanticAttributes.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
+              "$SemanticAttributes.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*\)/
               "$SemanticAttributes.DB_OPERATION" "INSERT"
               "$SemanticAttributes.DB_SQL_TABLE" "Customer"
             }
@@ -156,7 +156,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
               "$SemanticAttributes.DB_NAME" "test"
               "$SemanticAttributes.DB_USER" "sa"
               "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$SemanticAttributes.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
+              "$SemanticAttributes.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*\)/
               "$SemanticAttributes.DB_OPERATION" "INSERT"
               "$SemanticAttributes.DB_SQL_TABLE" "Customer"
             }
@@ -232,7 +232,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_NAME" "test"
             "$SemanticAttributes.DB_USER" "sa"
             "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-            "$SemanticAttributes.DB_STATEMENT" "update Customer set firstName=?, lastName=? where id=?"
+            "$SemanticAttributes.DB_STATEMENT" ~/update Customer set firstName=\?,(.*)lastName=\? where id=\?/
             "$SemanticAttributes.DB_OPERATION" "UPDATE"
             "$SemanticAttributes.DB_SQL_TABLE" "Customer"
           }

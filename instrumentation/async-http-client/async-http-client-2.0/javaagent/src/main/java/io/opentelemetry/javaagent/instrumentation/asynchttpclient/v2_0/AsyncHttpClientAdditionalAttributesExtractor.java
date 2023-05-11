@@ -32,7 +32,7 @@ public class AsyncHttpClientAdditionalAttributesExtractor
     if (nettyRequest != null) {
       String userAgent = nettyRequest.getHttpRequest().headers().get("User-Agent");
       if (userAgent != null) {
-        attributes.put(SemanticAttributes.HTTP_USER_AGENT, userAgent);
+        attributes.put(SemanticAttributes.USER_AGENT_ORIGINAL, userAgent);
       }
     }
   }

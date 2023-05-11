@@ -15,12 +15,6 @@ public class RabbitReceiveNetAttributesGetter
 
   @Nullable
   @Override
-  public String getTransport(ReceiveRequest request, @Nullable GetResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getPeerName(ReceiveRequest request) {
     return null;
   }

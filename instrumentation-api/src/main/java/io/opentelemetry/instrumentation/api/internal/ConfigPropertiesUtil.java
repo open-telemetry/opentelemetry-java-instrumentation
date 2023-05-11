@@ -19,6 +19,18 @@ public final class ConfigPropertiesUtil {
     return strValue == null ? defaultValue : Boolean.parseBoolean(strValue);
   }
 
+  public static int getInt(String propertyName, int defaultValue) {
+    String strValue = getString(propertyName);
+    if (strValue == null) {
+      return defaultValue;
+    }
+    try {
+      return Integer.parseInt(strValue);
+    } catch (NumberFormatException ignored) {
+      return defaultValue;
+    }
+  }
+
   @Nullable
   public static String getString(String propertyName) {
     String value = System.getProperty(propertyName);

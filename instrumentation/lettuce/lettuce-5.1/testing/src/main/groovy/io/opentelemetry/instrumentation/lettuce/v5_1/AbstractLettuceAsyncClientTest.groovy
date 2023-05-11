@@ -29,7 +29,6 @@ import java.util.function.Function
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecification {
   public static final int DB_INDEX = 0
@@ -159,7 +158,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           name "SET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -210,7 +208,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           name "GET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -285,7 +282,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           kind CLIENT
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -349,7 +345,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           kind CLIENT
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -416,7 +411,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           name "HMSET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -436,7 +430,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           name "HGETALL"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port

@@ -6,7 +6,10 @@
 package server.base;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
+import static org.springframework.web.reactive.function.server.RequestPredicates.path;
+import static org.springframework.web.reactive.function.server.RouterFunctions.nest;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
+import static server.base.SpringWebFluxServerTest.NESTED_PATH;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
@@ -98,7 +101,17 @@ public abstract class ServerTestRouteFactory {
                           request.headers().asHttpHeaders().getFirst("X-Test-Request")),
                   null,
                   null);
-            });
+            })
+        .andNest(
+            path("/nestedPath"),
+            nest(
+                path("/hello"),
+                route(
+                    path("/world"),
+                    request -> {
+                      ServerEndpoint endpoint = NESTED_PATH;
+                      return respond(endpoint, null, null, null);
+                    })));
   }
 
   protected Mono<ServerResponse> respond(

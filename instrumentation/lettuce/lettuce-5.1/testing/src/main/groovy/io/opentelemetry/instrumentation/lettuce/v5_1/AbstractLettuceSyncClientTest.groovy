@@ -19,7 +19,6 @@ import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 import static java.nio.charset.StandardCharsets.UTF_8
 
 abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecification {
@@ -123,7 +122,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "SET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -156,7 +154,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "SET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -190,7 +187,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "GET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -220,7 +216,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "GET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -250,7 +245,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "RANDOMKEY"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -280,7 +274,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "LPUSH"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -310,7 +303,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "HMSET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -340,7 +332,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "HGETALL"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -375,7 +366,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "EVAL"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -409,7 +399,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "MSET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -439,7 +428,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           kind CLIENT
           // Disconnect not an actual error even though an exception is recorded.
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port
@@ -475,7 +463,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             status ERROR
           }
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
             "$SemanticAttributes.NET_SOCK_PEER_PORT" port

@@ -161,4 +161,9 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
   boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
     return endpoint != EXCEPTION && super.hasExceptionOnServerSpan(endpoint)
   }
+
+  @Override
+  boolean testHttpPipelining() {
+    false
+  }
 }

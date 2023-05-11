@@ -36,8 +36,8 @@ class MissingTypeTest {
     AgentBuilder builder =
         new AgentBuilder.Default(
                 new ByteBuddy().with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE))
+            .with(AgentBuilder.TypeStrategy.Default.DECORATE)
             .disableClassFormatChanges()
-            .with(new SafeTypeStrategy(AgentBuilder.TypeStrategy.Default.REDEFINE_FROZEN))
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .with(
                 new AgentBuilder.Listener.Adapter() {
@@ -92,8 +92,10 @@ class MissingTypeTest {
   }
 
   // com.google.common.base.Joiner is missing from runtime class path
-  @SuppressWarnings({"UnusedMethod", "MethodCanBeStatic"})
+  @SuppressWarnings({"UnusedMethod", "UnusedVariable", "MethodCanBeStatic"})
   private static class SomeClass {
+    public Joiner joiner;
+
     public static boolean isInstrumented() {
       return false;
     }

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.net.URL;
 import java.nio.file.Files;
+import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
 import java.util.Collection;
@@ -53,6 +55,9 @@ public class HelperInjector implements Transformer {
 
   private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(HelperInjector.class);
+
+  private static final ProtectionDomain PROTECTION_DOMAIN =
+      HelperInjector.class.getProtectionDomain();
 
   // a hook for static instrumentation used to save additional classes created by the agent
   // see https://github.com/open-telemetry/opentelemetry-java-contrib/tree/main/static-instrumenter
@@ -175,6 +180,7 @@ public class HelperInjector implements Transformer {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public DynamicType.Builder<?> transform(
       DynamicType.Builder<?> builder,
       TypeDescription typeDescription,
@@ -385,10 +391,24 @@ public class HelperInjector implements Transformer {
     }
 
     Class<?> inject(ClassLoader classLoader, String className) {
+      // if security manager is present byte buddy calls
+      // checkPermission(new ReflectPermission("suppressAccessChecks")) so we must call class
+      // injection with AccessController.doPrivileged when security manager is enabled
       Map<String, Class<?>> result =
-          new ClassInjector.UsingReflection(classLoader)
-              .injectRaw(Collections.singletonMap(className, bytes.get()));
+          execute(
+              () ->
+                  new ClassInjector.UsingReflection(classLoader, PROTECTION_DOMAIN)
+                      .injectRaw(Collections.singletonMap(className, bytes.get())));
       return result.get(className);
+    }
+  }
+
+  @SuppressWarnings({"deprecation", "removal"}) // AccessController is deprecated
+  private static <T> T execute(PrivilegedAction<T> action) {
+    if (System.getSecurityManager() != null) {
+      return java.security.AccessController.doPrivileged(action);
+    } else {
+      return action.run();
     }
   }
 }

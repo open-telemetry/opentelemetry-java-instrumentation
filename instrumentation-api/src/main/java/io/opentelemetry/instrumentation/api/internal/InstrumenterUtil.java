@@ -6,12 +6,12 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.time.Instant;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -20,28 +20,16 @@ import javax.annotation.Nullable;
  */
 public final class InstrumenterUtil {
 
-  private static final Logger logger = Logger.getLogger(InstrumenterUtil.class.getName());
+  private static InstrumenterAccess instrumenterAccess;
+  private static InstrumenterBuilderAccess instrumenterBuilderAccess;
 
-  private static final Method startAndEndMethod;
+  public static void setInstrumenterAccess(InstrumenterAccess instrumenterAccess) {
+    InstrumenterUtil.instrumenterAccess = instrumenterAccess;
+  }
 
-  static {
-    Method method = null;
-    try {
-      method =
-          Instrumenter.class.getDeclaredMethod(
-              "startAndEnd",
-              Context.class,
-              Object.class,
-              Object.class,
-              Throwable.class,
-              Instant.class,
-              Instant.class);
-      method.setAccessible(true);
-    } catch (NoSuchMethodException e) {
-      logger.log(
-          Level.WARNING, "Could not get Instrumenter#startAndEnd() method with reflection", e);
-    }
-    startAndEndMethod = method;
+  public static void setInstrumenterBuilderAccess(
+      InstrumenterBuilderAccess instrumenterBuilderAccess) {
+    InstrumenterUtil.instrumenterBuilderAccess = instrumenterBuilderAccess;
   }
 
   public static <REQUEST, RESPONSE> Context startAndEnd(
@@ -52,19 +40,26 @@ public final class InstrumenterUtil {
       @Nullable Throwable error,
       Instant startTime,
       Instant endTime) {
+    // instrumenterAccess is guaranteed to be non-null here
+    return instrumenterAccess.startAndEnd(
+        instrumenter, parentContext, request, response, error, startTime, endTime);
+  }
 
-    if (startAndEndMethod == null) {
-      // already logged a warning when this class initialized
-      return parentContext;
-    }
-    try {
-      return (Context)
-          startAndEndMethod.invoke(
-              instrumenter, parentContext, request, response, error, startTime, endTime);
-    } catch (InvocationTargetException | IllegalAccessException e) {
-      logger.log(Level.WARNING, "Error occurred when calling Instrumenter#startAndEnd()", e);
-      return parentContext;
-    }
+  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> buildUpstreamInstrumenter(
+      InstrumenterBuilder<REQUEST, RESPONSE> builder,
+      TextMapGetter<REQUEST> getter,
+      SpanKindExtractor<REQUEST> spanKindExtractor) {
+    // instrumenterBuilderAccess is guaranteed to be non-null here
+    return instrumenterBuilderAccess.buildUpstreamInstrumenter(builder, getter, spanKindExtractor);
+  }
+
+  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> buildDownstreamInstrumenter(
+      InstrumenterBuilder<REQUEST, RESPONSE> builder,
+      TextMapSetter<REQUEST> setter,
+      SpanKindExtractor<REQUEST> spanKindExtractor) {
+    // instrumenterBuilderAccess is guaranteed to be non-null here
+    return instrumenterBuilderAccess.buildDownstreamInstrumenter(
+        builder, setter, spanKindExtractor);
   }
 
   private InstrumenterUtil() {}

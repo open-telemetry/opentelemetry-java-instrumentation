@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class CouchbaseInstrumentationModule extends InstrumentationModule {
   public CouchbaseInstrumentationModule() {
-    super("couchbase", "couchbase-3.1.6");
+    super("couchbase", "couchbase-3.2");
   }
 
   @Override

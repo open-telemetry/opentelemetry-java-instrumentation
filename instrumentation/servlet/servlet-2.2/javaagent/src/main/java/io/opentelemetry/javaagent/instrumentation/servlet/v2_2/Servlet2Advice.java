@@ -12,6 +12,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import javax.servlet.ServletRequest;
@@ -64,6 +65,9 @@ public class Servlet2Advice {
     // reset response status from previous request
     // (some servlet containers reuse response objects to reduce memory allocations)
     VirtualField.find(ServletResponse.class, Integer.class).set(response, null);
+
+    HttpServerResponseCustomizerHolder.getCustomizer()
+        .customize(context, (HttpServletResponse) response, Servlet2Accessor.INSTANCE);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

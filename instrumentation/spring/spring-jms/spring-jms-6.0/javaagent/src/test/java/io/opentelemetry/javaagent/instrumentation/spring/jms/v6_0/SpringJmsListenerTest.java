@@ -105,7 +105,7 @@ class SpringJmsListenerTest {
                     span.hasName("spring-jms-listener send")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -118,7 +118,7 @@ class SpringJmsListenerTest {
                     span.hasName("spring-jms-listener process")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -135,7 +135,7 @@ class SpringJmsListenerTest {
                     span.hasName("spring-jms-listener receive")
                         .hasKind(CONSUMER)
                         .hasNoParent()
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -188,7 +188,7 @@ class SpringJmsListenerTest {
                     span.hasName("spring-jms-listener send")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -207,7 +207,7 @@ class SpringJmsListenerTest {
                     span.hasName("spring-jms-listener process")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -230,7 +230,7 @@ class SpringJmsListenerTest {
                     span.hasName("spring-jms-listener receive")
                         .hasKind(CONSUMER)
                         .hasNoParent()
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,

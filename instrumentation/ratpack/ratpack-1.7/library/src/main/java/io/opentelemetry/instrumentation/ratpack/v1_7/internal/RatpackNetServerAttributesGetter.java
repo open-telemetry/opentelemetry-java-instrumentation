@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import ratpack.handling.Context;
 import ratpack.http.Request;
@@ -17,9 +16,25 @@ import ratpack.server.PublicAddress;
  * any time.
  */
 public final class RatpackNetServerAttributesGetter implements NetServerAttributesGetter<Request> {
+
+  @Nullable
   @Override
-  public String getTransport(Request request) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
+  public String getProtocolName(Request request) {
+    String protocol = request.getProtocol();
+    if (protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(Request request) {
+    String protocol = request.getProtocol();
+    if (protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
   }
 
   @Nullable

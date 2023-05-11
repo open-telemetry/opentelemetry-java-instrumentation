@@ -8,15 +8,21 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
 final class AsyncHttpClientNetAttributesGetter
     implements NetClientAttributesGetter<Request, Response> {
 
+  @Nullable
   @Override
-  public String getTransport(Request request, @Nullable Response response) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
+  public String getProtocolName(Request request, @Nullable Response response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(Request request, @Nullable Response response) {
+    return null;
   }
 
   @Override

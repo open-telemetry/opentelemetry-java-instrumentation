@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,8 @@ public class ClassLoaderMatcher {
    */
   public static Map<String, List<Mismatch>> matchesAll(
       ClassLoader classLoader, boolean injectHelpers, Set<String> excludedInstrumentationNames) {
+    disableMatcherCache();
+
     Map<String, List<Mismatch>> result = new HashMap<>();
     ServiceLoader.load(InstrumentationModule.class, ClassLoaderMatcher.class.getClassLoader())
         .forEach(
@@ -99,6 +102,20 @@ public class ClassLoaderMatcher {
       mismatches = ReferenceMatcher.add(mismatches, new Mismatch.HelperClassesInjectionError());
     }
     return mismatches;
+  }
+
+  private static void disableMatcherCache() {
+    try {
+      Class<?> matcherClass =
+          Class.forName(
+              "io.opentelemetry.javaagent.extension.matcher.ClassLoaderHasClassesNamedMatcher");
+      Field field = matcherClass.getDeclaredField("useCache");
+      field.setAccessible(true);
+      field.setBoolean(null, false);
+    } catch (Exception exception) {
+      throw new IllegalStateException(
+          "Failed to disable cache for ClassLoaderHasClassesNamedMatcher", exception);
+    }
   }
 
   private ClassLoaderMatcher() {}

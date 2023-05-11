@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -13,7 +14,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
@@ -119,12 +119,13 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
 
-          // flavor is extracted from the response, and those URLs cause exceptions (= null
+          // protocol is extracted from the response, and those URLs cause exceptions (= null
           // response)
           if ("http://localhost:61/".equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())
               || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
-            attributes.remove(SemanticAttributes.HTTP_FLAVOR);
+            attributes.remove(stringKey("net.protocol.name"));
+            attributes.remove(stringKey("net.protocol.version"));
           }
 
           return attributes;

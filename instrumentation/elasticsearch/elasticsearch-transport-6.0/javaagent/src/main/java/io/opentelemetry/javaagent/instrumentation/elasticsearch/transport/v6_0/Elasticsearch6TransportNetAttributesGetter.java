@@ -13,11 +13,6 @@ import org.elasticsearch.action.ActionResponse;
 
 public class Elasticsearch6TransportNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<ElasticTransportRequest, ActionResponse> {
-  @Override
-  @Nullable
-  public String getTransport(ElasticTransportRequest request, @Nullable ActionResponse response) {
-    return null;
-  }
 
   @Nullable
   @Override

@@ -18,12 +18,6 @@ import org.apache.dubbo.rpc.Result;
 public final class DubboNetClientAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<DubboRequest, Result> {
 
-  @Override
-  @Nullable
-  public String getTransport(DubboRequest request, @Nullable Result response) {
-    return null;
-  }
-
   @Nullable
   @Override
   public String getPeerName(DubboRequest request) {

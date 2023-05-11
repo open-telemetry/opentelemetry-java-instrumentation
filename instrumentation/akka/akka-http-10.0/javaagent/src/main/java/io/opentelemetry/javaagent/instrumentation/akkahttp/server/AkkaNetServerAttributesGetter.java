@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
 import akka.http.scaladsl.model.HttpRequest;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
 import javax.annotation.Nullable;
 
 // TODO (trask) capture net attributes?
@@ -14,19 +15,25 @@ class AkkaNetServerAttributesGetter implements NetServerAttributesGetter<HttpReq
 
   @Nullable
   @Override
-  public String getTransport(HttpRequest httpRequest) {
+  public String getProtocolName(HttpRequest request) {
+    return AkkaHttpUtil.protocolName(request);
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(HttpRequest request) {
+    return AkkaHttpUtil.protocolVersion(request);
+  }
+
+  @Nullable
+  @Override
+  public String getHostName(HttpRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getHostName(HttpRequest httpRequest) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getHostPort(HttpRequest httpRequest) {
+  public Integer getHostPort(HttpRequest request) {
     return null;
   }
 }

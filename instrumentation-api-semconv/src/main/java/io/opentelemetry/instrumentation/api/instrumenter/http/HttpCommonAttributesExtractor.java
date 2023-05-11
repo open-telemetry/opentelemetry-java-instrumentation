@@ -45,7 +45,7 @@ abstract class HttpCommonAttributesExtractor<
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     internalSet(attributes, SemanticAttributes.HTTP_METHOD, getter.getMethod(request));
-    internalSet(attributes, SemanticAttributes.HTTP_USER_AGENT, userAgent(request));
+    internalSet(attributes, SemanticAttributes.USER_AGENT_ORIGINAL, userAgent(request));
 
     for (String name : capturedRequestHeaders) {
       List<String> values = getter.getRequestHeader(request, name);

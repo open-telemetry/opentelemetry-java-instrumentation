@@ -49,13 +49,13 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
     app.setDefaultProperties([
       "spring.jmx.enabled"              : false,
       "spring.main.web-application-type": "none",
-      "spring.rabbitmq.host"            : rabbitMqContainer.containerIpAddress,
+      "spring.rabbitmq.host"            : rabbitMqContainer.host,
       "spring.rabbitmq.port"            : rabbitMqContainer.getMappedPort(5672),
     ])
     applicationContext = app.run()
 
     connectionFactory = new ConnectionFactory(
-      host: rabbitMqContainer.containerIpAddress,
+      host: rabbitMqContainer.host,
       port: rabbitMqContainer.getMappedPort(5672)
     )
   }
@@ -91,6 +91,10 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
     then:
     assertTraces(2) {
       trace(0, 5) {
+        spans.subList(2, 4).sort {
+          def destination = it.attributes.get(SemanticAttributes.MESSAGING_DESTINATION_NAME)
+          return destination == "<default>" ? 0 : 1
+        }
         span(0) {
           name "parent"
         }

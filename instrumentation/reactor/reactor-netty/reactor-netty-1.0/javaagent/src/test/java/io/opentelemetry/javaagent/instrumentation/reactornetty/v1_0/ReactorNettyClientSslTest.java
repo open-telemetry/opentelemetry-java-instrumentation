@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_1_1;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -154,11 +154,12 @@ class ReactorNettyClientSslTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_URL, uri),
-                            equalTo(SemanticAttributes.HTTP_FLAVOR, HTTP_1_1),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
                             satisfies(
                                 SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
                                 AbstractLongAssert::isNotNegative),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort()),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),
@@ -212,18 +213,11 @@ class ReactorNettyClientSslTest {
         .satisfiesExactly(
             event ->
                 assertThat(event)
-                    .hasAttributesSatisfying(
-                        attributes ->
-                            assertThat(attributes)
-                                .hasSize(3)
-                                .containsEntry(
-                                    SemanticAttributes.EXCEPTION_TYPE,
-                                    SSLHandshakeException.class.getCanonicalName())
-                                .hasEntrySatisfying(
-                                    SemanticAttributes.EXCEPTION_MESSAGE,
-                                    s -> assertThat(s).isNotEmpty())
-                                .hasEntrySatisfying(
-                                    SemanticAttributes.EXCEPTION_STACKTRACE,
-                                    s -> assertThat(s).isNotEmpty())));
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            SemanticAttributes.EXCEPTION_TYPE,
+                            SSLHandshakeException.class.getCanonicalName()),
+                        satisfies(SemanticAttributes.EXCEPTION_MESSAGE, s -> s.isNotEmpty()),
+                        satisfies(SemanticAttributes.EXCEPTION_STACKTRACE, s -> s.isNotEmpty())));
   }
 }

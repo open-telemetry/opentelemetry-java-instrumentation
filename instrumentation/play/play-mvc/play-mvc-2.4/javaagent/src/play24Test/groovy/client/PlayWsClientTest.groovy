@@ -10,8 +10,6 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.CompletableFuture
 import play.libs.ws.WS
 import play.libs.ws.WSRequest
 import play.libs.ws.WSResponse
@@ -19,7 +17,10 @@ import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Subject
 
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
+
+import static io.opentelemetry.api.common.AttributeKey.stringKey
 
 class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTrait {
   @Subject
@@ -51,10 +52,10 @@ class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTra
   private static CompletionStage<WSResponse> internalSendRequest(WSRequest request, String method) {
     def result = new CompletableFuture<WSResponse>()
     def promise = request.execute(method)
-    promise.onRedeem({response ->
+    promise.onRedeem({ response ->
       result.complete(response)
     })
-    promise.onFailure({throwable ->
+    promise.onFailure({ throwable ->
       result.completeExceptionally(throwable)
     })
     return result
@@ -73,11 +74,10 @@ class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTra
 
   @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
-    Set<AttributeKey<?>> extra = [
-      SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_TARGET
-    ]
-    super.httpAttributes(uri) + extra
+    def attributes = super.httpAttributes(uri)
+    attributes.remove(stringKey("net.protocol.name"))
+    attributes.remove(stringKey("net.protocol.version"))
+    attributes
   }
 
   @Override

@@ -11,9 +11,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Accessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletRequest;
@@ -74,6 +76,12 @@ public class JakartaServletServiceAdvice {
     contextToUpdate =
         helper().updateContext(contextToUpdate, httpServletRequest, mappingResolver, servlet);
     scope = contextToUpdate.makeCurrent();
+
+    if (context != null) {
+      // Only trigger response customizer once, so only if server span was created here
+      HttpServerResponseCustomizerHolder.getCustomizer()
+          .customize(contextToUpdate, (HttpServletResponse) response, Servlet5Accessor.INSTANCE);
+    }
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

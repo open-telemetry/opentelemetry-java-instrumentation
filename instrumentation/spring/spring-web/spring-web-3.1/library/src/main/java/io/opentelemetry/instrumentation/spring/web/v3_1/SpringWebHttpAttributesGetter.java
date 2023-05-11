@@ -36,13 +36,6 @@ enum SpringWebHttpAttributesGetter
     return httpRequest.getHeaders().getOrDefault(name, emptyList());
   }
 
-  @Override
-  @Nullable
-  public String getFlavor(
-      HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
-    return null;
-  }
-
   @Nullable private static final MethodHandle GET_STATUS_CODE;
 
   @Nullable private static final MethodHandle STATUS_CODE_VALUE;

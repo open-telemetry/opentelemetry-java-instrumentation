@@ -6,15 +6,29 @@
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
 public class LibertyDispatcherNetAttributesGetter
     implements NetServerAttributesGetter<LibertyRequest> {
 
+  @Nullable
   @Override
-  public String getTransport(LibertyRequest request) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
+  public String getProtocolName(LibertyRequest request) {
+    String protocol = request.getProtocol();
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getProtocolVersion(LibertyRequest request) {
+    String protocol = request.getProtocol();
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
   }
 
   @Nullable

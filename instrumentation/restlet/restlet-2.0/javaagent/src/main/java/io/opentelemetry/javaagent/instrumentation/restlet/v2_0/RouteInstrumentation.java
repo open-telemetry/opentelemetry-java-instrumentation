@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.instrumentation.restlet.v2_0.RestletSingletons.serverSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
@@ -24,7 +25,7 @@ import org.restlet.routing.TemplateRoute;
 public class RouteInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.restlet.routing.TemplateRoute").or(named("org.restlet.routing.Route"));
+    return namedOneOf("org.restlet.routing.TemplateRoute", "org.restlet.routing.Route");
   }
 
   @Override

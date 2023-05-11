@@ -11,12 +11,6 @@ import javax.annotation.Nullable;
 
 class MongoNetAttributesGetter implements NetClientAttributesGetter<CommandStartedEvent, Void> {
 
-  @Override
-  @Nullable
-  public String getTransport(CommandStartedEvent event, @Nullable Void unused) {
-    return null;
-  }
-
   @Nullable
   @Override
   public String getPeerName(CommandStartedEvent event) {

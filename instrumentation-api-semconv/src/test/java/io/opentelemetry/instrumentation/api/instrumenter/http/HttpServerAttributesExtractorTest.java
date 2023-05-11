@@ -18,6 +18,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -71,11 +72,6 @@ class HttpServerAttributesExtractorTest {
     }
 
     @Override
-    public String getFlavor(Map<String, Object> request) {
-      return (String) request.get("flavor");
-    }
-
-    @Override
     public List<String> getResponseHeader(
         Map<String, Object> request, Map<String, Object> response, String name) {
       String values = (String) response.get("header." + name);
@@ -85,10 +81,17 @@ class HttpServerAttributesExtractorTest {
 
   static class TestNetServerAttributesGetter
       implements NetServerAttributesGetter<Map<String, Object>> {
+
     @Nullable
     @Override
-    public String getTransport(Map<String, Object> request) {
-      return (String) request.get("transport");
+    public String getProtocolName(Map<String, Object> request) {
+      return (String) request.get("protocolName");
+    }
+
+    @Nullable
+    @Override
+    public String getProtocolVersion(Map<String, Object> request) {
+      return (String) request.get("protocolVersion");
     }
 
     @Nullable
@@ -112,12 +115,13 @@ class HttpServerAttributesExtractorTest {
     request.put("target", "/repositories/1");
     request.put("scheme", "http");
     request.put("header.content-length", "10");
-    request.put("flavor", "http/2");
     request.put("route", "/repositories/{id}");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.host", "github.com");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
+    request.put("protocolName", "http");
+    request.put("protocolVersion", "2.0");
 
     Map<String, Object> response = new HashMap<>();
     response.put("statusCode", "202");
@@ -139,11 +143,12 @@ class HttpServerAttributesExtractorTest {
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_HOST_NAME, "github.com"),
-            entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
+            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
-            entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
+            entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
             entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
             entry(
@@ -154,17 +159,18 @@ class HttpServerAttributesExtractorTest {
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_HOST_NAME, "github.com"),
+            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
-            entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
+            entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
             entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")),
-            entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
             entry(

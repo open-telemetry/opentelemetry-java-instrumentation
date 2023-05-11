@@ -142,7 +142,7 @@ public class JettyHttpClient9TracingInterceptor
       Span span = Span.fromContext(this.context);
       HttpField agentField = request.getHeaders().getField(HttpHeader.USER_AGENT);
       if (agentField != null) {
-        span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, agentField.getValue());
+        span.setAttribute(SemanticAttributes.USER_AGENT_ORIGINAL, agentField.getValue());
       }
     }
   }

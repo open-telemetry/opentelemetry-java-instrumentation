@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -21,10 +23,7 @@ public final class HttpServerTestOptions {
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
       Collections.unmodifiableSet(
           new HashSet<>(
-              Arrays.asList(
-                  SemanticAttributes.HTTP_ROUTE,
-                  SemanticAttributes.NET_TRANSPORT,
-                  SemanticAttributes.NET_PEER_PORT)));
+              Arrays.asList(SemanticAttributes.HTTP_ROUTE, SemanticAttributes.NET_PEER_PORT)));
 
   public static final SpanNameMapper DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER =
       (uri, method, route) -> route == null ? method : method + " " + route;
@@ -34,11 +33,13 @@ public final class HttpServerTestOptions {
   Function<ServerEndpoint, String> expectedHttpRoute = unused -> null;
   Function<ServerEndpoint, String> sockPeerAddr = unused -> "127.0.0.1";
   String contextPath = "";
-  Throwable expectedException = new Exception(ServerEndpoint.EXCEPTION.getBody());
+  Throwable expectedException = new Exception(EXCEPTION.body);
 
   Predicate<ServerEndpoint> hasHandlerSpan = unused -> false;
   Predicate<ServerEndpoint> hasResponseSpan = unused -> false;
   Predicate<ServerEndpoint> hasErrorPageSpans = unused -> false;
+  Predicate<ServerEndpoint> hasHandlerAsControllerParentSpan = unused -> true;
+  Predicate<ServerEndpoint> hasResponseCustomizer = unused -> false;
 
   Predicate<ServerEndpoint> hasExceptionOnServerSpan = endpoint -> !hasHandlerSpan.test(endpoint);
 
@@ -50,6 +51,8 @@ public final class HttpServerTestOptions {
   boolean testPathParam = false;
   boolean testCaptureHttpHeaders = true;
   boolean testCaptureRequestParameters = false;
+  boolean testHttpPipelining = true;
+  boolean verifyServerSpanEndTime = true;
 
   HttpServerTestOptions() {}
 
@@ -111,9 +114,23 @@ public final class HttpServerTestOptions {
   }
 
   @CanIgnoreReturnValue
+  public HttpServerTestOptions setHasHandlerAsControllerParentSpan(
+      Predicate<ServerEndpoint> hasHandlerAsControllerParentSpan) {
+    this.hasHandlerAsControllerParentSpan = hasHandlerAsControllerParentSpan;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setHasExceptionOnServerSpan(
       Predicate<ServerEndpoint> hasExceptionOnServerSpan) {
     this.hasExceptionOnServerSpan = hasExceptionOnServerSpan;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setHasResponseCustomizer(
+      Predicate<ServerEndpoint> hasResponseCustomizer) {
+    this.hasResponseCustomizer = hasResponseCustomizer;
     return this;
   }
 
@@ -163,6 +180,18 @@ public final class HttpServerTestOptions {
   public HttpServerTestOptions setTestCaptureRequestParameters(
       boolean testCaptureRequestParameters) {
     this.testCaptureRequestParameters = testCaptureRequestParameters;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setTestHttpPipelining(boolean testHttpPipelining) {
+    this.testHttpPipelining = testHttpPipelining;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setVerifyServerSpanEndTime(boolean verifyServerSpanEndTime) {
+    this.verifyServerSpanEndTime = verifyServerSpanEndTime;
     return this;
   }
 

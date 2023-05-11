@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
@@ -79,11 +78,6 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    public String getFlavor(Void unused, @Nullable Void unused2) {
-      return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
-    }
-
-    @Override
     public Integer getStatusCode(Void unused, Void unused2, @Nullable Throwable error) {
       return 200;
     }
@@ -102,8 +96,14 @@ public class InstrumenterBenchmark {
 
     @Nullable
     @Override
-    public String getTransport(Void request, @Nullable Void response) {
-      return SemanticAttributes.NetTransportValues.IP_TCP;
+    public String getProtocolName(Void unused, @Nullable Void unused2) {
+      return "http";
+    }
+
+    @Nullable
+    @Override
+    public String getProtocolVersion(Void unused, @Nullable Void unused2) {
+      return "2.0";
     }
 
     @Nullable

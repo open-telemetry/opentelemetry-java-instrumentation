@@ -19,7 +19,6 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 import static java.util.concurrent.TimeUnit.SECONDS
 import static org.junit.jupiter.api.Assumptions.assumeTrue
 
@@ -220,14 +219,20 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
   }
 
   @Override
+  boolean hasResponseCustomizer(ServerEndpoint endpoint) {
+    true
+  }
+
+  @Override
   void serverSpan(TraceAssert trace,
                   int index,
                   String traceID = null,
                   String parentID = null,
                   String method = "GET",
                   Long responseContentLength = null,
-                  ServerEndpoint endpoint = SUCCESS) {
-    serverSpan(trace, index, traceID, parentID, method,
+                  ServerEndpoint endpoint = SUCCESS,
+                  String spanID = null) {
+    serverSpan(trace, index, traceID, parentID, spanID, method,
       endpoint == PATH_PARAM ? getContextPath() + "/path/{id}/param" : endpoint.resolvePath(address).path,
       endpoint.resolve(address),
       endpoint.status,
@@ -239,7 +244,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
                        String url,
                        int statusCode) {
     def rawUrl = URI.create(url).toURL()
-    serverSpan(trace, index, null, null, "GET",
+    serverSpan(trace, index, null, null, null, "GET",
       rawUrl.path,
       rawUrl.toURI(),
       statusCode,
@@ -250,6 +255,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
                   int index,
                   String traceID,
                   String parentID,
+                  String spanID,
                   String method,
                   String path,
                   URI fullUrl,
@@ -261,13 +267,20 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
       if (statusCode >= 500) {
         status ERROR
       }
-      if (parentID != null) {
+      if (traceID != null) {
         traceId traceID
+      }
+      if (parentID != null) {
         parentSpanId parentID
       } else {
         hasNoParent()
       }
+      if (spanID != null) {
+        spanId spanID
+      }
       attributes {
+        "net.protocol.name" "http"
+        "net.protocol.version" "1.1"
         "$SemanticAttributes.NET_HOST_NAME" fullUrl.host
         "$SemanticAttributes.NET_HOST_PORT" fullUrl.port
         "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
@@ -277,10 +290,8 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         "$SemanticAttributes.HTTP_TARGET" fullUrl.getPath() + (fullUrl.getQuery() != null ? "?" + fullUrl.getQuery() : "")
         "$SemanticAttributes.HTTP_METHOD" method
         "$SemanticAttributes.HTTP_STATUS_CODE" statusCode
-        "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-        "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
+        "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
         "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
-        "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         // Optional
         "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
         "$SemanticAttributes.HTTP_ROUTE" path

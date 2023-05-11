@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp;
 
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,16 +32,20 @@ public class AkkaHttpUtil {
         .orElse(Collections.emptyList());
   }
 
-  public static String flavor(HttpRequest httpRequest) {
-    switch (httpRequest.protocol().value()) {
-      case "HTTP/1.0":
-        return SemanticAttributes.HttpFlavorValues.HTTP_1_0;
-      case "HTTP/2.0":
-        return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
-      case "HTTP/1.1":
-      default:
-        return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
+  public static String protocolName(HttpRequest request) {
+    String protocol = request.protocol().value();
+    if (protocol.startsWith("HTTP/")) {
+      return "http";
     }
+    return null;
+  }
+
+  public static String protocolVersion(HttpRequest request) {
+    String protocol = request.protocol().value();
+    if (protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
   }
 
   private AkkaHttpUtil() {}
