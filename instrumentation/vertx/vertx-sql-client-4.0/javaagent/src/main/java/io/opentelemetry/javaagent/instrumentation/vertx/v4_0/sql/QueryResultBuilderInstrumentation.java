@@ -12,8 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.vertx.core.Context;
+import io.vertx.core.Promise;
 import io.vertx.core.impl.ContextInternal;
+import io.vertx.core.impl.future.PromiseInternal;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -38,8 +39,12 @@ public class QueryResultBuilderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CompleteAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope onEnter(@Advice.FieldValue("context") Context vertxContext) {
-      ContextInternal contextInternal = (ContextInternal) vertxContext;
+    public static Scope onEnter(@Advice.FieldValue("handler") Promise<?> promise) {
+      if (!(promise instanceof PromiseInternal)) {
+        return null;
+      }
+      PromiseInternal<?> promiseInternal = (PromiseInternal<?>) promise;
+      ContextInternal contextInternal = promiseInternal.context();
       return endQuerySpan(contextInternal.localContextData(), null);
     }
 
@@ -55,9 +60,12 @@ public class QueryResultBuilderInstrumentation implements TypeInstrumentation {
   public static class FailAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope onEnter(
-        @Advice.Argument(0) Throwable throwable,
-        @Advice.FieldValue("context") Context vertxContext) {
-      ContextInternal contextInternal = (ContextInternal) vertxContext;
+        @Advice.Argument(0) Throwable throwable, @Advice.FieldValue("handler") Promise<?> promise) {
+      if (!(promise instanceof PromiseInternal)) {
+        return null;
+      }
+      PromiseInternal<?> promiseInternal = (PromiseInternal<?>) promise;
+      ContextInternal contextInternal = promiseInternal.context();
       return endQuerySpan(contextInternal.localContextData(), throwable);
     }
 
