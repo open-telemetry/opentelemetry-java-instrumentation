@@ -98,5 +98,3 @@ if (gradle.startParameter.taskNames.any { it.equals("listTestsInPartition") }) {
     }
   }
 }
-
-
