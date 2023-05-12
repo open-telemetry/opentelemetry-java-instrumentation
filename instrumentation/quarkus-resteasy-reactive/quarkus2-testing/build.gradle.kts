@@ -4,6 +4,10 @@ plugins {
   id("io.quarkus") version "2.16.7.Final"
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
 dependencies {
   implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:2.16.7.Final"))
   implementation("io.quarkus:quarkus-resteasy-reactive")
