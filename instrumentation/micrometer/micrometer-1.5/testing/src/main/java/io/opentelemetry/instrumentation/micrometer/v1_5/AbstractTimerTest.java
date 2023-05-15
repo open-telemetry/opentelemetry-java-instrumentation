@@ -78,6 +78,11 @@ public abstract class AbstractTimerTest {
                                                 .hasValue(42_000)
                                                 .hasAttributes(attributeEntry("tag", "value"))))));
 
+    // micrometer gauge histogram is not emitted
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME, "testTimer.histogram", AbstractIterableAssert::isEmpty);
+
     // when
     Metrics.globalRegistry.remove(timer);
     testing().clearData();
@@ -132,10 +137,10 @@ public abstract class AbstractTimerTest {
   }
 
   @Test
-  void testMicrometerHistogram() {
+  void testMicrometerTimerWithCustomBuckets() {
     // given
     Timer timer =
-        Timer.builder("testTimer")
+        Timer.builder("testTimerWithCustomBuckets")
             .description("This is a test timer")
             .tags("tag", "value")
             .serviceLevelObjectives(
@@ -156,7 +161,7 @@ public abstract class AbstractTimerTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testTimer",
+            "testTimerWithCustomBuckets",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
@@ -174,130 +179,5 @@ public abstract class AbstractTimerTest {
                                                 .hasBucketBoundaries(
                                                     1_000, 10_000, 100_000, 1_000_000)
                                                 .hasBucketCounts(1, 1, 1, 1, 0)))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "testTimer.max",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test timer")
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(500000)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "testTimer.histogram",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(1)
-                                                .hasAttributes(
-                                                    attributeEntry("le", "1000"),
-                                                    attributeEntry("tag", "value")),
-                                        point ->
-                                            point
-                                                .hasValue(2)
-                                                .hasAttributes(
-                                                    attributeEntry("le", "10000"),
-                                                    attributeEntry("tag", "value")),
-                                        point ->
-                                            point
-                                                .hasValue(3)
-                                                .hasAttributes(
-                                                    attributeEntry("le", "100000"),
-                                                    attributeEntry("tag", "value")),
-                                        point ->
-                                            point
-                                                .hasValue(4)
-                                                .hasAttributes(
-                                                    attributeEntry("le", "1000000"),
-                                                    attributeEntry("tag", "value"))))));
-  }
-
-  @Test
-  void testMicrometerPercentiles() {
-    // given
-    Timer timer =
-        Timer.builder("testTimer")
-            .description("This is a test timer")
-            .tags("tag", "value")
-            .publishPercentiles(0.5, 0.95, 0.99)
-            .register(Metrics.globalRegistry);
-
-    // when
-    timer.record(50, TimeUnit.MILLISECONDS);
-    timer.record(100, TimeUnit.MILLISECONDS);
-
-    // then
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "testTimer",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test timer")
-                            .hasUnit("ms")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasSum(150)
-                                                .hasCount(2)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "testTimer.max",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test timer")
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(100)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "testTimer.percentile",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("phi", "0.5"),
-                                                attributeEntry("tag", "value")),
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("phi", "0.95"),
-                                                attributeEntry("tag", "value")),
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("phi", "0.99"),
-                                                attributeEntry("tag", "value"))))));
   }
 }
