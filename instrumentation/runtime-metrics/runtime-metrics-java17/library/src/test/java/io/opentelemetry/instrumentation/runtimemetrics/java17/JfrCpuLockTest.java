@@ -6,7 +6,10 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.MILLISECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -19,11 +22,30 @@ class JfrCpuLockTest {
 
   @Test
   void shouldHaveLockEvents() throws Exception {
-    // This should generate some events
-    System.gc();
-    synchronized (this) {
-      Thread.sleep(1000);
+    AtomicBoolean done = new AtomicBoolean(false);
+    synchronized (done) {
+      new Thread(
+              () -> {
+                try {
+                  Thread.sleep(1000);
+                } catch (InterruptedException exception) {
+                  Thread.currentThread().interrupt();
+                }
+                synchronized (done) {
+                  done.set(true);
+                  done.notifyAll();
+                }
+              })
+          .start();
+      long waitTime = Duration.ofSeconds(10).toMillis();
+      long endTIme = System.currentTimeMillis() + Duration.ofSeconds(10).toMillis();
+      while (!done.get() && waitTime > 0) {
+        done.wait(waitTime);
+        waitTime = endTIme - System.currentTimeMillis();
+      }
     }
+
+    assertThat(done.get()).isEqualTo(true);
 
     jfrExtension.waitAndAssertMetrics(
         metric ->
