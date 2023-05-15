@@ -14,6 +14,7 @@ import io.micrometer.core.instrument.Timer;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.internal.aggregator.ExplicitBucketHistogramUtils;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -133,5 +134,50 @@ public abstract class AbstractTimerTest {
                                             point
                                                 .hasValue(1.234)
                                                 .hasAttributes(Attributes.empty())))));
+  }
+
+  @Test
+  void testMicrometerTimerWithCustomBuckets() {
+    // given
+    Timer timer =
+        Timer.builder("testTimerWithCustomBuckets")
+            .description("This is a test timer")
+            .tags("tag", "value")
+            .serviceLevelObjectives(
+                Duration.ofSeconds(1),
+                Duration.ofSeconds(10),
+                Duration.ofSeconds(100),
+                Duration.ofSeconds(1000))
+            .distributionStatisticBufferLength(10)
+            .register(Metrics.globalRegistry);
+
+    // when
+    timer.record(500, TimeUnit.MILLISECONDS);
+    timer.record(5, TimeUnit.SECONDS);
+    timer.record(50, TimeUnit.SECONDS);
+    timer.record(500, TimeUnit.SECONDS);
+
+    // then
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "testTimerWithCustomBuckets",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasDescription("This is a test timer")
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasSum(555500)
+                                                .hasCount(4)
+                                                .hasAttributes(attributeEntry("tag", "value"))
+                                                .hasBucketBoundaries(
+                                                    1_000, 10_000, 100_000, 1_000_000)
+                                                .hasBucketCounts(1, 1, 1, 1, 0)))));
   }
 }

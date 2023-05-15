@@ -111,4 +111,45 @@ public abstract class AbstractDistributionSummaryTest {
                                                 .hasCount(3)
                                                 .hasAttributes(attributeEntry("tag", "value"))))));
   }
+
+  @Test
+  void testMicrometerDistributionSummaryWithCustomBuckets() {
+    // given
+    DistributionSummary summary =
+        DistributionSummary.builder("testSummaryWithCustomBuckets")
+            .description("This is a test distribution summary")
+            .baseUnit("things")
+            .tags("tag", "value")
+            .serviceLevelObjectives(1, 10, 100, 1000)
+            .distributionStatisticBufferLength(10)
+            .register(Metrics.globalRegistry);
+
+    // when
+    summary.record(0.5);
+    summary.record(5);
+    summary.record(50);
+    summary.record(500);
+
+    // then
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "testSummaryWithCustomBuckets",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasDescription("This is a test distribution summary")
+                            .hasUnit("things")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        points ->
+                                            points
+                                                .hasSum(555.5)
+                                                .hasCount(4)
+                                                .hasAttributes(attributeEntry("tag", "value"))
+                                                .hasBucketBoundaries(1, 10, 100, 1000)
+                                                .hasBucketCounts(1, 1, 1, 1, 0)))));
+  }
 }
