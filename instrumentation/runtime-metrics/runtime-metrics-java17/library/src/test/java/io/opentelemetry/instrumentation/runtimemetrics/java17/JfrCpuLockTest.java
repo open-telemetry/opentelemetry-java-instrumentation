@@ -38,10 +38,10 @@ class JfrCpuLockTest {
               })
           .start();
       long waitTime = Duration.ofSeconds(10).toMillis();
-      long endTIme = System.currentTimeMillis() + Duration.ofSeconds(10).toMillis();
+      long endTime = System.currentTimeMillis() + Duration.ofSeconds(10).toMillis();
       while (!done.get() && waitTime > 0) {
         done.wait(waitTime);
-        waitTime = endTIme - System.currentTimeMillis();
+        waitTime = endTime - System.currentTimeMillis();
       }
     }
 
