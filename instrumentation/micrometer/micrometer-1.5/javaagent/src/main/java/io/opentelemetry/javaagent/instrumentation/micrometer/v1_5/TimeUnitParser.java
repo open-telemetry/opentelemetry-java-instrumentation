@@ -19,7 +19,7 @@ final class TimeUnitParser {
 
   static TimeUnit parseConfigValue(@Nullable String value) {
     if (value == null) {
-      return TimeUnit.MILLISECONDS;
+      return TimeUnit.SECONDS;
     }
     // short names are UCUM names
     // long names are just TimeUnit values lowercased
@@ -49,10 +49,10 @@ final class TimeUnitParser {
         if (logger.isLoggable(WARNING)) {
           logger.log(
               WARNING,
-              "Invalid base time unit: \"{0}\"; using 'ms' as the base time unit instead",
+              "Invalid base time unit: \"{0}\"; using \"s\" as the base time unit instead",
               value);
         }
-        return TimeUnit.MILLISECONDS;
+        return TimeUnit.SECONDS;
     }
   }
 

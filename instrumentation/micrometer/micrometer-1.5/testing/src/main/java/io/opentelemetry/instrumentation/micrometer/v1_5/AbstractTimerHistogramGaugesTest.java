@@ -52,13 +52,13 @@ public abstract class AbstractTimerHistogramGaugesTest {
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test timer")
-                            .hasUnit("ms")
+                            .hasUnit("s")
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasSum(555500)
+                                                .hasSum(555.5)
                                                 .hasCount(4)
                                                 .hasAttributes(attributeEntry("tag", "value"))))));
     testing()
@@ -75,7 +75,7 @@ public abstract class AbstractTimerHistogramGaugesTest {
                                     gauge.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasValue(500000)
+                                                .hasValue(500)
                                                 .hasAttributes(attributeEntry("tag", "value"))))));
     testing()
         .waitAndAssertMetrics(
@@ -92,25 +92,25 @@ public abstract class AbstractTimerHistogramGaugesTest {
                                             point
                                                 .hasValue(1)
                                                 .hasAttributes(
-                                                    attributeEntry("le", "1000"),
+                                                    attributeEntry("le", "1"),
                                                     attributeEntry("tag", "value")),
                                         point ->
                                             point
                                                 .hasValue(2)
                                                 .hasAttributes(
-                                                    attributeEntry("le", "10000"),
+                                                    attributeEntry("le", "10"),
                                                     attributeEntry("tag", "value")),
                                         point ->
                                             point
                                                 .hasValue(3)
                                                 .hasAttributes(
-                                                    attributeEntry("le", "100000"),
+                                                    attributeEntry("le", "100"),
                                                     attributeEntry("tag", "value")),
                                         point ->
                                             point
                                                 .hasValue(4)
                                                 .hasAttributes(
-                                                    attributeEntry("le", "1000000"),
+                                                    attributeEntry("le", "1000"),
                                                     attributeEntry("tag", "value"))))));
   }
 
@@ -126,7 +126,7 @@ public abstract class AbstractTimerHistogramGaugesTest {
 
     // when
     timer.record(50, TimeUnit.MILLISECONDS);
-    timer.record(100, TimeUnit.MILLISECONDS);
+    timer.record(500, TimeUnit.MILLISECONDS);
 
     // then
     testing()
@@ -138,13 +138,13 @@ public abstract class AbstractTimerHistogramGaugesTest {
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test timer")
-                            .hasUnit("ms")
+                            .hasUnit("s")
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasSum(150)
+                                                .hasSum(0.55)
                                                 .hasCount(2)
                                                 .hasAttributes(attributeEntry("tag", "value"))))));
     testing()
@@ -161,7 +161,7 @@ public abstract class AbstractTimerHistogramGaugesTest {
                                     gauge.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasValue(100)
+                                                .hasValue(0.5)
                                                 .hasAttributes(attributeEntry("tag", "value"))))));
     testing()
         .waitAndAssertMetrics(

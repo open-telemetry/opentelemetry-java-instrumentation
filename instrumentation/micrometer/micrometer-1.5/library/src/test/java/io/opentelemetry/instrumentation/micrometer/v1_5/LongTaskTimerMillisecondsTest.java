@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class TimerSecondsTest extends AbstractTimerSecondsTest {
+class LongTaskTimerMillisecondsTest extends AbstractLongTaskTimerMillisecondsTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -21,7 +21,7 @@ class TimerSecondsTest extends AbstractTimerSecondsTest {
         @Override
         OpenTelemetryMeterRegistryBuilder configureOtelRegistry(
             OpenTelemetryMeterRegistryBuilder registry) {
-          return registry.setBaseTimeUnit(TimeUnit.SECONDS);
+          return registry.setBaseTimeUnit(TimeUnit.MILLISECONDS);
         }
       };
 

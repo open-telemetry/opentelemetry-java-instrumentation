@@ -17,7 +17,7 @@ import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public abstract class AbstractFunctionTimerSecondsTest {
+public abstract class AbstractFunctionTimerMillisecondsTest {
 
   protected abstract InstrumentationExtension testing();
 
@@ -30,11 +30,11 @@ public abstract class AbstractFunctionTimerSecondsTest {
   }
 
   @Test
-  void testFunctionTimerWithBaseUnitSeconds() {
+  void testFunctionTimerWithBaseUnitMilliseconds() {
     // given
     FunctionTimer functionTimer =
         FunctionTimer.builder(
-                "testFunctionTimerSeconds",
+                "testFunctionTimerMilliseconds",
                 timerObj,
                 TestTimer::getCount,
                 TestTimer::getTotalTimeNanos,
@@ -50,7 +50,7 @@ public abstract class AbstractFunctionTimerSecondsTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testFunctionTimerSeconds.count",
+            "testFunctionTimerMilliseconds.count",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
@@ -69,19 +69,19 @@ public abstract class AbstractFunctionTimerSecondsTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testFunctionTimerSeconds.sum",
+            "testFunctionTimerMilliseconds.sum",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test function timer")
-                            .hasUnit("s")
+                            .hasUnit("ms")
                             .hasDoubleSumSatisfying(
                                 sum ->
                                     sum.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasValue(42)
+                                                .hasValue(42_000)
                                                 .hasAttributes(attributeEntry("tag", "value"))))));
 
     // when
@@ -92,7 +92,7 @@ public abstract class AbstractFunctionTimerSecondsTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testFunctionTimerSeconds.count",
+            "testFunctionTimerMilliseconds.count",
             AbstractIterableAssert::isEmpty);
   }
 }
