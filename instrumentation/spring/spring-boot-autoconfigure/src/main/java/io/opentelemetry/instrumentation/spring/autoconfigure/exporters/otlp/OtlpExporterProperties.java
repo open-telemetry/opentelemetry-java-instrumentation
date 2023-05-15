@@ -27,6 +27,7 @@ public final class OtlpExporterProperties {
   @Nullable private Duration timeout;
   private final SignalProperties traces = new SignalProperties();
   private final SignalProperties metrics = new SignalProperties();
+  private final SignalProperties logs = new SignalProperties();
 
   public boolean isEnabled() {
     return enabled;
@@ -60,6 +61,10 @@ public final class OtlpExporterProperties {
 
   public SignalProperties getMetrics() {
     return metrics;
+  }
+
+  public SignalProperties getLogs() {
+    return logs;
   }
 
   public static class SignalProperties {

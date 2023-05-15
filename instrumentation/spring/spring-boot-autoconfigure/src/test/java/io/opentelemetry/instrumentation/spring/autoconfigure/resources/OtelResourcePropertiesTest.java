@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import io.opentelemetry.api.logs.GlobalLoggerProvider;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -18,6 +20,11 @@ public class OtelResourcePropertiesTest {
       new ApplicationContextRunner()
           .withPropertyValues("otel.springboot.resource.enabled=true")
           .withConfiguration(AutoConfigurations.of(OtelResourceAutoConfiguration.class));
+
+  @BeforeEach
+  void resetGlobalLoggerProvider() {
+    GlobalLoggerProvider.resetForTest();
+  }
 
   @Test
   @DisplayName("when attributes are SET should set OtelResourceProperties with given attributes")

@@ -7,7 +7,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -21,6 +23,11 @@ public class TraceAspectAutoConfigurationTest {
           .withConfiguration(
               AutoConfigurations.of(
                   OpenTelemetryAutoConfiguration.class, TraceAspectAutoConfiguration.class));
+
+  @BeforeEach
+  void resetGlobalLoggerProvider() {
+    GlobalLoggerProvider.resetForTest();
+  }
 
   @Test
   @DisplayName("when aspects are ENABLED should initialize WithSpanAspect bean")

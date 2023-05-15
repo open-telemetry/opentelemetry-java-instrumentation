@@ -8,20 +8,20 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.logs.GlobalLoggerProvider;
-import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter;
+import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
-class OtlpMetricExporterAutoConfigurationTest {
+class OtlpLogExporterAutoConfigurationTest {
 
   private final ApplicationContextRunner runner =
       new ApplicationContextRunner()
           .withConfiguration(
               AutoConfigurations.of(
-                  OpenTelemetryAutoConfiguration.class, OtlpMetricExporterAutoConfiguration.class));
+                  OpenTelemetryAutoConfiguration.class, OtlpLoggerExporterAutoConfiguration.class));
 
   @BeforeEach
   void resetGlobalLoggerProvider() {
@@ -35,18 +35,20 @@ class OtlpMetricExporterAutoConfigurationTest {
         .run(
             context ->
                 assertThat(
-                        context.getBean("otelOtlpGrpcMetricExporter", OtlpGrpcMetricExporter.class))
+                        context.getBean(
+                            "otelOtlpGrpcLogRecordExporter", OtlpGrpcLogRecordExporter.class))
                     .isNotNull());
   }
 
   @Test
-  void otlpMetricsEnabled() {
+  void otlpLogsEnabled() {
     runner
-        .withPropertyValues("otel.exporter.otlp.metrics.enabled=true")
+        .withPropertyValues("otel.exporter.otlp.logs.enabled=true")
         .run(
             context ->
                 assertThat(
-                        context.getBean("otelOtlpGrpcMetricExporter", OtlpGrpcMetricExporter.class))
+                        context.getBean(
+                            "otelOtlpGrpcLogRecordExporter", OtlpGrpcLogRecordExporter.class))
                     .isNotNull());
   }
 
@@ -54,21 +56,25 @@ class OtlpMetricExporterAutoConfigurationTest {
   void otlpDisabled() {
     runner
         .withPropertyValues("otel.exporter.otlp.enabled=false")
-        .run(context -> assertThat(context.containsBean("otelOtlpGrpcMetricExporter")).isFalse());
+        .run(
+            context -> assertThat(context.containsBean("otelOtlpGrpcLogRecordExporter")).isFalse());
   }
 
   @Test
-  void otlpMetricsDisabled() {
+  void otlpLogsDisabled() {
     runner
-        .withPropertyValues("otel.exporter.otlp.metrics.enabled=false")
-        .run(context -> assertThat(context.containsBean("otelOtlpGrpcMetricExporter")).isFalse());
+        .withPropertyValues("otel.exporter.otlp.logs.enabled=false")
+        .run(
+            context -> assertThat(context.containsBean("otelOtlpGrpcLogRecordExporter")).isFalse());
   }
 
   @Test
-  void exporterPresentByDefault() {
+  void loggerPresentByDefault() {
     runner.run(
         context ->
-            assertThat(context.getBean("otelOtlpGrpcMetricExporter", OtlpGrpcMetricExporter.class))
+            assertThat(
+                    context.getBean(
+                        "otelOtlpGrpcLogRecordExporter", OtlpGrpcLogRecordExporter.class))
                 .isNotNull());
   }
 }
