@@ -102,9 +102,9 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     internalNetExtractor.onStart(attributes, request);
 
     if (SemconvStability.emitOldHttpSemconv()) {
-      String forwardedProto = forwardedProto(request);
-      String value = forwardedProto != null ? forwardedProto : getter.getUrlScheme(request);
-      internalSet(attributes, SemanticAttributes.HTTP_SCHEME, value);
+      // in case the Forwarded header is provided override the scheme set by the
+      // internalUrlExtractor
+      internalSet(attributes, SemanticAttributes.HTTP_SCHEME, forwardedProto(request));
     }
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.getRoute(request));
     internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
