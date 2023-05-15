@@ -39,13 +39,13 @@ class HttpClientAttributesExtractorTest {
       implements HttpClientAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Override
-    public String getMethod(Map<String, String> request) {
-      return request.get("method");
+    public String getFullUrl(Map<String, String> request) {
+      return request.get("url");
     }
 
     @Override
-    public String getUrl(Map<String, String> request) {
-      return request.get("url");
+    public String getMethod(Map<String, String> request) {
+      return request.get("method");
     }
 
     @Override
@@ -177,12 +177,19 @@ class HttpClientAttributesExtractorTest {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
-          arguments("https://user1:secret@github.com", "https://github.com"),
-          arguments("https://user1:secret@github.com/path/", "https://github.com/path/"),
-          arguments("https://user1:secret@github.com#test.html", "https://github.com#test.html"),
-          arguments("https://user1:secret@github.com?foo=b@r", "https://github.com?foo=b@r"),
+          arguments("https://user1:secret@github.com", "https://REDACTED:REDACTED@github.com"),
           arguments(
-              "https://user1:secret@github.com/p@th?foo=b@r", "https://github.com/p@th?foo=b@r"),
+              "https://user1:secret@github.com/path/",
+              "https://REDACTED:REDACTED@github.com/path/"),
+          arguments(
+              "https://user1:secret@github.com#test.html",
+              "https://REDACTED:REDACTED@github.com#test.html"),
+          arguments(
+              "https://user1:secret@github.com?foo=b@r",
+              "https://REDACTED:REDACTED@github.com?foo=b@r"),
+          arguments(
+              "https://user1:secret@github.com/p@th?foo=b@r",
+              "https://REDACTED:REDACTED@github.com/p@th?foo=b@r"),
           arguments("https://github.com/p@th?foo=b@r", "https://github.com/p@th?foo=b@r"),
           arguments("https://github.com#t@st.html", "https://github.com#t@st.html"),
           arguments("user1:secret@github.com", "user1:secret@github.com"),

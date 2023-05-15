@@ -18,7 +18,7 @@ enum WebClientHttpAttributesGetter
   INSTANCE;
 
   @Override
-  public String getUrl(ClientRequest request) {
+  public String getFullUrl(ClientRequest request) {
     return request.url().toString();
   }
 

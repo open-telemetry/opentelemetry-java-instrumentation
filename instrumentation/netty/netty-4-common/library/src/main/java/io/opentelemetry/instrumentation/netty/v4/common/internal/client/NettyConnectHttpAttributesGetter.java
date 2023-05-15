@@ -18,7 +18,7 @@ enum NettyConnectHttpAttributesGetter
 
   @Nullable
   @Override
-  public String getUrl(NettyConnectionRequest nettyConnectionRequest) {
+  public String getFullUrl(NettyConnectionRequest nettyConnectionRequest) {
     return null;
   }
 

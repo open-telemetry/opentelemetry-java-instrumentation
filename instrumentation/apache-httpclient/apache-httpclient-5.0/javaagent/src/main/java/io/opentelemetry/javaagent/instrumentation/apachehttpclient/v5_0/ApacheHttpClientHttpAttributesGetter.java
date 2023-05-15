@@ -25,7 +25,7 @@ final class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  public String getUrl(HttpRequest request) {
+  public String getFullUrl(HttpRequest request) {
     // similar to org.apache.hc.core5.http.message.BasicHttpRequest.getUri()
     // not calling getUri() to avoid unnecessary conversion
     StringBuilder url = new StringBuilder();

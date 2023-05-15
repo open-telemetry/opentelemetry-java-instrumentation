@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 
 internal object KtorHttpClientAttributesGetter : HttpClientAttributesGetter<HttpRequestData, HttpResponse> {
 
-  override fun getUrl(request: HttpRequestData) =
+  override fun getFullUrl(request: HttpRequestData) =
     request.url.toString()
 
   override fun getMethod(request: HttpRequestData) =

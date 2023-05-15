@@ -17,7 +17,7 @@ final class ReactorNettyHttpClientAttributesGetter
     implements HttpClientAttributesGetter<HttpClientConfig, HttpClientResponse> {
 
   @Override
-  public String getUrl(HttpClientConfig request) {
+  public String getFullUrl(HttpClientConfig request) {
     String uri = request.uri();
     if (isAbsolute(uri)) {
       return uri;

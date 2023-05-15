@@ -22,7 +22,7 @@ enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Reque
 
   @Override
   @Nullable
-  public String getUrl(Request request) {
+  public String getFullUrl(Request request) {
     return request.getURI().toString();
   }
 

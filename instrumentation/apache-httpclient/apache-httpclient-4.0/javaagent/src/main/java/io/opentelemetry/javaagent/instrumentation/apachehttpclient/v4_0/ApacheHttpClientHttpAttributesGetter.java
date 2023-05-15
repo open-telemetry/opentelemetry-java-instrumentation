@@ -21,7 +21,7 @@ final class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  public String getUrl(ApacheHttpClientRequest request) {
+  public String getFullUrl(ApacheHttpClientRequest request) {
     return request.getUrl();
   }
 

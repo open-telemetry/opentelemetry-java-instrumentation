@@ -24,7 +24,7 @@ final class JaxRsClientHttpAttributesGetter
   }
 
   @Override
-  public String getUrl(ClientRequest httpRequest) {
+  public String getFullUrl(ClientRequest httpRequest) {
     return httpRequest.getURI().toString();
   }
 

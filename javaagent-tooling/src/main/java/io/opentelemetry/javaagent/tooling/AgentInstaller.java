@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installO
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
+import static java.util.Arrays.asList;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
@@ -195,9 +196,14 @@ public class AgentInstaller {
   }
 
   private static void copyNecessaryConfigToSystemProperties(ConfigProperties config) {
-    String value = config.getString("otel.instrumentation.experimental.span-suppression-strategy");
-    if (value != null) {
-      System.setProperty("otel.instrumentation.experimental.span-suppression-strategy", value);
+    for (String property :
+        asList(
+            "otel.instrumentation.experimental.span-suppression-strategy",
+            "otel.semconv-stability.opt-in")) {
+      String value = config.getString(property);
+      if (value != null) {
+        System.setProperty(property, value);
+      }
     }
   }
 

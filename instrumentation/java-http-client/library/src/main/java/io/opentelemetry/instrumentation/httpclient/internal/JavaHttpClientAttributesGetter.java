@@ -25,7 +25,7 @@ enum JavaHttpClientAttributesGetter
   }
 
   @Override
-  public String getUrl(HttpRequest httpRequest) {
+  public String getFullUrl(HttpRequest httpRequest) {
     return httpRequest.uri().toString();
   }
 

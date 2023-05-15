@@ -23,7 +23,7 @@ enum ArmeriaHttpClientAttributesGetter
   }
 
   @Override
-  public String getUrl(RequestContext ctx) {
+  public String getFullUrl(RequestContext ctx) {
     HttpRequest request = request(ctx);
     StringBuilder uri = new StringBuilder();
     String scheme = request.scheme();

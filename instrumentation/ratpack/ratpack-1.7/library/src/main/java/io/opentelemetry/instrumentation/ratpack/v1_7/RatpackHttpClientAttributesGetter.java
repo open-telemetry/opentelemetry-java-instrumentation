@@ -17,7 +17,7 @@ enum RatpackHttpClientAttributesGetter
 
   @Nullable
   @Override
-  public String getUrl(RequestSpec requestSpec) {
+  public String getFullUrl(RequestSpec requestSpec) {
     return requestSpec.getUri().toString();
   }
 

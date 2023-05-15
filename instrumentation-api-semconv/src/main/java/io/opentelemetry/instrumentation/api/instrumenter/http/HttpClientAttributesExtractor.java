@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
-
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -50,6 +50,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     return new HttpClientAttributesExtractorBuilder<>(httpAttributesGetter, netAttributesGetter);
   }
 
+  private final InternalUrlAttributesExtractor<REQUEST> internalUrlExtractor;
   private final InternalNetClientAttributesExtractor<REQUEST, RESPONSE> internalNetExtractor;
   private final ToIntFunction<Context> resendCountIncrementer;
 
@@ -74,6 +75,11 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       List<String> capturedResponseHeaders,
       ToIntFunction<Context> resendCountIncrementer) {
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
+    internalUrlExtractor =
+        new InternalUrlAttributesExtractor<>(
+            httpAttributesGetter,
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv());
     internalNetExtractor =
         new InternalNetClientAttributesExtractor<>(
             netAttributesGetter,
@@ -86,14 +92,12 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    internalSet(
-        attributes, SemanticAttributes.HTTP_URL, stripSensitiveData(getter.getUrl(request)));
-
+    internalUrlExtractor.onStart(attributes, request);
     internalNetExtractor.onStart(attributes, request);
   }
 
   private boolean shouldCapturePeerPort(int port, REQUEST request) {
-    String url = getter.getUrl(request);
+    String url = getter.getFullUrl(request);
     if (url == null) {
       return true;
     }
@@ -102,49 +106,6 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       return false;
     }
     return true;
-  }
-
-  @Nullable
-  private static String stripSensitiveData(@Nullable String url) {
-    if (url == null || url.isEmpty()) {
-      return url;
-    }
-
-    int schemeEndIndex = url.indexOf(':');
-
-    if (schemeEndIndex == -1) {
-      // not a valid url
-      return url;
-    }
-
-    int len = url.length();
-    if (len <= schemeEndIndex + 2
-        || url.charAt(schemeEndIndex + 1) != '/'
-        || url.charAt(schemeEndIndex + 2) != '/') {
-      // has no authority component
-      return url;
-    }
-
-    // look for the end of the authority component:
-    //   '/', '?', '#' ==> start of path
-    int index;
-    int atIndex = -1;
-    for (index = schemeEndIndex + 3; index < len; index++) {
-      char c = url.charAt(index);
-
-      if (c == '@') {
-        atIndex = index;
-      }
-
-      if (c == '/' || c == '?' || c == '#') {
-        break;
-      }
-    }
-
-    if (atIndex == -1 || atIndex == len - 1) {
-      return url;
-    }
-    return url.substring(0, schemeEndIndex + 3) + url.substring(atIndex + 1);
   }
 
   @Override

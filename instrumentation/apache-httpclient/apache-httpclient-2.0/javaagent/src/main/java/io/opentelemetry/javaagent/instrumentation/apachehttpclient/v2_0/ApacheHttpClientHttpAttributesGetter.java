@@ -26,7 +26,7 @@ final class ApacheHttpClientHttpAttributesGetter
 
   // mirroring implementation HttpMethodBase.getURI(), to avoid converting to URI and back to String
   @Override
-  public String getUrl(HttpMethod request) {
+  public String getFullUrl(HttpMethod request) {
     HostConfiguration hostConfiguration = request.getHostConfiguration();
     if (hostConfiguration == null || hostConfiguration.getProtocol() == null) {
       String queryString = request.getQueryString();

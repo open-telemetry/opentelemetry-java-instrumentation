@@ -60,13 +60,13 @@ public class InstrumenterBenchmark {
     INSTANCE;
 
     @Override
-    public String getMethod(Void unused) {
-      return "GET";
+    public String getFullUrl(Void unused) {
+      return "https://opentelemetry.io/benchmark";
     }
 
     @Override
-    public String getUrl(Void unused) {
-      return "https://opentelemetry.io/benchmark";
+    public String getMethod(Void unused) {
+      return "GET";
     }
 
     @Override

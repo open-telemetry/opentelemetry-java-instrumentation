@@ -16,7 +16,7 @@ class AkkaHttpClientAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, HttpResponse> {
 
   @Override
-  public String getUrl(HttpRequest httpRequest) {
+  public String getFullUrl(HttpRequest httpRequest) {
     return httpRequest.uri().toString();
   }
 

@@ -39,7 +39,7 @@ class JoddHttpHttpAttributesGetterTest {
             .query("param2", "val2");
     assertEquals(
         "http://test.com/test/subpath?param1=val1&param2=val1&param2=val2",
-        attributesGetter.getUrl(request));
+        attributesGetter.getFullUrl(request));
   }
 
   @Test

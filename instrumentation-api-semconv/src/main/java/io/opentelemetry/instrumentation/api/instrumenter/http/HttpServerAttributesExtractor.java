@@ -16,6 +16,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -54,6 +56,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     return new HttpServerAttributesExtractorBuilder<>(httpAttributesGetter, netAttributesGetter);
   }
 
+  private final InternalUrlAttributesExtractor<REQUEST> internalUrlExtractor;
   private final InternalNetServerAttributesExtractor<REQUEST> internalNetExtractor;
   private final Function<Context, String> httpRouteHolderGetter;
 
@@ -78,6 +81,11 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       List<String> capturedResponseHeaders,
       Function<Context, String> httpRouteHolderGetter) {
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
+    internalUrlExtractor =
+        new InternalUrlAttributesExtractor<>(
+            httpAttributesGetter,
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv());
     internalNetExtractor =
         new InternalNetServerAttributesExtractor<>(
             netAttributesGetter,
@@ -90,18 +98,20 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    String forwardedProto = forwardedProto(request);
-    String value = forwardedProto != null ? forwardedProto : getter.getScheme(request);
-    internalSet(attributes, SemanticAttributes.HTTP_SCHEME, value);
-    internalSet(attributes, SemanticAttributes.HTTP_TARGET, getTarget(request));
+    internalUrlExtractor.onStart(attributes, request);
+    internalNetExtractor.onStart(attributes, request);
+
+    if (SemconvStability.emitOldHttpSemconv()) {
+      String forwardedProto = forwardedProto(request);
+      String value = forwardedProto != null ? forwardedProto : getter.getUrlScheme(request);
+      internalSet(attributes, SemanticAttributes.HTTP_SCHEME, value);
+    }
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.getRoute(request));
     internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
-
-    internalNetExtractor.onStart(attributes, request);
   }
 
   private boolean shouldCaptureHostPort(int port, REQUEST request) {
-    String scheme = getter.getScheme(request);
+    String scheme = getter.getUrlScheme(request);
     if (scheme == null) {
       return true;
     }
@@ -162,15 +172,6 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     }
 
     return null;
-  }
-
-  private String getTarget(REQUEST request) {
-    String path = getter.getPath(request);
-    String query = getter.getQuery(request);
-    if (path == null && query == null) {
-      return null;
-    }
-    return (path == null ? "" : path) + (query == null || query.isEmpty() ? "" : "?" + query);
   }
 
   /**

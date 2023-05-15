@@ -164,19 +164,19 @@ final class TestInstrumenters {
 
     @Nullable
     @Override
-    public String getScheme(String unused) {
+    public String getUrlScheme(String unused) {
       return null;
     }
 
     @Nullable
     @Override
-    public String getPath(String s) {
+    public String getUrlPath(String s) {
       return null;
     }
 
     @Nullable
     @Override
-    public String getQuery(String s) {
+    public String getUrlQuery(String s) {
       return null;
     }
 

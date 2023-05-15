@@ -15,7 +15,7 @@ final class Vertx3HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
       VirtualField.find(HttpClientRequest.class, VertxRequestInfo.class);
 
   @Override
-  public String getUrl(HttpClientRequest request) {
+  public String getFullUrl(HttpClientRequest request) {
     String uri = request.uri();
     // Uri should be relative, but it is possible to misuse vert.x api and pass an absolute uri
     // where relative is expected.

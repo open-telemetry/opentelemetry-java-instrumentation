@@ -11,7 +11,7 @@ import io.vertx.core.http.HttpClientRequest;
 final class Vertx4HttpAttributesGetter extends AbstractVertxHttpAttributesGetter {
 
   @Override
-  public String getUrl(HttpClientRequest request) {
+  public String getFullUrl(HttpClientRequest request) {
     String uri = request.getURI();
     if (!isAbsolute(uri)) {
       uri = request.absoluteURI();
