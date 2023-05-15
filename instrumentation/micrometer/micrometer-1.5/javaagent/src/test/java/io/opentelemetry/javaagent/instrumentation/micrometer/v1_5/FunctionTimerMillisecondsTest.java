@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
 import io.micrometer.core.instrument.Metrics;
-import io.opentelemetry.instrumentation.micrometer.v1_5.AbstractFunctionTimerSecondsTest;
+import io.opentelemetry.instrumentation.micrometer.v1_5.AbstractFunctionTimerMillisecondsTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class FunctionTimerSecondsTest extends AbstractFunctionTimerSecondsTest {
+class FunctionTimerMillisecondsTest extends AbstractFunctionTimerMillisecondsTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

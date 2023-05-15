@@ -8,15 +8,18 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static org.assertj.core.api.Assertions.within;
 
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.metrics.data.HistogramPointData;
 import io.opentelemetry.sdk.metrics.internal.aggregator.ExplicitBucketHistogramUtils;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.AbstractIterableAssert;
+import org.assertj.core.api.ThrowingConsumer;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("PreferJavaTimeOverload")
@@ -51,13 +54,13 @@ public abstract class AbstractTimerTest {
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test timer")
-                            .hasUnit("ms")
+                            .hasUnit("s")
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasSum(42_000)
+                                                .hasSum(42)
                                                 .hasCount(1)
                                                 .hasAttributes(attributeEntry("tag", "value"))
                                                 .hasBucketBoundaries(DEFAULT_BUCKETS)))));
@@ -75,7 +78,7 @@ public abstract class AbstractTimerTest {
                                     gauge.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasValue(42_000)
+                                                .hasValue(42)
                                                 .hasAttributes(attributeEntry("tag", "value"))))));
 
     // micrometer gauge histogram is not emitted
@@ -110,13 +113,13 @@ public abstract class AbstractTimerTest {
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasUnit("ms")
+                            .hasUnit("s")
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasSum(1.234)
+                                                .hasSum(0.001234)
                                                 .hasCount(1)
                                                 .hasAttributes(Attributes.empty())))));
     testing()
@@ -132,7 +135,7 @@ public abstract class AbstractTimerTest {
                                     gauge.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasValue(1.234)
+                                                .hasValue(0.001234)
                                                 .hasAttributes(Attributes.empty())))));
   }
 
@@ -167,17 +170,22 @@ public abstract class AbstractTimerTest {
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test timer")
-                            .hasUnit("ms")
+                            .hasUnit("s")
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasSum(555500)
+                                                .hasSum(555.5)
                                                 .hasCount(4)
                                                 .hasAttributes(attributeEntry("tag", "value"))
-                                                .hasBucketBoundaries(
-                                                    1_000, 10_000, 100_000, 1_000_000)
+                                                .satisfies(hasBucketBoundaries(1, 10, 100, 1_000))
                                                 .hasBucketCounts(1, 1, 1, 1, 0)))));
+  }
+
+  private static ThrowingConsumer<HistogramPointData> hasBucketBoundaries(double... buckets) {
+    return pointData ->
+        assertThat(pointData.getBoundaries().stream().mapToDouble(d -> d).toArray())
+            .contains(buckets, within(0.00001));
   }
 }

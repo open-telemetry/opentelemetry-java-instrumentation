@@ -23,7 +23,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
 
   private final OpenTelemetry openTelemetry;
   private Clock clock = Clock.SYSTEM;
-  private TimeUnit baseTimeUnit = TimeUnit.MILLISECONDS;
+  private TimeUnit baseTimeUnit = TimeUnit.SECONDS;
   private boolean prometheusMode = false;
   private boolean histogramGaugesEnabled = false;
 

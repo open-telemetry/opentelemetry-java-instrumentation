@@ -17,15 +17,15 @@ import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("PreferJavaTimeOverload")
-public abstract class AbstractTimerSecondsTest {
+public abstract class AbstractTimerMillisecondsTest {
 
   protected abstract InstrumentationExtension testing();
 
   @Test
-  void testTimerWithBaseUnitSeconds() {
+  void testTimerWithBaseUnitMilliseconds() {
     // given
     Timer timer =
-        Timer.builder("testTimerSeconds")
+        Timer.builder("testTimerMilliseconds")
             .description("This is a test timer")
             .tags("tag", "value")
             .register(Metrics.globalRegistry);
@@ -39,37 +39,37 @@ public abstract class AbstractTimerSecondsTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testTimerSeconds",
+            "testTimerMilliseconds",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test timer")
-                            .hasUnit("s")
+                            .hasUnit("ms")
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasSum(23.345)
+                                                .hasSum(23_345)
                                                 .hasCount(3)
                                                 .hasAttributes(attributeEntry("tag", "value"))))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testTimerSeconds.max",
+            "testTimerMilliseconds.max",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test timer")
-                            .hasUnit("s")
+                            .hasUnit("ms")
                             .hasDoubleGaugeSatisfying(
                                 gauge ->
                                     gauge.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasValue(12.345)
+                                                .hasValue(12_345)
                                                 .hasAttributes(attributeEntry("tag", "value"))))));
 
     // when

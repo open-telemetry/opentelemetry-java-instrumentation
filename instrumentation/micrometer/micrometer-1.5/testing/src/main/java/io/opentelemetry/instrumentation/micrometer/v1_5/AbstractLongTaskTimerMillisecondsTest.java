@@ -16,15 +16,15 @@ import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
 
-public abstract class AbstractLongTaskTimerSecondsTest {
+public abstract class AbstractLongTaskTimerMillisecondsTest {
 
   protected abstract InstrumentationExtension testing();
 
   @Test
-  void testLongTaskTimerWithBaseUnitSeconds() throws InterruptedException {
+  void testLongTaskTimerWithBaseUnitMilliseconds() throws InterruptedException {
     // given
     LongTaskTimer timer =
-        LongTaskTimer.builder("testLongTaskTimerSeconds")
+        LongTaskTimer.builder("testLongTaskTimerMilliseconds")
             .description("This is a test long task timer")
             .tags("tag", "value")
             .register(Metrics.globalRegistry);
@@ -36,7 +36,7 @@ public abstract class AbstractLongTaskTimerSecondsTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testLongTaskTimerSeconds.active",
+            "testLongTaskTimerMilliseconds.active",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
@@ -55,13 +55,13 @@ public abstract class AbstractLongTaskTimerSecondsTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testLongTaskTimerSeconds.duration",
+            "testLongTaskTimerMilliseconds.duration",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test long task timer")
-                            .hasUnit("s")
+                            .hasUnit("ms")
                             .hasDoubleSumSatisfying(
                                 sum ->
                                     sum.isNotMonotonic()
@@ -82,7 +82,7 @@ public abstract class AbstractLongTaskTimerSecondsTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testLongTaskTimerSeconds.active",
+            "testLongTaskTimerMilliseconds.active",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
@@ -97,7 +97,7 @@ public abstract class AbstractLongTaskTimerSecondsTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testLongTaskTimerSeconds.duration",
+            "testLongTaskTimerMilliseconds.duration",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
@@ -119,7 +119,7 @@ public abstract class AbstractLongTaskTimerSecondsTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testLongTaskTimerSeconds.active",
+            "testLongTaskTimerMilliseconds.active",
             AbstractIterableAssert::isEmpty);
   }
 }

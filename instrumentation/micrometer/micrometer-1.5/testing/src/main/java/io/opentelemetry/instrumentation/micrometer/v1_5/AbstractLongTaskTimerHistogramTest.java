@@ -70,7 +70,7 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test timer")
-                            .hasUnit("ms")
+                            .hasUnit("s")
                             .hasDoubleSumSatisfying(
                                 sum ->
                                     sum.isNotMonotonic()
@@ -95,11 +95,11 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                                     gauge.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasAttributes(attributeEntry("le", "100"))
+                                                .hasAttributes(attributeEntry("le", "0.1"))
                                                 .hasValue(2),
                                         point ->
                                             point
-                                                .hasAttributes(attributeEntry("le", "1000"))
+                                                .hasAttributes(attributeEntry("le", "1"))
                                                 .hasValue(3)))));
 
     // when
@@ -136,7 +136,7 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test timer")
-                            .hasUnit("ms")
+                            .hasUnit("s")
                             .hasDoubleSumSatisfying(
                                 sum ->
                                     sum.isNotMonotonic()
@@ -159,10 +159,10 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                                         point ->
                                             point
                                                 .hasValue(0)
-                                                .hasAttributes(attributeEntry("le", "100")),
+                                                .hasAttributes(attributeEntry("le", "0.1")),
                                         point ->
                                             point
                                                 .hasValue(0)
-                                                .hasAttributes(attributeEntry("le", "1000"))))));
+                                                .hasAttributes(attributeEntry("le", "1"))))));
   }
 }
