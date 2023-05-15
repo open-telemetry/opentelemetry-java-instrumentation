@@ -5,15 +5,20 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics;
 
+import static java.util.Collections.emptyList;
+
 import com.sun.management.GarbageCollectionNotificationInfo;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import javax.management.Notification;
@@ -34,6 +39,8 @@ import javax.management.openmbean.CompositeData;
 public final class GarbageCollector {
 
   private static final Logger logger = Logger.getLogger(GarbageCollector.class.getName());
+
+  private static final double MILLIS_PER_S = TimeUnit.SECONDS.toMillis(1);
 
   private static final AttributeKey<String> GC_KEY = AttributeKey.stringKey("gc");
   private static final AttributeKey<String> ACTION_KEY = AttributeKey.stringKey("action");
@@ -66,13 +73,13 @@ public final class GarbageCollector {
       Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor) {
     Meter meter = RuntimeMetricsUtil.getMeter(openTelemetry);
 
-    LongHistogram gcTime =
+    DoubleHistogramBuilder gcDurationBuilder =
         meter
             .histogramBuilder("process.runtime.jvm.gc.duration")
             .setDescription("Duration of JVM garbage collection actions")
-            .setUnit("ms")
-            .ofLongs()
-            .build();
+            .setUnit("s");
+    setGcDurationBuckets(gcDurationBuilder);
+    DoubleHistogram gcDuration = gcDurationBuilder.build();
 
     for (GarbageCollectorMXBean gcBean : gcBeans) {
       if (!(gcBean instanceof NotificationEmitter)) {
@@ -80,20 +87,29 @@ public final class GarbageCollector {
       }
       NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
       notificationEmitter.addNotificationListener(
-          new GcNotificationListener(gcTime, notificationInfoExtractor), GC_FILTER, null);
+          new GcNotificationListener(gcDuration, notificationInfoExtractor), GC_FILTER, null);
     }
+  }
+
+  private static void setGcDurationBuckets(DoubleHistogramBuilder builder) {
+    if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
+      // that shouldn't really happen
+      return;
+    }
+    ((ExtendedDoubleHistogramBuilder) builder)
+        .setAdvice(advice -> advice.setExplicitBucketBoundaries(emptyList()));
   }
 
   private static final class GcNotificationListener implements NotificationListener {
 
-    private final LongHistogram gcTime;
+    private final DoubleHistogram gcDuration;
     private final Function<Notification, GarbageCollectionNotificationInfo>
         notificationInfoExtractor;
 
     private GcNotificationListener(
-        LongHistogram gcTime,
+        DoubleHistogram gcDuration,
         Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor) {
-      this.gcTime = gcTime;
+      this.gcDuration = gcDuration;
       this.notificationInfoExtractor = notificationInfoExtractor;
     }
 
@@ -101,8 +117,8 @@ public final class GarbageCollector {
     public void handleNotification(Notification notification, Object unused) {
       GarbageCollectionNotificationInfo notificationInfo =
           notificationInfoExtractor.apply(notification);
-      gcTime.record(
-          notificationInfo.getGcInfo().getDuration(),
+      gcDuration.record(
+          notificationInfo.getGcInfo().getDuration() / MILLIS_PER_S,
           Attributes.of(
               GC_KEY, notificationInfo.getGcName(), ACTION_KEY, notificationInfo.getGcAction()));
     }
