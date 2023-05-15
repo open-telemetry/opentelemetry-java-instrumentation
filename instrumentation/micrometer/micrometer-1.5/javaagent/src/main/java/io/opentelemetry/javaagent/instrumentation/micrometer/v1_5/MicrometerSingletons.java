@@ -23,6 +23,9 @@ public final class MicrometerSingletons {
             .setBaseTimeUnit(
                 TimeUnitParser.parseConfigValue(
                     config.getString("otel.instrumentation.micrometer.base-time-unit")))
+            .setMicrometerHistogramGaugesEnabled(
+                config.getBoolean(
+                    "otel.instrumentation.micrometer.histogram-gauges.enabled", false))
             .build();
   }
 

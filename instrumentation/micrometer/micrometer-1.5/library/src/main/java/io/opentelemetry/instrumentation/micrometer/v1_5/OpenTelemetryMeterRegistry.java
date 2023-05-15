@@ -50,15 +50,18 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   }
 
   private final TimeUnit baseTimeUnit;
+  private final DistributionStatisticConfigModifier distributionStatisticConfigModifier;
   private final io.opentelemetry.api.metrics.Meter otelMeter;
 
   OpenTelemetryMeterRegistry(
       Clock clock,
       TimeUnit baseTimeUnit,
       NamingConvention namingConvention,
+      DistributionStatisticConfigModifier distributionStatisticConfigModifier,
       io.opentelemetry.api.metrics.Meter otelMeter) {
     super(clock);
     this.baseTimeUnit = baseTimeUnit;
+    this.distributionStatisticConfigModifier = distributionStatisticConfigModifier;
     this.otelMeter = otelMeter;
 
     this.config()
@@ -104,6 +107,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
             config().namingConvention(),
             clock,
             distributionStatisticConfig,
+            distributionStatisticConfigModifier,
             pauseDetector,
             getBaseTimeUnit(),
             otelMeter);
@@ -118,7 +122,13 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       Meter.Id id, DistributionStatisticConfig distributionStatisticConfig, double scale) {
     OpenTelemetryDistributionSummary distributionSummary =
         new OpenTelemetryDistributionSummary(
-            id, config().namingConvention(), clock, distributionStatisticConfig, scale, otelMeter);
+            id,
+            config().namingConvention(),
+            clock,
+            distributionStatisticConfig,
+            distributionStatisticConfigModifier,
+            scale,
+            otelMeter);
     if (distributionSummary.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(distributionSummary, this);
     }

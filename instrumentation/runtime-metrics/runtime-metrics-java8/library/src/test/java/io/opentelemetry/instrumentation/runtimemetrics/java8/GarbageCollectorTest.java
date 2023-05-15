@@ -72,28 +72,30 @@ class GarbageCollectorTest {
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("Duration of JVM garbage collection actions")
-                        .hasUnit("ms")
+                        .hasUnit("s")
                         .hasHistogramSatisfying(
                             histogram ->
                                 histogram.hasPointsSatisfying(
                                     point ->
                                         point
                                             .hasCount(2)
-                                            .hasSum(22)
+                                            .hasSum(0.022)
                                             .hasAttributes(
                                                 Attributes.builder()
                                                     .put("gc", "G1 Young Generation")
                                                     .put("action", "end of minor GC")
-                                                    .build()),
+                                                    .build())
+                                            .hasBucketBoundaries(),
                                     point ->
                                         point
                                             .hasCount(1)
-                                            .hasSum(11)
+                                            .hasSum(0.011)
                                             .hasAttributes(
                                                 Attributes.builder()
                                                     .put("gc", "G1 Old Generation")
                                                     .put("action", "end of major GC")
-                                                    .build())))));
+                                                    .build())
+                                            .hasBucketBoundaries()))));
   }
 
   private static Notification createTestNotification(

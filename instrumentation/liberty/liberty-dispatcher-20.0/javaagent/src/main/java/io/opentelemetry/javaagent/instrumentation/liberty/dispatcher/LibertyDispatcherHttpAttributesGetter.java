@@ -38,18 +38,19 @@ public class LibertyDispatcherHttpAttributesGetter
 
   @Override
   @Nullable
-  public String getTarget(LibertyRequest libertyRequest) {
-    String requestUri = libertyRequest.getRequestUri();
-    String queryString = libertyRequest.getQueryString();
-    if (queryString != null && !queryString.isEmpty()) {
-      return requestUri + "?" + queryString;
-    }
-    return requestUri;
-  }
-
-  @Override
-  @Nullable
   public String getScheme(LibertyRequest libertyRequest) {
     return libertyRequest.getScheme();
+  }
+
+  @Nullable
+  @Override
+  public String getPath(LibertyRequest request) {
+    return request.getRequestUri();
+  }
+
+  @Nullable
+  @Override
+  public String getQuery(LibertyRequest request) {
+    return request.getQueryString();
   }
 }

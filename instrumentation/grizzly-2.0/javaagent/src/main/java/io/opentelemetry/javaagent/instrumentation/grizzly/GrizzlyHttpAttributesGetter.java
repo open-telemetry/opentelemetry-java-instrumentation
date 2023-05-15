@@ -48,19 +48,20 @@ final class GrizzlyHttpAttributesGetter
     return toHeaderList(response.getHeaders().values(name));
   }
 
-  @Nullable
-  @Override
-  public String getTarget(HttpRequestPacket request) {
-    String target = request.getRequestURI();
-    String queryString = request.getQueryString();
-    if (queryString != null) {
-      target += "?" + queryString;
-    }
-    return target;
-  }
-
   @Override
   public String getScheme(HttpRequestPacket request) {
     return request.isSecure() ? "https" : "http";
+  }
+
+  @Nullable
+  @Override
+  public String getPath(HttpRequestPacket request) {
+    return request.getRequestURI();
+  }
+
+  @Nullable
+  @Override
+  public String getQuery(HttpRequestPacket request) {
+    return request.getQueryString();
   }
 }

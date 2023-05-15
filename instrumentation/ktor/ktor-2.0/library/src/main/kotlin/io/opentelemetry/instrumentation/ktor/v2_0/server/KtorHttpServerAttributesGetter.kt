@@ -30,11 +30,15 @@ internal enum class KtorHttpServerAttributesGetter :
     return response.headers.allValues().getAll(name) ?: emptyList()
   }
 
-  override fun getTarget(request: ApplicationRequest): String {
-    return request.uri
-  }
-
   override fun getScheme(request: ApplicationRequest): String {
     return request.origin.scheme
+  }
+
+  override fun getPath(request: ApplicationRequest): String {
+    return request.path()
+  }
+
+  override fun getQuery(request: ApplicationRequest): String {
+    return request.queryString()
   }
 }

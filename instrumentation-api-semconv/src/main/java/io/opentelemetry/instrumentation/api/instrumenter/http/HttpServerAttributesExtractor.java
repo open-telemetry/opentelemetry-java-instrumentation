@@ -93,7 +93,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     String forwardedProto = forwardedProto(request);
     String value = forwardedProto != null ? forwardedProto : getter.getScheme(request);
     internalSet(attributes, SemanticAttributes.HTTP_SCHEME, value);
-    internalSet(attributes, SemanticAttributes.HTTP_TARGET, getter.getTarget(request));
+    internalSet(attributes, SemanticAttributes.HTTP_TARGET, getTarget(request));
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.getRoute(request));
     internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
 
@@ -162,6 +162,15 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     }
 
     return null;
+  }
+
+  private String getTarget(REQUEST request) {
+    String path = getter.getPath(request);
+    String query = getter.getQuery(request);
+    if (path == null && query == null) {
+      return null;
+    }
+    return (path == null ? "" : path) + (query == null || query.isEmpty() ? "" : "?" + query);
   }
 
   /**

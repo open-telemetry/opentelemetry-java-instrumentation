@@ -164,19 +164,25 @@ final class TestInstrumenters {
 
     @Nullable
     @Override
-    public String getTarget(String unused) {
+    public String getScheme(String unused) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public String getPath(String s) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public String getQuery(String s) {
       return null;
     }
 
     @Nullable
     @Override
     public String getRoute(String unused) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public String getScheme(String unused) {
       return null;
     }
   }

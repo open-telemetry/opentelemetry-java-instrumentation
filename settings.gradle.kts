@@ -3,13 +3,13 @@ pluginManagement {
     id("com.bmuschko.docker-remote-api") version "8.1.0"
     id("com.github.ben-manes.versions") version "0.46.0"
     id("com.github.jk1.dependency-license-report") version "2.1"
-    id("com.google.cloud.tools.jib") version "3.3.1"
+    id("com.google.cloud.tools.jib") version "3.3.2"
     id("com.gradle.plugin-publish") version "1.2.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
     id("org.jetbrains.kotlin.jvm") version "1.8.21"
     id("org.xbib.gradle.plugin.jflex") version "1.7.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
-    id("org.graalvm.buildtools.native") version "0.9.21"
+    id("org.graalvm.buildtools.native") version "0.9.22"
   }
 }
 
@@ -395,6 +395,7 @@ hideFromDependabot(":instrumentation:oracle-ucp-11.2:testing")
 hideFromDependabot(":instrumentation:oshi:javaagent")
 hideFromDependabot(":instrumentation:oshi:library")
 hideFromDependabot(":instrumentation:oshi:testing")
+hideFromDependabot(":instrumentation:payara:javaagent")
 hideFromDependabot(":instrumentation:play:play-mvc:play-mvc-2.4:javaagent")
 hideFromDependabot(":instrumentation:play:play-mvc:play-mvc-2.6:javaagent")
 hideFromDependabot(":instrumentation:play:play-ws:play-ws-1.0:javaagent")
@@ -454,6 +455,10 @@ hideFromDependabot(":instrumentation:rxjava:rxjava-3.1.1:library")
 hideFromDependabot(":instrumentation:rxjava:rxjava-3.1.1:javaagent")
 hideFromDependabot(":instrumentation:rxjava:rxjava-3-common:library")
 hideFromDependabot(":instrumentation:rxjava:rxjava-3-common:testing")
+hideFromDependabot(":instrumentation:quarkus-resteasy-reactive:javaagent")
+hideFromDependabot(":instrumentation:quarkus-resteasy-reactive:common-testing")
+hideFromDependabot(":instrumentation:quarkus-resteasy-reactive:quarkus2-testing")
+hideFromDependabot(":instrumentation:quarkus-resteasy-reactive:quarkus3-testing")
 hideFromDependabot(":instrumentation:scala-fork-join-2.8:javaagent")
 hideFromDependabot(":instrumentation:servlet:servlet-common:bootstrap")
 hideFromDependabot(":instrumentation:servlet:servlet-common:javaagent")
