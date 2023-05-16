@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Deque;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -56,8 +57,8 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
         instrumenter().end(clientContext, request, null, throwable);
         return;
       }
-
-      Context serverContext = ctx.channel().attr(AttributeKeys.SERVER_CONTEXT).get();
+      Deque<Context> contexts = ctx.channel().attr(AttributeKeys.SERVER_CONTEXT).get();
+      Context serverContext = contexts != null ? contexts.peekFirst() : null;
       if (serverContext != null) {
         NettyErrorHolder.set(serverContext, throwable);
       }
