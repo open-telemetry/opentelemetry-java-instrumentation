@@ -32,29 +32,15 @@ public final class RuntimeMetrics implements Closeable {
 
   private final AtomicBoolean isClosed = new AtomicBoolean();
   private final OpenTelemetry openTelemetry;
-  private final List<RecordedEventHandler> recordedEventHandlers;
-  private final RecordingStream recordingStream;
-  private final CountDownLatch startUpLatch = new CountDownLatch(1);
   private final List<AutoCloseable> observables = new ArrayList<>();
+  private final JfrRuntimeMetrics jfrRuntimeMetrics;
 
   @SuppressWarnings("CatchingUnchecked")
   RuntimeMetrics(
       OpenTelemetry openTelemetry, Predicate<JfrFeature> featurePredicate, boolean disableJmx) {
     this.openTelemetry = openTelemetry;
-    this.recordedEventHandlers = HandlerRegistry.getHandlers(openTelemetry, featurePredicate);
     try {
-      recordingStream = new RecordingStream();
-      recordedEventHandlers.forEach(
-          handler -> {
-            EventSettings eventSettings = recordingStream.enable(handler.getEventName());
-            handler.getPollingDuration().ifPresent(eventSettings::withPeriod);
-            handler.getThreshold().ifPresent(eventSettings::withThreshold);
-            recordingStream.onEvent(handler.getEventName(), handler);
-          });
-      recordingStream.onMetadata(event -> startUpLatch.countDown());
-      Thread daemonRunner = new Thread(() -> recordingStream.start());
-      daemonRunner.setDaemon(true);
-      daemonRunner.start();
+      jfrRuntimeMetrics = JfrRuntimeMetrics.build(openTelemetry, featurePredicate);
 
       // Set up metrics gathered by JMX
       if (!disableJmx) {
@@ -98,18 +84,8 @@ public final class RuntimeMetrics implements Closeable {
   }
 
   // Visible for testing
-  List<RecordedEventHandler> getRecordedEventHandlers() {
-    return recordedEventHandlers;
-  }
-
-  // Visible for testing
-  RecordingStream getRecordingStream() {
-    return recordingStream;
-  }
-
-  // Visible for testing
-  CountDownLatch getStartUpLatch() {
-    return startUpLatch;
+  JfrRuntimeMetrics getJfrRuntimeMetrics() {
+    return jfrRuntimeMetrics;
   }
 
   /** Stop recording JFR events. */
@@ -119,9 +95,70 @@ public final class RuntimeMetrics implements Closeable {
       logger.log(Level.WARNING, "RuntimeMetrics is already closed");
       return;
     }
-    recordingStream.close();
-    recordedEventHandlers.forEach(RecordedEventHandler::close);
+    if (jfrRuntimeMetrics != null) {
+      jfrRuntimeMetrics.close();
+    }
 
     JmxRuntimeMetricsUtil.closeObservers(observables);
+  }
+
+  static class JfrRuntimeMetrics implements Closeable {
+    private final List<RecordedEventHandler> recordedEventHandlers;
+    private final RecordingStream recordingStream;
+    private final CountDownLatch startUpLatch = new CountDownLatch(1);
+
+    private JfrRuntimeMetrics(OpenTelemetry openTelemetry, Predicate<JfrFeature> featurePredicate) {
+      this.recordedEventHandlers = HandlerRegistry.getHandlers(openTelemetry, featurePredicate);
+      recordingStream = new RecordingStream();
+      recordedEventHandlers.forEach(
+          handler -> {
+            EventSettings eventSettings = recordingStream.enable(handler.getEventName());
+            handler.getPollingDuration().ifPresent(eventSettings::withPeriod);
+            handler.getThreshold().ifPresent(eventSettings::withThreshold);
+            recordingStream.onEvent(handler.getEventName(), handler);
+          });
+      recordingStream.onMetadata(event -> startUpLatch.countDown());
+      Thread daemonRunner = new Thread(() -> recordingStream.start());
+      daemonRunner.setDaemon(true);
+      daemonRunner.start();
+    }
+
+    static JfrRuntimeMetrics build(
+        OpenTelemetry openTelemetry, Predicate<JfrFeature> featurePredicate) {
+      if (!hasJfrRecordingStream()) {
+        return null;
+      }
+      return new JfrRuntimeMetrics(openTelemetry, featurePredicate);
+    }
+
+    @Override
+    public void close() {
+      recordingStream.close();
+      recordedEventHandlers.forEach(RecordedEventHandler::close);
+    }
+
+    // Visible for testing
+    List<RecordedEventHandler> getRecordedEventHandlers() {
+      return recordedEventHandlers;
+    }
+
+    // Visible for testing
+    RecordingStream getRecordingStream() {
+      return recordingStream;
+    }
+
+    // Visible for testing
+    CountDownLatch getStartUpLatch() {
+      return startUpLatch;
+    }
+
+    private static boolean hasJfrRecordingStream() {
+      try {
+        Class.forName("jdk.jfr.consumer.RecordingStream");
+        return true;
+      } catch (ClassNotFoundException e) {
+        return false;
+      }
+    }
   }
 }
