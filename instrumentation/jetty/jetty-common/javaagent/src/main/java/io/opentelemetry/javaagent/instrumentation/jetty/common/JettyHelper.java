@@ -57,6 +57,7 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
   }
 
   private static String errorExceptionAttributeName() {
+    // this method is only used on jetty versions before 9.4
     return "javax.servlet.error.exception";
   }
 }

@@ -43,7 +43,7 @@ abstract class JettyServlet5Test extends AbstractServlet5Test<Object, Object> {
     ServletContextHandler servletContext = new ServletContextHandler(null, contextPath)
     servletContext.errorHandler = new ErrorHandler() {
       protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
-        Throwable th = (Throwable) request.getAttribute("javax.servlet.error.exception")
+        Throwable th = (Throwable) request.getAttribute("jakarta.servlet.error.exception")
         writer.write(th ? th.message : message)
       }
     }
