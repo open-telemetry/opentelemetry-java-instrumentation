@@ -41,6 +41,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
@@ -82,10 +83,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     // protected methods.
     builder.setHttpAttributes(this::httpAttributes);
     builder.setExpectedClientSpanNameMapper(this::expectedClientSpanName);
-    Integer responseCodeOnError = responseCodeOnRedirectError();
-    if (responseCodeOnError != null) {
-      builder.setResponseCodeOnRedirectError(responseCodeOnError);
-    }
     builder.setUserAgent(userAgent());
     builder.setClientSpanErrorMapper(this::clientSpanError);
     builder.setSingleConnectionFactory(this::createSingleConnection);
@@ -150,7 +147,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
   }
@@ -167,7 +164,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span -> assertClientSpan(span, uri, method, responseCode).hasParent(trace.getSpan(0)),
+              span ->
+                  assertClientSpan(span, uri, method, responseCode, null)
+                      .hasParent(trace.getSpan(0)),
               span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
         });
   }
@@ -226,7 +225,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span -> assertClientSpan(span, uri, method, 200).hasParent(trace.getSpan(0)),
+              span -> assertClientSpan(span, uri, method, 200, null).hasParent(trace.getSpan(0)),
               span -> assertServerSpan(span).hasParent(trace.getSpan(1)),
               span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
         });
@@ -248,7 +247,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
+              span -> assertClientSpan(span, uri, method, 200, null).hasNoParent(),
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         },
         trace ->
@@ -271,7 +270,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
+                span -> assertClientSpan(span, uri, method, 200, null).hasNoParent(),
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("callback")
@@ -281,9 +280,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   @Test
   void basicRequestWith1Redirect() throws Exception {
-    // TODO quite a few clients create an extra span for the redirect
-    // This test should handle both types or we should unify how the clients work
-
     assumeTrue(options.getTestRedirects());
 
     String method = "GET";
@@ -293,20 +289,36 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     assertThat(responseCode).isEqualTo(200);
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-        });
+    if (options.isLowLevelInstrumentation()) {
+      testing.waitAndAssertTraces(
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertClientSpan(
+                            span, uri, method, options.getResponseCodeOnRedirectError(), null)
+                        .hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          },
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertClientSpan(span, uri.resolve("/success"), method, responseCode, 1)
+                        .hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          });
+    } else {
+      testing.waitAndAssertTraces(
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          });
+    }
   }
 
   @Test
   void basicRequestWith2Redirects() throws Exception {
-    // TODO quite a few clients create an extra span for the redirect
-    // This test should handle both types or we should unify how the clients work
-
     assumeTrue(options.getTestRedirects());
 
     String method = "GET";
@@ -316,14 +328,45 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     assertThat(responseCode).isEqualTo(200);
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-        });
+    if (options.isLowLevelInstrumentation()) {
+      testing.waitAndAssertTraces(
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertClientSpan(
+                            span, uri, method, options.getResponseCodeOnRedirectError(), null)
+                        .hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          },
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertClientSpan(
+                            span,
+                            uri.resolve("/redirect"),
+                            method,
+                            options.getResponseCodeOnRedirectError(),
+                            1)
+                        .hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          },
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertClientSpan(span, uri.resolve("/success"), method, responseCode, 2)
+                        .hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          });
+    } else {
+      testing.waitAndAssertTraces(
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          });
+    }
   }
 
   @Test
@@ -343,19 +386,38 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     }
     Throwable clientError = options.getClientSpanErrorMapper().apply(uri, ex);
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-          assertions.add(
-              span ->
-                  assertClientSpan(span, uri, method, options.getResponseCodeOnRedirectError())
-                      .hasNoParent()
-                      .hasException(clientError));
-          for (int i = 0; i < options.getMaxRedirects(); i++) {
-            assertions.add(span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-          }
-          trace.hasSpansSatisfyingExactly(assertions);
-        });
+    if (options.isLowLevelInstrumentation()) {
+      testing.waitAndAssertTraces(
+          IntStream.range(0, options.getMaxRedirects())
+              .mapToObj(i -> makeCircularRedirectAssertForLolLevelTrace(uri, method, i))
+              .collect(Collectors.toList()));
+    } else {
+      testing.waitAndAssertTraces(
+          trace -> {
+            List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+            assertions.add(
+                span ->
+                    assertClientSpan(
+                            span, uri, method, options.getResponseCodeOnRedirectError(), null)
+                        .hasNoParent()
+                        .hasException(clientError));
+            for (int i = 0; i < options.getMaxRedirects(); i++) {
+              assertions.add(span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+            }
+            trace.hasSpansSatisfyingExactly(assertions);
+          });
+    }
+  }
+
+  private Consumer<TraceAssert> makeCircularRedirectAssertForLolLevelTrace(
+      URI uri, String method, int resendNo) {
+    Integer resendCountValue = resendNo > 0 ? resendNo : null;
+    return trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                assertClientSpan(
+                    span, uri, method, options.getResponseCodeOnRedirectError(), resendCountValue),
+            span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
   }
 
   @Test
@@ -370,14 +432,35 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     assertThat(responseCode).isEqualTo(200);
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-        });
+    if (options.isLowLevelInstrumentation()) {
+      testing.waitAndAssertTraces(
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertClientSpan(
+                            span, uri, method, options.getResponseCodeOnRedirectError(), null)
+                        .hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          },
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertClientSpan(span, uri.resolve("/secured"), method, responseCode, 1)
+                        .hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          });
+    } else {
+      testing.waitAndAssertTraces(
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span -> assertClientSpan(span, uri, method, 200, null).hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          });
+    }
   }
+
+  // TODO: add basic auth scenario
 
   @Test
   void errorSpan() {
@@ -397,7 +480,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span -> assertClientSpan(span, uri, method, 500).hasParent(trace.getSpan(0)),
+              span -> assertClientSpan(span, uri, method, 500, null).hasParent(trace.getSpan(0)),
               span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
         });
   }
@@ -416,12 +499,12 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         },
         trace -> {
           trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
   }
@@ -444,7 +527,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
   }
@@ -462,7 +545,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> {
-                assertClientSpan(span, uri, method, responseCode).hasNoParent();
+                assertClientSpan(span, uri, method, responseCode, null).hasNoParent();
                 span.hasAttributesSatisfying(
                     equalTo(
                         AttributeKey.stringArrayKey("http.request.header.x_test_request"),
@@ -502,7 +585,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasStatus(StatusData.error())
                       .hasException(ex),
               span ->
-                  assertClientSpan(span, uri, method, null)
+                  assertClientSpan(span, uri, method, null, null)
                       .hasParent(trace.getSpan(0))
                       .hasException(clientError));
         });
@@ -539,7 +622,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               Arrays.asList(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                   span ->
-                      assertClientSpan(span, uri, method, null)
+                      assertClientSpan(span, uri, method, null, null)
                           .hasParent(trace.getSpan(0))
                           .hasException(clientError),
                   span ->
@@ -584,7 +667,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasStatus(StatusData.error())
                       .hasException(ex),
               span ->
-                  assertClientSpan(span, uri, method, null)
+                  assertClientSpan(span, uri, method, null, null)
                       .hasParent(trace.getSpan(0))
                       .hasException(clientError));
         });
@@ -617,7 +700,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasStatus(StatusData.error())
                       .hasException(ex),
               span ->
-                  assertClientSpan(span, uri, method, null)
+                  assertClientSpan(span, uri, method, null, null)
                       .hasParent(trace.getSpan(0))
                       .hasException(clientError),
               span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
@@ -643,7 +726,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
   }
@@ -710,7 +793,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(AttributeKey.longKey("test.request.id"), requestId)),
-                span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
+                span -> assertClientSpan(span, uri, method, 200, null).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
                         .hasParent(trace.getSpan(1))
@@ -786,7 +869,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(AttributeKey.longKey("test.request.id"), requestId)),
-                span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
+                span -> assertClientSpan(span, uri, method, 200, null).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
                         .hasParent(trace.getSpan(1))
@@ -864,7 +947,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(AttributeKey.longKey("test.request.id"), requestId)),
-                span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
+                span -> assertClientSpan(span, uri, method, 200, null).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
                         .hasParent(trace.getSpan(1))
@@ -880,7 +963,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   // Visible for spock bridge.
   SpanDataAssert assertClientSpan(
-      SpanDataAssert span, URI uri, String method, Integer responseCode) {
+      SpanDataAssert span,
+      URI uri,
+      String method,
+      @Nullable Integer responseCode,
+      @Nullable Integer resendCount) {
     Set<AttributeKey<?>> httpClientAttributes = options.getHttpAttributes().apply(uri);
     return span.hasName(options.getExpectedClientSpanNameMapper().apply(uri, method))
         .hasKind(SpanKind.CLIENT)
@@ -975,8 +1062,14 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 assertThat(attrs)
                     .containsEntry(SemanticAttributes.HTTP_STATUS_CODE, (long) responseCode);
               } else {
-                // worth adding AttributesAssert.doesNotContainKey?
-                assertThat(attrs.get(SemanticAttributes.HTTP_STATUS_CODE)).isNull();
+                assertThat(attrs).doesNotContainKey(SemanticAttributes.HTTP_STATUS_CODE);
+              }
+
+              if (resendCount != null) {
+                assertThat(attrs)
+                    .containsEntry(SemanticAttributes.HTTP_RESEND_COUNT, (long) resendCount);
+              } else {
+                assertThat(attrs).doesNotContainKey(SemanticAttributes.HTTP_RESEND_COUNT);
               }
             });
   }
@@ -999,11 +1092,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   protected String expectedClientSpanName(URI uri, String method) {
     return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
-  }
-
-  @Nullable
-  protected Integer responseCodeOnRedirectError() {
-    return null;
   }
 
   @Nullable

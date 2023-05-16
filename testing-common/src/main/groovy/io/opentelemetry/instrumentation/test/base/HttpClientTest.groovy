@@ -131,11 +131,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     }
 
     @Override
-    protected Integer responseCodeOnRedirectError() {
-      return HttpClientTest.this.responseCodeOnRedirectError()
-    }
-
-    @Override
     protected String userAgent() {
       return HttpClientTest.this.userAgent()
     }
@@ -221,6 +216,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     @Override
     protected boolean testErrorWithCallback() {
       return HttpClientTest.this.testErrorWithCallback()
+    }
+
+    @Override
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      optionsBuilder.setResponseCodeOnRedirectError(responseCodeOnRedirectError())
     }
   }
 
@@ -438,7 +438,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   Integer responseCodeOnRedirectError() {
-    return null
+    return 302
   }
 
   String userAgent() {
@@ -525,7 +525,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   final void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = resolveAddress("/success"), Integer responseCode = 200) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
-    def assertion = junitTest.assertClientSpan(OpenTelemetryAssertions.assertThat(spanData), uri, method, responseCode)
+    def assertion = junitTest.assertClientSpan(OpenTelemetryAssertions.assertThat(spanData), uri, method, responseCode, null)
     if (parentSpan == null) {
       assertion.hasParentSpanId(SpanId.invalid)
     } else {
