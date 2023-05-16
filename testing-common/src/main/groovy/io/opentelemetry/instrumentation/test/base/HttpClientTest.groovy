@@ -217,6 +217,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     protected boolean testErrorWithCallback() {
       return HttpClientTest.this.testErrorWithCallback()
     }
+
+    @Override
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      optionsBuilder.setResponseCodeOnRedirectError(responseCodeOnRedirectError())
+    }
   }
 
   @Shared
@@ -430,6 +435,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   protected String expectedClientSpanName(URI uri, String method) {
     return method
+  }
+
+  Integer responseCodeOnRedirectError() {
+    return 302
   }
 
   String userAgent() {

@@ -61,6 +61,12 @@ abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST>
   }
 
   @Override
+  Integer responseCodeOnRedirectError() {
+    // apparently play ws does not report the 302 status code
+    null
+  }
+
+  @Override
   int maxRedirects() {
     3
   }
