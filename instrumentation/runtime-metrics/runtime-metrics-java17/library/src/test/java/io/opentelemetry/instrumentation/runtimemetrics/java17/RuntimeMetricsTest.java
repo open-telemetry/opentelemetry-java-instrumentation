@@ -71,7 +71,7 @@ class RuntimeMetricsTest {
   void builder() {
     try (var jfrTelemetry = RuntimeMetrics.builder(sdk).build()) {
       assertThat(jfrTelemetry.getOpenTelemetry()).isSameAs(sdk);
-      assertThat(jfrTelemetry.getRecordedEventHandlers())
+      assertThat(jfrTelemetry.getJfrRuntimeMetrics().getRecordedEventHandlers())
           .hasSizeGreaterThan(0)
           .allSatisfy(handler -> assertThat(handler.getFeature().isDefaultEnabled()).isTrue());
     }
@@ -82,7 +82,10 @@ class RuntimeMetricsTest {
     try (RuntimeMetrics jfrTelemetry = RuntimeMetrics.builder(sdk).build()) {
       // Track whether RecordingStream has been closed
       AtomicBoolean recordingStreamClosed = new AtomicBoolean(false);
-      jfrTelemetry.getRecordingStream().onClose(() -> recordingStreamClosed.set(true));
+      jfrTelemetry
+          .getJfrRuntimeMetrics()
+          .getRecordingStream()
+          .onClose(() -> recordingStreamClosed.set(true));
 
       assertThat(reader.collectAllMetrics()).isNotEmpty();
 

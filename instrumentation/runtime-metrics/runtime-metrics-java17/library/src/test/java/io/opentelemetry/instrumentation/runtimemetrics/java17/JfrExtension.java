@@ -47,7 +47,10 @@ public class JfrExtension implements BeforeEachCallback, AfterEachCallback {
     RuntimeMetricsBuilder builder = RuntimeMetrics.builder(sdk);
     builderConsumer.accept(builder);
     runtimeMetrics = builder.build();
-    runtimeMetrics.getStartUpLatch().await(30, TimeUnit.SECONDS);
+    RuntimeMetrics.JfrRuntimeMetrics jfrRuntimeMetrics = runtimeMetrics.getJfrRuntimeMetrics();
+    if (jfrRuntimeMetrics != null) {
+      jfrRuntimeMetrics.getStartUpLatch().await(30, TimeUnit.SECONDS);
+    }
   }
 
   @Override

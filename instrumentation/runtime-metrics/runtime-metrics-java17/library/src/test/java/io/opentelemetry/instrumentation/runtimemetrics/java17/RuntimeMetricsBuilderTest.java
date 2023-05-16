@@ -66,7 +66,7 @@ class RuntimeMetricsBuilderTest {
     var openTelemetry = OpenTelemetry.noop();
     try (var jfrTelemetry = new RuntimeMetricsBuilder(openTelemetry).build()) {
       assertThat(jfrTelemetry.getOpenTelemetry()).isSameAs(openTelemetry);
-      assertThat(jfrTelemetry.getRecordedEventHandlers())
+      assertThat(jfrTelemetry.getJfrRuntimeMetrics().getRecordedEventHandlers())
           .hasSizeGreaterThan(0)
           .allSatisfy(handler -> assertThat(handler.getFeature().isDefaultEnabled()).isTrue());
     }
