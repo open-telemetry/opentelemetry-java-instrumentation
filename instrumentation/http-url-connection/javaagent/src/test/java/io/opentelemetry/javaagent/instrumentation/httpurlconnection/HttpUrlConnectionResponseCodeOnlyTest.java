@@ -48,11 +48,6 @@ class HttpUrlConnectionResponseCodeOnlyTest extends AbstractHttpClientTest<HttpU
   }
 
   @Override
-  public Integer responseCodeOnRedirectError() {
-    return 302;
-  }
-
-  @Override
   public boolean testReusedRequest() {
     // HttpURLConnection can't be reused
     return false;

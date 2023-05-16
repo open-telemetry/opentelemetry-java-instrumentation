@@ -6,18 +6,14 @@
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
@@ -26,9 +22,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Headers;
@@ -121,8 +114,8 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    // TODO: replace the base class redirect tests
-    optionsBuilder.disableTestRedirects();
+    optionsBuilder.markAsLowLevelInstrumentation();
+    optionsBuilder.setMaxRedirects(21); // 1st send + 20 retries
 
     optionsBuilder.enableTestReadTimeout();
 
@@ -204,165 +197,5 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
                       .hasParent(trace.getSpan(1)),
               span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
         });
-  }
-
-  // TODO: replace the resend tests in the AbstractHttpClient with these
-
-  @Test
-  void new_basicRequestWith1Redirect() throws Exception {
-    URI uri = resolveAddress("/redirect");
-
-    int responseCode = sendRequest(buildRequest("GET", uri, emptyMap()), "GET", uri, emptyMap());
-
-    assertThat(responseCode).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttribute(SemanticAttributes.HTTP_URL, uri.toString()),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttribute(
-                            SemanticAttributes.HTTP_URL, uri.resolve("/success").toString())
-                        .hasAttribute(SemanticAttributes.HTTP_RESEND_COUNT, 1L),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))));
-  }
-
-  @Test
-  void new_basicRequestWith2Redirects() throws Exception {
-    URI uri = resolveAddress("/another-redirect");
-
-    int responseCode = sendRequest(buildRequest("GET", uri, emptyMap()), "GET", uri, emptyMap());
-
-    assertThat(responseCode).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttribute(SemanticAttributes.HTTP_URL, uri.toString()),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttribute(
-                            SemanticAttributes.HTTP_URL, uri.resolve("/redirect").toString())
-                        .hasAttribute(SemanticAttributes.HTTP_RESEND_COUNT, 1L),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttribute(
-                            SemanticAttributes.HTTP_URL, uri.resolve("/success").toString())
-                        .hasAttribute(SemanticAttributes.HTTP_RESEND_COUNT, 2L),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))));
-  }
-
-  static final String BASIC_AUTH_KEY = "custom-authorization-header";
-  static final String BASIC_AUTH_VAL = "plain text auth token";
-
-  @Test
-  void new_redirectToSecuredCopiesAuthHeader() throws Exception {
-    URI uri = resolveAddress("/to-secured");
-    Map<String, String> headers = singletonMap(BASIC_AUTH_KEY, BASIC_AUTH_VAL);
-
-    int responseCode = sendRequest(buildRequest("GET", uri, headers), "GET", uri, headers);
-
-    assertThat(responseCode).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttribute(SemanticAttributes.HTTP_URL, uri.toString()),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttribute(
-                            SemanticAttributes.HTTP_URL, uri.resolve("/secured").toString())
-                        .hasAttribute(SemanticAttributes.HTTP_RESEND_COUNT, 1L),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))));
-  }
-
-  // TODO: add basic auth scenario
-
-  @Test
-  void new_circularRedirects() {
-    URI uri = resolveAddress("/circular-redirect");
-
-    Throwable thrown =
-        catchThrowable(
-            () -> sendRequest(buildRequest("GET", uri, emptyMap()), "GET", uri, emptyMap()));
-    assertThat(thrown).isNotNull();
-
-    int maxNumberOfResends = 21; // 1st send + 20 retries
-    testing.waitAndAssertTraces(
-        IntStream.range(0, maxNumberOfResends)
-            .mapToObj(i -> makeCircularRedirectAssert(uri, i))
-            .collect(Collectors.toList()));
-  }
-
-  private static Consumer<TraceAssert> makeCircularRedirectAssert(URI uri, int resendNo) {
-    return trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> {
-              span.hasName("GET")
-                  .hasKind(SpanKind.CLIENT)
-                  .hasNoParent()
-                  .hasAttribute(SemanticAttributes.HTTP_URL, uri.toString());
-              if (resendNo > 0) {
-                span.hasAttribute(SemanticAttributes.HTTP_RESEND_COUNT, (long) resendNo);
-              }
-            },
-            span ->
-                span.hasName("test-http-server")
-                    .hasKind(SpanKind.SERVER)
-                    .hasParent(trace.getSpan(0)));
   }
 }
