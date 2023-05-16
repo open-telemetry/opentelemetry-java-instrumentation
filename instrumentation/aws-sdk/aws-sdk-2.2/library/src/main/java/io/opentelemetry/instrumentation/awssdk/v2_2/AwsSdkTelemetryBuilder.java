@@ -15,6 +15,10 @@ public final class AwsSdkTelemetryBuilder {
 
   private boolean captureExperimentalSpanAttributes;
 
+  private boolean useMessagingPropagator;
+
+  private boolean useXrayPropagator = true;
+
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
@@ -32,9 +36,49 @@ public final class AwsSdkTelemetryBuilder {
   }
 
   /**
+   * Sets whether the {@link io.opentelemetry.context.propagation.TextMapPropagator} configured in
+   * the provided {@link OpenTelemetry} should be used to inject into supported messaging attributes
+   * (currently only SQS; SNS may follow).
+   *
+   * <p>In addition, the X-Ray propagator is always used.
+   *
+   * <p>Using the messaging propagator is needed if your tracing vendor requires special tracestate
+   * entries or legacy propagation information that cannot be transported via X-Ray headers. It may
+   * also be useful if you need to directly connect spans over messaging in your tracing backend,
+   * bypassing any intermediate spans/X-Ray segments that AWS may create in the delivery process.
+   *
+   * <p>This option is off by default. If enabled, on extraction the configured propagator will be
+   * preferred over X-Ray if it can extract anything.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setUseConfiguredPropagatorForMessaging(
+      boolean useMessagingPropagator) {
+    this.useMessagingPropagator = useMessagingPropagator;
+    return this;
+  }
+
+  /**
+   * This setter implemented package-private for testing the messaging propagator, it does not seem
+   * too useful in general. The option is on by default.
+   *
+   * <p>If this needs to be exposed for non-testing use cases, consider if you need to refine this
+   * feature so that it disable this only for requests supported by {@link
+   * #setUseConfiguredPropagatorForMessaging(boolean)}
+   */
+  @CanIgnoreReturnValue
+  AwsSdkTelemetryBuilder setUseXrayPropagator(boolean useMessagingPropagator) {
+    this.useXrayPropagator = useMessagingPropagator;
+    return this;
+  }
+
+  /**
    * Returns a new {@link AwsSdkTelemetry} with the settings of this {@link AwsSdkTelemetryBuilder}.
    */
   public AwsSdkTelemetry build() {
-    return new AwsSdkTelemetry(openTelemetry, captureExperimentalSpanAttributes);
+    return new AwsSdkTelemetry(
+        openTelemetry,
+        captureExperimentalSpanAttributes,
+        useMessagingPropagator,
+        useXrayPropagator);
   }
 }

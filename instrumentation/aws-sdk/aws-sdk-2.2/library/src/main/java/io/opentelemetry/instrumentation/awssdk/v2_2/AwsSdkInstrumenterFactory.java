@@ -20,31 +20,43 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 final class AwsSdkInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
 
+  static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse> rpcAttributesExtractor =
+      RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
+  private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
+      new AwsSdkExperimentalAttributesExtractor();
+
   static final AwsSdkHttpAttributesGetter httpAttributesGetter = new AwsSdkHttpAttributesGetter();
   private static final AwsSdkNetAttributesGetter netAttributesGetter =
       new AwsSdkNetAttributesGetter();
   static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse> httpAttributesExtractor =
       HttpClientAttributesExtractor.create(httpAttributesGetter, netAttributesGetter);
-  static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse> rpcAttributesExtractor =
-      RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
-  private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
-      new AwsSdkExperimentalAttributesExtractor();
+
   private static final AwsSdkSpanKindExtractor spanKindExtractor = new AwsSdkSpanKindExtractor();
 
   private static final List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>>
-      defaultAttributesExtractors = Arrays.asList(httpAttributesExtractor, rpcAttributesExtractor);
+      defaultAttributesExtractors = Arrays.asList(rpcAttributesExtractor);
 
   private static final List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>>
       extendedAttributesExtractors =
+          Arrays.asList(rpcAttributesExtractor, experimentalAttributesExtractor);
+
+  private static final List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>>
+      defaultConsumerAttributesExtractors =
+          Arrays.asList(rpcAttributesExtractor, httpAttributesExtractor);
+
+  private static final List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>>
+      extendedConsumerAttributesExtractors =
           Arrays.asList(
-              httpAttributesExtractor, rpcAttributesExtractor, experimentalAttributesExtractor);
+              rpcAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
 
   static Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter(
       OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
 
     return createInstrumenter(
         openTelemetry,
-        captureExperimentalSpanAttributes,
+        captureExperimentalSpanAttributes
+            ? extendedAttributesExtractors
+            : defaultAttributesExtractors,
         AwsSdkInstrumenterFactory.spanKindExtractor);
   }
 
@@ -52,20 +64,21 @@ final class AwsSdkInstrumenterFactory {
       OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
 
     return createInstrumenter(
-        openTelemetry, captureExperimentalSpanAttributes, SpanKindExtractor.alwaysConsumer());
+        openTelemetry,
+        captureExperimentalSpanAttributes
+            ? extendedConsumerAttributesExtractors
+            : defaultConsumerAttributesExtractors,
+        SpanKindExtractor.alwaysConsumer());
   }
 
   private static Instrumenter<ExecutionAttributes, SdkHttpResponse> createInstrumenter(
       OpenTelemetry openTelemetry,
-      boolean captureExperimentalSpanAttributes,
+      List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>> extractors,
       SpanKindExtractor<ExecutionAttributes> spanKindExtractor) {
 
     return Instrumenter.<ExecutionAttributes, SdkHttpResponse>builder(
             openTelemetry, INSTRUMENTATION_NAME, AwsSdkInstrumenterFactory::spanName)
-        .addAttributesExtractors(
-            captureExperimentalSpanAttributes
-                ? extendedAttributesExtractors
-                : defaultAttributesExtractors)
+        .addAttributesExtractors(extractors)
         .buildInstrumenter(spanKindExtractor);
   }
 
