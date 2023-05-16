@@ -14,8 +14,8 @@ import okhttp3.Response;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class OkHttpNetAttributesGetter
-    implements NetClientAttributesGetter<Request, Response> {
+public enum OkHttpNetAttributesGetter implements NetClientAttributesGetter<Request, Response> {
+  INSTANCE;
 
   @Nullable
   @Override

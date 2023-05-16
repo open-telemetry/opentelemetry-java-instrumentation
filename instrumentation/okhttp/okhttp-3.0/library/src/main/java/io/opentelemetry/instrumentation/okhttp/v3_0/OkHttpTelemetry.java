@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.okhttp.v3_0;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.okhttp.v3_0.internal.ConnectionErrorSpanInterceptor;
+import io.opentelemetry.instrumentation.okhttp.v3_0.internal.TracingInterceptor;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Interceptor;
@@ -67,8 +69,10 @@ public final class OkHttpTelemetry {
    */
   public Call.Factory newCallFactory(OkHttpClient baseClient) {
     OkHttpClient.Builder builder = baseClient.newBuilder();
-    // add our interceptor before other interceptors
-    builder.interceptors().add(0, newInterceptor());
+    // add our interceptors before other interceptors
+    builder.interceptors().add(0, new ContextInterceptor());
+    builder.interceptors().add(1, new ConnectionErrorSpanInterceptor(instrumenter));
+    builder.networkInterceptors().add(0, newInterceptor());
     OkHttpClient tracingClient = builder.build();
     return new TracingCallFactory(tracingClient);
   }
