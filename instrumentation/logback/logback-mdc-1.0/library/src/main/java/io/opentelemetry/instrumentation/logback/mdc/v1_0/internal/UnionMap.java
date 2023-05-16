@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.logback.mdc.v1_0.internal;
 
+import java.io.Serializable;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -21,7 +23,8 @@ import java.util.Set;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public final class UnionMap<K, V> extends AbstractMap<K, V> {
+public final class UnionMap<K, V> extends AbstractMap<K, V> implements Serializable {
+  private static final long serialVersionUID = 1L;
 
   private final Map<K, V> first;
   private final Map<K, V> second;
@@ -126,6 +129,11 @@ public final class UnionMap<K, V> extends AbstractMap<K, V> {
     }
     return entrySet =
         Collections.unmodifiableSet(new ConcatenatedSet<>(first.entrySet(), filteredSecond));
+  }
+
+  private Object writeReplace() {
+    // serialize this object as HashMap
+    return new HashMap<>(this);
   }
 
   // Member sets must be deduped by caller.
