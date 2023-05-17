@@ -1,7 +1,7 @@
 
 # javaagent
 ## Dependency License Report
-_2023-05-16 00:24:34 UTC_
+_2023-05-17 09:04:23 EEST_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -9,19 +9,18 @@ _2023-05-16 00:24:34 UTC_
 > - **POM Project URL**: [https://github.com/raphw/weak-lock-free](https://github.com/raphw/weak-lock-free)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**2** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.15.0`
+**2** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.15.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson-core](https://github.com/FasterXML/jackson-core)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-core-2.15.0.jar/META-INF/LICENSE](jackson-core-2.15.0.jar/META-INF/LICENSE)
-    - [jackson-core-2.15.0.jar/META-INF/NOTICE](jackson-core-2.15.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-core-2.15.1.jar/META-INF/NOTICE](jackson-core-2.15.1.jar/META-INF/NOTICE)
 
-**3** **Group:** `com.fasterxml.jackson.jr` **Name:** `jackson-jr-objects` **Version:** `2.15.0`
+**3** **Group:** `com.fasterxml.jackson.jr` **Name:** `jackson-jr-objects` **Version:** `2.15.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson-jr](https://github.com/FasterXML/jackson-jr)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-jr-objects-2.15.0.jar/META-INF/LICENSE](jackson-jr-objects-2.15.0.jar/META-INF/LICENSE)
-    - [jackson-jr-objects-2.15.0.jar/META-INF/NOTICE](jackson-jr-objects-2.15.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-jr-objects-2.15.1.jar/META-INF/LICENSE](jackson-jr-objects-2.15.1.jar/META-INF/LICENSE)
+    - [jackson-jr-objects-2.15.1.jar/META-INF/NOTICE](jackson-jr-objects-2.15.1.jar/META-INF/NOTICE)
 
 **4** **Group:** `com.googlecode.concurrentlinkedhashmap` **Name:** `concurrentlinkedhashmap-lru` **Version:** `1.4.2`
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
@@ -216,37 +215,33 @@ _2023-05-16 00:24:34 UTC_
 
 ## MIT License
 
-**47** **Group:** `ch.randelshofer` **Name:** `fastdoubleparser` **Version:** `0.8.0`
-> - **POM Project URL**: [https://github.com/wrandelshofer/FastDoubleParser](https://github.com/wrandelshofer/FastDoubleParser)
-> - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
-
-**48** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.7`
+**47** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.7`
 > - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 > - **Embedded license files**: [slf4j-api-2.0.7.jar/META-INF/LICENSE.txt](slf4j-api-2.0.7.jar/META-INF/LICENSE.txt)
 
-**49** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.7`
+**48** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.7`
 > - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 > - **Embedded license files**: [slf4j-simple-2.0.7.jar/META-INF/LICENSE.txt](slf4j-simple-2.0.7.jar/META-INF/LICENSE.txt)
 
 ## The 3-Clause BSD License
 
-**50** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.5`
+**49** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.5`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**51** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.5`
+**50** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.5`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**52** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.5`
+**51** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.5`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
@@ -255,4 +250,4 @@ _2023-05-16 00:24:34 UTC_
 
 ## Unknown
 
-**53** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.2.0`
+**52** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.2.0`
