@@ -51,7 +51,7 @@ class TestDataSource implements DataSource {
   }
 
   @Override
-  def <T> T unwrap(Class<T> iface) throws SQLException {
+  <T> T unwrap(Class<T> iface) throws SQLException {
     return null
   }
 
