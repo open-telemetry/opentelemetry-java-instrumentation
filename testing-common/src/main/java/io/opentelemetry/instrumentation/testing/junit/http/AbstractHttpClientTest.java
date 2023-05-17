@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -31,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -79,52 +77,19 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   @BeforeAll
   void setupOptions() {
     HttpClientTestOptions.Builder builder = HttpClientTestOptions.builder();
-    // TODO(anuraaga): Have subclasses configure options directly and remove mapping of legacy
-    // protected methods.
-    builder.setHttpAttributes(this::httpAttributes);
-    builder.setExpectedClientSpanNameMapper(this::expectedClientSpanName);
-    builder.setUserAgent(userAgent());
-    builder.setClientSpanErrorMapper(this::clientSpanError);
-    builder.setSingleConnectionFactory(this::createSingleConnection);
-    if (!testWithClientParent()) {
-      builder.disableTestWithClientParent();
-    }
-    if (!testRedirects()) {
-      builder.disableTestRedirects();
-    }
-    if (!testCircularRedirects()) {
-      builder.disableTestCircularRedirects();
-    }
-    builder.setMaxRedirects(maxRedirects());
-    if (!testReusedRequest()) {
-      builder.disableTestReusedRequest();
-    }
-    if (!testConnectionFailure()) {
-      builder.disableTestConnectionFailure();
-    }
-    if (testReadTimeout()) {
-      builder.enableTestReadTimeout();
-    }
-    if (!testRemoteConnection()) {
-      builder.disableTestRemoteConnection();
-    }
-    if (!testHttps()) {
-      builder.disableTestHttps();
-    }
-    if (!testCallback()) {
-      builder.disableTestCallback();
-    }
-    if (!testCallbackWithParent()) {
-      builder.disableTestCallbackWithParent();
-    }
-    if (!testErrorWithCallback()) {
-      builder.disableTestErrorWithCallback();
-    }
-    if (testCallbackWithImplicitParent()) {
-      builder.enableTestCallbackWithImplicitParent();
-    }
     configure(builder);
     options = builder.build();
+  }
+
+  /**
+   * Override this method to configure the {@link HttpClientTestOptions} for the tested HTTP client.
+   */
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {}
+
+  // called by the HttpClientInstrumentationExtension
+  final void setTesting(InstrumentationTestRunner testing, HttpClientTestServer server) {
+    this.testing = testing;
+    this.server = server;
   }
 
   @BeforeEach
@@ -1079,98 +1044,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     return span.hasName("test-http-server").hasKind(SpanKind.SERVER);
   }
 
-  protected Set<AttributeKey<?>> httpAttributes(URI uri) {
-    // FIXME (mateusz) why is this not the same as HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES?
-    Set<AttributeKey<?>> attributes = new HashSet<>();
-    attributes.add(NetAttributes.NET_PROTOCOL_NAME);
-    attributes.add(NetAttributes.NET_PROTOCOL_VERSION);
-    attributes.add(SemanticAttributes.HTTP_URL);
-    attributes.add(SemanticAttributes.HTTP_METHOD);
-    attributes.add(SemanticAttributes.USER_AGENT_ORIGINAL);
-    return attributes;
-  }
-
-  protected String expectedClientSpanName(URI uri, String method) {
-    return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
-  }
-
-  @Nullable
-  protected String userAgent() {
-    return null;
-  }
-
-  @CanIgnoreReturnValue
-  protected Throwable clientSpanError(URI uri, Throwable exception) {
-    return exception;
-  }
-
-  // This method should create either a single connection to the target uri or a http client
-  // which is guaranteed to use the same connection for all requests
-  @Nullable
-  protected SingleConnection createSingleConnection(String host, int port) {
-    return null;
-  }
-
-  protected boolean testWithClientParent() {
-    return true;
-  }
-
-  protected boolean testRedirects() {
-    return true;
-  }
-
-  protected boolean testCircularRedirects() {
-    return true;
-  }
-
-  // maximum number of redirects that http client follows before giving up
-  protected int maxRedirects() {
-    return 2;
-  }
-
-  protected boolean testReusedRequest() {
-    return true;
-  }
-
-  protected boolean testConnectionFailure() {
-    return true;
-  }
-
-  protected boolean testReadTimeout() {
-    return false;
-  }
-
-  protected boolean testRemoteConnection() {
-    return true;
-  }
-
-  protected boolean testHttps() {
-    return true;
-  }
-
-  protected boolean testCallback() {
-    return true;
-  }
-
-  protected boolean testCallbackWithParent() {
-    // FIXME: this hack is here because callback with parent is broken in play-ws when the stream()
-    // function is used.  There is no way to stop a test from a derived class hence the flag
-    return true;
-  }
-
-  protected boolean testCallbackWithImplicitParent() {
-    // depending on async behavior callback can be executed within
-    // parent span scope or outside of the scope, e.g. in reactor-netty or spring
-    // callback is correlated.
-    return false;
-  }
-
-  protected boolean testErrorWithCallback() {
-    return true;
-  }
-
-  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {}
-
   private int doRequest(String method, URI uri) throws Exception {
     return doRequest(method, uri, Collections.emptyMap());
   }
@@ -1209,12 +1082,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     return httpClientResult;
   }
 
-  protected URI resolveAddress(String path) {
+  protected final URI resolveAddress(String path) {
     return URI.create("http://localhost:" + server.httpPort() + path);
-  }
-
-  final void setTesting(InstrumentationTestRunner testing, HttpClientTestServer server) {
-    this.testing = testing;
-    this.server = server;
   }
 }

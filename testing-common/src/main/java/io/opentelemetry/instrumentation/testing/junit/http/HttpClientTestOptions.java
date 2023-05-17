@@ -49,6 +49,10 @@ public abstract class HttpClientTestOptions {
 
   public abstract BiFunction<URI, Throwable, Throwable> getClientSpanErrorMapper();
 
+  /**
+   * The returned function should create either a single connection to the target uri or a http
+   * client which is guaranteed to use the same connection for all requests.
+   */
   public abstract BiFunction<String, Integer, SingleConnection> getSingleConnectionFactory();
 
   public abstract BiFunction<URI, String, String> getExpectedClientSpanNameMapper();
@@ -65,6 +69,7 @@ public abstract class HttpClientTestOptions {
 
   public abstract boolean getTestCircularRedirects();
 
+  /** Returns the maximum number of redirects that http client follows before giving up. */
   public abstract int getMaxRedirects();
 
   public abstract boolean getTestReusedRequest();
@@ -81,6 +86,9 @@ public abstract class HttpClientTestOptions {
 
   public abstract boolean getTestCallbackWithParent();
 
+  // depending on async behavior callback can be executed within
+  // parent span scope or outside of the scope, e.g. in reactor-netty or spring
+  // callback is correlated.
   public abstract boolean getTestCallbackWithImplicitParent();
 
   public abstract boolean getTestErrorWithCallback();
