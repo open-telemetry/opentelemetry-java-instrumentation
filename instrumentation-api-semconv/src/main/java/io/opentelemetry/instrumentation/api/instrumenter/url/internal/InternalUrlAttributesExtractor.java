@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.url.UrlAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -19,21 +20,24 @@ import javax.annotation.Nullable;
 public final class InternalUrlAttributesExtractor<REQUEST> {
 
   private final UrlAttributesGetter<REQUEST> getter;
+  private final Function<REQUEST, String> alternateSchemeProvider;
   private final boolean emitStableUrlAttributes;
   private final boolean emitOldHttpAttributes;
 
   public InternalUrlAttributesExtractor(
       UrlAttributesGetter<REQUEST> getter,
+      Function<REQUEST, String> alternateSchemeProvider,
       boolean emitStableUrlAttributes,
       boolean emitOldHttpAttributes) {
     this.getter = getter;
+    this.alternateSchemeProvider = alternateSchemeProvider;
     this.emitStableUrlAttributes = emitStableUrlAttributes;
     this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
 
   public void onStart(AttributesBuilder attributes, REQUEST request) {
     String fullUrl = stripSensitiveData(getter.getFullUrl(request));
-    String urlScheme = getter.getUrlScheme(request);
+    String urlScheme = getUrlScheme(request);
     String urlPath = getter.getUrlPath(request);
     String urlQuery = getter.getUrlQuery(request);
 
@@ -48,6 +52,14 @@ public final class InternalUrlAttributesExtractor<REQUEST> {
       internalSet(attributes, SemanticAttributes.HTTP_SCHEME, urlScheme);
       internalSet(attributes, SemanticAttributes.HTTP_TARGET, getTarget(urlPath, urlQuery));
     }
+  }
+
+  private String getUrlScheme(REQUEST request) {
+    String urlScheme = alternateSchemeProvider.apply(request);
+    if (urlScheme == null) {
+      urlScheme = getter.getUrlScheme(request);
+    }
+    return urlScheme;
   }
 
   @Nullable

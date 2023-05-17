@@ -147,7 +147,7 @@ class HttpServerAttributesExtractorBothSemconvTest {
             entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
             entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
-            entry(SemanticAttributes.HTTP_SCHEME, "https"),
+            entry(SemanticAttributes.HTTP_SCHEME, "http"),
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1?details=true"),
             entry(UrlAttributes.URL_SCHEME, "http"),
             entry(UrlAttributes.URL_PATH, "/repositories/1"),

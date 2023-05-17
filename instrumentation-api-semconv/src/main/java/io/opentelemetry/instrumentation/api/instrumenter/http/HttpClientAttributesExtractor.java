@@ -78,6 +78,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     internalUrlExtractor =
         new InternalUrlAttributesExtractor<>(
             httpAttributesGetter,
+            /* alternateSchemeProvider= */ request -> null,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
     internalNetExtractor =

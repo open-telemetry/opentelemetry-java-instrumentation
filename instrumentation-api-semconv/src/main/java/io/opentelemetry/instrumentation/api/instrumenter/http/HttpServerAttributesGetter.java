@@ -18,7 +18,6 @@ import javax.annotation.Nullable;
 public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
     extends HttpCommonAttributesGetter<REQUEST, RESPONSE>, UrlAttributesGetter<REQUEST> {
 
-
   /**
    * Returns the URI scheme.
    *

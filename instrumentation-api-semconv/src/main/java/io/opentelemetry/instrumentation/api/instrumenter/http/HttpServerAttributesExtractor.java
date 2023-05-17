@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
@@ -56,6 +57,12 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     return new HttpServerAttributesExtractorBuilder<>(httpAttributesGetter, netAttributesGetter);
   }
 
+  // if set to true, the instrumentation will prefer the scheme from Forwarded/X-Forwarded-Proto
+  // headers over the one extracted from the URL
+  private static final boolean PREFER_FORWARDED_URL_SCHEME =
+      ConfigPropertiesUtil.getBoolean(
+          "otel.instrumentation.http.prefer-forwarded-url-scheme", false);
+
   private final InternalUrlAttributesExtractor<REQUEST> internalUrlExtractor;
   private final InternalNetServerAttributesExtractor<REQUEST> internalNetExtractor;
   private final Function<Context, String> httpRouteHolderGetter;
@@ -84,6 +91,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     internalUrlExtractor =
         new InternalUrlAttributesExtractor<>(
             httpAttributesGetter,
+            /* alternateSchemeProvider= */ this::forwardedProto,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
     internalNetExtractor =
@@ -101,11 +109,6 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     internalUrlExtractor.onStart(attributes, request);
     internalNetExtractor.onStart(attributes, request);
 
-    if (SemconvStability.emitOldHttpSemconv()) {
-      // in case the Forwarded header is provided override the scheme set by the
-      // internalUrlExtractor
-      internalSet(attributes, SemanticAttributes.HTTP_SCHEME, forwardedProto(request));
-    }
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.getRoute(request));
     internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
   }
@@ -136,6 +139,11 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
 
   @Nullable
   private String forwardedProto(REQUEST request) {
+    if (!PREFER_FORWARDED_URL_SCHEME) {
+      // don't parse headers, extract scheme from the URL
+      return null;
+    }
+
     // try Forwarded
     String forwarded = firstHeaderValue(getter.getRequestHeader(request, "forwarded"));
     if (forwarded != null) {

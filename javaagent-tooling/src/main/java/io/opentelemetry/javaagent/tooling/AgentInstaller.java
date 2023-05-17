@@ -199,6 +199,7 @@ public class AgentInstaller {
     for (String property :
         asList(
             "otel.instrumentation.experimental.span-suppression-strategy",
+            "otel.instrumentation.http.prefer-forwarded-url-scheme",
             "otel.semconv-stability.opt-in")) {
       String value = config.getString(property);
       if (value != null) {
