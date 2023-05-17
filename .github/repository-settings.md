@@ -42,7 +42,8 @@ Same settings as above for [`main`](#main).
 
 ### `opentelemetrybot/**/**`
 
-Same settings as for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md#branch-protection-rule-dependabot)
+Same settings as
+for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md#branch-protection-rule-dependabot)
 
 ### `gh-pages`
 
@@ -51,3 +52,7 @@ Same settings as for [`dependabot/**/**`](https://github.com/open-telemetry/comm
   (This branch is currently only used for directly pushing benchmarking results from the
   [Nightly overhead benchmark](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/nightly-benchmark-overhead.yml)
   job)
+
+## Code security and analysis
+
+* Secret scanning: Enabled
