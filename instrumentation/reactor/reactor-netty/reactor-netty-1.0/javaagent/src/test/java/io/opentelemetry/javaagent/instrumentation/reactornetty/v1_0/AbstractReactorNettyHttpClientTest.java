@@ -126,7 +126,8 @@ abstract class AbstractReactorNettyHttpClientTest
         });
 
     // TODO: see the comment in HttpResponseReceiverInstrumenter.EndOperationWithRequestError
-    optionsBuilder.setExpectedClientSpanNameMapper(AbstractReactorNettyHttpClientTest::getExpectedClientSpanName);
+    optionsBuilder.setExpectedClientSpanNameMapper(
+        AbstractReactorNettyHttpClientTest::getExpectedClientSpanName);
     optionsBuilder.setHttpAttributes(this::getHttpAttributes);
   }
 
