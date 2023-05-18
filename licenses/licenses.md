@@ -1,7 +1,7 @@
 
 # javaagent
 ## Dependency License Report
-_2023-05-17 09:04:23 EEST_
+_2023-05-18 09:52:25 EEST_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -140,7 +140,7 @@ _2023-05-17 09:04:23 EEST_
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**33** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-xray-propagator` **Version:** `1.25.1-alpha`
+**33** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-xray-propagator` **Version:** `1.26.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
