@@ -38,7 +38,7 @@ public class ElasticsearchRest6Test {
   static ObjectMapper objectMapper;
 
   @BeforeAll
-  static void setupSpec() {
+  static void setUp() {
     elasticsearch =
         new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.16");
     // limit memory usage
@@ -60,7 +60,7 @@ public class ElasticsearchRest6Test {
   }
 
   @AfterAll
-  static void cleanupSpec() {
+  static void cleanUp() {
     elasticsearch.stop();
   }
 
