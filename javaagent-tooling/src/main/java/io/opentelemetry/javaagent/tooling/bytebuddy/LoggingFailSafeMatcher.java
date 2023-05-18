@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy;
 
+import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingMatcher;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -19,7 +20,8 @@ import net.bytebuddy.matcher.ElementMatcher;
  * @param <T> The type of the matched entity.
  * @see net.bytebuddy.matcher.FailSafeMatcher
  */
-public class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> {
+public class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T>
+    implements DelegatingMatcher {
 
   private static final Logger logger = Logger.getLogger(LoggingFailSafeMatcher.class.getName());
 
@@ -70,5 +72,10 @@ public class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractB
   @Override
   public int hashCode() {
     return matcher.hashCode();
+  }
+
+  @Override
+  public ElementMatcher<?> getDelegate() {
+    return matcher;
   }
 }

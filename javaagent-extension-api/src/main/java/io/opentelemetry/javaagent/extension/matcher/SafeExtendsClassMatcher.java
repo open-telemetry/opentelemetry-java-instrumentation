@@ -7,12 +7,14 @@ package io.opentelemetry.javaagent.extension.matcher;
 
 import static io.opentelemetry.javaagent.extension.matcher.SafeHasSuperTypeMatcher.safeGetSuperClass;
 
+import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingSuperTypeMatcher;
 import javax.annotation.Nullable;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class SafeExtendsClassMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription> {
+class SafeExtendsClassMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription>
+    implements DelegatingSuperTypeMatcher {
 
   private final ElementMatcher<TypeDescription.Generic> matcher;
 
@@ -54,5 +56,10 @@ class SafeExtendsClassMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
   @Override
   public int hashCode() {
     return matcher.hashCode();
+  }
+
+  @Override
+  public ElementMatcher<?> getDelegate() {
+    return matcher;
   }
 }
