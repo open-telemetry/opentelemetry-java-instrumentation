@@ -80,9 +80,14 @@ public final class KafkaSingletons {
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
         OpenTelemetryMetricsReporter.class.getName(),
         (class1, class2) -> {
-          if (class1 instanceof String
-              && METRIC_REPORTER_PRESENT_PATTERN.matcher((String) class1).find()) {
-            return class1;
+          if (class1 instanceof String) {
+            String className1 = (String) class1;
+            if (className1.isEmpty()) {
+              return class2;
+            }
+            if (METRIC_REPORTER_PRESENT_PATTERN.matcher(className1).find()) {
+              return class1;
+            }
           }
           return class1 + "," + class2;
         });
