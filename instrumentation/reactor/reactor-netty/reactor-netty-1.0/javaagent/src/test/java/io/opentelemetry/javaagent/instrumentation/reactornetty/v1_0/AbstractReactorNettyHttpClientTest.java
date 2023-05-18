@@ -322,7 +322,6 @@ abstract class AbstractReactorNettyHttpClientTest
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_URL, uri.toString()),
                             equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, USER_AGENT),
-                            // TODO: that's probably not valid tho?
                             equalTo(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 0),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, uri.getPort())),

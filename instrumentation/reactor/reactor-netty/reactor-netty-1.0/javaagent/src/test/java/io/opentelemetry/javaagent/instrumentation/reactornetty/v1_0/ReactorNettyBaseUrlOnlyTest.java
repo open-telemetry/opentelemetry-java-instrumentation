@@ -113,7 +113,6 @@ class ReactorNettyBaseUrlOnlyTest {
                             equalTo(SemanticAttributes.HTTP_URL, uri + "/"),
                             equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, USER_AGENT),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                            // TODO: that's probably not valid tho?
                             equalTo(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 0),
                             satisfies(
                                 SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,

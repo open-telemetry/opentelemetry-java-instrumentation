@@ -188,7 +188,6 @@ class ReactorNettyClientSslTest {
                             equalTo(stringKey("net.protocol.name"), "http"),
                             equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                            // TODO: that's probably not valid tho?
                             equalTo(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 0),
                             satisfies(
                                 SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
