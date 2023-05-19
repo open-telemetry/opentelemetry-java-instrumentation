@@ -5,21 +5,32 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -33,21 +44,26 @@ import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
+import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverOptions;
 import reactor.kafka.sender.KafkaSender;
 import reactor.kafka.sender.SenderOptions;
+import reactor.kafka.sender.SenderRecord;
 
-abstract class AbstractReactorKafkaTest {
+public abstract class AbstractReactorKafkaTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractReactorKafkaTest.class);
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   static KafkaContainer kafka;
-  static KafkaSender<String, String> sender;
-  static KafkaReceiver<String, String> receiver;
+  protected static KafkaSender<String, String> sender;
+  protected static KafkaReceiver<String, String> receiver;
 
   @BeforeAll
   static void setUpAll() {
@@ -59,11 +75,8 @@ abstract class AbstractReactorKafkaTest {
             .withStartupTimeout(Duration.ofMinutes(1));
     kafka.start();
 
-    sender = KafkaSender.create(SenderOptions.create(producerProps()));
-    receiver =
-        KafkaReceiver.create(
-            ReceiverOptions.<String, String>create(consumerProps())
-                .subscription(singleton("testTopic")));
+    sender = KafkaSender.create(senderOptions());
+    receiver = KafkaReceiver.create(receiverOptions());
   }
 
   @AfterAll
@@ -74,16 +87,26 @@ abstract class AbstractReactorKafkaTest {
     kafka.stop();
   }
 
-  private static Properties producerProps() {
+  @SuppressWarnings("unchecked")
+  private static SenderOptions<String, String> senderOptions() {
     Properties props = new Properties();
     props.put("bootstrap.servers", kafka.getBootstrapServers());
     props.put("retries", 0);
     props.put("key.serializer", StringSerializer.class);
     props.put("value.serializer", StringSerializer.class);
-    return props;
+
+    try {
+      // SenderOptions changed from a class to an interface in 1.3.3, using reflection to avoid
+      // linkage error
+      return (SenderOptions<String, String>)
+          SenderOptions.class.getMethod("create", Properties.class).invoke(null, props);
+    } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
-  private static Properties consumerProps() {
+  @SuppressWarnings("unchecked")
+  private static ReceiverOptions<String, String> receiverOptions() {
     Properties props = new Properties();
     props.put("bootstrap.servers", kafka.getBootstrapServers());
     props.put("group.id", "test");
@@ -93,7 +116,62 @@ abstract class AbstractReactorKafkaTest {
     props.put("auto.offset.reset", "earliest");
     props.put("key.deserializer", StringDeserializer.class);
     props.put("value.deserializer", StringDeserializer.class);
-    return props;
+
+    try {
+      // SenderOptions changed from a class to an interface in 1.3.3, using reflection to avoid
+      // linkage error
+      ReceiverOptions<String, String> receiverOptions =
+          (ReceiverOptions<String, String>)
+              ReceiverOptions.class.getMethod("create", Properties.class).invoke(null, props);
+      return (ReceiverOptions<String, String>)
+          ReceiverOptions.class
+              .getMethod("subscription", Collection.class)
+              .invoke(receiverOptions, singleton("testTopic"));
+    } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  protected void testSingleRecordProcess(
+      Function<Consumer<ConsumerRecord<String, String>>, Disposable> subscriptionFunction) {
+    Disposable disposable =
+        subscriptionFunction.apply(record -> testing.runWithSpan("consumer", () -> {}));
+    cleanup.deferCleanup(disposable::dispose);
+
+    SenderRecord<String, String, Object> record =
+        SenderRecord.create("testTopic", 0, null, "10", "testSpan", null);
+    Flux<?> producer = sender.send(Flux.just(record));
+    testing.runWithSpan("producer", () -> producer.blockLast(Duration.ofSeconds(30)));
+
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("producer"),
+              span ->
+                  span.hasName("testTopic send")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(sendAttributes(record)));
+
+          producerSpan.set(trace.getSpan(1));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("testTopic receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(receiveAttributes("testTopic")),
+                span ->
+                    span.hasName("testTopic process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasAttributesSatisfyingExactly(processAttributes(record)),
+                span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
   protected static List<AttributeAssertion> sendAttributes(ProducerRecord<String, String> record) {
@@ -120,15 +198,24 @@ abstract class AbstractReactorKafkaTest {
   }
 
   protected static List<AttributeAssertion> receiveAttributes(String topic) {
-    return new ArrayList<>(
-        Arrays.asList(
-            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, topic),
-            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-            equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
-            satisfies(
-                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                stringAssert -> stringAssert.startsWith("consumer"))));
+    ArrayList<AttributeAssertion> assertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
+                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, topic),
+                equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                    stringAssert -> stringAssert.startsWith("consumer"))));
+    if (Boolean.getBoolean("hasConsumerGroupAndId")) {
+      assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+      assertions.add(
+          satisfies(
+              SemanticAttributes.MESSAGING_CONSUMER_ID,
+              stringAssert -> stringAssert.startsWith("test - consumer")));
+    }
+    return assertions;
   }
 
   protected static List<AttributeAssertion> processAttributes(
@@ -149,6 +236,13 @@ abstract class AbstractReactorKafkaTest {
                 satisfies(
                     SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                     AbstractLongAssert::isNotNegative)));
+    if (Boolean.getBoolean("hasConsumerGroupAndId")) {
+      assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+      assertions.add(
+          satisfies(
+              SemanticAttributes.MESSAGING_CONSUMER_ID,
+              stringAssert -> stringAssert.startsWith("test - consumer")));
+    }
     if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
       assertions.add(
           satisfies(
