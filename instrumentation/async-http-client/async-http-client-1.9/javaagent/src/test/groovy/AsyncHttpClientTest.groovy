@@ -25,7 +25,9 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   @AutoCleanup
   @Shared
   def client = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
-    .setConnectTimeout(CONNECT_TIMEOUT_MS).build())
+    .setConnectTimeout(CONNECT_TIMEOUT_MS)
+    .setReadTimeout(READ_TIMEOUT_MS)
+    .build())
 
   @Override
   Request buildRequest(String method, URI uri, Map<String, String> headers) {

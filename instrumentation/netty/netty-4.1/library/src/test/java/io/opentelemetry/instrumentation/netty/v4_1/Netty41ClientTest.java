@@ -52,5 +52,6 @@ public class Netty41ClientTest extends AbstractNetty41ClientTest {
     optionsBuilder.disableTestWithClientParent();
     optionsBuilder.disableTestConnectionFailure();
     optionsBuilder.disableTestRemoteConnection();
+    optionsBuilder.disableTestReadTimeout();
   }
 }

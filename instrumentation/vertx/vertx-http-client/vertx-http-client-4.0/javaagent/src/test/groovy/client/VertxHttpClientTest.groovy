@@ -87,6 +87,11 @@ class VertxHttpClientTest extends HttpClientTest<Future<HttpClientRequest>> impl
   }
 
   @Override
+  boolean testReadTimeout() {
+    false
+  }
+
+  @Override
   String expectedClientSpanName(URI uri, String method) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port

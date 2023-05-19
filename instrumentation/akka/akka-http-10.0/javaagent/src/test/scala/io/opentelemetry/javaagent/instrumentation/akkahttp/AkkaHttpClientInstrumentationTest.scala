@@ -10,14 +10,16 @@ import akka.dispatch.ExecutionContexts
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.javadsl.model.HttpHeader
+import akka.http.scaladsl.settings.ClientConnectionSettings
 import akka.http.scaladsl.model.headers.RawHeader
+import akka.http.scaladsl.settings.ConnectionPoolSettings
 import akka.stream.ActorMaterializer
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpClientTest,
   HttpClientInstrumentationExtension,
-  HttpClientTestOptions,
   HttpClientResult,
+  HttpClientTestOptions,
   SingleConnection
 }
 
@@ -64,8 +66,24 @@ class AkkaHttpClientInstrumentationTest
       uri: URI,
       headers: util.Map[String, String]
   ): Int = {
+    val settings = ConnectionPoolSettings(system)
+      .withConnectionSettings(
+        ClientConnectionSettings(system)
+          .withConnectingTimeout(
+            FiniteDuration(
+              AbstractHttpClientTest.CONNECTION_TIMEOUT.toMillis,
+              MILLISECONDS
+            )
+          )
+          .withIdleTimeout(
+            FiniteDuration(
+              AbstractHttpClientTest.READ_TIMEOUT.toMillis,
+              MILLISECONDS
+            )
+          )
+      )
     val response = Await.result(
-      Http.get(system).singleRequest(request),
+      Http.get(system).singleRequest(request, settings = settings),
       10 seconds
     )
     response.discardEntityBytes(materializer)

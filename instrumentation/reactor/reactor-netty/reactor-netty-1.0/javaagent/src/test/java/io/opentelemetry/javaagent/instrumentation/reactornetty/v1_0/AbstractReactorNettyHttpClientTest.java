@@ -106,7 +106,6 @@ abstract class AbstractReactorNettyHttpClientTest
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
-    optionsBuilder.enableTestReadTimeout();
     optionsBuilder.setUserAgent(USER_AGENT);
     optionsBuilder.enableTestCallbackWithImplicitParent();
 

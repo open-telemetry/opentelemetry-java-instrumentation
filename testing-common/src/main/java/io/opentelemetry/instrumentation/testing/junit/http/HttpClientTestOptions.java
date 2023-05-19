@@ -115,7 +115,7 @@ public abstract class HttpClientTestOptions {
           .setMaxRedirects(2)
           .setTestReusedRequest(true)
           .setTestConnectionFailure(true)
-          .setTestReadTimeout(false)
+          .setTestReadTimeout(true)
           .setTestRemoteConnection(true)
           .setTestHttps(true)
           .setTestCallback(true)
@@ -190,8 +190,8 @@ public abstract class HttpClientTestOptions {
     }
 
     @CanIgnoreReturnValue
-    default Builder enableTestReadTimeout() {
-      return setTestReadTimeout(true);
+    default Builder disableTestReadTimeout() {
+      return setTestReadTimeout(false);
     }
 
     @CanIgnoreReturnValue
