@@ -115,8 +115,6 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
     // context propagation, as there is no possible context propagation.
     optionsBuilder.disableTestCallback();
 
-    optionsBuilder.enableTestReadTimeout();
-
     // Circular redirects don't throw an exception with Google Http Client
     optionsBuilder.disableTestCircularRedirects();
 

@@ -26,7 +26,6 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.setUserAgent(USER_AGENT);
-    optionsBuilder.enableTestReadTimeout();
     optionsBuilder.setHttpAttributes(AbstractApacheHttpClientTest::getHttpAttributes);
   }
 

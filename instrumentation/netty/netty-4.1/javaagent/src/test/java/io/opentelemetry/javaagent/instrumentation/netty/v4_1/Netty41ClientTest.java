@@ -10,7 +10,6 @@ import io.opentelemetry.instrumentation.netty.v4_1.AbstractNetty41ClientTest;
 import io.opentelemetry.instrumentation.netty.v4_1.Netty41ClientExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class Netty41ClientTest extends AbstractNetty41ClientTest {
@@ -29,11 +28,4 @@ public class Netty41ClientTest extends AbstractNetty41ClientTest {
 
   @Override
   protected void configureChannel(Channel channel) {}
-
-  @Override
-  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    super.configure(optionsBuilder);
-
-    optionsBuilder.enableTestReadTimeout();
-  }
 }

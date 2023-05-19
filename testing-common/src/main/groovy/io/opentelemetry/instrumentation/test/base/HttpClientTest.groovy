@@ -415,7 +415,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   boolean testReadTimeout() {
-    false
+    true
   }
 
   boolean testHttps() {

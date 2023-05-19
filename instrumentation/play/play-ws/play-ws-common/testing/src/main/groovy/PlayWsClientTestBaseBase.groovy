@@ -51,6 +51,7 @@ abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST>
         .setShutdownTimeout(0)
         .setMaxRedirects(3)
         .setConnectTimeout(CONNECT_TIMEOUT_MS)
+        .setReadTimeout(READ_TIMEOUT_MS)
         .build()
 
     asyncHttpClient = new DefaultAsyncHttpClient(asyncHttpClientConfig)

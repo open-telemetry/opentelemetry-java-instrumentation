@@ -117,8 +117,6 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
     optionsBuilder.markAsLowLevelInstrumentation();
     optionsBuilder.setMaxRedirects(21); // 1st send + 20 retries
 
-    optionsBuilder.enableTestReadTimeout();
-
     optionsBuilder.setHttpAttributes(
         uri -> {
           Set<AttributeKey<?>> attributes =
