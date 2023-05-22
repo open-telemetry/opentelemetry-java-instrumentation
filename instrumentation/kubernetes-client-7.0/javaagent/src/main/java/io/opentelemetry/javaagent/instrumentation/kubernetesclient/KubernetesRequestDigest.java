@@ -106,7 +106,14 @@ class KubernetesRequestDigest {
       targetResourceName = resourceMeta.getResource() + "/" + resourceMeta.getSubResource();
     }
 
-    return verb.value() + ' ' + groupVersion + ' ' + targetResourceName;
+    StringBuilder result = new StringBuilder(verb.value());
+    if (!groupVersion.isEmpty()) {
+      result.append(" ").append(groupVersion);
+    }
+    if (!targetResourceName.isEmpty()) {
+      result.append(" ").append(targetResourceName);
+    }
+    return result.toString();
   }
 
   private static boolean isNullOrEmpty(String s) {
