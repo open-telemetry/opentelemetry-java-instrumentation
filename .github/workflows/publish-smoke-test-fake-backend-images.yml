@@ -75,7 +75,7 @@ jobs:
     if: always()
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
-      success: |
+      success: >-
         ${{
           needs.publishLinux.result == 'success' &&
           needs.publishWindows.result == 'success'
