@@ -22,4 +22,4 @@ jobs:
     if: always()
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
-      success: ${{ needs.workflow-update-gradle-wrapper.result == 'success' }}
+      success: ${{ needs.update-gradle-wrapper.result == 'success' }}
