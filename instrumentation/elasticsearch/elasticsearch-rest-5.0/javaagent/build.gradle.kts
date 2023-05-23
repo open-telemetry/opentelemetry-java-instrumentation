@@ -27,6 +27,7 @@ dependencies {
 
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind")
 
   testImplementation("org.testcontainers:elasticsearch")
   testLibrary("org.elasticsearch.client:rest:5.0.0")
