@@ -24,6 +24,7 @@ public class ReactorKafkaInstrumentationModule extends InstrumentationModule {
     return asList(
         new KafkaReceiverInstrumentation(),
         new ReceiverRecordInstrumentation(),
-        new DefaultKafkaReceiverInstrumentation());
+        new DefaultKafkaReceiverInstrumentation(),
+        new ConsumerHandlerInstrumentation());
   }
 }

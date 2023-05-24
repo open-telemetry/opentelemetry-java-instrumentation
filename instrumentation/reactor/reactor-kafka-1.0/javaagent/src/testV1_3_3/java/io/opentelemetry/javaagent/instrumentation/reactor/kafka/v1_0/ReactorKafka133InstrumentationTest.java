@@ -7,23 +7,23 @@ package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
 import org.junit.jupiter.api.Test;
 
-class ReactorKafkaInstrumentationTest extends AbstractReactorKafkaTest {
+class ReactorKafka133InstrumentationTest extends AbstractReactorKafkaTest {
 
   @Test
   void testReceive() {
-    testSingleRecordProcess(recordConsumer -> receiver.receive().subscribe(recordConsumer));
+    testSingleRecordProcess(recordConsumer -> receiver.receive(1).subscribe(recordConsumer));
   }
 
   @Test
   void testReceiveAutoAck() {
     testSingleRecordProcess(
         recordConsumer ->
-            receiver.receiveAutoAck().subscribe(records -> records.subscribe(recordConsumer)));
+            receiver.receiveAutoAck(1).subscribe(records -> records.subscribe(recordConsumer)));
   }
 
   @Test
   void testReceiveAtMostOnce() {
     testSingleRecordProcess(
-        recordConsumer -> receiver.receiveAtmostOnce().subscribe(recordConsumer));
+        recordConsumer -> receiver.receiveAtmostOnce(1).subscribe(recordConsumer));
   }
 }
