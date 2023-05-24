@@ -47,6 +47,8 @@ spotless {
           "ktlint_standard_max-line-length" to "disabled",
           // ktlint makes it *very* hard to locate where this actually happened
           "ktlint_standard_trailing-comma-on-call-site" to "disabled",
+          // depends on ktlint_standard_wrapping
+          "ktlint_standard_trailing-comma-on-declaration-site" to "disabled",
           // also very hard to find out where this happens
           "ktlint_standard_wrapping" to "disabled"
         )
@@ -69,6 +71,8 @@ spotless {
         "ktlint_standard_max-line-length" to "disabled",
         // ktlint makes it *very* hard to locate where this actually happened
         "ktlint_standard_trailing-comma-on-call-site" to "disabled",
+        // depends on ktlint_standard_wrapping
+        "ktlint_standard_trailing-comma-on-declaration-site" to "disabled",
         // also very hard to find out where this happens
         "ktlint_standard_wrapping" to "disabled"
       )
