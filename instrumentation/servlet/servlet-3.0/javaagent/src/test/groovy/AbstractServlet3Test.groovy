@@ -155,7 +155,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
   def "snippet injection with PrintWriter"() {
     setup:
-    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
     def request = request(HTML_PRINT_WRITER, "GET")
     def response = client.execute(request).aggregate().join()
 

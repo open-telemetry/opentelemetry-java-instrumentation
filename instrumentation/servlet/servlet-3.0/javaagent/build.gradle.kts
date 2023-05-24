@@ -37,9 +37,33 @@ dependencies {
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // see servlet-5.0 module
 }
 
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+tasks {
+//  val testUseSnippet by registering(Test::class) {
+//    filter {
+//      includeTestsMatching("AbstractServlet3Test")
+//    }
+//    include("**/AbstractServlet3Test.*")
+//    jvmArgs("-Dotel.experimental.javascript-snippet=\\<script type=\"text/javascript\"\\\\> Test </script\\\\> ")
+//  }
+
+  test {
+    filter {
+      excludeTestsMatching("AbstractServlet3Test")
+    }
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+
+//  check {
+//    dependsOn(testUseSnippet)
+//  }
+
+//  withType<Test>().configureEach {
+//    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+//    // required on jdk17
+//    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+//    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+//  }
 }
