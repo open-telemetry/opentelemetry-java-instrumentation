@@ -40,7 +40,7 @@ val DEPENDENCY_BOMS = listOf(
   "org.spockframework:spock-bom:2.4-M1-groovy-4.0"
 )
 
-val autoServiceVersion = "1.0.1"
+val autoServiceVersion = "1.1.0"
 val autoValueVersion = "1.10.1"
 val errorProneVersion = "2.19.1"
 val byteBuddyVersion = "1.14.4"
