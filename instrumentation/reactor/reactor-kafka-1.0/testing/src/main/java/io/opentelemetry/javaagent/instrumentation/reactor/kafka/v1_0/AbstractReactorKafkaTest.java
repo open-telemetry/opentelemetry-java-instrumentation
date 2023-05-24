@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -23,7 +24,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -177,7 +177,7 @@ public abstract class AbstractReactorKafkaTest {
   protected static List<AttributeAssertion> sendAttributes(ProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
@@ -200,7 +200,7 @@ public abstract class AbstractReactorKafkaTest {
   protected static List<AttributeAssertion> receiveAttributes(String topic) {
     ArrayList<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, topic),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
@@ -222,7 +222,7 @@ public abstract class AbstractReactorKafkaTest {
       ProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
@@ -245,9 +245,7 @@ public abstract class AbstractReactorKafkaTest {
     }
     if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
       assertions.add(
-          satisfies(
-              AttributeKey.longKey("kafka.record.queue_time_ms"),
-              AbstractLongAssert::isNotNegative));
+          satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
     }
     String messageKey = record.key();
     if (messageKey != null) {
