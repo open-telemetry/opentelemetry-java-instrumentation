@@ -18,7 +18,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Accessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.SnippetInjectingResponseWrapper;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.Servlet5SnippetInjectingResponseWrapper;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
@@ -48,8 +48,8 @@ public class JakartaServletServiceAdvice {
     String snippet = getSnippetInjectionHelper().getSnippet();
     if (!snippet.isEmpty()
         && !((HttpServletResponse) response)
-            .containsHeader(SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
-      response = new SnippetInjectingResponseWrapper((HttpServletResponse) response, snippet);
+            .containsHeader(Servlet5SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
+      response = new Servlet5SnippetInjectingResponseWrapper((HttpServletResponse) response, snippet);
     }
 
     callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());

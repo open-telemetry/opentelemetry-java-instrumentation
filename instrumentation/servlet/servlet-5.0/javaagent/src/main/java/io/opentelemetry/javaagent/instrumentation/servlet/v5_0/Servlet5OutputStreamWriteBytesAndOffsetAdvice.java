@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.getSnippetInjectionHelper;
 
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.InjectionState;
+import io.opentelemetry.javaagent.instrumentation.servlet.snippet.InjectionState;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.ServletOutputStreamInjectionState;
 import jakarta.servlet.ServletOutputStream;
 import java.io.IOException;

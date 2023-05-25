@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
+package io.opentelemetry.javaagent.instrumentation.servlet.snippet;
 
 import static java.util.logging.Level.FINE;
 
@@ -34,7 +34,7 @@ public class OutputStreamSnippetInjectionHelper {
    * true, and would write the original bytes when the return value is false.
    */
   public boolean handleWrite(
-      InjectionState state, OutputStream out, byte[] original, int off, int length)
+          InjectionState state, OutputStream out, byte[] original, int off, int length)
       throws IOException {
     if (state.isHeadTagWritten()) {
       return false;

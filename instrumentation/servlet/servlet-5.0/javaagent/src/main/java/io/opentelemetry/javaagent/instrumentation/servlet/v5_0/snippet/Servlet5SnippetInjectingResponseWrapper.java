@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.ServletOutputStreamInjectionState.initializeInjectionStateIfNeeded;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.javaagent.instrumentation.servlet.snippet.SnippetInjectingPrintWriter;
+import io.opentelemetry.javaagent.instrumentation.servlet.snippet.SnippetInjectingResponseWrapper;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
@@ -15,7 +17,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.logging.Logger;
 
-public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper {
+public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponseWrapper
+    implements SnippetInjectingResponseWrapper {
 
   private static final Logger logger = Logger.getLogger(HttpServletResponseWrapper.class.getName());
 
@@ -29,7 +32,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
 
-  public SnippetInjectingResponseWrapper(HttpServletResponse response, String snippet) {
+  public Servlet5SnippetInjectingResponseWrapper(HttpServletResponse response, String snippet) {
     super(response);
     this.snippet = snippet;
     snippetLength = snippet.length();
@@ -106,14 +109,6 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
     super.setContentLengthLong(length);
   }
 
-  boolean isContentTypeTextHtml() {
-    String contentType = super.getContentType();
-    if (contentType == null) {
-      contentType = super.getHeader("content-type");
-    }
-    return contentType != null && contentType.startsWith("text/html");
-  }
-
   @Override
   public ServletOutputStream getOutputStream() throws IOException {
     ServletOutputStream output = super.getOutputStream();
@@ -133,13 +128,24 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
     return snippetInjectingPrintWriter;
   }
 
-  void updateContentLengthIfPreviouslySet() {
+  @Override
+  public boolean isContentTypeTextHtml() {
+    String contentType = super.getContentType();
+    if (contentType == null) {
+      contentType = super.getHeader("content-type");
+    }
+    return contentType != null && contentType.startsWith("text/html");
+  }
+
+  @Override
+  public void updateContentLengthIfPreviouslySet() {
     if (contentLength != UNSET) {
       setContentLength((int) contentLength + snippetLength);
     }
   }
 
-  boolean isNotSafeToInject() {
+  @Override
+  public boolean isNotSafeToInject() {
     // if content-length was set and response was already committed (headers sent to the client),
     // then it is not safe to inject because the content-length header cannot be updated to account
     // for the snippet length

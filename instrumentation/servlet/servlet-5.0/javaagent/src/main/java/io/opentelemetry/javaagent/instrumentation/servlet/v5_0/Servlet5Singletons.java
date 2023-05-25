@@ -15,7 +15,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBui
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.ResponseInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.OutputStreamSnippetInjectionHelper;
+import io.opentelemetry.javaagent.instrumentation.servlet.snippet.OutputStreamSnippetInjectionHelper;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.http.HttpServletRequest;
