@@ -37,10 +37,14 @@ public final class RuntimeMetrics implements Closeable {
 
   @SuppressWarnings("CatchingUnchecked")
   RuntimeMetrics(
-      OpenTelemetry openTelemetry, Predicate<JfrFeature> featurePredicate, boolean disableJmx) {
+      OpenTelemetry openTelemetry,
+      Predicate<JfrFeature> featurePredicate,
+      boolean disableJmx,
+      boolean disableJfr) {
     this.openTelemetry = openTelemetry;
     try {
-      jfrRuntimeMetrics = JfrRuntimeMetrics.build(openTelemetry, featurePredicate);
+      jfrRuntimeMetrics =
+          disableJfr ? null : JfrRuntimeMetrics.build(openTelemetry, featurePredicate);
 
       // Set up metrics gathered by JMX
       if (!disableJmx) {
