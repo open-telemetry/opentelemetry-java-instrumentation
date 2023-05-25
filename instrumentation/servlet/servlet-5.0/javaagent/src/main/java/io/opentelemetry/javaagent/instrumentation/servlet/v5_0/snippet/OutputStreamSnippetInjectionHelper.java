@@ -20,10 +20,6 @@ public class OutputStreamSnippetInjectionHelper {
 
   private final Supplier<String> snippetSupplier;
 
-  public OutputStreamSnippetInjectionHelper(String snippet) {
-    this(() -> snippet);
-  }
-
   public OutputStreamSnippetInjectionHelper(Supplier<String> snippetSupplier) {
     this.snippetSupplier = snippetSupplier;
   }
