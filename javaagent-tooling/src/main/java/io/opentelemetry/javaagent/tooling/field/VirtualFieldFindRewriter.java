@@ -89,6 +89,7 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
         return new MethodVisitor(Opcodes.ASM7, mv) {
           /** The most recent objects pushed to the stack. */
           private final Object[] stack = {null, null};
+
           /** Most recent instructions. */
           private final int[] insnStack = {-1, -1, -1};
 

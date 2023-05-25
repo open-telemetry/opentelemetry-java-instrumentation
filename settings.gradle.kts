@@ -7,7 +7,7 @@ pluginManagement {
     id("com.gradle.plugin-publish") version "1.2.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
     id("org.jetbrains.kotlin.jvm") version "1.8.21"
-    id("org.xbib.gradle.plugin.jflex") version "1.7.0"
+    id("org.xbib.gradle.plugin.jflex") version "3.0.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
     id("org.graalvm.buildtools.native") version "0.9.22"
   }
@@ -232,7 +232,7 @@ hideFromDependabot(":instrumentation:finatra-2.9:javaagent")
 hideFromDependabot(":instrumentation:geode-1.4:javaagent")
 hideFromDependabot(":instrumentation:google-http-client-1.19:javaagent")
 hideFromDependabot(":instrumentation:grails-3.0:javaagent")
-hideFromDependabot(":instrumentation:grizzly-2.0:javaagent")
+hideFromDependabot(":instrumentation:grizzly-2.3:javaagent")
 hideFromDependabot(":instrumentation:grpc-1.6:javaagent")
 hideFromDependabot(":instrumentation:grpc-1.6:library")
 hideFromDependabot(":instrumentation:grpc-1.6:testing")

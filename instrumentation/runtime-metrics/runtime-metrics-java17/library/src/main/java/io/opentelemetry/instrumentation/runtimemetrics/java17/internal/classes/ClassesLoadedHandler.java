@@ -27,6 +27,7 @@ public final class ClassesLoadedHandler implements RecordedEventHandler {
   private static final String METRIC_NAME_LOADED = "process.runtime.jvm.classes.loaded";
 
   private static final String METRIC_NAME_UNLOADED = "process.runtime.jvm.classes.unloaded";
+
   /**
    * process.runtime.jvm.classes.current_loaded is the number of classes loaded at the time of
    * jdk.ClassLoadingStatistics event emission.

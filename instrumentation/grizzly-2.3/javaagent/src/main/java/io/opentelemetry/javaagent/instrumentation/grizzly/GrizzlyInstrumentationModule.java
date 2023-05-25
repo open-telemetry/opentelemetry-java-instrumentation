@@ -5,17 +5,25 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class GrizzlyInstrumentationModule extends InstrumentationModule {
   public GrizzlyInstrumentationModule() {
-    super("grizzly", "grizzly-2.0");
+    super("grizzly", "grizzly-2.3");
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // class added in 2.3
+    return hasClassesNamed("org.glassfish.grizzly.InputSource");
   }
 
   @Override
