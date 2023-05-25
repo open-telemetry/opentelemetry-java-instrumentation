@@ -143,6 +143,8 @@ class JettyServlet5TestForward extends JettyDispatchTest {
     super.setupServlets(context)
 
     addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + QUERY_PARAM.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Forward)
@@ -181,6 +183,8 @@ class JettyServlet5TestInclude extends JettyDispatchTest {
     super.setupServlets(context)
 
     addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + QUERY_PARAM.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Include)
@@ -203,7 +207,8 @@ class JettyServlet5TestDispatchImmediate extends JettyDispatchTest {
   @Override
   protected void setupServlets(Object context) {
     super.setupServlets(context)
-
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, TestServlet5.DispatchImmediate)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + SUCCESS.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + QUERY_PARAM.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + ERROR.path, TestServlet5.DispatchImmediate)
@@ -229,6 +234,8 @@ class JettyServlet5TestDispatchAsync extends JettyDispatchTest {
     super.setupServlets(context)
 
     addServlet(context, "/dispatch" + SUCCESS.path, TestServlet5.DispatchAsync)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, TestServlet5.DispatchAsync)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + QUERY_PARAM.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + ERROR.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + EXCEPTION.path, TestServlet5.DispatchAsync)

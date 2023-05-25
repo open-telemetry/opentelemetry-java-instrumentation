@@ -13,6 +13,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncCont
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletOutputStreamInstrumentation;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,6 +38,11 @@ public class JakartaServletInstrumentationModule extends InstrumentationModule {
             adviceClassName(".service.JakartaServletServiceAdvice"),
             adviceClassName(".service.JakartaServletInitAdvice"),
             adviceClassName(".service.JakartaServletFilterInitAdvice")),
+        new ServletOutputStreamInstrumentation(
+            BASE_PACKAGE,
+            adviceClassName(".Servlet5OutputStreamWriteBytesAndOffsetAdvice"),
+            adviceClassName(".Servlet5OutputStreamWriteBytesAdvice"),
+            adviceClassName(".Servlet5OutputStreamWriteIntAdvice")),
         new HttpServletResponseInstrumentation(
             BASE_PACKAGE, adviceClassName(".response.ResponseSendAdvice")));
   }
