@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.service;
 
+import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.getSnippetInjectionHelper;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.helper;
 
 import io.opentelemetry.context.Context;
@@ -45,7 +46,7 @@ public class JakartaServletServiceAdvice {
     }
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    String snippet = ExperimentalSnippetHolder.getSnippet();
+    String snippet = getSnippetInjectionHelper().getSnippet();
     if (!snippet.isEmpty()
         && !((HttpServletResponse) response)
             .containsHeader(SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
