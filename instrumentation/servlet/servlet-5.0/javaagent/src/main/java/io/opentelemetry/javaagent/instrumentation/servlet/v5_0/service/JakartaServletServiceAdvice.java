@@ -49,7 +49,8 @@ public class JakartaServletServiceAdvice {
     if (!snippet.isEmpty()
         && !((HttpServletResponse) response)
             .containsHeader(Servlet5SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
-      response = new Servlet5SnippetInjectingResponseWrapper((HttpServletResponse) response, snippet);
+      response =
+          new Servlet5SnippetInjectingResponseWrapper((HttpServletResponse) response, snippet);
     }
 
     callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());

@@ -17,10 +17,21 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.logging.Logger;
 
+/**
+ * Notes on Content-Length: the snippet length is only added to the content length when injection
+ * occurs and the content length was set previously.
+ *
+ * <p>If the Content-Length is set after snippet injection occurs (either for the first time or is
+ * set again for some reason), we intentionally do not add the snippet length, because the
+ * application server may be making that call at the end of a request when it sees the request has
+ * not been submitted, in which case it is likely using the real length of content that has been
+ * written, including the snippet length.
+ */
 public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponseWrapper
     implements SnippetInjectingResponseWrapper {
 
-  private static final Logger logger = Logger.getLogger(HttpServletResponseWrapper.class.getName());
+  private static final Logger logger =
+      Logger.getLogger(Servlet5SnippetInjectingResponseWrapper.class.getName());
 
   public static final String FAKE_SNIPPET_HEADER = "FAKE_SNIPPET_HEADER";
 
@@ -73,7 +84,7 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
       try {
         contentLength = Long.parseLong(value);
       } catch (NumberFormatException ex) {
-        logger.log(FINE, "NumberFormatException", ex);
+        logger.log(FINE, "Failed to parse the Content-Length header", ex);
       }
     }
     super.addHeader(name, value);

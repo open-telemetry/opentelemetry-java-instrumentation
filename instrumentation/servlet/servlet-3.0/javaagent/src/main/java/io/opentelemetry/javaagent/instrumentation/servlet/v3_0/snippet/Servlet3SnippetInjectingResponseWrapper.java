@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.ServletOutputStreamInjectionState.initializeInjectionStateIfNeeded;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.javaagent.instrumentation.servlet.snippet.SnippetInjectingPrintWriter;
+import io.opentelemetry.javaagent.instrumentation.servlet.snippet.SnippetInjectingResponseWrapper;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.invoke.MethodHandle;
@@ -29,9 +31,11 @@ import javax.servlet.http.HttpServletResponseWrapper;
  * not been submitted, in which case it is likely using the real length of content that has been
  * written, including the snippet length.
  */
-public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper {
+public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponseWrapper
+    implements SnippetInjectingResponseWrapper {
 
-  private static final Logger logger = Logger.getLogger(HttpServletResponseWrapper.class.getName());
+  private static final Logger logger =
+      Logger.getLogger(Servlet3SnippetInjectingResponseWrapper.class.getName());
 
   public static final String FAKE_SNIPPET_HEADER = "FAKE_SNIPPET_HEADER";
 
@@ -48,7 +52,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
 
-  public SnippetInjectingResponseWrapper(HttpServletResponse response, String snippet) {
+  public Servlet3SnippetInjectingResponseWrapper(HttpServletResponse response, String snippet) {
     super(response);
     this.snippet = snippet;
     snippetLength = snippet.length();
@@ -89,7 +93,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
       try {
         contentLength = Long.parseLong(value);
       } catch (NumberFormatException ex) {
-        logger.log(FINE, "NumberFormatException", ex);
+        logger.log(FINE, "Failed to parse the Content-Length header", ex);
       }
     }
     super.addHeader(name, value);
@@ -143,7 +147,8 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
     }
   }
 
-  boolean isContentTypeTextHtml() {
+  @Override
+  public boolean isContentTypeTextHtml() {
     String contentType = super.getContentType();
     if (contentType == null) {
       contentType = super.getHeader("content-type");
@@ -170,13 +175,15 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
     return snippetInjectingPrintWriter;
   }
 
-  void updateContentLengthIfPreviouslySet() {
+  @Override
+  public void updateContentLengthIfPreviouslySet() {
     if (contentLength != UNSET) {
       setContentLength((int) contentLength + snippetLength);
     }
   }
 
-  boolean isNotSafeToInject() {
+  @Override
+  public boolean isNotSafeToInject() {
     // if content-length was set and response was already committed (headers sent to the client),
     // then it is not safe to inject because the content-length header cannot be updated to account
     // for the snippet length

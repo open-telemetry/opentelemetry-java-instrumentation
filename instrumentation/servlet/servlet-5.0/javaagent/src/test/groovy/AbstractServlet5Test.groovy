@@ -129,6 +129,7 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         break
     }
   }
+
   def "snippet injection with ServletOutputStream"() {
     setup:
     ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
