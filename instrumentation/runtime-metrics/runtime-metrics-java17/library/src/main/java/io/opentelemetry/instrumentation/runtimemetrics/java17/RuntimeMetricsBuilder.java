@@ -73,8 +73,8 @@ public final class RuntimeMetricsBuilder {
 
   /** Build and start an {@link RuntimeMetrics} with the config from this builder. */
   public RuntimeMetrics build() {
-    Predicate<JfrFeature> featurePredicate =
-        jfrFeature -> enabledFeatureMap.getOrDefault(jfrFeature, jfrFeature.isDefaultEnabled());
-    return new RuntimeMetrics(openTelemetry, featurePredicate, disableJmx);
+    Predicate<JfrFeature> featurePredicate = jfrFeature -> enabledFeatureMap.get(jfrFeature);
+    boolean disableJfr = !enabledFeatureMap.keySet().stream().anyMatch(featurePredicate);
+    return new RuntimeMetrics(openTelemetry, featurePredicate, disableJmx, disableJfr);
   }
 }
