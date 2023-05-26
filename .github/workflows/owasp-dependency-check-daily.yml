@@ -30,3 +30,11 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: javaagent/build/reports
+
+  workflow-notification:
+    needs:
+      - analyze
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.analyze.result == 'success' }}
