@@ -31,7 +31,7 @@ val groovyVersion = "4.0.12"
 
 val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.15.1",
-  "com.google.guava:guava-bom:31.1-jre",
+  "com.google.guava:guava-bom:32.0.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
