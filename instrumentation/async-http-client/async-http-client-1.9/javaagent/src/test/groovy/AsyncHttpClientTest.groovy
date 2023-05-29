@@ -68,7 +68,7 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
 
   @Override
   boolean testReadTimeout() {
-    // disable read timeout test for non latest because it is flaky wih 1.9.0
+    // disable read timeout test for non latest because it is flaky with 1.9.0
     Boolean.getBoolean("testLatestDeps")
   }
 
