@@ -10,7 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
@@ -88,8 +88,7 @@ public class InstrumenterBenchmark {
     }
   }
 
-  static class ConstantNetAttributesGetter
-      extends InetSocketAddressNetClientAttributesGetter<Void, Void> {
+  static class ConstantNetAttributesGetter implements NetClientAttributesGetter<Void, Void> {
 
     private static final InetSocketAddress PEER_ADDRESS =
         InetSocketAddress.createUnresolved("localhost", 8080);
@@ -120,7 +119,7 @@ public class InstrumenterBenchmark {
 
     @Nullable
     @Override
-    protected InetSocketAddress getPeerSocketAddress(Void request, @Nullable Void response) {
+    public InetSocketAddress getPeerSocketAddress(Void request, @Nullable Void response) {
       return PEER_ADDRESS;
     }
   }
