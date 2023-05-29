@@ -67,6 +67,12 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   }
 
   @Override
+  boolean testReadTimeout() {
+    // disable read timeout test for non latest because it is flaky wih 1.9.0
+    Boolean.getBoolean("testLatestDeps")
+  }
+
+  @Override
   SingleConnection createSingleConnection(String host, int port) {
     // AsyncHttpClient does not support HTTP 1.1 pipelining nor waiting for connection pool slots to
     // free up (it immediately throws "Too many connections" IOException). Therefore making a single
