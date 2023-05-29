@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
 class AwsSdkHttpAttributesGetter implements HttpClientAttributesGetter<Request<?>, Response<?>> {
 
   @Override
-  public String getFullUrl(Request<?> request) {
+  public String getUrlFull(Request<?> request) {
     return request.getEndpoint().toString();
   }
 

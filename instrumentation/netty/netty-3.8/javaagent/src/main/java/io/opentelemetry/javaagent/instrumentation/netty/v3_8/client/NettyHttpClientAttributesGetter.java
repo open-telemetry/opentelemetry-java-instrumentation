@@ -20,7 +20,7 @@ final class NettyHttpClientAttributesGetter
 
   @Override
   @Nullable
-  public String getFullUrl(HttpRequestAndChannel requestAndChannel) {
+  public String getUrlFull(HttpRequestAndChannel requestAndChannel) {
     try {
       String hostHeader = getHost(requestAndChannel);
       String target = requestAndChannel.request().getUri();

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import io.opentelemetry.instrumentation.api.instrumenter.url.UrlAttributesGetter;
 import javax.annotation.Nullable;
 
 /**
@@ -16,13 +15,13 @@ import javax.annotation.Nullable;
  * various HTTP client attributes in a type-generic way.
  */
 public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
-    extends HttpCommonAttributesGetter<REQUEST, RESPONSE>, UrlAttributesGetter<REQUEST> {
+    extends HttpCommonAttributesGetter<REQUEST, RESPONSE> {
 
   /**
    * Returns the full request URL.
    *
    * @deprecated This method is deprecated and will be removed in a future release. Implement {@link
-   *     #getFullUrl(Object)} instead.
+   *     #getUrlFull(Object)} instead.
    */
   @Deprecated
   @Nullable
@@ -31,10 +30,14 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
   }
 
   // TODO: make this required to implement
-  /** {@inheritDoc} */
+  /**
+   * Returns the absolute URL describing a network resource according to <a
+   * href="https://www.rfc-editor.org/rfc/rfc3986">RFC3986</a>.
+   *
+   * <p>Examples: {@code https://www.foo.bar/search?q=OpenTelemetry#SemConv}; {@code //localhost}
+   */
   @Nullable
-  @Override
-  default String getFullUrl(REQUEST request) {
+  default String getUrlFull(REQUEST request) {
     return getUrl(request);
   }
 }

@@ -18,7 +18,7 @@ class AwsSdkHttpAttributesGetter
     implements HttpClientAttributesGetter<ExecutionAttributes, SdkHttpResponse> {
 
   @Override
-  public String getFullUrl(ExecutionAttributes request) {
+  public String getUrlFull(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
     return httpRequest.getUri().toString();

@@ -19,7 +19,7 @@ final class AsyncHttpClientHttpAttributesGetter
   }
 
   @Override
-  public String getFullUrl(RequestContext requestContext) {
+  public String getUrlFull(RequestContext requestContext) {
     return requestContext.getRequest().getUri().toUrl();
   }
 

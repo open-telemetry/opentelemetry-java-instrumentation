@@ -17,17 +17,6 @@ import javax.annotation.Nullable;
 public interface UrlAttributesGetter<REQUEST> {
 
   /**
-   * Returns the absolute URL describing a network resource according to <a
-   * href="https://www.rfc-editor.org/rfc/rfc3986">RFC3986</a>.
-   *
-   * <p>Examples: {@code https://www.foo.bar/search?q=OpenTelemetry#SemConv}; {@code //localhost}
-   */
-  @Nullable
-  default String getFullUrl(REQUEST request) {
-    return null;
-  }
-
-  /**
    * Returns the <a href="https://www.rfc-editor.org/rfc/rfc3986#section-3.1">URI scheme</a>
    * component identifying the used protocol.
    *

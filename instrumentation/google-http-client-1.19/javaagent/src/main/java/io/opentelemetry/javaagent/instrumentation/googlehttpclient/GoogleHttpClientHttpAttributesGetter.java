@@ -21,7 +21,7 @@ final class GoogleHttpClientHttpAttributesGetter
   }
 
   @Override
-  public String getFullUrl(HttpRequest httpRequest) {
+  public String getUrlFull(HttpRequest httpRequest) {
     return httpRequest.getUrl().build();
   }
 

@@ -23,7 +23,7 @@ enum ApacheHttpClientHttpAttributesGetter
 
   @Override
   @Nullable
-  public String getFullUrl(ApacheHttpClientRequest request) {
+  public String getUrlFull(ApacheHttpClientRequest request) {
     return request.getUrl();
   }
 

@@ -22,7 +22,7 @@ class HttpUrlHttpAttributesGetter
   }
 
   @Override
-  public String getFullUrl(HttpURLConnection connection) {
+  public String getUrlFull(HttpURLConnection connection) {
     return connection.getURL().toExternalForm();
   }
 

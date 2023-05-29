@@ -19,7 +19,7 @@ final class OkHttp2HttpAttributesGetter implements HttpClientAttributesGetter<Re
   }
 
   @Override
-  public String getFullUrl(Request request) {
+  public String getUrlFull(Request request) {
     return request.urlString();
   }
 

@@ -20,7 +20,7 @@ final class JoddHttpHttpAttributesGetter
   }
 
   @Override
-  public String getFullUrl(HttpRequest request) {
+  public String getUrlFull(HttpRequest request) {
     return request.url();
   }
 

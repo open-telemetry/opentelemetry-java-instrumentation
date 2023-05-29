@@ -60,7 +60,7 @@ public class InstrumenterBenchmark {
     INSTANCE;
 
     @Override
-    public String getFullUrl(Void unused) {
+    public String getUrlFull(Void unused) {
       return "https://opentelemetry.io/benchmark";
     }
 

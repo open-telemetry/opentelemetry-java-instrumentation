@@ -39,7 +39,7 @@ class HttpClientAttributesExtractorTest {
       implements HttpClientAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Override
-    public String getFullUrl(Map<String, String> request) {
+    public String getUrlFull(Map<String, String> request) {
       return request.get("url");
     }
 
