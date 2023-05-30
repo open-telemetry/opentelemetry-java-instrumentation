@@ -9,9 +9,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.util.Collections;
 import java.util.Map;
-import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 final class SqsParentContext {

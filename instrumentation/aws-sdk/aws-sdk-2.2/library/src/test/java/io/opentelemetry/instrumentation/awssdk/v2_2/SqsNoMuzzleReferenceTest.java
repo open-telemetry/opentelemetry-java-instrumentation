@@ -18,8 +18,8 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 
 /**
- * This unit test should be a muzzle directive. It verifies that certain references are *not* present
- * (or sources annotated with {@code @NoMuzzle}).
+ * This unit test should be a muzzle directive. It verifies that certain references are *not*
+ * present (or sources annotated with {@code @NoMuzzle}).
  */
 public class SqsNoMuzzleReferenceTest {
   @Test
@@ -36,17 +36,21 @@ public class SqsNoMuzzleReferenceTest {
     assertThat(loader)
         .allSatisfy(
             module -> {
-              Collection<ClassRef> refs = InstrumentationModuleMuzzle.getMuzzleReferences(
-                  module).values();
-              // TODO: Ideally, we would not like to filter by class name but by defining artifact (jar(s))
-              List<ClassRef> badRefs = refs.stream()
-                  .filter(ref -> ref.getClassName().startsWith("software.amazon.")
-                      && ref.getClassName().toLowerCase(Locale.ROOT).contains("sqs")).collect(
-                      Collectors.toList());
+              Collection<ClassRef> refs =
+                  InstrumentationModuleMuzzle.getMuzzleReferences(module).values();
+              // TODO: Ideally, we would not like to filter by class name but by defining artifact
+              // (jar(s))
+              List<ClassRef> badRefs =
+                  refs.stream()
+                      .filter(
+                          ref ->
+                              ref.getClassName().startsWith("software.amazon.")
+                                  && ref.getClassName().toLowerCase(Locale.ROOT).contains("sqs"))
+                      .collect(Collectors.toList());
               assertThat(badRefs)
-                  .as("Unexpected references, use printMuzzleReferences Gradle task to find sources")
+                  .as(
+                      "Unexpected references, use printMuzzleReferences Gradle task to find sources")
                   .isEmpty();
             });
-
   }
 }

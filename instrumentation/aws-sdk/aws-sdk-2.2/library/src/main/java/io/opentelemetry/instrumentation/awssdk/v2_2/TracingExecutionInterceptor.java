@@ -133,8 +133,10 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     Map<String, MessageAttributeValue> messageAttributes =
         new HashMap<>(request.messageAttributes());
 
-    // Need to use a full method to allow @NoMuzzle annotation (@NoMuzzle is not transitively applied to called methods)
-    messagingPropagator.inject(otelContext, messageAttributes, TracingExecutionInterceptor::injectSqsAttribute);
+    // Need to use a full method to allow @NoMuzzle annotation (@NoMuzzle is not transitively
+    // applied to called methods)
+    messagingPropagator.inject(
+        otelContext, messageAttributes, TracingExecutionInterceptor::injectSqsAttribute);
 
     if (messageAttributes.size() > 10) { // Too many attributes, we don't want to break the call.
       return request;
@@ -392,10 +394,10 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   }
 
   @NoMuzzle
-  private static void injectSqsAttribute(@Nullable Map<String, MessageAttributeValue> carrier, String k, String v) {
+  private static void injectSqsAttribute(
+      @Nullable Map<String, MessageAttributeValue> carrier, String k, String v) {
     if (carrier != null) {
-      carrier.put(
-          k, MessageAttributeValue.builder().stringValue(v).dataType("String").build());
+      carrier.put(k, MessageAttributeValue.builder().stringValue(v).dataType("String").build());
     }
   }
 }
