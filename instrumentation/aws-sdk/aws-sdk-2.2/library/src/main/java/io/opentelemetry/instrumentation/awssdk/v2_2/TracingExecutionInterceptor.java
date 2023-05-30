@@ -14,6 +14,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,7 +25,6 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.ClientType;
-import software.amazon.awssdk.core.SdkPojo;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.interceptor.Context;
@@ -34,7 +34,8 @@ import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
-import software.amazon.awssdk.utils.builder.SdkBuilder;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 /** AWS request execution interceptor. */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
@@ -125,35 +126,20 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     return request;
   }
 
+  @NoMuzzle
   private SdkRequest injectIntoSqsSendMessageRequest(
-      SdkRequest request, io.opentelemetry.context.Context otelContext) {
-    Map<String, SdkPojo> messageAttributes =
-        new HashMap<>(SqsSendMessageRequestAccess.messageAttributes(request));
-    messagingPropagator.inject(
-        otelContext,
-        messageAttributes,
-        (carrier, k, v) -> {
-          @SuppressWarnings("rawtypes")
-          SdkBuilder builder = SqsMessageAttributeValueAccess.builder();
-          if (builder == null) {
-            return;
-          }
-          builder = SqsMessageAttributeValueAccess.stringValue(builder, v);
-          if (builder == null) {
-            return;
-          }
-          builder = SqsMessageAttributeValueAccess.dataType(builder, "String");
-          if (builder == null) {
-            return;
-          }
-          carrier.put(k, (SdkPojo) builder.build());
-        });
+      SdkRequest rawRequest, io.opentelemetry.context.Context otelContext) {
+    SendMessageRequest request = (SendMessageRequest) rawRequest;
+    Map<String, MessageAttributeValue> messageAttributes =
+        new HashMap<>(request.messageAttributes());
+
+    // Need to use a full method to allow @NoMuzzle annotation (@NoMuzzle is not transitively applied to called methods)
+    messagingPropagator.inject(otelContext, messageAttributes, TracingExecutionInterceptor::injectSqsAttribute);
+
     if (messageAttributes.size() > 10) { // Too many attributes, we don't want to break the call.
       return request;
     }
-    SdkRequest.Builder builder = request.toBuilder();
-    SqsSendMessageRequestAccess.messageAttributes(builder, messageAttributes);
-    return builder.build();
+    return request.toBuilder().messageAttributes(messageAttributes).build();
   }
 
   private SdkRequest modifySqsReceiveMessageRequest(SdkRequest request) {
@@ -319,15 +305,19 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   private void createConsumerSpan(
       Object message, ExecutionAttributes executionAttributes, SdkHttpResponse httpResponse) {
 
     io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.root();
 
     if (messagingPropagator != null) {
+      // TODO: Dirty cast, only occurs due to partial removal of reflection.
       parentContext =
           SqsParentContext.ofMessageAttributes(
-              SqsMessageAccess.getMessageAttributes(message), messagingPropagator);
+              (Map<String, MessageAttributeValue>)
+                  (Map) SqsMessageAccess.getMessageAttributes(message),
+              messagingPropagator);
     }
 
     if (useXrayPropagator && parentContext == io.opentelemetry.context.Context.root()) {
@@ -399,5 +389,13 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   static List<Object> getMessages(SdkResponse response) {
     Optional<List> optional = response.getValueForField("Messages", List.class);
     return optional.isPresent() ? optional.get() : Collections.emptyList();
+  }
+
+  @NoMuzzle
+  private static void injectSqsAttribute(@Nullable Map<String, MessageAttributeValue> carrier, String k, String v) {
+    if (carrier != null) {
+      carrier.put(
+          k, MessageAttributeValue.builder().stringValue(v).dataType("String").build());
+    }
   }
 }

@@ -11,7 +11,8 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import java.util.Collections;
 import java.util.Map;
-import software.amazon.awssdk.core.SdkPojo;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 final class SqsParentContext {
 
@@ -29,31 +30,34 @@ final class SqsParentContext {
     }
   }
 
-  enum MessageAttributeValueMapGetter implements TextMapGetter<Map<String, SdkPojo>> {
+  enum MessageAttributeValueMapGetter implements TextMapGetter<Map<String, MessageAttributeValue>> {
     INSTANCE;
 
     @Override
-    public Iterable<String> keys(Map<String, SdkPojo> map) {
+    @NoMuzzle
+    public Iterable<String> keys(Map<String, MessageAttributeValue> map) {
       return map.keySet();
     }
 
     @Override
-    public String get(Map<String, SdkPojo> map, String s) {
+    @NoMuzzle
+    public String get(Map<String, MessageAttributeValue> map, String s) {
       if (map == null) {
         return null;
       }
-      SdkPojo value = map.get(s);
+      MessageAttributeValue value = map.get(s);
       if (value == null) {
         return null;
       }
-      return SqsMessageAttributeValueAccess.getStringValue(value);
+      return value.stringValue();
     }
   }
 
   static final String AWS_TRACE_SYSTEM_ATTRIBUTE = "AWSTraceHeader";
 
+  @NoMuzzle
   static Context ofMessageAttributes(
-      Map<String, SdkPojo> messageAttributes, TextMapPropagator propagator) {
+      Map<String, MessageAttributeValue> messageAttributes, TextMapPropagator propagator) {
     return propagator.extract(
         Context.root(), messageAttributes, MessageAttributeValueMapGetter.INSTANCE);
   }
