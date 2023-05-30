@@ -47,6 +47,9 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
     public static void onEnter(
         @Advice.This ChannelHandlerContext ctx, @Advice.Argument(0) Throwable throwable) {
 
+      // we can't rely on exception handling in HttpClientTracingHandler because it can't catch
+      // exceptions from handlers that run after it, for example ratpack has ReadTimeoutHandler
+      // (trigger ReadTimeoutException) after HttpClientCodec (or handler is inserted after it)
       Attribute<Context> contextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
       Context clientContext = contextAttr.get();
       if (clientContext != null) {
