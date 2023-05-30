@@ -5,6 +5,18 @@ common environments. Currently, the resources provide the following semantic con
 
 ## Populated attributes
 
+### Environment
+
+Provider: `io.opentelemetry.instrumentation.resources.EnvironmentResourceProvider`
+
+Specification: <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/configuration/sdk-environment-variables.md#general-sdk-configuration>
+
+Parses environment variables / system properties in keys `otel.service.name` and `otel.resource.attributes` to construct resource.
+
+Implemented attributes:
+
+- `service.name`, *
+
 ### Container
 
 Provider: `io.opentelemetry.instrumentation.resources.ContainerResource`

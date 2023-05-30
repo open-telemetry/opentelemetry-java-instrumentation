@@ -14,6 +14,7 @@ dependencies {
   testCompileOnly("com.google.auto.service:auto-service-annotations")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api")
+  testImplementation("edu.berkeley.cs.jqf:jqf-fuzz")
 }
 
 for (version in mrJarVersions) {
