@@ -60,7 +60,7 @@ public class OutputStreamSnippetInjectionHelper {
     try {
       snippetBytes = snippetSupplier.get().getBytes(state.getCharacterEncoding());
     } catch (UnsupportedEncodingException e) {
-      logger.log(FINE, "UnsupportedEncodingException", e);
+      logger.log(FINE, "Failed getting snippet bytes", e);
       return false;
     }
     // updating Content-Length before any further writing in case that writing triggers a flush
@@ -86,7 +86,7 @@ public class OutputStreamSnippetInjectionHelper {
     try {
       snippetBytes = snippetSupplier.get().getBytes(state.getCharacterEncoding());
     } catch (UnsupportedEncodingException e) {
-      logger.log(FINE, "UnsupportedEncodingException", e);
+      logger.log(FINE, "Failed getting snippet bytes", e);
       return false;
     }
     state.getWrapper().updateContentLengthIfPreviouslySet();
