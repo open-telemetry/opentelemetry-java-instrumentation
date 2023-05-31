@@ -9,7 +9,7 @@ The handler provides constructors to change the messaging operation and span nam
 ## Available Handlers
 - `SQSBatchMessageHandlerTest` - processes messages from Amazon's SQS.
 
-## Using SQSBatchMessageHandlerTest
+## Using SQSBatchMessageHandler
 
 1. Retrieve a collection of messages to process.
 2. Create a SQSBatchMessageHandler and provide the business logic on what to do with the messages.

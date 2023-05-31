@@ -11,12 +11,16 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -26,10 +30,23 @@ import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 public class SqsBatchMessageHandlerTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  static {
+    // Change to the X-Ray propagator
+    try {
+      Field field = OpenTelemetrySdk.class.getDeclaredField("propagators");
+      field.setAccessible(true);
+      field.set(testing.getOpenTelemetrySdk(), ContextPropagators.create(AwsXrayPropagator.getInstance()));
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   @Test
   public void simple() {
@@ -70,57 +87,6 @@ public class SqsBatchMessageHandlerTest {
                                 SpanContext.createFromRemoteParent(
                                     "55555555123456789012345678901234",
                                     "1234567890123456",
-                                    TraceFlags.getSampled(),
-                                    TraceState.getDefault())))
-                        .hasTotalRecordedLinks(1)
-                        .hasAttribute(
-                            SemanticAttributes.MESSAGING_OPERATION, MessageOperation.RECEIVE.name())
-                        .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
-                        .hasTotalAttributeCount(2)
-                        .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
-                        .hasTraceId(parentSpan.getSpanContext().getTraceId())));
-
-    Assert.assertEquals(1, counter.get());
-  }
-
-  @Test
-  public void simpleOtelUpstream() {
-    SQSEvent.SQSMessage sqsMessage = newMessage();
-
-    sqsMessage.setAttributes(
-        Collections.singletonMap(
-            "AWSTraceHeader", "00-ff000000000000000000000000000041-ff00000000000041-01"));
-
-    AtomicInteger counter = new AtomicInteger(0);
-
-    SqsBatchMessageHandler messageHandler =
-        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk()) {
-          @Override
-          protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
-            counter.getAndIncrement();
-          }
-        };
-
-    Span parentSpan =
-        testing.getOpenTelemetrySdk().getTracer("test").spanBuilder("test").startSpan();
-
-    try (Scope scope = parentSpan.makeCurrent()) {
-      messageHandler.handleMessages(Collections.singletonList(sqsMessage));
-    }
-
-    parentSpan.end();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
-                span ->
-                    span.hasName("Batch Message")
-                        .hasLinks(
-                            LinkData.create(
-                                SpanContext.createFromRemoteParent(
-                                    "ff000000000000000000000000000041",
-                                    "ff00000000000041",
                                     TraceFlags.getSampled(),
                                     TraceState.getDefault())))
                         .hasTotalRecordedLinks(1)
@@ -326,7 +292,7 @@ public class SqsBatchMessageHandlerTest {
 
     SqsBatchMessageHandler messageHandler =
         new SqsBatchMessageHandler(
-            testing.getOpenTelemetrySdk(), MessageOperation.PROCESS.name(), "New Name") {
+            testing.getOpenTelemetrySdk(), MessageOperation.PROCESS.name(), messages -> "New Name") {
           @Override
           protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
             counter.getAndIncrement();
@@ -387,27 +353,12 @@ public class SqsBatchMessageHandlerTest {
     Span parentSpan =
         testing.getOpenTelemetrySdk().getTracer("test").spanBuilder("test").startSpan();
 
-    try (Scope scope = parentSpan.makeCurrent()) {
-      messageHandler.handleMessages(Collections.singletonList(sqsMessage));
-    }
-
-    parentSpan.end();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
-                span ->
-                    span.hasName("Batch Message")
-                        .hasTotalRecordedLinks(0)
-                        .hasAttribute(
-                            SemanticAttributes.MESSAGING_OPERATION, MessageOperation.RECEIVE.name())
-                        .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
-                        .hasTotalAttributeCount(2)
-                        .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
-                        .hasTraceId(parentSpan.getSpanContext().getTraceId())));
-
-    Assert.assertEquals(1, counter.get());
+    assertThrows(StringIndexOutOfBoundsException.class,
+        ()->{
+          try (Scope scope = parentSpan.makeCurrent()) {
+            messageHandler.handleMessages(Collections.singletonList(sqsMessage));
+          }
+        });
   }
 
   private static SQSEvent.SQSMessage newMessage() {

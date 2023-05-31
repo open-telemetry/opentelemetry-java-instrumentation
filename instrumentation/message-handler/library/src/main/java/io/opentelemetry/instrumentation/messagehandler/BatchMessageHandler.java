@@ -6,167 +6,83 @@
 package io.opentelemetry.instrumentation.messagehandler;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanBuilder;
-import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.TracerBuilder;
-import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Locale;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public abstract class BatchMessageHandler<T> {
-  private static final Logger logger = Logger.getLogger(BatchMessageHandler.class.getName());
-  private static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
-
   protected String messagingOperation;
   protected OpenTelemetry openTelemetry;
-  protected String spanName;
+  protected SpanNameExtractor<Collection<T>> spanNameExtractor;
+
+  protected Instrumenter<Collection<T>, Void> messageInstrumenter;
 
   public BatchMessageHandler(OpenTelemetry openTelemetry) {
     this(openTelemetry, MessageOperation.RECEIVE.name());
   }
 
   public BatchMessageHandler(OpenTelemetry openTelemetry, String messageOperation) {
-    this(openTelemetry, messageOperation, "Batch Message");
+    this(openTelemetry, messageOperation, messages -> "Batch Message");
   }
 
   public BatchMessageHandler(
-      OpenTelemetry openTelemetry, String messageOperation, String spanName) {
+      OpenTelemetry openTelemetry, String messageOperation, SpanNameExtractor<Collection<T>> spanNameExtractor) {
     this.openTelemetry = openTelemetry;
-    this.spanName = spanName;
+    this.spanNameExtractor = spanNameExtractor;
     this.messagingOperation = messageOperation;
+
+    setup();
   }
 
-  public abstract String getParentHeaderFromMessage(T t);
+  protected abstract void setup();
 
   protected abstract void doHandleMessages(Collection<T> messages);
 
-  protected void addMessagingAttributes(SpanBuilder spanBuilder) {
-    spanBuilder.setAttribute(SemanticAttributes.MESSAGING_OPERATION, messagingOperation);
+  protected AttributesExtractor<Collection<T>, Void> getGenericAttributesExtractor() {
+    return
+        new AttributesExtractor<Collection<T>, Void>() {
+
+          @Override
+          public void onStart(
+              AttributesBuilder attributes, Context parentContext, Collection<T> messages) {
+            attributes.put(SemanticAttributes.MESSAGING_OPERATION, messagingOperation);
+          }
+
+          @Override
+          public void onEnd(
+              AttributesBuilder attributes,
+              Context context,
+              Collection<T> messages,
+              @Nullable Void unused,
+              @Nullable Throwable error) {
+
+          }
+      };
   }
 
   public void handleMessages(Collection<T> messages) {
-    TracerBuilder tracerBuilder =
-        openTelemetry
-            .tracerBuilder("io.opentelemetry.message.handler")
-            .setInstrumentationVersion("1.0");
-
-    Span parentSpan = Span.current();
-
-    SpanBuilder spanBuilder =
-        tracerBuilder
-            .build()
-            .spanBuilder(spanName)
-            .setParent(Context.current().with(parentSpan))
-            .setSpanKind(SpanKind.INTERNAL);
-
-    addMessagingAttributes(spanBuilder);
-
-    for (T t : messages) {
-      SpanContext spanContext = getParentSpanContextFromHeader(getParentHeaderFromMessage(t));
-
-      if (spanContext != null) {
-        spanBuilder.addLink(spanContext);
+    Context parentContext = Context.current();
+    if (messageInstrumenter.shouldStart(parentContext, messages)) {
+      io.opentelemetry.context.Context otelContext =
+          messageInstrumenter.start(parentContext, messages);
+      Throwable error = null;
+      try (Scope ignored = otelContext.makeCurrent()) {
+        doHandleMessages(messages);
+      } catch (Throwable t) {
+        error = t;
+        throw t;
+      } finally {
+        messageInstrumenter.end(otelContext, messages, null, error);
       }
-    }
-
-    Span span = spanBuilder.startSpan();
-
-    try (Scope scope = span.makeCurrent()) {
+    } else {
       doHandleMessages(messages);
-    } finally {
-      span.end();
-    }
-  }
-
-  public SpanContext getParentSpanContextFromHeader(String parentHeader) {
-    if (parentHeader == null) {
-      return null;
-    }
-
-    // We do not know if the upstream is W3C or X-Ray format.
-    // We will first try to decode it as a X-Ray trace context.
-    // Then we will try to decode it as a W3C trace context.
-    SpanContext spanContext = getParentSpanContextXray(parentHeader);
-
-    if (spanContext != null) {
-      return spanContext;
-    }
-
-    spanContext = getParentSpanContextW3C(parentHeader);
-
-    if (spanContext != null) {
-      return spanContext;
-    }
-
-    logger.log(Level.WARNING, "Invalid upstream span context: {0}", parentHeader);
-    return null;
-  }
-
-  private static SpanContext getParentSpanContextW3C(String parentHeader) {
-    try {
-      Context w3cContext =
-          W3CTraceContextPropagator.getInstance()
-              .extract(
-                  Context.root(),
-                  Collections.singletonMap("traceparent", parentHeader),
-                  MapGetter.INSTANCE);
-
-      SpanContext messageSpanCtx = Span.fromContext(w3cContext).getSpanContext();
-
-      if (messageSpanCtx.isValid()) {
-        return messageSpanCtx;
-      } else {
-        return null;
-      }
-    } catch (RuntimeException e) {
-      return null;
-    }
-  }
-
-  private static SpanContext getParentSpanContextXray(String parentHeader) {
-    try {
-      Context xrayContext =
-          AwsXrayPropagator.getInstance()
-              .extract(
-                  Context.root(),
-                  Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
-                  MapGetter.INSTANCE);
-
-      SpanContext messageSpanCtx = Span.fromContext(xrayContext).getSpanContext();
-
-      if (messageSpanCtx.isValid()) {
-        return messageSpanCtx;
-      } else {
-        return null;
-      }
-    } catch (RuntimeException e) {
-      return null;
-    }
-  }
-
-  private enum MapGetter implements TextMapGetter<Map<String, String>> {
-    INSTANCE;
-
-    @Override
-    public Iterable<String> keys(Map<String, String> map) {
-      return map.keySet();
-    }
-
-    @Override
-    public String get(Map<String, String> map, String s) {
-      return map.get(s.toLowerCase(Locale.ROOT));
     }
   }
 }

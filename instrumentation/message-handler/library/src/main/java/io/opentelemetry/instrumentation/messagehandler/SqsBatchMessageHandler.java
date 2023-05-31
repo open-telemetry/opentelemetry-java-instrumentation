@@ -7,11 +7,28 @@ package io.opentelemetry.instrumentation.messagehandler;
 
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Locale;
+import java.util.Map;
 
 public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEvent.SQSMessage> {
   private static final String AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY = "AWSTraceHeader";
+
+  // lower-case map getter used for extraction
+  static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 
   public SqsBatchMessageHandler(OpenTelemetry openTelemetry) {
     super(openTelemetry);
@@ -22,18 +39,78 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEven
   }
 
   public SqsBatchMessageHandler(
-      OpenTelemetry openTelemetry, String messageOperation, String spanName) {
-    super(openTelemetry, messageOperation, spanName);
+      OpenTelemetry openTelemetry, String messageOperation, SpanNameExtractor<Collection<SQSEvent.SQSMessage>> spanNameExtractor) {
+    super(openTelemetry, messageOperation, spanNameExtractor);
   }
 
   @Override
-  protected void addMessagingAttributes(SpanBuilder spanBuilder) {
-    super.addMessagingAttributes(spanBuilder);
-    spanBuilder.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS");
+  protected void setup() {
+    InstrumenterBuilder<Collection<SQSEvent.SQSMessage>, Void> builder = Instrumenter.builder(
+        openTelemetry,
+        "io.opentelemetry.message.handler",
+        spanNameExtractor);
+
+    builder.setInstrumentationVersion("1.0");
+    builder.addAttributesExtractor(getGenericAttributesExtractor());
+    builder.addAttributesExtractor(getAttributesExtractor());
+    builder.addSpanLinksExtractor(getSpanLinksExtractor());
+
+    messageInstrumenter = builder.buildInstrumenter();
   }
 
-  @Override
-  public String getParentHeaderFromMessage(SQSEvent.SQSMessage message) {
-    return message.getAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
+  protected AttributesExtractor<Collection<SQSEvent.SQSMessage>, Void> getAttributesExtractor() {
+    return
+        new AttributesExtractor<Collection<SQSEvent.SQSMessage>, Void>() {
+
+          @Override
+          public void onStart(
+              AttributesBuilder attributes, Context parentContext, Collection<SQSEvent.SQSMessage> messages) {
+            attributes.put(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS");
+          }
+
+          @Override
+          public void onEnd(
+              AttributesBuilder attributes,
+              Context context,
+              Collection<SQSEvent.SQSMessage> messages,
+              @Nullable Void unused,
+              @Nullable Throwable error) {
+
+          }
+        };
+  }
+
+  protected SpanLinksExtractor<Collection<SQSEvent.SQSMessage>> getSpanLinksExtractor() {
+    return (spanLinks, parentContext, sqsMessages) -> {
+      for (SQSEvent.SQSMessage message: sqsMessages) {
+        String parentHeader = message.getAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
+        if (parentHeader != null) {
+          Context xrayContext =
+              openTelemetry.getPropagators().getTextMapPropagator()
+                  .extract(
+                      Context.root(), // We don't want the ambient context.
+                      Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
+                      MapGetter.INSTANCE);
+          SpanContext messageSpanCtx = Span.fromContext(xrayContext).getSpanContext();
+          if (messageSpanCtx.isValid()) {
+            spanLinks.addLink(messageSpanCtx);
+          }
+        }
+      }
+    };
+  }
+
+  private enum MapGetter implements TextMapGetter<Map<String, String>> {
+    INSTANCE;
+
+    @Override
+    public Iterable<String> keys(Map<String, String> map) {
+      return map.keySet();
+    }
+
+    @Override
+    public String get(Map<String, String> map, String s) {
+      return map.get(s.toLowerCase(Locale.ROOT));
+    }
   }
 }
