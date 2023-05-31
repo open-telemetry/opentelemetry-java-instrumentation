@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
+import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
@@ -16,7 +17,8 @@ import javax.annotation.Nullable;
  * library/framework. It will be used by the NetClientAttributesExtractor to obtain the various
  * network attributes in a type-generic way.
  */
-public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
+public interface NetClientAttributesGetter<REQUEST, RESPONSE>
+    extends NetworkAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
   default String getTransport(REQUEST request, @Nullable RESPONSE response) {
@@ -27,7 +29,11 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
    * Returns the application protocol used.
    *
    * <p>Examples: `amqp`, `http`, `mqtt`.
+   *
+   * @deprecated This method is deprecated and will be removed in the following release. Implement
+   *     {@link #getNetworkProtocolName(Object, Object)} instead.
    */
+  @Deprecated
   @Nullable
   default String getProtocolName(REQUEST request, @Nullable RESPONSE response) {
     return null;
@@ -37,10 +43,35 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
    * Returns the version of the application protocol used.
    *
    * <p>Examples: `3.1.1`.
+   *
+   * @deprecated This method is deprecated and will be removed in the following release. Implement
+   *     {@link #getNetworkProtocolVersion(Object, Object)} instead.
    */
+  @Deprecated
   @Nullable
   default String getProtocolVersion(REQUEST request, @Nullable RESPONSE response) {
     return null;
+  }
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  default String getNetworkType(REQUEST request, @Nullable RESPONSE response) {
+    return InetSocketAddressUtil.getNetworkType(getPeerSocketAddress(request, response), null);
+  }
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  default String getNetworkProtocolName(REQUEST request, @Nullable RESPONSE response) {
+    return getProtocolName(request, response);
+  }
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  default String getNetworkProtocolVersion(REQUEST request, @Nullable RESPONSE response) {
+    return getProtocolVersion(request, response);
   }
 
   @Nullable

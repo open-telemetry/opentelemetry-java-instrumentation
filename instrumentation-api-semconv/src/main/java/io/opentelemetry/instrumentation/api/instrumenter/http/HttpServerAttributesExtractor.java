@@ -16,6 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -43,7 +44,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   /** Creates the HTTP server attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST> netAttributesGetter) {
+      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
     return builder(httpAttributesGetter, netAttributesGetter).build();
   }
 
@@ -53,7 +54,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
    */
   public static <REQUEST, RESPONSE> HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST> netAttributesGetter) {
+      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
     return new HttpServerAttributesExtractorBuilder<>(httpAttributesGetter, netAttributesGetter);
   }
 
@@ -64,12 +65,13 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
           "otel.instrumentation.http.prefer-forwarded-url-scheme", false);
 
   private final InternalUrlAttributesExtractor<REQUEST> internalUrlExtractor;
-  private final InternalNetServerAttributesExtractor<REQUEST> internalNetExtractor;
+  private final InternalNetServerAttributesExtractor<REQUEST, RESPONSE> internalNetExtractor;
+  private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final Function<Context, String> httpRouteHolderGetter;
 
   HttpServerAttributesExtractor(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST> netAttributesGetter,
+      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders) {
     this(
@@ -83,7 +85,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   // visible for tests
   HttpServerAttributesExtractor(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST> netAttributesGetter,
+      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders,
       Function<Context, String> httpRouteHolderGetter) {
@@ -98,7 +100,13 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
         new InternalNetServerAttributesExtractor<>(
             netAttributesGetter,
             this::shouldCaptureHostPort,
-            new HttpNetNamePortGetter<>(httpAttributesGetter));
+            new HttpNetNamePortGetter<>(httpAttributesGetter),
+            SemconvStability.emitOldHttpSemconv());
+    internalNetworkExtractor =
+        new InternalNetworkAttributesExtractor<>(
+            netAttributesGetter,
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv());
     this.httpRouteHolderGetter = httpRouteHolderGetter;
   }
 
@@ -134,6 +142,9 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
 
     super.onEnd(attributes, context, request, response, error);
+
+    internalNetworkExtractor.onEnd(attributes, request, response);
+
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteHolderGetter.apply(context));
   }
 

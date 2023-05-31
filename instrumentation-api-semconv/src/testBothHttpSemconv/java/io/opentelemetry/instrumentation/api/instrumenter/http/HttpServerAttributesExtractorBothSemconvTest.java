@@ -17,6 +17,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
@@ -80,17 +81,33 @@ class HttpServerAttributesExtractorBothSemconvTest {
   }
 
   static class TestNetServerAttributesGetter
-      implements NetServerAttributesGetter<Map<String, Object>> {
+      implements NetServerAttributesGetter<Map<String, Object>, Map<String, Object>> {
 
     @Nullable
     @Override
-    public String getProtocolName(Map<String, Object> request) {
+    public String getNetworkTransport(
+        Map<String, Object> request, @Nullable Map<String, Object> response) {
+      return (String) request.get("transport");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkType(
+        Map<String, Object> request, @Nullable Map<String, Object> response) {
+      return (String) request.get("type");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkProtocolName(
+        Map<String, Object> request, Map<String, Object> response) {
       return (String) request.get("protocolName");
     }
 
     @Nullable
     @Override
-    public String getProtocolVersion(Map<String, Object> request) {
+    public String getNetworkProtocolVersion(
+        Map<String, Object> request, Map<String, Object> response) {
       return (String) request.get("protocolVersion");
     }
 
@@ -121,6 +138,8 @@ class HttpServerAttributesExtractorBothSemconvTest {
     request.put("header.host", "github.com");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
+    request.put("transport", "tcp");
+    request.put("type", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "2.0");
 
@@ -144,8 +163,6 @@ class HttpServerAttributesExtractorBothSemconvTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_HOST_NAME, "github.com"),
-            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_SCHEME, "http"),
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1?details=true"),
@@ -163,6 +180,12 @@ class HttpServerAttributesExtractorBothSemconvTest {
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
+            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
+            entry(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+            entry(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),

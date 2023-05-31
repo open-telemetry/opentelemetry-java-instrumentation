@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
-import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
@@ -15,14 +14,14 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class NetServerAttributesExtractorTest {
+class NetServerAttributesExtractorBothSemconvTest {
 
   static class TestNetServerAttributesGetter
       implements NetServerAttributesGetter<Map<String, String>, Void> {
@@ -143,146 +142,11 @@ class NetServerAttributesExtractorTest {
 
     assertThat(endAttributes.build())
         .containsOnly(
+            entry(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+            entry(NetworkAttributes.NETWORK_TYPE, "ipv6"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
             entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
             entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"));
-  }
-
-  @Test
-  void empty() {
-    // given
-    Context context = Context.root();
-
-    // when
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, context, emptyMap());
-
-    AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, emptyMap(), null, null);
-
-    // then
-    assertThat(startAttributes.build()).isEmpty();
-    assertThat(endAttributes.build()).isEmpty();
-  }
-
-  @Test
-  @DisplayName(
-      "does not set any net.sock.host.* attributes when net.host.name = net.sock.host.addr")
-  void doesNotSetDuplicates1() {
-    // given
-    Map<String, String> map = new HashMap<>();
-    map.put("netTransport", IP_TCP);
-    map.put("hostName", "4:3:2:1::");
-    map.put("hostPort", "80");
-    map.put("sockFamily", "inet6");
-    map.put("sockHostAddr", "4:3:2:1::");
-    map.put("sockHostPort", "8080");
-
-    Context context = Context.root();
-
-    // when
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, context, map);
-
-    AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, null, null);
-
-    // then
-    assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-            entry(SemanticAttributes.NET_HOST_NAME, "4:3:2:1::"),
-            entry(SemanticAttributes.NET_HOST_PORT, 80L));
-
-    assertThat(endAttributes.build()).isEmpty();
-  }
-
-  @Test
-  @DisplayName(
-      "does not set net.sock.host.* attributes when they duplicate related net.host.* attributes")
-  void doesNotSetDuplicates2() {
-    // given
-    Map<String, String> map = new HashMap<>();
-    map.put("netTransport", IP_TCP);
-    map.put("hostName", "opentelemetry.io");
-    map.put("hostPort", "80");
-    map.put("sockFamily", "inet6");
-    map.put("sockHostAddr", "4:3:2:1::");
-    map.put("sockHostPort", "80");
-
-    Context context = Context.root();
-
-    // when
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, context, map);
-
-    AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, null, null);
-
-    // then
-    assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-            entry(SemanticAttributes.NET_HOST_NAME, "opentelemetry.io"),
-            entry(SemanticAttributes.NET_HOST_PORT, 80L),
-            entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"),
-            entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"));
-
-    assertThat(endAttributes.build()).isEmpty();
-  }
-
-  @Test
-  void doesNotSetNegativePort() {
-    // given
-    Map<String, String> map = new HashMap<>();
-    map.put("hostName", "opentelemetry.io");
-    map.put("hostPort", "-80");
-    map.put("sockPeerAddr", "1:2:3:4::");
-    map.put("sockPeerPort", "-42");
-    map.put("sockHostAddr", "4:3:2:1::");
-    map.put("sockHostPort", "-8080");
-
-    Context context = Context.root();
-
-    // when
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, context, map);
-
-    AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, null, null);
-
-    // then
-    assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_HOST_NAME, "opentelemetry.io"),
-            entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
-            entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"));
-
-    assertThat(endAttributes.build()).isEmpty();
-  }
-
-  @Test
-  void doesNotSetSockFamilyInet() {
-    // given
-    Map<String, String> map = new HashMap<>();
-    map.put("hostName", "opentelemetry.io");
-    map.put("sockPeerAddr", "1.2.3.4");
-    map.put("sockFamily", SemanticAttributes.NetSockFamilyValues.INET);
-
-    Context context = Context.root();
-
-    // when
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, context, map);
-
-    AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, null, null);
-
-    // then
-    assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_HOST_NAME, "opentelemetry.io"),
-            entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"));
-
-    assertThat(endAttributes.build()).isEmpty();
   }
 }

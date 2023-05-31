@@ -12,10 +12,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributes
 import javax.annotation.Nullable;
 import org.glassfish.grizzly.Transport;
 import org.glassfish.grizzly.http.HttpRequestPacket;
+import org.glassfish.grizzly.http.HttpResponsePacket;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
 import org.glassfish.grizzly.nio.transport.UDPNIOTransport;
 
-final class GrizzlyNetAttributesGetter implements NetServerAttributesGetter<HttpRequestPacket> {
+final class GrizzlyNetAttributesGetter
+    implements NetServerAttributesGetter<HttpRequestPacket, HttpResponsePacket> {
 
   @Override
   public String getTransport(HttpRequestPacket request) {
@@ -30,7 +32,21 @@ final class GrizzlyNetAttributesGetter implements NetServerAttributesGetter<Http
 
   @Nullable
   @Override
-  public String getProtocolName(HttpRequestPacket request) {
+  public String getNetworkTransport(
+      HttpRequestPacket request, @Nullable HttpResponsePacket response) {
+    Transport transport = request.getConnection().getTransport();
+    if (transport instanceof TCPNIOTransport) {
+      return "tcp";
+    } else if (transport instanceof UDPNIOTransport) {
+      return "udp";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkProtocolName(
+      HttpRequestPacket request, @Nullable HttpResponsePacket response) {
     String protocol = request.getProtocolString();
     if (protocol.startsWith("HTTP/")) {
       return "http";
@@ -40,7 +56,8 @@ final class GrizzlyNetAttributesGetter implements NetServerAttributesGetter<Http
 
   @Nullable
   @Override
-  public String getProtocolVersion(HttpRequestPacket request) {
+  public String getNetworkProtocolVersion(
+      HttpRequestPacket request, @Nullable HttpResponsePacket response) {
     String protocol = request.getProtocolString();
     if (protocol.startsWith("HTTP/")) {
       return protocol.substring("HTTP/".length());

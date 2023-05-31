@@ -21,7 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class InetSocketAddressNetServerAttributesGetterTest {
 
-  static class TestNetServerAttributesGetter implements NetServerAttributesGetter<Addresses> {
+  static class TestNetServerAttributesGetter
+      implements NetServerAttributesGetter<Addresses, Addresses> {
 
     @Override
     public String getHostName(Addresses request) {

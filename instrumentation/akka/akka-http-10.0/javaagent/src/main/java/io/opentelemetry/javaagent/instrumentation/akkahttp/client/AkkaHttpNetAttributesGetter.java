@@ -15,13 +15,15 @@ class AkkaHttpNetAttributesGetter implements NetClientAttributesGetter<HttpReque
 
   @Nullable
   @Override
-  public String getProtocolName(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
+  public String getNetworkProtocolName(
+      HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return AkkaHttpUtil.protocolName(httpRequest);
   }
 
   @Nullable
   @Override
-  public String getProtocolVersion(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
+  public String getNetworkProtocolVersion(
+      HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return AkkaHttpUtil.protocolVersion(httpRequest);
   }
 

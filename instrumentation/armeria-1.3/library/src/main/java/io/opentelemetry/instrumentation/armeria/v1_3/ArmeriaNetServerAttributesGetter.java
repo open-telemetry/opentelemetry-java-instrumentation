@@ -7,20 +7,22 @@ package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.SessionProtocol;
+import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-final class ArmeriaNetServerAttributesGetter implements NetServerAttributesGetter<RequestContext> {
+final class ArmeriaNetServerAttributesGetter
+    implements NetServerAttributesGetter<RequestContext, RequestLog> {
 
   @Override
-  public String getProtocolName(RequestContext ctx) {
+  public String getNetworkProtocolName(RequestContext ctx, @Nullable RequestLog requestLog) {
     return "http";
   }
 
   @Override
-  public String getProtocolVersion(RequestContext ctx) {
+  public String getNetworkProtocolVersion(RequestContext ctx, @Nullable RequestLog requestLog) {
     SessionProtocol protocol = ctx.sessionProtocol();
     return protocol.isMultiplex() ? "2.0" : "1.1";
   }

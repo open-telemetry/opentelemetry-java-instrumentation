@@ -73,14 +73,28 @@ class HttpClientAttributesExtractorTest {
 
     @Nullable
     @Override
-    public String getProtocolName(
+    public String getNetworkTransport(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("transport");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkType(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("type");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkProtocolName(
         Map<String, String> request, @Nullable Map<String, String> response) {
       return request.get("protocolName");
     }
 
     @Nullable
     @Override
-    public String getProtocolVersion(
+    public String getNetworkProtocolVersion(
         Map<String, String> request, @Nullable Map<String, String> response) {
       return request.get("protocolVersion");
     }
@@ -107,6 +121,8 @@ class HttpClientAttributesExtractorTest {
     request.put("header.content-length", "10");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.custom-request-header", "123,456");
+    request.put("transport", "tcp");
+    request.put("type", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "1.1");
     request.put("peerName", "github.com");

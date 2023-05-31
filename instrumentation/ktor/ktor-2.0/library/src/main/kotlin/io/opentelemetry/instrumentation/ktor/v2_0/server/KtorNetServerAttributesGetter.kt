@@ -6,15 +6,16 @@
 package io.opentelemetry.instrumentation.ktor.v2_0.server
 
 import io.ktor.server.request.*
+import io.ktor.server.response.*
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter
 import io.opentelemetry.instrumentation.ktor.isIpAddress
 
-internal class KtorNetServerAttributesGetter : NetServerAttributesGetter<ApplicationRequest> {
+internal class KtorNetServerAttributesGetter : NetServerAttributesGetter<ApplicationRequest, ApplicationResponse> {
 
-  override fun getProtocolName(request: ApplicationRequest): String? =
+  override fun getNetworkProtocolName(request: ApplicationRequest, response: ApplicationResponse?): String? =
     if (request.httpVersion.startsWith("HTTP/")) "http" else null
 
-  override fun getProtocolVersion(request: ApplicationRequest): String? =
+  override fun getNetworkProtocolVersion(request: ApplicationRequest, response: ApplicationResponse?): String? =
     if (request.httpVersion.startsWith("HTTP/")) request.httpVersion.substring("HTTP/".length) else null
 
   override fun getHostName(request: ApplicationRequest): String {

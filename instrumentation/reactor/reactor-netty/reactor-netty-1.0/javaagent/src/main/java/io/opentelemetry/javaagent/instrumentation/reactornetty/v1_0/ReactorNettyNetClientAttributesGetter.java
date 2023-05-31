@@ -19,7 +19,8 @@ final class ReactorNettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(HttpClientConfig request, @Nullable HttpClientResponse response) {
+  public String getNetworkProtocolName(
+      HttpClientConfig request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
     }
@@ -28,7 +29,7 @@ final class ReactorNettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolVersion(
+  public String getNetworkProtocolVersion(
       HttpClientConfig request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;

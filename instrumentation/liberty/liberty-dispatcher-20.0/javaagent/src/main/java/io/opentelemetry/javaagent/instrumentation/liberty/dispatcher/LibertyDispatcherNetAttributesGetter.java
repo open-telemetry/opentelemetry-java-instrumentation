@@ -9,11 +9,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributes
 import javax.annotation.Nullable;
 
 public class LibertyDispatcherNetAttributesGetter
-    implements NetServerAttributesGetter<LibertyRequest> {
+    implements NetServerAttributesGetter<LibertyRequest, LibertyResponse> {
 
   @Nullable
   @Override
-  public String getProtocolName(LibertyRequest request) {
+  public String getNetworkProtocolName(
+      LibertyRequest request, @Nullable LibertyResponse libertyResponse) {
     String protocol = request.getProtocol();
     if (protocol != null && protocol.startsWith("HTTP/")) {
       return "http";
@@ -23,7 +24,8 @@ public class LibertyDispatcherNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolVersion(LibertyRequest request) {
+  public String getNetworkProtocolVersion(
+      LibertyRequest request, @Nullable LibertyResponse libertyResponse) {
     String protocol = request.getProtocol();
     if (protocol != null && protocol.startsWith("HTTP/")) {
       return protocol.substring("HTTP/".length());

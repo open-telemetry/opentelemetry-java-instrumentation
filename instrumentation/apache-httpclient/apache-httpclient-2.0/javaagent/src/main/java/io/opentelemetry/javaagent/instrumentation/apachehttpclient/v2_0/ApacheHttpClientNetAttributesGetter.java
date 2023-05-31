@@ -15,13 +15,13 @@ final class ApacheHttpClientNetAttributesGetter
     implements NetClientAttributesGetter<HttpMethod, HttpMethod> {
 
   @Override
-  public String getProtocolName(HttpMethod request, @Nullable HttpMethod response) {
+  public String getNetworkProtocolName(HttpMethod request, @Nullable HttpMethod response) {
     return "http";
   }
 
   @Nullable
   @Override
-  public String getProtocolVersion(HttpMethod request, @Nullable HttpMethod response) {
+  public String getNetworkProtocolVersion(HttpMethod request, @Nullable HttpMethod response) {
     if (request instanceof HttpMethodBase) {
       return ((HttpMethodBase) request).isHttp11() ? "1.1" : "1.0";
     }

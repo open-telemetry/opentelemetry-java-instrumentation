@@ -24,6 +24,11 @@ final class NettyConnectNetAttributesGetter
     return channel instanceof DatagramChannel ? IP_UDP : IP_TCP;
   }
 
+  @Override
+  public String getNetworkTransport(NettyConnectionRequest request, @Nullable Channel channel) {
+    return channel instanceof DatagramChannel ? "udp" : "tcp";
+  }
+
   @Nullable
   @Override
   public String getPeerName(NettyConnectionRequest request) {

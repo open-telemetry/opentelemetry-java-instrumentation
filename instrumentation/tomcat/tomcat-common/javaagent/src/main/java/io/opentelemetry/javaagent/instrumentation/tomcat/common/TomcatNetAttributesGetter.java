@@ -11,12 +11,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributes
 import javax.annotation.Nullable;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.Request;
+import org.apache.coyote.Response;
 
-public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Request> {
+public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Request, Response> {
 
   @Nullable
   @Override
-  public String getProtocolName(Request request) {
+  public String getNetworkProtocolName(Request request, @Nullable Response response) {
     String protocol = messageBytesToString(request.protocol());
     if (protocol != null && protocol.startsWith("HTTP/")) {
       return "http";
@@ -26,7 +27,7 @@ public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
-  public String getProtocolVersion(Request request) {
+  public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
     String protocol = messageBytesToString(request.protocol());
     if (protocol != null && protocol.startsWith("HTTP/")) {
       return protocol.substring("HTTP/".length());
