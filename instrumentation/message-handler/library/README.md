@@ -7,7 +7,7 @@ The handler will create a single new messaging span, add span links to it, and s
 The handler provides constructors to change the messaging operation and span name of the newly created messaging span.
 
 ## Available Handlers
-- `SQSBatchMessageHandlerTest` - processes messages from Amazon's SQS.
+- `SQSBatchMessageHandler` - processes messages from Amazon's SQS.
 
 ## Using SQSBatchMessageHandler
 
