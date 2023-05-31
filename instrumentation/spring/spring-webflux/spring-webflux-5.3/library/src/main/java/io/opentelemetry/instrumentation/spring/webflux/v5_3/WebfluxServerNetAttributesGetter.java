@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 
 final class WebfluxServerNetAttributesGetter
-    implements NetServerAttributesGetter<ServerWebExchange> {
+    implements NetServerAttributesGetter<ServerWebExchange, ServerWebExchange> {
 
   @Nullable
   @Override

@@ -16,7 +16,7 @@ final class ApacheHttpClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(HttpRequest request, @Nullable HttpResponse response) {
+  public String getNetworkProtocolName(HttpRequest request, @Nullable HttpResponse response) {
     ProtocolVersion protocolVersion = getVersion(request, response);
     if (protocolVersion == null) {
       return null;
@@ -26,7 +26,7 @@ final class ApacheHttpClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolVersion(HttpRequest request, @Nullable HttpResponse response) {
+  public String getNetworkProtocolVersion(HttpRequest request, @Nullable HttpResponse response) {
     ProtocolVersion protocolVersion = getVersion(request, response);
     if (protocolVersion == null) {
       return null;

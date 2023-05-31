@@ -13,12 +13,13 @@ final class ApacheHttpClientNetAttributesGetter
     implements NetClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
-  public String getProtocolName(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+  public String getNetworkProtocolName(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getProtocolName();
   }
 
   @Override
-  public String getProtocolVersion(
+  public String getNetworkProtocolVersion(
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getProtocolVersion();
   }

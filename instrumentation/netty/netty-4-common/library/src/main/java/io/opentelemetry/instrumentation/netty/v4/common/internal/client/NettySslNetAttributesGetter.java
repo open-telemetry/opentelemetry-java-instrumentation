@@ -21,6 +21,11 @@ final class NettySslNetAttributesGetter
     return request.channel() instanceof DatagramChannel ? IP_UDP : IP_TCP;
   }
 
+  @Override
+  public String getNetworkTransport(NettySslRequest request, @Nullable Void unused) {
+    return request.channel() instanceof DatagramChannel ? "udp" : "tcp";
+  }
+
   @Nullable
   @Override
   public String getPeerName(NettySslRequest nettySslRequest) {

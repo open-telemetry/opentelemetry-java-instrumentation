@@ -9,13 +9,14 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
+import org.apache.dubbo.rpc.Result;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public final class DubboNetServerAttributesGetter
-    implements NetServerAttributesGetter<DubboRequest> {
+    implements NetServerAttributesGetter<DubboRequest, Result> {
 
   @Nullable
   @Override

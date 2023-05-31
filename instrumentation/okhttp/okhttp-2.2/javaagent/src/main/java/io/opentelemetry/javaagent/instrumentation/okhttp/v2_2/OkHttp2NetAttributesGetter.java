@@ -15,7 +15,7 @@ public final class OkHttp2NetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(Request request, @Nullable Response response) {
+  public String getNetworkProtocolName(Request request, @Nullable Response response) {
     if (response == null) {
       return null;
     }
@@ -32,7 +32,7 @@ public final class OkHttp2NetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolVersion(Request request, @Nullable Response response) {
+  public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
     if (response == null) {
       return null;
     }

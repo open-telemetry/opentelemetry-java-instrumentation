@@ -20,13 +20,13 @@ public class JettyHttpClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(Request request, @Nullable Response response) {
+  public String getNetworkProtocolName(Request request, @Nullable Response response) {
     return "http";
   }
 
   @Nullable
   @Override
-  public String getProtocolVersion(Request request, @Nullable Response response) {
+  public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
     HttpVersion httpVersion = null;
     if (response != null) {
       httpVersion = response.getVersion();

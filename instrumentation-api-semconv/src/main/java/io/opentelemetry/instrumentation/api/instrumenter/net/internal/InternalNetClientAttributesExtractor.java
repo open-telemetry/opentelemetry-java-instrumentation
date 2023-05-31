@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.Locale;
 import java.util.function.BiPredicate;
 import javax.annotation.Nullable;
 
@@ -23,14 +22,17 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
   private final NetClientAttributesGetter<REQUEST, RESPONSE> getter;
   private final BiPredicate<Integer, REQUEST> capturePeerPortCondition;
   private final FallbackNamePortGetter<REQUEST> fallbackNamePortGetter;
+  private final boolean emitOldHttpAttributes;
 
   public InternalNetClientAttributesExtractor(
       NetClientAttributesGetter<REQUEST, RESPONSE> getter,
       BiPredicate<Integer, REQUEST> capturePeerPortCondition,
-      FallbackNamePortGetter<REQUEST> fallbackNamePortGetter) {
+      FallbackNamePortGetter<REQUEST> fallbackNamePortGetter,
+      boolean emitOldHttpAttributes) {
     this.getter = getter;
     this.capturePeerPortCondition = capturePeerPortCondition;
     this.fallbackNamePortGetter = fallbackNamePortGetter;
+    this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
 
   public void onStart(AttributesBuilder attributes, REQUEST request) {
@@ -48,17 +50,10 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
 
   public void onEnd(AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
 
-    internalSet(
-        attributes, SemanticAttributes.NET_TRANSPORT, getter.getTransport(request, response));
-    String protocolName = getter.getProtocolName(request, response);
-    if (protocolName != null) {
+    if (emitOldHttpAttributes) {
       internalSet(
-          attributes, NetAttributes.NET_PROTOCOL_NAME, protocolName.toLowerCase(Locale.ROOT));
+          attributes, SemanticAttributes.NET_TRANSPORT, getter.getTransport(request, response));
     }
-    internalSet(
-        attributes,
-        NetAttributes.NET_PROTOCOL_VERSION,
-        getter.getProtocolVersion(request, response));
 
     String peerName = extractPeerName(request);
 
@@ -72,9 +67,11 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
         internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_PORT, (long) sockPeerPort);
       }
 
-      String sockFamily = getter.getSockFamily(request, response);
-      if (sockFamily != null && !SemanticAttributes.NetSockFamilyValues.INET.equals(sockFamily)) {
-        internalSet(attributes, SemanticAttributes.NET_SOCK_FAMILY, sockFamily);
+      if (emitOldHttpAttributes) {
+        String sockFamily = getter.getSockFamily(request, response);
+        if (sockFamily != null && !SemanticAttributes.NetSockFamilyValues.INET.equals(sockFamily)) {
+          internalSet(attributes, SemanticAttributes.NET_SOCK_FAMILY, sockFamily);
+        }
       }
 
       String sockPeerName = getter.getSockPeerName(request, response);

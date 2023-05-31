@@ -10,6 +10,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 
 /**
@@ -20,17 +22,26 @@ import javax.annotation.Nullable;
 public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private final InternalNetServerAttributesExtractor<REQUEST> internalExtractor;
-
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      NetServerAttributesGetter<REQUEST> getter) {
+      NetServerAttributesGetter<REQUEST, RESPONSE> getter) {
     return new NetServerAttributesExtractor<>(getter);
   }
 
-  private NetServerAttributesExtractor(NetServerAttributesGetter<REQUEST> getter) {
+  private final InternalNetServerAttributesExtractor<REQUEST, RESPONSE> internalExtractor;
+  private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
+
+  private NetServerAttributesExtractor(NetServerAttributesGetter<REQUEST, RESPONSE> getter) {
     internalExtractor =
         new InternalNetServerAttributesExtractor<>(
-            getter, (integer, request) -> true, FallbackNamePortGetter.noop());
+            getter,
+            (integer, request) -> true,
+            FallbackNamePortGetter.noop(),
+            SemconvStability.emitOldHttpSemconv());
+    internalNetworkExtractor =
+        new InternalNetworkAttributesExtractor<>(
+            getter,
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv());
   }
 
   @Override
@@ -44,5 +55,7 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
       Context context,
       REQUEST request,
       @Nullable RESPONSE response,
-      @Nullable Throwable error) {}
+      @Nullable Throwable error) {
+    internalNetworkExtractor.onEnd(attributes, request, response);
+  }
 }

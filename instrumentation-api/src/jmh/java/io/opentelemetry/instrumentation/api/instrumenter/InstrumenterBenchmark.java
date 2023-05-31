@@ -95,13 +95,13 @@ public class InstrumenterBenchmark {
 
     @Nullable
     @Override
-    public String getProtocolName(Void unused, @Nullable Void unused2) {
+    public String getNetworkProtocolName(Void unused, @Nullable Void unused2) {
       return "http";
     }
 
     @Nullable
     @Override
-    public String getProtocolVersion(Void unused, @Nullable Void unused2) {
+    public String getNetworkProtocolVersion(Void unused, @Nullable Void unused2) {
       return "2.0";
     }
 

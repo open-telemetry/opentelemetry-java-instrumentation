@@ -14,10 +14,11 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 import org.jboss.netty.channel.socket.DatagramChannel;
+import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpVersion;
 
 final class NettyNetServerAttributesGetter
-    implements NetServerAttributesGetter<HttpRequestAndChannel> {
+    implements NetServerAttributesGetter<HttpRequestAndChannel, HttpResponse> {
 
   @Override
   public String getTransport(HttpRequestAndChannel requestAndChannel) {
@@ -25,12 +26,20 @@ final class NettyNetServerAttributesGetter
   }
 
   @Override
-  public String getProtocolName(HttpRequestAndChannel requestAndChannel) {
+  public String getNetworkTransport(
+      HttpRequestAndChannel requestAndChannel, HttpResponse response) {
+    return requestAndChannel.channel() instanceof DatagramChannel ? "udp" : "tcp";
+  }
+
+  @Override
+  public String getNetworkProtocolName(
+      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return requestAndChannel.request().getProtocolVersion().getProtocolName();
   }
 
   @Override
-  public String getProtocolVersion(HttpRequestAndChannel requestAndChannel) {
+  public String getNetworkProtocolVersion(
+      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     HttpVersion version = requestAndChannel.request().getProtocolVersion();
     return version.getMajorVersion() + "." + version.getMinorVersion();
   }

@@ -22,12 +22,12 @@ public final class ArmeriaNetClientAttributesGetter
     implements NetClientAttributesGetter<RequestContext, RequestLog> {
 
   @Override
-  public String getProtocolName(RequestContext ctx, @Nullable RequestLog requestLog) {
+  public String getNetworkProtocolName(RequestContext ctx, @Nullable RequestLog requestLog) {
     return "http";
   }
 
   @Override
-  public String getProtocolVersion(RequestContext ctx, @Nullable RequestLog requestLog) {
+  public String getNetworkProtocolVersion(RequestContext ctx, @Nullable RequestLog requestLog) {
     SessionProtocol protocol = ctx.sessionProtocol();
     return protocol.isMultiplex() ? "2.0" : "1.1";
   }

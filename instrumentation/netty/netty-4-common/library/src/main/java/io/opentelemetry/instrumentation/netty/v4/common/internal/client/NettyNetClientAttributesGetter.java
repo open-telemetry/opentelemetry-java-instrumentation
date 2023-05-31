@@ -27,13 +27,19 @@ final class NettyNetClientAttributesGetter
   }
 
   @Override
-  public String getProtocolName(
+  public String getNetworkTransport(
+      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
+    return requestAndChannel.channel() instanceof DatagramChannel ? "udp" : "tcp";
+  }
+
+  @Override
+  public String getNetworkProtocolName(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return requestAndChannel.request().getProtocolVersion().protocolName();
   }
 
   @Override
-  public String getProtocolVersion(
+  public String getNetworkProtocolVersion(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     HttpVersion version = requestAndChannel.request().getProtocolVersion();
     return version.majorVersion() + "." + version.minorVersion();

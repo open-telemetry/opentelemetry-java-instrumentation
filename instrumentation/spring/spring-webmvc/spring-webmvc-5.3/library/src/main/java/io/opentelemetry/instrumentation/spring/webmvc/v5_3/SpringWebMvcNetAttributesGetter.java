@@ -8,13 +8,16 @@ package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-enum SpringWebMvcNetAttributesGetter implements NetServerAttributesGetter<HttpServletRequest> {
+enum SpringWebMvcNetAttributesGetter
+    implements NetServerAttributesGetter<HttpServletRequest, HttpServletResponse> {
   INSTANCE;
 
   @Nullable
   @Override
-  public String getProtocolName(HttpServletRequest request) {
+  public String getNetworkProtocolName(
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
     String protocol = request.getProtocol();
     if (protocol != null && protocol.startsWith("HTTP/")) {
       return "http";
@@ -24,7 +27,8 @@ enum SpringWebMvcNetAttributesGetter implements NetServerAttributesGetter<HttpSe
 
   @Nullable
   @Override
-  public String getProtocolVersion(HttpServletRequest request) {
+  public String getNetworkProtocolVersion(
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
     String protocol = request.getProtocol();
     if (protocol != null && protocol.startsWith("HTTP/")) {
       return protocol.substring("HTTP/".length());

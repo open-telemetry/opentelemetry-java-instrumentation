@@ -182,7 +182,7 @@ final class TestInstrumenters {
     }
   }
 
-  private enum NetServerGetter implements NetServerAttributesGetter<String> {
+  private enum NetServerGetter implements NetServerAttributesGetter<String, Void> {
     INSTANCE;
 
     @Nullable

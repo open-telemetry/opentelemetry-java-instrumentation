@@ -12,12 +12,14 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import javax.annotation.Nullable;
 import org.restlet.Request;
+import org.restlet.Response;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class RestletNetAttributesGetter implements NetServerAttributesGetter<Request> {
+public final class RestletNetAttributesGetter
+    implements NetServerAttributesGetter<Request, Response> {
 
   private static final Class<?> HTTP_REQUEST_CLASS;
   private static final MethodHandle GET_HTTP_CALL;
@@ -79,13 +81,13 @@ public final class RestletNetAttributesGetter implements NetServerAttributesGett
 
   @Nullable
   @Override
-  public String getProtocolName(Request request) {
+  public String getNetworkProtocolName(Request request, @Nullable Response response) {
     return request.getProtocol().getSchemeName();
   }
 
   @Nullable
   @Override
-  public String getProtocolVersion(Request request) {
+  public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
     return request.getProtocol().getVersion();
   }
 
