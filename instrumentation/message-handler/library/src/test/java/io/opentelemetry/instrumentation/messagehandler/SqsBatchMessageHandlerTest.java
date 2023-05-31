@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.messagehandler;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -30,8 +32,6 @@ import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 public class SqsBatchMessageHandlerTest {
 
   @RegisterExtension
@@ -42,7 +42,9 @@ public class SqsBatchMessageHandlerTest {
     try {
       Field field = OpenTelemetrySdk.class.getDeclaredField("propagators");
       field.setAccessible(true);
-      field.set(testing.getOpenTelemetrySdk(), ContextPropagators.create(AwsXrayPropagator.getInstance()));
+      field.set(
+          testing.getOpenTelemetrySdk(),
+          ContextPropagators.create(AwsXrayPropagator.getInstance()));
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -292,7 +294,9 @@ public class SqsBatchMessageHandlerTest {
 
     SqsBatchMessageHandler messageHandler =
         new SqsBatchMessageHandler(
-            testing.getOpenTelemetrySdk(), MessageOperation.PROCESS.name(), messages -> "New Name") {
+            testing.getOpenTelemetrySdk(),
+            MessageOperation.PROCESS.name(),
+            messages -> "New Name") {
           @Override
           protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
             counter.getAndIncrement();
@@ -353,8 +357,9 @@ public class SqsBatchMessageHandlerTest {
     Span parentSpan =
         testing.getOpenTelemetrySdk().getTracer("test").spanBuilder("test").startSpan();
 
-    assertThrows(StringIndexOutOfBoundsException.class,
-        ()->{
+    assertThrows(
+        StringIndexOutOfBoundsException.class,
+        () -> {
           try (Scope scope = parentSpan.makeCurrent()) {
             messageHandler.handleMessages(Collections.singletonList(sqsMessage));
           }

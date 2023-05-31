@@ -18,11 +18,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEvent.SQSMessage> {
   private static final String AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY = "AWSTraceHeader";
@@ -39,16 +39,16 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEven
   }
 
   public SqsBatchMessageHandler(
-      OpenTelemetry openTelemetry, String messageOperation, SpanNameExtractor<Collection<SQSEvent.SQSMessage>> spanNameExtractor) {
+      OpenTelemetry openTelemetry,
+      String messageOperation,
+      SpanNameExtractor<Collection<SQSEvent.SQSMessage>> spanNameExtractor) {
     super(openTelemetry, messageOperation, spanNameExtractor);
   }
 
   @Override
   protected void setup() {
-    InstrumenterBuilder<Collection<SQSEvent.SQSMessage>, Void> builder = Instrumenter.builder(
-        openTelemetry,
-        "io.opentelemetry.message.handler",
-        spanNameExtractor);
+    InstrumenterBuilder<Collection<SQSEvent.SQSMessage>, Void> builder =
+        Instrumenter.builder(openTelemetry, "io.opentelemetry.message.handler", spanNameExtractor);
 
     builder.setInstrumentationVersion("1.0");
     builder.addAttributesExtractor(getGenericAttributesExtractor());
@@ -59,34 +59,35 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEven
   }
 
   protected AttributesExtractor<Collection<SQSEvent.SQSMessage>, Void> getAttributesExtractor() {
-    return
-        new AttributesExtractor<Collection<SQSEvent.SQSMessage>, Void>() {
+    return new AttributesExtractor<Collection<SQSEvent.SQSMessage>, Void>() {
 
-          @Override
-          public void onStart(
-              AttributesBuilder attributes, Context parentContext, Collection<SQSEvent.SQSMessage> messages) {
-            attributes.put(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS");
-          }
+      @Override
+      public void onStart(
+          AttributesBuilder attributes,
+          Context parentContext,
+          Collection<SQSEvent.SQSMessage> messages) {
+        attributes.put(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS");
+      }
 
-          @Override
-          public void onEnd(
-              AttributesBuilder attributes,
-              Context context,
-              Collection<SQSEvent.SQSMessage> messages,
-              @Nullable Void unused,
-              @Nullable Throwable error) {
-
-          }
-        };
+      @Override
+      public void onEnd(
+          AttributesBuilder attributes,
+          Context context,
+          Collection<SQSEvent.SQSMessage> messages,
+          @Nullable Void unused,
+          @Nullable Throwable error) {}
+    };
   }
 
   protected SpanLinksExtractor<Collection<SQSEvent.SQSMessage>> getSpanLinksExtractor() {
     return (spanLinks, parentContext, sqsMessages) -> {
-      for (SQSEvent.SQSMessage message: sqsMessages) {
+      for (SQSEvent.SQSMessage message : sqsMessages) {
         String parentHeader = message.getAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
         if (parentHeader != null) {
           Context xrayContext =
-              openTelemetry.getPropagators().getTextMapPropagator()
+              openTelemetry
+                  .getPropagators()
+                  .getTextMapPropagator()
                   .extract(
                       Context.root(), // We don't want the ambient context.
                       Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),

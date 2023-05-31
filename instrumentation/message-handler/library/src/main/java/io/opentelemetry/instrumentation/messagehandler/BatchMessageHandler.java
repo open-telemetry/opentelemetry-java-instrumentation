@@ -14,8 +14,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import javax.annotation.Nullable;
 import java.util.Collection;
+import javax.annotation.Nullable;
 
 public abstract class BatchMessageHandler<T> {
   protected String messagingOperation;
@@ -33,7 +33,9 @@ public abstract class BatchMessageHandler<T> {
   }
 
   public BatchMessageHandler(
-      OpenTelemetry openTelemetry, String messageOperation, SpanNameExtractor<Collection<T>> spanNameExtractor) {
+      OpenTelemetry openTelemetry,
+      String messageOperation,
+      SpanNameExtractor<Collection<T>> spanNameExtractor) {
     this.openTelemetry = openTelemetry;
     this.spanNameExtractor = spanNameExtractor;
     this.messagingOperation = messageOperation;
@@ -46,25 +48,22 @@ public abstract class BatchMessageHandler<T> {
   protected abstract void doHandleMessages(Collection<T> messages);
 
   protected AttributesExtractor<Collection<T>, Void> getGenericAttributesExtractor() {
-    return
-        new AttributesExtractor<Collection<T>, Void>() {
+    return new AttributesExtractor<Collection<T>, Void>() {
 
-          @Override
-          public void onStart(
-              AttributesBuilder attributes, Context parentContext, Collection<T> messages) {
-            attributes.put(SemanticAttributes.MESSAGING_OPERATION, messagingOperation);
-          }
+      @Override
+      public void onStart(
+          AttributesBuilder attributes, Context parentContext, Collection<T> messages) {
+        attributes.put(SemanticAttributes.MESSAGING_OPERATION, messagingOperation);
+      }
 
-          @Override
-          public void onEnd(
-              AttributesBuilder attributes,
-              Context context,
-              Collection<T> messages,
-              @Nullable Void unused,
-              @Nullable Throwable error) {
-
-          }
-      };
+      @Override
+      public void onEnd(
+          AttributesBuilder attributes,
+          Context context,
+          Collection<T> messages,
+          @Nullable Void unused,
+          @Nullable Throwable error) {}
+    };
   }
 
   public void handleMessages(Collection<T> messages) {
