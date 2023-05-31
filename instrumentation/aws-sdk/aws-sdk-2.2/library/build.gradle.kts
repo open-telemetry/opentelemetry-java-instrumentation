@@ -11,9 +11,6 @@ dependencies {
   compileOnly(project(":muzzle")) // For @NoMuzzle
 
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-  testImplementation(project(":muzzle"))
-  testImplementation(project(":javaagent-extension-api"))
-  testRuntimeOnly(project(":instrumentation:aws-sdk:aws-sdk-2.2:javaagent"))
 
   latestDepTestLibrary("software.amazon.awssdk:aws-core:+")
   latestDepTestLibrary("software.amazon.awssdk:aws-json-protocol:+")
