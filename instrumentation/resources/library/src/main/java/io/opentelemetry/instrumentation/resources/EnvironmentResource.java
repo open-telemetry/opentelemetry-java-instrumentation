@@ -25,7 +25,7 @@ public final class EnvironmentResource {
   static final String SERVICE_NAME_PROPERTY = "otel.service.name";
 
   private static final Resource INSTANCE =
-      buildResource(DefaultConfigProperties.create(Collections.emptyMap()));
+      create(DefaultConfigProperties.create(Collections.emptyMap()));
 
   /**
    * Returns a new {@link Resource} from the environment. The resource contains attributes parsed
@@ -46,11 +46,7 @@ public final class EnvironmentResource {
    * @return the resource
    */
   public static Resource create(ConfigProperties configProperties) {
-    return buildResource(configProperties);
-  }
-
-  static Resource buildResource(ConfigProperties config) {
-    return Resource.create(getAttributes(config), ResourceAttributes.SCHEMA_URL);
+    return Resource.create(getAttributes(configProperties), ResourceAttributes.SCHEMA_URL);
   }
 
   // visible for testing

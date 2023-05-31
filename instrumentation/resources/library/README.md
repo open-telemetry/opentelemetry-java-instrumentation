@@ -5,6 +5,16 @@ common environments. Currently, the resources provide the following semantic con
 
 ## Populated attributes
 
+### Container
+
+Provider: `io.opentelemetry.instrumentation.resources.ContainerResource`
+
+Specification: <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/container.md>
+
+Implemented attributes:
+
+- `container.id`
+
 ### Environment
 
 Provider: `io.opentelemetry.instrumentation.resources.EnvironmentResourceProvider`
@@ -16,16 +26,6 @@ Parses environment variables / system properties in keys `otel.service.name` and
 Implemented attributes:
 
 - `service.name`, *
-
-### Container
-
-Provider: `io.opentelemetry.instrumentation.resources.ContainerResource`
-
-Specification: <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/container.md>
-
-Implemented attributes:
-
-- `container.id`
 
 ### Host
 
