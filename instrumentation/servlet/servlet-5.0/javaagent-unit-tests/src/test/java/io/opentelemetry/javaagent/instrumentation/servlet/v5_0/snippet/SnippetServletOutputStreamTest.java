@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
+package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.TestUtil.readFileAsBytes;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.TestUtil.readFileAsBytes;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.mock;
@@ -13,12 +13,13 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.javaagent.instrumentation.servlet.snippet.InjectionState;
 import io.opentelemetry.javaagent.instrumentation.servlet.snippet.OutputStreamSnippetInjectionHelper;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.WriteListener;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.function.Supplier;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 
 class SnippetServletOutputStreamTest {
@@ -68,6 +69,7 @@ class SnippetServletOutputStreamTest {
 
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
+
     Supplier<String> stringSupplier = snippet::toString;
     OutputStreamSnippetInjectionHelper helper =
         new OutputStreamSnippetInjectionHelper(stringSupplier);
@@ -129,20 +131,29 @@ class SnippetServletOutputStreamTest {
     HttpServletResponse response = mock(HttpServletResponse.class);
     when(response.isCommitted()).thenReturn(false);
     when(response.getCharacterEncoding()).thenReturn(charset.name());
-    return new InjectionState(new Servlet3SnippetInjectingResponseWrapper(response, snippet));
+
+    return new InjectionState(new Servlet5SnippetInjectingResponseWrapper(response, snippet));
   }
 
   private static class InMemoryServletOutputStream extends ServletOutputStream {
 
     private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-    @Override
-    public void write(int b) {
-      baos.write(b);
-    }
-
     public byte[] getBytes() {
       return baos.toByteArray();
+    }
+
+    @Override
+    public boolean isReady() {
+      return false;
+    }
+
+    @Override
+    public void setWriteListener(WriteListener writeListener) {}
+
+    @Override
+    public void write(int b) throws IOException {
+      baos.write(b);
     }
   }
 }

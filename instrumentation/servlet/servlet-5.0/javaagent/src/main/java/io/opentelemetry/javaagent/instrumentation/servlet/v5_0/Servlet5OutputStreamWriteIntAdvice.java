@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
+package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.getSnippetInjectionHelper;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.getSnippetInjectionHelper;
 
 import io.opentelemetry.javaagent.instrumentation.servlet.snippet.InjectionState;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.ServletOutputStreamInjectionState;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.ServletOutputStreamInjectionState;
+import jakarta.servlet.ServletOutputStream;
 import java.io.IOException;
-import javax.servlet.ServletOutputStream;
 import net.bytebuddy.asm.Advice;
 
-public class Servlet3OutputStreamWriteIntAdvice {
+public class Servlet5OutputStreamWriteIntAdvice {
 
   @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, suppress = Throwable.class)
   public static boolean methodEnter(

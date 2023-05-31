@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
+package io.opentelemetry.javaagent.instrumentation.servlet.snippet;
 
 // this is shared by both ServletOutputStream and PrintWriter injection
 public class InjectionState {

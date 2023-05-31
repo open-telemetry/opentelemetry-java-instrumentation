@@ -3,21 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
+package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.getSnippetInjectionHelper;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.getSnippetInjectionHelper;
 
 import io.opentelemetry.javaagent.instrumentation.servlet.snippet.InjectionState;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.ServletOutputStreamInjectionState;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.ServletOutputStreamInjectionState;
+import jakarta.servlet.ServletOutputStream;
 import java.io.IOException;
-import javax.servlet.ServletOutputStream;
 import net.bytebuddy.asm.Advice;
 
-public class Servlet3OutputStreamWriteIntAdvice {
-
+public class Servlet5OutputStreamWriteBytesAndOffsetAdvice {
   @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, suppress = Throwable.class)
   public static boolean methodEnter(
-      @Advice.This ServletOutputStream servletOutputStream, @Advice.Argument(0) int write)
+      @Advice.This ServletOutputStream servletOutputStream,
+      @Advice.Argument(value = 0) byte[] write,
+      @Advice.Argument(value = 1) int off,
+      @Advice.Argument(value = 2) int len)
       throws IOException {
     InjectionState state = ServletOutputStreamInjectionState.getInjectionState(servletOutputStream);
     if (state == null) {
@@ -28,6 +30,6 @@ public class Servlet3OutputStreamWriteIntAdvice {
     // call (see skipOn above)
     // if it returns false, then it means nothing was written to the servletOutputStream and the
     // original method call should be executed
-    return !getSnippetInjectionHelper().handleWrite(state, servletOutputStream, write);
+    return !getSnippetInjectionHelper().handleWrite(state, servletOutputStream, write, off, len);
   }
 }
