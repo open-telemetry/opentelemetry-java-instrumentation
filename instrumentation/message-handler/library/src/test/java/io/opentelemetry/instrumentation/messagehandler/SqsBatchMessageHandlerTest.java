@@ -366,6 +366,64 @@ public class SqsBatchMessageHandlerTest {
         });
   }
 
+  @Test
+  public void exceptionInHandle() {
+    SQSEvent.SQSMessage sqsMessage = newMessage();
+
+    sqsMessage.setAttributes(
+        Collections.singletonMap(
+            "AWSTraceHeader",
+            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"));
+
+    AtomicInteger counter = new AtomicInteger(0);
+
+    SqsBatchMessageHandler messageHandler =
+        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk()) {
+          @Override
+          protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+            counter.getAndIncrement();
+            throw new RuntimeException("Injected Error");
+          }
+        };
+
+    Span parentSpan =
+        testing.getOpenTelemetrySdk().getTracer("test").spanBuilder("test").startSpan();
+
+    assertThrows(
+        RuntimeException.class,
+        () -> {
+          try (Scope scope = parentSpan.makeCurrent()) {
+            messageHandler.handleMessages(Collections.singletonList(sqsMessage));
+          }
+    });
+
+    parentSpan.end();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
+                span ->
+                    span.hasName("Batch Message")
+                        .hasLinks(
+                            LinkData.create(
+                                SpanContext.createFromRemoteParent(
+                                    "55555555123456789012345678901234",
+                                    "1234567890123456",
+                                    TraceFlags.getSampled(),
+                                    TraceState.getDefault())))
+                        .hasTotalRecordedLinks(1)
+                        .hasException(new RuntimeException("Injected Error"))
+                        .hasAttribute(
+                            SemanticAttributes.MESSAGING_OPERATION, MessageOperation.RECEIVE.name())
+                        .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
+                        .hasTotalAttributeCount(2)
+                        .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
+                        .hasTraceId(parentSpan.getSpanContext().getTraceId())));
+
+    Assert.assertEquals(1, counter.get());
+  }
+
   private static SQSEvent.SQSMessage newMessage() {
     try {
       Constructor<SQSEvent.SQSMessage> ctor = SQSEvent.SQSMessage.class.getDeclaredConstructor();
