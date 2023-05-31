@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  testImplementation("org.testcontainers:testcontainers:1.18.1")
+  testImplementation("org.testcontainers:testcontainers:1.18.2")
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.1")
   testImplementation("com.google.protobuf:protobuf-java-util:3.23.2")
   testImplementation("com.squareup.okhttp3:okhttp:4.11.0")
