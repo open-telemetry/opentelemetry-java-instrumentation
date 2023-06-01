@@ -395,7 +395,7 @@ public class SqsBatchMessageHandlerTest {
           try (Scope scope = parentSpan.makeCurrent()) {
             messageHandler.handleMessages(Collections.singletonList(sqsMessage));
           }
-    });
+        });
 
     parentSpan.end();
 
