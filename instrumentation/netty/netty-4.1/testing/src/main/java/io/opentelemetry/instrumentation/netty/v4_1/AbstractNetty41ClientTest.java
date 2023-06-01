@@ -13,7 +13,9 @@ import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
@@ -27,6 +29,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractNetty41ClientTest
     extends AbstractHttpClientTest<DefaultFullHttpRequest> {
@@ -88,6 +91,9 @@ public abstract class AbstractNetty41ClientTest
     configureChannel(ch);
     CompletableFuture<Integer> result = new CompletableFuture<>();
     result.whenComplete((status, throwable) -> httpClientResult.complete(() -> status, throwable));
+    if (uri.toString().contains("/read-timeout")) {
+      ch.pipeline().addLast(new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
+    }
     ch.pipeline().addLast(new ClientHandler(result));
     ch.writeAndFlush(defaultFullHttpRequest);
   }
@@ -128,5 +134,30 @@ public abstract class AbstractNetty41ClientTest
       default:
         return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
     }
+  }
+
+  @Test
+  void closeChannel() throws ExecutionException, InterruptedException {
+    String method = "GET";
+    URI uri = resolveAddress("/read-timeout");
+    DefaultFullHttpRequest request = buildRequest(method, uri, Collections.emptyMap());
+
+    Channel channel =
+        clientExtension().getBootstrap(uri).connect(uri.getHost(), getPort(uri)).sync().channel();
+    configureChannel(channel);
+    CompletableFuture<Integer> result = new CompletableFuture<>();
+    channel.pipeline().addLast(new ClientHandler(result));
+    channel
+        .pipeline()
+        .addLast(new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
+    channel.writeAndFlush(request).get();
+    Thread.sleep(1_000);
+    channel.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasNoParent(),
+                span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))));
   }
 }
