@@ -44,13 +44,14 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEven
 
   @Override
   protected void setup() {
-    messageInstrumenter = Instrumenter
-        .<Collection<SQSEvent.SQSMessage>, Void>builder(getOpenTelemetry(), "io.opentelemetry.message.handler", getSpanNameExtractor())
-          .setInstrumentationVersion("1.0")
-          .addAttributesExtractor(getGenericAttributesExtractor())
-          .addAttributesExtractor(getAttributesExtractor())
-          .addSpanLinksExtractor(getSpanLinksExtractor())
-          .buildInstrumenter();
+    messageInstrumenter =
+        Instrumenter.<Collection<SQSEvent.SQSMessage>, Void>builder(
+                getOpenTelemetry(), "io.opentelemetry.message.handler", getSpanNameExtractor())
+            .setInstrumentationVersion("1.0")
+            .addAttributesExtractor(getGenericAttributesExtractor())
+            .addAttributesExtractor(getAttributesExtractor())
+            .addSpanLinksExtractor(getSpanLinksExtractor())
+            .buildInstrumenter();
   }
 
   protected AttributesExtractor<Collection<SQSEvent.SQSMessage>, Void> getAttributesExtractor() {
