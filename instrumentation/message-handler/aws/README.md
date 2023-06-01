@@ -26,5 +26,5 @@ SqsBatchMessageHandler messageHandler = new SqsBatchMessageHandler(GlobalOpenTel
   }
 };
 
-messageHandler.handleMessages(sqsMessages);
+messageHandler.handleMessages(sqsMessages, messages -> "Receiving Messages");
 ```

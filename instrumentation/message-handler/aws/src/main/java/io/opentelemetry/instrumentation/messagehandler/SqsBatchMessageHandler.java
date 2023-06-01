@@ -14,7 +14,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -30,30 +29,28 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEven
   // lower-case map getter used for extraction
   static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 
-  public SqsBatchMessageHandler(OpenTelemetry openTelemetry) {
-    super(openTelemetry);
-  }
-
-  public SqsBatchMessageHandler(OpenTelemetry openTelemetry, String messageOperation) {
-    super(openTelemetry, messageOperation);
+  public SqsBatchMessageHandler(
+      OpenTelemetry openTelemetry,
+      SpanNameExtractor<Collection<SQSEvent.SQSMessage>> spanNameExtractor) {
+    super(openTelemetry, spanNameExtractor);
   }
 
   public SqsBatchMessageHandler(
       OpenTelemetry openTelemetry,
-      String messageOperation,
-      SpanNameExtractor<Collection<SQSEvent.SQSMessage>> spanNameExtractor) {
-    super(openTelemetry, messageOperation, spanNameExtractor);
+      SpanNameExtractor<Collection<SQSEvent.SQSMessage>> spanNameExtractor,
+      String messageOperation) {
+    super(openTelemetry, spanNameExtractor, messageOperation);
   }
 
   @Override
   protected void setup() {
     messageInstrumenter = Instrumenter
-        .builder(openTelemetry, "io.opentelemetry.message.handler", spanNameExtractor)
-        .setInstrumentationVersion("1.0")
-        .addAttributesExtractor(getGenericAttributesExtractor())
-        .addAttributesExtractor(getAttributesExtractor())
-        .addSpanLinksExtractor(getSpanLinksExtractor())
-        .buildInstrumenter();
+        .<Collection<SQSEvent.SQSMessage>, Void>builder(getOpenTelemetry(), "io.opentelemetry.message.handler", getSpanNameExtractor())
+          .setInstrumentationVersion("1.0")
+          .addAttributesExtractor(getGenericAttributesExtractor())
+          .addAttributesExtractor(getAttributesExtractor())
+          .addSpanLinksExtractor(getSpanLinksExtractor())
+          .buildInstrumenter();
   }
 
   protected AttributesExtractor<Collection<SQSEvent.SQSMessage>, Void> getAttributesExtractor() {
@@ -83,7 +80,7 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEven
         String parentHeader = message.getAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
         if (parentHeader != null) {
           Context xrayContext =
-              openTelemetry
+              getOpenTelemetry()
                   .getPropagators()
                   .getTextMapPropagator()
                   .extract(

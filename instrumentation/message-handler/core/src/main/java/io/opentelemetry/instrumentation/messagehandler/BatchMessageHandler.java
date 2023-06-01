@@ -18,29 +18,34 @@ import java.util.Collection;
 import javax.annotation.Nullable;
 
 public abstract class BatchMessageHandler<T> {
-  protected String messagingOperation;
-  protected OpenTelemetry openTelemetry;
-  protected SpanNameExtractor<Collection<T>> spanNameExtractor;
+  private final String messagingOperation;
+  private final OpenTelemetry openTelemetry;
+  private final SpanNameExtractor<Collection<T>> spanNameExtractor;
 
   protected Instrumenter<Collection<T>, Void> messageInstrumenter;
 
-  public BatchMessageHandler(OpenTelemetry openTelemetry) {
-    this(openTelemetry, MessageOperation.RECEIVE.name());
-  }
-
-  public BatchMessageHandler(OpenTelemetry openTelemetry, String messageOperation) {
-    this(openTelemetry, messageOperation, messages -> "Batch Message");
+  public BatchMessageHandler(
+      OpenTelemetry openTelemetry, SpanNameExtractor<Collection<T>> spanNameExtractor) {
+    this(openTelemetry, spanNameExtractor, MessageOperation.RECEIVE.name());
   }
 
   public BatchMessageHandler(
       OpenTelemetry openTelemetry,
-      String messageOperation,
-      SpanNameExtractor<Collection<T>> spanNameExtractor) {
+      SpanNameExtractor<Collection<T>> spanNameExtractor,
+      String messageOperation) {
     this.openTelemetry = openTelemetry;
     this.spanNameExtractor = spanNameExtractor;
     this.messagingOperation = messageOperation;
 
     setup();
+  }
+
+  protected OpenTelemetry getOpenTelemetry() {
+    return openTelemetry;
+  }
+
+  protected SpanNameExtractor<Collection<T>> getSpanNameExtractor() {
+    return spanNameExtractor;
   }
 
   protected abstract void setup();

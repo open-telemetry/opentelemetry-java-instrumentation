@@ -62,7 +62,7 @@ public class SqsBatchMessageHandlerTest {
     AtomicInteger counter = new AtomicInteger(0);
 
     SqsBatchMessageHandler messageHandler =
-        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk()) {
+        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk(), messages -> "Batch of Messages") {
           @Override
           protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
             counter.getAndIncrement();
@@ -83,7 +83,7 @@ public class SqsBatchMessageHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("Batch Message")
+                    span.hasName("Batch of Messages")
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -123,7 +123,7 @@ public class SqsBatchMessageHandlerTest {
     AtomicInteger counter = new AtomicInteger(0);
 
     SqsBatchMessageHandler messageHandler =
-        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk()) {
+        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk(), messages -> "Batch of Messages") {
           @Override
           protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
             counter.getAndIncrement();
@@ -144,7 +144,7 @@ public class SqsBatchMessageHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("Batch Message")
+                    span.hasName("Batch of Messages")
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -186,7 +186,10 @@ public class SqsBatchMessageHandlerTest {
     AtomicInteger counter = new AtomicInteger(0);
 
     SqsBatchMessageHandler messageHandler =
-        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk(), MessageOperation.PROCESS.name()) {
+        new SqsBatchMessageHandler(
+            testing.getOpenTelemetrySdk(),
+            messages -> "Batch of Messages",
+            MessageOperation.PROCESS.name()) {
           @Override
           protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
             counter.getAndIncrement();
@@ -208,7 +211,7 @@ public class SqsBatchMessageHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("Batch Message")
+                    span.hasName("Batch of Messages")
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -224,7 +227,7 @@ public class SqsBatchMessageHandlerTest {
                         .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
                         .hasTraceId(parentSpan.getSpanContext().getTraceId()),
                 span ->
-                    span.hasName("Batch Message")
+                    span.hasName("Batch of Messages")
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -248,7 +251,7 @@ public class SqsBatchMessageHandlerTest {
     AtomicInteger counter = new AtomicInteger(0);
 
     SqsBatchMessageHandler messageHandler =
-        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk()) {
+        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk(), messages -> "Batch of Messages") {
           @Override
           protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
             counter.getAndIncrement();
@@ -269,7 +272,7 @@ public class SqsBatchMessageHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("Batch Message")
+                    span.hasName("Batch of Messages")
                         .hasTotalRecordedLinks(0)
                         .hasAttribute(
                             SemanticAttributes.MESSAGING_OPERATION, MessageOperation.RECEIVE.name())
@@ -295,8 +298,8 @@ public class SqsBatchMessageHandlerTest {
     SqsBatchMessageHandler messageHandler =
         new SqsBatchMessageHandler(
             testing.getOpenTelemetrySdk(),
-            MessageOperation.PROCESS.name(),
-            messages -> "New Name") {
+            messages -> "New Name",
+            MessageOperation.PROCESS.name()) {
           @Override
           protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
             counter.getAndIncrement();
@@ -347,7 +350,7 @@ public class SqsBatchMessageHandlerTest {
     AtomicInteger counter = new AtomicInteger(0);
 
     SqsBatchMessageHandler messageHandler =
-        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk()) {
+        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk(), messages -> "Batch of Messages") {
           @Override
           protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
             counter.getAndIncrement();
@@ -378,7 +381,7 @@ public class SqsBatchMessageHandlerTest {
     AtomicInteger counter = new AtomicInteger(0);
 
     SqsBatchMessageHandler messageHandler =
-        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk()) {
+        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk(), messages -> "Batch of Messages") {
           @Override
           protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
             counter.getAndIncrement();
@@ -404,7 +407,7 @@ public class SqsBatchMessageHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("Batch Message")
+                    span.hasName("Batch of Messages")
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(

@@ -3,9 +3,9 @@ plugins {
 }
 
 dependencies {
-  api(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:library"))
-
   compileOnly("io.opentelemetry:opentelemetry-sdk")
+
+  implementation(project(":instrumentation:message-handler:core"))
 
   library("com.amazonaws:aws-lambda-java-core:1.0.0")
   library("com.amazonaws:aws-lambda-java-events:2.2.1")
