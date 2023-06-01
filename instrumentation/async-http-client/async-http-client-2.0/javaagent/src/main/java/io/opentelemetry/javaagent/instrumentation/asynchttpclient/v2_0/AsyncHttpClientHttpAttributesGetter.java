@@ -14,7 +14,7 @@ final class AsyncHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<RequestContext, Response> {
 
   @Override
-  public String getMethod(RequestContext requestContext) {
+  public String getHttpRequestMethod(RequestContext requestContext) {
     return requestContext.getRequest().getMethod();
   }
 
@@ -24,18 +24,18 @@ final class AsyncHttpClientHttpAttributesGetter
   }
 
   @Override
-  public List<String> getRequestHeader(RequestContext requestContext, String name) {
+  public List<String> getHttpRequestHeader(RequestContext requestContext, String name) {
     return requestContext.getRequest().getHeaders().getAll(name);
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       RequestContext requestContext, Response response, @Nullable Throwable error) {
     return response.getStatusCode();
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       RequestContext requestContext, Response response, String name) {
     return response.getHeaders().getAll(name);
   }

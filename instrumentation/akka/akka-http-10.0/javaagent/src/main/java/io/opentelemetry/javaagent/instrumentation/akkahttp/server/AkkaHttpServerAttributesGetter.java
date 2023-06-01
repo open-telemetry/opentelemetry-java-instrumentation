@@ -17,23 +17,23 @@ class AkkaHttpServerAttributesGetter
     implements HttpServerAttributesGetter<HttpRequest, HttpResponse> {
 
   @Override
-  public String getMethod(HttpRequest request) {
+  public String getHttpRequestMethod(HttpRequest request) {
     return request.method().value();
   }
 
   @Override
-  public List<String> getRequestHeader(HttpRequest request, String name) {
+  public List<String> getHttpRequestHeader(HttpRequest request, String name) {
     return AkkaHttpUtil.requestHeader(request, name);
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       HttpRequest request, HttpResponse httpResponse, @Nullable Throwable error) {
     return httpResponse.status().intValue();
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       HttpRequest request, HttpResponse httpResponse, String name) {
     return AkkaHttpUtil.responseHeader(httpResponse, name);
   }

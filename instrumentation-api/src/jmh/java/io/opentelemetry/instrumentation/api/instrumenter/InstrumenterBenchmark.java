@@ -65,12 +65,12 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    public String getMethod(Void unused) {
+    public String getHttpRequestMethod(Void unused) {
       return "GET";
     }
 
     @Override
-    public List<String> getRequestHeader(Void unused, String name) {
+    public List<String> getHttpRequestHeader(Void unused, String name) {
       if (name.equalsIgnoreCase("user-agent")) {
         return Collections.singletonList("OpenTelemetryBot");
       }
@@ -78,12 +78,12 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    public Integer getStatusCode(Void unused, Void unused2, @Nullable Throwable error) {
+    public Integer getHttpResponseStatusCode(Void unused, Void unused2, @Nullable Throwable error) {
       return 200;
     }
 
     @Override
-    public List<String> getResponseHeader(Void unused, Void unused2, String name) {
+    public List<String> getHttpResponseHeader(Void unused, Void unused2, String name) {
       return Collections.emptyList();
     }
   }

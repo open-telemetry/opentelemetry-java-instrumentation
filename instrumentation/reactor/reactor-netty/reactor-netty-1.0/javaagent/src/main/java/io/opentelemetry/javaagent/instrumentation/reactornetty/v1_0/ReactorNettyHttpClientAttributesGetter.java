@@ -58,23 +58,23 @@ final class ReactorNettyHttpClientAttributesGetter
   }
 
   @Override
-  public String getMethod(HttpClientConfig request) {
+  public String getHttpRequestMethod(HttpClientConfig request) {
     return request.method().name();
   }
 
   @Override
-  public List<String> getRequestHeader(HttpClientConfig request, String name) {
+  public List<String> getHttpRequestHeader(HttpClientConfig request, String name) {
     return request.headers().getAll(name);
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       HttpClientConfig request, HttpClientResponse response, @Nullable Throwable error) {
     return response.status().code();
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       HttpClientConfig request, HttpClientResponse response, String name) {
     return response.responseHeaders().getAll(name);
   }

@@ -109,7 +109,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     internalUrlExtractor.onStart(attributes, request);
     internalNetExtractor.onStart(attributes, request);
 
-    internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.getRoute(request));
+    internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.getHttpRoute(request));
     internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
   }
 
@@ -145,7 +145,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     }
 
     // try Forwarded
-    String forwarded = firstHeaderValue(getter.getRequestHeader(request, "forwarded"));
+    String forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "forwarded"));
     if (forwarded != null) {
       forwarded = extractProtoFromForwardedHeader(forwarded);
       if (forwarded != null) {
@@ -154,7 +154,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     }
 
     // try X-Forwarded-Proto
-    forwarded = firstHeaderValue(getter.getRequestHeader(request, "x-forwarded-proto"));
+    forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "x-forwarded-proto"));
     if (forwarded != null) {
       return extractProtoFromForwardedProtoHeader(forwarded);
     }
@@ -165,7 +165,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   @Nullable
   private String clientIp(REQUEST request) {
     // try Forwarded
-    String forwarded = firstHeaderValue(getter.getRequestHeader(request, "forwarded"));
+    String forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "forwarded"));
     if (forwarded != null) {
       forwarded = extractClientIpFromForwardedHeader(forwarded);
       if (forwarded != null) {
@@ -174,7 +174,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     }
 
     // try X-Forwarded-For
-    forwarded = firstHeaderValue(getter.getRequestHeader(request, "x-forwarded-for"));
+    forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "x-forwarded-for"));
     if (forwarded != null) {
       return extractClientIpFromForwardedForHeader(forwarded);
     }

@@ -20,7 +20,7 @@ final class ApacheHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpMethod, HttpMethod> {
 
   @Override
-  public String getMethod(HttpMethod request) {
+  public String getHttpRequestMethod(HttpMethod request) {
     return request.getName();
   }
 
@@ -56,20 +56,21 @@ final class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  public List<String> getRequestHeader(HttpMethod request, String name) {
+  public List<String> getHttpRequestHeader(HttpMethod request, String name) {
     Header header = request.getRequestHeader(name);
     return header == null ? emptyList() : singletonList(header.getValue());
   }
 
   @Override
   @Nullable
-  public Integer getStatusCode(HttpMethod request, HttpMethod response, @Nullable Throwable error) {
+  public Integer getHttpResponseStatusCode(
+      HttpMethod request, HttpMethod response, @Nullable Throwable error) {
     StatusLine statusLine = response.getStatusLine();
     return statusLine == null ? null : statusLine.getStatusCode();
   }
 
   @Override
-  public List<String> getResponseHeader(HttpMethod request, HttpMethod response, String name) {
+  public List<String> getHttpResponseHeader(HttpMethod request, HttpMethod response, String name) {
     Header header = response.getResponseHeader(name);
     return header == null ? emptyList() : singletonList(header.getValue());
   }

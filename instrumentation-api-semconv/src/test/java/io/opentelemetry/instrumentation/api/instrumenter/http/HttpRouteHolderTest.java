@@ -58,7 +58,7 @@ class HttpRouteHolderTest {
 
   @Test
   void shouldSetRoute() {
-    when(getter.getMethod("test")).thenReturn("GET");
+    when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
     assertNull(HttpRouteHolder.getRoute(context));
@@ -74,7 +74,7 @@ class HttpRouteHolderTest {
 
   @Test
   void shouldNotUpdateRoute_sameSource() {
-    when(getter.getMethod("test")).thenReturn("GET");
+    when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
     assertNull(HttpRouteHolder.getRoute(context));
@@ -91,7 +91,7 @@ class HttpRouteHolderTest {
 
   @Test
   void shouldNotUpdateRoute_lowerOrderSource() {
-    when(getter.getMethod("test")).thenReturn("GET");
+    when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
     assertNull(HttpRouteHolder.getRoute(context));
@@ -108,7 +108,7 @@ class HttpRouteHolderTest {
 
   @Test
   void shouldUpdateRoute_higherOrderSource() {
-    when(getter.getMethod("test")).thenReturn("GET");
+    when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
     assertNull(HttpRouteHolder.getRoute(context));
@@ -125,7 +125,7 @@ class HttpRouteHolderTest {
 
   @Test
   void shouldUpdateRoute_betterMatch() {
-    when(getter.getMethod("test")).thenReturn("GET");
+    when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
     assertNull(HttpRouteHolder.getRoute(context));
@@ -142,7 +142,7 @@ class HttpRouteHolderTest {
 
   @Test
   void shouldNotUpdateRoute_worseMatch() {
-    when(getter.getMethod("test")).thenReturn("GET");
+    when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
     assertNull(HttpRouteHolder.getRoute(context));
@@ -159,7 +159,7 @@ class HttpRouteHolderTest {
 
   @Test
   void shouldNotUpdateSpanName_noMethod() {
-    when(getter.getMethod("test")).thenReturn(null);
+    when(getter.getHttpRequestMethod("test")).thenReturn(null);
 
     Context context = instrumenter.start(Context.root(), "test");
     assertNull(HttpRouteHolder.getRoute(context));

@@ -32,7 +32,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
       implements HttpServerAttributesGetter<Map<String, Object>, Map<String, Object>> {
 
     @Override
-    public String getMethod(Map<String, Object> request) {
+    public String getHttpRequestMethod(Map<String, Object> request) {
       return (String) request.get("method");
     }
 
@@ -54,25 +54,25 @@ class HttpServerAttributesExtractorStableSemconvTest {
     }
 
     @Override
-    public String getRoute(Map<String, Object> request) {
+    public String getHttpRoute(Map<String, Object> request) {
       return (String) request.get("route");
     }
 
     @Override
-    public List<String> getRequestHeader(Map<String, Object> request, String name) {
+    public List<String> getHttpRequestHeader(Map<String, Object> request, String name) {
       String values = (String) request.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
     }
 
     @Override
-    public Integer getStatusCode(
+    public Integer getHttpResponseStatusCode(
         Map<String, Object> request, Map<String, Object> response, @Nullable Throwable error) {
       String value = (String) response.get("statusCode");
       return value == null ? null : Integer.parseInt(value);
     }
 
     @Override
-    public List<String> getResponseHeader(
+    public List<String> getHttpResponseHeader(
         Map<String, Object> request, Map<String, Object> response, String name) {
       String values = (String) response.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
@@ -146,7 +146,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
             entry(SemanticAttributes.NET_HOST_NAME, "github.com"),
             entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
             entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
-            entry(SemanticAttributes.HTTP_METHOD, "POST"),
+            entry(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(UrlAttributes.URL_SCHEME, "http"),
             entry(UrlAttributes.URL_PATH, "/repositories/1"),
             entry(UrlAttributes.URL_QUERY, "details=true"),
@@ -162,9 +162,9 @@ class HttpServerAttributesExtractorStableSemconvTest {
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
-            entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
-            entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
-            entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
+            entry(HttpAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
+            entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
+            entry(HttpAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")));

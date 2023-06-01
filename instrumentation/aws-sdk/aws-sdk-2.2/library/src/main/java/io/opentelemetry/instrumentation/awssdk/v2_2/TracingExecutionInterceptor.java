@@ -348,7 +348,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   // Certain headers in the request like User-Agent are only available after execution.
   private static void onUserAgentHeaderAvailable(Span span, ExecutionAttributes request) {
     List<String> userAgent =
-        AwsSdkInstrumenterFactory.httpAttributesGetter.getRequestHeader(request, "User-Agent");
+        AwsSdkInstrumenterFactory.httpAttributesGetter.getHttpRequestHeader(request, "User-Agent");
     if (!userAgent.isEmpty()) {
       span.setAttribute(SemanticAttributes.USER_AGENT_ORIGINAL, userAgent.get(0));
     }

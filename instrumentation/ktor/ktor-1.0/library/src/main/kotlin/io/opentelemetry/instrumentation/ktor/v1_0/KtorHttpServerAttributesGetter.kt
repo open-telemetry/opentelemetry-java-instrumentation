@@ -14,19 +14,19 @@ internal enum class KtorHttpServerAttributesGetter :
   HttpServerAttributesGetter<ApplicationRequest, ApplicationResponse> {
   INSTANCE, ;
 
-  override fun getMethod(request: ApplicationRequest): String {
+  override fun getHttpRequestMethod(request: ApplicationRequest): String {
     return request.httpMethod.value
   }
 
-  override fun getRequestHeader(request: ApplicationRequest, name: String): List<String> {
+  override fun getHttpRequestHeader(request: ApplicationRequest, name: String): List<String> {
     return request.headers.getAll(name) ?: emptyList()
   }
 
-  override fun getStatusCode(request: ApplicationRequest, response: ApplicationResponse, error: Throwable?): Int? {
+  override fun getHttpResponseStatusCode(request: ApplicationRequest, response: ApplicationResponse, error: Throwable?): Int? {
     return response.status()?.value
   }
 
-  override fun getResponseHeader(request: ApplicationRequest, response: ApplicationResponse, name: String): List<String> {
+  override fun getHttpResponseHeader(request: ApplicationRequest, response: ApplicationResponse, name: String): List<String> {
     return response.headers.allValues().getAll(name) ?: emptyList()
   }
 

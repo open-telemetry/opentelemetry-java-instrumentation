@@ -44,24 +44,24 @@ class HttpClientAttributesExtractorTest {
     }
 
     @Override
-    public String getMethod(Map<String, String> request) {
+    public String getHttpRequestMethod(Map<String, String> request) {
       return request.get("method");
     }
 
     @Override
-    public List<String> getRequestHeader(Map<String, String> request, String name) {
+    public List<String> getHttpRequestHeader(Map<String, String> request, String name) {
       String value = request.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
     }
 
     @Override
-    public Integer getStatusCode(
+    public Integer getHttpResponseStatusCode(
         Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
       return Integer.parseInt(response.get("statusCode"));
     }
 
     @Override
-    public List<String> getResponseHeader(
+    public List<String> getHttpResponseHeader(
         Map<String, String> request, Map<String, String> response, String name) {
       String value = response.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));

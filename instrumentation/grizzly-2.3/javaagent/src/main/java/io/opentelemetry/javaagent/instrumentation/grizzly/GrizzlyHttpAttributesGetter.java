@@ -18,12 +18,12 @@ final class GrizzlyHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpRequestPacket, HttpResponsePacket> {
 
   @Override
-  public String getMethod(HttpRequestPacket request) {
+  public String getHttpRequestMethod(HttpRequestPacket request) {
     return request.getMethod().getMethodString();
   }
 
   @Override
-  public List<String> getRequestHeader(HttpRequestPacket request, String name) {
+  public List<String> getHttpRequestHeader(HttpRequestPacket request, String name) {
     return toHeaderList(request.getHeaders().values(name));
   }
 
@@ -37,13 +37,13 @@ final class GrizzlyHttpAttributesGetter
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       HttpRequestPacket request, HttpResponsePacket response, @Nullable Throwable error) {
     return response.getStatus();
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       HttpRequestPacket request, HttpResponsePacket response, String name) {
     return toHeaderList(response.getHeaders().values(name));
   }
