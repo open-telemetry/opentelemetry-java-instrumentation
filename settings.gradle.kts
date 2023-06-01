@@ -2,7 +2,7 @@ pluginManagement {
   plugins {
     id("com.bmuschko.docker-remote-api") version "8.1.0"
     id("com.github.ben-manes.versions") version "0.46.0"
-    id("com.github.jk1.dependency-license-report") version "2.3"
+    id("com.github.jk1.dependency-license-report") version "2.4"
     id("com.google.cloud.tools.jib") version "3.3.2"
     id("com.gradle.plugin-publish") version "1.2.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
@@ -15,7 +15,7 @@ pluginManagement {
 
 plugins {
   id("com.gradle.enterprise") version "3.13.3"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.10"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.11"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.5.0"
 }
 
