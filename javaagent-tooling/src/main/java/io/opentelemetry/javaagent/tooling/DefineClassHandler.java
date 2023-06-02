@@ -7,6 +7,9 @@ package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import org.objectweb.asm.ClassReader;
 
 public class DefineClassHandler implements Handler {
@@ -27,7 +30,8 @@ public class DefineClassHandler implements Handler {
       return null;
     }
 
-    DefineClassContextImpl context = null;
+    Set<String> superNames = new HashSet<>();
+    DefineClassContextImpl context = DefineClassContextImpl.enter();
     // attempt to load super types of currently loaded class
     // for a class to be loaded all of its super types must be loaded, here we just change the order
     // of operations and load super types before transforming the bytes for current class so that
@@ -37,20 +41,46 @@ public class DefineClassHandler implements Handler {
       ClassReader cr = new ClassReader(classBytes, offset, length);
       String superName = cr.getSuperName();
       if (superName != null) {
-        Class.forName(superName.replace('/', '.'), false, classLoader);
+        String superDotName = superName.replace('/', '.');
+        Class<?> clazz = Class.forName(superDotName, false, classLoader);
+        addSuperNames(superNames, clazz);
       }
       String[] interfaces = cr.getInterfaces();
       for (String interfaceName : interfaces) {
-        Class.forName(interfaceName.replace('/', '.'), false, classLoader);
+        String interfaceDotName = interfaceName.replace('/', '.');
+        Class<?> clazz = Class.forName(interfaceDotName, false, classLoader);
+        addSuperNames(superNames, clazz);
       }
+      context.superDotNames = superNames;
     } catch (Throwable throwable) {
       // loading of super class or interface failed
       // mark current class as failed to skip matching and transforming it
       // we'll let defining the class proceed as usual so that it would throw the same exception as
       // it does when running without the agent
-      context = DefineClassContextImpl.enter(className);
+      context.failedClassDotName = className;
     }
+
     return context;
+  }
+
+  @Override
+  public DefineClassContext beforeDefineLambdaClass(Class<?> lambdaInterface) {
+    DefineClassContextImpl context = DefineClassContextImpl.enter();
+    Set<String> superNames = new HashSet<>();
+    addSuperNames(superNames, lambdaInterface);
+    context.superDotNames = superNames;
+
+    return context;
+  }
+
+  private static void addSuperNames(Set<String> superNames, Class<?> clazz) {
+    if (clazz == null || !superNames.add(clazz.getName())) {
+      return;
+    }
+    addSuperNames(superNames, clazz.getSuperclass());
+    for (Class<?> interfaceClass : clazz.getInterfaces()) {
+      addSuperNames(superNames, interfaceClass);
+    }
   }
 
   @Override
@@ -63,33 +93,37 @@ public class DefineClassHandler implements Handler {
   /**
    * Detect whether loading the specified class is known to fail.
    *
-   * @param className class being loaded
+   * @param dotClassName class being loaded
    * @return true if it is known that loading class with given name will fail
    */
-  public static boolean isFailedClass(String className) {
+  public static boolean isFailedClass(String dotClassName) {
     DefineClassContextImpl context = defineClassContext.get();
-    return context.failedClassName != null && context.failedClassName.equals(className);
+    return context.failedClassDotName != null && context.failedClassDotName.equals(dotClassName);
+  }
+
+  public static Set<String> getSuperTypes() {
+    Set<String> superNames = defineClassContext.get().superDotNames;
+    return superNames == null ? Collections.emptySet() : superNames;
   }
 
   private static class DefineClassContextImpl implements DefineClassContext {
     private static final DefineClassContextImpl NOP = new DefineClassContextImpl();
 
     private final DefineClassContextImpl previous;
-    private final String failedClassName;
+    String failedClassDotName;
+    Set<String> superDotNames;
 
     private DefineClassContextImpl() {
       previous = null;
-      failedClassName = null;
     }
 
-    private DefineClassContextImpl(DefineClassContextImpl previous, String failedClassName) {
+    private DefineClassContextImpl(DefineClassContextImpl previous) {
       this.previous = previous;
-      this.failedClassName = failedClassName;
     }
 
-    static DefineClassContextImpl enter(String failedClassName) {
+    static DefineClassContextImpl enter() {
       DefineClassContextImpl previous = defineClassContext.get();
-      DefineClassContextImpl context = new DefineClassContextImpl(previous, failedClassName);
+      DefineClassContextImpl context = new DefineClassContextImpl(previous);
       defineClassContext.set(context);
       return context;
     }
