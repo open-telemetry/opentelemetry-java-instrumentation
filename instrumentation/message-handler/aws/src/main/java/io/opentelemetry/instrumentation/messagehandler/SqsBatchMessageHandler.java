@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.messagehandler;
 
-import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -22,22 +21,22 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
+import software.amazon.awssdk.services.sqs.model.Message;
 
-public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEvent.SQSMessage> {
+public abstract class SqsBatchMessageHandler extends BatchMessageHandler<Message> {
   private static final String AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY = "AWSTraceHeader";
 
   // lower-case map getter used for extraction
   static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 
   public SqsBatchMessageHandler(
-      OpenTelemetry openTelemetry,
-      SpanNameExtractor<Collection<SQSEvent.SQSMessage>> spanNameExtractor) {
+      OpenTelemetry openTelemetry, SpanNameExtractor<Collection<Message>> spanNameExtractor) {
     super(openTelemetry, spanNameExtractor);
   }
 
   public SqsBatchMessageHandler(
       OpenTelemetry openTelemetry,
-      SpanNameExtractor<Collection<SQSEvent.SQSMessage>> spanNameExtractor,
+      SpanNameExtractor<Collection<Message>> spanNameExtractor,
       String messageOperation) {
     super(openTelemetry, spanNameExtractor, messageOperation);
   }
@@ -45,7 +44,7 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEven
   @Override
   protected void setup() {
     messageInstrumenter =
-        Instrumenter.<Collection<SQSEvent.SQSMessage>, Void>builder(
+        Instrumenter.<Collection<Message>, Void>builder(
                 getOpenTelemetry(), "io.opentelemetry.message.handler", getSpanNameExtractor())
             .setInstrumentationVersion("1.0")
             .addAttributesExtractor(getGenericAttributesExtractor())
@@ -54,14 +53,12 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEven
             .buildInstrumenter();
   }
 
-  protected AttributesExtractor<Collection<SQSEvent.SQSMessage>, Void> getAttributesExtractor() {
-    return new AttributesExtractor<Collection<SQSEvent.SQSMessage>, Void>() {
+  protected AttributesExtractor<Collection<Message>, Void> getAttributesExtractor() {
+    return new AttributesExtractor<Collection<Message>, Void>() {
 
       @Override
       public void onStart(
-          AttributesBuilder attributes,
-          Context parentContext,
-          Collection<SQSEvent.SQSMessage> messages) {
+          AttributesBuilder attributes, Context parentContext, Collection<Message> messages) {
         attributes.put(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS");
       }
 
@@ -69,16 +66,17 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<SQSEven
       public void onEnd(
           AttributesBuilder attributes,
           Context context,
-          Collection<SQSEvent.SQSMessage> messages,
+          Collection<Message> messages,
           @Nullable Void unused,
           @Nullable Throwable error) {}
     };
   }
 
-  protected SpanLinksExtractor<Collection<SQSEvent.SQSMessage>> getSpanLinksExtractor() {
+  protected SpanLinksExtractor<Collection<Message>> getSpanLinksExtractor() {
     return (spanLinks, parentContext, sqsMessages) -> {
-      for (SQSEvent.SQSMessage message : sqsMessages) {
-        String parentHeader = message.getAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
+      for (Message message : sqsMessages) {
+        String parentHeader =
+            message.messageAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY).stringValue();
         if (parentHeader != null) {
           Context xrayContext =
               getOpenTelemetry()

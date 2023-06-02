@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.messagehandler;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
@@ -21,7 +20,6 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,6 +29,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 public class SqsBatchMessageHandlerTest {
 
@@ -52,19 +52,23 @@ public class SqsBatchMessageHandlerTest {
 
   @Test
   public void simple() {
-    SQSEvent.SQSMessage sqsMessage = newMessage();
-
-    sqsMessage.setAttributes(
-        Collections.singletonMap(
-            "AWSTraceHeader",
-            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"));
+    Message sqsMessage =
+        Message.builder()
+            .messageAttributes(
+                Collections.singletonMap(
+                    "AWSTraceHeader",
+                    MessageAttributeValue.builder()
+                        .stringValue(
+                            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1")
+                        .build()))
+            .build();
 
     AtomicInteger counter = new AtomicInteger(0);
 
     SqsBatchMessageHandler messageHandler =
         new SqsBatchMessageHandler(testing.getOpenTelemetrySdk(), messages -> "Batch of Messages") {
           @Override
-          protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+          protected void doHandleMessages(Collection<Message> messages) {
             counter.getAndIncrement();
           }
         };
@@ -104,20 +108,30 @@ public class SqsBatchMessageHandlerTest {
 
   @Test
   public void multipleMessages() {
-    List<SQSEvent.SQSMessage> sqsMessages = new LinkedList<>();
+    List<Message> sqsMessages = new LinkedList<>();
 
-    SQSEvent.SQSMessage sqsMessage1 = newMessage();
-    sqsMessage1.setAttributes(
-        Collections.singletonMap(
-            "AWSTraceHeader",
-            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"));
+    Message sqsMessage1 =
+        Message.builder()
+            .messageAttributes(
+                Collections.singletonMap(
+                    "AWSTraceHeader",
+                    MessageAttributeValue.builder()
+                        .stringValue(
+                            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1")
+                        .build()))
+            .build();
     sqsMessages.add(sqsMessage1);
 
-    SQSEvent.SQSMessage sqsMessage2 = newMessage();
-    sqsMessage2.setAttributes(
-        Collections.singletonMap(
-            "AWSTraceHeader",
-            "Root=1-44444444-123456789012345678901234;Parent=2481624816248161;Sampled=0"));
+    Message sqsMessage2 =
+        Message.builder()
+            .messageAttributes(
+                Collections.singletonMap(
+                    "AWSTraceHeader",
+                    MessageAttributeValue.builder()
+                        .stringValue(
+                            "Root=1-44444444-123456789012345678901234;Parent=2481624816248161;Sampled=0")
+                        .build()))
+            .build();
     sqsMessages.add(sqsMessage2);
 
     AtomicInteger counter = new AtomicInteger(0);
@@ -125,7 +139,7 @@ public class SqsBatchMessageHandlerTest {
     SqsBatchMessageHandler messageHandler =
         new SqsBatchMessageHandler(testing.getOpenTelemetrySdk(), messages -> "Batch of Messages") {
           @Override
-          protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+          protected void doHandleMessages(Collection<Message> messages) {
             counter.getAndIncrement();
           }
         };
@@ -171,17 +185,27 @@ public class SqsBatchMessageHandlerTest {
 
   @Test
   public void multipleRunsOfTheHandler() {
-    SQSEvent.SQSMessage sqsMessage1 = newMessage();
-    sqsMessage1.setAttributes(
-        Collections.singletonMap(
-            "AWSTraceHeader",
-            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"));
+    Message sqsMessage1 =
+        Message.builder()
+            .messageAttributes(
+                Collections.singletonMap(
+                    "AWSTraceHeader",
+                    MessageAttributeValue.builder()
+                        .stringValue(
+                            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1")
+                        .build()))
+            .build();
 
-    SQSEvent.SQSMessage sqsMessage2 = newMessage();
-    sqsMessage2.setAttributes(
-        Collections.singletonMap(
-            "AWSTraceHeader",
-            "Root=1-44444444-123456789012345678901234;Parent=2481624816248161;Sampled=0"));
+    Message sqsMessage2 =
+        Message.builder()
+            .messageAttributes(
+                Collections.singletonMap(
+                    "AWSTraceHeader",
+                    MessageAttributeValue.builder()
+                        .stringValue(
+                            "Root=1-44444444-123456789012345678901234;Parent=2481624816248161;Sampled=0")
+                        .build()))
+            .build();
 
     AtomicInteger counter = new AtomicInteger(0);
 
@@ -191,7 +215,7 @@ public class SqsBatchMessageHandlerTest {
             messages -> "Batch of Messages",
             MessageOperation.PROCESS.name()) {
           @Override
-          protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+          protected void doHandleMessages(Collection<Message> messages) {
             counter.getAndIncrement();
           }
         };
@@ -253,7 +277,7 @@ public class SqsBatchMessageHandlerTest {
     SqsBatchMessageHandler messageHandler =
         new SqsBatchMessageHandler(testing.getOpenTelemetrySdk(), messages -> "Batch of Messages") {
           @Override
-          protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+          protected void doHandleMessages(Collection<Message> messages) {
             counter.getAndIncrement();
           }
         };
@@ -286,12 +310,16 @@ public class SqsBatchMessageHandlerTest {
 
   @Test
   public void changeDefaults() {
-    SQSEvent.SQSMessage sqsMessage = newMessage();
-
-    sqsMessage.setAttributes(
-        Collections.singletonMap(
-            "AWSTraceHeader",
-            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"));
+    Message sqsMessage =
+        Message.builder()
+            .messageAttributes(
+                Collections.singletonMap(
+                    "AWSTraceHeader",
+                    MessageAttributeValue.builder()
+                        .stringValue(
+                            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1")
+                        .build()))
+            .build();
 
     AtomicInteger counter = new AtomicInteger(0);
 
@@ -301,7 +329,7 @@ public class SqsBatchMessageHandlerTest {
             messages -> "New Name",
             MessageOperation.PROCESS.name()) {
           @Override
-          protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+          protected void doHandleMessages(Collection<Message> messages) {
             counter.getAndIncrement();
           }
         };
@@ -341,18 +369,22 @@ public class SqsBatchMessageHandlerTest {
 
   @Test
   public void invalidUpstreamParent() {
-    SQSEvent.SQSMessage sqsMessage = newMessage();
-
-    sqsMessage.setAttributes(
-        Collections.singletonMap(
-            "AWSTraceHeader", "Root=1-55555555-invalid;Parent=1234567890123456;Sampled=1"));
+    Message sqsMessage =
+        Message.builder()
+            .messageAttributes(
+                Collections.singletonMap(
+                    "AWSTraceHeader",
+                    MessageAttributeValue.builder()
+                        .stringValue("Root=1-55555555-invalid;Parent=1234567890123456;Sampled=1")
+                        .build()))
+            .build();
 
     AtomicInteger counter = new AtomicInteger(0);
 
     SqsBatchMessageHandler messageHandler =
         new SqsBatchMessageHandler(testing.getOpenTelemetrySdk(), messages -> "Batch of Messages") {
           @Override
-          protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+          protected void doHandleMessages(Collection<Message> messages) {
             counter.getAndIncrement();
           }
         };
@@ -371,19 +403,23 @@ public class SqsBatchMessageHandlerTest {
 
   @Test
   public void exceptionInHandle() {
-    SQSEvent.SQSMessage sqsMessage = newMessage();
-
-    sqsMessage.setAttributes(
-        Collections.singletonMap(
-            "AWSTraceHeader",
-            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"));
+    Message sqsMessage =
+        Message.builder()
+            .messageAttributes(
+                Collections.singletonMap(
+                    "AWSTraceHeader",
+                    MessageAttributeValue.builder()
+                        .stringValue(
+                            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1")
+                        .build()))
+            .build();
 
     AtomicInteger counter = new AtomicInteger(0);
 
     SqsBatchMessageHandler messageHandler =
         new SqsBatchMessageHandler(testing.getOpenTelemetrySdk(), messages -> "Batch of Messages") {
           @Override
-          protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+          protected void doHandleMessages(Collection<Message> messages) {
             counter.getAndIncrement();
             throw new RuntimeException("Injected Error");
           }
@@ -425,15 +461,5 @@ public class SqsBatchMessageHandlerTest {
                         .hasTraceId(parentSpan.getSpanContext().getTraceId())));
 
     Assert.assertEquals(1, counter.get());
-  }
-
-  private static SQSEvent.SQSMessage newMessage() {
-    try {
-      Constructor<SQSEvent.SQSMessage> ctor = SQSEvent.SQSMessage.class.getDeclaredConstructor();
-      ctor.setAccessible(true);
-      return ctor.newInstance();
-    } catch (Throwable t) {
-      throw new AssertionError(t);
-    }
   }
 }
