@@ -15,6 +15,9 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.USER_
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent.RequestContext;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -34,6 +37,9 @@ final class ApiGatewayProxyAttributesExtractor
     if (request.getInput() instanceof APIGatewayProxyRequestEvent) {
       attributes.put(FAAS_TRIGGER, SemanticAttributes.FaasTriggerValues.HTTP);
       onRequest(attributes, (APIGatewayProxyRequestEvent) request.getInput());
+    } else if (request.getInput() instanceof APIGatewayV2HTTPEvent) {
+      attributes.put(FAAS_TRIGGER, SemanticAttributes.FaasTriggerValues.HTTP);
+      onV2Request(attributes, (APIGatewayV2HTTPEvent) request.getInput());
     }
   }
 
@@ -46,6 +52,22 @@ final class ApiGatewayProxyAttributesExtractor
       attributes.put(USER_AGENT_ORIGINAL, userAgent);
     }
     String httpUrl = getHttpUrl(request, headers);
+    if (httpUrl != null) {
+      attributes.put(HTTP_URL, httpUrl);
+    }
+  }
+
+  void onV2Request(AttributesBuilder attributes, APIGatewayV2HTTPEvent request) {
+    RequestContext requestContext = request.getRequestContext();
+    RequestContext.Http http = requestContext != null ? requestContext.getHttp() : null;
+    attributes.put(HTTP_METHOD, http != null ? http.getMethod() : null);
+
+    Map<String, String> headers = lowercaseMap(request.getHeaders());
+    String userAgent = headers.get("user-agent");
+    if (userAgent != null) {
+      attributes.put(USER_AGENT_ORIGINAL, userAgent);
+    }
+    String httpUrl = getV2HttpUrl(request, headers);
     if (httpUrl != null) {
       attributes.put(HTTP_URL, httpUrl);
     }
@@ -83,6 +105,38 @@ final class ApiGatewayProxyAttributesExtractor
     return str.length() == 0 ? null : str.toString();
   }
 
+  private static String getV2HttpUrl(
+      APIGatewayV2HTTPEvent request, Map<String, String> headers) {
+    StringBuilder str = new StringBuilder();
+
+    String scheme = headers.get("x-forwarded-proto");
+    if (scheme != null) {
+      str.append(scheme).append("://");
+    }
+    String host = headers.get("host");
+    if (host != null) {
+      str.append(host);
+    }
+    String path = request.getRawPath();
+    if (path != null) {
+      str.append(path);
+    }
+
+    try {
+      boolean first = true;
+      for (Map.Entry<String, String> entry :
+          emptyIfNull(request.getQueryStringParameters()).entrySet()) {
+        String key = URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8.name());
+        String value = URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8.name());
+        str.append(first ? '?' : '&').append(key).append('=').append(value);
+        first = false;
+      }
+    } catch (UnsupportedEncodingException ignored) {
+      // Ignore
+    }
+    return str.length() == 0 ? null : str.toString();
+  }
+
   @Override
   public void onEnd(
       AttributesBuilder attributes,
@@ -93,6 +147,11 @@ final class ApiGatewayProxyAttributesExtractor
     if (response instanceof APIGatewayProxyResponseEvent) {
       Integer statusCode = ((APIGatewayProxyResponseEvent) response).getStatusCode();
       if (statusCode != null) {
+        attributes.put(HTTP_STATUS_CODE, statusCode);
+      }
+    } else if (response instanceof APIGatewayV2HTTPResponse) {
+      int statusCode = ((APIGatewayV2HTTPResponse) response).getStatusCode();
+      if (statusCode != 0) {
         attributes.put(HTTP_STATUS_CODE, statusCode);
       }
     }
