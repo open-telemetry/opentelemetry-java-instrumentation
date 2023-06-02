@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -151,6 +152,22 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
       "</html>"
     response.contentUtf8() == result
     response.headers().contentLength() == result.length()
+
+    def expectedRoute = expectedHttpRoute(HTML_SERVLET_OUTPUT_STREAM)
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "GET" + (expectedRoute != null ? " " + expectedRoute : "")
+          kind SpanKind.SERVER
+          hasNoParent()
+        }
+        span(1) {
+          name "controller"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+      }
+    }
   }
 
   def "snippet injection with PrintWriter"() {
@@ -175,5 +192,21 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
     response.contentUtf8() == result
     response.headers().contentLength() == result.length()
+
+    def expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER)
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "GET" + (expectedRoute != null ? " " + expectedRoute : "")
+          kind SpanKind.SERVER
+          hasNoParent()
+        }
+        span(1) {
+          name "controller"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+      }
+    }
   }
 }
