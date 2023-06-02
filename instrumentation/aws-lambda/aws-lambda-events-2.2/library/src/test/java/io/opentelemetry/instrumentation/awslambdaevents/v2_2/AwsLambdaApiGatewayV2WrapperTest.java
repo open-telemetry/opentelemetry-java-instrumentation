@@ -76,14 +76,8 @@ public class AwsLambdaApiGatewayV2WrapperTest {
     query.put("a", "b");
     query.put("c", "d");
     RequestContext.Http http =
-        RequestContext.Http.builder()
-            .withMethod("GET")
-            .withPath("/hello/{param}")
-            .build();
-    RequestContext requestContext =
-        RequestContext.builder()
-            .withHttp(http)
-            .build();
+        RequestContext.Http.builder().withMethod("GET").withPath("/hello/{param}").build();
+    RequestContext requestContext = RequestContext.builder().withHttp(http).build();
     APIGatewayV2HTTPEvent input =
         APIGatewayV2HTTPEvent.builder()
             .withRawPath("/hello/world")
@@ -133,7 +127,8 @@ public class AwsLambdaApiGatewayV2WrapperTest {
             TracingRequestApiGatewayV2Wrapper::map);
     APIGatewayV2HTTPResponse result =
         (APIGatewayV2HTTPResponse)
-            wrapper.handleRequest(APIGatewayV2HTTPEvent.builder().withBody("empty").build(), context);
+            wrapper.handleRequest(
+                APIGatewayV2HTTPEvent.builder().withBody("empty").build(), context);
 
     assertThat(result.getBody()).isNull();
     testing.waitAndAssertTraces(
@@ -164,7 +159,8 @@ public class AwsLambdaApiGatewayV2WrapperTest {
             TracingRequestApiGatewayV2Wrapper::map);
     APIGatewayV2HTTPResponse result =
         (APIGatewayV2HTTPResponse)
-            wrapper.handleRequest(APIGatewayV2HTTPEvent.builder().withBody("\"hello\"").build(), context);
+            wrapper.handleRequest(
+                APIGatewayV2HTTPEvent.builder().withBody("\"hello\"").build(), context);
 
     assertThat(result.getBody()).isEqualTo("\"world\"");
     testing.waitAndAssertTraces(
@@ -252,8 +248,7 @@ public class AwsLambdaApiGatewayV2WrapperTest {
       implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> {
 
     @Override
-    public APIGatewayV2HTTPResponse handleRequest(
-        APIGatewayV2HTTPEvent input, Context context) {
+    public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent input, Context context) {
       if (input.getBody().equals("hello")) {
         return APIGatewayV2HTTPResponse.builder().withStatusCode(200).withBody("world").build();
       } else if (input.getBody().equals("empty")) {

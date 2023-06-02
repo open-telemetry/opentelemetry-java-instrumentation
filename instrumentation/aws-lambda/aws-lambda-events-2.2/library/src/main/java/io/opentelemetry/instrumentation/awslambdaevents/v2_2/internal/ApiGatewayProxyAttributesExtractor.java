@@ -105,8 +105,7 @@ final class ApiGatewayProxyAttributesExtractor
     return str.length() == 0 ? null : str.toString();
   }
 
-  private static String getV2HttpUrl(
-      APIGatewayV2HTTPEvent request, Map<String, String> headers) {
+  private static String getV2HttpUrl(APIGatewayV2HTTPEvent request, Map<String, String> headers) {
     StringBuilder str = new StringBuilder();
 
     String scheme = headers.get("x-forwarded-proto");

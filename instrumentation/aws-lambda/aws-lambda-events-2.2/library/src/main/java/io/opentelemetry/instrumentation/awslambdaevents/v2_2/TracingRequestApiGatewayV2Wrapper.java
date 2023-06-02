@@ -15,8 +15,8 @@ import java.util.function.BiFunction;
 
 /**
  * Wrapper for {@link io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestHandler}.
- * Allows for wrapping a lambda proxied through API Gateway V2, enabling single span tracing and HTTP
- * context propagation.
+ * Allows for wrapping a lambda proxied through API Gateway V2, enabling single span tracing and
+ * HTTP context propagation.
  */
 public class TracingRequestApiGatewayV2Wrapper
     extends TracingRequestWrapperBase<APIGatewayV2HTTPEvent, Object> {
@@ -44,8 +44,7 @@ public class TracingRequestApiGatewayV2Wrapper
   }
 
   @Override
-  protected APIGatewayV2HTTPResponse doHandleRequest(
-      APIGatewayV2HTTPEvent input, Context context) {
+  protected APIGatewayV2HTTPResponse doHandleRequest(APIGatewayV2HTTPEvent input, Context context) {
     Object result = super.doHandleRequest(input, context);
     APIGatewayV2HTTPResponse event;
     // map to response event if needed
