@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.Map;
 import software.amazon.awssdk.core.SdkPojo;
 
-final class SqsParentContext {
+public final class SqsParentContext {
 
   enum StringMapGetter implements TextMapGetter<Map<String, String>> {
     INSTANCE;
@@ -52,13 +52,13 @@ final class SqsParentContext {
 
   static final String AWS_TRACE_SYSTEM_ATTRIBUTE = "AWSTraceHeader";
 
-  static Context ofMessageAttributes(
+  static public Context ofMessageAttributes(
       Map<String, SdkPojo> messageAttributes, TextMapPropagator propagator) {
     return propagator.extract(
         Context.root(), messageAttributes, MessageAttributeValueMapGetter.INSTANCE);
   }
 
-  static Context ofSystemAttributes(Map<String, String> systemAttributes) {
+  public static Context ofSystemAttributes(Map<String, String> systemAttributes) {
     String traceHeader = systemAttributes.get(AWS_TRACE_SYSTEM_ATTRIBUTE);
     return AwsXrayPropagator.getInstance()
         .extract(

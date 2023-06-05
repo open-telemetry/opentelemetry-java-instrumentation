@@ -54,13 +54,7 @@ public class SqsBatchMessageHandlerTest {
   public void simple() {
     Message sqsMessage =
         Message.builder()
-            .messageAttributes(
-                Collections.singletonMap(
-                    "AWSTraceHeader",
-                    MessageAttributeValue.builder()
-                        .stringValue(
-                            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1")
-                        .build()))
+            .attributesWithStrings(Collections.singletonMap("AWSTraceHeader", "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"))
             .build();
 
     AtomicInteger counter = new AtomicInteger(0);
@@ -107,30 +101,68 @@ public class SqsBatchMessageHandlerTest {
   }
 
   @Test
+  public void simpleMessage() {
+    Message sqsMessage =
+        Message.builder()
+            .messageAttributes(Collections.singletonMap("X-Amzn-Trace-Id", MessageAttributeValue.builder().stringValue("Root=1-66555555-123456789012345678901234;Parent=2234567890123456;Sampled=1").build()))
+            .build();
+
+    AtomicInteger counter = new AtomicInteger(0);
+
+    SqsBatchMessageHandler messageHandler =
+        new SqsBatchMessageHandler(testing.getOpenTelemetrySdk(), messages -> "Batch of Messages") {
+          @Override
+          protected void doHandleMessages(Collection<Message> messages) {
+            counter.getAndIncrement();
+          }
+        };
+
+    Span parentSpan =
+        testing.getOpenTelemetrySdk().getTracer("test").spanBuilder("test").startSpan();
+
+    try (Scope scope = parentSpan.makeCurrent()) {
+      messageHandler.handleMessages(Collections.singletonList(sqsMessage));
+    }
+
+    parentSpan.end();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
+                span ->
+                    span.hasName("Batch of Messages")
+                        .hasLinks(
+                            LinkData.create(
+                                SpanContext.createFromRemoteParent(
+                                    "66555555123456789012345678901234",
+                                    "2234567890123456",
+                                    TraceFlags.getSampled(),
+                                    TraceState.getDefault())))
+                        .hasTotalRecordedLinks(1)
+                        .hasAttribute(
+                            SemanticAttributes.MESSAGING_OPERATION, MessageOperation.RECEIVE.name())
+                        .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
+                        .hasTotalAttributeCount(2)
+                        .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
+                        .hasTraceId(parentSpan.getSpanContext().getTraceId())));
+
+    Assert.assertEquals(1, counter.get());
+  }
+
+  @Test
   public void multipleMessages() {
     List<Message> sqsMessages = new LinkedList<>();
 
     Message sqsMessage1 =
         Message.builder()
-            .messageAttributes(
-                Collections.singletonMap(
-                    "AWSTraceHeader",
-                    MessageAttributeValue.builder()
-                        .stringValue(
-                            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1")
-                        .build()))
+            .attributesWithStrings(Collections.singletonMap("AWSTraceHeader", "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"))
             .build();
     sqsMessages.add(sqsMessage1);
 
     Message sqsMessage2 =
         Message.builder()
-            .messageAttributes(
-                Collections.singletonMap(
-                    "AWSTraceHeader",
-                    MessageAttributeValue.builder()
-                        .stringValue(
-                            "Root=1-44444444-123456789012345678901234;Parent=2481624816248161;Sampled=0")
-                        .build()))
+            .attributesWithStrings(Collections.singletonMap("AWSTraceHeader", "Root=1-44444444-123456789012345678901234;Parent=2481624816248161;Sampled=0"))
             .build();
     sqsMessages.add(sqsMessage2);
 
@@ -187,24 +219,12 @@ public class SqsBatchMessageHandlerTest {
   public void multipleRunsOfTheHandler() {
     Message sqsMessage1 =
         Message.builder()
-            .messageAttributes(
-                Collections.singletonMap(
-                    "AWSTraceHeader",
-                    MessageAttributeValue.builder()
-                        .stringValue(
-                            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1")
-                        .build()))
+            .attributesWithStrings(Collections.singletonMap("AWSTraceHeader", "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"))
             .build();
 
     Message sqsMessage2 =
         Message.builder()
-            .messageAttributes(
-                Collections.singletonMap(
-                    "AWSTraceHeader",
-                    MessageAttributeValue.builder()
-                        .stringValue(
-                            "Root=1-44444444-123456789012345678901234;Parent=2481624816248161;Sampled=0")
-                        .build()))
+            .attributesWithStrings(Collections.singletonMap("AWSTraceHeader", "Root=1-44444444-123456789012345678901234;Parent=2481624816248161;Sampled=0"))
             .build();
 
     AtomicInteger counter = new AtomicInteger(0);
@@ -312,13 +332,7 @@ public class SqsBatchMessageHandlerTest {
   public void changeDefaults() {
     Message sqsMessage =
         Message.builder()
-            .messageAttributes(
-                Collections.singletonMap(
-                    "AWSTraceHeader",
-                    MessageAttributeValue.builder()
-                        .stringValue(
-                            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1")
-                        .build()))
+            .attributesWithStrings(Collections.singletonMap("AWSTraceHeader", "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"))
             .build();
 
     AtomicInteger counter = new AtomicInteger(0);
@@ -371,12 +385,7 @@ public class SqsBatchMessageHandlerTest {
   public void invalidUpstreamParent() {
     Message sqsMessage =
         Message.builder()
-            .messageAttributes(
-                Collections.singletonMap(
-                    "AWSTraceHeader",
-                    MessageAttributeValue.builder()
-                        .stringValue("Root=1-55555555-invalid;Parent=1234567890123456;Sampled=1")
-                        .build()))
+            .attributesWithStrings(Collections.singletonMap("AWSTraceHeader", "Root=1-55555555-invalid;Parent=1234567890123456;Sampled=1"))
             .build();
 
     AtomicInteger counter = new AtomicInteger(0);
@@ -405,13 +414,7 @@ public class SqsBatchMessageHandlerTest {
   public void exceptionInHandle() {
     Message sqsMessage =
         Message.builder()
-            .messageAttributes(
-                Collections.singletonMap(
-                    "AWSTraceHeader",
-                    MessageAttributeValue.builder()
-                        .stringValue(
-                            "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1")
-                        .build()))
+            .attributesWithStrings(Collections.singletonMap("AWSTraceHeader", "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"))
             .build();
 
     AtomicInteger counter = new AtomicInteger(0);
