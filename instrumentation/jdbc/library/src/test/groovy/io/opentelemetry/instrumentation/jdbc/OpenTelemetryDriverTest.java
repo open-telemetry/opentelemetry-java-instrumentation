@@ -162,6 +162,7 @@ public class OpenTelemetryDriverTest {
     registerTestDriver();
     TestDriver localDriver3 =
         new TestDriver() {
+          @Override
           public boolean acceptsURL(String url) {
             return false;
           }
