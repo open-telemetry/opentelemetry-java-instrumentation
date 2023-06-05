@@ -18,6 +18,8 @@ import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuild
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -53,22 +55,22 @@ public final class GarbageCollector {
               .equals(GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION);
 
   /** Register observers for java runtime memory metrics. */
-  public static void registerObservers(OpenTelemetry openTelemetry) {
+  public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
     if (!isNotificationClassPresent()) {
       logger.fine(
           "The com.sun.management.GarbageCollectionNotificationInfo class is not available;"
               + " GC metrics will not be reported.");
-      return;
+      return Collections.emptyList();
     }
 
-    registerObservers(
+    return registerObservers(
         openTelemetry,
         ManagementFactory.getGarbageCollectorMXBeans(),
         GarbageCollector::extractNotificationInfo);
   }
 
   // Visible for testing
-  static void registerObservers(
+  static List<AutoCloseable> registerObservers(
       OpenTelemetry openTelemetry,
       List<GarbageCollectorMXBean> gcBeans,
       Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor) {
@@ -82,14 +84,18 @@ public final class GarbageCollector {
     setGcDurationBuckets(gcDurationBuilder);
     DoubleHistogram gcDuration = gcDurationBuilder.build();
 
+    List<AutoCloseable> result = new ArrayList<>();
     for (GarbageCollectorMXBean gcBean : gcBeans) {
       if (!(gcBean instanceof NotificationEmitter)) {
         continue;
       }
       NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
-      notificationEmitter.addNotificationListener(
-          new GcNotificationListener(gcDuration, notificationInfoExtractor), GC_FILTER, null);
+      GcNotificationListener listener =
+          new GcNotificationListener(gcDuration, notificationInfoExtractor);
+      notificationEmitter.addNotificationListener(listener, GC_FILTER, null);
+      result.add(() -> notificationEmitter.removeNotificationListener(listener));
     }
+    return result;
   }
 
   private static void setGcDurationBuckets(DoubleHistogramBuilder builder) {
