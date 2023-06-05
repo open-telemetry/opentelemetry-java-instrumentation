@@ -242,7 +242,7 @@ public final class LoggingEventMapper {
     }
   }
 
-  @Deprecated // getMarker is deprecate since 1.3.0
+  @SuppressWarnings("deprecation") // getMarker is deprecate since 1.3.0
   private static void captureSingleMarkerAttribute(
       AttributesBuilder attributes, ILoggingEvent loggingEvent) {
     Marker marker = loggingEvent.getMarker();
