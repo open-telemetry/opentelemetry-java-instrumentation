@@ -11,6 +11,10 @@ import io.opentelemetry.instrumentation.kafka.internal.AbstractOpenTelemetryMetr
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Map;
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -32,5 +36,16 @@ class OpenTelemetryMetricsReporterTest extends AbstractOpenTelemetryMetricsRepor
   @Override
   protected Map<String, ?> additionalConfig() {
     return emptyMap();
+  }
+
+  @Test
+  void emptyMetricsReporter() {
+    Map<String, Object> consumerConfig = consumerConfig();
+    consumerConfig.put(CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG, "");
+    new KafkaConsumer<>(consumerConfig).close();
+
+    Map<String, Object> producerConfig = producerConfig();
+    producerConfig.put(CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG, "");
+    new KafkaProducer<>(producerConfig).close();
   }
 }

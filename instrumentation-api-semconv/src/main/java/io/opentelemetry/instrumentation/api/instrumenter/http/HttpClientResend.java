@@ -32,6 +32,11 @@ public final class HttpClientResend {
     return context.with(KEY, new HttpClientResend());
   }
 
+  public static int get(Context context) {
+    HttpClientResend resend = context.get(KEY);
+    return resend == null ? 0 : resend.resends;
+  }
+
   static int getAndIncrement(Context context) {
     HttpClientResend resend = context.get(KEY);
     if (resend == null) {

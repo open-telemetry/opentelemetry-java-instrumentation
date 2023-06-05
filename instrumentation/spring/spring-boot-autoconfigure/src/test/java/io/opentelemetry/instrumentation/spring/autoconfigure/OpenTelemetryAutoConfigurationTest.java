@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
@@ -154,6 +155,35 @@ class OpenTelemetryAutoConfigurationTest {
               assertThat(otelResource.getAttribute(AttributeKey.stringKey("xyz"))).isEqualTo("foo");
               assertThat(otelResource.getAttribute(AttributeKey.stringKey("service.instance.id")))
                   .isEqualTo("id-example");
+            });
+  }
+
+  @Test
+  void shouldInitializeSdkWhenNotDisabled() {
+    this.contextRunner
+        .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
+        .withPropertyValues("otel.sdk.disabled=false")
+        .run(
+            context -> {
+              assertThat(context).getBean("openTelemetry").isInstanceOf(OpenTelemetrySdk.class);
+              assertThat(context)
+                  .hasBean("openTelemetry")
+                  .hasBean("sdkTracerProvider")
+                  .hasBean("sdkMeterProvider");
+            });
+  }
+
+  @Test
+  void shouldInitializeNoopOpenTelemetryWhenSdkIsDisabled() {
+    this.contextRunner
+        .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
+        .withPropertyValues("otel.sdk.disabled=true")
+        .run(
+            context -> {
+              assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop());
+              assertThat(context)
+                  .doesNotHaveBean("sdkTracerProvider")
+                  .doesNotHaveBean("sdkMeterProvider");
             });
   }
 }

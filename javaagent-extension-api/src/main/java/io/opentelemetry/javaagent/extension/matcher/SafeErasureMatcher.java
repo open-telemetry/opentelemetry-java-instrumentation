@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.extension.matcher;
 import static io.opentelemetry.javaagent.extension.matcher.Utils.safeTypeDefinitionName;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingMatcher;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -24,7 +25,8 @@ import net.bytebuddy.matcher.ElementMatcher;
  * @param <T> The type of the matched entity.
  * @see net.bytebuddy.matcher.ErasureMatcher
  */
-class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Junction.AbstractBase<T> {
+class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Junction.AbstractBase<T>
+    implements DelegatingMatcher {
 
   private static final Logger logger = Logger.getLogger(SafeErasureMatcher.class.getName());
 
@@ -87,5 +89,10 @@ class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Juncti
   @Override
   public int hashCode() {
     return matcher.hashCode();
+  }
+
+  @Override
+  public ElementMatcher<?> getDelegate() {
+    return matcher;
   }
 }

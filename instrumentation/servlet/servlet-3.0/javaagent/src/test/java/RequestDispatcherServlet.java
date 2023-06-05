@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -39,10 +38,10 @@ public class RequestDispatcherServlet {
       ServletContext context = getServletContext();
       RequestDispatcher dispatcher = context.getRequestDispatcher(target);
       // for HTML test case, set the content type before calling include because
-      // setContentType will be rejected if called inside of include
-      // check https://statics.teams.cdn.office.net/evergreen-assets/safelinks/1/atp-safelinks.html
-      if (ServerEndpoint.forPath(target) == ServerEndpoint.forPath("/htmlPrintWriter")
-          || ServerEndpoint.forPath(target) == ServerEndpoint.forPath("/htmlServletOutputStream")) {
+      // setContentType will be rejected if called inside include
+      // check
+      // https://docs.oracle.com/javaee/7/api/javax/servlet/RequestDispatcher.html#include-javax.servlet.ServletRequest-javax.servlet.ServletResponse-
+      if ("/htmlPrintWriter".equals(target) || "/htmlServletOutputStream".equals(target)) {
         resp.setContentType("text/html");
       }
       dispatcher.include(req, resp);

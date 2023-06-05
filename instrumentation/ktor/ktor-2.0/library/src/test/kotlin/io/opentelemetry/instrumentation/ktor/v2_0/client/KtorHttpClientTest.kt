@@ -54,6 +54,7 @@ class KtorHttpClientTest : AbstractHttpClientTest<HttpRequestBuilder>() {
 
   override fun configure(optionsBuilder: HttpClientTestOptions.Builder) {
     with(optionsBuilder) {
+      disableTestReadTimeout()
       // this instrumentation creates a span per each physical request
       // related issue https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/5722
       disableTestRedirects()

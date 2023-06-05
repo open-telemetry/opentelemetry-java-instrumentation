@@ -109,7 +109,6 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
     optionsBuilder.disableTestRedirects();
     // armeria requests can't be reused
     optionsBuilder.disableTestReusedRequest();
-    optionsBuilder.enableTestReadTimeout();
   }
 
   @Test

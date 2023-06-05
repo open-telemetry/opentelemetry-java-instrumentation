@@ -116,7 +116,9 @@ public final class InstrumentationModuleInstaller {
                       classLoaderMatcher,
                       "Instrumentation class loader matcher unexpected exception: "
                           + classLoaderMatcher))
-              .and(NOT_DECORATOR_MATCHER)
+              .and(
+                  (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) ->
+                      classLoader == null || NOT_DECORATOR_MATCHER.matches(typeDescription))
               .and(muzzleMatcher)
               .transform(ConstantAdjuster.instance())
               .transform(helperInjector);

@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installO
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
+import static java.util.Arrays.asList;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
@@ -54,6 +55,7 @@ import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.agent.builder.AgentBuilderUtil;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
@@ -184,6 +186,7 @@ public class AgentInstaller {
     }
     logger.log(FINE, "Installed {0} extension(s)", numberOfLoadedExtensions);
 
+    agentBuilder = AgentBuilderUtil.optimize(agentBuilder);
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
 
@@ -193,9 +196,15 @@ public class AgentInstaller {
   }
 
   private static void copyNecessaryConfigToSystemProperties(ConfigProperties config) {
-    String value = config.getString("otel.instrumentation.experimental.span-suppression-strategy");
-    if (value != null) {
-      System.setProperty("otel.instrumentation.experimental.span-suppression-strategy", value);
+    for (String property :
+        asList(
+            "otel.instrumentation.experimental.span-suppression-strategy",
+            "otel.instrumentation.http.prefer-forwarded-url-scheme",
+            "otel.semconv-stability.opt-in")) {
+      String value = config.getString(property);
+      if (value != null) {
+        System.setProperty(property, value);
+      }
     }
   }
 

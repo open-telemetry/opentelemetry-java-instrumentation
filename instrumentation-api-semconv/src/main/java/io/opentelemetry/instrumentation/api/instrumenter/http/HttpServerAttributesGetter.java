@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.url.UrlAttributesGetter;
 import javax.annotation.Nullable;
 
 /**
@@ -16,30 +16,33 @@ import javax.annotation.Nullable;
  * various HTTP server attributes in a type-generic way.
  */
 public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
-    extends HttpCommonAttributesGetter<REQUEST, RESPONSE> {
-
-  // Attributes that always exist in a request
+    extends HttpCommonAttributesGetter<REQUEST, RESPONSE>, UrlAttributesGetter<REQUEST> {
 
   /**
-   * Extracts the {@code http.flavor} span attribute.
+   * Returns the URI scheme.
    *
-   * @deprecated Use {@link NetServerAttributesGetter#getProtocolName(Object)} and {@link
-   *     NetServerAttributesGetter#getProtocolVersion(Object)} instead.
+   * @deprecated This method is deprecated and will be removed in a future release. Implement {@link
+   *     #getUrlScheme(Object)} instead.
    */
   @Deprecated
   @Nullable
-  default String getFlavor(REQUEST request) {
+  default String getScheme(REQUEST request) {
     return null;
   }
 
+  // TODO: make this required to implement
+  /** {@inheritDoc} */
   @Nullable
-  String getScheme(REQUEST request);
+  @Override
+  default String getUrlScheme(REQUEST request) {
+    return getScheme(request);
+  }
 
   /**
    * Returns the path and query pieces of the URL, joined by the {@code ?} character.
    *
    * @deprecated This method is deprecated and will be removed in the following release. Implement
-   *     {@link #getPath(Object)} and {@link #getQuery(Object)} instead.
+   *     {@link #getUrlPath(Object)} and {@link #getUrlQuery(Object)} instead.
    */
   @Deprecated
   @Nullable
@@ -47,8 +50,11 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
     return null;
   }
 
+  // TODO: make this required to implement
+  /** {@inheritDoc} */
   @Nullable
-  default String getPath(REQUEST request) {
+  @Override
+  default String getUrlPath(REQUEST request) {
     String target = getTarget(request);
     if (target == null) {
       return null;
@@ -57,8 +63,11 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
     return separatorPos == -1 ? target : target.substring(0, separatorPos);
   }
 
+  // TODO: make this required to implement
+  /** {@inheritDoc} */
   @Nullable
-  default String getQuery(REQUEST request) {
+  @Override
+  default String getUrlQuery(REQUEST request) {
     String target = getTarget(request);
     if (target == null) {
       return null;

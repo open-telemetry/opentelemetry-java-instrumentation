@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.util.Map;
@@ -43,28 +44,11 @@ class HttpUrlConnectionResponseCodeOnlyTest extends AbstractHttpClientTest<HttpU
   }
 
   @Override
-  public int maxRedirects() {
-    return 20;
-  }
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.setMaxRedirects(20);
 
-  @Override
-  public Integer responseCodeOnRedirectError() {
-    return 302;
-  }
-
-  @Override
-  public boolean testReusedRequest() {
     // HttpURLConnection can't be reused
-    return false;
-  }
-
-  @Override
-  public boolean testCallback() {
-    return false;
-  }
-
-  @Override
-  public boolean testReadTimeout() {
-    return true;
+    optionsBuilder.disableTestReusedRequest();
+    optionsBuilder.disableTestCallback();
   }
 }

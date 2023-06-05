@@ -11,9 +11,12 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.javaagent.instrumentation.servlet.snippet.InjectionState;
+import io.opentelemetry.javaagent.instrumentation.servlet.snippet.OutputStreamSnippetInjectionHelper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.function.Supplier;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
@@ -28,7 +31,9 @@ class SnippetServletOutputStreamTest {
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
 
-    OutputStreamSnippetInjectionHelper helper = new OutputStreamSnippetInjectionHelper(snippet);
+    Supplier<String> stringSupplier = snippet::toString;
+    OutputStreamSnippetInjectionHelper helper =
+        new OutputStreamSnippetInjectionHelper(stringSupplier);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
     assertThat(injected).isEqualTo(true);
@@ -45,7 +50,9 @@ class SnippetServletOutputStreamTest {
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
 
-    OutputStreamSnippetInjectionHelper helper = new OutputStreamSnippetInjectionHelper(snippet);
+    Supplier<String> stringSupplier = snippet::toString;
+    OutputStreamSnippetInjectionHelper helper =
+        new OutputStreamSnippetInjectionHelper(stringSupplier);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
 
     byte[] expectedHtml = readFileAsBytes("afterSnippetInjectionChinese.html");
@@ -61,8 +68,9 @@ class SnippetServletOutputStreamTest {
 
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
-
-    OutputStreamSnippetInjectionHelper helper = new OutputStreamSnippetInjectionHelper(snippet);
+    Supplier<String> stringSupplier = snippet::toString;
+    OutputStreamSnippetInjectionHelper helper =
+        new OutputStreamSnippetInjectionHelper(stringSupplier);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
 
     assertThat(injected).isFalse();
@@ -79,7 +87,9 @@ class SnippetServletOutputStreamTest {
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
 
-    OutputStreamSnippetInjectionHelper helper = new OutputStreamSnippetInjectionHelper(snippet);
+    Supplier<String> stringSupplier = snippet::toString;
+    OutputStreamSnippetInjectionHelper helper =
+        new OutputStreamSnippetInjectionHelper(stringSupplier);
     boolean injected =
         helper.handleWrite(obj, out, htmlFirstPartBytes, 0, htmlFirstPartBytes.length);
 
@@ -119,8 +129,7 @@ class SnippetServletOutputStreamTest {
     HttpServletResponse response = mock(HttpServletResponse.class);
     when(response.isCommitted()).thenReturn(false);
     when(response.getCharacterEncoding()).thenReturn(charset.name());
-
-    return new InjectionState(new SnippetInjectingResponseWrapper(response, snippet));
+    return new InjectionState(new Servlet3SnippetInjectingResponseWrapper(response, snippet));
   }
 
   private static class InMemoryServletOutputStream extends ServletOutputStream {

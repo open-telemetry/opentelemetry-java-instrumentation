@@ -20,15 +20,12 @@ import org.apache.http.protocol.HttpContext;
 
 abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
     extends AbstractHttpClientTest<T> {
-  @Override
-  protected String userAgent() {
-    return "apachehttpclient";
-  }
+
+  private static final String USER_AGENT = "apachehttpclient";
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.setUserAgent(userAgent());
-    optionsBuilder.enableTestReadTimeout();
+    optionsBuilder.setUserAgent(USER_AGENT);
     optionsBuilder.setHttpAttributes(AbstractApacheHttpClientTest::getHttpAttributes);
   }
 
@@ -39,7 +36,7 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
   @Override
   public T buildRequest(String method, URI uri, Map<String, String> headers) {
     T request = createRequest(method, uri);
-    request.addHeader("user-agent", userAgent());
+    request.addHeader("user-agent", USER_AGENT);
     headers.forEach(request::setHeader);
     return request;
   }

@@ -67,8 +67,4 @@ public class DataSourceConfig {
 
 1. Activate tracing for JDBC connections by setting `jdbc:otel:` prefix to the JDBC URL, e.g. `jdbc:otel:h2:mem:test`.
 
-2. Set the driver class to `io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver` and initialize the driver with:
-
-  ```java
-  Class.forName("io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver");
-  ```
+2. Set the driver class to `io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver`.

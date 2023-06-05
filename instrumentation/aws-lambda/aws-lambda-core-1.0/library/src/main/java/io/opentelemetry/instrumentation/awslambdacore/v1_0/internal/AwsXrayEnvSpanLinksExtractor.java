@@ -26,7 +26,7 @@ import java.util.Map;
 final class AwsXrayEnvSpanLinksExtractor implements SpanLinksExtractor<AwsLambdaRequest> {
 
   private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
-
+  private static final String AWS_TRACE_HEADER_PROP = "com.amazonaws.xray.traceHeader";
   // lower-case map getter used for extraction
   private static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 
@@ -42,20 +42,30 @@ final class AwsXrayEnvSpanLinksExtractor implements SpanLinksExtractor<AwsLambda
   }
 
   public static void extract(SpanLinksBuilder spanLinks) {
-    String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
-    if (parentTraceHeader == null || parentTraceHeader.isEmpty()) {
+    Map<String, String> contextMap = getTraceHeaderMap();
+    if (contextMap.isEmpty()) {
       return;
     }
     Context xrayContext =
-        AwsXrayPropagator.getInstance()
-            .extract(
-                Context.root(),
-                Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentTraceHeader),
-                MapGetter.INSTANCE);
+        AwsXrayPropagator.getInstance().extract(Context.root(), contextMap, MapGetter.INSTANCE);
     SpanContext envVarSpanCtx = Span.fromContext(xrayContext).getSpanContext();
     if (envVarSpanCtx.isValid()) {
       spanLinks.addLink(envVarSpanCtx, LINK_ATTRIBUTES);
     }
+  }
+
+  private static Map<String, String> getTraceHeaderMap() {
+    String traceHeader = System.getProperty(AWS_TRACE_HEADER_PROP);
+    if (isEmptyOrNull(traceHeader)) {
+      traceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
+    }
+    return isEmptyOrNull(traceHeader)
+        ? Collections.emptyMap()
+        : Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, traceHeader);
+  }
+
+  private static boolean isEmptyOrNull(String value) {
+    return value == null || value.isEmpty();
   }
 
   private enum MapGetter implements TextMapGetter<Map<String, String>> {

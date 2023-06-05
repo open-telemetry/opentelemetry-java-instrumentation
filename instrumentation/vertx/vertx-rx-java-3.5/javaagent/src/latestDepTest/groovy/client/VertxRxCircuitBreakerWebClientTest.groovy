@@ -120,6 +120,11 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
   }
 
   @Override
+  boolean testReadTimeout() {
+    false
+  }
+
+  @Override
   SingleConnection createSingleConnection(String host, int port) {
     return new VertxRxCircuitBreakerSingleConnection(host, port, breaker)
   }

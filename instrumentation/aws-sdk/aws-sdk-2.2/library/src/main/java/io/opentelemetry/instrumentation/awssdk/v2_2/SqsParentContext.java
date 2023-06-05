@@ -7,13 +7,15 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import java.util.Collections;
 import java.util.Map;
+import software.amazon.awssdk.core.SdkPojo;
 
 final class SqsParentContext {
 
-  enum MapGetter implements TextMapGetter<Map<String, String>> {
+  enum StringMapGetter implements TextMapGetter<Map<String, String>> {
     INSTANCE;
 
     @Override
@@ -27,7 +29,34 @@ final class SqsParentContext {
     }
   }
 
+  enum MessageAttributeValueMapGetter implements TextMapGetter<Map<String, SdkPojo>> {
+    INSTANCE;
+
+    @Override
+    public Iterable<String> keys(Map<String, SdkPojo> map) {
+      return map.keySet();
+    }
+
+    @Override
+    public String get(Map<String, SdkPojo> map, String s) {
+      if (map == null) {
+        return null;
+      }
+      SdkPojo value = map.get(s);
+      if (value == null) {
+        return null;
+      }
+      return SqsMessageAttributeValueAccess.getStringValue(value);
+    }
+  }
+
   static final String AWS_TRACE_SYSTEM_ATTRIBUTE = "AWSTraceHeader";
+
+  static Context ofMessageAttributes(
+      Map<String, SdkPojo> messageAttributes, TextMapPropagator propagator) {
+    return propagator.extract(
+        Context.root(), messageAttributes, MessageAttributeValueMapGetter.INSTANCE);
+  }
 
   static Context ofSystemAttributes(Map<String, String> systemAttributes) {
     String traceHeader = systemAttributes.get(AWS_TRACE_SYSTEM_ATTRIBUTE);
@@ -35,7 +64,7 @@ final class SqsParentContext {
         .extract(
             Context.root(),
             Collections.singletonMap("X-Amzn-Trace-Id", traceHeader),
-            MapGetter.INSTANCE);
+            StringMapGetter.INSTANCE);
   }
 
   private SqsParentContext() {}

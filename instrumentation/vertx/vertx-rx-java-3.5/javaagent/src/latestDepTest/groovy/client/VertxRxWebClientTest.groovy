@@ -106,6 +106,11 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
   }
 
   @Override
+  boolean testReadTimeout() {
+    false
+  }
+
+  @Override
   SingleConnection createSingleConnection(String host, int port) {
     return new VertxRxSingleConnection(host, port)
   }

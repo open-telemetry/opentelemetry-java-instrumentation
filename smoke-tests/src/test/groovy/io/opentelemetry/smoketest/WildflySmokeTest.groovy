@@ -41,17 +41,6 @@ abstract class WildflySmokeTest extends AppServerTest {
   }
 }
 
-abstract class WildflyJdk8SmokeTest extends WildflySmokeTest {
-  @Override
-  protected Map<String, String> getExtraEnv() {
-    // https://github.com/openjdk/jdk8u/commit/d72d28967d732ba32e02178b828255378c5a8938
-    // introduces a changes that causes wildfly to throw java.io.FileNotFoundException: Invalid file
-    // path on windows
-    return Collections.singletonMap("JAVA_OPTS", "-Djdk.io.File.enableADS=true " +
-      "-Djava.net.preferIPv4Stack=true -Djava.awt.headless=true")
-  }
-}
-
 @AppServer(version = "13.0.0.Final", jdk = "8")
 class Wildfly13Jdk8 extends WildflySmokeTest {
 }

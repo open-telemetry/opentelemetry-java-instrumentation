@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import javax.annotation.Nullable;
 
 /**
@@ -20,25 +17,27 @@ import javax.annotation.Nullable;
 public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
     extends HttpCommonAttributesGetter<REQUEST, RESPONSE> {
 
-  // Attributes that always exist in a request
-
-  @Nullable
-  String getUrl(REQUEST request);
-
-  // Attributes which are not always available when the request is ready.
-
   /**
-   * Extracts the {@code http.flavor} span attribute.
+   * Returns the full request URL.
    *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
-   * {@code response} is {@code null} or not.
-   *
-   * @deprecated Use {@link NetClientAttributesGetter#getProtocolName(Object, Object)} and {@link
-   *     NetClientAttributesGetter#getProtocolVersion(Object, Object)} instead.
+   * @deprecated This method is deprecated and will be removed in a future release. Implement {@link
+   *     #getUrlFull(Object)} instead.
    */
   @Deprecated
   @Nullable
-  default String getFlavor(REQUEST request, @Nullable RESPONSE response) {
+  default String getUrl(REQUEST request) {
     return null;
+  }
+
+  // TODO: make this required to implement
+  /**
+   * Returns the absolute URL describing a network resource according to <a
+   * href="https://www.rfc-editor.org/rfc/rfc3986">RFC3986</a>.
+   *
+   * <p>Examples: {@code https://www.foo.bar/search?q=OpenTelemetry#SemConv}; {@code //localhost}
+   */
+  @Nullable
+  default String getUrlFull(REQUEST request) {
+    return getUrl(request);
   }
 }

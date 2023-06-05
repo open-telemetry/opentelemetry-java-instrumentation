@@ -40,13 +40,47 @@ ConnectionFactory wrapWithProxyFactory(OpenTelemetry openTelemetry, ConnectionFa
 }
 ```
 
-If you use R2dbc in a Spring application you can wrap the `ConnectionFactory` in the `ConnectionFactoryInitializer` Bean:
+If you use R2dbc in a Spring Boot application you can wrap the `ConnectionFactory` using a custom `BeanPostProcessor` implementation:
+
 ```java
-@Bean
-ConnectionFactoryInitializer initializer(OpenTelemetry openTelemetry, ConnectionFactory connectionFactory) {
-    ConnectionFactoryInitializer initializer = new ConnectionFactoryInitializer();
-    ConnectionFactoryOptions factoryOptions = ConnectionFactoryOptions.parse("r2dbc:mariadb://localhost:3306/db");
-    initializer.setConnectionFactory(wrapWithProxyFactory(openTelemetry, connectionFactory, factoryOptions));
-    return initializer;
+@Configuration
+class R2dbcConfiguration {
+
+  @Bean
+  public R2dbcInstrumentingPostProcessor r2dbcInstrumentingPostProcessor(
+      OpenTelemetry openTelemetry) {
+    return new R2dbcInstrumentingPostProcessor(openTelemetry);
+  }
+}
+
+class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
+
+  private final OpenTelemetry openTelemetry;
+
+  R2dbcInstrumentingPostProcessor(OpenTelemetry openTelemetry) {
+    this.openTelemetry = openTelemetry;
+  }
+
+  @Override
+  public Object postProcessAfterInitialization(Object bean, String beanName) {
+    if (!(bean instanceof ConnectionFactory)) {
+      return bean;
+    }
+    ConnectionFactory connectionFactory = (ConnectionFactory) bean;
+    return R2dbcTelemetry.create(openTelemetry)
+        .wrapConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
+  }
+
+  private static ConnectionFactoryOptions getConnectionFactoryOptions(ConnectionFactory connectionFactory) {
+    OptionsCapableConnectionFactory optionsCapableConnectionFactory =
+        OptionsCapableConnectionFactory.unwrapFrom(connectionFactory);
+    if (optionsCapableConnectionFactory != null) {
+      return optionsCapableConnectionFactory.getOptions();
+    } else {
+      // in practice should never happen
+      // fall back to empty options; or reconstruct them from the R2dbcProperties
+      return ConnectionFactoryOptions.builder().build();
+    }
+  }
 }
 ```

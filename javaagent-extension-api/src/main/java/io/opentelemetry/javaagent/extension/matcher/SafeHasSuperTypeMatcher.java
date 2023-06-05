@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.SafeErasureMatcher.sa
 import static io.opentelemetry.javaagent.extension.matcher.Utils.safeTypeDefinitionName;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingSuperTypeMatcher;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -35,7 +36,8 @@ import net.bytebuddy.matcher.ElementMatcher;
  *
  * @see net.bytebuddy.matcher.HasSuperTypeMatcher
  */
-class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription> {
+class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription>
+    implements DelegatingSuperTypeMatcher {
 
   private static final Logger logger = Logger.getLogger(SafeHasSuperTypeMatcher.class.getName());
 
@@ -134,6 +136,11 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
   @Override
   public int hashCode() {
     return matcher.hashCode();
+  }
+
+  @Override
+  public ElementMatcher<?> getDelegate() {
+    return matcher;
   }
 
   /**

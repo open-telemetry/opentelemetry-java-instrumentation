@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import org.testcontainers.shaded.com.google.common.collect.ImmutableMap
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
@@ -24,7 +23,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
   def "camel SQS producer - camel SQS consumer"() {
     setup:
     String queueName = "sqsCamelTest"
-    def camelApp = new CamelSpringApp(awsConnector, SqsConfig, ImmutableMap.of("queueName", queueName))
+    def camelApp = new CamelSpringApp(awsConnector, SqsConfig, ["queueName": queueName])
     def queueUrl = awsConnector.createQueue(queueName)
 
     waitAndClearSetupTraces(queueUrl, queueName)
@@ -59,7 +58,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
   def "AWS SDK SQS producer - camel SQS consumer"() {
     setup:
     String queueName = "sqsCamelTest"
-    def camelApp = new CamelSpringApp(awsConnector, SqsConfig, ImmutableMap.of("queueName", queueName))
+    def camelApp = new CamelSpringApp(awsConnector, SqsConfig, ["queueName": queueName])
     def queueUrl = awsConnector.createQueue(queueName)
 
     waitAndClearSetupTraces(queueUrl, queueName)
@@ -95,7 +94,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
   def "camel SQS producer - AWS SDK SQS consumer"() {
     setup:
     String queueName = "sqsCamelTestSdkConsumer"
-    def camelApp = new CamelSpringApp(awsConnector, SqsConfig, ImmutableMap.of("queueSdkConsumerName", queueName))
+    def camelApp = new CamelSpringApp(awsConnector, SqsConfig, [queueSdkConsumerName: queueName])
     def queueUrl = awsConnector.createQueue(queueName)
 
     waitAndClearSetupTraces(queueUrl, queueName)

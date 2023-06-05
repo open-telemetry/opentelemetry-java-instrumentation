@@ -28,7 +28,7 @@ public class OkHttp3Test extends AbstractOkHttp3Test {
 
   @Test
   @SuppressWarnings("PreferJavaTimeOverload")
-  void reusedBuilderHasOneInterceptor() {
+  void reusedBuilderOnlyHasOpenTelemetryInterceptors() {
     OkHttpClient.Builder builder =
         new OkHttpClient.Builder()
             .connectTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)
@@ -36,13 +36,15 @@ public class OkHttp3Test extends AbstractOkHttp3Test {
 
     OkHttpClient newClient = builder.build().newBuilder().build();
 
-    assertThat(newClient.interceptors()).hasSize(1);
+    assertThat(newClient.interceptors()).hasSize(2);
+    assertThat(newClient.networkInterceptors()).hasSize(1);
   }
 
   @Test
-  void builderCreatedFromClientHasOneInterceptor() {
+  void builderCreatedFromClientOnlyHasOpenTelemetryInterceptors() {
     OkHttpClient newClient = ((OkHttpClient) client).newBuilder().build();
 
-    assertThat(newClient.interceptors()).hasSize(1);
+    assertThat(newClient.interceptors()).hasSize(2);
+    assertThat(newClient.networkInterceptors()).hasSize(1);
   }
 }

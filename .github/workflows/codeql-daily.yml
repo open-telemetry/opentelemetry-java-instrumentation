@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 17.0.6
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
@@ -27,10 +27,14 @@ jobs:
           # see https://github.com/github/codeql-action/issues/1555#issuecomment-1452228433
           tools: latest
 
+      - name: Increase gradle daemon heap size
+        run: |
+          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
+
       - uses: gradle/gradle-build-action@v2
         with:
           # skipping build cache is needed so that all modules will be analyzed
-          arguments: assemble --no-build-cache
+          arguments: assemble -x javadoc --no-build-cache --no-daemon
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v2

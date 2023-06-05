@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Deque;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -47,6 +48,9 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
     public static void onEnter(
         @Advice.This ChannelHandlerContext ctx, @Advice.Argument(0) Throwable throwable) {
 
+      // we can't rely on exception handling in HttpClientTracingHandler because it can't catch
+      // exceptions from handlers that run after it, for example ratpack has ReadTimeoutHandler
+      // (trigger ReadTimeoutException) after HttpClientCodec (or handler is inserted after it)
       Attribute<Context> contextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
       Context clientContext = contextAttr.get();
       if (clientContext != null) {
@@ -56,8 +60,8 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
         instrumenter().end(clientContext, request, null, throwable);
         return;
       }
-
-      Context serverContext = ctx.channel().attr(AttributeKeys.SERVER_CONTEXT).get();
+      Deque<Context> contexts = ctx.channel().attr(AttributeKeys.SERVER_CONTEXT).get();
+      Context serverContext = contexts != null ? contexts.peekFirst() : null;
       if (serverContext != null) {
         NettyErrorHolder.set(serverContext, throwable);
       }
