@@ -6,43 +6,38 @@
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
 import io.opentelemetry.instrumentation.jdbc.TestConnection;
-
-import javax.sql.DataSource;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.logging.Logger;
+import javax.sql.DataSource;
 
 class TestDataSource implements DataSource {
 
   @Override
-  public Connection getConnection() throws SQLException {
+  public Connection getConnection() {
     return new TestConnection();
   }
 
   @Override
-  public Connection getConnection(String username, String password) throws SQLException {
+  public Connection getConnection(String username, String password) {
     return new TestConnection();
   }
 
   @Override
-  public PrintWriter getLogWriter() throws SQLException {
+  public PrintWriter getLogWriter() {
     return null;
   }
 
   @Override
-  public void setLogWriter(PrintWriter out) throws SQLException {
-
-  }
+  public void setLogWriter(PrintWriter out) {}
 
   @Override
-  public void setLoginTimeout(int seconds) throws SQLException {
-
-  }
+  public void setLoginTimeout(int seconds) {}
 
   @Override
-  public int getLoginTimeout() throws SQLException {
+  public int getLoginTimeout() {
     return 0;
   }
 
@@ -60,5 +55,4 @@ class TestDataSource implements DataSource {
   public boolean isWrapperFor(Class<?> iface) throws SQLException {
     return false;
   }
-
 }

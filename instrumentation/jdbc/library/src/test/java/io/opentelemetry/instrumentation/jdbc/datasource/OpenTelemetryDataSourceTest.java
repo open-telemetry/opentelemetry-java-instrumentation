@@ -25,8 +25,7 @@ class OpenTelemetryDataSourceTest {
 
     OpenTelemetry openTelemetry = OpenTelemetry.propagating(ContextPropagators.noop());
     TestDataSource testDataSource = new TestDataSource();
-    OpenTelemetryDataSource dataSource =
-        new OpenTelemetryDataSource(testDataSource, openTelemetry);
+    OpenTelemetryDataSource dataSource = new OpenTelemetryDataSource(testDataSource, openTelemetry);
     Connection connection = dataSource.getConnection();
 
     assertThat(connection).isExactlyInstanceOf(OpenTelemetryConnection.class);
