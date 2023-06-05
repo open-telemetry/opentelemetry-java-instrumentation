@@ -1,3 +1,5 @@
+import java.time.Duration
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -38,5 +40,9 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+
+    // TODO: just to test things out
+    testLogging.showStandardStreams = true
+    timeout.set(Duration.ofMinutes(5))
   }
 }
