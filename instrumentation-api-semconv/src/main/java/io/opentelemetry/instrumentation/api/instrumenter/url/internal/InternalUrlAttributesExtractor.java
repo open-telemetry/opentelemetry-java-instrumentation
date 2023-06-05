@@ -64,6 +64,6 @@ public final class InternalUrlAttributesExtractor<REQUEST> {
     if (path == null && query == null) {
       return null;
     }
-    return (path == null ? "" : path) + (query == null || query.isEmpty() ? "" : "?" + query);
+    return (path == null ? "" : path) + (query == null ? "" : "?" + query);
   }
 }

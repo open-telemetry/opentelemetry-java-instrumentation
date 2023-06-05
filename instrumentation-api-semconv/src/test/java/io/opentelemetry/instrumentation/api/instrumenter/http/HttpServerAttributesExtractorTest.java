@@ -316,7 +316,7 @@ class HttpServerAttributesExtractorTest {
       return Stream.of(
           arguments(null, null, null),
           arguments("path", null, "path"),
-          arguments("path", "", "path"),
+          arguments("path", "", "path?"),
           arguments(null, "query", "?query"),
           arguments("path", "query", "path?query"));
     }
