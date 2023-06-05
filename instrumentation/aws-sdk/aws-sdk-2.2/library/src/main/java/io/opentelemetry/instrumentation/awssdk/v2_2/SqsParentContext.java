@@ -52,7 +52,7 @@ public final class SqsParentContext {
 
   static final String AWS_TRACE_SYSTEM_ATTRIBUTE = "AWSTraceHeader";
 
-  static public Context ofMessageAttributes(
+  public static Context ofMessageAttributes(
       Map<String, SdkPojo> messageAttributes, TextMapPropagator propagator) {
     return propagator.extract(
         Context.root(), messageAttributes, MessageAttributeValueMapGetter.INSTANCE);

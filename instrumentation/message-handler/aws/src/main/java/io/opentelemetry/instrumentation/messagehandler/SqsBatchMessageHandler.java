@@ -69,15 +69,15 @@ public abstract class SqsBatchMessageHandler extends BatchMessageHandler<Message
   }
 
   protected SpanLinksExtractor<Collection<Message>> getSpanLinksExtractor() {
-    TextMapPropagator messagingPropagator = getOpenTelemetry()
-        .getPropagators()
-        .getTextMapPropagator();
+    TextMapPropagator messagingPropagator =
+        getOpenTelemetry().getPropagators().getTextMapPropagator();
 
     return (spanLinks, parentContext, sqsMessages) -> {
       for (Message message : sqsMessages) {
         Map<String, SdkPojo> messageAtributes = SqsMessageAccess.getMessageAttributes(message);
 
-        Context context = SqsParentContext.ofMessageAttributes(messageAtributes, messagingPropagator);
+        Context context =
+            SqsParentContext.ofMessageAttributes(messageAtributes, messagingPropagator);
 
         if (context == Context.root()) {
           context = SqsParentContext.ofSystemAttributes(SqsMessageAccess.getAttributes(message));
