@@ -12,6 +12,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration;
+import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
@@ -53,7 +54,8 @@ class OpenTelemetryAutoConfigurationTest {
                     .hasBean("customOpenTelemetry")
                     .doesNotHaveBean("openTelemetry")
                     .doesNotHaveBean("sdkTracerProvider")
-                    .doesNotHaveBean("sdkMeterProvider"));
+                    .doesNotHaveBean("sdkMeterProvider")
+                    .doesNotHaveBean("sdkLoggerProvider"));
   }
 
   @Test
@@ -82,6 +84,10 @@ class OpenTelemetryAutoConfigurationTest {
             () -> SdkTracerProvider.builder().build())
         .withBean(
             "customMeterProvider", SdkMeterProvider.class, () -> SdkMeterProvider.builder().build())
+        .withBean(
+            "customLoggerProvider",
+            SdkLoggerProvider.class,
+            () -> SdkLoggerProvider.builder().build())
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .run(
             context ->
@@ -90,7 +96,9 @@ class OpenTelemetryAutoConfigurationTest {
                     .hasBean("customTracerProvider")
                     .doesNotHaveBean("sdkTracerProvider")
                     .hasBean("customMeterProvider")
-                    .doesNotHaveBean("sdkMeterProvider"));
+                    .doesNotHaveBean("sdkMeterProvider")
+                    .hasBean("customLoggerProvider")
+                    .doesNotHaveBean("sdkLoggerProvider"));
   }
 
   @Test
