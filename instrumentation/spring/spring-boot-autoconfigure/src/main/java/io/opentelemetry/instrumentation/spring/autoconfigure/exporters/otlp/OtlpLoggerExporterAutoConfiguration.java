@@ -39,7 +39,7 @@ public class OtlpLoggerExporterAutoConfiguration {
       builder.setEndpoint(endpoint);
     }
 
-    Duration timeout = properties.getTraces().getTimeout();
+    Duration timeout = properties.getLogs().getTimeout();
     if (timeout == null) {
       timeout = properties.getTimeout();
     }
