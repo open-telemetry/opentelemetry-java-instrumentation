@@ -7,9 +7,18 @@ package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.BufferPools;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.Classes;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.Cpu;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.GarbageCollector;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.MemoryPools;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.Threads;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
-import java.util.function.Predicate;
+import java.util.List;
+import javax.annotation.Nullable;
 
 /** Builder for {@link RuntimeMetrics}. */
 public final class RuntimeMetricsBuilder {
@@ -73,8 +82,36 @@ public final class RuntimeMetricsBuilder {
 
   /** Build and start an {@link RuntimeMetrics} with the config from this builder. */
   public RuntimeMetrics build() {
-    Predicate<JfrFeature> featurePredicate = jfrFeature -> enabledFeatureMap.get(jfrFeature);
-    boolean disableJfr = !enabledFeatureMap.keySet().stream().anyMatch(featurePredicate);
-    return new RuntimeMetrics(openTelemetry, featurePredicate, disableJmx, disableJfr);
+    List<AutoCloseable> observables = buildObservables();
+    RuntimeMetrics.JfrRuntimeMetrics jfrRuntimeMetrics = buildJfrMetrics();
+    return new RuntimeMetrics(openTelemetry, observables, jfrRuntimeMetrics);
+  }
+
+  @SuppressWarnings("CatchingUnchecked")
+  private List<AutoCloseable> buildObservables() {
+    if (disableJmx) {
+      return Collections.emptyList();
+    }
+    try {
+      // Set up metrics gathered by JMX
+      List<AutoCloseable> observables = new ArrayList<>();
+      observables.addAll(BufferPools.registerObservers(openTelemetry));
+      observables.addAll(Classes.registerObservers(openTelemetry));
+      observables.addAll(Cpu.registerObservers(openTelemetry));
+      observables.addAll(MemoryPools.registerObservers(openTelemetry));
+      observables.addAll(Threads.registerObservers(openTelemetry));
+      observables.addAll(GarbageCollector.registerObservers(openTelemetry));
+      return observables;
+    } catch (Exception e) {
+      throw new IllegalStateException("Error building RuntimeMetrics", e);
+    }
+  }
+
+  @Nullable
+  private RuntimeMetrics.JfrRuntimeMetrics buildJfrMetrics() {
+    if (enabledFeatureMap.values().stream().noneMatch(isEnabled -> isEnabled)) {
+      return null;
+    }
+    return RuntimeMetrics.JfrRuntimeMetrics.build(openTelemetry, enabledFeatureMap::get);
   }
 }
