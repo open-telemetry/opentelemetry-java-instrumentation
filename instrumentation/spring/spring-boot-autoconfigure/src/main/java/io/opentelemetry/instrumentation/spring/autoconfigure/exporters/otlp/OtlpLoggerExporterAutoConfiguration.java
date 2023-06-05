@@ -27,7 +27,6 @@ public class OtlpLoggerExporterAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  @SuppressWarnings("SystemOut")
   public OtlpGrpcLogRecordExporter otelOtlpGrpcLogRecordExporter(
       OtlpExporterProperties properties) {
     OtlpGrpcLogRecordExporterBuilder builder = OtlpGrpcLogRecordExporter.builder();
