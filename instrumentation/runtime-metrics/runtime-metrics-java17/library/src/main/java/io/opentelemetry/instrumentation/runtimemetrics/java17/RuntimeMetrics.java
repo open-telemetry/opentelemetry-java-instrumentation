@@ -53,7 +53,7 @@ public final class RuntimeMetrics implements Closeable {
         observables.addAll(Cpu.registerObservers(openTelemetry));
         observables.addAll(MemoryPools.registerObservers(openTelemetry));
         observables.addAll(Threads.registerObservers(openTelemetry));
-        GarbageCollector.registerObservers(openTelemetry);
+        observables.addAll(GarbageCollector.registerObservers(openTelemetry));
       }
     } catch (Exception e) {
       close();
