@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7.internal;
 
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
@@ -15,13 +15,7 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class DubboNetServerAttributesGetter
-    extends InetSocketAddressNetServerAttributesGetter<DubboRequest> {
-
-  @Override
-  @Nullable
-  public String getTransport(DubboRequest request) {
-    return null;
-  }
+    implements NetServerAttributesGetter<DubboRequest> {
 
   @Nullable
   @Override
@@ -37,13 +31,13 @@ public final class DubboNetServerAttributesGetter
 
   @Override
   @Nullable
-  protected InetSocketAddress getPeerSocketAddress(DubboRequest request) {
+  public InetSocketAddress getPeerSocketAddress(DubboRequest request) {
     return request.remoteAddress();
   }
 
   @Nullable
   @Override
-  protected InetSocketAddress getHostSocketAddress(DubboRequest request) {
+  public InetSocketAddress getHostSocketAddress(DubboRequest request) {
     return request.localAddress();
   }
 }

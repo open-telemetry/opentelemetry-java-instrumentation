@@ -5,21 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 public class CouchbaseNetAttributesGetter
-    extends InetSocketAddressNetClientAttributesGetter<CouchbaseRequestInfo, Void> {
-  @Nullable
-  @Override
-  public String getTransport(CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
-    return couchbaseRequest.getPeerAddress() != null
-        ? SemanticAttributes.NetTransportValues.IP_TCP
-        : null;
-  }
+    implements NetClientAttributesGetter<CouchbaseRequestInfo, Void> {
 
   @Nullable
   @Override
@@ -35,7 +27,7 @@ public class CouchbaseNetAttributesGetter
 
   @Nullable
   @Override
-  protected InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getPeerSocketAddress(
       CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
     SocketAddress peerAddress = couchbaseRequest.getPeerAddress();
     if (peerAddress instanceof InetSocketAddress) {

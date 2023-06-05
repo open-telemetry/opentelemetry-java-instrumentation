@@ -5,19 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.undertow.server.HttpServerExchange;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-public class UndertowNetAttributesGetter
-    extends InetSocketAddressNetServerAttributesGetter<HttpServerExchange> {
-
-  @Override
-  public String getTransport(HttpServerExchange exchange) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
+public class UndertowNetAttributesGetter implements NetServerAttributesGetter<HttpServerExchange> {
 
   @Nullable
   @Override
@@ -53,13 +46,13 @@ public class UndertowNetAttributesGetter
 
   @Override
   @Nullable
-  protected InetSocketAddress getPeerSocketAddress(HttpServerExchange exchange) {
+  public InetSocketAddress getPeerSocketAddress(HttpServerExchange exchange) {
     return exchange.getConnection().getPeerAddress(InetSocketAddress.class);
   }
 
   @Nullable
   @Override
-  protected InetSocketAddress getHostSocketAddress(HttpServerExchange exchange) {
+  public InetSocketAddress getHostSocketAddress(HttpServerExchange exchange) {
     return exchange.getConnection().getLocalAddress(InetSocketAddress.class);
   }
 }

@@ -12,9 +12,9 @@ import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.logs.export.InMemoryLogRecordExporter;
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
@@ -56,7 +56,7 @@ public class Slf4j2Test {
   void keyValue() {
     logger.atInfo().setMessage("log message 1").addKeyValue("key", "value").log();
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
     LogRecordData logData = logDataList.get(0);
     assertThat(logData.getResource()).isEqualTo(resource);
@@ -79,7 +79,7 @@ public class Slf4j2Test {
         .addMarker(MarkerFactory.getMarker(markerName2))
         .log();
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
     LogRecordData logData = logDataList.get(0);
     assertThat(logData.getResource()).isEqualTo(resource);

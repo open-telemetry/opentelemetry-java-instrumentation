@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import jakarta.jms.ConnectionFactory;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -44,6 +45,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.jms.core.JmsTemplate;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 class SpringJmsListenerTest {
 
@@ -63,6 +65,8 @@ class SpringJmsListenerTest {
             .withEnv("AMQ_USER", "test")
             .withEnv("AMQ_PASSWORD", "test")
             .withExposedPorts(61616, 8161)
+            .waitingFor(Wait.forLogMessage(".*Server is now live.*", 1))
+            .withStartupTimeout(Duration.ofMinutes(2))
             .withLogConsumer(new Slf4jLogConsumer(logger));
     broker.start();
   }
@@ -105,7 +109,7 @@ class SpringJmsListenerTest {
                     span.hasName("spring-jms-listener send")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -118,7 +122,7 @@ class SpringJmsListenerTest {
                     span.hasName("spring-jms-listener process")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -135,7 +139,7 @@ class SpringJmsListenerTest {
                     span.hasName("spring-jms-listener receive")
                         .hasKind(CONSUMER)
                         .hasNoParent()
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -188,7 +192,7 @@ class SpringJmsListenerTest {
                     span.hasName("spring-jms-listener send")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -207,7 +211,7 @@ class SpringJmsListenerTest {
                     span.hasName("spring-jms-listener process")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -230,7 +234,7 @@ class SpringJmsListenerTest {
                     span.hasName("spring-jms-listener receive")
                         .hasKind(CONSUMER)
                         .hasNoParent()
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,

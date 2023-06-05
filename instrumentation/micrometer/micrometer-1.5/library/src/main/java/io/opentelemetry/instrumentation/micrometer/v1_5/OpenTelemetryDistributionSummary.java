@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.HistogramAdviceUtil.setExplicitBucketsIfConfigured;
 
 import io.micrometer.core.instrument.AbstractDistributionSummary;
 import io.micrometer.core.instrument.Clock;
@@ -18,6 +19,7 @@ import io.micrometer.core.instrument.distribution.NoopHistogram;
 import io.micrometer.core.instrument.distribution.TimeWindowMax;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 import java.util.Collections;
@@ -41,9 +43,10 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
       NamingConvention namingConvention,
       Clock clock,
       DistributionStatisticConfig distributionStatisticConfig,
+      DistributionStatisticConfigModifier modifier,
       double scale,
       Meter otelMeter) {
-    super(id, clock, distributionStatisticConfig, scale, false);
+    super(id, clock, modifier.modify(distributionStatisticConfig), scale, false);
 
     if (isUsingMicrometerHistograms()) {
       measurements = new MicrometerHistogramMeasurements();
@@ -55,12 +58,13 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
     this.attributes = tagsAsAttributes(id, namingConvention);
 
     String name = name(id, namingConvention);
-    this.otelHistogram =
+    DoubleHistogramBuilder otelHistogramBuilder =
         otelMeter
             .histogramBuilder(name)
             .setDescription(Bridging.description(id))
-            .setUnit(baseUnit(id))
-            .build();
+            .setUnit(baseUnit(id));
+    setExplicitBucketsIfConfigured(otelHistogramBuilder, distributionStatisticConfig);
+    this.otelHistogram = otelHistogramBuilder.build();
     this.observableMax =
         otelMeter
             .gaugeBuilder(name + ".max")

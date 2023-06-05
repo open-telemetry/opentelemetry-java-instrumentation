@@ -29,6 +29,7 @@ import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -48,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 class Jms3InstrumentationTest {
 
@@ -70,6 +72,8 @@ class Jms3InstrumentationTest {
             .withEnv("AMQ_USER", "test")
             .withEnv("AMQ_PASSWORD", "test")
             .withExposedPorts(61616, 8161)
+            .waitingFor(Wait.forLogMessage(".*Server is now live.*", 1))
+            .withStartupTimeout(Duration.ofMinutes(2))
             .withLogConsumer(new Slf4jLogConsumer(logger));
     broker.start();
 
@@ -138,7 +142,7 @@ class Jms3InstrumentationTest {
                   span.hasName(producerDestinationName + " send")
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfying(
+                      .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                           equalTo(
                               SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -157,7 +161,7 @@ class Jms3InstrumentationTest {
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -208,7 +212,7 @@ class Jms3InstrumentationTest {
                     span.hasName(producerDestinationName + " send")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -220,7 +224,7 @@ class Jms3InstrumentationTest {
                     span.hasName(actualDestinationName + " process")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -294,7 +298,7 @@ class Jms3InstrumentationTest {
                     span.hasName(producerDestinationName + " send")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
@@ -312,7 +316,7 @@ class Jms3InstrumentationTest {
                     span.hasName(actualDestinationName + " process")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,

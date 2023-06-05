@@ -6,17 +6,11 @@
 package io.opentelemetry.instrumentation.spring.webmvc.v6_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import jakarta.servlet.http.HttpServletRequest;
 import javax.annotation.Nullable;
 
 enum SpringWebMvcNetAttributesGetter implements NetServerAttributesGetter<HttpServletRequest> {
   INSTANCE;
-
-  @Override
-  public String getTransport(HttpServletRequest request) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
 
   @Nullable
   @Override

@@ -14,6 +14,8 @@ public class DefineClassHelper {
     DefineClassContext beforeDefineClass(
         ClassLoader classLoader, String className, byte[] classBytes, int offset, int length);
 
+    DefineClassContext beforeDefineLambdaClass(Class<?> lambdaInterface);
+
     void afterDefineClass(DefineClassContext context);
 
     /** Context returned from {@code beforeDefineClass} and passed to {@code afterDefineClass}. */
@@ -46,6 +48,10 @@ public class DefineClassHelper {
       byteBuffer.duplicate().get(classBytes);
       return beforeDefineClass(classLoader, className, classBytes, 0, length);
     }
+  }
+
+  public static Handler.DefineClassContext beforeDefineLambdaClass(Class<?> lambdaInterface) {
+    return handler.beforeDefineLambdaClass(lambdaInterface);
   }
 
   public static void afterDefineClass(Handler.DefineClassContext context) {

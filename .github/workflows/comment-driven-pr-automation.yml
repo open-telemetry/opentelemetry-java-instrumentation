@@ -73,6 +73,12 @@ jobs:
           env.COMMAND == 'update'
         run: .github/scripts/use-cla-approved-github-bot.sh
 
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17.0.6
+
       - name: Run command
         env:
           NUMBER: ${{ github.event.issue.number }}

@@ -46,10 +46,13 @@ public class OkHttp3Instrumentation implements TypeInstrumentation {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      if (builder.interceptors().contains(OkHttp3Singletons.TRACING_INTERCEPTOR)) {
-        return;
+      if (!builder.interceptors().contains(OkHttp3Singletons.CONTEXT_INTERCEPTOR)) {
+        builder.interceptors().add(0, OkHttp3Singletons.CONTEXT_INTERCEPTOR);
+        builder.interceptors().add(1, OkHttp3Singletons.CONNECTION_ERROR_INTERCEPTOR);
       }
-      builder.addInterceptor(OkHttp3Singletons.TRACING_INTERCEPTOR);
+      if (!builder.networkInterceptors().contains(OkHttp3Singletons.TRACING_INTERCEPTOR)) {
+        builder.addNetworkInterceptor(OkHttp3Singletons.TRACING_INTERCEPTOR);
+      }
     }
   }
 }

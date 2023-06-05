@@ -51,5 +51,10 @@ public final class KafkaConsumerContextUtil {
     recordsConsumerField.set(records, consumer);
   }
 
+  public static void copy(ConsumerRecord<?, ?> from, ConsumerRecord<?, ?> to) {
+    recordContextField.set(to, recordContextField.get(from));
+    recordConsumerField.set(to, recordConsumerField.get(from));
+  }
+
   private KafkaConsumerContextUtil() {}
 }

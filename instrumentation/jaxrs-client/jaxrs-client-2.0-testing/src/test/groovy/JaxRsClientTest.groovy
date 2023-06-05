@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implements AgentTestTrait {
 
@@ -108,7 +107,6 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
           kind CLIENT
           status ERROR
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_PEER_NAME" uri.host
@@ -138,6 +136,7 @@ class JerseyClientTest extends JaxRsClientTest {
   ClientBuilder builder() {
     ClientConfig config = new ClientConfig()
     config.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT_MS)
+    config.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT_MS)
     return new JerseyClientBuilder().withConfig(config)
   }
 
@@ -162,6 +161,7 @@ class ResteasyClientTest extends JaxRsClientTest {
   ClientBuilder builder() {
     return new ResteasyClientBuilder()
       .establishConnectionTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+      .socketTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
   }
 
   @Override
@@ -176,12 +176,26 @@ class CxfClientTest extends JaxRsClientTest {
   Throwable clientSpanError(URI uri, Throwable exception) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
+        if (exception.getCause() instanceof ConnectException) {
+          exception = exception.getCause()
+        }
+        break
       case "https://192.0.2.1/": // non routable address
         if (exception.getCause() != null) {
           exception = exception.getCause()
         }
     }
     return exception
+  }
+
+  @Override
+  boolean testWithClientParent() {
+    !Boolean.getBoolean("testLatestDeps")
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    return false
   }
 
   @Override
@@ -193,6 +207,7 @@ class CxfClientTest extends JaxRsClientTest {
   ClientBuilder builder() {
     return new ClientBuilderImpl()
       .property("http.connection.timeout", (long) CONNECT_TIMEOUT_MS)
+      .property("org.apache.cxf.transport.http.forceVersion", "1.1")
   }
 
   @Override

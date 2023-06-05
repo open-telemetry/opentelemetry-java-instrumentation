@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.T
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggerContextVO;
+import ch.qos.logback.classic.spi.LoggingEventVO;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
@@ -82,22 +83,27 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             ? new LoggerContextVO(oldVo.getName(), eventContextMap, oldVo.getBirthTime())
             : null;
 
-    return (ILoggingEvent)
-        Proxy.newProxyInstance(
-            ILoggingEvent.class.getClassLoader(),
-            new Class<?>[] {ILoggingEvent.class},
-            (proxy, method, args) -> {
-              if ("getMDCPropertyMap".equals(method.getName())) {
-                return eventContextMap;
-              } else if ("getLoggerContextVO".equals(method.getName())) {
-                return vo;
-              }
-              try {
-                return method.invoke(event, args);
-              } catch (InvocationTargetException exception) {
-                throw exception.getCause();
-              }
-            });
+    ILoggingEvent wrappedEvent =
+        (ILoggingEvent)
+            Proxy.newProxyInstance(
+                ILoggingEvent.class.getClassLoader(),
+                new Class<?>[] {ILoggingEvent.class},
+                (proxy, method, args) -> {
+                  if ("getMDCPropertyMap".equals(method.getName())) {
+                    return eventContextMap;
+                  } else if ("getLoggerContextVO".equals(method.getName())) {
+                    return vo;
+                  }
+                  try {
+                    return method.invoke(event, args);
+                  } catch (InvocationTargetException exception) {
+                    throw exception.getCause();
+                  }
+                });
+    // https://github.com/qos-ch/logback/blob/9e833ec858953a2296afdc3292f8542fc08f2a45/logback-classic/src/main/java/ch/qos/logback/classic/net/LoggingEventPreSerializationTransformer.java#L29
+    // LoggingEventPreSerializationTransformer accepts only subclasses of LoggingEvent and
+    // LoggingEventVO, here we transform our wrapped event into a LoggingEventVO
+    return LoggingEventVO.build(wrappedEvent);
   }
 
   @Override

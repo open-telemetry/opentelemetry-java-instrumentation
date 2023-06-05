@@ -155,7 +155,8 @@ public final class ContextPropagationOperator {
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift(
       ReactorAsyncOperationEndStrategy asyncOperationEndStrategy) {
-    return Operators.lift(new Lifter<>(asyncOperationEndStrategy));
+    return Operators.lift(
+        ContextPropagationOperator::shouldInstrument, new Lifter<>(asyncOperationEndStrategy));
   }
 
   /** Forces Mono to run in traceContext scope. */
@@ -220,7 +221,12 @@ public final class ContextPropagationOperator {
     }
   }
 
-  public static class Lifter<T>
+  private static boolean shouldInstrument(Scannable publisher) {
+    // skip if Flux/Mono #just, #empty, #error
+    return !(publisher instanceof Fuseable.ScalarCallable);
+  }
+
+  private static class Lifter<T>
       implements BiFunction<Scannable, CoreSubscriber<? super T>, CoreSubscriber<? super T>> {
 
     /** Holds reference to strategy to prevent it from being collected. */
@@ -233,10 +239,6 @@ public final class ContextPropagationOperator {
 
     @Override
     public CoreSubscriber<? super T> apply(Scannable publisher, CoreSubscriber<? super T> sub) {
-      // if Flux/Mono #just, #empty, #error
-      if (publisher instanceof Fuseable.ScalarCallable) {
-        return sub;
-      }
       return new TracingSubscriber<>(sub, sub.currentContext());
     }
   }

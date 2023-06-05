@@ -101,6 +101,7 @@ abstract class TomcatServlet5Test extends AbstractServlet5Test<Tomcat, Context> 
 
   def setup() {
     accessLogValue.loggedIds.clear()
+    accessLogValue.disable()
   }
 
   @Override
@@ -122,6 +123,8 @@ abstract class TomcatServlet5Test extends AbstractServlet5Test<Tomcat, Context> 
   }
 
   def "access log has ids for #count requests"() {
+    accessLogValue.enable()
+
     given:
     def request = request(SUCCESS, method)
 
@@ -162,6 +165,8 @@ abstract class TomcatServlet5Test extends AbstractServlet5Test<Tomcat, Context> 
   def "access log has ids for error request"() {
     setup:
     assumeTrue(testError())
+    accessLogValue.enable()
+
     def request = request(ERROR, method)
     def response = client.execute(request).aggregate().join()
 
@@ -246,12 +251,24 @@ class ErrorHandlerValve extends ErrorReportValve {
 
 class TestAccessLogValve extends ValveBase implements AccessLog {
   final List<Tuple2<String, String>> loggedIds = []
+  volatile boolean enabled = false
 
   TestAccessLogValve() {
     super(true)
   }
 
+  void disable() {
+    enabled = false
+  }
+
+  void enable() {
+    enabled = true
+  }
+
   void log(Request request, Response response, long time) {
+    if (!enabled) {
+      return
+    }
     synchronized (loggedIds) {
       loggedIds.add(new Tuple2(request.getAttribute("trace_id"),
         request.getAttribute("span_id")))
@@ -343,6 +360,8 @@ class TomcatServlet5TestForward extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + CAPTURE_PARAMETERS.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, RequestDispatcherServlet.Forward)
   }
 }
 
@@ -385,6 +404,8 @@ class TomcatServlet5TestInclude extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + CAPTURE_PARAMETERS.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, RequestDispatcherServlet.Include)
   }
 }
 
@@ -412,6 +433,8 @@ class TomcatServlet5TestDispatchImmediate extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + CAPTURE_PARAMETERS.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet5.DispatchImmediate)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, TestServlet5.DispatchImmediate)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }
 }
@@ -435,6 +458,8 @@ class TomcatServlet5TestDispatchAsync extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + CAPTURE_HEADERS.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + CAPTURE_PARAMETERS.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet5.DispatchAsync)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, TestServlet5.DispatchAsync)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }
 

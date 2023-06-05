@@ -39,13 +39,19 @@ enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String
 
   @Nullable
   @Override
-  public String getTarget(String s) {
+  public String getUrlScheme(String s) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getScheme(String s) {
+  public String getUrlPath(String s) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getUrlQuery(String s) {
     return null;
   }
 }

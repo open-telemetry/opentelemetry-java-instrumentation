@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_UDP;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -17,7 +17,7 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.socket.DatagramChannel;
 
 final class NettyConnectNetAttributesGetter
-    extends InetSocketAddressNetClientAttributesGetter<NettyConnectionRequest, Channel> {
+    implements NetClientAttributesGetter<NettyConnectionRequest, Channel> {
 
   @Override
   public String getTransport(NettyConnectionRequest request, @Nullable Channel channel) {
@@ -46,7 +46,7 @@ final class NettyConnectNetAttributesGetter
 
   @Nullable
   @Override
-  protected InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getPeerSocketAddress(
       NettyConnectionRequest request, @Nullable Channel channel) {
     if (channel == null) {
       return null;

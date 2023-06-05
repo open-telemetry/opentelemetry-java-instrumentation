@@ -152,7 +152,6 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_TARGET" "/sendResponse"
-            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" uri.host
@@ -207,7 +206,6 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_TARGET" "/sendResponseWithException"
-            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" uri.host

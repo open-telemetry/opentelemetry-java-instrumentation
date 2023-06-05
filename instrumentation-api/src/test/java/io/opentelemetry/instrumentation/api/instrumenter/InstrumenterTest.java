@@ -6,10 +6,12 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -179,16 +181,13 @@ class InstrumenterTest {
                             .hasParentSpanId(SpanId.getInvalid())
                             .hasStatus(StatusData.unset())
                             .hasLinks(expectedSpanLink())
-                            .hasAttributesSatisfying(
-                                attributes ->
-                                    assertThat(attributes)
-                                        .containsOnly(
-                                            attributeEntry("req1", "req1_value"),
-                                            attributeEntry("req2", "req2_2_value"),
-                                            attributeEntry("req3", "req3_value"),
-                                            attributeEntry("resp1", "resp1_value"),
-                                            attributeEntry("resp2", "resp2_2_value"),
-                                            attributeEntry("resp3", "resp3_value")))));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(AttributeKey.stringKey("req1"), "req1_value"),
+                                equalTo(AttributeKey.stringKey("req2"), "req2_2_value"),
+                                equalTo(AttributeKey.stringKey("req3"), "req3_value"),
+                                equalTo(AttributeKey.stringKey("resp1"), "resp1_value"),
+                                equalTo(AttributeKey.stringKey("resp2"), "resp2_2_value"),
+                                equalTo(AttributeKey.stringKey("resp3"), "resp3_value"))));
   }
 
   @Test
@@ -287,16 +286,13 @@ class InstrumenterTest {
                             .hasParentSpanId(SpanId.getInvalid())
                             .hasStatus(StatusData.unset())
                             .hasLinks(expectedSpanLink())
-                            .hasAttributesSatisfying(
-                                attributes ->
-                                    assertThat(attributes)
-                                        .containsOnly(
-                                            attributeEntry("req1", "req1_value"),
-                                            attributeEntry("req2", "req2_2_value"),
-                                            attributeEntry("req3", "req3_value"),
-                                            attributeEntry("resp1", "resp1_value"),
-                                            attributeEntry("resp2", "resp2_2_value"),
-                                            attributeEntry("resp3", "resp3_value")))));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(AttributeKey.stringKey("req1"), "req1_value"),
+                                equalTo(AttributeKey.stringKey("req2"), "req2_2_value"),
+                                equalTo(AttributeKey.stringKey("req3"), "req3_value"),
+                                equalTo(AttributeKey.stringKey("resp1"), "resp1_value"),
+                                equalTo(AttributeKey.stringKey("resp2"), "resp2_2_value"),
+                                equalTo(AttributeKey.stringKey("resp3"), "resp3_value"))));
   }
 
   @Test
@@ -364,6 +360,58 @@ class InstrumenterTest {
                             .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
                             .hasSpanId(spanContext.getSpanId())
                             .hasParentSpanId("090a0b0c0d0e0f00")));
+  }
+
+  @Test
+  void upstream_customSpanKind() {
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .buildUpstreamInstrumenter(new MapGetter(), SpanKindExtractor.alwaysInternal());
+
+    Map<String, String> request = new HashMap<>();
+    request.put("traceparent", "00-ff01020304050600ff0a0b0c0d0e0f00-090a0b0c0d0e0f00-01");
+    Context context = instrumenter.start(Context.root(), request);
+
+    SpanContext spanContext = Span.fromContext(context).getSpanContext();
+    assertThat(spanContext.isValid()).isTrue();
+
+    instrumenter.end(context, request, emptyMap(), null);
+
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                            .hasParentSpanId("090a0b0c0d0e0f00")));
+  }
+
+  @Test
+  void downstream_customSpanKind() {
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .buildDownstreamInstrumenter(Map::put, SpanKindExtractor.alwaysInternal());
+
+    Map<String, String> request = new HashMap<>();
+    Context context = instrumenter.start(Context.root(), request);
+
+    SpanContext spanContext = Span.fromContext(context).getSpanContext();
+    assertThat(spanContext.isValid()).isTrue();
+    assertThat(request).containsKey("traceparent");
+
+    instrumenter.end(context, request, emptyMap(), null);
+
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("span").hasKind(SpanKind.INTERNAL)));
   }
 
   @Test
@@ -491,10 +539,10 @@ class InstrumenterTest {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         builder.buildInstrumenter();
 
-    Context context = instrumenter.start(Context.root(), Collections.emptyMap());
+    Context context = instrumenter.start(Context.root(), emptyMap());
     assertThat(Span.fromContext(context)).isNotNull();
 
-    instrumenter.end(context, Collections.emptyMap(), Collections.emptyMap(), null);
+    instrumenter.end(context, emptyMap(), emptyMap(), null);
 
     // see the test-instrumentation.properties file
     InstrumentationScopeInfo expectedLibraryInfo =
@@ -516,10 +564,10 @@ class InstrumenterTest {
             .setInstrumentationVersion("1.0")
             .buildInstrumenter();
 
-    Context context = instrumenter.start(Context.root(), Collections.emptyMap());
+    Context context = instrumenter.start(Context.root(), emptyMap());
     assertThat(Span.fromContext(context)).isNotNull();
 
-    instrumenter.end(context, Collections.emptyMap(), Collections.emptyMap(), null);
+    instrumenter.end(context, emptyMap(), emptyMap(), null);
 
     otelTesting
         .assertTraces()
@@ -542,10 +590,10 @@ class InstrumenterTest {
             .setSchemaUrl("https://opentelemetry.io/schemas/1.0.0")
             .buildInstrumenter();
 
-    Context context = instrumenter.start(Context.root(), Collections.emptyMap());
+    Context context = instrumenter.start(Context.root(), emptyMap());
     assertThat(Span.fromContext(context)).isNotNull();
 
-    instrumenter.end(context, Collections.emptyMap(), Collections.emptyMap(), null);
+    instrumenter.end(context, emptyMap(), emptyMap(), null);
 
     InstrumentationScopeInfo expectedLibraryInfo =
         InstrumentationScopeInfo.builder("test")

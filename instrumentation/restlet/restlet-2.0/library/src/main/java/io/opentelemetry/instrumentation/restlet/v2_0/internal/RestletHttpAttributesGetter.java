@@ -14,7 +14,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.Reference;
 import org.restlet.util.Series;
 
 /**
@@ -31,16 +30,20 @@ public enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
 
   @Override
   @Nullable
-  public String getTarget(Request request) {
-    Reference ref = request.getOriginalRef();
-    String path = ref.getPath();
-    return ref.hasQuery() ? path + "?" + ref.getQuery() : path;
+  public String getUrlScheme(Request request) {
+    return request.getOriginalRef().getScheme();
   }
 
-  @Override
   @Nullable
-  public String getScheme(Request request) {
-    return request.getOriginalRef().getScheme();
+  @Override
+  public String getUrlPath(Request request) {
+    return request.getOriginalRef().getPath();
+  }
+
+  @Nullable
+  @Override
+  public String getUrlQuery(Request request) {
+    return request.getOriginalRef().getQuery();
   }
 
   @Override

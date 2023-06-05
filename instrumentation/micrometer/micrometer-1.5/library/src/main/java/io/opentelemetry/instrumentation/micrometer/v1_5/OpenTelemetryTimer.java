@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.HistogramAdviceUtil.setExplicitBucketsIfConfigured;
 
 import io.micrometer.core.instrument.AbstractTimer;
 import io.micrometer.core.instrument.Clock;
@@ -19,6 +20,7 @@ import io.micrometer.core.instrument.distribution.pause.PauseDetector;
 import io.micrometer.core.instrument.util.TimeUtils;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 import java.util.Collections;
@@ -43,10 +45,17 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
       NamingConvention namingConvention,
       Clock clock,
       DistributionStatisticConfig distributionStatisticConfig,
+      DistributionStatisticConfigModifier modifier,
       PauseDetector pauseDetector,
       TimeUnit baseTimeUnit,
       Meter otelMeter) {
-    super(id, clock, distributionStatisticConfig, pauseDetector, TimeUnit.MILLISECONDS, false);
+    super(
+        id,
+        clock,
+        modifier.modify(distributionStatisticConfig),
+        pauseDetector,
+        baseTimeUnit,
+        false);
 
     if (isUsingMicrometerHistograms()) {
       measurements = new MicrometerHistogramMeasurements();
@@ -59,12 +68,13 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
     this.attributes = tagsAsAttributes(id, namingConvention);
 
     String name = name(id, namingConvention);
-    this.otelHistogram =
+    DoubleHistogramBuilder otelHistogramBuilder =
         otelMeter
             .histogramBuilder(name)
             .setDescription(Bridging.description(id))
-            .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit))
-            .build();
+            .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit));
+    setExplicitBucketsIfConfigured(otelHistogramBuilder, distributionStatisticConfig, baseTimeUnit);
+    this.otelHistogram = otelHistogramBuilder.build();
     this.observableMax =
         otelMeter
             .gaugeBuilder(name + ".max")

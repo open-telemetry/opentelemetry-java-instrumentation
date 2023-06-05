@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.field;
 
 import static java.util.logging.Level.FINEST;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
@@ -64,6 +65,7 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public int mergeReader(int flags) {
     return flags;
   }
@@ -87,6 +89,7 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
         return new MethodVisitor(Opcodes.ASM7, mv) {
           /** The most recent objects pushed to the stack. */
           private final Object[] stack = {null, null};
+
           /** Most recent instructions. */
           private final int[] insnStack = {-1, -1, -1};
 

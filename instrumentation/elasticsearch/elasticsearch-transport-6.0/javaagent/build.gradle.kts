@@ -11,6 +11,8 @@ muzzle {
     // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
     // version 7.17.8 has broken module metadata
     skip("7.11.0", "7.17.8")
+    // version 8.8.0 depends on elasticsearch:elasticsearch-preallocate which doesn't exist
+    excludeDependency("org.elasticsearch:elasticsearch-preallocate")
     assertInverse.set(true)
   }
   pass {
@@ -20,6 +22,8 @@ muzzle {
     // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
     // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
     skip("7.11.0")
+    // version 8.8.0 depends on elasticsearch:elasticsearch-preallocate which doesn't exist
+    excludeDependency("org.elasticsearch:elasticsearch-preallocate")
     assertInverse.set(true)
   }
 }
@@ -39,9 +43,6 @@ dependencies {
   testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
-
-  // version 7.17.8 (which is currently the latest release) has broken module metadata
-  latestDepTestLibrary("org.elasticsearch.client:transport:7.17.7")
 }
 
 tasks.withType<Test>().configureEach {

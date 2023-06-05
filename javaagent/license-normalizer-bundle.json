@@ -13,10 +13,6 @@
     },
     {
       "bundleName": "apache2",
-      "licenseNamePattern": "Apache-2.0"
-    },
-    {
-      "bundleName": "apache2",
       "licenseNamePattern": "The Apache License, Version 2.0"
     },
     {

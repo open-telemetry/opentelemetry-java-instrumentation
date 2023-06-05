@@ -25,6 +25,9 @@ import org.junit.jupiter.api.Test;
 
 class HttpServerMetricsTest {
 
+  static final double[] DURATION_BUCKETS =
+      HistogramAdviceUtil.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
+
   @Test
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
@@ -149,13 +152,13 @@ class HttpServerMetricsTest {
             metric ->
                 assertThat(metric)
                     .hasName("http.server.duration")
-                    .hasUnit("ms")
+                    .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
                                 point ->
                                     point
-                                        .hasSum(150 /* millis */)
+                                        .hasSum(0.15 /* seconds */)
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
@@ -168,7 +171,8 @@ class HttpServerMetricsTest {
                                             exemplar ->
                                                 exemplar
                                                     .hasTraceId(spanContext1.getTraceId())
-                                                    .hasSpanId(spanContext1.getSpanId())))),
+                                                    .hasSpanId(spanContext1.getSpanId()))
+                                        .hasBucketBoundaries(DURATION_BUCKETS))),
             metric ->
                 assertThat(metric)
                     .hasName("http.server.request.size")
@@ -242,7 +246,7 @@ class HttpServerMetricsTest {
                             histogram.hasPointsSatisfying(
                                 point ->
                                     point
-                                        .hasSum(300 /* millis */)
+                                        .hasSum(0.3 /* seconds */)
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -304,13 +308,13 @@ class HttpServerMetricsTest {
             metric ->
                 assertThat(metric)
                     .hasName("http.server.duration")
-                    .hasUnit("ms")
+                    .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
                                 point ->
                                     point
-                                        .hasSum(100 /* millis */)
+                                        .hasSum(0.100 /* seconds */)
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.NET_HOST_NAME, "host"),

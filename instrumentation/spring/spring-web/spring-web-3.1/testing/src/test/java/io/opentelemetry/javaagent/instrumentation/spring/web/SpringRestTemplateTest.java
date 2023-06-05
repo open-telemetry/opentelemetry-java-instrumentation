@@ -35,6 +35,7 @@ public class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<St
   static void setUp() {
     SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
     factory.setConnectTimeout((int) CONNECTION_TIMEOUT.toMillis());
+    factory.setReadTimeout((int) READ_TIMEOUT.toMillis());
     restTemplate = new RestTemplate(factory);
   }
 
@@ -87,6 +88,5 @@ public class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<St
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.setMaxRedirects(20);
-    optionsBuilder.setResponseCodeOnRedirectError(302);
   }
 }

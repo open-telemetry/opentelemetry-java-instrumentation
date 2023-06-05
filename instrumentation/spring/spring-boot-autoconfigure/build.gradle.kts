@@ -12,6 +12,7 @@ val springBootVersion = versions["org.springframework.boot"]
 dependencies {
   implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
+  annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
   implementation("javax.validation:validation-api")
 
   implementation(project(":instrumentation-annotations-support"))

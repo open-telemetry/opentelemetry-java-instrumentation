@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -40,13 +39,13 @@ class HttpClientAttributesExtractorTest {
       implements HttpClientAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Override
-    public String getMethod(Map<String, String> request) {
-      return request.get("method");
+    public String getUrlFull(Map<String, String> request) {
+      return request.get("url");
     }
 
     @Override
-    public String getUrl(Map<String, String> request) {
-      return request.get("url");
+    public String getMethod(Map<String, String> request) {
+      return request.get("method");
     }
 
     @Override
@@ -71,13 +70,6 @@ class HttpClientAttributesExtractorTest {
 
   static class TestNetClientAttributesGetter
       implements NetClientAttributesGetter<Map<String, String>, Map<String, String>> {
-
-    @Nullable
-    @Override
-    public String getTransport(
-        Map<String, String> request, @Nullable Map<String, String> response) {
-      return response == null ? null : response.get("transport");
-    }
 
     @Nullable
     @Override
@@ -124,7 +116,6 @@ class HttpClientAttributesExtractorTest {
     response.put("statusCode", "202");
     response.put("header.content-length", "20");
     response.put("header.custom-response-header", "654,321");
-    response.put("transport", IP_TCP);
 
     ToIntFunction<Context> resendCountFromContext = context -> 2;
 
@@ -160,7 +151,6 @@ class HttpClientAttributesExtractorTest {
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")),
-            entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
             entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
             entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"));
   }
@@ -187,12 +177,19 @@ class HttpClientAttributesExtractorTest {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
-          arguments("https://user1:secret@github.com", "https://github.com"),
-          arguments("https://user1:secret@github.com/path/", "https://github.com/path/"),
-          arguments("https://user1:secret@github.com#test.html", "https://github.com#test.html"),
-          arguments("https://user1:secret@github.com?foo=b@r", "https://github.com?foo=b@r"),
+          arguments("https://user1:secret@github.com", "https://REDACTED:REDACTED@github.com"),
           arguments(
-              "https://user1:secret@github.com/p@th?foo=b@r", "https://github.com/p@th?foo=b@r"),
+              "https://user1:secret@github.com/path/",
+              "https://REDACTED:REDACTED@github.com/path/"),
+          arguments(
+              "https://user1:secret@github.com#test.html",
+              "https://REDACTED:REDACTED@github.com#test.html"),
+          arguments(
+              "https://user1:secret@github.com?foo=b@r",
+              "https://REDACTED:REDACTED@github.com?foo=b@r"),
+          arguments(
+              "https://user1:secret@github.com/p@th?foo=b@r",
+              "https://REDACTED:REDACTED@github.com/p@th?foo=b@r"),
           arguments("https://github.com/p@th?foo=b@r", "https://github.com/p@th?foo=b@r"),
           arguments("https://github.com#t@st.html", "https://github.com#t@st.html"),
           arguments("user1:secret@github.com", "user1:secret@github.com"),

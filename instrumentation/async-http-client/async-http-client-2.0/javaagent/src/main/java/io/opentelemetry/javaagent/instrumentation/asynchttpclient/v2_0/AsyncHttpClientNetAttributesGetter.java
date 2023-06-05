@@ -7,20 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpVersion;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.asynchttpclient.Response;
 import org.asynchttpclient.netty.request.NettyRequest;
 
 final class AsyncHttpClientNetAttributesGetter
-    extends InetSocketAddressNetClientAttributesGetter<RequestContext, Response> {
-
-  @Override
-  public String getTransport(RequestContext request, @Nullable Response response) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
+    implements NetClientAttributesGetter<RequestContext, Response> {
 
   @Nullable
   @Override
@@ -68,7 +62,7 @@ final class AsyncHttpClientNetAttributesGetter
 
   @Override
   @Nullable
-  protected InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getPeerSocketAddress(
       RequestContext request, @Nullable Response response) {
     if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) response.getRemoteAddress();

@@ -9,7 +9,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import com.google.common.util.concurrent.Futures;
@@ -137,9 +136,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -149,25 +145,15 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "RECEIVED"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 2L)))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -179,9 +165,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -192,26 +175,15 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "RECEIVED"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_ID, 2L))))));
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L)))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -226,7 +198,6 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(
                                                     SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
@@ -256,7 +227,6 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.NET_PEER_PORT,
                                                     server.getPort()),
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -327,9 +297,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -339,25 +306,15 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "RECEIVED"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 2L)))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -369,9 +326,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -382,25 +336,15 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "RECEIVED"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 2L)))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -419,7 +363,6 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(
                                                     SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
@@ -449,7 +392,6 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.NET_PEER_PORT,
                                                     server.getPort()),
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -528,9 +470,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -540,25 +479,15 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "RECEIVED"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 2L)))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -570,9 +499,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -583,25 +509,15 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "RECEIVED"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 2L)))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -620,7 +536,6 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(
                                                     SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
@@ -650,7 +565,6 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.NET_PEER_PORT,
                                                     server.getPort()),
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -703,9 +617,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) status.getCode().value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -715,14 +626,9 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L)))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -735,9 +641,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) status.getCode().value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -749,14 +652,9 @@ public abstract class AbstractGrpcTest {
                                   assertThat(events).isNotEmpty();
                                   assertThat(events.get(0))
                                       .hasName("message")
-                                      .hasAttributesSatisfying(
-                                          attrs ->
-                                              assertThat(attrs)
-                                                  .containsOnly(
-                                                      entry(
-                                                          SemanticAttributes.MESSAGE_TYPE,
-                                                          "RECEIVED"),
-                                                      entry(SemanticAttributes.MESSAGE_ID, 1L)));
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(SemanticAttributes.MESSAGE_ID, 1L));
                                   if (status.getCause() == null) {
                                     assertThat(events).hasSize(1);
                                   } else {
@@ -778,7 +676,6 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(
                                                     SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
@@ -808,7 +705,6 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.NET_PEER_PORT,
                                                     server.getPort()),
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -867,9 +763,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.UNKNOWN.getCode().value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -879,14 +772,9 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L)))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -899,9 +787,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.UNKNOWN.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -913,14 +798,9 @@ public abstract class AbstractGrpcTest {
                                   assertThat(events).hasSize(2);
                                   assertThat(events.get(0))
                                       .hasName("message")
-                                      .hasAttributesSatisfying(
-                                          attrs ->
-                                              assertThat(attrs)
-                                                  .containsOnly(
-                                                      entry(
-                                                          SemanticAttributes.MESSAGE_TYPE,
-                                                          "RECEIVED"),
-                                                      entry(SemanticAttributes.MESSAGE_ID, 1L)));
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(SemanticAttributes.MESSAGE_ID, 1L));
                                   span.hasException(status.asRuntimeException());
                                 })));
     testing()
@@ -937,7 +817,6 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(
                                                     SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
@@ -967,7 +846,6 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.NET_PEER_PORT,
                                                     server.getPort()),
-                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -1122,9 +1000,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -1134,25 +1009,15 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "RECEIVED"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 2L)))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -1164,9 +1029,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -1177,26 +1039,15 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "RECEIVED"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_ID, 2L))))));
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L)))));
   }
 
   @Test
@@ -1266,9 +1117,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayMultipleHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.CANCELLED.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -1279,23 +1127,14 @@ public abstract class AbstractGrpcTest {
                                   assertThat(events).hasSize(3);
                                   assertThat(events.get(0))
                                       .hasName("message")
-                                      .hasAttributesSatisfying(
-                                          attrs ->
-                                              assertThat(attrs)
-                                                  .containsOnly(
-                                                      entry(
-                                                          SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                                      entry(SemanticAttributes.MESSAGE_ID, 1L)));
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(SemanticAttributes.MESSAGE_ID, 1L));
                                   assertThat(events.get(1))
                                       .hasName("message")
-                                      .hasAttributesSatisfying(
-                                          attrs ->
-                                              assertThat(attrs)
-                                                  .containsOnly(
-                                                      entry(
-                                                          SemanticAttributes.MESSAGE_TYPE,
-                                                          "RECEIVED"),
-                                                      entry(SemanticAttributes.MESSAGE_ID, 2L)));
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(SemanticAttributes.MESSAGE_ID, 2L));
                                   span.hasException(thrown);
                                 }),
                     span ->
@@ -1309,9 +1148,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.CANCELLED.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -1322,26 +1158,15 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "RECEIVED"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_ID, 2L))))));
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L)))));
   }
 
   @Test
@@ -1409,9 +1234,6 @@ public abstract class AbstractGrpcTest {
                                         "grpc.reflection.v1alpha.ServerReflection"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "ServerReflectionInfo"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -1421,25 +1243,15 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "RECEIVED"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 2L)))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
                     span ->
                         span.hasName(
                                 "grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo")
@@ -1454,9 +1266,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -1467,26 +1276,15 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "RECEIVED"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_ID, 2L))))));
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L)))));
   }
 
   @Test
@@ -1540,9 +1338,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                     equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.NET_TRANSPORT,
-                                        SemanticAttributes.NetTransportValues.IP_TCP),
-                                    equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
                                     equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -1552,25 +1347,15 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "RECEIVED"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 2L)))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -1582,9 +1367,6 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(
-                                    SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -1595,26 +1377,15 @@ public abstract class AbstractGrpcTest {
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "RECEIVED"),
-                                                        entry(SemanticAttributes.MESSAGE_ID, 1L))),
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
-                                        .hasAttributesSatisfying(
-                                            attrs ->
-                                                assertThat(attrs)
-                                                    .containsOnly(
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_TYPE,
-                                                            "SENT"),
-                                                        entry(
-                                                            SemanticAttributes.MESSAGE_ID, 2L))))));
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L)))));
   }
 
   // Regression test for

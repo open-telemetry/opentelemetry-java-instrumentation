@@ -170,6 +170,8 @@ class JettyServlet3TestForward extends JettyDispatchTest {
     super.setupServlets(context)
 
     addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + QUERY_PARAM.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Forward)
@@ -207,6 +209,8 @@ class JettyServlet3TestInclude extends JettyDispatchTest {
     super.setupServlets(context)
 
     addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + QUERY_PARAM.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Include)
@@ -232,7 +236,8 @@ class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {
   @Override
   protected void setupServlets(ServletContextHandler context) {
     super.setupServlets(context)
-
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, TestServlet3.DispatchImmediate)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch" + SUCCESS.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch" + QUERY_PARAM.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch" + ERROR.path, TestServlet3.DispatchImmediate)
@@ -260,7 +265,8 @@ class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
   @Override
   protected void setupServlets(ServletContextHandler context) {
     super.setupServlets(context)
-
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + SUCCESS.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + QUERY_PARAM.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + ERROR.path, TestServlet3.DispatchAsync)

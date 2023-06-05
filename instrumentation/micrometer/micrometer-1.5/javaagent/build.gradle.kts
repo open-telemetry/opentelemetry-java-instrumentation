@@ -30,21 +30,31 @@ tasks {
 
   val testBaseTimeUnit by registering(Test::class) {
     filter {
-      includeTestsMatching("*TimerSecondsTest")
+      includeTestsMatching("*TimerMillisecondsTest")
     }
-    include("**/*TimerSecondsTest.*")
-    jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=seconds")
+    include("**/*TimerMillisecondsTest.*")
+    jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=milliseconds")
+  }
+
+  val testHistogramGauges by registering(Test::class) {
+    filter {
+      includeTestsMatching("*HistogramGaugesTest")
+    }
+    include("**/*HistogramGaugesTest.*")
+    jvmArgs("-Dotel.instrumentation.micrometer.histogram-gauges.enabled=true")
   }
 
   test {
     filter {
-      excludeTestsMatching("*TimerSecondsTest")
+      excludeTestsMatching("*TimerMillisecondsTest")
       excludeTestsMatching("*PrometheusModeTest")
+      excludeTestsMatching("*HistogramGaugesTest")
     }
   }
 
   check {
     dependsOn(testBaseTimeUnit)
     dependsOn(testPrometheusMode)
+    dependsOn(testHistogramGauges)
   }
 }

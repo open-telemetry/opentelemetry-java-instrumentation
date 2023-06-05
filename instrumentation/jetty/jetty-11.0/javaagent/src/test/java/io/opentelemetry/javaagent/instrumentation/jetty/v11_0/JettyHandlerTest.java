@@ -6,11 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.jetty.v11_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Sets;
@@ -119,37 +122,29 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
   private static HttpServletResponse response(
       Request request, HttpServletResponse response, ServerEndpoint endpoint) throws IOException {
     response.setContentType("text/plain");
-    switch (endpoint) {
-      case SUCCESS:
-        response.setStatus(endpoint.getStatus());
-        response.getWriter().print(endpoint.getBody());
-        break;
-      case QUERY_PARAM:
-        response.setStatus(endpoint.getStatus());
-        response.getWriter().print(request.getQueryString());
-        break;
-      case REDIRECT:
-        response.sendRedirect(endpoint.getBody());
-        break;
-      case ERROR:
-        response.sendError(endpoint.getStatus(), endpoint.getBody());
-        break;
-      case CAPTURE_HEADERS:
-        response.setHeader("X-Test-Response", request.getHeader("X-Test-Request"));
-        response.setStatus(endpoint.getStatus());
-        response.getWriter().print(endpoint.getBody());
-        break;
-      case EXCEPTION:
-        throw new IllegalStateException(endpoint.getBody());
-      case INDEXED_CHILD:
-        INDEXED_CHILD.collectSpanAttributes(name -> request.getParameter(name));
-        response.setStatus(endpoint.getStatus());
-        response.getWriter().print(endpoint.getBody());
-        break;
-      default:
-        response.setStatus(NOT_FOUND.getStatus());
-        response.getWriter().print(NOT_FOUND.getBody());
-        break;
+    if (SUCCESS.equals(endpoint)) {
+      response.setStatus(endpoint.getStatus());
+      response.getWriter().print(endpoint.getBody());
+    } else if (QUERY_PARAM.equals(endpoint)) {
+      response.setStatus(endpoint.getStatus());
+      response.getWriter().print(request.getQueryString());
+    } else if (REDIRECT.equals(endpoint)) {
+      response.sendRedirect(endpoint.getBody());
+    } else if (ERROR.equals(endpoint)) {
+      response.sendError(endpoint.getStatus(), endpoint.getBody());
+    } else if (CAPTURE_HEADERS.equals(endpoint)) {
+      response.setHeader("X-Test-Response", request.getHeader("X-Test-Request"));
+      response.setStatus(endpoint.getStatus());
+      response.getWriter().print(endpoint.getBody());
+    } else if (EXCEPTION.equals(endpoint)) {
+      throw new IllegalStateException(endpoint.getBody());
+    } else if (INDEXED_CHILD.equals(endpoint)) {
+      INDEXED_CHILD.collectSpanAttributes(name -> request.getParameter(name));
+      response.setStatus(endpoint.getStatus());
+      response.getWriter().print(endpoint.getBody());
+    } else {
+      response.setStatus(NOT_FOUND.getStatus());
+      response.getWriter().print(NOT_FOUND.getBody());
     }
     return response;
   }

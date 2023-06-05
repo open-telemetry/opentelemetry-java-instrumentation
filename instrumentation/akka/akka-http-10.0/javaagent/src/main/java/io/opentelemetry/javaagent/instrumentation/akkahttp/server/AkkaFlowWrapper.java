@@ -21,8 +21,8 @@ import akka.stream.stage.AbstractInHandler;
 import akka.stream.stage.AbstractOutHandler;
 import akka.stream.stage.GraphStage;
 import akka.stream.stage.GraphStageLogic;
+import akka.stream.stage.OutHandler;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -41,6 +41,22 @@ public class AkkaFlowWrapper
   public static Flow<HttpRequest, HttpResponse, ?> wrap(
       Flow<HttpRequest, HttpResponse, ?> handler) {
     return handler.join(new AkkaFlowWrapper());
+  }
+
+  public static Context getContext(OutHandler outHandler) {
+    if (outHandler instanceof TracingLogic.ApplicationOutHandler) {
+      // We have multiple requests here only when requests are pipelined on the same connection.
+      // It appears that these requests are processed one by one so processing next request won't
+      // be started before the first one has returned a response, because of this the first request
+      // in the queue is always the one that is currently being processed.
+      TracingRequest request =
+          ((TracingLogic.ApplicationOutHandler) outHandler).getRequests().peek();
+      if (request != null) {
+        return request.context;
+      }
+    }
+
+    return null;
   }
 
   @Override
@@ -77,7 +93,7 @@ public class AkkaFlowWrapper
       // user code pulls request, pass request from server to user code
       setHandler(
           requestOut,
-          new AbstractOutHandler() {
+          new ApplicationOutHandler() {
             @Override
             public void onPull() {
               pull(requestIn);
@@ -102,9 +118,7 @@ public class AkkaFlowWrapper
               Context parentContext = currentContext();
               if (instrumenter().shouldStart(parentContext, request)) {
                 Context context = instrumenter().start(parentContext, request);
-                // scope opened here may leak, actor instrumentation will close it
-                Scope scope = context.makeCurrent();
-                tracingRequest = new TracingRequest(context, scope, request);
+                tracingRequest = new TracingRequest(context, request);
               }
               // event if span wasn't started we need to push TracingRequest to match response
               // with request
@@ -134,10 +148,6 @@ public class AkkaFlowWrapper
 
               TracingRequest tracingRequest = requests.poll();
               if (tracingRequest != null && tracingRequest != TracingRequest.EMPTY) {
-                // this may happen on a different thread from the one that opened the scope
-                // actor instrumentation will take care of the leaked scopes
-                tracingRequest.scope.close();
-
                 // akka response is immutable so the customizer just captures the added headers
                 AkkaHttpResponseMutator responseMutator = new AkkaHttpResponseMutator();
                 HttpServerResponseCustomizerHolder.getCustomizer()
@@ -160,7 +170,6 @@ public class AkkaFlowWrapper
                 if (tracingRequest == TracingRequest.EMPTY) {
                   continue;
                 }
-                tracingRequest.scope.close();
                 instrumenter()
                     .end(
                         tracingRequest.context, tracingRequest.request, errorResponse(), exception);
@@ -175,17 +184,21 @@ public class AkkaFlowWrapper
             }
           });
     }
+
+    abstract class ApplicationOutHandler extends AbstractOutHandler {
+      Deque<TracingRequest> getRequests() {
+        return requests;
+      }
+    }
   }
 
   private static class TracingRequest {
-    static final TracingRequest EMPTY = new TracingRequest(null, null, null);
+    static final TracingRequest EMPTY = new TracingRequest(null, null);
     final Context context;
-    final Scope scope;
     final HttpRequest request;
 
-    TracingRequest(Context context, Scope scope, HttpRequest request) {
+    TracingRequest(Context context, HttpRequest request) {
       this.context = context;
-      this.scope = scope;
       this.request = request;
     }
   }

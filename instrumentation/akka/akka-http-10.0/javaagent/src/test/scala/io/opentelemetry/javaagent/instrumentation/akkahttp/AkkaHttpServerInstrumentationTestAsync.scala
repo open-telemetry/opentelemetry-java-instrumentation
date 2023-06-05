@@ -6,7 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.akkahttp
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension
+import io.opentelemetry.instrumentation.testing.junit.http.{
+  HttpServerInstrumentationExtension,
+  HttpServerTestOptions
+}
 import org.junit.jupiter.api.extension.RegisterExtension
 
 class AkkaHttpServerInstrumentationTestAsync
@@ -22,4 +25,11 @@ class AkkaHttpServerInstrumentationTestAsync
 
   override protected def stopServer(server: Object): Unit =
     AkkaHttpTestAsyncWebServer.stop()
+
+  override protected def configure(
+      options: HttpServerTestOptions
+  ): Unit = {
+    super.configure(options)
+    options.setTestHttpPipelining(false)
+  }
 }

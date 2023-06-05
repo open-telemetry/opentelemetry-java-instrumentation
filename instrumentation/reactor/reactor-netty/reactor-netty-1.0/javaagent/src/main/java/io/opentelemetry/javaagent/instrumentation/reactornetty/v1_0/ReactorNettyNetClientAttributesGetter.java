@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import io.netty.handler.codec.http.HttpVersion;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -15,13 +15,7 @@ import reactor.netty.http.client.HttpClientConfig;
 import reactor.netty.http.client.HttpClientResponse;
 
 final class ReactorNettyNetClientAttributesGetter
-    extends InetSocketAddressNetClientAttributesGetter<HttpClientConfig, HttpClientResponse> {
-
-  @Nullable
-  @Override
-  public String getTransport(HttpClientConfig request, @Nullable HttpClientResponse response) {
-    return null;
-  }
+    implements NetClientAttributesGetter<HttpClientConfig, HttpClientResponse> {
 
   @Nullable
   @Override
@@ -57,7 +51,7 @@ final class ReactorNettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  protected InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getPeerSocketAddress(
       HttpClientConfig request, @Nullable HttpClientResponse response) {
 
     // we're making use of the fact that HttpClientOperations is both a Connection and an

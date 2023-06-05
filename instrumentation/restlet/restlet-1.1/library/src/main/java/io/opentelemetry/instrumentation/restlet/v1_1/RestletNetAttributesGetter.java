@@ -8,16 +8,10 @@ package io.opentelemetry.instrumentation.restlet.v1_1;
 import com.noelios.restlet.http.HttpCall;
 import com.noelios.restlet.http.HttpRequest;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.restlet.data.Request;
 
 final class RestletNetAttributesGetter implements NetServerAttributesGetter<Request> {
-
-  @Override
-  public String getTransport(Request request) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
 
   @Nullable
   @Override

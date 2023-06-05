@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_UDP;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -17,7 +17,7 @@ import org.jboss.netty.channel.socket.DatagramChannel;
 import org.jboss.netty.handler.codec.http.HttpVersion;
 
 final class NettyNetServerAttributesGetter
-    extends InetSocketAddressNetServerAttributesGetter<HttpRequestAndChannel> {
+    implements NetServerAttributesGetter<HttpRequestAndChannel> {
 
   @Override
   public String getTransport(HttpRequestAndChannel requestAndChannel) {
@@ -49,7 +49,7 @@ final class NettyNetServerAttributesGetter
 
   @Override
   @Nullable
-  protected InetSocketAddress getPeerSocketAddress(HttpRequestAndChannel requestAndChannel) {
+  public InetSocketAddress getPeerSocketAddress(HttpRequestAndChannel requestAndChannel) {
     SocketAddress address = requestAndChannel.channel().getRemoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
@@ -59,7 +59,7 @@ final class NettyNetServerAttributesGetter
 
   @Nullable
   @Override
-  protected InetSocketAddress getHostSocketAddress(HttpRequestAndChannel requestAndChannel) {
+  public InetSocketAddress getHostSocketAddress(HttpRequestAndChannel requestAndChannel) {
     SocketAddress address = requestAndChannel.channel().getLocalAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;

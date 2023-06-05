@@ -151,7 +151,6 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
 
     optionsBuilder.disableTestRedirects();
     optionsBuilder.disableTestReusedRequest();
-    optionsBuilder.enableTestReadTimeout();
 
     optionsBuilder.setHttpAttributes(this::getHttpAttributes);
   }

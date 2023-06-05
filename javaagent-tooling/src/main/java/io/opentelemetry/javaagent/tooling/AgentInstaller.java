@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installO
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
+import static java.util.Arrays.asList;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
@@ -31,7 +32,6 @@ import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
-import io.opentelemetry.javaagent.tooling.bytebuddy.SafeTypeStrategy;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesBridge;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
@@ -55,10 +55,13 @@ import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.agent.builder.AgentBuilderUtil;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.dynamic.VisibilityBridgeStrategy;
+import net.bytebuddy.dynamic.scaffold.InstrumentedType;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.utility.JavaModule;
 
@@ -80,7 +83,8 @@ public class AgentInstaller {
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
 
-  public static void installBytebuddyAgent(Instrumentation inst, ClassLoader extensionClassLoader) {
+  public static void installBytebuddyAgent(
+      Instrumentation inst, ClassLoader extensionClassLoader, EarlyInitAgentConfig earlyConfig) {
     addByteBuddyRawSetting();
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
@@ -90,8 +94,7 @@ public class AgentInstaller {
     }
 
     logVersionInfo();
-    EarlyInitAgentConfig agentConfig = EarlyInitAgentConfig.create();
-    if (agentConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
+    if (earlyConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
       setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
       installBytebuddyAgent(inst, extensionClassLoader, agentListeners);
@@ -131,11 +134,12 @@ public class AgentInstaller {
         new AgentBuilder.Default(
                 // default method graph compiler inspects the class hierarchy, we don't need it, so
                 // we use a simpler and faster strategy instead
-                new ByteBuddy().with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE))
+                new ByteBuddy()
+                    .with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE)
+                    .with(VisibilityBridgeStrategy.Default.NEVER)
+                    .with(InstrumentedType.Factory.Default.FROZEN))
+            .with(AgentBuilder.TypeStrategy.Default.DECORATE)
             .disableClassFormatChanges()
-            // disableClassFormatChanges sets type strategy to TypeStrategy.Default.REDEFINE_FROZEN
-            // we'll wrap it with our own strategy
-            .with(new SafeTypeStrategy(AgentBuilder.TypeStrategy.Default.REDEFINE_FROZEN))
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .with(new RedefinitionDiscoveryStrategy())
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
@@ -182,6 +186,7 @@ public class AgentInstaller {
     }
     logger.log(FINE, "Installed {0} extension(s)", numberOfLoadedExtensions);
 
+    agentBuilder = AgentBuilderUtil.optimize(agentBuilder);
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
 
@@ -191,9 +196,15 @@ public class AgentInstaller {
   }
 
   private static void copyNecessaryConfigToSystemProperties(ConfigProperties config) {
-    String value = config.getString("otel.instrumentation.experimental.span-suppression-strategy");
-    if (value != null) {
-      System.setProperty("otel.instrumentation.experimental.span-suppression-strategy", value);
+    for (String property :
+        asList(
+            "otel.instrumentation.experimental.span-suppression-strategy",
+            "otel.instrumentation.http.prefer-forwarded-url-scheme",
+            "otel.semconv-stability.opt-in")) {
+      String value = config.getString(property);
+      if (value != null) {
+        System.setProperty(property, value);
+      }
     }
   }
 

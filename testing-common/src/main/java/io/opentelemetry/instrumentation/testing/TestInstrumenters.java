@@ -164,7 +164,19 @@ final class TestInstrumenters {
 
     @Nullable
     @Override
-    public String getTarget(String unused) {
+    public String getUrlScheme(String unused) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public String getUrlPath(String s) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public String getUrlQuery(String s) {
       return null;
     }
 
@@ -173,22 +185,10 @@ final class TestInstrumenters {
     public String getRoute(String unused) {
       return null;
     }
-
-    @Nullable
-    @Override
-    public String getScheme(String unused) {
-      return null;
-    }
   }
 
   private enum NetServerGetter implements NetServerAttributesGetter<String> {
     INSTANCE;
-
-    @Nullable
-    @Override
-    public String getTransport(String unused) {
-      return null;
-    }
 
     @Nullable
     @Override

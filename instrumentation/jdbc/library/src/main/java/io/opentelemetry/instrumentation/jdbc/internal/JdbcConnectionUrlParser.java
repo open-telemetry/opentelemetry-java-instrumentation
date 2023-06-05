@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAU
 import static java.util.logging.Level.FINE;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.io.UnsupportedEncodingException;
@@ -36,6 +37,7 @@ import java.util.regex.Pattern;
 public enum JdbcConnectionUrlParser {
   GENERIC_URL_LIKE() {
     @Override
+    @CanIgnoreReturnValue
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       try {
         // Attempt generic parsing
@@ -78,6 +80,7 @@ public enum JdbcConnectionUrlParser {
   // see http://jtds.sourceforge.net/faq.html#urlFormat
   JTDS_URL_LIKE() {
     @Override
+    @CanIgnoreReturnValue
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       String serverName = "";
 
@@ -150,6 +153,7 @@ public enum JdbcConnectionUrlParser {
             CASE_INSENSITIVE);
 
     @Override
+    @CanIgnoreReturnValue
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       String serverName = "";
       Integer port = null;
@@ -361,6 +365,7 @@ public enum JdbcConnectionUrlParser {
     private final Pattern userPattern = Pattern.compile("\\(\\s*user\\s*=\\s*([^ )]+)\\s*\\)");
 
     @Override
+    @CanIgnoreReturnValue
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       int addressEnd = jdbcUrl.indexOf(",address=");
       if (addressEnd > 0) {
@@ -527,6 +532,7 @@ public enum JdbcConnectionUrlParser {
 
   ORACLE_AT() {
     @Override
+    @CanIgnoreReturnValue
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       if (jdbcUrl.contains("@(description")) {
         return ORACLE_AT_DESCRIPTION.doParse(jdbcUrl, builder);
@@ -569,6 +575,7 @@ public enum JdbcConnectionUrlParser {
         Pattern.compile("\\(\\s*service_name\\s*=\\s*([^ )]+)\\s*\\)");
 
     @Override
+    @CanIgnoreReturnValue
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       String[] atSplit = jdbcUrl.split("@", 2);
 

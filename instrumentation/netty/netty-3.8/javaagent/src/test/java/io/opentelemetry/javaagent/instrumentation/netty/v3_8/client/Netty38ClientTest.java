@@ -138,6 +138,7 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
     optionsBuilder.disableTestHttps();
+    optionsBuilder.disableTestReadTimeout();
 
     optionsBuilder.setUserAgent(USER_AGENT);
 

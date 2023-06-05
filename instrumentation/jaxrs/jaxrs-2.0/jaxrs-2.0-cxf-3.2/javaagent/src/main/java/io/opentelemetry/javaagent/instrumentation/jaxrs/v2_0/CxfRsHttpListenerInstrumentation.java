@@ -46,7 +46,7 @@ public class CxfRsHttpListenerInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(@Advice.Local("otelScope") Scope scope) {
+    public static void onExit(@Advice.Local("otelScope") Scope scope) {
       if (scope != null) {
         scope.close();
       }

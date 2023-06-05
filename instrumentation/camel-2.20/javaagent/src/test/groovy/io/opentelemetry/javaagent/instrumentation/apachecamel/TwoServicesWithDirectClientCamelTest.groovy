@@ -17,8 +17,9 @@ import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
 
-import static io.opentelemetry.api.trace.SpanKind.*
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecification implements RetryOnAddressAlreadyInUseTrait {
 
@@ -128,7 +129,6 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
             "$SemanticAttributes.USER_AGENT_ORIGINAL" "Jakarta Commons-HttpClient/3.1"
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
             "$SemanticAttributes.HTTP_ROUTE" "/serviceTwo"
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.protocol.name" "http"
             "net.protocol.version" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "127.0.0.1"

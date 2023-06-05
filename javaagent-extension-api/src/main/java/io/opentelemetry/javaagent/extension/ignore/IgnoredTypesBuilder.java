@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.extension.ignore;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+
 /**
  * This interface defines different ways to ignore/allow instrumenting classes or packages.
  *
@@ -23,6 +25,7 @@ public interface IgnoredTypesBuilder {
    *
    * @return {@code this}
    */
+  @CanIgnoreReturnValue
   IgnoredTypesBuilder ignoreClass(String classNameOrPrefix);
 
   /**
@@ -36,6 +39,7 @@ public interface IgnoredTypesBuilder {
    *
    * @return {@code this}
    */
+  @CanIgnoreReturnValue
   IgnoredTypesBuilder allowClass(String classNameOrPrefix);
 
   /**
@@ -48,6 +52,7 @@ public interface IgnoredTypesBuilder {
    *
    * @return {@code this}
    */
+  @CanIgnoreReturnValue
   IgnoredTypesBuilder ignoreClassLoader(String classNameOrPrefix);
 
   /**
@@ -61,6 +66,7 @@ public interface IgnoredTypesBuilder {
    *
    * @return {@code this}
    */
+  @CanIgnoreReturnValue
   IgnoredTypesBuilder allowClassLoader(String classNameOrPrefix);
 
   /**
@@ -83,5 +89,6 @@ public interface IgnoredTypesBuilder {
    *
    * @return {@code this}
    */
+  @CanIgnoreReturnValue
   IgnoredTypesBuilder ignoreTaskClass(String classNameOrPrefix);
 }

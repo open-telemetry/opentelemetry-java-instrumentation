@@ -12,10 +12,17 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attri
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Metrics;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.metrics.internal.aggregator.ExplicitBucketHistogramUtils;
+import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractDistributionSummaryTest {
+
+  static final double[] DEFAULT_BUCKETS =
+      ExplicitBucketHistogramUtils.DEFAULT_HISTOGRAM_BUCKET_BOUNDARIES.stream()
+          .mapToDouble(d -> d)
+          .toArray();
 
   protected abstract InstrumentationExtension testing();
 
@@ -57,7 +64,8 @@ public abstract class AbstractDistributionSummaryTest {
                                             point
                                                 .hasSum(7)
                                                 .hasCount(3)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+                                                .hasAttributes(attributeEntry("tag", "value"))
+                                                .hasBucketBoundaries(DEFAULT_BUCKETS)))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -74,6 +82,11 @@ public abstract class AbstractDistributionSummaryTest {
                                             point
                                                 .hasValue(4)
                                                 .hasAttributes(attributeEntry("tag", "value"))))));
+
+    // micrometer gauge histogram is not emitted
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME, "testSummary.histogram", AbstractIterableAssert::isEmpty);
 
     // when
     Metrics.globalRegistry.remove(summary);
@@ -100,10 +113,10 @@ public abstract class AbstractDistributionSummaryTest {
   }
 
   @Test
-  void testMicrometerHistogram() {
+  void testMicrometerDistributionSummaryWithCustomBuckets() {
     // given
     DistributionSummary summary =
-        DistributionSummary.builder("testSummary")
+        DistributionSummary.builder("testSummaryWithCustomBuckets")
             .description("This is a test distribution summary")
             .baseUnit("things")
             .tags("tag", "value")
@@ -121,7 +134,7 @@ public abstract class AbstractDistributionSummaryTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testSummary",
+            "testSummaryWithCustomBuckets",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
@@ -135,132 +148,8 @@ public abstract class AbstractDistributionSummaryTest {
                                             points
                                                 .hasSum(555.5)
                                                 .hasCount(4)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "testSummary.max",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test distribution summary")
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(500)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "testSummary.histogram",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(1)
-                                                .hasAttributes(
-                                                    attributeEntry("le", "1"),
-                                                    attributeEntry("tag", "value")),
-                                        point ->
-                                            point
-                                                .hasValue(2)
-                                                .hasAttributes(
-                                                    attributeEntry("le", "10"),
-                                                    attributeEntry("tag", "value")),
-                                        point ->
-                                            point
-                                                .hasValue(3)
-                                                .hasAttributes(
-                                                    attributeEntry("le", "100"),
-                                                    attributeEntry("tag", "value")),
-                                        point ->
-                                            point
-                                                .hasValue(4)
-                                                .hasAttributes(
-                                                    attributeEntry("le", "1000"),
-                                                    attributeEntry("tag", "value"))))));
-  }
-
-  @Test
-  void testMicrometerPercentiles() {
-    // given
-    DistributionSummary summary =
-        DistributionSummary.builder("testSummary")
-            .description("This is a test distribution summary")
-            .baseUnit("things")
-            .tags("tag", "value")
-            .publishPercentiles(0.5, 0.95, 0.99)
-            .register(Metrics.globalRegistry);
-
-    // when
-    summary.record(50);
-    summary.record(100);
-
-    // then
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "testSummary",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test distribution summary")
-                            .hasUnit("things")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasSum(150)
-                                                .hasCount(2)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "testSummary.max",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test distribution summary")
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(100)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "testSummary.percentile",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("phi", "0.5"),
-                                                attributeEntry("tag", "value")),
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("phi", "0.95"),
-                                                attributeEntry("tag", "value")),
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("phi", "0.99"),
-                                                attributeEntry("tag", "value"))))));
+                                                .hasAttributes(attributeEntry("tag", "value"))
+                                                .hasBucketBoundaries(1, 10, 100, 1000)
+                                                .hasBucketCounts(1, 1, 1, 1, 0)))));
   }
 }

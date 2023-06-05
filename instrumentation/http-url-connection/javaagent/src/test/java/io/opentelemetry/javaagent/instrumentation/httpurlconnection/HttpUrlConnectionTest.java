@@ -11,13 +11,13 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.StreamUtils.readLines;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -72,29 +72,12 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
   }
 
   @Override
-  public int maxRedirects() {
-    return 20;
-  }
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.setMaxRedirects(20);
 
-  @Override
-  public Integer responseCodeOnRedirectError() {
-    return 302;
-  }
-
-  @Override
-  public boolean testReusedRequest() {
     // HttpURLConnection can't be reused
-    return false;
-  }
-
-  @Override
-  public boolean testCallback() {
-    return false;
-  }
-
-  @Override
-  public boolean testReadTimeout() {
-    return true;
+    optionsBuilder.disableTestReusedRequest();
+    optionsBuilder.disableTestCallback();
   }
 
   @ParameterizedTest
@@ -136,7 +119,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
                             equalTo(stringKey("net.protocol.name"), "http"),
                             equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -154,7 +136,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
                             equalTo(stringKey("net.protocol.name"), "http"),
                             equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -193,7 +174,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
                             equalTo(stringKey("net.protocol.name"), "http"),
                             equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -245,7 +225,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
                             equalTo(stringKey("net.protocol.name"), "http"),
                             equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
@@ -302,7 +281,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
                             equalTo(stringKey("net.protocol.name"), "http"),
                             equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),

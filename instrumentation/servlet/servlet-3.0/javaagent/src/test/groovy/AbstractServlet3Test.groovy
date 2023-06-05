@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 
 import javax.servlet.Servlet
@@ -38,6 +40,32 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
   abstract void addServlet(CONTEXT context, String path, Class<Servlet> servlet)
 
+  public static final ServerEndpoint HTML_PRINT_WRITER =
+    new ServerEndpoint("HTML_PRINT_WRITER",  "htmlPrintWriter",
+      200,
+      "<!DOCTYPE html>\n"
+        + "<html lang=\"en\">\n"
+        + "<head>\n"
+        + "  <meta charset=\"UTF-8\">\n"
+        + "  <title>Title</title>\n"
+        + "</head>\n"
+        + "<body>\n"
+        + "<p>test works</p>\n"
+        + "</body>\n"
+        + "</html>")
+  public static final ServerEndpoint HTML_SERVLET_OUTPUT_STREAM =
+    new ServerEndpoint("HTML_SERVLET_OUTPUT_STREAM", "htmlServletOutputStream",
+      200,
+      "<!DOCTYPE html>\n"
+        + "<html lang=\"en\">\n"
+        + "<head>\n"
+        + "  <meta charset=\"UTF-8\">\n"
+        + "  <title>Title</title>\n"
+        + "</head>\n"
+        + "<body>\n"
+        + "<p>test works</p>\n"
+        + "</body>\n"
+        + "</html>")
   protected void setupServlets(CONTEXT context) {
     def servlet = servlet()
 
@@ -50,6 +78,8 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     addServlet(context, INDEXED_CHILD.path, servlet)
     addServlet(context, CAPTURE_HEADERS.path, servlet)
     addServlet(context, CAPTURE_PARAMETERS.path, servlet)
+    addServlet(context, HTML_PRINT_WRITER.path, servlet)
+    addServlet(context, HTML_SERVLET_OUTPUT_STREAM.path, servlet)
   }
 
   protected ServerEndpoint lastRequest
@@ -98,6 +128,85 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
       case ERROR:
         sendErrorSpan(trace, index, parent)
         break
+    }
+  }
+
+  def "snippet injection with ServletOutputStream"() {
+    setup:
+    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
+    def request = request(HTML_SERVLET_OUTPUT_STREAM, "GET")
+    def response = client.execute(request).aggregate().join()
+
+    expect:
+    response.status().code() == HTML_SERVLET_OUTPUT_STREAM.status
+    String result = "<!DOCTYPE html>\n" +
+      "<html lang=\"en\">\n" +
+      "<head>\n" +
+      "  <script type=\"text/javascript\"> Test </script>\n" +
+      "  <meta charset=\"UTF-8\">\n" +
+      "  <title>Title</title>\n" +
+      "</head>\n" +
+      "<body>\n" +
+      "<p>test works</p>\n" +
+      "</body>\n" +
+      "</html>"
+    response.contentUtf8() == result
+    response.headers().contentLength() == result.length()
+
+    def expectedRoute = expectedHttpRoute(HTML_SERVLET_OUTPUT_STREAM)
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "GET" + (expectedRoute != null ? " " + expectedRoute : "")
+          kind SpanKind.SERVER
+          hasNoParent()
+        }
+        span(1) {
+          name "controller"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+      }
+    }
+  }
+
+  def "snippet injection with PrintWriter"() {
+    setup:
+    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
+    def request = request(HTML_PRINT_WRITER, "GET")
+    def response = client.execute(request).aggregate().join()
+
+    expect:
+    response.status().code() == HTML_PRINT_WRITER.status
+    String result = "<!DOCTYPE html>\n" +
+      "<html lang=\"en\">\n" +
+      "<head>\n" +
+      "  <script type=\"text/javascript\"> Test </script>\n" +
+      "  <meta charset=\"UTF-8\">\n" +
+      "  <title>Title</title>\n" +
+      "</head>\n" +
+      "<body>\n" +
+      "<p>test works</p>\n" +
+      "</body>\n" +
+      "</html>"
+
+    response.contentUtf8() == result
+    response.headers().contentLength() == result.length()
+
+    def expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER)
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "GET" + (expectedRoute != null ? " " + expectedRoute : "")
+          kind SpanKind.SERVER
+          hasNoParent()
+        }
+        span(1) {
+          name "controller"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+      }
     }
   }
 }

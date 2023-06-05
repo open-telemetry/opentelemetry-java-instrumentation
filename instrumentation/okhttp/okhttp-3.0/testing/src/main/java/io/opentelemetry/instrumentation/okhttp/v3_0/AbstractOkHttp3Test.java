@@ -14,6 +14,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
@@ -42,14 +43,16 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
   protected final Call.Factory client = createCallFactory(getClientBuilder(false));
   private final Call.Factory clientWithReadTimeout = createCallFactory(getClientBuilder(true));
 
-  OkHttpClient.Builder getClientBuilder(boolean withReadTimeout) {
+  protected OkHttpClient.Builder getClientBuilder(boolean withReadTimeout) {
     OkHttpClient.Builder builder =
         new OkHttpClient.Builder()
             .connectTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)
-            .protocols(singletonList(Protocol.HTTP_1_1))
-            .retryOnConnectionFailure(false);
+            .protocols(singletonList(Protocol.HTTP_1_1));
     if (withReadTimeout) {
-      builder.readTimeout(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+      builder
+          // don't want retries on time outs
+          .retryOnConnectionFailure(false)
+          .readTimeout(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
     }
     return builder;
   }
@@ -111,13 +114,17 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.disableTestCircularRedirects();
-    optionsBuilder.enableTestReadTimeout();
+    optionsBuilder.markAsLowLevelInstrumentation();
+    optionsBuilder.setMaxRedirects(21); // 1st send + 20 retries
 
     optionsBuilder.setHttpAttributes(
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          // the tests are capturing the user-agent, but since it's not possible to override it in
+          // the builder, and since it contains the okhttp library version, let's just skip
+          // verification on this attribute
+          attributes.remove(SemanticAttributes.USER_AGENT_ORIGINAL);
 
           // protocol is extracted from the response, and those URLs cause exceptions (= null
           // response)

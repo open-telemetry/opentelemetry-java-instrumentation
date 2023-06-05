@@ -10,8 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
@@ -61,13 +60,13 @@ public class InstrumenterBenchmark {
     INSTANCE;
 
     @Override
-    public String getMethod(Void unused) {
-      return "GET";
+    public String getUrlFull(Void unused) {
+      return "https://opentelemetry.io/benchmark";
     }
 
     @Override
-    public String getUrl(Void unused) {
-      return "https://opentelemetry.io/benchmark";
+    public String getMethod(Void unused) {
+      return "GET";
     }
 
     @Override
@@ -89,17 +88,10 @@ public class InstrumenterBenchmark {
     }
   }
 
-  static class ConstantNetAttributesGetter
-      extends InetSocketAddressNetClientAttributesGetter<Void, Void> {
+  static class ConstantNetAttributesGetter implements NetClientAttributesGetter<Void, Void> {
 
     private static final InetSocketAddress PEER_ADDRESS =
         InetSocketAddress.createUnresolved("localhost", 8080);
-
-    @Nullable
-    @Override
-    public String getTransport(Void request, @Nullable Void response) {
-      return SemanticAttributes.NetTransportValues.IP_TCP;
-    }
 
     @Nullable
     @Override
@@ -127,7 +119,7 @@ public class InstrumenterBenchmark {
 
     @Nullable
     @Override
-    protected InetSocketAddress getPeerSocketAddress(Void request, @Nullable Void response) {
+    public InetSocketAddress getPeerSocketAddress(Void request, @Nullable Void response) {
       return PEER_ADDRESS;
     }
   }

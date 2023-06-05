@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,6 +26,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import javax.annotation.Nullable;
 import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 
 /**
@@ -36,8 +38,7 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
  * MultipleParentClassLoader}.
  */
 // TODO find a way to initialize logging before using this class
-// Used by AgentInitializer
-@SuppressWarnings({"unused", "SystemOut"})
+@SuppressWarnings("SystemOut")
 public class ExtensionClassLoader extends URLClassLoader {
   public static final String EXTENSIONS_CONFIG = "otel.javaagent.extensions";
 
@@ -51,22 +52,19 @@ public class ExtensionClassLoader extends URLClassLoader {
   }
 
   public static ClassLoader getInstance(
-      ClassLoader parent, File javaagentFile, boolean isSecurityManagerSupportEnabled) {
+      ClassLoader parent,
+      File javaagentFile,
+      boolean isSecurityManagerSupportEnabled,
+      EarlyInitAgentConfig earlyConfig) {
     List<URL> extensions = new ArrayList<>();
 
-    includeEmbeddedExtensionsIfFound(parent, extensions, javaagentFile);
+    includeEmbeddedExtensionsIfFound(extensions, javaagentFile);
+
+    extensions.addAll(parseLocation(earlyConfig.getString(EXTENSIONS_CONFIG), javaagentFile));
 
     extensions.addAll(
         parseLocation(
-            System.getProperty(EXTENSIONS_CONFIG, System.getenv("OTEL_JAVAAGENT_EXTENSIONS")),
-            javaagentFile));
-
-    extensions.addAll(
-        parseLocation(
-            System.getProperty(
-                "otel.javaagent.experimental.extensions",
-                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS")),
-            javaagentFile));
+            earlyConfig.getString("otel.javaagent.experimental.extensions"), javaagentFile));
 
     // TODO when logging is configured add warning about deprecated property
 
@@ -81,8 +79,7 @@ public class ExtensionClassLoader extends URLClassLoader {
     return new MultipleParentClassLoader(parent, delegates);
   }
 
-  private static void includeEmbeddedExtensionsIfFound(
-      ClassLoader parent, List<URL> extensions, File javaagentFile) {
+  private static void includeEmbeddedExtensionsIfFound(List<URL> extensions, File javaagentFile) {
     try {
       JarFile jarFile = new JarFile(javaagentFile, false);
       Enumeration<JarEntry> entryEnumeration = jarFile.entries();
@@ -132,7 +129,7 @@ public class ExtensionClassLoader extends URLClassLoader {
   }
 
   // visible for testing
-  static List<URL> parseLocation(String locationName, File javaagentFile) {
+  static List<URL> parseLocation(@Nullable String locationName, File javaagentFile) {
     if (locationName == null) {
       return Collections.emptyList();
     }

@@ -5,19 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticTransportRequest;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.elasticsearch.action.ActionResponse;
 
 public class Elasticsearch6TransportNetAttributesGetter
-    extends InetSocketAddressNetClientAttributesGetter<ElasticTransportRequest, ActionResponse> {
-  @Override
-  @Nullable
-  public String getTransport(ElasticTransportRequest request, @Nullable ActionResponse response) {
-    return null;
-  }
+    implements NetClientAttributesGetter<ElasticTransportRequest, ActionResponse> {
 
   @Nullable
   @Override
@@ -33,7 +28,7 @@ public class Elasticsearch6TransportNetAttributesGetter
 
   @Override
   @Nullable
-  protected InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getPeerSocketAddress(
       ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().address();

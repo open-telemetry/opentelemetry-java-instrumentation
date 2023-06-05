@@ -37,6 +37,13 @@ public class RequestDispatcherServlet {
       String target = req.getServletPath().replace("/dispatch", "");
       ServletContext context = getServletContext();
       RequestDispatcher dispatcher = context.getRequestDispatcher(target);
+      // for HTML test case, set the content type before calling include because
+      // setContentType will be rejected if called inside include
+      // check
+      // https://docs.oracle.com/javaee/7/api/javax/servlet/RequestDispatcher.html#include-javax.servlet.ServletRequest-javax.servlet.ServletResponse-
+      if ("/htmlPrintWriter".equals(target) || "/htmlServletOutputStream".equals(target)) {
+        resp.setContentType("text/html");
+      }
       dispatcher.include(req, resp);
     }
   }

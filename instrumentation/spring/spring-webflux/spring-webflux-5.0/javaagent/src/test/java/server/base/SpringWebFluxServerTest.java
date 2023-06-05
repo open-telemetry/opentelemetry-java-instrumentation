@@ -6,19 +6,26 @@
 package server.base;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 public abstract class SpringWebFluxServerTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
+
+  protected static final ServerEndpoint NESTED_PATH =
+      new ServerEndpoint("NESTED_PATH", "nestedPath/hello/world", 200, "nested path");
+
   protected abstract Class<?> getApplicationClass();
 
   @RegisterExtension
@@ -27,16 +34,12 @@ public abstract class SpringWebFluxServerTest
   @Override
   public ConfigurableApplicationContext setupServer() {
     SpringApplication app = new SpringApplication(getApplicationClass());
-    app.setDefaultProperties(
-        ImmutableMap.of(
-            "server.port",
-            port,
-            "server.context-path",
-            getContextPath(),
-            "server.servlet.contextPath",
-            getContextPath(),
-            "server.error.include-message",
-            "always"));
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("server.port", port);
+    properties.put("server.context-path", getContextPath());
+    properties.put("server.servlet.contextPath", getContextPath());
+    properties.put("server.error.include-message", "always");
+    app.setDefaultProperties(properties);
     return app.run();
   }
 
@@ -47,14 +50,14 @@ public abstract class SpringWebFluxServerTest
 
   @Override
   public String expectedHttpRoute(ServerEndpoint endpoint) {
-    switch (endpoint) {
-      case PATH_PARAM:
-        return getContextPath() + "/path/{id}/param";
-      case NOT_FOUND:
-        return "/**";
-      default:
-        return super.expectedHttpRoute(endpoint);
+    if (endpoint.equals(PATH_PARAM)) {
+      return getContextPath() + "/path/{id}/param";
+    } else if (endpoint.equals(NOT_FOUND)) {
+      return "/**";
+    } else if (endpoint.equals(NESTED_PATH)) {
+      return "/nestedPath/hello/world";
     }
+    return super.expectedHttpRoute(endpoint);
   }
 
   @Override

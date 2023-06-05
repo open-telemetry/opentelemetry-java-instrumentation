@@ -34,7 +34,7 @@ class JettyServletHandlerTest extends AbstractServlet5Test<Object, Object> {
     setupServlets(handler)
     server.addBean(new ErrorHandler() {
       protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
-        Throwable th = (Throwable) request.getAttribute("javax.servlet.error.exception")
+        Throwable th = (Throwable) request.getAttribute("jakarta.servlet.error.exception")
         writer.write(th ? th.message : message)
       }
     })

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import org.testcontainers.shaded.com.google.common.collect.ImmutableMap
 import spock.lang.Ignore
 import spock.lang.Shared
 
@@ -22,7 +21,7 @@ class SnsCamelTest extends AgentInstrumentationSpecification {
     setup:
     String topicName = "snsCamelTest"
     String queueName = "snsCamelTest"
-    def camelApp = new CamelSpringApp(awsConnector, SnsConfig, ImmutableMap.of("topicName", topicName, "queueName", queueName))
+    def camelApp = new CamelSpringApp(awsConnector, SnsConfig, [topicName: topicName, queueName: queueName])
 
     def (queueUrl, topicArn) = setupTestInfrastructure(queueName, topicName)
     waitAndClearSetupTraces(queueUrl, queueName)
@@ -59,7 +58,7 @@ class SnsCamelTest extends AgentInstrumentationSpecification {
     setup:
     String topicName = "snsCamelTest"
     String queueName = "snsCamelTest"
-    def camelApp = new CamelSpringApp(awsConnector, SnsConfig, ImmutableMap.of("topicName", topicName, "queueName", queueName))
+    def camelApp = new CamelSpringApp(awsConnector, SnsConfig, [topicName: topicName, queueName: queueName])
 
     def (queueUrl, topicArn) = setupTestInfrastructure(queueName, topicName)
     waitAndClearSetupTraces(queueUrl, queueName)
