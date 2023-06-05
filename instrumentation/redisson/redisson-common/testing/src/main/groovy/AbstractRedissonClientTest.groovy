@@ -369,7 +369,7 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
       }
       trace(1, 1) {
         span(0) {
-          def lockScriptPattern = compile("^" + quote("EVAL ") + ".*" + quote(" 2 lock ") + "\\S+" + quote(" ? ? ?") + "\$")
+          def lockScriptPattern = compile("^" + quote("EVAL ") + ".*" + quote(" 2 lock ") + "\\S+" + "(" + quote(" ?") + ")+\$")
 
           name "EVAL"
           kind CLIENT
