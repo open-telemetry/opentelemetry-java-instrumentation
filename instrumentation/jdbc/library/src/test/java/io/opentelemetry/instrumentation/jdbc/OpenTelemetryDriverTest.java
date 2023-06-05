@@ -113,16 +113,16 @@ public class OpenTelemetryDriverTest {
 
     // Add driver candidate
     TestDriver driver = new TestDriver();
-    OpenTelemetryDriver.INSTANCE.addDriverCandidate(driver);
+    OpenTelemetryDriver.addDriverCandidate(driver);
     Connection connection = OpenTelemetryDriver.INSTANCE.connect("jdbc:otel:test:", null);
-    OpenTelemetryDriver.INSTANCE.removeDriverCandidate(driver);
+    OpenTelemetryDriver.removeDriverCandidate(driver);
 
     assertThat(connection).isExactlyInstanceOf(OpenTelemetryConnection.class);
 
     // Remove driver candidate
     deregisterTestDriver();
-    OpenTelemetryDriver.INSTANCE.addDriverCandidate(driver);
-    OpenTelemetryDriver.INSTANCE.removeDriverCandidate(driver);
+    OpenTelemetryDriver.addDriverCandidate(driver);
+    OpenTelemetryDriver.removeDriverCandidate(driver);
 
     assertThrows(
         IllegalStateException.class,
@@ -136,10 +136,10 @@ public class OpenTelemetryDriverTest {
     TestDriver localDriver = new TestDriver();
     TestDriver globalDriver = new TestDriver();
 
-    OpenTelemetryDriver.INSTANCE.addDriverCandidate(localDriver);
+    OpenTelemetryDriver.addDriverCandidate(localDriver);
     DriverManager.registerDriver(globalDriver);
-    Driver winner = OpenTelemetryDriver.INSTANCE.findDriver("jdbc:test:");
-    OpenTelemetryDriver.INSTANCE.removeDriverCandidate(localDriver);
+    Driver winner = OpenTelemetryDriver.findDriver("jdbc:test:");
+    OpenTelemetryDriver.removeDriverCandidate(localDriver);
 
     assertThat(winner).isEqualTo(localDriver);
     assertThat(winner).isNotEqualTo(globalDriver);
@@ -148,12 +148,12 @@ public class OpenTelemetryDriverTest {
     TestDriver localDriver1 = new TestDriver();
     TestDriver localDriver2 = new TestDriver();
 
-    OpenTelemetryDriver.INSTANCE.addDriverCandidate(localDriver1);
-    OpenTelemetryDriver.INSTANCE.addDriverCandidate(localDriver2);
+    OpenTelemetryDriver.addDriverCandidate(localDriver1);
+    OpenTelemetryDriver.addDriverCandidate(localDriver2);
 
-    Driver winner2 = OpenTelemetryDriver.INSTANCE.findDriver("jdbc:test:");
-    OpenTelemetryDriver.INSTANCE.removeDriverCandidate(localDriver1);
-    OpenTelemetryDriver.INSTANCE.removeDriverCandidate(localDriver2);
+    Driver winner2 = OpenTelemetryDriver.findDriver("jdbc:test:");
+    OpenTelemetryDriver.removeDriverCandidate(localDriver1);
+    OpenTelemetryDriver.removeDriverCandidate(localDriver2);
 
     assertThat(winner2).isEqualTo(localDriver1);
     assertThat(winner2).isNotEqualTo(localDriver2);
@@ -167,10 +167,10 @@ public class OpenTelemetryDriverTest {
             return false;
           }
         };
-    OpenTelemetryDriver.INSTANCE.addDriverCandidate(localDriver3);
+    OpenTelemetryDriver.addDriverCandidate(localDriver3);
 
-    Driver winner3 = OpenTelemetryDriver.INSTANCE.findDriver("jdbc:test:");
-    OpenTelemetryDriver.INSTANCE.removeDriverCandidate(localDriver3);
+    Driver winner3 = OpenTelemetryDriver.findDriver("jdbc:test:");
+    OpenTelemetryDriver.removeDriverCandidate(localDriver3);
 
     assertThat(winner3).isNotNull();
     assertThat(winner3).isNotEqualTo(localDriver3);
