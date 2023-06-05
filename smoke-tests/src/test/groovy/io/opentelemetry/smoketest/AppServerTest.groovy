@@ -369,6 +369,30 @@ abstract class AppServerTest extends SmokeTest {
     [appServer, jdk, isWindows] << getTestParams()
   }
 
+  @Unroll
+  def "JSP smoke test for Snippet Injection"() {
+    when:
+    def response = client().get("/app/jsp").aggregate().join()
+    TraceInspector traces = new TraceInspector(waitForTraces())
+    String responseBody = response.contentUtf8()
+
+    println(response.contentType())
+    println(responseBody)
+
+    then:
+    response.status().isSuccess()
+    responseBody.contains("Successful JSP test")
+
+    responseBody.contains("<script>console.log(hi)</script>")
+
+    traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
+
+    traces.countSpansByName('GET /app/jsp') == 1
+
+    where:
+    [appServer, jdk] << getTestParams()
+  }
+
   protected String getSpanName(String path) {
     switch (path) {
       case "/app/greeting":
