@@ -7,7 +7,7 @@ muzzle {
     group.set("com.amazonaws")
     module.set("aws-lambda-java-core")
     versions.set("[1.0.0,)")
-    extraDependency("com.amazonaws:aws-lambda-java-events:3.11.2")
+    extraDependency("com.amazonaws:aws-lambda-java-events:3.9.0")
     extraDependency("com.amazonaws.serverless:aws-serverless-java-container-core:1.5.2")
   }
 }
@@ -27,7 +27,7 @@ dependencies {
   // with lambda.
   // NB: 2.2.0 includes a class called SQSEvent but isn't usable due to it returning private classes
   // in public API.
-  library("com.amazonaws:aws-lambda-java-events:3.11.2")
+  library("com.amazonaws:aws-lambda-java-events:3.9.0")
 
   testImplementation(project(":instrumentation:aws-lambda:aws-lambda-events-2.2:testing"))
   testInstrumentation(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:javaagent"))

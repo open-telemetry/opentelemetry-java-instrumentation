@@ -36,14 +36,14 @@ final class ApiGatewayProxyAttributesExtractor
       AttributesBuilder attributes, Context parentContext, AwsLambdaRequest request) {
     if (request.getInput() instanceof APIGatewayProxyRequestEvent) {
       attributes.put(FAAS_TRIGGER, SemanticAttributes.FaasTriggerValues.HTTP);
-      onRequest(attributes, (APIGatewayProxyRequestEvent) request.getInput());
+      onRequest(attributes, new V1Request((APIGatewayProxyRequestEvent) request.getInput()));
     } else if (request.getInput() instanceof APIGatewayV2HTTPEvent) {
       attributes.put(FAAS_TRIGGER, SemanticAttributes.FaasTriggerValues.HTTP);
-      onV2Request(attributes, (APIGatewayV2HTTPEvent) request.getInput());
+      onRequest(attributes, new V2Request((APIGatewayV2HTTPEvent) request.getInput()));
     }
   }
 
-  void onRequest(AttributesBuilder attributes, APIGatewayProxyRequestEvent request) {
+  void onRequest(AttributesBuilder attributes, Request request) {
     attributes.put(HTTP_METHOD, request.getHttpMethod());
 
     Map<String, String> headers = lowercaseMap(request.getHeaders());
@@ -57,24 +57,7 @@ final class ApiGatewayProxyAttributesExtractor
     }
   }
 
-  void onV2Request(AttributesBuilder attributes, APIGatewayV2HTTPEvent request) {
-    RequestContext requestContext = request.getRequestContext();
-    RequestContext.Http http = requestContext != null ? requestContext.getHttp() : null;
-    attributes.put(HTTP_METHOD, http != null ? http.getMethod() : null);
-
-    Map<String, String> headers = lowercaseMap(request.getHeaders());
-    String userAgent = headers.get("user-agent");
-    if (userAgent != null) {
-      attributes.put(USER_AGENT_ORIGINAL, userAgent);
-    }
-    String httpUrl = getV2HttpUrl(request, headers);
-    if (httpUrl != null) {
-      attributes.put(HTTP_URL, httpUrl);
-    }
-  }
-
-  private static String getHttpUrl(
-      APIGatewayProxyRequestEvent request, Map<String, String> headers) {
+  private static String getHttpUrl(Request request, Map<String, String> headers) {
     StringBuilder str = new StringBuilder();
 
     String scheme = headers.get("x-forwarded-proto");
@@ -86,37 +69,6 @@ final class ApiGatewayProxyAttributesExtractor
       str.append(host);
     }
     String path = request.getPath();
-    if (path != null) {
-      str.append(path);
-    }
-
-    try {
-      boolean first = true;
-      for (Map.Entry<String, String> entry :
-          emptyIfNull(request.getQueryStringParameters()).entrySet()) {
-        String key = URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8.name());
-        String value = URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8.name());
-        str.append(first ? '?' : '&').append(key).append('=').append(value);
-        first = false;
-      }
-    } catch (UnsupportedEncodingException ignored) {
-      // Ignore
-    }
-    return str.length() == 0 ? null : str.toString();
-  }
-
-  private static String getV2HttpUrl(APIGatewayV2HTTPEvent request, Map<String, String> headers) {
-    StringBuilder str = new StringBuilder();
-
-    String scheme = headers.get("x-forwarded-proto");
-    if (scheme != null) {
-      str.append(scheme).append("://");
-    }
-    String host = headers.get("host");
-    if (host != null) {
-      str.append(host);
-    }
-    String path = request.getRawPath();
     if (path != null) {
       str.append(path);
     }
@@ -153,6 +105,75 @@ final class ApiGatewayProxyAttributesExtractor
       if (statusCode != 0) {
         attributes.put(HTTP_STATUS_CODE, statusCode);
       }
+    }
+  }
+
+  private interface Request {
+    String getHttpMethod();
+
+    String getPath();
+
+    Map<String, String> getHeaders();
+
+    Map<String, String> getQueryStringParameters();
+  }
+
+  private static class V1Request implements Request {
+    private final APIGatewayProxyRequestEvent request;
+
+    private V1Request(APIGatewayProxyRequestEvent request) {
+      this.request = request;
+    }
+
+    @Override
+    public String getHttpMethod() {
+      return request.getHttpMethod();
+    }
+
+    @Override
+    public String getPath() {
+      return request.getPath();
+    }
+
+    @Override
+    public Map<String, String> getHeaders() {
+      return request.getHeaders();
+    }
+
+    @Override
+    public Map<String, String> getQueryStringParameters() {
+      return request.getQueryStringParameters();
+    }
+  }
+
+  private static class V2Request implements Request {
+    private final APIGatewayV2HTTPEvent request;
+
+    private V2Request(APIGatewayV2HTTPEvent request) {
+      this.request = request;
+    }
+
+    @Override
+    public String getHttpMethod() {
+      RequestContext requestContext = request.getRequestContext();
+      RequestContext.Http http = requestContext != null ? requestContext.getHttp() : null;
+
+      return http != null ? http.getMethod() : null;
+    }
+
+    @Override
+    public String getPath() {
+      return request.getRawPath();
+    }
+
+    @Override
+    public Map<String, String> getHeaders() {
+      return request.getHeaders();
+    }
+
+    @Override
+    public Map<String, String> getQueryStringParameters() {
+      return request.getQueryStringParameters();
     }
   }
 
