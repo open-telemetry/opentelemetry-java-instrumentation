@@ -32,7 +32,7 @@ public class OtlpLoggerExporterAutoConfiguration {
       OtlpExporterProperties properties) {
     OtlpGrpcLogRecordExporterBuilder builder = OtlpGrpcLogRecordExporter.builder();
 
-    String endpoint = properties.getTraces().getEndpoint();
+    String endpoint = properties.getLogs().getEndpoint();
     if (endpoint == null) {
       endpoint = properties.getEndpoint();
     }
