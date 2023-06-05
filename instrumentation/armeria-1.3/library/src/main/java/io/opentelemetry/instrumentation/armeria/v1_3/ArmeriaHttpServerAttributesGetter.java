@@ -25,12 +25,12 @@ enum ArmeriaHttpServerAttributesGetter
 
   @Override
   @Nullable
-  public String getScheme(RequestContext ctx) {
+  public String getUrlScheme(RequestContext ctx) {
     return request(ctx).scheme();
   }
 
   @Override
-  public String getPath(RequestContext ctx) {
+  public String getUrlPath(RequestContext ctx) {
     String fullPath = request(ctx).path();
     int separatorPos = fullPath.indexOf('?');
     return separatorPos == -1 ? fullPath : fullPath.substring(0, separatorPos);
@@ -38,7 +38,7 @@ enum ArmeriaHttpServerAttributesGetter
 
   @Nullable
   @Override
-  public String getQuery(RequestContext ctx) {
+  public String getUrlQuery(RequestContext ctx) {
     String fullPath = request(ctx).path();
     int separatorPos = fullPath.indexOf('?');
     return separatorPos == -1 ? null : fullPath.substring(separatorPos + 1);

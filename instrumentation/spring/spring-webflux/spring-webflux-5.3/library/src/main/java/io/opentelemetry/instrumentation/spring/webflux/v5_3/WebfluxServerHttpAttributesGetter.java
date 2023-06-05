@@ -42,19 +42,19 @@ enum WebfluxServerHttpAttributesGetter
 
   @Nullable
   @Override
-  public String getScheme(ServerWebExchange request) {
+  public String getUrlScheme(ServerWebExchange request) {
     return request.getRequest().getURI().getScheme();
   }
 
   @Nullable
   @Override
-  public String getPath(ServerWebExchange request) {
+  public String getUrlPath(ServerWebExchange request) {
     return request.getRequest().getURI().getPath();
   }
 
   @Nullable
   @Override
-  public String getQuery(ServerWebExchange request) {
+  public String getUrlQuery(ServerWebExchange request) {
     return request.getRequest().getURI().getQuery();
   }
 

@@ -10,6 +10,7 @@ dependencies {
   implementation(project(":instrumentation:runtime-metrics:runtime-metrics-java8:library"))
   testImplementation("io.github.netmikey.logunit:logunit-jul:1.1.3")
 }
+
 tasks.create("generateDocs", JavaExec::class) {
   group = "build"
   description = "Generate table for README.md"
@@ -17,8 +18,8 @@ tasks.create("generateDocs", JavaExec::class) {
   mainClass.set("io.opentelemetry.instrumentation.runtimemetrics.java17.GenerateDocs")
   systemProperties.set("jfr.readme.path", project.projectDir.toString() + "/README.md")
 }
-tasks {
 
+tasks {
   val testG1 by registering(Test::class) {
     filter {
       includeTestsMatching("*G1GcMemoryMetricTest*")
@@ -49,6 +50,9 @@ tasks {
       excludeTestsMatching("*SerialGcMemoryMetricTest")
       excludeTestsMatching("*PsGcMemoryMetricTest")
     }
+  }
+
+  check {
     dependsOn(testG1)
     dependsOn(testPS)
     dependsOn(testSerial)

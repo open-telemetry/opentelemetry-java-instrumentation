@@ -20,7 +20,7 @@ final class PlayWsClientHttpAttributesGetter
   }
 
   @Override
-  public String getUrl(Request request) {
+  public String getUrlFull(Request request) {
     return request.getUri().toUrl();
   }
 

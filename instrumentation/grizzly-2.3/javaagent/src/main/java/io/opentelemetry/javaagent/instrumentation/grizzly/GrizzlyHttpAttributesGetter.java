@@ -49,19 +49,19 @@ final class GrizzlyHttpAttributesGetter
   }
 
   @Override
-  public String getScheme(HttpRequestPacket request) {
+  public String getUrlScheme(HttpRequestPacket request) {
     return request.isSecure() ? "https" : "http";
   }
 
   @Nullable
   @Override
-  public String getPath(HttpRequestPacket request) {
+  public String getUrlPath(HttpRequestPacket request) {
     return request.getRequestURI();
   }
 
   @Nullable
   @Override
-  public String getQuery(HttpRequestPacket request) {
+  public String getUrlQuery(HttpRequestPacket request) {
     return request.getQueryString();
   }
 }
