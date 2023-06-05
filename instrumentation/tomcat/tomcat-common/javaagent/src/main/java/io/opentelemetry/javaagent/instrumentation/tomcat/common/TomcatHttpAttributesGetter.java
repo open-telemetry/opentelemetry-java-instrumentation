@@ -24,20 +24,20 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
 
   @Override
   @Nullable
-  public String getScheme(Request request) {
+  public String getUrlScheme(Request request) {
     MessageBytes schemeMessageBytes = request.scheme();
     return schemeMessageBytes.isNull() ? "http" : messageBytesToString(schemeMessageBytes);
   }
 
   @Nullable
   @Override
-  public String getPath(Request request) {
+  public String getUrlPath(Request request) {
     return messageBytesToString(request.requestURI());
   }
 
   @Nullable
   @Override
-  public String getQuery(Request request) {
+  public String getUrlQuery(Request request) {
     return messageBytesToString(request.queryString());
   }
 

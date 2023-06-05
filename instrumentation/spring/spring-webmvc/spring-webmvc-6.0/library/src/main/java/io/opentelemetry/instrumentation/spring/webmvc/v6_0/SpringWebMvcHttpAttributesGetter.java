@@ -65,19 +65,19 @@ enum SpringWebMvcHttpAttributesGetter
 
   @Override
   @Nullable
-  public String getScheme(HttpServletRequest request) {
+  public String getUrlScheme(HttpServletRequest request) {
     return request.getScheme();
   }
 
   @Nullable
   @Override
-  public String getPath(HttpServletRequest request) {
+  public String getUrlPath(HttpServletRequest request) {
     return request.getRequestURI();
   }
 
   @Nullable
   @Override
-  public String getQuery(HttpServletRequest request) {
+  public String getUrlQuery(HttpServletRequest request) {
     return request.getQueryString();
   }
 }

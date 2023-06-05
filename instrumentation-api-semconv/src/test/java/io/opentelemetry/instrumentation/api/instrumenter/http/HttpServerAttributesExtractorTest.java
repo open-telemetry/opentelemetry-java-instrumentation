@@ -44,19 +44,19 @@ class HttpServerAttributesExtractorTest {
     }
 
     @Override
-    public String getScheme(Map<String, Object> request) {
+    public String getUrlScheme(Map<String, Object> request) {
       return (String) request.get("scheme");
     }
 
     @Nullable
     @Override
-    public String getPath(Map<String, Object> request) {
+    public String getUrlPath(Map<String, Object> request) {
       return (String) request.get("path");
     }
 
     @Nullable
     @Override
-    public String getQuery(Map<String, Object> request) {
+    public String getUrlQuery(Map<String, Object> request) {
       return (String) request.get("query");
     }
 
@@ -146,9 +146,9 @@ class HttpServerAttributesExtractorTest {
             singletonList("Custom-Response-Header"),
             routeFromContext);
 
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), request);
-    assertThat(attributes.build())
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_HOST_NAME, "github.com"),
             entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
@@ -163,22 +163,12 @@ class HttpServerAttributesExtractorTest {
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")));
 
-    extractor.onEnd(attributes, Context.root(), request, response, null);
-    assertThat(attributes.build())
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NET_HOST_NAME, "github.com"),
-            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
-            entry(SemanticAttributes.HTTP_METHOD, "POST"),
-            entry(SemanticAttributes.HTTP_SCHEME, "https"),
-            entry(SemanticAttributes.HTTP_TARGET, "/repositories/1?details=true"),
-            entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
-            entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
-            entry(
-                AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
-                asList("123", "456")),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
             entry(
