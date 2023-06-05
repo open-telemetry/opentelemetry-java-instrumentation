@@ -1,7 +1,7 @@
 
 # javaagent
 ## Dependency License Report
-_2023-05-18 09:52:25 EEST_
+_2023-06-03 19:26:17 EEST_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -9,18 +9,19 @@ _2023-05-18 09:52:25 EEST_
 > - **POM Project URL**: [https://github.com/raphw/weak-lock-free](https://github.com/raphw/weak-lock-free)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**2** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.15.1`
+**2** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.15.2`
 > - **Project URL**: [https://github.com/FasterXML/jackson-core](https://github.com/FasterXML/jackson-core)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-core-2.15.1.jar/META-INF/NOTICE](jackson-core-2.15.1.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-core-2.15.2.jar/META-INF/LICENSE](jackson-core-2.15.2.jar/META-INF/LICENSE)
+    - [jackson-core-2.15.2.jar/META-INF/NOTICE](jackson-core-2.15.2.jar/META-INF/NOTICE)
 
-**3** **Group:** `com.fasterxml.jackson.jr` **Name:** `jackson-jr-objects` **Version:** `2.15.1`
+**3** **Group:** `com.fasterxml.jackson.jr` **Name:** `jackson-jr-objects` **Version:** `2.15.2`
 > - **Project URL**: [https://github.com/FasterXML/jackson-jr](https://github.com/FasterXML/jackson-jr)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-jr-objects-2.15.1.jar/META-INF/LICENSE](jackson-jr-objects-2.15.1.jar/META-INF/LICENSE)
-    - [jackson-jr-objects-2.15.1.jar/META-INF/NOTICE](jackson-jr-objects-2.15.1.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-jr-objects-2.15.2.jar/META-INF/LICENSE](jackson-jr-objects-2.15.2.jar/META-INF/LICENSE)
+    - [jackson-jr-objects-2.15.2.jar/META-INF/NOTICE](jackson-jr-objects-2.15.2.jar/META-INF/NOTICE)
 
 **4** **Group:** `com.googlecode.concurrentlinkedhashmap` **Name:** `concurrentlinkedhashmap-lru` **Version:** `1.4.2`
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
@@ -162,10 +163,10 @@ _2023-05-18 09:52:25 EEST_
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-2.23.2.jar/META-INF/LICENSE](zipkin-2.23.2.jar/META-INF/LICENSE)
 
-**37** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.14.4`
+**37** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.14.5`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [byte-buddy-dep-1.14.4.jar/META-INF/LICENSE](byte-buddy-dep-1.14.4.jar/META-INF/LICENSE)
-    - [byte-buddy-dep-1.14.4.jar/META-INF/NOTICE](byte-buddy-dep-1.14.4.jar/META-INF/NOTICE)
+> - **Embedded license files**: [byte-buddy-dep-1.14.5.jar/META-INF/LICENSE](byte-buddy-dep-1.14.5.jar/META-INF/LICENSE)
+    - [byte-buddy-dep-1.14.5.jar/META-INF/NOTICE](byte-buddy-dep-1.14.5.jar/META-INF/NOTICE)
 
 **38** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)

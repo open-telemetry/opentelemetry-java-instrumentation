@@ -8,8 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.internal.lambda;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
+import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler.DefineClassContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
@@ -62,6 +65,24 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
                         classVisitor, instrumentedType.getInternalName());
                   }
                 }));
+
+    transformer.applyAdviceToMethod(
+        named("spinInnerClass"),
+        InnerClassLambdaMetafactoryInstrumentation.class.getName()
+            + (hasInterfaceClassField() ? "$LambdaJdk17Advice" : "$LambdaAdvice"));
+  }
+
+  @SuppressWarnings("ReturnValueIgnored")
+  private static boolean hasInterfaceClassField() {
+    try {
+      Class<?> clazz = Class.forName("java.lang.invoke.AbstractValidatingLambdaMetafactory");
+      clazz.getDeclaredField("interfaceClass");
+      return true;
+    } catch (NoSuchFieldException exception) {
+      return false;
+    } catch (ClassNotFoundException exception) {
+      throw new IllegalStateException(exception);
+    }
   }
 
   private static class MetaFactoryClassVisitor extends ClassVisitor {
@@ -115,6 +136,36 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
             };
       }
       return mv;
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class LambdaAdvice {
+
+    @Advice.OnMethodEnter
+    public static DefineClassContext onEnter(
+        @Advice.FieldValue("samBase") Class<?> lambdaInterface) {
+      return DefineClassHelper.beforeDefineLambdaClass(lambdaInterface);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    public static void onExit(@Advice.Enter DefineClassContext context) {
+      DefineClassHelper.afterDefineClass(context);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class LambdaJdk17Advice {
+
+    @Advice.OnMethodEnter
+    public static DefineClassContext onEnter(
+        @Advice.FieldValue("interfaceClass") Class<?> lambdaInterface) {
+      return DefineClassHelper.beforeDefineLambdaClass(lambdaInterface);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    public static void onExit(@Advice.Enter DefineClassContext context) {
+      DefineClassHelper.afterDefineClass(context);
     }
   }
 }

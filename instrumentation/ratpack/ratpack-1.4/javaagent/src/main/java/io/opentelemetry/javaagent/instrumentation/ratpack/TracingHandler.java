@@ -13,6 +13,7 @@ import io.netty.util.Attribute;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import java.util.Deque;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
 
@@ -24,9 +25,11 @@ public final class TracingHandler implements Handler {
 
   @Override
   public void handle(Context ctx) {
-    Attribute<io.opentelemetry.context.Context> spanAttribute =
+    Attribute<Deque<io.opentelemetry.context.Context>> serverContextAttribute =
         ctx.getDirectChannelAccess().getChannel().attr(AttributeKeys.SERVER_CONTEXT);
-    io.opentelemetry.context.Context serverSpanContext = spanAttribute.get();
+    Deque<io.opentelemetry.context.Context> contexts = serverContextAttribute.get();
+    io.opentelemetry.context.Context serverSpanContext =
+        contexts != null ? contexts.peekFirst() : null;
 
     // Must use context from channel, as executor instrumentation is not accurate - Ratpack
     // internally queues events and then drains them in batches, causing executor instrumentation to

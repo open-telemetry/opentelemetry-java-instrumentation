@@ -30,20 +30,20 @@ val groovyVersion = "4.0.12"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.15.1",
+  "com.fasterxml.jackson:jackson-bom:2.15.2",
   "com.google.guava:guava-bom:32.0.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
   "org.junit:junit-bom:5.9.3",
-  "org.testcontainers:testcontainers-bom:1.18.1",
+  "org.testcontainers:testcontainers-bom:1.18.3",
   "org.spockframework:spock-bom:2.4-M1-groovy-4.0"
 )
 
 val autoServiceVersion = "1.1.0"
 val autoValueVersion = "1.10.1"
 val errorProneVersion = "2.19.1"
-val byteBuddyVersion = "1.14.4"
+val byteBuddyVersion = "1.14.5"
 val asmVersion = "9.5"
 val jmhVersion = "1.36"
 val mockitoVersion = "4.11.0"

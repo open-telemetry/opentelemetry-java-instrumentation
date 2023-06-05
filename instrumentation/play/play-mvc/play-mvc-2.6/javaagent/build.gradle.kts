@@ -80,3 +80,15 @@ tasks {
 configurations.configureEach {
   exclude("org.eclipse.jetty.websocket", "websocket-client")
 }
+
+// com.fasterxml.jackson.module:jackson-module-scala_2.13:2.15.2 is missing force using jackson 2.15.1
+// remove this when a new version of jackson is released
+configurations.configureEach {
+  resolutionStrategy {
+    eachDependency {
+      if (requested.group == "com.fasterxml.jackson" && requested.name == "jackson-bom" && requested.version == "2.15.2") {
+        useVersion("2.15.1")
+      }
+    }
+  }
+}

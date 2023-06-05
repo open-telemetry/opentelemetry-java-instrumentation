@@ -8,12 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.ResponseInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.servlet.snippet.OutputStreamSnippetInjectionHelper;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,6 +41,8 @@ public final class Servlet5Singletons {
 
   private static final Instrumenter<ClassAndMethod, Void> RESPONSE_INSTRUMENTER =
       ResponseInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
+  private static final OutputStreamSnippetInjectionHelper SNIPPET_INJECTION_HELPER =
+      new OutputStreamSnippetInjectionHelper(() -> ExperimentalSnippetHolder.getSnippet());
 
   public static ServletHelper<HttpServletRequest, HttpServletResponse> helper() {
     return HELPER;
@@ -46,6 +50,10 @@ public final class Servlet5Singletons {
 
   public static Instrumenter<ClassAndMethod, Void> responseInstrumenter() {
     return RESPONSE_INSTRUMENTER;
+  }
+
+  public static OutputStreamSnippetInjectionHelper getSnippetInjectionHelper() {
+    return SNIPPET_INJECTION_HELPER;
   }
 
   public static MappingResolver getMappingResolver(Object servletOrFilter) {

@@ -12,6 +12,8 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
@@ -62,12 +64,14 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
   }
 
   private static class Manager {
-    private static final BitSet EMPTY = new BitSet(0);
     static final Manager INSTANCE = new Manager();
     private final List<ClassLoaderHasClassesNamedMatcher> matchers = new CopyOnWriteArrayList<>();
-    // each matcher gets a bit in BitSet, that bit indicates whether current matcher matched or not
-    // for given class loader
+    // each matcher gets a two bits in BitSet, that first bit indicates whether current matcher has
+    // been run for given class loader and the second whether it matched or not
     private final Cache<ClassLoader, BitSet> enabled = Cache.weak();
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private final Lock readLock = lock.readLock();
+    private final Lock writeLock = lock.writeLock();
     private volatile boolean matchCalled = false;
 
     Manager() {
@@ -83,20 +87,36 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
 
     boolean match(ClassLoaderHasClassesNamedMatcher matcher, ClassLoader cl) {
       matchCalled = true;
-      BitSet set = enabled.get(cl);
-      if (set == null) {
-        set = new BitSet(counter.get());
-        for (ClassLoaderHasClassesNamedMatcher m : matchers) {
-          if (hasResources(cl, m.resources)) {
-            // set the bit corresponding to the matcher when it matched
-            set.set(m.index);
+      BitSet set = enabled.computeIfAbsent(cl, (unused) -> new BitSet(counter.get() * 2));
+      int matcherRunBit = 2 * matcher.index;
+      int matchedBit = matcherRunBit + 1;
+      readLock.lock();
+      try {
+        if (!set.get(matcherRunBit)) {
+          // read lock needs to be released before upgrading to write lock
+          readLock.unlock();
+          // we do the resource presence check outside the lock to keep the time we need to hold
+          // the write lock minimal
+          boolean matches = hasResources(cl, matcher.resources);
+          writeLock.lock();
+          try {
+            if (!set.get(matcherRunBit)) {
+              if (matches) {
+                set.set(matchedBit);
+              }
+              set.set(matcherRunBit);
+            }
+          } finally {
+            // downgrading the write lock to the read lock
+            readLock.lock();
+            writeLock.unlock();
           }
         }
-        enabled.put(cl, set.isEmpty() ? EMPTY : set);
-      } else if (set.isEmpty()) {
-        return false;
+
+        return set.get(matchedBit);
+      } finally {
+        readLock.unlock();
       }
-      return set.get(matcher.index);
     }
   }
 }

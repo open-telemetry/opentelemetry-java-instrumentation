@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.util;
 
+import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingMatcher;
 import io.opentelemetry.javaagent.tooling.DefineClassHandler;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -14,7 +15,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * matched type will fail. If we know that the class that is currently loading can't be loaded
  * successfully we can skip transforming it.
  */
-public class IgnoreFailedTypeMatcher implements ElementMatcher<TypeDescription> {
+public class IgnoreFailedTypeMatcher implements ElementMatcher<TypeDescription>, DelegatingMatcher {
   private final ElementMatcher<TypeDescription> delegate;
 
   public IgnoreFailedTypeMatcher(ElementMatcher<TypeDescription> delegate) {
@@ -29,5 +30,10 @@ public class IgnoreFailedTypeMatcher implements ElementMatcher<TypeDescription> 
   @Override
   public String toString() {
     return delegate.toString();
+  }
+
+  @Override
+  public ElementMatcher<?> getDelegate() {
+    return delegate;
   }
 }

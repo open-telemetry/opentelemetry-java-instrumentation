@@ -9,12 +9,12 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_UDP;
 
 import io.netty.channel.socket.DatagramChannel;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class NettySslNetAttributesGetter
-    extends InetSocketAddressNetClientAttributesGetter<NettySslRequest, Void> {
+    implements NetClientAttributesGetter<NettySslRequest, Void> {
 
   @Override
   public String getTransport(NettySslRequest request, @Nullable Void unused) {
@@ -35,7 +35,7 @@ final class NettySslNetAttributesGetter
 
   @Nullable
   @Override
-  protected InetSocketAddress getPeerSocketAddress(NettySslRequest request, @Nullable Void unused) {
+  public InetSocketAddress getPeerSocketAddress(NettySslRequest request, @Nullable Void unused) {
     if (request.remoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) request.remoteAddress();
     }

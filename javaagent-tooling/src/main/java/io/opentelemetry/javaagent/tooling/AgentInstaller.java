@@ -54,6 +54,7 @@ import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.agent.builder.AgentBuilderUtil;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
@@ -184,6 +185,7 @@ public class AgentInstaller {
     }
     logger.log(FINE, "Installed {0} extension(s)", numberOfLoadedExtensions);
 
+    agentBuilder = AgentBuilderUtil.optimize(agentBuilder);
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
 
