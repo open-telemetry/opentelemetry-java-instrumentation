@@ -42,7 +42,7 @@ public final class Servlet5Singletons {
   private static final Instrumenter<ClassAndMethod, Void> RESPONSE_INSTRUMENTER =
       ResponseInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
   private static final OutputStreamSnippetInjectionHelper SNIPPET_INJECTION_HELPER =
-      new OutputStreamSnippetInjectionHelper(() -> ExperimentalSnippetHolder.getSnippet());
+      new OutputStreamSnippetInjectionHelper(ExperimentalSnippetHolder.getSnippet());
 
   public static ServletHelper<HttpServletRequest, HttpServletResponse> helper() {
     return HELPER;

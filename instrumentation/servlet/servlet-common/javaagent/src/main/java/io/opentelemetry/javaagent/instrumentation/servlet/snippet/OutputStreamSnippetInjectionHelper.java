@@ -10,7 +10,6 @@ import static java.util.logging.Level.FINE;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 public class OutputStreamSnippetInjectionHelper {
@@ -18,14 +17,11 @@ public class OutputStreamSnippetInjectionHelper {
   private static final Logger logger =
       Logger.getLogger(OutputStreamSnippetInjectionHelper.class.getName());
 
-  private final Supplier<String> snippetSupplier;
+  private final String snippet;
 
-  public OutputStreamSnippetInjectionHelper(Supplier<String> snippetSupplier) {
-    this.snippetSupplier = snippetSupplier;
-  }
 
-  public String getSnippet() {
-    return snippetSupplier.get();
+  public OutputStreamSnippetInjectionHelper(String snippet) {
+    this.snippet = snippet;
   }
 
   /**
@@ -58,7 +54,7 @@ public class OutputStreamSnippetInjectionHelper {
     }
     byte[] snippetBytes;
     try {
-      snippetBytes = snippetSupplier.get().getBytes(state.getCharacterEncoding());
+      snippetBytes = snippet.getBytes(state.getCharacterEncoding());
     } catch (UnsupportedEncodingException e) {
       logger.log(FINE, "Failed getting snippet bytes", e);
       return false;
@@ -84,7 +80,7 @@ public class OutputStreamSnippetInjectionHelper {
     }
     byte[] snippetBytes;
     try {
-      snippetBytes = snippetSupplier.get().getBytes(state.getCharacterEncoding());
+      snippetBytes = snippet.getBytes(state.getCharacterEncoding());
     } catch (UnsupportedEncodingException e) {
       logger.log(FINE, "Failed getting snippet bytes", e);
       return false;

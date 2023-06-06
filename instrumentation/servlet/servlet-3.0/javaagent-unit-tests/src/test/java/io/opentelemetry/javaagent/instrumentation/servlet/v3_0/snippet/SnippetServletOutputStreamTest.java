@@ -31,9 +31,8 @@ class SnippetServletOutputStreamTest {
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
 
-    Supplier<String> stringSupplier = snippet::toString;
     OutputStreamSnippetInjectionHelper helper =
-        new OutputStreamSnippetInjectionHelper(stringSupplier);
+        new OutputStreamSnippetInjectionHelper(snippet);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
     assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
     assertThat(injected).isEqualTo(true);
@@ -50,9 +49,8 @@ class SnippetServletOutputStreamTest {
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
 
-    Supplier<String> stringSupplier = snippet::toString;
     OutputStreamSnippetInjectionHelper helper =
-        new OutputStreamSnippetInjectionHelper(stringSupplier);
+        new OutputStreamSnippetInjectionHelper(snippet);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
 
     byte[] expectedHtml = readFileAsBytes("afterSnippetInjectionChinese.html");
@@ -68,9 +66,9 @@ class SnippetServletOutputStreamTest {
 
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
-    Supplier<String> stringSupplier = snippet::toString;
+
     OutputStreamSnippetInjectionHelper helper =
-        new OutputStreamSnippetInjectionHelper(stringSupplier);
+        new OutputStreamSnippetInjectionHelper(snippet);
     boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
 
     assertThat(injected).isFalse();
@@ -87,9 +85,8 @@ class SnippetServletOutputStreamTest {
     InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
     InMemoryServletOutputStream out = new InMemoryServletOutputStream();
 
-    Supplier<String> stringSupplier = snippet::toString;
     OutputStreamSnippetInjectionHelper helper =
-        new OutputStreamSnippetInjectionHelper(stringSupplier);
+        new OutputStreamSnippetInjectionHelper(snippet);
     boolean injected =
         helper.handleWrite(obj, out, htmlFirstPartBytes, 0, htmlFirstPartBytes.length);
 
