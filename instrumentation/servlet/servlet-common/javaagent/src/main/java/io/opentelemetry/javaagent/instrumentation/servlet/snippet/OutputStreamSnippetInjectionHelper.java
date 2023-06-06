@@ -19,7 +19,6 @@ public class OutputStreamSnippetInjectionHelper {
 
   private final String snippet;
 
-
   public OutputStreamSnippetInjectionHelper(String snippet) {
     this.snippet = snippet;
   }
