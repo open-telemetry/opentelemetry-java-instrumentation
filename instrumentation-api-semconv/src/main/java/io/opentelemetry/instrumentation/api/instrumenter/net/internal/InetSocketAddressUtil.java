@@ -3,17 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter.net;
+package io.opentelemetry.instrumentation.api.instrumenter.net.internal;
 
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class InetSocketAddressUtil {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class InetSocketAddressUtil {
 
   @Nullable
-  static String getSockFamily(
+  public static String getSockFamily(
       @Nullable InetSocketAddress address, @Nullable InetSocketAddress otherAddress) {
     if (address == null) {
       address = otherAddress;
@@ -29,7 +33,7 @@ final class InetSocketAddressUtil {
   }
 
   @Nullable
-  static String getNetworkType(
+  public static String getNetworkType(
       @Nullable InetSocketAddress address, @Nullable InetSocketAddress otherAddress) {
     if (address == null) {
       address = otherAddress;
@@ -42,7 +46,7 @@ final class InetSocketAddressUtil {
   }
 
   @Nullable
-  static String getHostName(@Nullable InetSocketAddress address) {
+  public static String getDomainName(@Nullable InetSocketAddress address) {
     if (address == null) {
       return null;
     }
@@ -50,7 +54,7 @@ final class InetSocketAddressUtil {
   }
 
   @Nullable
-  static String getHostAddress(@Nullable InetSocketAddress address) {
+  public static String getIpAddress(@Nullable InetSocketAddress address) {
     if (address == null) {
       return null;
     }
@@ -62,7 +66,7 @@ final class InetSocketAddressUtil {
   }
 
   @Nullable
-  static Integer getPort(@Nullable InetSocketAddress address) {
+  public static Integer getPort(@Nullable InetSocketAddress address) {
     if (address == null) {
       return null;
     }

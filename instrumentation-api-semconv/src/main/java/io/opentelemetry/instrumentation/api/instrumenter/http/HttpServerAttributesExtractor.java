@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -67,6 +68,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   private final InternalUrlAttributesExtractor<REQUEST> internalUrlExtractor;
   private final InternalNetServerAttributesExtractor<REQUEST, RESPONSE> internalNetExtractor;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
+  private final InternalServerAttributesExtractor<REQUEST, RESPONSE> internalServerExtractor;
   private final Function<Context, String> httpRouteHolderGetter;
 
   HttpServerAttributesExtractor(
@@ -90,6 +92,8 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       List<String> capturedResponseHeaders,
       Function<Context, String> httpRouteHolderGetter) {
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
+    HttpNetNamePortGetter<REQUEST> namePortGetter =
+        new HttpNetNamePortGetter<>(httpAttributesGetter);
     internalUrlExtractor =
         new InternalUrlAttributesExtractor<>(
             httpAttributesGetter,
@@ -98,16 +102,21 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
             SemconvStability.emitOldHttpSemconv());
     internalNetExtractor =
         new InternalNetServerAttributesExtractor<>(
-            netAttributesGetter,
-            this::shouldCaptureHostPort,
-            new HttpNetNamePortGetter<>(httpAttributesGetter),
-            SemconvStability.emitOldHttpSemconv());
+            netAttributesGetter, namePortGetter, SemconvStability.emitOldHttpSemconv());
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             netAttributesGetter,
             HttpNetworkTransportFilter.INSTANCE,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
+    internalServerExtractor =
+        new InternalServerAttributesExtractor<>(
+            netAttributesGetter,
+            this::shouldCaptureServerPort,
+            namePortGetter,
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv(),
+            InternalServerAttributesExtractor.Mode.HOST);
     this.httpRouteHolderGetter = httpRouteHolderGetter;
   }
 
@@ -117,12 +126,13 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
 
     internalUrlExtractor.onStart(attributes, request);
     internalNetExtractor.onStart(attributes, request);
+    internalServerExtractor.onStart(attributes, request);
 
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.getHttpRoute(request));
     internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
   }
 
-  private boolean shouldCaptureHostPort(int port, REQUEST request) {
+  private boolean shouldCaptureServerPort(int port, REQUEST request) {
     String scheme = getter.getUrlScheme(request);
     if (scheme == null) {
       return true;
@@ -145,6 +155,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     super.onEnd(attributes, context, request, response, error);
 
     internalNetworkExtractor.onEnd(attributes, request, response);
+    internalServerExtractor.onEnd(attributes, request, response);
 
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteHolderGetter.apply(context));
   }

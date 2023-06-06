@@ -34,7 +34,7 @@ public final class ArmeriaNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(RequestContext ctx) {
+  public String getServerAddress(RequestContext ctx) {
     HttpRequest request = request(ctx);
     String authority = request.authority();
     if (authority == null) {
@@ -46,7 +46,7 @@ public final class ArmeriaNetClientAttributesGetter
 
   @Nullable
   @Override
-  public Integer getPeerPort(RequestContext ctx) {
+  public Integer getServerPort(RequestContext ctx) {
     HttpRequest request = request(ctx);
     String authority = request.authority();
     if (authority == null) {
@@ -65,7 +65,7 @@ public final class ArmeriaNetClientAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getServerInetSocketAddress(
       RequestContext ctx, @Nullable RequestLog requestLog) {
     SocketAddress address = ctx.remoteAddress();
     if (address instanceof InetSocketAddress) {

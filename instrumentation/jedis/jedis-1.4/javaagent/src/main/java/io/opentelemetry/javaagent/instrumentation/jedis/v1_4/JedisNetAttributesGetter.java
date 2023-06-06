@@ -10,12 +10,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 final class JedisNetAttributesGetter implements NetClientAttributesGetter<JedisRequest, Void> {
 
   @Override
-  public String getPeerName(JedisRequest request) {
+  public String getServerAddress(JedisRequest request) {
     return request.getConnection().getHost();
   }
 
   @Override
-  public Integer getPeerPort(JedisRequest request) {
+  public Integer getServerPort(JedisRequest request) {
     return request.getConnection().getPort();
   }
 }

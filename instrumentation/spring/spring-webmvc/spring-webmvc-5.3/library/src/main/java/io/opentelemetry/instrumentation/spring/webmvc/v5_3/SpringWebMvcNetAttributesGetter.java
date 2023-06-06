@@ -38,12 +38,12 @@ enum SpringWebMvcNetAttributesGetter
 
   @Nullable
   @Override
-  public String getHostName(HttpServletRequest request) {
+  public String getServerAddress(HttpServletRequest request) {
     return request.getServerName();
   }
 
   @Override
-  public Integer getHostPort(HttpServletRequest request) {
+  public Integer getServerPort(HttpServletRequest request) {
     return request.getServerPort();
   }
 
@@ -60,12 +60,14 @@ enum SpringWebMvcNetAttributesGetter
 
   @Nullable
   @Override
-  public String getSockHostAddr(HttpServletRequest request) {
+  public String getServerSocketAddress(
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getLocalAddr();
   }
 
   @Override
-  public Integer getSockHostPort(HttpServletRequest request) {
+  public Integer getServerSocketPort(
+      HttpServletRequest request, @Nullable HttpServletResponse respo) {
     return request.getLocalPort();
   }
 }

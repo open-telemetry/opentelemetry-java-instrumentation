@@ -68,12 +68,12 @@ final class GrizzlyNetAttributesGetter
 
   @Nullable
   @Override
-  public String getHostName(HttpRequestPacket request) {
+  public String getServerAddress(HttpRequestPacket request) {
     return request.getLocalHost();
   }
 
   @Override
-  public Integer getHostPort(HttpRequestPacket request) {
+  public Integer getServerPort(HttpRequestPacket request) {
     return request.getServerPort();
   }
 
@@ -90,12 +90,12 @@ final class GrizzlyNetAttributesGetter
 
   @Nullable
   @Override
-  public String getSockHostAddr(HttpRequestPacket request) {
+  public String getServerSocketAddress(HttpRequestPacket request, HttpResponsePacket response) {
     return request.getLocalAddress();
   }
 
   @Override
-  public Integer getSockHostPort(HttpRequestPacket request) {
+  public Integer getServerSocketPort(HttpRequestPacket request, HttpResponsePacket response) {
     return request.getLocalPort();
   }
 }

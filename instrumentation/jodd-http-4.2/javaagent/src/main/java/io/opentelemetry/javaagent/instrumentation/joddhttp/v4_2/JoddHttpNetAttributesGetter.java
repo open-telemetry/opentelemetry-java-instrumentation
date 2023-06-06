@@ -35,12 +35,12 @@ final class JoddHttpNetAttributesGetter
 
   @Override
   @Nullable
-  public String getPeerName(HttpRequest request) {
+  public String getServerAddress(HttpRequest request) {
     return request.host();
   }
 
   @Override
-  public Integer getPeerPort(HttpRequest request) {
+  public Integer getServerPort(HttpRequest request) {
     return request.port();
   }
 }

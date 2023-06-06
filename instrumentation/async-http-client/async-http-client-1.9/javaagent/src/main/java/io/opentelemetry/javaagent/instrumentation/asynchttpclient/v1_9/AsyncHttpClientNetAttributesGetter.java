@@ -26,12 +26,12 @@ final class AsyncHttpClientNetAttributesGetter
   }
 
   @Override
-  public String getPeerName(Request request) {
+  public String getServerAddress(Request request) {
     return request.getUri().getHost();
   }
 
   @Override
-  public Integer getPeerPort(Request request) {
+  public Integer getServerPort(Request request) {
     return request.getUri().getPort();
   }
 }

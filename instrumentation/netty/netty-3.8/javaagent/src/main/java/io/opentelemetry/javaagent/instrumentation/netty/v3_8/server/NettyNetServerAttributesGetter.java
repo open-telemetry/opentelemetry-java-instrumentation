@@ -47,13 +47,13 @@ final class NettyNetServerAttributesGetter
 
   @Nullable
   @Override
-  public String getHostName(HttpRequestAndChannel requestAndChannel) {
+  public String getServerAddress(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer getHostPort(HttpRequestAndChannel requestAndChannel) {
+  public Integer getServerPort(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 
@@ -69,7 +69,8 @@ final class NettyNetServerAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getHostSocketAddress(HttpRequestAndChannel requestAndChannel) {
+  public InetSocketAddress getServerInetSocketAddress(
+      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     SocketAddress address = requestAndChannel.channel().getLocalAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;

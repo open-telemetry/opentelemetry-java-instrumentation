@@ -14,18 +14,19 @@ final class JedisNetAttributesGetter implements NetClientAttributesGetter<JedisR
 
   @Nullable
   @Override
-  public String getPeerName(JedisRequest jedisRequest) {
+  public String getServerAddress(JedisRequest jedisRequest) {
     return jedisRequest.getConnection().getHost();
   }
 
   @Override
-  public Integer getPeerPort(JedisRequest jedisRequest) {
+  public Integer getServerPort(JedisRequest jedisRequest) {
     return jedisRequest.getConnection().getPort();
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerSocketAddress(JedisRequest jedisRequest, @Nullable Void unused) {
+  public InetSocketAddress getServerInetSocketAddress(
+      JedisRequest jedisRequest, @Nullable Void unused) {
     Socket socket = jedisRequest.getConnection().getSocket();
     if (socket != null && socket.getRemoteSocketAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) socket.getRemoteSocketAddress();

@@ -15,12 +15,12 @@ final class SpringWebNetAttributesGetter
 
   @Override
   @Nullable
-  public String getPeerName(HttpRequest httpRequest) {
+  public String getServerAddress(HttpRequest httpRequest) {
     return httpRequest.getURI().getHost();
   }
 
   @Override
-  public Integer getPeerPort(HttpRequest httpRequest) {
+  public Integer getServerPort(HttpRequest httpRequest) {
     return httpRequest.getURI().getPort();
   }
 }

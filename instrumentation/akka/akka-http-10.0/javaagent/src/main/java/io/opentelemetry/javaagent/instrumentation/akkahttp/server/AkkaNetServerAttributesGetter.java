@@ -30,13 +30,13 @@ class AkkaNetServerAttributesGetter
 
   @Nullable
   @Override
-  public String getHostName(HttpRequest request) {
+  public String getServerAddress(HttpRequest request) {
     Uri.Host host = request.uri().authority().host();
     return host.isEmpty() ? null : host.address();
   }
 
   @Override
-  public Integer getHostPort(HttpRequest request) {
+  public Integer getServerPort(HttpRequest request) {
     return request.uri().authority().port();
   }
 }

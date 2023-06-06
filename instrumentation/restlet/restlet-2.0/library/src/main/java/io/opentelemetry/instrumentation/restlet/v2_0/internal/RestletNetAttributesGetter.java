@@ -93,7 +93,7 @@ public final class RestletNetAttributesGetter
 
   @Nullable
   @Override
-  public String getHostName(Request request) {
+  public String getServerAddress(Request request) {
     if (GET_HOST_DOMAIN == null) {
       return null;
     }
@@ -110,7 +110,7 @@ public final class RestletNetAttributesGetter
 
   @Nullable
   @Override
-  public Integer getHostPort(Request request) {
+  public Integer getServerPort(Request request) {
     if (GET_SERVER_PORT == null) {
       return null;
     }
@@ -138,7 +138,7 @@ public final class RestletNetAttributesGetter
 
   @Nullable
   @Override
-  public String getSockHostAddr(Request request) {
+  public String getServerSocketAddress(Request request, @Nullable Response response) {
     if (GET_SERVER_ADDRESS == null) {
       return null;
     }

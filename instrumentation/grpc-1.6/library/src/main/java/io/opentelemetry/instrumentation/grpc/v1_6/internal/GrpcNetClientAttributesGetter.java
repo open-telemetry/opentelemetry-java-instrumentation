@@ -21,18 +21,19 @@ public final class GrpcNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(GrpcRequest grpcRequest) {
+  public String getServerAddress(GrpcRequest grpcRequest) {
     return grpcRequest.getLogicalHost();
   }
 
   @Override
-  public Integer getPeerPort(GrpcRequest grpcRequest) {
+  public Integer getServerPort(GrpcRequest grpcRequest) {
     return grpcRequest.getLogicalPort();
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerSocketAddress(GrpcRequest request, @Nullable Status response) {
+  public InetSocketAddress getServerInetSocketAddress(
+      GrpcRequest request, @Nullable Status response) {
     SocketAddress address = request.getPeerSocketAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;

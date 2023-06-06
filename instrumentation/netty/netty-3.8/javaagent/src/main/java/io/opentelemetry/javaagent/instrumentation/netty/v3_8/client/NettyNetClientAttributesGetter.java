@@ -48,19 +48,19 @@ final class NettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(HttpRequestAndChannel requestAndChannel) {
+  public String getServerAddress(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(HttpRequestAndChannel requestAndChannel) {
+  public Integer getServerPort(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getServerInetSocketAddress(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     SocketAddress address = requestAndChannel.channel().getRemoteAddress();
     if (address instanceof InetSocketAddress) {

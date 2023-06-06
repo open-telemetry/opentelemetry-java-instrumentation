@@ -61,12 +61,12 @@ class NetClientAttributesExtractorTest {
     }
 
     @Override
-    public String getPeerName(Map<String, String> request) {
+    public String getServerAddress(Map<String, String> request) {
       return request.get("peerName");
     }
 
     @Override
-    public Integer getPeerPort(Map<String, String> request) {
+    public Integer getServerPort(Map<String, String> request) {
       String peerPort = request.get("peerPort");
       return peerPort == null ? null : Integer.valueOf(peerPort);
     }
@@ -77,17 +77,18 @@ class NetClientAttributesExtractorTest {
     }
 
     @Override
-    public String getSockPeerAddr(Map<String, String> request, Map<String, String> response) {
-      return response.get("sockPeerAddr");
-    }
-
-    @Override
-    public String getSockPeerName(Map<String, String> request, Map<String, String> response) {
+    public String getServerSocketDomain(Map<String, String> request, Map<String, String> response) {
       return response.get("sockPeerName");
     }
 
     @Override
-    public Integer getSockPeerPort(Map<String, String> request, Map<String, String> response) {
+    public String getServerSocketAddress(
+        Map<String, String> request, Map<String, String> response) {
+      return response.get("sockPeerAddr");
+    }
+
+    @Override
+    public Integer getServerSocketPort(Map<String, String> request, Map<String, String> response) {
       String sockPeerPort = response.get("sockPeerPort");
       return sockPeerPort == null ? null : Integer.valueOf(sockPeerPort);
     }

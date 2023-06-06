@@ -51,18 +51,18 @@ final class AsyncHttpClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(RequestContext request) {
+  public String getServerAddress(RequestContext request) {
     return request.getRequest().getUri().getHost();
   }
 
   @Override
-  public Integer getPeerPort(RequestContext request) {
+  public Integer getServerPort(RequestContext request) {
     return request.getRequest().getUri().getPort();
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getServerInetSocketAddress(
       RequestContext request, @Nullable Response response) {
     if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) response.getRemoteAddress();

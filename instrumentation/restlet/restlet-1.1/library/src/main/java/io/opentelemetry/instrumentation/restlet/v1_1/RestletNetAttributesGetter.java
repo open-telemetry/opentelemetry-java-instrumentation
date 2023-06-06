@@ -40,14 +40,14 @@ final class RestletNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
-  public String getHostName(Request request) {
+  public String getServerAddress(Request request) {
     HttpCall call = httpCall(request);
     return call == null ? null : call.getHostDomain();
   }
 
   @Nullable
   @Override
-  public Integer getHostPort(Request request) {
+  public Integer getServerPort(Request request) {
     HttpCall call = httpCall(request);
     return call == null ? null : call.getServerPort();
   }
@@ -65,7 +65,7 @@ final class RestletNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
-  public String getSockHostAddr(Request request) {
+  public String getServerSocketAddress(Request request, @Nullable Response response) {
     HttpCall call = httpCall(request);
     return call == null ? null : call.getServerAddress();
   }

@@ -30,14 +30,14 @@ final class ApacheHttpClientNetAttributesGetter
 
   @Override
   @Nullable
-  public String getPeerName(HttpMethod request) {
+  public String getServerAddress(HttpMethod request) {
     HostConfiguration hostConfiguration = request.getHostConfiguration();
     return hostConfiguration != null ? hostConfiguration.getHost() : null;
   }
 
   @Override
   @Nullable
-  public Integer getPeerPort(HttpMethod request) {
+  public Integer getServerPort(HttpMethod request) {
     HostConfiguration hostConfiguration = request.getHostConfiguration();
     return hostConfiguration != null ? hostConfiguration.getPort() : null;
   }

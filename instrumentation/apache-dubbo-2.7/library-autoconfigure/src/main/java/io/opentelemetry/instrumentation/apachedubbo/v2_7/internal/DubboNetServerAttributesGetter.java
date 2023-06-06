@@ -20,13 +20,13 @@ public final class DubboNetServerAttributesGetter
 
   @Nullable
   @Override
-  public String getHostName(DubboRequest request) {
+  public String getServerAddress(DubboRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer getHostPort(DubboRequest request) {
+  public Integer getServerPort(DubboRequest request) {
     return null;
   }
 
@@ -38,7 +38,8 @@ public final class DubboNetServerAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getHostSocketAddress(DubboRequest request) {
+  public InetSocketAddress getServerInetSocketAddress(
+      DubboRequest request, @Nullable Result result) {
     return request.localAddress();
   }
 }

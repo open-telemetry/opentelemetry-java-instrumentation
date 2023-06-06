@@ -15,12 +15,12 @@ final class GoogleHttpClientNetAttributesGetter
 
   @Override
   @Nullable
-  public String getPeerName(HttpRequest request) {
+  public String getServerAddress(HttpRequest request) {
     return request.getUrl().getHost();
   }
 
   @Override
-  public Integer getPeerPort(HttpRequest request) {
+  public Integer getServerPort(HttpRequest request) {
     return request.getUrl().getPort();
   }
 }

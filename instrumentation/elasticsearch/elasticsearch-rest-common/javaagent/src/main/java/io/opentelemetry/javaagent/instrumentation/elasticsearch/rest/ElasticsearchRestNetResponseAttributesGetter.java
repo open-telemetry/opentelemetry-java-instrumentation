@@ -15,13 +15,13 @@ final class ElasticsearchRestNetResponseAttributesGetter
 
   @Override
   @Nullable
-  public String getPeerName(ElasticsearchRestRequest request) {
+  public String getServerAddress(ElasticsearchRestRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public Integer getPeerPort(ElasticsearchRestRequest request) {
+  public Integer getServerPort(ElasticsearchRestRequest request) {
     return null;
   }
 
@@ -37,7 +37,8 @@ final class ElasticsearchRestNetResponseAttributesGetter
 
   @Override
   @Nullable
-  public String getSockPeerAddr(ElasticsearchRestRequest request, @Nullable Response response) {
+  public String getServerSocketAddress(
+      ElasticsearchRestRequest request, @Nullable Response response) {
     if (response != null && response.getHost().getAddress() != null) {
       return response.getHost().getAddress().getHostAddress();
     }

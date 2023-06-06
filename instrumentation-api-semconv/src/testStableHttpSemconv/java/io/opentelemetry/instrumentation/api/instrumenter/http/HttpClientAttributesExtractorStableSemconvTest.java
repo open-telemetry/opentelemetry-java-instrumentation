@@ -104,13 +104,13 @@ class HttpClientAttributesExtractorStableSemconvTest {
 
     @Nullable
     @Override
-    public String getPeerName(Map<String, String> request) {
+    public String getServerAddress(Map<String, String> request) {
       return request.get("peerName");
     }
 
     @Nullable
     @Override
-    public Integer getPeerPort(Map<String, String> request) {
+    public Integer getServerPort(Map<String, String> request) {
       String value = request.get("peerPort");
       return value == null ? null : Integer.parseInt(value);
     }
@@ -156,8 +156,8 @@ class HttpClientAttributesExtractorStableSemconvTest {
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")),
-            entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
-            entry(SemanticAttributes.NET_PEER_PORT, 123L));
+            entry(NetworkAttributes.SERVER_ADDRESS, "github.com"),
+            entry(NetworkAttributes.SERVER_PORT, 123L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);

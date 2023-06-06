@@ -81,12 +81,12 @@ public final class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public String getPeerName() {
+  public String getServerAddress() {
     return uri == null ? null : uri.getHost();
   }
 
   @Nullable
-  public Integer getPeerPort() {
+  public Integer getServerPort() {
     return uri == null ? null : uri.getPort();
   }
 

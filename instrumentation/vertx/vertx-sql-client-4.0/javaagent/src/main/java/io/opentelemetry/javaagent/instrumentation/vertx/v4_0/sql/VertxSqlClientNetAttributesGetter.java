@@ -20,13 +20,13 @@ public enum VertxSqlClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(VertxSqlClientRequest request) {
+  public String getServerAddress(VertxSqlClientRequest request) {
     return request.getHost();
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(VertxSqlClientRequest request) {
+  public Integer getServerPort(VertxSqlClientRequest request) {
     return request.getPort();
   }
 }

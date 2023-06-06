@@ -15,19 +15,19 @@ public class CouchbaseNetAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(CouchbaseRequestInfo couchbaseRequest) {
+  public String getServerAddress(CouchbaseRequestInfo couchbaseRequest) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(CouchbaseRequestInfo couchbaseRequest) {
+  public Integer getServerPort(CouchbaseRequestInfo couchbaseRequest) {
     return null;
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getServerInetSocketAddress(
       CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
     SocketAddress peerAddress = couchbaseRequest.getPeerAddress();
     if (peerAddress instanceof InetSocketAddress) {

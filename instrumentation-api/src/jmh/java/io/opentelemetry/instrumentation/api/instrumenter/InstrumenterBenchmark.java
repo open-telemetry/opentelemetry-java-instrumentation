@@ -107,19 +107,19 @@ public class InstrumenterBenchmark {
 
     @Nullable
     @Override
-    public String getPeerName(Void request) {
+    public String getServerAddress(Void request) {
       return null;
     }
 
     @Nullable
     @Override
-    public Integer getPeerPort(Void request) {
+    public Integer getServerPort(Void request) {
       return null;
     }
 
     @Nullable
     @Override
-    public InetSocketAddress getPeerSocketAddress(Void request, @Nullable Void response) {
+    public InetSocketAddress getServerInetSocketAddress(Void request, @Nullable Void response) {
       return PEER_ADDRESS;
     }
   }

@@ -35,12 +35,12 @@ public class LibertyDispatcherNetAttributesGetter
 
   @Nullable
   @Override
-  public String getHostName(LibertyRequest request) {
+  public String getServerAddress(LibertyRequest request) {
     return request.request().getURLHost();
   }
 
   @Override
-  public Integer getHostPort(LibertyRequest request) {
+  public Integer getServerPort(LibertyRequest request) {
     return request.request().getURLPort();
   }
 
@@ -57,13 +57,13 @@ public class LibertyDispatcherNetAttributesGetter
 
   @Nullable
   @Override
-  public String getSockHostAddr(LibertyRequest request) {
+  public String getServerSocketAddress(LibertyRequest request, LibertyResponse response) {
     return request.dispatcher().getLocalHostAddress();
   }
 
   @Nullable
   @Override
-  public Integer getSockHostPort(LibertyRequest request) {
+  public Integer getServerSocketPort(LibertyRequest request, LibertyResponse response) {
     return request.dispatcher().getLocalPort();
   }
 }

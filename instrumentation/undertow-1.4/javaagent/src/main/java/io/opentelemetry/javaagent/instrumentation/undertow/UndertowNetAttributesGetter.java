@@ -37,13 +37,13 @@ public class UndertowNetAttributesGetter
 
   @Nullable
   @Override
-  public String getHostName(HttpServerExchange exchange) {
+  public String getServerAddress(HttpServerExchange exchange) {
     return exchange.getHostName();
   }
 
   @Nullable
   @Override
-  public Integer getHostPort(HttpServerExchange exchange) {
+  public Integer getServerPort(HttpServerExchange exchange) {
     return exchange.getHostPort();
   }
 
@@ -55,7 +55,8 @@ public class UndertowNetAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getHostSocketAddress(HttpServerExchange exchange) {
+  public InetSocketAddress getServerInetSocketAddress(
+      HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
     return exchange.getConnection().getLocalAddress(InetSocketAddress.class);
   }
 }

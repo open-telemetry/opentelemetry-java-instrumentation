@@ -29,13 +29,13 @@ final class ArmeriaNetServerAttributesGetter
 
   @Nullable
   @Override
-  public String getHostName(RequestContext ctx) {
+  public String getServerAddress(RequestContext ctx) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer getHostPort(RequestContext ctx) {
+  public Integer getServerPort(RequestContext ctx) {
     return null;
   }
 
@@ -51,7 +51,8 @@ final class ArmeriaNetServerAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getHostSocketAddress(RequestContext ctx) {
+  public InetSocketAddress getServerInetSocketAddress(
+      RequestContext ctx, @Nullable RequestLog log) {
     SocketAddress address = ctx.localAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;

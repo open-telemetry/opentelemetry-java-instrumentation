@@ -101,13 +101,13 @@ class HttpClientAttributesExtractorTest {
 
     @Nullable
     @Override
-    public String getPeerName(Map<String, String> request) {
+    public String getServerAddress(Map<String, String> request) {
       return request.get("peerName");
     }
 
     @Nullable
     @Override
-    public Integer getPeerPort(Map<String, String> request) {
+    public Integer getServerPort(Map<String, String> request) {
       String statusCode = request.get("peerPort");
       return statusCode == null ? null : Integer.parseInt(statusCode);
     }

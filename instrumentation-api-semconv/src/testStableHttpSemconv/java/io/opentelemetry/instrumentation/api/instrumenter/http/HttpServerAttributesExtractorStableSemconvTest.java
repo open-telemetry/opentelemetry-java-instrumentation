@@ -121,13 +121,13 @@ class HttpServerAttributesExtractorStableSemconvTest {
 
     @Nullable
     @Override
-    public String getHostName(Map<String, Object> request) {
+    public String getServerAddress(Map<String, Object> request) {
       return (String) request.get("hostName");
     }
 
     @Nullable
     @Override
-    public Integer getHostPort(Map<String, Object> request) {
+    public Integer getServerPort(Map<String, Object> request) {
       return (Integer) request.get("hostPort");
     }
   }
@@ -170,7 +170,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NET_HOST_NAME, "github.com"),
+            entry(NetworkAttributes.SERVER_ADDRESS, "github.com"),
             entry(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(UrlAttributes.URL_SCHEME, "http"),
             entry(UrlAttributes.URL_PATH, "/repositories/1"),

@@ -60,12 +60,12 @@ class NetClientAttributesExtractorBothSemconvTest {
     }
 
     @Override
-    public String getPeerName(Map<String, String> request) {
+    public String getServerAddress(Map<String, String> request) {
       return request.get("peerName");
     }
 
     @Override
-    public Integer getPeerPort(Map<String, String> request) {
+    public Integer getServerPort(Map<String, String> request) {
       String peerPort = request.get("peerPort");
       return peerPort == null ? null : Integer.valueOf(peerPort);
     }
@@ -76,17 +76,18 @@ class NetClientAttributesExtractorBothSemconvTest {
     }
 
     @Override
-    public String getSockPeerAddr(Map<String, String> request, Map<String, String> response) {
-      return response.get("sockPeerAddr");
-    }
-
-    @Override
-    public String getSockPeerName(Map<String, String> request, Map<String, String> response) {
+    public String getServerSocketDomain(Map<String, String> request, Map<String, String> response) {
       return response.get("sockPeerName");
     }
 
     @Override
-    public Integer getSockPeerPort(Map<String, String> request, Map<String, String> response) {
+    public String getServerSocketAddress(
+        Map<String, String> request, Map<String, String> response) {
+      return response.get("sockPeerAddr");
+    }
+
+    @Override
+    public Integer getServerSocketPort(Map<String, String> request, Map<String, String> response) {
       String sockPeerPort = response.get("sockPeerPort");
       return sockPeerPort == null ? null : Integer.valueOf(sockPeerPort);
     }
@@ -124,7 +125,9 @@ class NetClientAttributesExtractorBothSemconvTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_PEER_NAME, "opentelemetry.io"),
-            entry(SemanticAttributes.NET_PEER_PORT, 42L));
+            entry(SemanticAttributes.NET_PEER_PORT, 42L),
+            entry(NetworkAttributes.SERVER_ADDRESS, "opentelemetry.io"),
+            entry(NetworkAttributes.SERVER_PORT, 42L));
 
     assertThat(endAttributes.build())
         .containsOnly(
@@ -138,6 +141,9 @@ class NetClientAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"),
             entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
             entry(SemanticAttributes.NET_SOCK_PEER_NAME, "proxy.opentelemetry.io"),
-            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 123L));
+            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 123L),
+            entry(NetworkAttributes.SERVER_SOCKET_DOMAIN, "proxy.opentelemetry.io"),
+            entry(NetworkAttributes.SERVER_SOCKET_ADDRESS, "1:2:3:4::"),
+            entry(NetworkAttributes.SERVER_SOCKET_PORT, 123L));
   }
 }

@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkTransportFilter;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
@@ -30,25 +31,32 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
 
   private final InternalNetServerAttributesExtractor<REQUEST, RESPONSE> internalExtractor;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
+  private final InternalServerAttributesExtractor<REQUEST, RESPONSE> internalServerExtractor;
 
   private NetServerAttributesExtractor(NetServerAttributesGetter<REQUEST, RESPONSE> getter) {
     internalExtractor =
         new InternalNetServerAttributesExtractor<>(
-            getter,
-            (integer, request) -> true,
-            FallbackNamePortGetter.noop(),
-            SemconvStability.emitOldHttpSemconv());
+            getter, FallbackNamePortGetter.noop(), SemconvStability.emitOldHttpSemconv());
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,
             NetworkTransportFilter.alwaysTrue(),
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
+    internalServerExtractor =
+        new InternalServerAttributesExtractor<>(
+            getter,
+            (port, request) -> true,
+            FallbackNamePortGetter.noop(),
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv(),
+            InternalServerAttributesExtractor.Mode.HOST);
   }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     internalExtractor.onStart(attributes, request);
+    internalServerExtractor.onStart(attributes, request);
   }
 
   @Override
@@ -59,5 +67,6 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     internalNetworkExtractor.onEnd(attributes, request, response);
+    internalServerExtractor.onEnd(attributes, request, response);
   }
 }

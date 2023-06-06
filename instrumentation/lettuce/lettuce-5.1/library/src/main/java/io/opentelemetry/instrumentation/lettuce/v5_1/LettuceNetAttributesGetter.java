@@ -15,19 +15,19 @@ final class LettuceNetAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(OpenTelemetryEndpoint openTelemetryEndpoint) {
+  public String getServerAddress(OpenTelemetryEndpoint openTelemetryEndpoint) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(OpenTelemetryEndpoint openTelemetryEndpoint) {
+  public Integer getServerPort(OpenTelemetryEndpoint openTelemetryEndpoint) {
     return null;
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getServerInetSocketAddress(
       OpenTelemetryEndpoint openTelemetryEndpoint, @Nullable Void unused) {
     return openTelemetryEndpoint.address;
   }

@@ -28,12 +28,12 @@ class AkkaHttpNetAttributesGetter implements NetClientAttributesGetter<HttpReque
   }
 
   @Override
-  public String getPeerName(HttpRequest httpRequest) {
+  public String getServerAddress(HttpRequest httpRequest) {
     return httpRequest.uri().authority().host().address();
   }
 
   @Override
-  public Integer getPeerPort(HttpRequest httpRequest) {
+  public Integer getServerPort(HttpRequest httpRequest) {
     return httpRequest.uri().authority().port();
   }
 }

@@ -27,20 +27,20 @@ final class ApacheHttpClientNetAttributesGetter
 
   @Override
   @Nullable
-  public String getPeerName(ApacheHttpClientRequest request) {
-    return request.getPeerName();
+  public String getServerAddress(ApacheHttpClientRequest request) {
+    return request.getServerAddress();
   }
 
   @Override
   @Nullable
-  public Integer getPeerPort(ApacheHttpClientRequest request) {
-    return request.getPeerPort();
+  public Integer getServerPort(ApacheHttpClientRequest request) {
+    return request.getServerPort();
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getServerInetSocketAddress(
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return request.peerSocketAddress();
+    return request.serverSocketAddress();
   }
 }
