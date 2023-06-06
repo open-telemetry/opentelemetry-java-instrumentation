@@ -7,21 +7,15 @@ package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RecordedEventHandler;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.BufferPools;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Classes;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Cpu;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.GarbageCollector;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.MemoryPools;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Threads;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import java.io.Closeable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import jdk.jfr.EventSettings;
 import jdk.jfr.consumer.RecordingStream;
 
@@ -32,33 +26,17 @@ public final class RuntimeMetrics implements Closeable {
 
   private final AtomicBoolean isClosed = new AtomicBoolean();
   private final OpenTelemetry openTelemetry;
-  private final List<AutoCloseable> observables = new ArrayList<>();
-  private final JfrRuntimeMetrics jfrRuntimeMetrics;
+  private final List<AutoCloseable> observables;
 
-  @SuppressWarnings("CatchingUnchecked")
+  @Nullable private final JfrRuntimeMetrics jfrRuntimeMetrics;
+
   RuntimeMetrics(
       OpenTelemetry openTelemetry,
-      Predicate<JfrFeature> featurePredicate,
-      boolean disableJmx,
-      boolean disableJfr) {
+      List<AutoCloseable> observables,
+      @Nullable JfrRuntimeMetrics jfrRuntimeMetrics) {
     this.openTelemetry = openTelemetry;
-    try {
-      jfrRuntimeMetrics =
-          disableJfr ? null : JfrRuntimeMetrics.build(openTelemetry, featurePredicate);
-
-      // Set up metrics gathered by JMX
-      if (!disableJmx) {
-        observables.addAll(BufferPools.registerObservers(openTelemetry));
-        observables.addAll(Classes.registerObservers(openTelemetry));
-        observables.addAll(Cpu.registerObservers(openTelemetry));
-        observables.addAll(MemoryPools.registerObservers(openTelemetry));
-        observables.addAll(Threads.registerObservers(openTelemetry));
-        observables.addAll(GarbageCollector.registerObservers(openTelemetry));
-      }
-    } catch (Exception e) {
-      close();
-      throw new IllegalStateException("Error starting RuntimeMetrics", e);
-    }
+    this.observables = List.copyOf(observables);
+    this.jfrRuntimeMetrics = jfrRuntimeMetrics;
   }
 
   /**
