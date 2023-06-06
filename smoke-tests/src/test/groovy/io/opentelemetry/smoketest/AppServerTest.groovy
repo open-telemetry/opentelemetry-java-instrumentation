@@ -376,9 +376,6 @@ abstract class AppServerTest extends SmokeTest {
     TraceInspector traces = new TraceInspector(waitForTraces())
     String responseBody = response.contentUtf8()
 
-    println(response.contentType())
-    println(responseBody)
-
     then:
     response.status().isSuccess()
     responseBody.contains("Successful JSP test")
