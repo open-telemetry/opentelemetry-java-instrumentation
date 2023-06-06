@@ -10,11 +10,16 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ExperimentalSnippetHolder {
 
-  private static final AtomicReference<String> snippet =
-      new AtomicReference<>(
-          ConfigPropertiesUtil.getString("otel.experimental.javascript-snippet") == null
-              ? ""
-              : ConfigPropertiesUtil.getString("otel.experimental.javascript-snippet"));
+  private static final AtomicReference<String> snippet = new AtomicReference<>(getSnippetSetting());
+
+  private static String getSnippetSetting() {
+    String result = ConfigPropertiesUtil.getString("otel.experimental.javascript-snippet");
+    if (result == null) {
+      return "";
+    } else {
+      return result;
+    }
+  }
 
   public static void setSnippet(String newValue) {
     snippet.compareAndSet("", newValue);
