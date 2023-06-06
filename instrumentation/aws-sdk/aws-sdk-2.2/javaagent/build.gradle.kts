@@ -18,6 +18,7 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library-autoconfigure"))
+  implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
 
   library("software.amazon.awssdk:aws-core:2.2.0")
   library("software.amazon.awssdk:sqs:2.2.0")

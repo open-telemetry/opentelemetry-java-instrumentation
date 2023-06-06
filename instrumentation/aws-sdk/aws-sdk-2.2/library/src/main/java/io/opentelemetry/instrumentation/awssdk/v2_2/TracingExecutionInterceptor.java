@@ -14,11 +14,9 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,7 +33,6 @@ import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
-import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 /** AWS request execution interceptor. */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
@@ -119,29 +116,11 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       return modifySqsReceiveMessageRequest(request);
     } else if (messagingPropagator != null) {
       if (SqsSendMessageRequestAccess.isInstance(request)) {
-        return injectIntoSqsSendMessageRequest(request, otelContext);
+        return SqsAccess.injectIntoSqsSendMessageRequest(messagingPropagator, request, otelContext);
       }
       // TODO: Support SendMessageBatchRequest (and thus SendMessageBatchRequestEntry)
     }
     return request;
-  }
-
-  @NoMuzzle
-  private SdkRequest injectIntoSqsSendMessageRequest(
-      SdkRequest rawRequest, io.opentelemetry.context.Context otelContext) {
-    SendMessageRequest request = (SendMessageRequest) rawRequest;
-    Map<String, MessageAttributeValue> messageAttributes =
-        new HashMap<>(request.messageAttributes());
-
-    // Need to use a full method to allow @NoMuzzle annotation (@NoMuzzle is not transitively
-    // applied to called methods)
-    messagingPropagator.inject(
-        otelContext, messageAttributes, TracingExecutionInterceptor::injectSqsAttribute);
-
-    if (messageAttributes.size() > 10) { // Too many attributes, we don't want to break the call.
-      return request;
-    }
-    return request.toBuilder().messageAttributes(messageAttributes).build();
   }
 
   private SdkRequest modifySqsReceiveMessageRequest(SdkRequest request) {
@@ -391,13 +370,5 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   static List<Object> getMessages(SdkResponse response) {
     Optional<List> optional = response.getValueForField("Messages", List.class);
     return optional.isPresent() ? optional.get() : Collections.emptyList();
-  }
-
-  @NoMuzzle
-  private static void injectSqsAttribute(
-      @Nullable Map<String, MessageAttributeValue> carrier, String k, String v) {
-    if (carrier != null) {
-      carrier.put(k, MessageAttributeValue.builder().stringValue(v).dataType("String").build());
-    }
   }
 }
