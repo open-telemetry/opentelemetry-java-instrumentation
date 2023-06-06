@@ -133,7 +133,7 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
   def "snippet injection with ServletOutputStream"() {
     setup:
-    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
+    System.setProperty("otel.experimental.javascript-snippet", "<script type=\\\"text/javascript\\\"> Test </script>");
     def request = request(HTML_SERVLET_OUTPUT_STREAM, "GET")
     def response = client.execute(request).aggregate().join()
 
@@ -152,6 +152,9 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
       "</html>"
     response.contentUtf8() == result
     response.headers().contentLength() == result.length()
+
+    cleanup:
+    System.clearProperty("otel.experimental.javascript-snippet")
 
     def expectedRoute = expectedHttpRoute(HTML_SERVLET_OUTPUT_STREAM)
     assertTraces(1) {
@@ -172,7 +175,7 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
   def "snippet injection with PrintWriter"() {
     setup:
-    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
+    System.setProperty("otel.experimental.javascript-snippet", "<script type=\\\"text/javascript\\\"> Test </script>");
     def request = request(HTML_PRINT_WRITER, "GET")
     def response = client.execute(request).aggregate().join()
 
@@ -192,6 +195,9 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
     response.contentUtf8() == result
     response.headers().contentLength() == result.length()
+
+    cleanup:
+    System.clearProperty("otel.experimental.javascript-snippet")
 
     def expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER)
     assertTraces(1) {

@@ -16,7 +16,6 @@ import io.opentelemetry.javaagent.instrumentation.servlet.snippet.OutputStreamSn
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.function.Supplier;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
