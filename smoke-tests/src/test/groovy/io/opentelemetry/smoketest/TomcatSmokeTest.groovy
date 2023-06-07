@@ -20,10 +20,7 @@ abstract class TomcatSmokeTest extends AppServerTest {
 
   @Override
   protected boolean expectServerSpan() {
-    if (this.serverVersion == "7.0.109") {
-      return false
-    }
-    return true
+    return this.serverVersion != "7.0.109"
   }
 }
 

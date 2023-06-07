@@ -5,9 +5,6 @@
 
 package io.opentelemetry.smoketest
 
-import io.opentelemetry.proto.trace.v1.Span
-import spock.lang.Unroll
-
 import java.time.Duration
 
 abstract class WildflySmokeTest extends AppServerTest {
