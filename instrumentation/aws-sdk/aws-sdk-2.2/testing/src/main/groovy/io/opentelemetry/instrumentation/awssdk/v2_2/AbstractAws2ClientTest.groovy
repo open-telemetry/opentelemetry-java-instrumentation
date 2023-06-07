@@ -48,7 +48,6 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest
-import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import spock.lang.Shared
 import spock.lang.Unroll
 
