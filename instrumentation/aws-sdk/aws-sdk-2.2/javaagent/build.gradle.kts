@@ -39,8 +39,11 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
+  // TODO run tests both with and without experimental span attributes, with & without extra propagation
+  systemProperties(mapOf(
+    "otel.instrumentation.aws-sdk.experimental-span-attributes" to "true",
+    "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging" to "true",
+  ))
 }
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>().configureEach {

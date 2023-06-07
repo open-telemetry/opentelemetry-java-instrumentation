@@ -34,7 +34,6 @@ final class SqsParentContext {
     INSTANCE;
 
     @Override
-    @NoMuzzle
     public Iterable<String> keys(Map<String, MessageAttributeValue> map) {
       return map.keySet();
     }
@@ -55,7 +54,6 @@ final class SqsParentContext {
 
   static final String AWS_TRACE_SYSTEM_ATTRIBUTE = "AWSTraceHeader";
 
-  @NoMuzzle
   static Context ofMessageAttributes(
       Map<String, MessageAttributeValue> messageAttributes, TextMapPropagator propagator) {
     return propagator.extract(
