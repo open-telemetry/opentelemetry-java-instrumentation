@@ -14,7 +14,7 @@ public class ExperimentalSnippetHolder {
 
   private static String getSnippetSetting() {
     String result = ConfigPropertiesUtil.getString("otel.experimental.javascript-snippet");
-    return result == null ? "" : result;
+    return result == null ? "" : result; 
   }
 
   public static void setSnippet(String newValue) {
