@@ -45,17 +45,8 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
   val testSnippetInjection by registering(Test::class) {
-    filter {
-      includeTestsMatching("AbstractServlet3Test")
-    }
-    include("**/AbstractServlet3Test.*")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("AbstractServlet3Test")
-    }
     jvmArgs("-Dotel.experimental.javascript-snippet=<script> Test </script>")
+
   }
 
   check {

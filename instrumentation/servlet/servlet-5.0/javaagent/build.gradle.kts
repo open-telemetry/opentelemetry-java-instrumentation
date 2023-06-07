@@ -34,16 +34,6 @@ tasks {
     jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
   }
   val testSnippetInjection by registering(Test::class) {
-    filter {
-      includeTestsMatching("AbstractServlet5Test")
-    }
-    include("**/AbstractServlet5Test.*")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("AbstractServlet5Test")
-    }
     jvmArgs("-Dotel.experimental.javascript-snippet=<script> Test </script>")
   }
 

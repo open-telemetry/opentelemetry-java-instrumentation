@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -136,6 +137,10 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     def response = client.execute(request).aggregate().join()
 
     expect:
+    String checkSnippetExsit = ConfigPropertiesUtil.getString("otel.experimental.javascript-snippet")
+    if (!checkSnippetExsit || checkSnippetExsit.length() <= 0){
+      return
+    }
     response.status().code() == HTML_SERVLET_OUTPUT_STREAM.status
     String result = "<!DOCTYPE html>\n" +
       "<html lang=\"en\">\n" +
@@ -174,6 +179,10 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     def response = client.execute(request).aggregate().join()
 
     expect:
+    String checkSnippetExsit = ConfigPropertiesUtil.getString("otel.experimental.javascript-snippet")
+    if (!checkSnippetExsit || checkSnippetExsit.length() <= 0){
+      return
+    }
     response.status().code() == HTML_PRINT_WRITER.status
     String result = "<!DOCTYPE html>\n" +
       "<html lang=\"en\">\n" +
