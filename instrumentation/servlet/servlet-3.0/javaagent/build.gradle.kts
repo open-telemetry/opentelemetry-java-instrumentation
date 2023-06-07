@@ -37,12 +37,12 @@ dependencies {
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // see servlet-5.0 module
 }
 
-tasks{
+tasks {
   withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
   val testSnippetInjection by registering(Test::class) {
     filter {
