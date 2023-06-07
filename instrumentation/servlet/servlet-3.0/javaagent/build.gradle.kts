@@ -55,7 +55,7 @@ tasks {
     filter {
       excludeTestsMatching("AbstractServlet3Test")
     }
-    jvmArgs("-Dotel.experimental.javascript-snippet=<script type=\\\"text/javascript\\\"> Test </script>")
+    jvmArgs("-Dotel.experimental.javascript-snippet=<script> Test </script>")
   }
 
   check {

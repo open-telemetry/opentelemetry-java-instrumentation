@@ -140,7 +140,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     String result = "<!DOCTYPE html>\n" +
       "<html lang=\"en\">\n" +
       "<head>" +
-      "<script type=\"text/javascript\"> Test </script>\n" +
+      "<script> Test </script>\n" +
       "  <meta charset=\"UTF-8\">\n" +
       "  <title>Title</title>\n" +
       "</head>\n" +
@@ -178,7 +178,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     String result = "<!DOCTYPE html>\n" +
       "<html lang=\"en\">\n" +
       "<head>" +
-      "<script type=\"text/javascript\"> Test </script>\n" +
+      "<script> Test </script>\n" +
       "  <meta charset=\"UTF-8\">\n" +
       "  <title>Title</title>\n" +
       "</head>\n" +
