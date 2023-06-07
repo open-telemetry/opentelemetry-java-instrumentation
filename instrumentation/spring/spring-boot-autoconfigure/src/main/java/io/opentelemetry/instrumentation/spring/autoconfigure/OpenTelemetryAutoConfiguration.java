@@ -15,8 +15,8 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.SdkLoggerProviderBuilder;
+import io.opentelemetry.sdk.logs.export.BatchLogRecordProcessor;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
-import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.SdkMeterProviderBuilder;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
@@ -81,21 +81,16 @@ public class OpenTelemetryAutoConfiguration {
       SdkLoggerProviderBuilder loggerProviderBuilder = SdkLoggerProvider.builder();
       loggerProviderBuilder.setResource(otelResource);
 
-      initializeGlobalLoggerProvider(loggerExportersProvider);
-
-      return loggerProviderBuilder.build();
-    }
-
-    private static void initializeGlobalLoggerProvider(
-        ObjectProvider<List<LogRecordExporter>> loggerExportersProvider) {
-      SdkLoggerProviderBuilder loggerProviderBuilder = SdkLoggerProvider.builder();
       loggerExportersProvider.getIfAvailable(Collections::emptyList).stream()
           .forEach(
               loggerExporter ->
                   loggerProviderBuilder.addLogRecordProcessor(
-                      SimpleLogRecordProcessor.create(loggerExporter)));
+                      BatchLogRecordProcessor.builder(loggerExporter).build()));
+
       SdkLoggerProvider loggerProvider = loggerProviderBuilder.build();
       GlobalLoggerProvider.set(loggerProvider);
+
+      return loggerProvider;
     }
 
     @Bean
