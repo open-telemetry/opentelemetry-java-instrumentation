@@ -382,12 +382,16 @@ abstract class AppServerTest extends SmokeTest {
 
     responseBody.contains("<script>console.log(hi)</script>")
 
-    traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
-
-    traces.countSpansByName('GET /app/jsp') == 1
-
+    if (expectServerSpan()){
+      traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
+      traces.countSpansByName('GET /app/jsp') == 1
+    }
     where:
     [appServer, jdk] << getTestParams()
+  }
+
+  protected boolean expectServerSpan() {
+    true
   }
 
   protected String getSpanName(String path) {

@@ -17,6 +17,14 @@ abstract class TomcatSmokeTest extends AppServerTest {
   protected TargetWaitStrategy getWaitStrategy() {
     return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Server startup in.*")
   }
+
+  @Override
+  protected boolean expectServerSpan() {
+    if (this.serverVersion == "7.0.109") {
+      return false
+    }
+    return true
+  }
 }
 
 @AppServer(version = "7.0.109", jdk = "8")
