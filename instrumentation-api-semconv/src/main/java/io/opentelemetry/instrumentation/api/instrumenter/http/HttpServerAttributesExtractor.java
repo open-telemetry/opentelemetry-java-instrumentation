@@ -16,6 +16,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -54,6 +57,13 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     return new HttpServerAttributesExtractorBuilder<>(httpAttributesGetter, netAttributesGetter);
   }
 
+  // if set to true, the instrumentation will prefer the scheme from Forwarded/X-Forwarded-Proto
+  // headers over the one extracted from the URL
+  private static final boolean PREFER_FORWARDED_URL_SCHEME =
+      ConfigPropertiesUtil.getBoolean(
+          "otel.instrumentation.http.prefer-forwarded-url-scheme", false);
+
+  private final InternalUrlAttributesExtractor<REQUEST> internalUrlExtractor;
   private final InternalNetServerAttributesExtractor<REQUEST> internalNetExtractor;
   private final Function<Context, String> httpRouteHolderGetter;
 
@@ -78,6 +88,12 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       List<String> capturedResponseHeaders,
       Function<Context, String> httpRouteHolderGetter) {
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
+    internalUrlExtractor =
+        new InternalUrlAttributesExtractor<>(
+            httpAttributesGetter,
+            /* alternateSchemeProvider= */ this::forwardedProto,
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv());
     internalNetExtractor =
         new InternalNetServerAttributesExtractor<>(
             netAttributesGetter,
@@ -90,18 +106,15 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    String forwardedProto = forwardedProto(request);
-    String value = forwardedProto != null ? forwardedProto : getter.getScheme(request);
-    internalSet(attributes, SemanticAttributes.HTTP_SCHEME, value);
-    internalSet(attributes, SemanticAttributes.HTTP_TARGET, getTarget(request));
+    internalUrlExtractor.onStart(attributes, request);
+    internalNetExtractor.onStart(attributes, request);
+
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.getRoute(request));
     internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
-
-    internalNetExtractor.onStart(attributes, request);
   }
 
   private boolean shouldCaptureHostPort(int port, REQUEST request) {
-    String scheme = getter.getScheme(request);
+    String scheme = getter.getUrlScheme(request);
     if (scheme == null) {
       return true;
     }
@@ -126,6 +139,11 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
 
   @Nullable
   private String forwardedProto(REQUEST request) {
+    if (!PREFER_FORWARDED_URL_SCHEME) {
+      // don't parse headers, extract scheme from the URL
+      return null;
+    }
+
     // try Forwarded
     String forwarded = firstHeaderValue(getter.getRequestHeader(request, "forwarded"));
     if (forwarded != null) {
@@ -162,15 +180,6 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     }
 
     return null;
-  }
-
-  private String getTarget(REQUEST request) {
-    String path = getter.getPath(request);
-    String query = getter.getQuery(request);
-    if (path == null && query == null) {
-      return null;
-    }
-    return (path == null ? "" : path) + (query == null || query.isEmpty() ? "" : "?" + query);
   }
 
   /**

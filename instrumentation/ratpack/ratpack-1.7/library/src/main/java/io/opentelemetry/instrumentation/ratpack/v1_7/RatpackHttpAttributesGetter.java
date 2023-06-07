@@ -23,7 +23,7 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
 
   @Override
   @Nullable
-  public String getScheme(Request request) {
+  public String getUrlScheme(Request request) {
     Context ratpackContext = request.get(Context.class);
     if (ratpackContext == null) {
       return null;
@@ -36,14 +36,14 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   }
 
   @Override
-  public String getPath(Request request) {
+  public String getUrlPath(Request request) {
     String path = request.getPath();
     return path.startsWith("/") ? path : "/" + path;
   }
 
   @Nullable
   @Override
-  public String getQuery(Request request) {
+  public String getUrlQuery(Request request) {
     return request.getQuery();
   }
 

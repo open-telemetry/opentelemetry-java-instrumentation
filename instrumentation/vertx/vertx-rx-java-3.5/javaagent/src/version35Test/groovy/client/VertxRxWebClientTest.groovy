@@ -88,6 +88,11 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
   }
 
   @Override
+  boolean testReadTimeout() {
+    false
+  }
+
+  @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
     attributes.remove(stringKey("net.protocol.name"))

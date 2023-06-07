@@ -71,6 +71,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   private final ElementMatcher.Junction<ClassLoader> classLoaderOptimization;
   private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;
+
   /** This matcher matches all methods that should be excluded from transformation. */
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 

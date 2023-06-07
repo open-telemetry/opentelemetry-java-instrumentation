@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
 
 final class ApacheHttpClientNetAttributesGetter
-    extends InetSocketAddressNetClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
+    implements NetClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
   public String getProtocolName(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
@@ -38,7 +38,7 @@ final class ApacheHttpClientNetAttributesGetter
 
   @Nullable
   @Override
-  protected InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getPeerSocketAddress(
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.peerSocketAddress();
   }

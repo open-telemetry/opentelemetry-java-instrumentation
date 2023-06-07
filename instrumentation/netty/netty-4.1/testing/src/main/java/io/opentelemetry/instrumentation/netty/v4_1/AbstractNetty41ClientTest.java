@@ -13,19 +13,23 @@ import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractNetty41ClientTest
     extends AbstractHttpClientTest<DefaultFullHttpRequest> {
@@ -33,11 +37,6 @@ public abstract class AbstractNetty41ClientTest
   protected abstract Netty41ClientExtension clientExtension();
 
   protected abstract void configureChannel(Channel channel);
-
-  @Override
-  protected boolean testRedirects() {
-    return false;
-  }
 
   @Override
   public DefaultFullHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -92,37 +91,73 @@ public abstract class AbstractNetty41ClientTest
     configureChannel(ch);
     CompletableFuture<Integer> result = new CompletableFuture<>();
     result.whenComplete((status, throwable) -> httpClientResult.complete(() -> status, throwable));
+    if (uri.toString().contains("/read-timeout")) {
+      ch.pipeline().addLast(new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
+    }
     ch.pipeline().addLast(new ClientHandler(result));
     ch.writeAndFlush(defaultFullHttpRequest);
   }
 
   @Override
-  protected String expectedClientSpanName(URI uri, String method) {
-    switch (uri.toString()) {
-      case "http://localhost:61/": // unopened port
-      case "https://192.0.2.1/": // non routable address
-        return "CONNECT";
-      default:
-        return super.expectedClientSpanName(uri, method);
-    }
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.setHttpAttributes(AbstractNetty41ClientTest::getHttpAttributes);
+    optionsBuilder.setExpectedClientSpanNameMapper(
+        AbstractNetty41ClientTest::getExpectedClientSpanName);
+    optionsBuilder.setSingleConnectionFactory(
+        (host, port) ->
+            new SingleNettyConnection(
+                clientExtension().buildBootstrap(false, false),
+                host,
+                port,
+                this::configureChannel));
+
+    optionsBuilder.disableTestRedirects();
   }
 
-  @Override
-  protected Set<AttributeKey<?>> httpAttributes(URI uri) {
+  private static Set<AttributeKey<?>> getHttpAttributes(URI uri) {
     String uriString = uri.toString();
     // http://localhost:61/ => unopened port, https://192.0.2.1/ => non routable address
     if ("http://localhost:61/".equals(uriString) || "https://192.0.2.1/".equals(uriString)) {
       return Collections.emptySet();
     }
-    Set<AttributeKey<?>> attributes = super.httpAttributes(uri);
+    Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     attributes.remove(SemanticAttributes.NET_PEER_NAME);
     attributes.remove(SemanticAttributes.NET_PEER_PORT);
     return attributes;
   }
 
-  @Override
-  protected SingleConnection createSingleConnection(String host, int port) {
-    return new SingleNettyConnection(
-        clientExtension().buildBootstrap(false, false), host, port, this::configureChannel);
+  private static String getExpectedClientSpanName(URI uri, String method) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "https://192.0.2.1/": // non routable address
+        return "CONNECT";
+      default:
+        return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
+    }
+  }
+
+  @Test
+  void closeChannel() throws ExecutionException, InterruptedException {
+    String method = "GET";
+    URI uri = resolveAddress("/read-timeout");
+    DefaultFullHttpRequest request = buildRequest(method, uri, Collections.emptyMap());
+
+    Channel channel =
+        clientExtension().getBootstrap(uri).connect(uri.getHost(), getPort(uri)).sync().channel();
+    configureChannel(channel);
+    CompletableFuture<Integer> result = new CompletableFuture<>();
+    channel.pipeline().addLast(new ClientHandler(result));
+    channel
+        .pipeline()
+        .addLast(new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
+    channel.writeAndFlush(request).get();
+    Thread.sleep(1_000);
+    channel.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasNoParent(),
+                span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))));
   }
 }

@@ -10,6 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -43,32 +44,13 @@ public class Netty41ClientTest extends AbstractNetty41ClientTest {
   }
 
   @Override
-  protected boolean testReadTimeout() {
-    return false;
-  }
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    super.configure(optionsBuilder);
 
-  @Override
-  protected boolean testErrorWithCallback() {
-    return false;
-  }
-
-  @Override
-  protected boolean testCallbackWithParent() {
-    return false;
-  }
-
-  @Override
-  protected boolean testWithClientParent() {
-    return false;
-  }
-
-  @Override
-  protected boolean testConnectionFailure() {
-    return false;
-  }
-
-  @Override
-  protected boolean testRemoteConnection() {
-    return false;
+    optionsBuilder.disableTestErrorWithCallback();
+    optionsBuilder.disableTestCallbackWithParent();
+    optionsBuilder.disableTestWithClientParent();
+    optionsBuilder.disableTestConnectionFailure();
+    optionsBuilder.disableTestRemoteConnection();
   }
 }

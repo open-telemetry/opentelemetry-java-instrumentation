@@ -10,14 +10,14 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.handler.codec.http.HttpVersion;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class NettyNetServerAttributesGetter
-    extends InetSocketAddressNetServerAttributesGetter<HttpRequestAndChannel> {
+    implements NetServerAttributesGetter<HttpRequestAndChannel> {
 
   @Override
   public String getTransport(HttpRequestAndChannel requestAndChannel) {
@@ -49,7 +49,7 @@ final class NettyNetServerAttributesGetter
 
   @Override
   @Nullable
-  protected InetSocketAddress getPeerSocketAddress(HttpRequestAndChannel requestAndChannel) {
+  public InetSocketAddress getPeerSocketAddress(HttpRequestAndChannel requestAndChannel) {
     SocketAddress address = requestAndChannel.remoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
@@ -59,7 +59,7 @@ final class NettyNetServerAttributesGetter
 
   @Nullable
   @Override
-  protected InetSocketAddress getHostSocketAddress(HttpRequestAndChannel requestAndChannel) {
+  public InetSocketAddress getHostSocketAddress(HttpRequestAndChannel requestAndChannel) {
     SocketAddress address = requestAndChannel.channel().localAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;

@@ -11,14 +11,14 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpVersion;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class NettyNetClientAttributesGetter
-    extends InetSocketAddressNetClientAttributesGetter<HttpRequestAndChannel, HttpResponse> {
+    implements NetClientAttributesGetter<HttpRequestAndChannel, HttpResponse> {
 
   @Override
   public String getTransport(
@@ -53,7 +53,7 @@ final class NettyNetClientAttributesGetter
 
   @Override
   @Nullable
-  protected InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getPeerSocketAddress(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     SocketAddress address = requestAndChannel.remoteAddress();
     if (address instanceof InetSocketAddress) {

@@ -11,6 +11,8 @@ updates:
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
+    labels: # overriding the default which is to add both "dependencies" and "github_actions"
+      - "dependencies"
 
   - package-ecosystem: "gradle"
     directory: "/"
@@ -42,6 +44,8 @@ updates:
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
+    labels: # overriding the default which is to add both "dependencies" and "java"
+      - "dependencies"
     open-pull-requests-limit: 10
 
   - package-ecosystem: "gradle"
@@ -61,6 +65,8 @@ updates:
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
+    labels: # overriding the default which is to add both "dependencies" and "java"
+      - "dependencies"
     open-pull-requests-limit: 10
 
   - package-ecosystem: "gradle"
@@ -80,6 +86,8 @@ updates:
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
+    labels: # overriding the default which is to add both "dependencies" and "java"
+      - "dependencies"
     open-pull-requests-limit: 10
 
   - package-ecosystem: "gradle"
@@ -87,4 +95,6 @@ updates:
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
+    labels: # overriding the default which is to add both "dependencies" and "java"
+      - "dependencies"
     open-pull-requests-limit: 10

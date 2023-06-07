@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.tooling.util;
 
+import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingMatcher;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
  * A matcher wrapper that adds specified name to the output of {@code toString} to allow easy
  * identification of where the given matcher originates from.
  */
-public class NamedMatcher<T> implements ElementMatcher<T> {
+public class NamedMatcher<T> implements ElementMatcher<T>, DelegatingMatcher {
   private final String name;
   private final ElementMatcher<T> delegate;
 
@@ -28,5 +29,10 @@ public class NamedMatcher<T> implements ElementMatcher<T> {
   @Override
   public String toString() {
     return name + "(" + delegate.toString() + ")";
+  }
+
+  @Override
+  public ElementMatcher<?> getDelegate() {
+    return delegate;
   }
 }

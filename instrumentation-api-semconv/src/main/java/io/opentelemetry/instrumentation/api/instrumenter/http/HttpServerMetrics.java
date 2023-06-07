@@ -13,6 +13,7 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.api.metrics.Meter;
@@ -32,7 +33,7 @@ import javax.annotation.Nullable;
  */
 public final class HttpServerMetrics implements OperationListener {
 
-  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
+  private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
 
   private static final ContextKey<State> HTTP_SERVER_REQUEST_METRICS_STATE =
       ContextKey.named("http-server-request-metrics-state");
@@ -61,12 +62,13 @@ public final class HttpServerMetrics implements OperationListener {
             .setDescription("The number of concurrent HTTP requests that are currently in-flight")
             .build();
 
-    duration =
+    DoubleHistogramBuilder durationBuilder =
         meter
             .histogramBuilder("http.server.duration")
-            .setUnit("ms")
-            .setDescription("The duration of the inbound HTTP request")
-            .build();
+            .setUnit("s")
+            .setDescription("The duration of the inbound HTTP request");
+    HistogramAdviceUtil.setHttpDurationBuckets(durationBuilder);
+    duration = durationBuilder.build();
     requestSize =
         meter
             .histogramBuilder("http.server.request.size")
@@ -108,7 +110,7 @@ public final class HttpServerMetrics implements OperationListener {
     Attributes durationAndSizeAttributes =
         applyServerDurationAndSizeView(state.startAttributes(), endAttributes);
     duration.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_MS, durationAndSizeAttributes, context);
+        (endNanos - state.startTimeNanos()) / NANOS_PER_S, durationAndSizeAttributes, context);
     Long requestLength =
         getAttribute(
             SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, endAttributes, state.startAttributes());

@@ -95,7 +95,6 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestCircularRedirects();
-    optionsBuilder.enableTestReadTimeout();
 
     optionsBuilder.setHttpAttributes(
         uri -> {

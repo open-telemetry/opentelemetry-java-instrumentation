@@ -78,9 +78,4 @@ public class Netty41NativeClientTest extends AbstractNetty41ClientTest {
 
   @Override
   protected void configureChannel(Channel channel) {}
-
-  @Override
-  protected boolean testReadTimeout() {
-    return true;
-  }
 }

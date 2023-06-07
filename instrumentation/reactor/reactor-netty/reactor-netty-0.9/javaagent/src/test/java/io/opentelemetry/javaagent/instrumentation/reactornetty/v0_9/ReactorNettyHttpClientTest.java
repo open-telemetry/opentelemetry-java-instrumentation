@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9;
 
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -34,7 +35,13 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
   }
 
   @Override
-  public SingleConnection createSingleConnection(String host, int port) {
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    super.configure(optionsBuilder);
+
+    optionsBuilder.setSingleConnectionFactory(ReactorNettyHttpClientTest::createSingleConnection);
+  }
+
+  private static SingleConnection createSingleConnection(String host, int port) {
     String url;
     try {
       url = new URL("http", host, port, "").toString();

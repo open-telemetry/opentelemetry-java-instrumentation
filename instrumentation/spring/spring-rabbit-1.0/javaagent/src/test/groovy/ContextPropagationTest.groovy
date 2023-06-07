@@ -91,7 +91,12 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
     then:
     assertTraces(2) {
       trace(0, 5) {
-        spans.subList(2, 4).sort {
+        spans.subList(2, 5).sort {
+          // sort "consumer" span after "testQueue process" spans
+          if (it.name == "consumer") {
+            return 2
+          }
+          // order "testQueue process" spans
           def destination = it.attributes.get(SemanticAttributes.MESSAGING_DESTINATION_NAME)
           return destination == "<default>" ? 0 : 1
         }

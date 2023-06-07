@@ -97,6 +97,7 @@ public class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEnt
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestCircularRedirects();
+    optionsBuilder.disableTestReadTimeout();
     optionsBuilder.setHttpAttributes(
         uri -> {
           Set<AttributeKey<?>> attributes =

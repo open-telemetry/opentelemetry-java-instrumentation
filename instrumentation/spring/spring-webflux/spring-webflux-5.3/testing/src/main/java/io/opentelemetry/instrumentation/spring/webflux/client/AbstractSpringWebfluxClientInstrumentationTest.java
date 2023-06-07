@@ -67,6 +67,9 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
 
+    // timeouts leak the scope
+    optionsBuilder.disableTestReadTimeout();
+
     optionsBuilder.setHttpAttributes(
         uri -> {
           Set<AttributeKey<?>> attributes =

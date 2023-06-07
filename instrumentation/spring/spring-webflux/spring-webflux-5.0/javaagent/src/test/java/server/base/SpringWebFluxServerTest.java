@@ -14,10 +14,11 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 public abstract class SpringWebFluxServerTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
@@ -33,16 +34,12 @@ public abstract class SpringWebFluxServerTest
   @Override
   public ConfigurableApplicationContext setupServer() {
     SpringApplication app = new SpringApplication(getApplicationClass());
-    app.setDefaultProperties(
-        ImmutableMap.of(
-            "server.port",
-            port,
-            "server.context-path",
-            getContextPath(),
-            "server.servlet.contextPath",
-            getContextPath(),
-            "server.error.include-message",
-            "always"));
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("server.port", port);
+    properties.put("server.context-path", getContextPath());
+    properties.put("server.servlet.contextPath", getContextPath());
+    properties.put("server.error.include-message", "always");
+    app.setDefaultProperties(properties);
     return app.run();
   }
 
@@ -68,6 +65,5 @@ public abstract class SpringWebFluxServerTest
     options.setTestPathParam(true);
     options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasHandlerSpan(unused -> true);
-    options.setTestHttpPipelining(false);
   }
 }

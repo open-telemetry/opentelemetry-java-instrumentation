@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.guava.v10_0;
 
+import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractWithSpanTest;
-import org.testcontainers.shaded.com.google.common.base.Throwables;
 
 abstract class BaseGuavaWithSpanTest
     extends AbstractWithSpanTest<SettableFuture<String>, ListenableFuture<String>> {

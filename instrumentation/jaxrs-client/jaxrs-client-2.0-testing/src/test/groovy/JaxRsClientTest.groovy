@@ -136,6 +136,7 @@ class JerseyClientTest extends JaxRsClientTest {
   ClientBuilder builder() {
     ClientConfig config = new ClientConfig()
     config.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT_MS)
+    config.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT_MS)
     return new JerseyClientBuilder().withConfig(config)
   }
 
@@ -160,6 +161,7 @@ class ResteasyClientTest extends JaxRsClientTest {
   ClientBuilder builder() {
     return new ResteasyClientBuilder()
       .establishConnectionTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+      .socketTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
   }
 
   @Override
@@ -189,6 +191,11 @@ class CxfClientTest extends JaxRsClientTest {
   @Override
   boolean testWithClientParent() {
     !Boolean.getBoolean("testLatestDeps")
+  }
+
+  @Override
+  boolean testReadTimeout() {
+    return false
   }
 
   @Override

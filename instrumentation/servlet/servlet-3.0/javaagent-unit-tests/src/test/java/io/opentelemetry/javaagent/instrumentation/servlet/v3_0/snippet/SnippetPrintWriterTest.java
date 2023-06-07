@@ -26,8 +26,8 @@ class SnippetPrintWriterTest {
     String html = readFileAsString("beforeSnippetInjection.html");
 
     InMemoryHttpServletResponse response = createInMemoryHttpServletResponse("text/html");
-    SnippetInjectingResponseWrapper responseWrapper =
-        new SnippetInjectingResponseWrapper(response, snippet);
+    Servlet3SnippetInjectingResponseWrapper responseWrapper =
+        new Servlet3SnippetInjectingResponseWrapper(response, snippet);
 
     responseWrapper.getWriter().write(html);
     responseWrapper.getWriter().flush();
@@ -42,8 +42,8 @@ class SnippetPrintWriterTest {
     String html = readFileAsString("beforeSnippetInjectionChinese.html");
 
     InMemoryHttpServletResponse response = createInMemoryHttpServletResponse("text/html");
-    SnippetInjectingResponseWrapper responseWrapper =
-        new SnippetInjectingResponseWrapper(response, snippet);
+    Servlet3SnippetInjectingResponseWrapper responseWrapper =
+        new Servlet3SnippetInjectingResponseWrapper(response, snippet);
 
     responseWrapper.getWriter().write(html);
     responseWrapper.getWriter().flush();
@@ -59,8 +59,8 @@ class SnippetPrintWriterTest {
 
     InMemoryHttpServletResponse response = createInMemoryHttpServletResponse("not/text");
 
-    SnippetInjectingResponseWrapper responseWrapper =
-        new SnippetInjectingResponseWrapper(response, snippet);
+    Servlet3SnippetInjectingResponseWrapper responseWrapper =
+        new Servlet3SnippetInjectingResponseWrapper(response, snippet);
 
     responseWrapper.getWriter().write(html);
     responseWrapper.getWriter().flush();
@@ -74,8 +74,8 @@ class SnippetPrintWriterTest {
     String html = readFileAsString("beforeSnippetInjection.html");
 
     InMemoryHttpServletResponse response = createInMemoryHttpServletResponse("text/html");
-    SnippetInjectingResponseWrapper responseWrapper =
-        new SnippetInjectingResponseWrapper(response, snippet);
+    Servlet3SnippetInjectingResponseWrapper responseWrapper =
+        new Servlet3SnippetInjectingResponseWrapper(response, snippet);
 
     byte[] originalBytes = html.getBytes(Charset.defaultCharset());
     for (byte originalByte : originalBytes) {
@@ -93,8 +93,8 @@ class SnippetPrintWriterTest {
     String html = readFileAsString("beforeSnippetInjectionChinese.html");
 
     InMemoryHttpServletResponse response = createInMemoryHttpServletResponse("text/html");
-    SnippetInjectingResponseWrapper responseWrapper =
-        new SnippetInjectingResponseWrapper(response, snippet);
+    Servlet3SnippetInjectingResponseWrapper responseWrapper =
+        new Servlet3SnippetInjectingResponseWrapper(response, snippet);
 
     char[] originalChars = html.toCharArray();
     responseWrapper.getWriter().write(originalChars, 0, originalChars.length);
@@ -112,8 +112,8 @@ class SnippetPrintWriterTest {
     html = extraBuffer + html;
 
     InMemoryHttpServletResponse response = createInMemoryHttpServletResponse("text/html");
-    SnippetInjectingResponseWrapper responseWrapper =
-        new SnippetInjectingResponseWrapper(response, snippet);
+    Servlet3SnippetInjectingResponseWrapper responseWrapper =
+        new Servlet3SnippetInjectingResponseWrapper(response, snippet);
 
     responseWrapper
         .getWriter()

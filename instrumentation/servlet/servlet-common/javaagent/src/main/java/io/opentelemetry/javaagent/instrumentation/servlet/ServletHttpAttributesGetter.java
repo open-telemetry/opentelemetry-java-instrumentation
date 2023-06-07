@@ -27,19 +27,19 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public String getScheme(ServletRequestContext<REQUEST> requestContext) {
+  public String getUrlScheme(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestScheme(requestContext.request());
   }
 
   @Nullable
   @Override
-  public String getPath(ServletRequestContext<REQUEST> requestContext) {
+  public String getUrlPath(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestUri(requestContext.request());
   }
 
   @Nullable
   @Override
-  public String getQuery(ServletRequestContext<REQUEST> requestContext) {
+  public String getUrlQuery(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestQueryString(requestContext.request());
   }
 

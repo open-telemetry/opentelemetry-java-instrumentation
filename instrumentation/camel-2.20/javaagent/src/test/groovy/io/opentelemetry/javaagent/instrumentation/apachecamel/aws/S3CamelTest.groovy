@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import org.testcontainers.shaded.com.google.common.collect.ImmutableMap
 import spock.lang.Ignore
 import spock.lang.Shared
 
@@ -22,7 +21,7 @@ class S3CamelTest extends AgentInstrumentationSpecification {
     setup:
     String bucketName = "bucket-test-s3-sqs-camel"
     String queueName = "s3SqsCamelTest"
-    def camelApp = new CamelSpringApp(awsConnector, S3Config, ImmutableMap.of("bucketName", bucketName, "queueName", queueName))
+    def camelApp = new CamelSpringApp(awsConnector, S3Config, [bucketName: bucketName, queueName: queueName])
 
     def queueUrl = setupTestInfrastructure(queueName, bucketName)
     waitAndClearSetupTraces(queueUrl, queueName, bucketName)

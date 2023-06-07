@@ -101,6 +101,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
 
   def setup() {
     accessLogValue.loggedIds.clear()
+    accessLogValue.disable()
   }
 
   @Override
@@ -122,6 +123,8 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
   }
 
   def "access log has ids for #count requests"() {
+    accessLogValue.enable()
+
     given:
     def request = request(SUCCESS, method)
 
@@ -162,6 +165,8 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
   def "access log has ids for error request"() {
     setup:
     assumeTrue(testError())
+    accessLogValue.enable()
+
     def request = request(ERROR, method)
     def response = client.execute(request).aggregate().join()
 
@@ -246,12 +251,25 @@ class ErrorHandlerValve extends ErrorReportValve {
 
 class TestAccessLogValve extends ValveBase implements AccessLog {
   final List<Tuple2<String, String>> loggedIds = []
+  volatile boolean enabled = false
 
   TestAccessLogValve() {
     super(true)
   }
 
+  void disable() {
+    enabled = false
+  }
+
+  void enable() {
+    enabled = true
+  }
+
   void log(Request request, Response response, long time) {
+    if (!enabled) {
+      return
+    }
+
     synchronized (loggedIds) {
       loggedIds.add(new Tuple2(request.getAttribute("trace_id"),
         request.getAttribute("span_id")))
