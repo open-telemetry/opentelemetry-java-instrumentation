@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.thrift.internal;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.thrift.ThriftRequest;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class ThriftNetServerAttributesGetter
-    extends InetSocketAddressNetServerAttributesGetter<ThriftRequest> {
+    implements NetServerAttributesGetter<ThriftRequest> {
   @Override
   public String getTransport(ThriftRequest request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
@@ -35,13 +35,13 @@ public final class ThriftNetServerAttributesGetter
 
   @Override
   @Nullable
-  protected InetSocketAddress getPeerSocketAddress(ThriftRequest request) {
+  public InetSocketAddress getPeerSocketAddress(ThriftRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  protected InetSocketAddress getHostSocketAddress(ThriftRequest thriftRequest) {
+  public InetSocketAddress getHostSocketAddress(ThriftRequest thriftRequest) {
     return null;
   }
 }
