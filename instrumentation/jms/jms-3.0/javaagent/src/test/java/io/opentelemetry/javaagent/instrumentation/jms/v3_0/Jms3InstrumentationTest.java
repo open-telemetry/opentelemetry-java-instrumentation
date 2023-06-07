@@ -71,6 +71,7 @@ class Jms3InstrumentationTest {
         new GenericContainer<>("quay.io/artemiscloud/activemq-artemis-broker:artemis.2.27.0")
             .withEnv("AMQ_USER", "test")
             .withEnv("AMQ_PASSWORD", "test")
+            .withEnv("JAVA_TOOL_OPTIONS", "-Dbrokerconfig.maxDiskUsage=-1")
             .withExposedPorts(61616, 8161)
             .waitingFor(Wait.forLogMessage(".*Server is now live.*", 1))
             .withStartupTimeout(Duration.ofMinutes(2))
