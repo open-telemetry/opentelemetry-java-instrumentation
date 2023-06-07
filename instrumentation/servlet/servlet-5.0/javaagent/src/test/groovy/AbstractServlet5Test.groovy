@@ -139,8 +139,8 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     response.status().code() == HTML_SERVLET_OUTPUT_STREAM.status
     String result = "<!DOCTYPE html>\n" +
       "<html lang=\"en\">\n" +
-      "<head>\n" +
-      "  <script type=text/javascript> Test </script>\n" +
+      "<head>" +
+      "<script> Test </script>\n" +
       "  <meta charset=\"UTF-8\">\n" +
       "  <title>Title</title>\n" +
       "</head>\n" +
@@ -177,8 +177,8 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     response.status().code() == HTML_PRINT_WRITER.status
     String result = "<!DOCTYPE html>\n" +
       "<html lang=\"en\">\n" +
-      "<head>\n" +
-      "  <script type=text/javascript> Test </script>\n" +
+      "<head>" +
+      "<script> Test </script>\n" +
       "  <meta charset=\"UTF-8\">\n" +
       "  <title>Title</title>\n" +
       "</head>\n" +
