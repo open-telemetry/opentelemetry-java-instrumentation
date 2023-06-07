@@ -255,9 +255,7 @@ public class SqsMessageHandlerTest {
     AtomicInteger counter = new AtomicInteger(0);
 
     SqsMessageHandler messageHandler =
-        new SqsMessageHandler(
-            testing.getOpenTelemetrySdk(),
-            messages -> "Batch of Messages") {
+        new SqsMessageHandler(testing.getOpenTelemetrySdk(), messages -> "Batch of Messages") {
           @Override
           protected void doHandleMessages(Collection<Message> messages) {
             counter.getAndIncrement();
@@ -369,9 +367,7 @@ public class SqsMessageHandlerTest {
 
     SqsMessageHandler messageHandler =
         new SqsMessageHandler(
-            testing.getOpenTelemetrySdk(),
-            messages -> "New Name",
-            MessageOperation.PROCESS) {
+            testing.getOpenTelemetrySdk(), messages -> "New Name", MessageOperation.PROCESS) {
           @Override
           protected void doHandleMessages(Collection<Message> messages) {
             counter.getAndIncrement();
@@ -426,9 +422,7 @@ public class SqsMessageHandlerTest {
 
     SqsMessageHandler messageHandler =
         new SqsMessageHandler(
-            testing.getOpenTelemetrySdk(),
-            messages -> "New Name",
-            MessageOperation.SEND) {
+            testing.getOpenTelemetrySdk(), messages -> "New Name", MessageOperation.SEND) {
           @Override
           protected void doHandleMessages(Collection<Message> messages) {
             counter.getAndIncrement();

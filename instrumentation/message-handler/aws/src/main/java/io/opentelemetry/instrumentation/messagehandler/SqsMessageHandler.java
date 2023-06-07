@@ -29,8 +29,7 @@ import software.amazon.awssdk.core.SdkPojo;
 import software.amazon.awssdk.services.sqs.model.Message;
 
 public abstract class SqsMessageHandler extends MessageHandler<Message> {
-  private static final Logger logger =
-      Logger.getLogger(SqsMessageHandler.class.getName());
+  private static final Logger logger = Logger.getLogger(SqsMessageHandler.class.getName());
 
   public SqsMessageHandler(
       OpenTelemetry openTelemetry, SpanNameExtractor<Collection<Message>> spanNameExtractor) {
@@ -59,13 +58,14 @@ public abstract class SqsMessageHandler extends MessageHandler<Message> {
   protected SpanKindExtractor<Collection<Message>> getSpanKindExtractor() {
     MessageOperation messageOperation = getMessagingOperation();
 
-    if (messageOperation == MessageOperation.RECEIVE ||
-        messageOperation == MessageOperation.PROCESS) {
+    if (messageOperation == MessageOperation.RECEIVE
+        || messageOperation == MessageOperation.PROCESS) {
       return SpanKindExtractor.alwaysConsumer();
     } else if (messageOperation == MessageOperation.SEND) {
       return SpanKindExtractor.alwaysProducer();
     } else {
-      logger.log(Level.WARNING, "Unknown Messaging Operation {0}", new Object[] {messageOperation.name()});
+      logger.log(
+          Level.WARNING, "Unknown Messaging Operation {0}", new Object[] {messageOperation.name()});
       return SpanKindExtractor.alwaysConsumer();
     }
   }
