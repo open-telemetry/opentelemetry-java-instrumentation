@@ -17,27 +17,31 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
-public abstract class BatchMessageHandler<T> {
-  private final String messagingOperation;
+public abstract class MessageHandler<T> {
+  private final MessageOperation messagingOperation;
   private final OpenTelemetry openTelemetry;
   private final SpanNameExtractor<Collection<T>> spanNameExtractor;
 
   protected Instrumenter<Collection<T>, Void> messageInstrumenter;
 
-  public BatchMessageHandler(
+  public MessageHandler(
       OpenTelemetry openTelemetry, SpanNameExtractor<Collection<T>> spanNameExtractor) {
-    this(openTelemetry, spanNameExtractor, MessageOperation.RECEIVE.name());
+    this(openTelemetry, spanNameExtractor, MessageOperation.RECEIVE);
   }
 
-  public BatchMessageHandler(
+  public MessageHandler(
       OpenTelemetry openTelemetry,
       SpanNameExtractor<Collection<T>> spanNameExtractor,
-      String messageOperation) {
+      MessageOperation messageOperation) {
     this.openTelemetry = openTelemetry;
     this.spanNameExtractor = spanNameExtractor;
     this.messagingOperation = messageOperation;
 
     setup();
+  }
+
+  protected MessageOperation getMessagingOperation() {
+    return messagingOperation;
   }
 
   protected OpenTelemetry getOpenTelemetry() {
@@ -58,7 +62,7 @@ public abstract class BatchMessageHandler<T> {
       @Override
       public void onStart(
           AttributesBuilder attributes, Context parentContext, Collection<T> messages) {
-        attributes.put(SemanticAttributes.MESSAGING_OPERATION, messagingOperation);
+        attributes.put(SemanticAttributes.MESSAGING_OPERATION, messagingOperation.name());
       }
 
       @Override
