@@ -46,7 +46,6 @@ tasks {
   }
   val testSnippetInjection by registering(Test::class) {
     jvmArgs("-Dotel.experimental.javascript-snippet=<script> Test </script>")
-
   }
 
   check {
