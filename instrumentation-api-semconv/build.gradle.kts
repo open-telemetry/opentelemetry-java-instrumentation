@@ -13,13 +13,49 @@ group = "io.opentelemetry.instrumentation"
 dependencies {
   api("io.opentelemetry:opentelemetry-semconv")
   api(project(":instrumentation-api"))
+  implementation("io.opentelemetry:opentelemetry-extension-incubator")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation(project(":testing-common"))
-  testImplementation("io.opentelemetry:opentelemetry-sdk-metrics")
+  testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+}
+
+testing {
+  suites {
+    val testStableHttpSemconv by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation(project(":testing-common"))
+        implementation("io.opentelemetry:opentelemetry-sdk")
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+      }
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=http")
+          }
+        }
+      }
+    }
+    val testBothHttpSemconv by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation(project(":testing-common"))
+        implementation("io.opentelemetry:opentelemetry-sdk")
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+      }
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=http/dup")
+          }
+        }
+      }
+    }
+  }
 }
 
 tasks {
@@ -37,5 +73,13 @@ tasks {
 
   sourcesJar {
     dependsOn("generateJflex")
+  }
+
+  test {
+    jvmArgs("-Dotel.instrumentation.http.prefer-forwarded-url-scheme=true")
+  }
+
+  check {
+    dependsOn(testing.suites)
   }
 }

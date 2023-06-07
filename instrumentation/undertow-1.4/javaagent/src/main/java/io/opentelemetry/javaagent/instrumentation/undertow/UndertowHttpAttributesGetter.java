@@ -41,18 +41,19 @@ public class UndertowHttpAttributesGetter
 
   @Override
   @Nullable
-  public String getTarget(HttpServerExchange exchange) {
-    String requestPath = exchange.getRequestPath();
-    String queryString = exchange.getQueryString();
-    if (requestPath != null && queryString != null && !queryString.isEmpty()) {
-      return requestPath + "?" + queryString;
-    }
-    return requestPath;
+  public String getUrlScheme(HttpServerExchange exchange) {
+    return exchange.getRequestScheme();
   }
 
-  @Override
   @Nullable
-  public String getScheme(HttpServerExchange exchange) {
-    return exchange.getRequestScheme();
+  @Override
+  public String getUrlPath(HttpServerExchange exchange) {
+    return exchange.getRequestPath();
+  }
+
+  @Nullable
+  @Override
+  public String getUrlQuery(HttpServerExchange exchange) {
+    return exchange.getQueryString();
   }
 }

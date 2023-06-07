@@ -44,74 +44,66 @@ class Tomee71Jdk8 extends TomeeSmokeTest {
 class Tomee71Jdk8Openj9 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "8.0.8", jdk = "8")
+@AppServer(version = "8.0.14", jdk = "8")
 class Tomee8Jdk8 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "8.0.8", jdk = "11")
+@AppServer(version = "8.0.14", jdk = "11")
 class Tomee8Jdk11 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "8.0.8", jdk = "17")
+@AppServer(version = "8.0.14", jdk = "17")
 class Tomee8Jdk17 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "8.0.8", jdk = "19")
-class Tomee8Jdk19 extends TomeeSmokeTest {
-}
-
-@AppServer(version = "8.0.8", jdk = "20")
+@AppServer(version = "8.0.14", jdk = "20")
 class Tomee8Jdk20 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "8.0.8", jdk = "8-openj9")
+@AppServer(version = "8.0.14", jdk = "21")
+class Tomee8Jdk21 extends TomeeSmokeTest {
+}
+
+@AppServer(version = "8.0.14", jdk = "8-openj9")
 class Tomee8Jdk8Openj9 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "8.0.8", jdk = "11-openj9")
+@AppServer(version = "8.0.14", jdk = "11-openj9")
 class Tomee8Jdk11Openj9 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "8.0.8", jdk = "17-openj9")
+@AppServer(version = "8.0.14", jdk = "17-openj9")
 class Tomee8Jdk17Openj9 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "8.0.8", jdk = "18-openj9")
+@AppServer(version = "8.0.14", jdk = "18-openj9")
 class Tomee8Jdk18Openj9 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "9.0.0-M7", jdk = "8")
-class Tomee9Jdk8 extends TomeeSmokeTest {
-}
-
-@AppServer(version = "9.0.0-M7", jdk = "11")
+@AppServer(version = "9.0.0", jdk = "11")
 class Tomee9Jdk11 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "9.0.0-M7", jdk = "17")
+@AppServer(version = "9.0.0", jdk = "17")
 class Tomee9Jdk17 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "9.0.0-M7", jdk = "19")
-class Tomee9Jdk19 extends TomeeSmokeTest {
-}
-
-@AppServer(version = "9.0.0-M7", jdk = "20")
+@AppServer(version = "9.0.0", jdk = "20")
 class Tomee9Jdk20 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "9.0.0-M7", jdk = "8-openj9")
-class Tomee9Jdk8Openj9 extends TomeeSmokeTest {
+@AppServer(version = "9.0.0", jdk = "21")
+class Tomee9Jdk21 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "9.0.0-M7", jdk = "11-openj9")
+@AppServer(version = "9.0.0", jdk = "11-openj9")
 class Tomee9Jdk11Openj9 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "9.0.0-M7", jdk = "17-openj9")
+@AppServer(version = "9.0.0", jdk = "17-openj9")
 class Tomee9Jdk17Openj9 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "9.0.0-M7", jdk = "18-openj9")
+@AppServer(version = "9.0.0", jdk = "18-openj9")
 class Tomee9Jdk18Openj9 extends TomeeSmokeTest {
 }

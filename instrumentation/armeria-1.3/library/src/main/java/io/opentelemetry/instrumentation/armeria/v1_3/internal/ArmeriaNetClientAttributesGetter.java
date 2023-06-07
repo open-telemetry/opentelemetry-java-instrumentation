@@ -9,7 +9,7 @@ import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class ArmeriaNetClientAttributesGetter
-    extends InetSocketAddressNetClientAttributesGetter<RequestContext, RequestLog> {
+    implements NetClientAttributesGetter<RequestContext, RequestLog> {
 
   @Override
   public String getProtocolName(RequestContext ctx, @Nullable RequestLog requestLog) {
@@ -65,7 +65,7 @@ public final class ArmeriaNetClientAttributesGetter
 
   @Override
   @Nullable
-  protected InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getPeerSocketAddress(
       RequestContext ctx, @Nullable RequestLog requestLog) {
     SocketAddress address = ctx.remoteAddress();
     if (address instanceof InetSocketAddress) {

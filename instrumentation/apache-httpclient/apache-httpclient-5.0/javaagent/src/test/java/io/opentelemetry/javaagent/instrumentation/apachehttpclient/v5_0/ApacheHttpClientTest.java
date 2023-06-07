@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpCl
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
 import java.net.URI;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
@@ -195,6 +196,13 @@ public class ApacheHttpClientTest {
 
     abstract ClassicHttpResponse doExecuteRequest(ClassicHttpRequest request, URI uri)
         throws Exception;
+
+    @Override
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      super.configure(optionsBuilder);
+      // apparently apache http client does not report the 302 status code?
+      optionsBuilder.setResponseCodeOnRedirectError(null);
+    }
   }
 
   private static class ResponseHandler implements HttpClientResponseHandler<Void> {

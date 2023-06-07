@@ -24,6 +24,9 @@ import org.junit.jupiter.api.Test;
 
 class HttpClientMetricsTest {
 
+  static final double[] DURATION_BUCKETS =
+      HistogramAdviceUtil.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
+
   @Test
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
@@ -79,13 +82,13 @@ class HttpClientMetricsTest {
             metric ->
                 assertThat(metric)
                     .hasName("http.client.duration")
-                    .hasUnit("ms")
+                    .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
                                 point ->
                                     point
-                                        .hasSum(150 /* millis */)
+                                        .hasSum(0.15 /* seconds */)
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
@@ -99,7 +102,8 @@ class HttpClientMetricsTest {
                                             exemplar ->
                                                 exemplar
                                                     .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00")))),
+                                                    .hasSpanId("090a0b0c0d0e0f00"))
+                                        .hasBucketBoundaries(DURATION_BUCKETS))),
             metric ->
                 assertThat(metric)
                     .hasName("http.client.request.size")
@@ -158,7 +162,8 @@ class HttpClientMetricsTest {
                     .hasName("http.client.duration")
                     .hasHistogramSatisfying(
                         histogram ->
-                            histogram.hasPointsSatisfying(point -> point.hasSum(300 /* millis */))),
+                            histogram.hasPointsSatisfying(
+                                point -> point.hasSum(0.3 /* seconds */))),
             metric ->
                 assertThat(metric)
                     .hasName("http.client.request.size")

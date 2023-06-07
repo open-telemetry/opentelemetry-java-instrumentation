@@ -41,7 +41,7 @@ class AwsConnector {
   static localstack() {
     AwsConnector awsConnector = new AwsConnector()
 
-    awsConnector.localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
+    awsConnector.localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:2.0.2"))
       .withServices(LocalStackContainer.Service.SQS, LocalStackContainer.Service.SNS, LocalStackContainer.Service.S3)
       .withEnv("DEBUG", "1")
       .withEnv("SQS_PROVIDER", "elasticmq")

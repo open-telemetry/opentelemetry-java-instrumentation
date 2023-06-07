@@ -21,6 +21,7 @@ import org.mockito.ArgumentCaptor;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
+import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -32,17 +33,40 @@ class AwsXrayEnvSpanLinksExtractorTest {
       Attributes.of(AttributeKey.stringKey("source"), "x-ray-env");
 
   @SystemStub final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+  @SystemStub final SystemProperties systemProperties = new SystemProperties();
 
   @Test
-  void shouldIgnoreIfEnvVarEmpty() {
+  void shouldIgnoreIfEnvVarAndSystemPropertyEmpty() {
     // given
     SpanLinksBuilder spanLinksBuilder = mock(SpanLinksBuilder.class);
     environmentVariables.set("_X_AMZN_TRACE_ID", "");
-
+    systemProperties.set("com.amazonaws.xray.traceHeader", "");
     // when
     AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
     // then
     verifyNoInteractions(spanLinksBuilder);
+  }
+
+  @Test
+  void shouldLinkAwsParentHeaderAndChooseSystemPropertyIfValidAndNotSampled() {
+    // given
+    SpanLinksBuilder spanLinksBuilder = mock(SpanLinksBuilder.class);
+    environmentVariables.set(
+        "_X_AMZN_TRACE_ID",
+        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=0");
+    systemProperties.set(
+        "com.amazonaws.xray.traceHeader",
+        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa7;Parent=0000000000000789;Sampled=0");
+    // when
+    AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
+    // then
+    ArgumentCaptor<SpanContext> captor = ArgumentCaptor.forClass(SpanContext.class);
+    verify(spanLinksBuilder).addLink(captor.capture(), eq(EXPECTED_LINK_ATTRIBUTES));
+    SpanContext spanContext = captor.getValue();
+    assertThat(spanContext.isValid()).isTrue();
+    assertThat(spanContext.isSampled()).isFalse();
+    assertThat(spanContext.getSpanId()).isEqualTo("0000000000000789");
+    assertThat(spanContext.getTraceId()).isEqualTo("8a3c60f7d188f8fa79d48a391a778fa7");
   }
 
   @Test
@@ -52,7 +76,6 @@ class AwsXrayEnvSpanLinksExtractorTest {
     environmentVariables.set(
         "_X_AMZN_TRACE_ID",
         "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=0");
-
     // when
     AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
     // then
@@ -66,13 +89,31 @@ class AwsXrayEnvSpanLinksExtractorTest {
   }
 
   @Test
-  void shouldLinkAwsParentHeaderIfValidAndSampled() {
+  void shouldLinkAwsParentHeaderIfValidAndNotSampledSystemProperty() {
     // given
     SpanLinksBuilder spanLinksBuilder = mock(SpanLinksBuilder.class);
-    environmentVariables.set(
-        "_X_AMZN_TRACE_ID",
-        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=1");
+    systemProperties.set(
+        "com.amazonaws.xray.traceHeader",
+        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=0");
+    // when
+    AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
+    // then
+    ArgumentCaptor<SpanContext> captor = ArgumentCaptor.forClass(SpanContext.class);
+    verify(spanLinksBuilder).addLink(captor.capture(), eq(EXPECTED_LINK_ATTRIBUTES));
+    SpanContext spanContext = captor.getValue();
+    assertThat(spanContext.isValid()).isTrue();
+    assertThat(spanContext.isSampled()).isFalse();
+    assertThat(spanContext.getSpanId()).isEqualTo("0000000000000456");
+    assertThat(spanContext.getTraceId()).isEqualTo("8a3c60f7d188f8fa79d48a391a778fa6");
+  }
 
+  @Test
+  void shouldLinkAwsParentHeaderIfValidAndSampledSystemProperty() {
+    // given
+    SpanLinksBuilder spanLinksBuilder = mock(SpanLinksBuilder.class);
+    systemProperties.set(
+        "com.amazonaws.xray.traceHeader",
+        "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=1");
     // when
     AwsXrayEnvSpanLinksExtractor.extract(spanLinksBuilder);
     // then

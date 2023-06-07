@@ -15,18 +15,15 @@ abstract class JettyJpmsSmokeTest extends JettySmokeTest {
   }
 }
 
-@AppServer(version = "11.0.7", jdk = "11")
+@AppServer(version = "11.0.15", jdk = "11")
 class Jetty11JpmsJdk11 extends JettyJpmsSmokeTest {
 }
-
-@AppServer(version = "11.0.7", jdk = "17")
+@AppServer(version = "11.0.15", jdk = "17")
 class Jetty11JpmsJdk17 extends JettyJpmsSmokeTest {
 }
-
-@AppServer(version = "11.0.7", jdk = "19")
-class Jetty11JpmsJdk19 extends JettyJpmsSmokeTest {
-}
-
-@AppServer(version = "11.0.7", jdk = "20")
+@AppServer(version = "11.0.15", jdk = "20")
 class Jetty11JpmsJdk20 extends JettyJpmsSmokeTest {
+}
+@AppServer(version = "11.0.15", jdk = "21")
+class Jetty11JpmsJdk21 extends JettyJpmsSmokeTest {
 }

@@ -44,18 +44,25 @@ class HttpServerAttributesExtractorTest {
     }
 
     @Override
-    public String getTarget(Map<String, Object> request) {
-      return (String) request.get("target");
+    public String getUrlScheme(Map<String, Object> request) {
+      return (String) request.get("scheme");
+    }
+
+    @Nullable
+    @Override
+    public String getUrlPath(Map<String, Object> request) {
+      return (String) request.get("path");
+    }
+
+    @Nullable
+    @Override
+    public String getUrlQuery(Map<String, Object> request) {
+      return (String) request.get("query");
     }
 
     @Override
     public String getRoute(Map<String, Object> request) {
       return (String) request.get("route");
-    }
-
-    @Override
-    public String getScheme(Map<String, Object> request) {
-      return (String) request.get("scheme");
     }
 
     @Override
@@ -112,7 +119,8 @@ class HttpServerAttributesExtractorTest {
     Map<String, Object> request = new HashMap<>();
     request.put("method", "POST");
     request.put("url", "http://github.com");
-    request.put("target", "/repositories/1");
+    request.put("path", "/repositories/1");
+    request.put("query", "details=true");
     request.put("scheme", "http");
     request.put("header.content-length", "10");
     request.put("route", "/repositories/{id}");
@@ -138,16 +146,16 @@ class HttpServerAttributesExtractorTest {
             singletonList("Custom-Response-Header"),
             routeFromContext);
 
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), request);
-    assertThat(attributes.build())
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_HOST_NAME, "github.com"),
             entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
             entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
-            entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
+            entry(SemanticAttributes.HTTP_TARGET, "/repositories/1?details=true"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
             entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
@@ -155,22 +163,12 @@ class HttpServerAttributesExtractorTest {
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")));
 
-    extractor.onEnd(attributes, Context.root(), request, response, null);
-    assertThat(attributes.build())
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NET_HOST_NAME, "github.com"),
-            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
-            entry(SemanticAttributes.HTTP_METHOD, "POST"),
-            entry(SemanticAttributes.HTTP_SCHEME, "https"),
-            entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
-            entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
-            entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
-            entry(
-                AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
-                asList("123", "456")),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
             entry(
@@ -287,6 +285,40 @@ class HttpServerAttributesExtractorTest {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(arguments(80, "http"), arguments(443, "https"));
+    }
+  }
+
+  @ParameterizedTest
+  @ArgumentsSource(PathAndQueryArgumentSource.class)
+  void computeTargetFromPathAndQuery(String path, String query, String expectedTarget) {
+    Map<String, Object> request = new HashMap<>();
+    request.put("path", path);
+    request.put("query", query);
+
+    AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
+        HttpServerAttributesExtractor.create(
+            new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    if (expectedTarget == null) {
+      assertThat(attributes.build()).doesNotContainKey(SemanticAttributes.HTTP_TARGET);
+    } else {
+      assertThat(attributes.build()).containsEntry(SemanticAttributes.HTTP_TARGET, expectedTarget);
+    }
+  }
+
+  static class PathAndQueryArgumentSource implements ArgumentsProvider {
+
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return Stream.of(
+          arguments(null, null, null),
+          arguments("path", null, "path"),
+          arguments("path", "", "path"),
+          arguments(null, "query", "?query"),
+          arguments("path", "query", "path?query"));
     }
   }
 }

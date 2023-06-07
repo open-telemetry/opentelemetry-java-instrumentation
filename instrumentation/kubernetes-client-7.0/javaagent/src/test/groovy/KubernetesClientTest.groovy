@@ -68,7 +68,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        apiClientSpan(it, 1, "get  pods/proxy", "${server.httpUri()}/api/v1/namespaces/namespace/pods/name/proxy?path=path", 200)
+        apiClientSpan(it, 1, "get pods/proxy", "${server.httpUri()}/api/v1/namespaces/namespace/pods/name/proxy?path=path", 200)
       }
     }
   }
@@ -95,7 +95,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent(exception.class, exception.message)
         }
-        apiClientSpan(it, 1, "get  pods/proxy", "${server.httpUri()}/api/v1/namespaces/namespace/pods/name/proxy?path=path", 451, exception)
+        apiClientSpan(it, 1, "get pods/proxy", "${server.httpUri()}/api/v1/namespaces/namespace/pods/name/proxy?path=path", 451, exception)
       }
     }
   }
@@ -131,7 +131,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        apiClientSpan(it, 1, "get  pods/proxy", "${server.httpUri()}/api/v1/namespaces/namespace/pods/name/proxy?path=path", 200)
+        apiClientSpan(it, 1, "get pods/proxy", "${server.httpUri()}/api/v1/namespaces/namespace/pods/name/proxy?path=path", 200)
         span(2) {
           name "callback"
           kind SpanKind.INTERNAL
@@ -172,7 +172,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        apiClientSpan(it, 1, "get  pods/proxy", "${server.httpUri()}/api/v1/namespaces/namespace/pods/name/proxy?path=path", 451, exception.get())
+        apiClientSpan(it, 1, "get pods/proxy", "${server.httpUri()}/api/v1/namespaces/namespace/pods/name/proxy?path=path", 451, exception.get())
         span(2) {
           name "callback"
           kind SpanKind.INTERNAL

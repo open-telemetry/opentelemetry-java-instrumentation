@@ -42,13 +42,20 @@ enum WebfluxServerHttpAttributesGetter
 
   @Nullable
   @Override
-  public String getTarget(ServerWebExchange request) {
-    String path = request.getRequest().getURI().getPath();
-    String query = request.getRequest().getURI().getQuery();
-    if (path == null && query == null) {
-      return null;
-    }
-    return (path == null ? "" : path) + (query == null ? "" : "?" + query);
+  public String getUrlScheme(ServerWebExchange request) {
+    return request.getRequest().getURI().getScheme();
+  }
+
+  @Nullable
+  @Override
+  public String getUrlPath(ServerWebExchange request) {
+    return request.getRequest().getURI().getPath();
+  }
+
+  @Nullable
+  @Override
+  public String getUrlQuery(ServerWebExchange request) {
+    return request.getRequest().getURI().getQuery();
   }
 
   @Nullable
@@ -69,11 +76,5 @@ enum WebfluxServerHttpAttributesGetter
     }
     String contextPath = request.getRequest().getPath().contextPath().value();
     return contextPath + (route.startsWith("/") ? route : ("/" + route));
-  }
-
-  @Nullable
-  @Override
-  public String getScheme(ServerWebExchange request) {
-    return request.getRequest().getURI().getScheme();
   }
 }

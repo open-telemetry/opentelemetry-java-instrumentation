@@ -51,6 +51,7 @@ abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST>
         .setShutdownTimeout(0)
         .setMaxRedirects(3)
         .setConnectTimeout(CONNECT_TIMEOUT_MS)
+        .setReadTimeout(READ_TIMEOUT_MS)
         .build()
 
     asyncHttpClient = new DefaultAsyncHttpClient(asyncHttpClientConfig)
@@ -58,6 +59,12 @@ abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST>
 
   def cleanupSpec() {
     system?.terminate()
+  }
+
+  @Override
+  Integer responseCodeOnRedirectError() {
+    // apparently play ws does not report the 302 status code
+    null
   }
 
   @Override

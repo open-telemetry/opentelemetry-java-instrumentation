@@ -94,11 +94,6 @@ abstract class AbstractCommonsHttpClientTest extends HttpClientTest<HttpMethod> 
   }
 
   @Override
-  boolean testReadTimeout() {
-    true
-  }
-
-  @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     Set<AttributeKey<?>> extra = [
       SemanticAttributes.HTTP_SCHEME,

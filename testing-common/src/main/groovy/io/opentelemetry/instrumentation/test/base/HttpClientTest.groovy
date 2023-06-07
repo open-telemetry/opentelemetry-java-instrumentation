@@ -126,101 +126,26 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     }
 
     @Override
-    protected String expectedClientSpanName(URI uri, String method) {
-      return HttpClientTest.this.expectedClientSpanName(uri, method)
-    }
-
-    @Override
-    protected Integer responseCodeOnRedirectError() {
-      return HttpClientTest.this.responseCodeOnRedirectError()
-    }
-
-    @Override
-    protected String userAgent() {
-      return HttpClientTest.this.userAgent()
-    }
-
-    @Override
-    protected Throwable clientSpanError(URI uri, Throwable exception) {
-      return HttpClientTest.this.clientSpanError(uri, exception)
-    }
-
-    @Override
-    protected Set<AttributeKey<?>> httpAttributes(URI uri) {
-      return HttpClientTest.this.httpAttributes(uri)
-    }
-
-    @Override
-    protected SingleConnection createSingleConnection(String host, int port) {
-      return HttpClientTest.this.createSingleConnection(host, port)
-    }
-
-    @Override
-    protected boolean testWithClientParent() {
-      return HttpClientTest.this.testWithClientParent()
-    }
-
-    @Override
-    protected boolean testRedirects() {
-      return HttpClientTest.this.testRedirects()
-    }
-
-    @Override
-    protected boolean testCircularRedirects() {
-      return HttpClientTest.this.testCircularRedirects()
-    }
-
-    // maximum number of redirects that http client follows before giving up
-    @Override
-    protected int maxRedirects() {
-      return HttpClientTest.this.maxRedirects()
-    }
-
-    @Override
-    protected boolean testReusedRequest() {
-      return HttpClientTest.this.testReusedRequest()
-    }
-
-    @Override
-    protected boolean testConnectionFailure() {
-      return HttpClientTest.this.testConnectionFailure()
-    }
-
-    @Override
-    protected boolean testRemoteConnection() {
-      return HttpClientTest.this.testRemoteConnection()
-    }
-
-    @Override
-    protected boolean testReadTimeout() {
-      return HttpClientTest.this.testReadTimeout()
-    }
-
-    @Override
-    protected boolean testHttps() {
-      return HttpClientTest.this.testHttps()
-    }
-
-    @Override
-    protected boolean testCallback() {
-      return HttpClientTest.this.testCallback()
-    }
-
-    @Override
-    protected boolean testCallbackWithParent() {
-      // FIXME: this hack is here because callback with parent is broken in play-ws when the stream()
-      // function is used.  There is no way to stop a test from a derived class hence the flag
-      return HttpClientTest.this.testCallbackWithParent()
-    }
-
-    @Override
-    protected boolean testCallbackWithImplicitParent() {
-      return HttpClientTest.this.testCallbackWithImplicitParent()
-    }
-
-    @Override
-    protected boolean testErrorWithCallback() {
-      return HttpClientTest.this.testErrorWithCallback()
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      optionsBuilder.setHttpAttributes(HttpClientTest.this.&httpAttributes)
+      optionsBuilder.setResponseCodeOnRedirectError(responseCodeOnRedirectError())
+      optionsBuilder.setUserAgent(HttpClientTest.this.userAgent())
+      optionsBuilder.setClientSpanErrorMapper(HttpClientTest.this.&clientSpanError)
+      optionsBuilder.setSingleConnectionFactory(HttpClientTest.this.&createSingleConnection)
+      optionsBuilder.setExpectedClientSpanNameMapper(HttpClientTest.this.&expectedClientSpanName)
+      optionsBuilder.setTestWithClientParent(HttpClientTest.this.testWithClientParent())
+      optionsBuilder.setTestRedirects(HttpClientTest.this.testRedirects())
+      optionsBuilder.setTestCircularRedirects(HttpClientTest.this.testCircularRedirects())
+      optionsBuilder.setMaxRedirects(HttpClientTest.this.maxRedirects())
+      optionsBuilder.setTestReusedRequest(HttpClientTest.this.testReusedRequest())
+      optionsBuilder.setTestConnectionFailure(HttpClientTest.this.testConnectionFailure())
+      optionsBuilder.setTestReadTimeout(HttpClientTest.this.testReadTimeout())
+      optionsBuilder.setTestRemoteConnection(HttpClientTest.this.testRemoteConnection())
+      optionsBuilder.setTestHttps(HttpClientTest.this.testHttps())
+      optionsBuilder.setTestCallback(HttpClientTest.this.testCallback())
+      optionsBuilder.setTestCallbackWithParent(HttpClientTest.this.testCallbackWithParent())
+      optionsBuilder.setTestCallbackWithImplicitParent(HttpClientTest.this.testCallbackWithImplicitParent())
+      optionsBuilder.setTestErrorWithCallback(HttpClientTest.this.testErrorWithCallback())
     }
   }
 
@@ -438,7 +363,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   Integer responseCodeOnRedirectError() {
-    return null
+    return 302
   }
 
   String userAgent() {
@@ -490,7 +415,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   boolean testReadTimeout() {
-    false
+    true
   }
 
   boolean testHttps() {
@@ -525,7 +450,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   final void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = resolveAddress("/success"), Integer responseCode = 200) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
-    def assertion = junitTest.assertClientSpan(OpenTelemetryAssertions.assertThat(spanData), uri, method, responseCode)
+    def assertion = junitTest.assertClientSpan(OpenTelemetryAssertions.assertThat(spanData), uri, method, responseCode, null)
     if (parentSpan == null) {
       assertion.hasParentSpanId(SpanId.invalid)
     } else {

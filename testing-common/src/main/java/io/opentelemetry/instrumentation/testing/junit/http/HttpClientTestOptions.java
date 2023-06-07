@@ -10,6 +10,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,6 +37,8 @@ public abstract class HttpClientTestOptions {
   public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =
       (uri, method) -> method;
 
+  public static final int FOUND_STATUS_CODE = HttpStatus.FOUND.code();
+
   public abstract Function<URI, Set<AttributeKey<?>>> getHttpAttributes();
 
   @Nullable
@@ -46,9 +49,19 @@ public abstract class HttpClientTestOptions {
 
   public abstract BiFunction<URI, Throwable, Throwable> getClientSpanErrorMapper();
 
+  /**
+   * The returned function should create either a single connection to the target uri or a http
+   * client which is guaranteed to use the same connection for all requests.
+   */
   public abstract BiFunction<String, Integer, SingleConnection> getSingleConnectionFactory();
 
   public abstract BiFunction<URI, String, String> getExpectedClientSpanNameMapper();
+
+  abstract HttpClientInstrumentationType getInstrumentationType();
+
+  public boolean isLowLevelInstrumentation() {
+    return getInstrumentationType() == HttpClientInstrumentationType.LOW_LEVEL;
+  }
 
   public abstract boolean getTestWithClientParent();
 
@@ -56,6 +69,7 @@ public abstract class HttpClientTestOptions {
 
   public abstract boolean getTestCircularRedirects();
 
+  /** Returns the maximum number of redirects that http client follows before giving up. */
   public abstract int getMaxRedirects();
 
   public abstract boolean getTestReusedRequest();
@@ -72,6 +86,9 @@ public abstract class HttpClientTestOptions {
 
   public abstract boolean getTestCallbackWithParent();
 
+  // depending on async behavior callback can be executed within
+  // parent span scope or outside of the scope, e.g. in reactor-netty or spring
+  // callback is correlated.
   public abstract boolean getTestCallbackWithImplicitParent();
 
   public abstract boolean getTestErrorWithCallback();
@@ -86,18 +103,19 @@ public abstract class HttpClientTestOptions {
     @CanIgnoreReturnValue
     default Builder withDefaults() {
       return setHttpAttributes(x -> DEFAULT_HTTP_ATTRIBUTES)
-          .setResponseCodeOnRedirectError(null)
+          .setResponseCodeOnRedirectError(FOUND_STATUS_CODE)
           .setUserAgent(null)
           .setClientSpanErrorMapper((uri, exception) -> exception)
           .setSingleConnectionFactory((host, port) -> null)
           .setExpectedClientSpanNameMapper(DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER)
+          .setInstrumentationType(HttpClientInstrumentationType.HIGH_LEVEL)
           .setTestWithClientParent(true)
           .setTestRedirects(true)
           .setTestCircularRedirects(true)
           .setMaxRedirects(2)
           .setTestReusedRequest(true)
           .setTestConnectionFailure(true)
-          .setTestReadTimeout(false)
+          .setTestReadTimeout(true)
           .setTestRemoteConnection(true)
           .setTestHttps(true)
           .setTestCallback(true)
@@ -117,6 +135,8 @@ public abstract class HttpClientTestOptions {
     Builder setSingleConnectionFactory(BiFunction<String, Integer, SingleConnection> value);
 
     Builder setExpectedClientSpanNameMapper(BiFunction<URI, String, String> value);
+
+    Builder setInstrumentationType(HttpClientInstrumentationType instrumentationType);
 
     Builder setTestWithClientParent(boolean value);
 
@@ -170,8 +190,8 @@ public abstract class HttpClientTestOptions {
     }
 
     @CanIgnoreReturnValue
-    default Builder enableTestReadTimeout() {
-      return setTestReadTimeout(true);
+    default Builder disableTestReadTimeout() {
+      return setTestReadTimeout(false);
     }
 
     @CanIgnoreReturnValue
@@ -204,6 +224,21 @@ public abstract class HttpClientTestOptions {
       return setTestCallbackWithImplicitParent(true);
     }
 
+    @CanIgnoreReturnValue
+    default Builder markAsLowLevelInstrumentation() {
+      return setInstrumentationType(HttpClientInstrumentationType.LOW_LEVEL);
+    }
+
     HttpClientTestOptions build();
+  }
+
+  enum HttpClientInstrumentationType {
+    /**
+     * Creates a span for each attempt to send an HTTP request over the wire, follows the HTTP
+     * resend spec.
+     */
+    LOW_LEVEL,
+    /** Creates a single span for the topmost HTTP client operation. */
+    HIGH_LEVEL
   }
 }

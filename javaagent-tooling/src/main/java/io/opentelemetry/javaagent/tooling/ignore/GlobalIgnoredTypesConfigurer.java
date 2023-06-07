@@ -170,5 +170,13 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
     // Presto turned into trino, and so the package changed.
     builder.ignoreTaskClass("io.trino.jdbc.$internal.okhttp3.ConnectionPool$");
+
+    // ReservedThread is a Runnable that consumes tasks from a queue.
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8415
+    builder.ignoreTaskClass("org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread");
+
+    // Skip propagating context into truffle compiler.
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8415
+    builder.ignoreTaskClass("org.graalvm.compiler.truffle.runtime.CompilationTask");
   }
 }

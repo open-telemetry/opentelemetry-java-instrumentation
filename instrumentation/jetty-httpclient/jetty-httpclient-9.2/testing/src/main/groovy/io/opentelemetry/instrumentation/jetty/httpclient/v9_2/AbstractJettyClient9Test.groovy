@@ -36,6 +36,7 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
 
   def setupSpec() {
     //Start the main Jetty HttpClient and a https client
+    client.setConnectTimeout(CONNECT_TIMEOUT_MS)
     client.start()
 
     SslContextFactory tlsCtx = new SslContextFactory()

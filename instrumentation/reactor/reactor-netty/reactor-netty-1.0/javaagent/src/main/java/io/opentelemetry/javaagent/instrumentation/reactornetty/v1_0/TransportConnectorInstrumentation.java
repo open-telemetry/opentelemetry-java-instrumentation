@@ -80,6 +80,7 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) SocketAddress remoteAddress,
+        @Advice.Argument(2) ChannelPromise channelPromise,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelRequest") NettyConnectionRequest request,
         @Advice.Local("otelScope") Scope scope) {
@@ -92,12 +93,15 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
 
       context = connectionInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
+
+      // the span is finished in the mono decorated by the ConnectionWrapper
+      VirtualField.find(ChannelPromise.class, ConnectionRequestAndContext.class)
+          .set(channelPromise, ConnectionRequestAndContext.create(request, context));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endConnect(
         @Advice.Thrown Throwable throwable,
-        @Advice.Argument(2) ChannelPromise channelPromise,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelRequest") NettyConnectionRequest request,
         @Advice.Local("otelScope") Scope scope) {
@@ -109,10 +113,6 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
 
       if (throwable != null) {
         connectionInstrumenter().end(context, request, null, throwable);
-      } else {
-        // the span is finished in the mono decorated by the ConnectionWrapper
-        VirtualField.find(ChannelPromise.class, ConnectionRequestAndContext.class)
-            .set(channelPromise, ConnectionRequestAndContext.create(request, context));
       }
     }
   }
@@ -123,6 +123,7 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) List<SocketAddress> remoteAddresses,
+        @Advice.Argument(2) ChannelPromise channelPromise,
         @Advice.Argument(3) int index,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelRequest") NettyConnectionRequest request,
@@ -136,12 +137,15 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
 
       context = connectionInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
+
+      // the span is finished in the mono decorated by the ConnectionWrapper
+      VirtualField.find(ChannelPromise.class, ConnectionRequestAndContext.class)
+          .set(channelPromise, ConnectionRequestAndContext.create(request, context));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endConnect(
         @Advice.Thrown Throwable throwable,
-        @Advice.Argument(2) ChannelPromise channelPromise,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelRequest") NettyConnectionRequest request,
         @Advice.Local("otelScope") Scope scope) {
@@ -153,10 +157,6 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
 
       if (throwable != null) {
         connectionInstrumenter().end(context, request, null, throwable);
-      } else {
-        // the span is finished in the mono decorated by the ConnectionWrapper
-        VirtualField.find(ChannelPromise.class, ConnectionRequestAndContext.class)
-            .set(channelPromise, ConnectionRequestAndContext.create(request, context));
       }
     }
   }

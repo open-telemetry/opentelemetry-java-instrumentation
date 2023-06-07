@@ -17,6 +17,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -24,7 +26,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
  */
 public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapter {
 
-  static final AttributeKey<HttpRequestAndChannel> HTTP_SERVER_REQUEST =
+  static final AttributeKey<Deque<HttpRequestAndChannel>> HTTP_SERVER_REQUEST =
       AttributeKey.valueOf(HttpServerRequestTracingHandler.class, "http-server-request");
 
   private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
@@ -37,11 +39,10 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     Channel channel = ctx.channel();
-    Attribute<Context> contextAttr = channel.attr(AttributeKeys.SERVER_CONTEXT);
-    Attribute<HttpRequestAndChannel> requestAttr = channel.attr(HTTP_SERVER_REQUEST);
+    Deque<Context> contexts = getOrCreate(channel, AttributeKeys.SERVER_CONTEXT);
 
     if (!(msg instanceof HttpRequest)) {
-      Context serverContext = contextAttr.get();
+      Context serverContext = contexts.peekLast();
       if (serverContext == null) {
         super.channelRead(ctx, msg);
       } else {
@@ -52,28 +53,35 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
       return;
     }
 
-    Context parentContext = contextAttr.get();
-    if (parentContext == null) {
-      parentContext = Context.current();
-    }
+    Context parentContext = Context.current();
     HttpRequestAndChannel request = HttpRequestAndChannel.create((HttpRequest) msg, channel);
-
     if (!instrumenter.shouldStart(parentContext, request)) {
       super.channelRead(ctx, msg);
       return;
     }
 
     Context context = instrumenter.start(parentContext, request);
-    contextAttr.set(context);
-    requestAttr.set(request);
+    contexts.addLast(context);
+    Deque<HttpRequestAndChannel> requests = getOrCreate(channel, HTTP_SERVER_REQUEST);
+    requests.addLast(request);
 
     try (Scope ignored = context.makeCurrent()) {
       super.channelRead(ctx, msg);
       // the span is ended normally in HttpServerResponseTracingHandler
     } catch (Throwable throwable) {
       // make sure to remove the server context on end() call
-      instrumenter.end(contextAttr.getAndSet(null), requestAttr.getAndSet(null), null, throwable);
+      instrumenter.end(contexts.removeLast(), requests.removeLast(), null, throwable);
       throw throwable;
     }
+  }
+
+  private static <T> Deque<T> getOrCreate(Channel channel, AttributeKey<Deque<T>> key) {
+    Attribute<Deque<T>> attribute = channel.attr(key);
+    Deque<T> deque = attribute.get();
+    if (deque == null) {
+      deque = new ArrayDeque<>();
+      attribute.set(deque);
+    }
+    return deque;
   }
 }

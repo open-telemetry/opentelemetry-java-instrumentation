@@ -29,6 +29,7 @@ import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -48,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 class Jms3InstrumentationTest {
 
@@ -70,6 +72,8 @@ class Jms3InstrumentationTest {
             .withEnv("AMQ_USER", "test")
             .withEnv("AMQ_PASSWORD", "test")
             .withExposedPorts(61616, 8161)
+            .waitingFor(Wait.forLogMessage(".*Server is now live.*", 1))
+            .withStartupTimeout(Duration.ofMinutes(2))
             .withLogConsumer(new Slf4jLogConsumer(logger));
     broker.start();
 

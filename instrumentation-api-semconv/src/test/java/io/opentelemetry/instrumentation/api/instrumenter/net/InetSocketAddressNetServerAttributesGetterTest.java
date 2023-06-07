@@ -21,33 +21,33 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class InetSocketAddressNetServerAttributesGetterTest {
 
-  final InetSocketAddressNetServerAttributesGetter<Addresses> getter =
-      new InetSocketAddressNetServerAttributesGetter<Addresses>() {
+  static class TestNetServerAttributesGetter implements NetServerAttributesGetter<Addresses> {
 
-        @Override
-        public String getHostName(Addresses request) {
-          // net.host.name and net.host.port are tested in NetClientAttributesExtractorTest
-          return null;
-        }
+    @Override
+    public String getHostName(Addresses request) {
+      // net.host.name and net.host.port are tested in NetClientAttributesExtractorTest
+      return null;
+    }
 
-        @Override
-        public Integer getHostPort(Addresses request) {
-          // net.host.name and net.host.port are tested in NetClientAttributesExtractorTest
-          return null;
-        }
+    @Override
+    public Integer getHostPort(Addresses request) {
+      // net.host.name and net.host.port are tested in NetClientAttributesExtractorTest
+      return null;
+    }
 
-        @Override
-        protected InetSocketAddress getPeerSocketAddress(Addresses request) {
-          return request.peer;
-        }
+    @Override
+    public InetSocketAddress getPeerSocketAddress(Addresses request) {
+      return request.peer;
+    }
 
-        @Override
-        protected InetSocketAddress getHostSocketAddress(Addresses request) {
-          return request.host;
-        }
-      };
+    @Override
+    public InetSocketAddress getHostSocketAddress(Addresses request) {
+      return request.host;
+    }
+  }
+
   private final AttributesExtractor<Addresses, Addresses> extractor =
-      NetServerAttributesExtractor.create(getter);
+      NetServerAttributesExtractor.create(new TestNetServerAttributesGetter());
 
   @Test
   void noInetSocketAddress() {

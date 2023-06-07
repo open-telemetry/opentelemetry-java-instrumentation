@@ -30,20 +30,20 @@ val groovyVersion = "4.0.12"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.15.0",
-  "com.google.guava:guava-bom:31.1-jre",
+  "com.fasterxml.jackson:jackson-bom:2.15.2",
+  "com.google.guava:guava-bom:32.0.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
   "org.junit:junit-bom:5.9.3",
-  "org.testcontainers:testcontainers-bom:1.18.0",
+  "org.testcontainers:testcontainers-bom:1.18.3",
   "org.spockframework:spock-bom:2.4-M1-groovy-4.0"
 )
 
-val autoServiceVersion = "1.0.1"
+val autoServiceVersion = "1.1.0"
 val autoValueVersion = "1.10.1"
 val errorProneVersion = "2.19.1"
-val byteBuddyVersion = "1.14.4"
+val byteBuddyVersion = "1.14.5"
 val asmVersion = "9.5"
 val jmhVersion = "1.36"
 val mockitoVersion = "4.11.0"
@@ -91,12 +91,12 @@ val DEPENDENCIES = listOf(
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.5",
-  "commons-io:commons-io:2.11.0",
+  "commons-io:commons-io:2.12.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
-  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.25.1-alpha",
+  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.26.0-alpha",
   "io.opentelemetry.proto:opentelemetry-proto:0.19.0-alpha",
   "org.assertj:assertj-core:3.24.2",
   "org.awaitility:awaitility:4.2.0",

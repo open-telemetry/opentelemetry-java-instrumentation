@@ -16,7 +16,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 17.0.6
 
       - name: Build Docker image
         uses: gradle/gradle-build-action@v2
@@ -41,7 +41,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 17.0.6
 
       - name: Build Docker image
         uses: gradle/gradle-build-action@v2

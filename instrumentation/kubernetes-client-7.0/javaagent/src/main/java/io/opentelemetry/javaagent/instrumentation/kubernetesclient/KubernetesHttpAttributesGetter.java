@@ -22,7 +22,7 @@ class KubernetesHttpAttributesGetter
   }
 
   @Override
-  public String getUrl(Request request) {
+  public String getUrlFull(Request request) {
     return request.url().toString();
   }
 

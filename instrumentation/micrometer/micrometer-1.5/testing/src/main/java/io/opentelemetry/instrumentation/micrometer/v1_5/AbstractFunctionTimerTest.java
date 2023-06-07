@@ -78,13 +78,13 @@ public abstract class AbstractFunctionTimerTest {
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test function timer")
-                            .hasUnit("ms")
+                            .hasUnit("s")
                             .hasDoubleSumSatisfying(
                                 sum ->
                                     sum.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasValue(42_000)
+                                                .hasValue(42)
                                                 .hasAttributes(attributeEntry("tag", "value"))))));
 
     // when
@@ -120,13 +120,13 @@ public abstract class AbstractFunctionTimerTest {
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasUnit("ms")
+                            .hasUnit("s")
                             .hasDoubleSumSatisfying(
                                 sum ->
                                     sum.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasValue(1.234)
+                                                .hasValue(0.001234)
                                                 .hasAttributes(Attributes.empty())))));
   }
 
@@ -163,17 +163,17 @@ public abstract class AbstractFunctionTimerTest {
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasUnit("ms")
+                            .hasUnit("s")
                             .hasDoubleSumSatisfying(
                                 sum ->
                                     sum.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasValue(12_000)
+                                                .hasValue(12)
                                                 .hasAttributes(attributeEntry("tag", "1")),
                                         point ->
                                             point
-                                                .hasValue(42_000)
+                                                .hasValue(42)
                                                 .hasAttributes(attributeEntry("tag", "2"))))));
   }
 }

@@ -36,7 +36,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 17.0.6
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules

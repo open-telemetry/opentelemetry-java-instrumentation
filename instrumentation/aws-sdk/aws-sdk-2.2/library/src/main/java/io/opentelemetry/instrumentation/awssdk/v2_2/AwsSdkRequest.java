@@ -121,6 +121,7 @@ enum AwsSdkRequest {
 
   private final AwsSdkRequestType type;
   private final String requestClass;
+
   // Wrap in unmodifiableMap
   @SuppressWarnings("ImmutableEnumChecker")
   private final Map<FieldMapping.Type, List<FieldMapping>> fields;

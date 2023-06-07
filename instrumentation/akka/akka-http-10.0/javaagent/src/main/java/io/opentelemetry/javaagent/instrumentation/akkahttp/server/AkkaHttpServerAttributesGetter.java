@@ -39,17 +39,19 @@ class AkkaHttpServerAttributesGetter
   }
 
   @Override
-  public String getTarget(HttpRequest request) {
-    String target = request.uri().path().toString();
-    Option<String> queryString = request.uri().rawQueryString();
-    if (queryString.isDefined()) {
-      target += "?" + queryString.get();
-    }
-    return target;
+  public String getUrlScheme(HttpRequest request) {
+    return request.uri().scheme();
   }
 
   @Override
-  public String getScheme(HttpRequest request) {
-    return request.uri().scheme();
+  public String getUrlPath(HttpRequest request) {
+    return request.uri().path().toString();
+  }
+
+  @Nullable
+  @Override
+  public String getUrlQuery(HttpRequest request) {
+    Option<String> queryString = request.uri().rawQueryString();
+    return queryString.isDefined() ? queryString.get() : null;
   }
 }

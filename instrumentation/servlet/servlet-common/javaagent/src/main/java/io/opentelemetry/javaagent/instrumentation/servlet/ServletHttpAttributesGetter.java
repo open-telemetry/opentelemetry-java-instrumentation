@@ -27,20 +27,20 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public String getTarget(ServletRequestContext<REQUEST> requestContext) {
-    REQUEST request = requestContext.request();
-    String target = accessor.getRequestUri(request);
-    String queryString = accessor.getRequestQueryString(request);
-    if (queryString != null) {
-      target += "?" + queryString;
-    }
-    return target;
+  public String getUrlScheme(ServletRequestContext<REQUEST> requestContext) {
+    return accessor.getRequestScheme(requestContext.request());
   }
 
-  @Override
   @Nullable
-  public String getScheme(ServletRequestContext<REQUEST> requestContext) {
-    return accessor.getRequestScheme(requestContext.request());
+  @Override
+  public String getUrlPath(ServletRequestContext<REQUEST> requestContext) {
+    return accessor.getRequestUri(requestContext.request());
+  }
+
+  @Nullable
+  @Override
+  public String getUrlQuery(ServletRequestContext<REQUEST> requestContext) {
+    return accessor.getRequestQueryString(requestContext.request());
   }
 
   @Override
