@@ -133,7 +133,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
   def "snippet injection with ServletOutputStream"() {
     setup:
-    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
     def request = request(HTML_SERVLET_OUTPUT_STREAM, "GET")
     def response = client.execute(request).aggregate().join()
 
@@ -141,8 +140,8 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     response.status().code() == HTML_SERVLET_OUTPUT_STREAM.status
     String result = "<!DOCTYPE html>\n" +
       "<html lang=\"en\">\n" +
-      "<head>\n" +
-      "  <script type=\"text/javascript\"> Test </script>\n" +
+      "<head>" +
+      "<script type=\"text/javascript\"> Test </script>\n" +
       "  <meta charset=\"UTF-8\">\n" +
       "  <title>Title</title>\n" +
       "</head>\n" +
@@ -172,7 +171,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
   def "snippet injection with PrintWriter"() {
     setup:
-    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
     def request = request(HTML_PRINT_WRITER, "GET")
     def response = client.execute(request).aggregate().join()
 
@@ -180,8 +178,8 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     response.status().code() == HTML_PRINT_WRITER.status
     String result = "<!DOCTYPE html>\n" +
       "<html lang=\"en\">\n" +
-      "<head>\n" +
-      "  <script type=\"text/javascript\"> Test </script>\n" +
+      "<head>" +
+      "<script type=\"text/javascript\"> Test </script>\n" +
       "  <meta charset=\"UTF-8\">\n" +
       "  <title>Title</title>\n" +
       "</head>\n" +
