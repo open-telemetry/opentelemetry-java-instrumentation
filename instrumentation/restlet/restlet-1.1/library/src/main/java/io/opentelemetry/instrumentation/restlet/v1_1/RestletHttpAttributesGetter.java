@@ -28,19 +28,19 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
 
   @Override
   @Nullable
-  public String getScheme(Request request) {
+  public String getUrlScheme(Request request) {
     return request.getOriginalRef().getScheme();
   }
 
   @Nullable
   @Override
-  public String getPath(Request request) {
+  public String getUrlPath(Request request) {
     return request.getOriginalRef().getPath();
   }
 
   @Nullable
   @Override
-  public String getQuery(Request request) {
+  public String getUrlQuery(Request request) {
     return request.getOriginalRef().getQuery();
   }
 

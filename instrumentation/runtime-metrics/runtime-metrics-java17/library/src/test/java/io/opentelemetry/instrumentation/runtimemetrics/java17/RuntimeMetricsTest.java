@@ -78,7 +78,7 @@ class RuntimeMetricsTest {
   }
 
   @Test
-  void close() {
+  void close() throws InterruptedException {
     try (RuntimeMetrics jfrTelemetry = RuntimeMetrics.builder(sdk).build()) {
       // Track whether RecordingStream has been closed
       AtomicBoolean recordingStreamClosed = new AtomicBoolean(false);
@@ -92,11 +92,13 @@ class RuntimeMetricsTest {
       jfrTelemetry.close();
       logs.assertDoesNotContain("RuntimeMetrics is already closed");
       assertThat(recordingStreamClosed.get()).isTrue();
-      assertThat(reader.collectAllMetrics())
-          .allSatisfy(
-              metric -> {
-                assertThat(metric.getName()).isEqualTo("process.runtime.jvm.gc.duration");
-              });
+
+      // clear all metrics that might have arrived after close
+      Thread.sleep(100); // give time for any inflight metric export to be received
+      reader.collectAllMetrics();
+
+      Thread.sleep(100);
+      assertThat(reader.collectAllMetrics()).isEmpty();
 
       jfrTelemetry.close();
       logs.assertContains("RuntimeMetrics is already closed");

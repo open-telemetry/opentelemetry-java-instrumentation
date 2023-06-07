@@ -27,7 +27,7 @@ enum SpringWebHttpAttributesGetter
 
   @Override
   @Nullable
-  public String getUrl(HttpRequest httpRequest) {
+  public String getUrlFull(HttpRequest httpRequest) {
     return httpRequest.getURI().toString();
   }
 

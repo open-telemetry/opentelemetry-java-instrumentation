@@ -41,7 +41,7 @@ public class Java8RuntimeMetricsInstaller implements AgentListener {
     observables.addAll(Cpu.registerObservers(openTelemetry));
     observables.addAll(MemoryPools.registerObservers(openTelemetry));
     observables.addAll(Threads.registerObservers(openTelemetry));
-    GarbageCollector.registerObservers(openTelemetry);
+    observables.addAll(GarbageCollector.registerObservers(openTelemetry));
     Thread cleanupTelemetry =
         new Thread(
             () -> {
