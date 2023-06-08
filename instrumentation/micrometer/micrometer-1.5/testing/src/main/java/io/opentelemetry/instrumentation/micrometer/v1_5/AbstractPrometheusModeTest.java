@@ -140,7 +140,7 @@ public abstract class AbstractPrometheusModeTest {
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test function timer")
-                            .hasUnit("1")
+                            .hasUnit("{invocation}")
                             .hasLongSumSatisfying(
                                 sum ->
                                     sum.isMonotonic()
