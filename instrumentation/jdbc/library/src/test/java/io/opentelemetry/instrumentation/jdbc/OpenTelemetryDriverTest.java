@@ -21,14 +21,19 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.Enumeration;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class OpenTelemetryDriverTest {
 
   @DisplayName("verify driver auto registered")
+  @Order(1)
   @Test
   void verifyOpenTelemetryDriverAutoRegisteration() throws ClassNotFoundException {
 
@@ -107,29 +112,46 @@ public class OpenTelemetryDriverTest {
     assertNull(connection);
   }
 
-  @DisplayName("With other driver")
+  @DisplayName("verify add driver candidate")
   @Test
-  void verifyAddDriveCandidate() throws SQLException {
-
-    // Add driver candidate
+  void verifyAddDriverCandidate() throws SQLException {
     TestDriver driver = new TestDriver();
     OpenTelemetryDriver.addDriverCandidate(driver);
     Connection connection = OpenTelemetryDriver.INSTANCE.connect("jdbc:otel:test:", null);
     OpenTelemetryDriver.removeDriverCandidate(driver);
 
     assertThat(connection).isExactlyInstanceOf(OpenTelemetryConnection.class);
+  }
 
-    // Remove driver candidate
-    deregisterTestDriver();
-    OpenTelemetryDriver.addDriverCandidate(driver);
-    OpenTelemetryDriver.removeDriverCandidate(driver);
+  @DisplayName("verify remove driver candidate")
+  @Test
+  void verifyRemoveDriverCandidate() throws SQLException {
+
+    unregisterDrivers();
+
+    TestDriver newDriver = new TestDriver();
+    OpenTelemetryDriver.addDriverCandidate(newDriver);
+    OpenTelemetryDriver.removeDriverCandidate(newDriver);
 
     assertThrows(
         IllegalStateException.class,
         () -> OpenTelemetryDriver.INSTANCE.connect("jdbc:otel:test:", null),
         "Unable to find a driver that accepts url: jdbc:test:");
+  }
 
-    // Driver candidate has higher priority
+  private static void unregisterDrivers() throws SQLException {
+    Enumeration<Driver> drivers = DriverManager.getDrivers();
+
+    while (drivers.hasMoreElements()) {
+      Driver driver = drivers.nextElement();
+      DriverManager.deregisterDriver(driver);
+    }
+  }
+
+  @DisplayName("Driver candidate has higher priority")
+  @Test
+  void verifyDriverCandidateHasHigherPriority() throws SQLException {
+
     deregisterTestDriver();
 
     deregisterTestDriver();
@@ -143,8 +165,12 @@ public class OpenTelemetryDriverTest {
 
     assertThat(winner).isEqualTo(localDriver);
     assertThat(winner).isNotEqualTo(globalDriver);
+  }
 
-    // Two clashing driver candidates
+  @DisplayName("Two clashing driver candidates")
+  @Test
+  void verifyTwoClashingDriverCandidates() throws SQLException {
+
     TestDriver localDriver1 = new TestDriver();
     TestDriver localDriver2 = new TestDriver();
 
@@ -157,8 +183,12 @@ public class OpenTelemetryDriverTest {
 
     assertThat(winner2).isEqualTo(localDriver1);
     assertThat(winner2).isNotEqualTo(localDriver2);
+  }
 
-    // Verify drivers in DriverManager are used as fallback
+  @DisplayName("Verify drivers in DriverManager are used as fallback")
+  @Test
+  void verifyDriversInDriverManagerAreUsedAsFallback() {
+
     registerTestDriver();
     TestDriver localDriver3 =
         new TestDriver() {
@@ -174,16 +204,24 @@ public class OpenTelemetryDriverTest {
 
     assertThat(winner3).isNotNull();
     assertThat(winner3).isNotEqualTo(localDriver3);
+  }
 
-    // Verify connection with accepted url
+  @DisplayName("Verify connection with accepted url")
+  @Test
+  void verifyConnectionWithAcceptedUrl() throws SQLException {
+
     registerTestDriver();
 
     Connection connection2 = OpenTelemetryDriver.INSTANCE.connect("jdbc:otel:test:", null);
 
     assertThat(connection2).isNotNull();
     assertThat(connection2).isExactlyInstanceOf(OpenTelemetryConnection.class);
+  }
 
-    // Verify get property info with test driver url
+  @DisplayName("Verify get property info with test driver url")
+  @Test
+  void verifyGetPropertyInfoWithTestDriverUrl() throws SQLException {
+
     registerTestDriver();
     String testUrl = "jdbc:otel:test:";
     DriverPropertyInfo[] propertyInfos =
@@ -254,7 +292,7 @@ public class OpenTelemetryDriverTest {
 
   @DisplayName("verify get property info with test driver url")
   @Test
-  void verifyGetPropertyInfoWithTestDriverUrl() {
+  void verifyGetPropertyInfoWithUnknowDriverUrl() {
     String unknownUrl = "jdbc:unknown";
     assertThrows(
         IllegalStateException.class,
