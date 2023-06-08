@@ -8,6 +8,8 @@ muzzle {
     module.set("undertow-core")
     versions.set("[1.4.0.Final,)")
     assertInverse.set(true)
+    // release missing in maven central
+    skip("2.2.25.Final")
   }
 }
 
