@@ -7,8 +7,10 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.exporter.logging.LoggingMetricExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -21,6 +23,11 @@ class LoggingMetricExporterAutoConfigurationTest {
               AutoConfigurations.of(
                   OpenTelemetryAutoConfiguration.class,
                   LoggingMetricExporterAutoConfiguration.class));
+
+  @BeforeEach
+  void resetGlobalLoggerProvider() {
+    GlobalLoggerProvider.resetForTest();
+  }
 
   @Test
   void loggingEnabled() {
