@@ -35,7 +35,7 @@ public class OpenTelemetryDriverTest {
   @DisplayName("verify driver auto registered")
   @Order(1)
   @Test
-  void verifyOpenTelemetryDriverAutoRegisteration() throws ClassNotFoundException {
+  void verifyOpenTelemetryDriverAutoRegisteration() {
 
     Enumeration<Driver> drivers = DriverManager.getDrivers();
 
