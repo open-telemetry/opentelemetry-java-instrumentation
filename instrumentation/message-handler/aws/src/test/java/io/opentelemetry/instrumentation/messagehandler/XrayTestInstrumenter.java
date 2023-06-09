@@ -1,4 +1,11 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.messagehandler;
+
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
@@ -20,9 +27,6 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
-import org.awaitility.core.ConditionTimeoutException;
-import org.junit.jupiter.api.AfterEach;
-import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,8 +35,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-
-import static org.awaitility.Awaitility.await;
+import javax.annotation.Nullable;
+import org.awaitility.core.ConditionTimeoutException;
+import org.junit.jupiter.api.AfterEach;
 
 public class XrayTestInstrumenter {
   private static final OpenTelemetrySdk openTelemetry;

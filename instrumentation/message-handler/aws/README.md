@@ -15,5 +15,5 @@ SqsMessageHandler messageHandler = new SqsMessageHandler(opentelemetry) {
   }
 };
 
-messageHandler.handleMessages(sqsMessages, messages -> "Receiving Messages");
+messageHandler.handleMessages(sqsMessages, "destination.name", MessageOperation.RECEIVE);
 ```
