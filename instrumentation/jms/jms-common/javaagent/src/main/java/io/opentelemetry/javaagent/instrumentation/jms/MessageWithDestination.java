@@ -17,8 +17,6 @@ public abstract class MessageWithDestination {
 
   public abstract String destinationName();
 
-  public abstract String destinationKind();
-
   public abstract boolean isTemporaryDestination();
 
   public static MessageWithDestination create(

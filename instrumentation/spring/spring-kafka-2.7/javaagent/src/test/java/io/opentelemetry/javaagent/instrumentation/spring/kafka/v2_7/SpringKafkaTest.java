@@ -68,7 +68,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
@@ -92,7 +91,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
@@ -113,7 +111,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
@@ -167,7 +164,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
@@ -191,7 +187,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
@@ -214,7 +209,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
@@ -264,7 +258,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
@@ -282,7 +275,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
@@ -307,7 +299,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
@@ -330,7 +321,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
@@ -371,7 +361,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                               AbstractLongAssert::isNotNegative),
@@ -395,7 +384,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
@@ -418,7 +406,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             equalTo(
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,

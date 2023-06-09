@@ -23,9 +23,6 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   String getSystem(REQUEST request);
 
   @Nullable
-  String getDestinationKind(REQUEST request);
-
-  @Nullable
   String getDestination(REQUEST request);
 
   boolean isTemporaryDestination(REQUEST request);

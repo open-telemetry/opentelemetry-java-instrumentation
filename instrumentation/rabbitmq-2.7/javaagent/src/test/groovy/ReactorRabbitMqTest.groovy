@@ -27,7 +27,7 @@ class ReactorRabbitMqTest extends AgentInstrumentationSpecification implements W
 
     when:
     sender.declareExchange(ExchangeSpecification.exchange("testExchange"))
-      .block()
+        .block()
 
     then:
     noExceptionThrown()
@@ -42,7 +42,6 @@ class ReactorRabbitMqTest extends AgentInstrumentationSpecification implements W
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "rabbitmq.command" "exchange.declare"
           }
         }

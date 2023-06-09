@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -17,11 +16,6 @@ enum RabbitChannelAttributesGetter implements MessagingAttributesGetter<ChannelA
   @Override
   public String getSystem(ChannelAndMethod channelAndMethod) {
     return "rabbitmq";
-  }
-
-  @Override
-  public String getDestinationKind(ChannelAndMethod channelAndMethod) {
-    return SemanticAttributes.MessagingDestinationKindValues.QUEUE;
   }
 
   @Nullable

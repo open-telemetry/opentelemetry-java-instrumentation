@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -19,11 +18,6 @@ enum RabbitReceiveAttributesGetter
   @Override
   public String getSystem(ReceiveRequest request) {
     return "rabbitmq";
-  }
-
-  @Override
-  public String getDestinationKind(ReceiveRequest request) {
-    return SemanticAttributes.MessagingDestinationKindValues.QUEUE;
   }
 
   @Nullable

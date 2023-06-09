@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.kafka.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,11 +24,6 @@ enum KafkaProducerAttributesGetter
   @Override
   public String getSystem(KafkaProducerRequest request) {
     return "kafka";
-  }
-
-  @Override
-  public String getDestinationKind(KafkaProducerRequest request) {
-    return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Override

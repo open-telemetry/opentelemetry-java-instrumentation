@@ -42,13 +42,13 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     }
     KStream<Integer, String> textLines = builder.stream(STREAM_PENDING)
     def values = textLines
-      .mapValues(new ValueMapper<String, String>() {
-        @Override
-        String apply(String textLine) {
-          Span.current().setAttribute("asdf", "testing")
-          return textLine.toLowerCase()
-        }
-      })
+        .mapValues(new ValueMapper<String, String>() {
+          @Override
+          String apply(String textLine) {
+            Span.current().setAttribute("asdf", "testing")
+            return textLine.toLowerCase()
+          }
+        })
 
     KafkaStreams streams
     try {
@@ -57,7 +57,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
       streams = new KafkaStreams(builder, config)
     } catch (MissingMethodException e) {
       def producer = Class.forName("org.apache.kafka.streams.kstream.Produced")
-        .with(Serdes.Integer(), Serdes.String())
+          .with(Serdes.Integer(), Serdes.String())
       values.to(STREAM_PROCESSED, producer)
       streams = new KafkaStreams(builder.build(), config)
     }
@@ -84,9 +84,9 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
 
     assertTraces(3) {
       traces.sort(orderByRootSpanName(
-        STREAM_PENDING + " send",
-        STREAM_PENDING + " receive",
-        STREAM_PROCESSED + " receive"))
+          STREAM_PENDING + " send",
+          STREAM_PENDING + " receive",
+          STREAM_PROCESSED + " receive"))
 
       SpanData producerPending, producerProcessed
 
@@ -99,7 +99,6 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.startsWith("producer") }
             "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
@@ -118,7 +117,6 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.endsWith("consumer") }
             if (Boolean.getBoolean("testLatestDeps")) {
@@ -136,7 +134,6 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.endsWith("consumer") }
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
@@ -159,7 +156,6 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.endsWith("producer") }
             "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
@@ -177,7 +173,6 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.startsWith("consumer") }
             if (Boolean.getBoolean("testLatestDeps")) {
@@ -195,7 +190,6 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.startsWith("consumer") }
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long

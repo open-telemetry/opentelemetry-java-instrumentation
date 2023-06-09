@@ -69,7 +69,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
     serverLocator.close()
 
     def connectionFactory = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF,
-      new TransportConfiguration(InVMConnectorFactory.name))
+        new TransportConfiguration(InVMConnectorFactory.name))
 
     def connection = connectionFactory.createConnection()
     connection.start()
@@ -81,7 +81,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
     server.stop()
   }
 
-  def "sending a message to #destinationName #destinationType generates spans"() {
+  def "sending a message to #destinationName generates spans"() {
     setup:
     def producer = session.createProducer(destination)
     def consumer = session.createConsumer(destination)
@@ -104,7 +104,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
           name "producer parent"
           hasNoParent()
         }
-        producerSpan(it, 1, destinationType, destinationName, span(0))
+        producerSpan(it, 1, destinationName, span(0))
 
         producerSpanData = span(1)
       }
@@ -113,7 +113,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
           name "consumer parent"
           hasNoParent()
         }
-        consumerSpan(it, 1, destinationType, destinationName, messageId, "receive", span(0), producerSpanData)
+        consumerSpan(it, 1, destinationName, messageId, "receive", span(0), producerSpanData)
       }
     }
 
@@ -122,14 +122,14 @@ class Jms2Test extends AgentInstrumentationSpecification {
     consumer.close()
 
     where:
-    destination                      | destinationType | destinationName
-    session.createQueue("someQueue") | "queue"         | "someQueue"
-    session.createTopic("someTopic") | "topic"         | "someTopic"
-    session.createTemporaryQueue()   | "queue"         | "(temporary)"
-    session.createTemporaryTopic()   | "topic"         | "(temporary)"
+    destination                      | destinationName
+    session.createQueue("someQueue") | "someQueue"
+    session.createTopic("someTopic") | "someTopic"
+    session.createTemporaryQueue()   | "(temporary)"
+    session.createTemporaryTopic()   | "(temporary)"
   }
 
-  def "sending to a MessageListener on #destinationName #destinationType generates a span"() {
+  def "sending to a MessageListener on #destinationName generates a span"() {
     setup:
     def lock = new CountDownLatch(1)
     def messageRef = new AtomicReference<TextMessage>()
@@ -155,8 +155,8 @@ class Jms2Test extends AgentInstrumentationSpecification {
           name "parent"
           hasNoParent()
         }
-        producerSpan(it, 1, destinationType, destinationName, span(0))
-        consumerSpan(it, 2, destinationType, destinationName, messageRef.get().getJMSMessageID(), "process", span(1))
+        producerSpan(it, 1, destinationName, span(0))
+        consumerSpan(it, 2, destinationName, messageRef.get().getJMSMessageID(), "process", span(1))
       }
     }
     // This check needs to go after all traces have been accounted for
@@ -167,14 +167,14 @@ class Jms2Test extends AgentInstrumentationSpecification {
     consumer.close()
 
     where:
-    destination                      | destinationType | destinationName
-    session.createQueue("someQueue") | "queue"         | "someQueue"
-    session.createTopic("someTopic") | "topic"         | "someTopic"
-    session.createTemporaryQueue()   | "queue"         | "(temporary)"
-    session.createTemporaryTopic()   | "topic"         | "(temporary)"
+    destination                      | destinationName
+    session.createQueue("someQueue") | "someQueue"
+    session.createTopic("someTopic") | "someTopic"
+    session.createTemporaryQueue()   | "(temporary)"
+    session.createTemporaryTopic()   | "(temporary)"
   }
 
-  def "failing to receive message with receiveNoWait on #destinationName #destinationType works"() {
+  def "failing to receive message with receiveNoWait on #destinationName works"() {
     setup:
     def consumer = session.createConsumer(destination)
 
@@ -190,12 +190,12 @@ class Jms2Test extends AgentInstrumentationSpecification {
     consumer.close()
 
     where:
-    destination                      | destinationType | destinationName
-    session.createQueue("someQueue") | "queue"         | "someQueue"
-    session.createTopic("someTopic") | "topic"         | "someTopic"
+    destination                      | destinationName
+    session.createQueue("someQueue") | "someQueue"
+    session.createTopic("someTopic") | "someTopic"
   }
 
-  def "failing to receive message with wait(timeout) on #destinationName #destinationType works"() {
+  def "failing to receive message with wait(timeout) on #destinationName works"() {
     setup:
     def consumer = session.createConsumer(destination)
 
@@ -211,12 +211,12 @@ class Jms2Test extends AgentInstrumentationSpecification {
     consumer.close()
 
     where:
-    destination                      | destinationType | destinationName
-    session.createQueue("someQueue") | "queue"         | "someQueue"
-    session.createTopic("someTopic") | "topic"         | "someTopic"
+    destination                      | destinationName
+    session.createQueue("someQueue") | "someQueue"
+    session.createTopic("someTopic") | "someTopic"
   }
 
-  def "sending a message to #destinationName #destinationType with explicit destination propagates context"() {
+  def "sending a message to #destinationName with explicit destination propagates context"() {
     given:
     def producer = session.createProducer(null)
     def consumer = session.createConsumer(destination)
@@ -244,8 +244,8 @@ class Jms2Test extends AgentInstrumentationSpecification {
           name "parent"
           hasNoParent()
         }
-        producerSpan(it, 1, destinationType, destinationName, span(0))
-        consumerSpan(it, 2, destinationType, destinationName, messageRef.get().getJMSMessageID(), "process", span(1))
+        producerSpan(it, 1, destinationName, span(0))
+        consumerSpan(it, 2, destinationName, messageRef.get().getJMSMessageID(), "process", span(1))
       }
     }
     // This check needs to go after all traces have been accounted for
@@ -256,14 +256,14 @@ class Jms2Test extends AgentInstrumentationSpecification {
     consumer.close()
 
     where:
-    destination                      | destinationType | destinationName
-    session.createQueue("someQueue") | "queue"         | "someQueue"
-    session.createTopic("someTopic") | "topic"         | "someTopic"
-    session.createTemporaryQueue()   | "queue"         | "(temporary)"
-    session.createTemporaryTopic()   | "topic"         | "(temporary)"
+    destination                      | destinationName
+    session.createQueue("someQueue") | "someQueue"
+    session.createTopic("someTopic") | "someTopic"
+    session.createTemporaryQueue()   | "(temporary)"
+    session.createTemporaryTopic()   | "(temporary)"
   }
 
-  static producerSpan(TraceAssert trace, int index, String destinationType, String destinationName, SpanData parentSpan = null) {
+  static producerSpan(TraceAssert trace, int index, String destinationName, SpanData parentSpan = null) {
     trace.span(index) {
       name destinationName + " send"
       kind PRODUCER
@@ -275,7 +275,6 @@ class Jms2Test extends AgentInstrumentationSpecification {
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destinationName
-        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" destinationType
         if (destinationName == "(temporary)") {
           "$SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY" true
         }
@@ -287,7 +286,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
   // passing messageId = null will verify message.id is not captured,
   // passing messageId = "" will verify message.id is captured (but won't verify anything about the value),
   // any other value for messageId will verify that message.id is captured and has that same value
-  static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, String operation, SpanData parentSpan, SpanData linkedSpan = null) {
+  static consumerSpan(TraceAssert trace, int index, String destinationName, String messageId, String operation, SpanData parentSpan, SpanData linkedSpan = null) {
     trace.span(index) {
       name destinationName + " " + operation
       kind CONSUMER
@@ -304,7 +303,6 @@ class Jms2Test extends AgentInstrumentationSpecification {
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destinationName
-        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" destinationType
         "$SemanticAttributes.MESSAGING_OPERATION" operation
         if (messageId != null) {
           //In some tests we don't know exact messageId, so we pass "" and verify just the existence of the attribute

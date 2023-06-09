@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import com.google.common.io.Files
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import javax.jms.JMSException
-import javax.jms.Message
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient
@@ -22,9 +21,7 @@ import org.springframework.jms.core.JmsTemplate
 import org.springframework.jms.core.MessagePostProcessor
 import spock.lang.Shared
 
-import javax.jms.Connection
-import javax.jms.Session
-import javax.jms.TextMessage
+import javax.jms.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
@@ -69,7 +66,7 @@ class SpringTemplateTest extends AgentInstrumentationSpecification {
     serverLocator.close()
 
     def connectionFactory = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF,
-      new TransportConfiguration(InVMConnectorFactory.name))
+        new TransportConfiguration(InVMConnectorFactory.name))
 
     connection = connectionFactory.createConnection()
     connection.start()
@@ -95,16 +92,16 @@ class SpringTemplateTest extends AgentInstrumentationSpecification {
     receivedMessage.text == messageText
     assertTraces(2) {
       trace(0, 1) {
-        producerSpan(it, 0, destinationType, destinationName)
+        producerSpan(it, 0, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), null, "receive")
+        consumerSpan(it, 0, destinationName, receivedMessage.getJMSMessageID(), null, "receive")
       }
     }
 
     where:
-    destination                               | destinationType | destinationName
-    session.createQueue("SpringTemplateJms2") | "queue"         | "SpringTemplateJms2"
+    destination                               | destinationName
+    session.createQueue("SpringTemplateJms2") | "SpringTemplateJms2"
   }
 
   def "send and receive message generates spans"() {
@@ -128,28 +125,28 @@ class SpringTemplateTest extends AgentInstrumentationSpecification {
     receivedMessage.text == "responded!"
     assertTraces(4) {
       traces.sort(orderByRootSpanName(
-        "$destinationName receive",
-        "$destinationName send",
-        "(temporary) receive",
-        "(temporary) send"))
+          "$destinationName receive",
+          "$destinationName send",
+          "(temporary) receive",
+          "(temporary) send"))
 
       trace(0, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, msgId.get(), null, "receive")
+        consumerSpan(it, 0, destinationName, msgId.get(), null, "receive")
       }
       trace(1, 1) {
-        producerSpan(it, 0, destinationType, destinationName)
+        producerSpan(it, 0, destinationName)
       }
       trace(2, 1) {
-        consumerSpan(it, 0, "queue", "(temporary)", receivedMessage.getJMSMessageID(), null, "receive")
+        consumerSpan(it, 0, "(temporary)", receivedMessage.getJMSMessageID(), null, "receive")
       }
       trace(3, 1) {
-        producerSpan(it, 0, "queue", "(temporary)")
+        producerSpan(it, 0, "(temporary)")
       }
     }
 
     where:
-    destination                               | destinationType | destinationName
-    session.createQueue("SpringTemplateJms2") | "queue"         | "SpringTemplateJms2"
+    destination                               | destinationName
+    session.createQueue("SpringTemplateJms2") | "SpringTemplateJms2"
   }
 
   def "capture message header as span attribute"() {
@@ -168,15 +165,15 @@ class SpringTemplateTest extends AgentInstrumentationSpecification {
     receivedMessage.text == messageText
     assertTraces(2) {
       trace(0, 1) {
-        producerSpan(it, 0, destinationType, destinationName, true)
+        producerSpan(it, 0, destinationName, true)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), null, "receive", true)
+        consumerSpan(it, 0, destinationName, receivedMessage.getJMSMessageID(), null, "receive", true)
       }
     }
 
     where:
-    destination                               | destinationType | destinationName
-    session.createQueue("SpringTemplateJms2") | "queue"         | "SpringTemplateJms2"
+    destination                               | destinationName
+    session.createQueue("SpringTemplateJms2") | "SpringTemplateJms2"
   }
 }

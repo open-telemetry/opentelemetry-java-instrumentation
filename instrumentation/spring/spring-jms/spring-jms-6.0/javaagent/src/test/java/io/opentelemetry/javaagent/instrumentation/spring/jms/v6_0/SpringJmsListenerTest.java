@@ -115,7 +115,6 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,
                                 AbstractStringAssert::isNotBlank)),
@@ -128,7 +127,6 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,
@@ -145,7 +143,6 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,
@@ -198,7 +195,6 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,
                                 AbstractStringAssert::isNotBlank),
@@ -217,7 +213,6 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,
@@ -240,7 +235,6 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,

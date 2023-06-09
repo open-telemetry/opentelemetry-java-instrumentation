@@ -108,7 +108,7 @@ class Jms3InstrumentationTest {
   @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
   void testMessageConsumer(
-      DestinationFactory destinationFactory, String destinationKind, boolean isTemporary)
+      DestinationFactory destinationFactory, boolean isTemporary)
       throws JMSException {
 
     // given
@@ -148,7 +148,6 @@ class Jms3InstrumentationTest {
                           equalTo(
                               SemanticAttributes.MESSAGING_DESTINATION_NAME,
                               producerDestinationName),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                           equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
@@ -167,7 +166,6 @@ class Jms3InstrumentationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 actualDestinationName),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId))));
   }
@@ -175,7 +173,7 @@ class Jms3InstrumentationTest {
   @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
   void testMessageListener(
-      DestinationFactory destinationFactory, String destinationKind, boolean isTemporary)
+      DestinationFactory destinationFactory, boolean isTemporary)
       throws Exception {
 
     // given
@@ -218,7 +216,6 @@ class Jms3InstrumentationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 producerDestinationName),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
@@ -230,7 +227,6 @@ class Jms3InstrumentationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 actualDestinationName),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
@@ -259,7 +255,7 @@ class Jms3InstrumentationTest {
   @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
   void shouldCaptureMessageHeaders(
-      DestinationFactory destinationFactory, String destinationKind, boolean isTemporary)
+      DestinationFactory destinationFactory, boolean isTemporary)
       throws Exception {
 
     // given
@@ -304,7 +300,6 @@ class Jms3InstrumentationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 producerDestinationName),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
@@ -322,7 +317,6 @@ class Jms3InstrumentationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 actualDestinationName),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             equalTo(
@@ -367,10 +361,10 @@ class Jms3InstrumentationTest {
       DestinationFactory tempQueue = Session::createTemporaryQueue;
 
       return Stream.of(
-          arguments(topic, "topic", false),
-          arguments(queue, "queue", false),
-          arguments(tempTopic, "topic", true),
-          arguments(tempQueue, "queue", true));
+          arguments(topic, false),
+          arguments(queue, false),
+          arguments(tempTopic, true),
+          arguments(tempQueue, true));
     }
   }
 

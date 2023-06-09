@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -20,11 +19,6 @@ enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<Deliver
   @Override
   public String getSystem(DeliveryRequest request) {
     return "rabbitmq";
-  }
-
-  @Override
-  public String getDestinationKind(DeliveryRequest request) {
-    return SemanticAttributes.MessagingDestinationKindValues.QUEUE;
   }
 
   @Nullable

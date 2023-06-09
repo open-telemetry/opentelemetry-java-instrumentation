@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import com.rabbitmq.client.ConnectionFactory
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
@@ -25,9 +26,7 @@ import spock.lang.Unroll
 
 import java.time.Duration
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER
+import static io.opentelemetry.api.trace.SpanKind.*
 
 class ContextPropagationTest extends AgentInstrumentationSpecification {
 
@@ -40,23 +39,23 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
 
   def setupSpec() {
     rabbitMqContainer = new GenericContainer('rabbitmq:latest')
-      .withExposedPorts(5672)
-      .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1))
-      .withStartupTimeout(Duration.ofMinutes(2))
+        .withExposedPorts(5672)
+        .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1))
+        .withStartupTimeout(Duration.ofMinutes(2))
     rabbitMqContainer.start()
 
     def app = new SpringApplication(ConsumerConfig)
     app.setDefaultProperties([
-      "spring.jmx.enabled"              : false,
-      "spring.main.web-application-type": "none",
-      "spring.rabbitmq.host"            : rabbitMqContainer.host,
-      "spring.rabbitmq.port"            : rabbitMqContainer.getMappedPort(5672),
+        "spring.jmx.enabled"              : false,
+        "spring.main.web-application-type": "none",
+        "spring.rabbitmq.host"            : rabbitMqContainer.host,
+        "spring.rabbitmq.port"            : rabbitMqContainer.getMappedPort(5672),
     ])
     applicationContext = app.run()
 
     connectionFactory = new ConnectionFactory(
-      host: rabbitMqContainer.host,
-      port: rabbitMqContainer.getMappedPort(5672)
+        host: rabbitMqContainer.host,
+        port: rabbitMqContainer.getMappedPort(5672)
     )
   }
 
@@ -75,16 +74,16 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
     runWithSpan("parent") {
       if (testHeaders) {
         applicationContext.getBean(AmqpTemplate)
-          .convertAndSend(ConsumerConfig.TEST_QUEUE, (Object) "test", new MessagePostProcessor() {
-            @Override
-            Message postProcessMessage(Message message) throws AmqpException {
-              message.getMessageProperties().setHeader("test-message-header", "test")
-              return message
-            }
-          })
+            .convertAndSend(ConsumerConfig.TEST_QUEUE, (Object) "test", new MessagePostProcessor() {
+              @Override
+              Message postProcessMessage(Message message) throws AmqpException {
+                message.getMessageProperties().setHeader("test-message-header", "test")
+                return message
+              }
+            })
       } else {
         applicationContext.getBean(AmqpTemplate)
-          .convertAndSend(ConsumerConfig.TEST_QUEUE, "test")
+            .convertAndSend(ConsumerConfig.TEST_QUEUE, "test")
       }
     }
 
@@ -113,7 +112,6 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "<default>"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
             if (testHeaders) {
@@ -131,7 +129,6 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "<default>"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
@@ -148,7 +145,6 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testQueue"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             if (testHeaders) {
@@ -170,7 +166,6 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
           }
         }
       }

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -21,12 +20,6 @@ enum RocketMqConsumerProcessAttributeGetter
   @Override
   public String getSystem(MessageView messageView) {
     return "rocketmq";
-  }
-
-  @Nullable
-  @Override
-  public String getDestinationKind(MessageView messageView) {
-    return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Nullable
