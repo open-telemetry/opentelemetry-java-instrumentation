@@ -38,24 +38,24 @@ class HttpClientAttributesExtractorBothSemconvTest {
     }
 
     @Override
-    public String getMethod(Map<String, String> request) {
+    public String getHttpRequestMethod(Map<String, String> request) {
       return request.get("method");
     }
 
     @Override
-    public List<String> getRequestHeader(Map<String, String> request, String name) {
+    public List<String> getHttpRequestHeader(Map<String, String> request, String name) {
       String value = request.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
     }
 
     @Override
-    public Integer getStatusCode(
+    public Integer getHttpResponseStatusCode(
         Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
       return Integer.parseInt(response.get("statusCode"));
     }
 
     @Override
-    public List<String> getResponseHeader(
+    public List<String> getHttpResponseHeader(
         Map<String, String> request, Map<String, String> response, String name) {
       String value = response.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
@@ -126,6 +126,7 @@ class HttpClientAttributesExtractorBothSemconvTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
+            entry(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_URL, "http://github.com"),
             entry(UrlAttributes.URL_FULL, "http://github.com"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
@@ -140,8 +141,11 @@ class HttpClientAttributesExtractorBothSemconvTest {
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
+            entry(HttpAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
+            entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
+            entry(HttpAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
             entry(SemanticAttributes.HTTP_RESEND_COUNT, 2L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),

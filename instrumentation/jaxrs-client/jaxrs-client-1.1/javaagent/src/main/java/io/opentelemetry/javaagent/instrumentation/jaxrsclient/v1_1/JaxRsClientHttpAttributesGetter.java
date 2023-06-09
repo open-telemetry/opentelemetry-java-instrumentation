@@ -19,7 +19,7 @@ final class JaxRsClientHttpAttributesGetter
 
   @Override
   @Nullable
-  public String getMethod(ClientRequest httpRequest) {
+  public String getHttpRequestMethod(ClientRequest httpRequest) {
     return httpRequest.getMethod();
   }
 
@@ -29,7 +29,7 @@ final class JaxRsClientHttpAttributesGetter
   }
 
   @Override
-  public List<String> getRequestHeader(ClientRequest httpRequest, String name) {
+  public List<String> getHttpRequestHeader(ClientRequest httpRequest, String name) {
     List<Object> rawHeaders = httpRequest.getHeaders().getOrDefault(name, emptyList());
     if (rawHeaders.isEmpty()) {
       return emptyList();
@@ -42,13 +42,13 @@ final class JaxRsClientHttpAttributesGetter
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       ClientRequest httpRequest, ClientResponse httpResponse, @Nullable Throwable error) {
     return httpResponse.getStatus();
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       ClientRequest httpRequest, ClientResponse httpResponse, String name) {
     return httpResponse.getHeaders().getOrDefault(name, emptyList());
   }

@@ -15,6 +15,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import java.util.logging.Logger;
@@ -44,11 +45,17 @@ abstract class HttpCommonAttributesExtractor<
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, SemanticAttributes.HTTP_METHOD, getter.getMethod(request));
+    String method = getter.getHttpRequestMethod(request);
+    if (SemconvStability.emitStableHttpSemconv()) {
+      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+    }
+    if (SemconvStability.emitOldHttpSemconv()) {
+      internalSet(attributes, SemanticAttributes.HTTP_METHOD, method);
+    }
     internalSet(attributes, SemanticAttributes.USER_AGENT_ORIGINAL, userAgent(request));
 
     for (String name : capturedRequestHeaders) {
-      List<String> values = getter.getRequestHeader(request, name);
+      List<String> values = getter.getHttpRequestHeader(request, name);
       if (!values.isEmpty()) {
         internalSet(attributes, requestAttributeKey(name), values);
       }
@@ -63,22 +70,35 @@ abstract class HttpCommonAttributesExtractor<
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
 
-    internalSet(
-        attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestContentLength(request));
+    Long requestBodySize = requestBodySize(request);
+    if (SemconvStability.emitStableHttpSemconv()) {
+      internalSet(attributes, HttpAttributes.HTTP_REQUEST_BODY_SIZE, requestBodySize);
+    }
+    if (SemconvStability.emitOldHttpSemconv()) {
+      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestBodySize);
+    }
 
     if (response != null) {
-      Integer statusCode = getter.getStatusCode(request, response, error);
+      Integer statusCode = getter.getHttpResponseStatusCode(request, response, error);
       if (statusCode != null && statusCode > 0) {
-        internalSet(attributes, SemanticAttributes.HTTP_STATUS_CODE, (long) statusCode);
+        if (SemconvStability.emitStableHttpSemconv()) {
+          internalSet(attributes, HttpAttributes.HTTP_RESPONSE_STATUS_CODE, (long) statusCode);
+        }
+        if (SemconvStability.emitOldHttpSemconv()) {
+          internalSet(attributes, SemanticAttributes.HTTP_STATUS_CODE, (long) statusCode);
+        }
       }
 
-      internalSet(
-          attributes,
-          SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-          responseContentLength(request, response));
+      Long responseBodySize = responseBodySize(request, response);
+      if (SemconvStability.emitStableHttpSemconv()) {
+        internalSet(attributes, HttpAttributes.HTTP_RESPONSE_BODY_SIZE, responseBodySize);
+      }
+      if (SemconvStability.emitOldHttpSemconv()) {
+        internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, responseBodySize);
+      }
 
       for (String name : capturedResponseHeaders) {
-        List<String> values = getter.getResponseHeader(request, response, name);
+        List<String> values = getter.getHttpResponseHeader(request, response, name);
         if (!values.isEmpty()) {
           internalSet(attributes, responseAttributeKey(name), values);
         }
@@ -88,18 +108,18 @@ abstract class HttpCommonAttributesExtractor<
 
   @Nullable
   private String userAgent(REQUEST request) {
-    return firstHeaderValue(getter.getRequestHeader(request, "user-agent"));
+    return firstHeaderValue(getter.getHttpRequestHeader(request, "user-agent"));
   }
 
   @Nullable
-  private Long requestContentLength(REQUEST request) {
-    return parseNumber(firstHeaderValue(getter.getRequestHeader(request, "content-length")));
+  private Long requestBodySize(REQUEST request) {
+    return parseNumber(firstHeaderValue(getter.getHttpRequestHeader(request, "content-length")));
   }
 
   @Nullable
-  private Long responseContentLength(REQUEST request, RESPONSE response) {
+  private Long responseBodySize(REQUEST request, RESPONSE response) {
     return parseNumber(
-        firstHeaderValue(getter.getResponseHeader(request, response, "content-length")));
+        firstHeaderValue(getter.getHttpResponseHeader(request, response, "content-length")));
   }
 
   @Nullable
@@ -131,7 +151,7 @@ abstract class HttpCommonAttributesExtractor<
     @Nullable
     @Override
     public String name(REQUEST request) {
-      String host = firstHeaderValue(getter.getRequestHeader(request, "host"));
+      String host = firstHeaderValue(getter.getHttpRequestHeader(request, "host"));
       if (host == null) {
         return null;
       }
@@ -142,7 +162,7 @@ abstract class HttpCommonAttributesExtractor<
     @Nullable
     @Override
     public Integer port(REQUEST request) {
-      String host = firstHeaderValue(getter.getRequestHeader(request, "host"));
+      String host = firstHeaderValue(getter.getHttpRequestHeader(request, "host"));
       if (host == null) {
         return null;
       }

@@ -24,7 +24,7 @@ public enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
   INSTANCE;
 
   @Override
-  public String getMethod(Request request) {
+  public String getHttpRequestMethod(Request request) {
     return request.getMethod().toString();
   }
 
@@ -47,7 +47,7 @@ public enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
   }
 
   @Override
-  public List<String> getRequestHeader(Request request, String name) {
+  public List<String> getHttpRequestHeader(Request request, String name) {
     Series<?> headers = getHeaders(request);
     if (headers == null) {
       return Collections.emptyList();
@@ -56,12 +56,13 @@ public enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
   }
 
   @Override
-  public Integer getStatusCode(Request request, Response response, @Nullable Throwable error) {
+  public Integer getHttpResponseStatusCode(
+      Request request, Response response, @Nullable Throwable error) {
     return response.getStatus().getCode();
   }
 
   @Override
-  public List<String> getResponseHeader(Request request, Response response, String name) {
+  public List<String> getHttpResponseHeader(Request request, Response response, String name) {
     Series<?> headers = getHeaders(response);
     if (headers == null) {
       return Collections.emptyList();

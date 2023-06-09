@@ -24,7 +24,7 @@ final class Vertx4HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
   }
 
   @Override
-  public String getMethod(HttpClientRequest request) {
+  public String getHttpRequestMethod(HttpClientRequest request) {
     return request.getMethod().name();
   }
 }

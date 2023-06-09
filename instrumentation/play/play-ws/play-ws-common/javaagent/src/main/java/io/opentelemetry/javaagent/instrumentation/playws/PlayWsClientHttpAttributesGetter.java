@@ -15,7 +15,7 @@ final class PlayWsClientHttpAttributesGetter
     implements HttpClientAttributesGetter<Request, Response> {
 
   @Override
-  public String getMethod(Request request) {
+  public String getHttpRequestMethod(Request request) {
     return request.getMethod();
   }
 
@@ -25,17 +25,18 @@ final class PlayWsClientHttpAttributesGetter
   }
 
   @Override
-  public List<String> getRequestHeader(Request request, String name) {
+  public List<String> getHttpRequestHeader(Request request, String name) {
     return request.getHeaders().getAll(name);
   }
 
   @Override
-  public Integer getStatusCode(Request request, Response response, @Nullable Throwable error) {
+  public Integer getHttpResponseStatusCode(
+      Request request, Response response, @Nullable Throwable error) {
     return response.getStatusCode();
   }
 
   @Override
-  public List<String> getResponseHeader(Request request, Response response, String name) {
+  public List<String> getHttpResponseHeader(Request request, Response response, String name) {
     return response.getHeaders().getAll(name);
   }
 }

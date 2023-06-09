@@ -14,15 +14,15 @@ internal object KtorHttpClientAttributesGetter : HttpClientAttributesGetter<Http
   override fun getUrlFull(request: HttpRequestData) =
     request.url.toString()
 
-  override fun getMethod(request: HttpRequestData) =
+  override fun getHttpRequestMethod(request: HttpRequestData) =
     request.method.value
 
-  override fun getRequestHeader(request: HttpRequestData, name: String) =
+  override fun getHttpRequestHeader(request: HttpRequestData, name: String) =
     request.headers.getAll(name).orEmpty()
 
-  override fun getStatusCode(request: HttpRequestData, response: HttpResponse, error: Throwable?) =
+  override fun getHttpResponseStatusCode(request: HttpRequestData, response: HttpResponse, error: Throwable?) =
     response.status.value
 
-  override fun getResponseHeader(request: HttpRequestData, response: HttpResponse, name: String) =
+  override fun getHttpResponseHeader(request: HttpRequestData, response: HttpResponse, name: String) =
     response.headers.getAll(name).orEmpty()
 }

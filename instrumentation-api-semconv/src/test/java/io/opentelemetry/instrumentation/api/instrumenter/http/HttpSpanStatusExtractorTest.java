@@ -35,7 +35,8 @@ class HttpSpanStatusExtractorTest {
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 500, 501, 600, 601})
   void hasServerStatus(int statusCode) {
     StatusCode expectedStatusCode = HttpStatusConverter.SERVER.statusFromHttpStatus(statusCode);
-    when(serverGetter.getStatusCode(anyMap(), anyMap(), isNull())).thenReturn(statusCode);
+    when(serverGetter.getHttpResponseStatusCode(anyMap(), anyMap(), isNull()))
+        .thenReturn(statusCode);
 
     HttpSpanStatusExtractor.create(serverGetter)
         .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
@@ -51,7 +52,8 @@ class HttpSpanStatusExtractorTest {
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasClientStatus(int statusCode) {
     StatusCode expectedStatusCode = HttpStatusConverter.CLIENT.statusFromHttpStatus(statusCode);
-    when(clientGetter.getStatusCode(anyMap(), anyMap(), isNull())).thenReturn(statusCode);
+    when(clientGetter.getHttpResponseStatusCode(anyMap(), anyMap(), isNull()))
+        .thenReturn(statusCode);
 
     HttpSpanStatusExtractor.create(clientGetter)
         .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
@@ -67,7 +69,8 @@ class HttpSpanStatusExtractorTest {
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasServerStatusAndException(int statusCode) {
     Throwable error = new IllegalStateException("test");
-    when(serverGetter.getStatusCode(anyMap(), anyMap(), same(error))).thenReturn(statusCode);
+    when(serverGetter.getHttpResponseStatusCode(anyMap(), anyMap(), same(error)))
+        .thenReturn(statusCode);
 
     // Presence of exception overshadows the HTTP status
     HttpSpanStatusExtractor.create(serverGetter)
@@ -80,7 +83,8 @@ class HttpSpanStatusExtractorTest {
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasClientStatusAndException(int statusCode) {
     Throwable error = new IllegalStateException("test");
-    when(clientGetter.getStatusCode(anyMap(), anyMap(), same(error))).thenReturn(statusCode);
+    when(clientGetter.getHttpResponseStatusCode(anyMap(), anyMap(), same(error)))
+        .thenReturn(statusCode);
 
     // Presence of exception overshadows the HTTP status
     HttpSpanStatusExtractor.create(clientGetter)
@@ -91,7 +95,7 @@ class HttpSpanStatusExtractorTest {
 
   @Test
   void hasNoServerStatus_fallsBackToDefault_unset() {
-    when(serverGetter.getStatusCode(anyMap(), anyMap(), isNull())).thenReturn(null);
+    when(serverGetter.getHttpResponseStatusCode(anyMap(), anyMap(), isNull())).thenReturn(null);
 
     HttpSpanStatusExtractor.create(serverGetter)
         .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
@@ -101,7 +105,7 @@ class HttpSpanStatusExtractorTest {
 
   @Test
   void hasNoClientStatus_fallsBackToDefault_unset() {
-    when(clientGetter.getStatusCode(anyMap(), anyMap(), isNull())).thenReturn(null);
+    when(clientGetter.getHttpResponseStatusCode(anyMap(), anyMap(), isNull())).thenReturn(null);
 
     HttpSpanStatusExtractor.create(clientGetter)
         .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
@@ -112,7 +116,7 @@ class HttpSpanStatusExtractorTest {
   @Test
   void hasNoServerStatus_fallsBackToDefault_error() {
     Throwable error = new IllegalStateException("test");
-    when(serverGetter.getStatusCode(anyMap(), anyMap(), same(error))).thenReturn(null);
+    when(serverGetter.getHttpResponseStatusCode(anyMap(), anyMap(), same(error))).thenReturn(null);
 
     HttpSpanStatusExtractor.create(serverGetter)
         .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), error);
@@ -123,7 +127,7 @@ class HttpSpanStatusExtractorTest {
   @Test
   void hasNoClientStatus_fallsBackToDefault_error() {
     IllegalStateException error = new IllegalStateException("test");
-    when(clientGetter.getStatusCode(anyMap(), anyMap(), same(error))).thenReturn(null);
+    when(clientGetter.getHttpResponseStatusCode(anyMap(), anyMap(), same(error))).thenReturn(null);
 
     HttpSpanStatusExtractor.create(clientGetter)
         .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), error);

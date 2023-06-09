@@ -21,23 +21,23 @@ class AkkaHttpClientAttributesGetter
   }
 
   @Override
-  public String getMethod(HttpRequest httpRequest) {
+  public String getHttpRequestMethod(HttpRequest httpRequest) {
     return httpRequest.method().value();
   }
 
   @Override
-  public List<String> getRequestHeader(HttpRequest httpRequest, String name) {
+  public List<String> getHttpRequestHeader(HttpRequest httpRequest, String name) {
     return AkkaHttpUtil.requestHeader(httpRequest, name);
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       HttpRequest httpRequest, HttpResponse httpResponse, @Nullable Throwable error) {
     return httpResponse.status().intValue();
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       HttpRequest httpRequest, HttpResponse httpResponse, String name) {
     return AkkaHttpUtil.responseHeader(httpResponse, name);
   }

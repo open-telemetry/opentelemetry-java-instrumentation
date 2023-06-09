@@ -18,7 +18,7 @@ enum ArmeriaHttpClientAttributesGetter
   INSTANCE;
 
   @Override
-  public String getMethod(RequestContext ctx) {
+  public String getHttpRequestMethod(RequestContext ctx) {
     return ctx.method().name();
   }
 
@@ -39,13 +39,13 @@ enum ArmeriaHttpClientAttributesGetter
   }
 
   @Override
-  public List<String> getRequestHeader(RequestContext ctx, String name) {
+  public List<String> getHttpRequestHeader(RequestContext ctx, String name) {
     return request(ctx).headers().getAll(name);
   }
 
   @Override
   @Nullable
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       RequestContext ctx, RequestLog requestLog, @Nullable Throwable error) {
     HttpStatus status = requestLog.responseHeaders().status();
     if (!status.equals(HttpStatus.UNKNOWN)) {
@@ -55,7 +55,8 @@ enum ArmeriaHttpClientAttributesGetter
   }
 
   @Override
-  public List<String> getResponseHeader(RequestContext ctx, RequestLog requestLog, String name) {
+  public List<String> getHttpResponseHeader(
+      RequestContext ctx, RequestLog requestLog, String name) {
     return requestLog.responseHeaders().getAll(name);
   }
 

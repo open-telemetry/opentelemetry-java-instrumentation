@@ -22,24 +22,24 @@ class AwsSdkHttpAttributesGetter implements HttpClientAttributesGetter<Request<?
   }
 
   @Override
-  public String getMethod(Request<?> request) {
+  public String getHttpRequestMethod(Request<?> request) {
     return request.getHttpMethod().name();
   }
 
   @Override
-  public List<String> getRequestHeader(Request<?> request, String name) {
+  public List<String> getHttpRequestHeader(Request<?> request, String name) {
     String value = request.getHeaders().get(name.equals("user-agent") ? "User-Agent" : name);
     return value == null ? emptyList() : singletonList(value);
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       Request<?> request, Response<?> response, @Nullable Throwable error) {
     return response.getHttpResponse().getStatusCode();
   }
 
   @Override
-  public List<String> getResponseHeader(Request<?> request, Response<?> response, String name) {
+  public List<String> getHttpResponseHeader(Request<?> request, Response<?> response, String name) {
     String value = response.getHttpResponse().getHeaders().get(name);
     return value == null ? emptyList() : singletonList(value);
   }

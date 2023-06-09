@@ -25,14 +25,14 @@ class AwsSdkHttpAttributesGetter
   }
 
   @Override
-  public String getMethod(ExecutionAttributes request) {
+  public String getHttpRequestMethod(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
     return httpRequest.method().name();
   }
 
   @Override
-  public List<String> getRequestHeader(ExecutionAttributes request, String name) {
+  public List<String> getHttpRequestHeader(ExecutionAttributes request, String name) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
     List<String> value = httpRequest.headers().get(name);
@@ -40,13 +40,13 @@ class AwsSdkHttpAttributesGetter
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       ExecutionAttributes request, SdkHttpResponse response, @Nullable Throwable error) {
     return response.statusCode();
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       ExecutionAttributes request, SdkHttpResponse response, String name) {
     List<String> value = response.headers().get(name);
     return value == null ? emptyList() : value;

@@ -15,18 +15,18 @@ public abstract class AbstractVertxHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpClientRequest, HttpClientResponse> {
 
   @Override
-  public List<String> getRequestHeader(HttpClientRequest request, String name) {
+  public List<String> getHttpRequestHeader(HttpClientRequest request, String name) {
     return request.headers().getAll(name);
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       HttpClientRequest request, HttpClientResponse response, @Nullable Throwable error) {
     return response.statusCode();
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       HttpClientRequest request, HttpClientResponse response, String name) {
     return response.headers().getAll(name);
   }
