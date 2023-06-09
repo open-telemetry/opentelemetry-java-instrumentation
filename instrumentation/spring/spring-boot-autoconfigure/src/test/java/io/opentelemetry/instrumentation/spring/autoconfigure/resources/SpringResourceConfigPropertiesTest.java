@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import io.opentelemetry.api.logs.GlobalLoggerProvider;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -16,6 +18,11 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 class SpringResourceConfigPropertiesTest {
   private final ApplicationContextRunner contextRunner = new ApplicationContextRunner();
+
+  @BeforeEach
+  void resetGlobalLoggerProvider() {
+    GlobalLoggerProvider.resetForTest();
+  }
 
   @Test
   @DisplayName("when map is set in properties in a row it should be available in config")

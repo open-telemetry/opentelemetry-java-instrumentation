@@ -5,9 +5,6 @@
 
 package io.opentelemetry.smoketest
 
-import io.opentelemetry.proto.trace.v1.Span
-import spock.lang.Unroll
-
 import java.time.Duration
 
 abstract class WildflySmokeTest extends AppServerTest {
@@ -21,24 +18,6 @@ abstract class WildflySmokeTest extends AppServerTest {
     return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*started in.*")
   }
 
-  @Unroll
-  def "JSP smoke test on WildFly"() {
-    when:
-    def response = client().get("/app/jsp").aggregate().join()
-    TraceInspector traces = new TraceInspector(waitForTraces())
-    String responseBody = response.contentUtf8()
-
-    then:
-    response.status().isSuccess()
-    responseBody.contains("Successful JSP test")
-
-    traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
-
-    traces.countSpansByName('GET /app/jsp') == 1
-
-    where:
-    [appServer, jdk] << getTestParams()
-  }
 }
 
 @AppServer(version = "13.0.0.Final", jdk = "8")

@@ -6,12 +6,17 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceConfigProperties;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import io.opentelemetry.sdk.logs.SdkLoggerProvider;
+import io.opentelemetry.sdk.logs.SdkLoggerProviderBuilder;
+import io.opentelemetry.sdk.logs.export.BatchLogRecordProcessor;
+import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.SdkMeterProviderBuilder;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
@@ -72,6 +77,26 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    public SdkLoggerProvider sdkLoggerProvider(
+        ObjectProvider<List<LogRecordExporter>> loggerExportersProvider, Resource otelResource) {
+
+      SdkLoggerProviderBuilder loggerProviderBuilder = SdkLoggerProvider.builder();
+      loggerProviderBuilder.setResource(otelResource);
+
+      loggerExportersProvider.getIfAvailable(Collections::emptyList).stream()
+          .forEach(
+              loggerExporter ->
+                  loggerProviderBuilder.addLogRecordProcessor(
+                      BatchLogRecordProcessor.builder(loggerExporter).build()));
+
+      SdkLoggerProvider loggerProvider = loggerProviderBuilder.build();
+      GlobalLoggerProvider.set(loggerProvider);
+
+      return loggerProvider;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
     public SdkMeterProvider sdkMeterProvider(
         MetricExportProperties properties,
         ObjectProvider<List<MetricExporter>> metricExportersProvider,
@@ -113,13 +138,15 @@ public class OpenTelemetryAutoConfiguration {
     public OpenTelemetry openTelemetry(
         ObjectProvider<ContextPropagators> propagatorsProvider,
         SdkTracerProvider tracerProvider,
-        SdkMeterProvider meterProvider) {
+        SdkMeterProvider meterProvider,
+        SdkLoggerProvider loggerProvider) {
 
       ContextPropagators propagators = propagatorsProvider.getIfAvailable(ContextPropagators::noop);
 
       return OpenTelemetrySdk.builder()
           .setTracerProvider(tracerProvider)
           .setMeterProvider(meterProvider)
+          .setLoggerProvider(loggerProvider)
           .setPropagators(propagators)
           .build();
     }

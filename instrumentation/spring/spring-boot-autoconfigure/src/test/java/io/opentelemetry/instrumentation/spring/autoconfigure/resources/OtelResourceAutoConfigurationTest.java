@@ -7,7 +7,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -19,6 +21,11 @@ public class OtelResourceAutoConfigurationTest {
           .withConfiguration(
               AutoConfigurations.of(
                   OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class));
+
+  @BeforeEach
+  void resetGlobalLoggerProvider() {
+    GlobalLoggerProvider.resetForTest();
+  }
 
   @Test
   @DisplayName(
