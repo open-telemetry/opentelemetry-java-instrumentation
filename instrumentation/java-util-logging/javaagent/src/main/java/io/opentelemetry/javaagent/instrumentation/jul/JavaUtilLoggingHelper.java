@@ -80,8 +80,6 @@ public final class JavaUtilLoggingHelper {
     // throwable
     Throwable throwable = logRecord.getThrown();
     if (throwable != null) {
-      // TODO (trask) extract method for recording exception into
-      // io.opentelemetry:opentelemetry-api-logs
       attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
       attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
       StringWriter writer = new StringWriter();

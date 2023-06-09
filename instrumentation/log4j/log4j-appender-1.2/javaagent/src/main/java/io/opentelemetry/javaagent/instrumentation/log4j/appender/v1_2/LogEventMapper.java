@@ -82,7 +82,7 @@ public final class LogEventMapper {
     // throwable
     if (throwable != null) {
       // TODO (trask) extract method for recording exception into
-      // io.opentelemetry:opentelemetry-api-logs
+      // io.opentelemetry:opentelemetry-api
       attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
       attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
       StringWriter writer = new StringWriter();

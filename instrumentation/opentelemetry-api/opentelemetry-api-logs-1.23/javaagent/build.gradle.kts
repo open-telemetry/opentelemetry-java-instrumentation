@@ -21,9 +21,7 @@ dependencies {
   //
   // and in the code "io.opentelemetry.*" refers to the (shaded) OpenTelemetry API that is used by
   // the agent (as those references will later be shaded)
-  compileOnly("io.opentelemetry:opentelemetry-api-logs")
+  compileOnly("io.opentelemetry:opentelemetry-api")
   compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
-
-  testImplementation("io.opentelemetry:opentelemetry-sdk-logs")
 }

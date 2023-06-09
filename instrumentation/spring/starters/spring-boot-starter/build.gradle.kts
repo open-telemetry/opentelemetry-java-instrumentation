@@ -16,7 +16,6 @@ dependencies {
   api("io.opentelemetry:opentelemetry-api")
   api("io.opentelemetry:opentelemetry-exporter-logging")
   api("io.opentelemetry:opentelemetry-exporter-otlp")
-  api("io.opentelemetry:opentelemetry-exporter-otlp-logs")
   api("io.opentelemetry:opentelemetry-sdk")
   api(project(":instrumentation-annotations"))
 }

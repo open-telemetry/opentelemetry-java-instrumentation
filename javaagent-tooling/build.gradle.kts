@@ -17,11 +17,8 @@ dependencies {
   implementation(project(":muzzle"))
 
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("io.opentelemetry:opentelemetry-api-logs")
   implementation("io.opentelemetry:opentelemetry-sdk")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-  implementation("io.opentelemetry:opentelemetry-sdk-metrics")
-  implementation("io.opentelemetry:opentelemetry-sdk-logs")
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   // the incubator's ViewConfigCustomizer is used to support loading yaml-based metric views
@@ -31,7 +28,6 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-exporter-jaeger")
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
   implementation("io.opentelemetry:opentelemetry-exporter-otlp")
-  implementation("io.opentelemetry:opentelemetry-exporter-otlp-logs")
   implementation("io.opentelemetry:opentelemetry-exporter-logging-otlp")
 
   implementation("io.opentelemetry:opentelemetry-exporter-prometheus")

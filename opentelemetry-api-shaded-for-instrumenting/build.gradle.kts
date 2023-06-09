@@ -38,7 +38,6 @@ val v1_15 by configurations.creating {
 
 dependencies {
   latestDeps("io.opentelemetry:opentelemetry-api")
-  latestDeps("io.opentelemetry:opentelemetry-api-logs")
 
   listOf("opentelemetry-api", "opentelemetry-context").forEach {
     v1_10Deps("io.opentelemetry:$it") {

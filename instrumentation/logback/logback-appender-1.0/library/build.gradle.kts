@@ -5,7 +5,6 @@ plugins {
 
 dependencies {
   compileOnly(project(":muzzle"))
-  implementation("io.opentelemetry:opentelemetry-api-logs")
 
   // pin the version strictly to avoid overriding by dependencyManagement versions
   compileOnly("ch.qos.logback:logback-classic") {
@@ -36,8 +35,6 @@ dependencies {
     }
   }
 
-  testImplementation("io.opentelemetry:opentelemetry-sdk-logs")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-logs-testing")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
 
@@ -63,9 +60,6 @@ testing {
     val slf4j2ApiTest by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
-        implementation("io.opentelemetry:opentelemetry-api-logs")
-        implementation("io.opentelemetry:opentelemetry-sdk-logs")
-        implementation("io.opentelemetry:opentelemetry-sdk-logs-testing")
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
         if (latestDepTest) {
