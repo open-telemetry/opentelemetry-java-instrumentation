@@ -7,10 +7,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.propagators;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import java.util.Arrays;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -23,11 +21,6 @@ public class PropagationPropertiesTest {
           .withConfiguration(
               AutoConfigurations.of(
                   OpenTelemetryAutoConfiguration.class, PropagationAutoConfiguration.class));
-
-  @BeforeEach
-  void resetGlobalLoggerProvider() {
-    GlobalLoggerProvider.resetForTest();
-  }
 
   @Test
   @DisplayName("when propagation is SET should set PropagationProperties with given propagators")

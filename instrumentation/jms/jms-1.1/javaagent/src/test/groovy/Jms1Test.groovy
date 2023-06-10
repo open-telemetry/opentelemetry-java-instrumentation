@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -17,7 +16,11 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import javax.jms.*
+import javax.jms.Connection
+import javax.jms.Message
+import javax.jms.MessageListener
+import javax.jms.Session
+import javax.jms.TextMessage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
@@ -30,8 +33,8 @@ class Jms1Test extends AgentInstrumentationSpecification {
   private static final Logger logger = LoggerFactory.getLogger(Jms1Test)
 
   private static final GenericContainer broker = new GenericContainer("rmohr/activemq:latest")
-      .withExposedPorts(61616, 8161)
-      .withLogConsumer(new Slf4jLogConsumer(logger))
+    .withExposedPorts(61616, 8161)
+    .withLogConsumer(new Slf4jLogConsumer(logger))
 
   @Shared
   String messageText = "a message"

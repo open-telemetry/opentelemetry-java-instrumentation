@@ -79,7 +79,7 @@ class JavaagentTestArgumentsProvider(
     "-Dotel.javaagent.testing.javaagent-jar-path=${agentShadowJar.absolutePath}",
     "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.absolutePath}",
     "-Dotel.javaagent.testing.additional-library-ignores.enabled=false",
-    "-Dotel.javaagent.testing.fail-on-context-leak=${findProperty("failOnContextLeak")!=false}",
+    "-Dotel.javaagent.testing.fail-on-context-leak=${findProperty("failOnContextLeak") != false}",
     // prevent sporadic gradle deadlocks, see SafeLogger for more details
     "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
     // Reduce noise in assertion messages since we don't need to verify this in most tests. We check

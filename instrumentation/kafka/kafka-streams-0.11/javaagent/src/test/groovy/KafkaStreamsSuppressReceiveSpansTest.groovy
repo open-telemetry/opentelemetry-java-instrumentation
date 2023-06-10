@@ -42,13 +42,13 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
     }
     KStream<Integer, String> textLines = builder.stream(STREAM_PENDING)
     def values = textLines
-        .mapValues(new ValueMapper<String, String>() {
-          @Override
-          String apply(String textLine) {
-            Span.current().setAttribute("asdf", "testing")
-            return textLine.toLowerCase()
-          }
-        })
+      .mapValues(new ValueMapper<String, String>() {
+        @Override
+        String apply(String textLine) {
+          Span.current().setAttribute("asdf", "testing")
+          return textLine.toLowerCase()
+        }
+      })
 
     KafkaStreams streams
     try {
@@ -57,7 +57,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
       streams = new KafkaStreams(builder, config)
     } catch (MissingMethodException e) {
       def producer = Class.forName("org.apache.kafka.streams.kstream.Produced")
-          .with(Serdes.Integer(), Serdes.String())
+        .with(Serdes.Integer(), Serdes.String())
       values.to(STREAM_PROCESSED, producer)
       streams = new KafkaStreams(builder.build(), config)
     }

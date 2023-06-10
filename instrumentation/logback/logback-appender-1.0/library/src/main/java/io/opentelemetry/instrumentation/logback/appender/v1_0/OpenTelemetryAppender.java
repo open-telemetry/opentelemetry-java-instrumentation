@@ -9,7 +9,7 @@ import static java.util.Collections.emptyList;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +42,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   @Override
   protected void append(ILoggingEvent event) {
-    mapper.emit(GlobalLoggerProvider.get(), event);
+    mapper.emit(GlobalOpenTelemetry.get().getLogsBridge(), event);
   }
 
   /**

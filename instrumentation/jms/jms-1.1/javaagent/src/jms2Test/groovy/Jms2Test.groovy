@@ -69,7 +69,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
     serverLocator.close()
 
     def connectionFactory = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF,
-        new TransportConfiguration(InVMConnectorFactory.name))
+      new TransportConfiguration(InVMConnectorFactory.name))
 
     def connection = connectionFactory.createConnection()
     connection.start()

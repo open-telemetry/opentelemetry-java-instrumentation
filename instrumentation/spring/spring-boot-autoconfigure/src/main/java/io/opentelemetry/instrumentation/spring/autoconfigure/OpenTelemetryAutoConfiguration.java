@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceConfigProperties;
@@ -83,16 +82,14 @@ public class OpenTelemetryAutoConfiguration {
       SdkLoggerProviderBuilder loggerProviderBuilder = SdkLoggerProvider.builder();
       loggerProviderBuilder.setResource(otelResource);
 
-      loggerExportersProvider.getIfAvailable(Collections::emptyList).stream()
+      loggerExportersProvider
+          .getIfAvailable(Collections::emptyList)
           .forEach(
               loggerExporter ->
                   loggerProviderBuilder.addLogRecordProcessor(
                       BatchLogRecordProcessor.builder(loggerExporter).build()));
 
-      SdkLoggerProvider loggerProvider = loggerProviderBuilder.build();
-      GlobalLoggerProvider.set(loggerProvider);
-
-      return loggerProvider;
+      return loggerProviderBuilder.build();
     }
 
     @Bean

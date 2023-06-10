@@ -7,10 +7,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -22,11 +20,6 @@ class OtlpLogExporterAutoConfigurationTest {
           .withConfiguration(
               AutoConfigurations.of(
                   OpenTelemetryAutoConfiguration.class, OtlpLoggerExporterAutoConfiguration.class));
-
-  @BeforeEach
-  void resetGlobalLoggerProvider() {
-    GlobalLoggerProvider.resetForTest();
-  }
 
   @Test
   void otlpEnabled() {

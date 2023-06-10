@@ -21,7 +21,9 @@ import spock.lang.Unroll
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
-import static io.opentelemetry.api.trace.SpanKind.*
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 //TODO add tests for propagationEnabled flag
 @Unroll

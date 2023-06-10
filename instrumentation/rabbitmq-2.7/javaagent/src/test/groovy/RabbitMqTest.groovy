@@ -3,8 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
-import com.rabbitmq.client.*
+import com.rabbitmq.client.AMQP
+import com.rabbitmq.client.Channel
+import com.rabbitmq.client.Connection
+import com.rabbitmq.client.Consumer
+import com.rabbitmq.client.DefaultConsumer
+import com.rabbitmq.client.Envelope
+import com.rabbitmq.client.GetResponse
+import com.rabbitmq.client.ShutdownSignalException
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -20,7 +26,9 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-import static io.opentelemetry.api.trace.SpanKind.*
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabbitMqTrait {
@@ -135,8 +143,8 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
     setup:
     channel.exchangeDeclare(exchangeName, "direct", false)
     String queueName = (messageCount % 2 == 0) ?
-        channel.queueDeclare().getQueue() :
-        channel.queueDeclare("some-queue", false, true, true, null).getQueue()
+      channel.queueDeclare().getQueue() :
+      channel.queueDeclare("some-queue", false, true, true, null).getQueue()
     channel.queueBind(queueName, exchangeName, "")
 
     def deliveries = []
@@ -153,8 +161,8 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
     (1..messageCount).each {
       if (setTimestamp) {
         channel.basicPublish(exchangeName, "",
-            new AMQP.BasicProperties.Builder().timestamp(new Date()).build(),
-            "msg $it".getBytes())
+          new AMQP.BasicProperties.Builder().timestamp(new Date()).build(),
+          "msg $it".getBytes())
       } else {
         channel.basicPublish(exchangeName, "", null, "msg $it".getBytes())
       }
@@ -353,18 +361,18 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
   }
 
   def rabbitSpan(
-      TraceAssert trace,
-      int index,
-      String exchange,
-      String routingKey,
-      String operation,
-      String resource,
-      SpanData parentSpan = null,
-      SpanData linkSpan = null,
-      Throwable exception = null,
-      String errorMsg = null,
-      boolean expectTimestamp = false,
-      boolean testHeaders = false
+    TraceAssert trace,
+    int index,
+    String exchange,
+    String routingKey,
+    String operation,
+    String resource,
+    SpanData parentSpan = null,
+    SpanData linkSpan = null,
+    Throwable exception = null,
+    String errorMsg = null,
+    boolean expectTimestamp = false,
+    boolean testHeaders = false
   ) {
 
     def spanName = resource

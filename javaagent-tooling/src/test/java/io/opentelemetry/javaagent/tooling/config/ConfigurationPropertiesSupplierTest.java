@@ -11,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.events.GlobalEventEmitterProvider;
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
@@ -33,7 +32,6 @@ class ConfigurationPropertiesSupplierTest {
   @AfterAll
   static void cleanUp() {
     GlobalOpenTelemetry.resetForTest();
-    GlobalLoggerProvider.resetForTest();
     GlobalEventEmitterProvider.resetForTest();
   }
 

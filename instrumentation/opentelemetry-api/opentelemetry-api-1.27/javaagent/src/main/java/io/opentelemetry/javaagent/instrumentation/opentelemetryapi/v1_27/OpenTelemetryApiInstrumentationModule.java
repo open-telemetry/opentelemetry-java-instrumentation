@@ -3,22 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.logs;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27;
+
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Collections;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class OpenTelemetryApiLogsInstrumentationModule extends InstrumentationModule {
-  public OpenTelemetryApiLogsInstrumentationModule() {
-    super("opentelemetry-api-logs");
+public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule {
+  public OpenTelemetryApiInstrumentationModule() {
+    super("opentelemetry-api", "opentelemetry-api-1.27");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Collections.singletonList(new OpenTelemetryLogsInstrumentation());
+    return singletonList(new OpenTelemetryInstrumentation());
   }
 }

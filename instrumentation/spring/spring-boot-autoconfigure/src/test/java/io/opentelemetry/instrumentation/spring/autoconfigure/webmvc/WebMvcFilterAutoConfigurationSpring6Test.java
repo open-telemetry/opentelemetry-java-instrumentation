@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.webmvc;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import jakarta.servlet.Filter;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +28,6 @@ class WebMvcFilterAutoConfigurationSpring6Test {
   @BeforeEach
   void setUp() {
     assumeTrue(Boolean.getBoolean("testLatestDeps"));
-    GlobalLoggerProvider.resetForTest();
   }
 
   @Test

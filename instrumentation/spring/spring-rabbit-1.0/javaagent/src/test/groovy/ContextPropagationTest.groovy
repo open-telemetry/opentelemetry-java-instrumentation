@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import com.rabbitmq.client.ConnectionFactory
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
@@ -26,7 +25,9 @@ import spock.lang.Unroll
 
 import java.time.Duration
 
-import static io.opentelemetry.api.trace.SpanKind.*
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 class ContextPropagationTest extends AgentInstrumentationSpecification {
 
@@ -39,23 +40,23 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
 
   def setupSpec() {
     rabbitMqContainer = new GenericContainer('rabbitmq:latest')
-        .withExposedPorts(5672)
-        .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1))
-        .withStartupTimeout(Duration.ofMinutes(2))
+      .withExposedPorts(5672)
+      .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1))
+      .withStartupTimeout(Duration.ofMinutes(2))
     rabbitMqContainer.start()
 
     def app = new SpringApplication(ConsumerConfig)
     app.setDefaultProperties([
-        "spring.jmx.enabled"              : false,
-        "spring.main.web-application-type": "none",
-        "spring.rabbitmq.host"            : rabbitMqContainer.host,
-        "spring.rabbitmq.port"            : rabbitMqContainer.getMappedPort(5672),
+      "spring.jmx.enabled"              : false,
+      "spring.main.web-application-type": "none",
+      "spring.rabbitmq.host"            : rabbitMqContainer.host,
+      "spring.rabbitmq.port"            : rabbitMqContainer.getMappedPort(5672),
     ])
     applicationContext = app.run()
 
     connectionFactory = new ConnectionFactory(
-        host: rabbitMqContainer.host,
-        port: rabbitMqContainer.getMappedPort(5672)
+      host: rabbitMqContainer.host,
+      port: rabbitMqContainer.getMappedPort(5672)
     )
   }
 
@@ -74,16 +75,16 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
     runWithSpan("parent") {
       if (testHeaders) {
         applicationContext.getBean(AmqpTemplate)
-            .convertAndSend(ConsumerConfig.TEST_QUEUE, (Object) "test", new MessagePostProcessor() {
-              @Override
-              Message postProcessMessage(Message message) throws AmqpException {
-                message.getMessageProperties().setHeader("test-message-header", "test")
-                return message
-              }
-            })
+          .convertAndSend(ConsumerConfig.TEST_QUEUE, (Object) "test", new MessagePostProcessor() {
+            @Override
+            Message postProcessMessage(Message message) throws AmqpException {
+              message.getMessageProperties().setHeader("test-message-header", "test")
+              return message
+            }
+          })
       } else {
         applicationContext.getBean(AmqpTemplate)
-            .convertAndSend(ConsumerConfig.TEST_QUEUE, "test")
+          .convertAndSend(ConsumerConfig.TEST_QUEUE, "test")
       }
     }
 

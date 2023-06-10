@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import com.google.common.io.Files
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.hornetq.api.core.TransportConfiguration
@@ -21,7 +20,11 @@ import org.springframework.jms.core.JmsTemplate
 import org.springframework.jms.core.MessagePostProcessor
 import spock.lang.Shared
 
-import javax.jms.*
+import javax.jms.Connection
+import javax.jms.JMSException
+import javax.jms.Message
+import javax.jms.Session
+import javax.jms.TextMessage
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
@@ -66,7 +69,7 @@ class SpringTemplateTest extends AgentInstrumentationSpecification {
     serverLocator.close()
 
     def connectionFactory = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF,
-        new TransportConfiguration(InVMConnectorFactory.name))
+      new TransportConfiguration(InVMConnectorFactory.name))
 
     connection = connectionFactory.createConnection()
     connection.start()
@@ -125,10 +128,10 @@ class SpringTemplateTest extends AgentInstrumentationSpecification {
     receivedMessage.text == "responded!"
     assertTraces(4) {
       traces.sort(orderByRootSpanName(
-          "$destinationName receive",
-          "$destinationName send",
-          "(temporary) receive",
-          "(temporary) send"))
+        "$destinationName receive",
+        "$destinationName send",
+        "(temporary) receive",
+        "(temporary) send"))
 
       trace(0, 1) {
         consumerSpan(it, 0, destinationName, msgId.get(), null, "receive")

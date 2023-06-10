@@ -107,8 +107,7 @@ class Jms3InstrumentationTest {
 
   @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
-  void testMessageConsumer(
-      DestinationFactory destinationFactory, boolean isTemporary)
+  void testMessageConsumer(DestinationFactory destinationFactory, boolean isTemporary)
       throws JMSException {
 
     // given
@@ -172,8 +171,7 @@ class Jms3InstrumentationTest {
 
   @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
-  void testMessageListener(
-      DestinationFactory destinationFactory, boolean isTemporary)
+  void testMessageListener(DestinationFactory destinationFactory, boolean isTemporary)
       throws Exception {
 
     // given
@@ -254,8 +252,7 @@ class Jms3InstrumentationTest {
 
   @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
-  void shouldCaptureMessageHeaders(
-      DestinationFactory destinationFactory, boolean isTemporary)
+  void shouldCaptureMessageHeaders(DestinationFactory destinationFactory, boolean isTemporary)
       throws Exception {
 
     // given

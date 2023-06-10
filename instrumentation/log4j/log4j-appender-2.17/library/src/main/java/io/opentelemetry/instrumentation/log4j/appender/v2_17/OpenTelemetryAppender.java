@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
@@ -146,7 +146,11 @@ public class OpenTelemetryAppender extends AbstractAppender {
       instrumentationName = "ROOT";
     }
     LogRecordBuilder builder =
-        GlobalLoggerProvider.get().loggerBuilder(instrumentationName).build().logRecordBuilder();
+        GlobalOpenTelemetry.get()
+            .getLogsBridge()
+            .loggerBuilder(instrumentationName)
+            .build()
+            .logRecordBuilder();
     ReadOnlyStringMap contextData = event.getContextData();
     mapper.mapLogEvent(
         builder,

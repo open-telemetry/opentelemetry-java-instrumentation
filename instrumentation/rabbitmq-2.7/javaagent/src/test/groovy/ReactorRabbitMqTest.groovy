@@ -27,7 +27,7 @@ class ReactorRabbitMqTest extends AgentInstrumentationSpecification implements W
 
     when:
     sender.declareExchange(ExchangeSpecification.exchange("testExchange"))
-        .block()
+      .block()
 
     then:
     noExceptionThrown()

@@ -16,7 +16,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4.trace.ApplicationTracerProvider14;
 import java.lang.reflect.InvocationTargetException;
 
-public final class ApplicationOpenTelemetry110 implements OpenTelemetry {
+public class ApplicationOpenTelemetry110 implements OpenTelemetry {
 
   // Accessed with reflection
   @SuppressWarnings("unused")
@@ -27,7 +27,7 @@ public final class ApplicationOpenTelemetry110 implements OpenTelemetry {
   private final MeterProvider applicationMeterProvider;
 
   @SuppressWarnings("UnnecessarilyFullyQualified")
-  private ApplicationOpenTelemetry110() {
+  protected ApplicationOpenTelemetry110() {
     io.opentelemetry.api.OpenTelemetry agentOpenTelemetry =
         io.opentelemetry.api.GlobalOpenTelemetry.get();
     applicationTracerProvider =
