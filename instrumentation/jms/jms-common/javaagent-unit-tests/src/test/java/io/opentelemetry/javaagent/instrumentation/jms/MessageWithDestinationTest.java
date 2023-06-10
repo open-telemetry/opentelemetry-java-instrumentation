@@ -46,7 +46,7 @@ class MessageWithDestinationTest {
     MessageWithDestination result = MessageWithDestination.create(message, destination);
 
     // then
-    assertMessage( "unknown", /* expectedTemporary= */ false, result);
+    assertMessage("unknown", /* expectedTemporary= */ false, result);
   }
 
   @ParameterizedTest
@@ -112,9 +112,7 @@ class MessageWithDestinationTest {
   }
 
   private void assertMessage(
-      String expectedDestinationName,
-      boolean expectedTemporary,
-      MessageWithDestination actual) {
+      String expectedDestinationName, boolean expectedTemporary, MessageWithDestination actual) {
 
     assertSame(message, actual.message());
     assertEquals(expectedDestinationName, actual.destinationName());
