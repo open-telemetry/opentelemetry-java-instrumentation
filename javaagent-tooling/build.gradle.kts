@@ -17,7 +17,6 @@ dependencies {
   implementation(project(":muzzle"))
 
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("io.opentelemetry:opentelemetry-api-events")
   implementation("io.opentelemetry:opentelemetry-sdk")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
