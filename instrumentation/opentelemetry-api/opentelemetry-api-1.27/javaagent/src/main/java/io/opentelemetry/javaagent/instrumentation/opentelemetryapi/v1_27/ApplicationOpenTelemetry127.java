@@ -36,7 +36,8 @@ public final class ApplicationOpenTelemetry127 implements OpenTelemetry {
     applicationContextPropagators =
         new ApplicationContextPropagators(agentOpenTelemetry.getPropagators());
     applicationMeterProvider =
-        new ApplicationMeterProvider(new ApplicationMeterFactory115(), agentOpenTelemetry.getMeterProvider());
+        new ApplicationMeterProvider(
+            new ApplicationMeterFactory115(), agentOpenTelemetry.getMeterProvider());
     applicationLoggerProvider = new ApplicationLoggerProvider(agentOpenTelemetry.getLogsBridge());
   }
 
