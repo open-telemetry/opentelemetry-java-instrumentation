@@ -18,7 +18,7 @@ final class AsyncHttpClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(RequestContext request, @Nullable Response response) {
+  public String getNetworkProtocolName(RequestContext request, @Nullable Response response) {
     HttpVersion httpVersion = getHttpVersion(request);
     if (httpVersion == null) {
       return null;
@@ -28,7 +28,7 @@ final class AsyncHttpClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolVersion(RequestContext request, @Nullable Response response) {
+  public String getNetworkProtocolVersion(RequestContext request, @Nullable Response response) {
     HttpVersion httpVersion = getHttpVersion(request);
     if (httpVersion == null) {
       return null;

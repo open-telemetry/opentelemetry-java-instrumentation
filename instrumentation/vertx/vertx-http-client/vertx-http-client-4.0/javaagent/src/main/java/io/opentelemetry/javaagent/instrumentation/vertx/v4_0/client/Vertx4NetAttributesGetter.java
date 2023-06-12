@@ -16,13 +16,14 @@ final class Vertx4NetAttributesGetter
     implements NetClientAttributesGetter<HttpClientRequest, HttpClientResponse> {
 
   @Override
-  public String getProtocolName(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public String getNetworkProtocolName(
+      HttpClientRequest request, @Nullable HttpClientResponse response) {
     return "http";
   }
 
   @Nullable
   @Override
-  public String getProtocolVersion(
+  public String getNetworkProtocolVersion(
       HttpClientRequest request, @Nullable HttpClientResponse response) {
     HttpVersion version = request.version();
     if (version == null) {

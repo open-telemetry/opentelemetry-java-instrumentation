@@ -29,6 +29,19 @@ final class InetSocketAddressUtil {
   }
 
   @Nullable
+  static String getNetworkType(
+      @Nullable InetSocketAddress address, @Nullable InetSocketAddress otherAddress) {
+    if (address == null) {
+      address = otherAddress;
+    }
+    if (address == null) {
+      return null;
+    }
+    InetAddress remoteAddress = address.getAddress();
+    return remoteAddress instanceof Inet6Address ? "ipv6" : "ipv4";
+  }
+
+  @Nullable
   static String getHostName(@Nullable InetSocketAddress address) {
     if (address == null) {
       return null;

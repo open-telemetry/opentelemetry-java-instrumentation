@@ -20,13 +20,13 @@ public class JavaHttpClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(HttpRequest request, @Nullable HttpResponse<?> response) {
+  public String getNetworkProtocolName(HttpRequest request, @Nullable HttpResponse<?> response) {
     return "http";
   }
 
   @Nullable
   @Override
-  public String getProtocolVersion(HttpRequest request, @Nullable HttpResponse<?> response) {
+  public String getNetworkProtocolVersion(HttpRequest request, @Nullable HttpResponse<?> response) {
     HttpClient.Version version;
     if (response != null) {
       version = response.version();

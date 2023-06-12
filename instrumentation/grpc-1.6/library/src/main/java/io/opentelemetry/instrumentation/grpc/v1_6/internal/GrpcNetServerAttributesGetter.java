@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 
+import io.grpc.Status;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcRequest;
 import java.net.InetSocketAddress;
@@ -15,7 +16,8 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class GrpcNetServerAttributesGetter implements NetServerAttributesGetter<GrpcRequest> {
+public final class GrpcNetServerAttributesGetter
+    implements NetServerAttributesGetter<GrpcRequest, Status> {
 
   @Nullable
   @Override

@@ -15,13 +15,13 @@ final class AsyncHttpClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(Request request, @Nullable Response response) {
+  public String getNetworkProtocolName(Request request, @Nullable Response response) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getProtocolVersion(Request request, @Nullable Response response) {
+  public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
     return null;
   }
 

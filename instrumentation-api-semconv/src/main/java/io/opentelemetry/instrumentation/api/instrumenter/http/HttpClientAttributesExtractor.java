@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
@@ -53,6 +54,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private final InternalNetClientAttributesExtractor<REQUEST, RESPONSE> internalNetExtractor;
+  private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final ToIntFunction<Context> resendCountIncrementer;
 
   HttpClientAttributesExtractor(
@@ -80,7 +82,14 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
         new InternalNetClientAttributesExtractor<>(
             netAttributesGetter,
             this::shouldCapturePeerPort,
-            new HttpNetNamePortGetter<>(httpAttributesGetter));
+            new HttpNetNamePortGetter<>(httpAttributesGetter),
+            SemconvStability.emitOldHttpSemconv());
+    internalNetworkExtractor =
+        new InternalNetworkAttributesExtractor<>(
+            netAttributesGetter,
+            HttpNetworkTransportFilter.INSTANCE,
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv());
     this.resendCountIncrementer = resendCountIncrementer;
   }
 
@@ -121,6 +130,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     super.onEnd(attributes, context, request, response, error);
 
     internalNetExtractor.onEnd(attributes, request, response);
+    internalNetworkExtractor.onEnd(attributes, request, response);
 
     int resendCount = resendCountIncrementer.applyAsInt(context);
     if (resendCount > 0) {

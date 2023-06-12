@@ -10,12 +10,13 @@ import com.noelios.restlet.http.HttpRequest;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import javax.annotation.Nullable;
 import org.restlet.data.Request;
+import org.restlet.data.Response;
 
-final class RestletNetAttributesGetter implements NetServerAttributesGetter<Request> {
+final class RestletNetAttributesGetter implements NetServerAttributesGetter<Request, Response> {
 
   @Nullable
   @Override
-  public String getProtocolName(Request request) {
+  public String getNetworkProtocolName(Request request, @Nullable Response response) {
     String protocol = getProtocolString(request);
     if (protocol.startsWith("HTTP/")) {
       return "http";
@@ -25,7 +26,7 @@ final class RestletNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
-  public String getProtocolVersion(Request request) {
+  public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
     String protocol = getProtocolString(request);
     if (protocol.startsWith("HTTP/")) {
       return protocol.substring("HTTP/".length());

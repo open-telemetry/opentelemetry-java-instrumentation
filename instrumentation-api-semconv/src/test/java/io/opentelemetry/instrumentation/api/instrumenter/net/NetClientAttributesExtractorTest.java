@@ -29,19 +29,33 @@ class NetClientAttributesExtractorTest {
 
     @Override
     public String getTransport(Map<String, String> request, Map<String, String> response) {
-      return response.get("transport");
+      return response.get("netTransport");
     }
 
     @Nullable
     @Override
-    public String getProtocolName(
+    public String getNetworkTransport(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("transport");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkType(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("type");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkProtocolName(
         Map<String, String> request, @Nullable Map<String, String> response) {
       return request.get("protocolName");
     }
 
     @Nullable
     @Override
-    public String getProtocolVersion(
+    public String getNetworkProtocolVersion(
         Map<String, String> request, @Nullable Map<String, String> response) {
       return request.get("protocolVersion");
     }
@@ -86,7 +100,9 @@ class NetClientAttributesExtractorTest {
   void normal() {
     // given
     Map<String, String> map = new HashMap<>();
-    map.put("transport", IP_TCP);
+    map.put("netTransport", IP_TCP);
+    map.put("transport", "tcp");
+    map.put("type", "ipv6");
     map.put("protocolName", "http");
     map.put("protocolVersion", "1.1");
     map.put("peerName", "opentelemetry.io");
@@ -144,7 +160,7 @@ class NetClientAttributesExtractorTest {
   void doesNotSetDuplicates1() {
     // given
     Map<String, String> map = new HashMap<>();
-    map.put("transport", IP_TCP);
+    map.put("netTransport", IP_TCP);
     map.put("peerName", "1:2:3:4::");
     map.put("peerPort", "42");
     map.put("sockFamily", "inet6");
@@ -176,7 +192,7 @@ class NetClientAttributesExtractorTest {
   void doesNotSetDuplicates2() {
     // given
     Map<String, String> map = new HashMap<>();
-    map.put("transport", IP_TCP);
+    map.put("netTransport", IP_TCP);
     map.put("peerName", "opentelemetry.io");
     map.put("peerPort", "42");
     map.put("sockFamily", "inet6");

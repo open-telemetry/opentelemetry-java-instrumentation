@@ -10,11 +10,13 @@ import io.undertow.server.HttpServerExchange;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-public class UndertowNetAttributesGetter implements NetServerAttributesGetter<HttpServerExchange> {
+public class UndertowNetAttributesGetter
+    implements NetServerAttributesGetter<HttpServerExchange, HttpServerExchange> {
 
   @Nullable
   @Override
-  public String getProtocolName(HttpServerExchange exchange) {
+  public String getNetworkProtocolName(
+      HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
     String protocol = exchange.getProtocol().toString();
     if (protocol.startsWith("HTTP/")) {
       return "http";
@@ -24,7 +26,8 @@ public class UndertowNetAttributesGetter implements NetServerAttributesGetter<Ht
 
   @Nullable
   @Override
-  public String getProtocolVersion(HttpServerExchange exchange) {
+  public String getNetworkProtocolVersion(
+      HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
     String protocol = exchange.getProtocol().toString();
     if (protocol.startsWith("HTTP/")) {
       return protocol.substring("HTTP/".length());

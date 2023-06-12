@@ -8,23 +8,32 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 
 class HttpServerAttributesExtractorStableSemconvTest {
 
@@ -80,17 +89,33 @@ class HttpServerAttributesExtractorStableSemconvTest {
   }
 
   static class TestNetServerAttributesGetter
-      implements NetServerAttributesGetter<Map<String, Object>> {
+      implements NetServerAttributesGetter<Map<String, Object>, Map<String, Object>> {
 
     @Nullable
     @Override
-    public String getProtocolName(Map<String, Object> request) {
+    public String getNetworkTransport(
+        Map<String, Object> request, @Nullable Map<String, Object> response) {
+      return (String) request.get("transport");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkType(
+        Map<String, Object> request, @Nullable Map<String, Object> response) {
+      return (String) request.get("type");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkProtocolName(
+        Map<String, Object> request, Map<String, Object> response) {
       return (String) request.get("protocolName");
     }
 
     @Nullable
     @Override
-    public String getProtocolVersion(Map<String, Object> request) {
+    public String getNetworkProtocolVersion(
+        Map<String, Object> request, Map<String, Object> response) {
       return (String) request.get("protocolVersion");
     }
 
@@ -121,6 +146,8 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("header.host", "github.com");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
+    request.put("transport", "udp");
+    request.put("type", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "2.0");
 
@@ -144,8 +171,6 @@ class HttpServerAttributesExtractorStableSemconvTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_HOST_NAME, "github.com"),
-            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
             entry(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(UrlAttributes.URL_SCHEME, "http"),
             entry(UrlAttributes.URL_PATH, "/repositories/1"),
@@ -161,6 +186,10 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
+            entry(NetworkAttributes.NETWORK_TRANSPORT, "udp"),
+            entry(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
             entry(HttpAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
             entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
@@ -168,5 +197,50 @@ class HttpServerAttributesExtractorStableSemconvTest {
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")));
+  }
+
+  @ParameterizedTest
+  @ArgumentsSource(NetworkTransportAndProtocolProvider.class)
+  void skipNetworkTransportIfDefaultForProtocol(
+      String observedProtocolName,
+      String observedProtocolVersion,
+      String observedTransport,
+      @Nullable String extractedTransport) {
+    Map<String, String> request = new HashMap<>();
+    request.put("protocolName", observedProtocolName);
+    request.put("protocolVersion", observedProtocolVersion);
+    request.put("transport", observedTransport);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(
+            new HttpClientAttributesExtractorStableSemconvTest.TestHttpClientAttributesGetter(),
+            new HttpClientAttributesExtractorStableSemconvTest.TestNetClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    if (extractedTransport != null) {
+      assertThat(attributes.build())
+          .containsEntry(NetworkAttributes.NETWORK_TRANSPORT, extractedTransport);
+    } else {
+      assertThat(attributes.build()).doesNotContainKey(NetworkAttributes.NETWORK_TRANSPORT);
+    }
+  }
+
+  static final class NetworkTransportAndProtocolProvider implements ArgumentsProvider {
+
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return Stream.of(
+          arguments("http", "1.0", "tcp", null),
+          arguments("http", "1.1", "tcp", null),
+          arguments("http", "2.0", "tcp", null),
+          arguments("http", "3.0", "udp", null),
+          arguments("http", "1.1", "udp", "udp"),
+          arguments("ftp", "2.0", "tcp", "tcp"),
+          arguments("http", "3.0", "tcp", "tcp"),
+          arguments("http", "42", "tcp", "tcp"));
+    }
   }
 }

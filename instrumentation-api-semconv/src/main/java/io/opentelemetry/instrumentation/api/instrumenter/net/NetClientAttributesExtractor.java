@@ -10,6 +10,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkTransportFilter;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 
 /**
@@ -25,6 +28,7 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   private final InternalNetClientAttributesExtractor<REQUEST, RESPONSE> internalExtractor;
+  private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
 
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       NetClientAttributesGetter<REQUEST, RESPONSE> getter) {
@@ -34,7 +38,16 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
   private NetClientAttributesExtractor(NetClientAttributesGetter<REQUEST, RESPONSE> getter) {
     internalExtractor =
         new InternalNetClientAttributesExtractor<>(
-            getter, (port, request) -> true, FallbackNamePortGetter.noop());
+            getter,
+            (port, request) -> true,
+            FallbackNamePortGetter.noop(),
+            SemconvStability.emitOldHttpSemconv());
+    internalNetworkExtractor =
+        new InternalNetworkAttributesExtractor<>(
+            getter,
+            NetworkTransportFilter.alwaysTrue(),
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv());
   }
 
   @Override
@@ -50,5 +63,6 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     internalExtractor.onEnd(attributes, request, response);
+    internalNetworkExtractor.onEnd(attributes, request, response);
   }
 }
