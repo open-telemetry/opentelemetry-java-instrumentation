@@ -19,6 +19,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class TaskSchedulerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
+    // we're only instrumenting the "real" scheduler implementations, and skipping all the decorator
+    // impls
     return namedOneOf(
         "org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler",
         "org.springframework.scheduling.concurrent.ConcurrentTaskScheduler",
