@@ -58,12 +58,12 @@ public class LibertyDispatcherNetAttributesGetter
   @Nullable
   @Override
   public String getServerSocketAddress(LibertyRequest request, LibertyResponse response) {
-    return request.dispatcher().getLocalHostAddress();
+    return request.getServerSocketAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerSocketPort(LibertyRequest request, LibertyResponse response) {
-    return request.dispatcher().getLocalPort();
+    return request.getServerSocketPort();
   }
 }

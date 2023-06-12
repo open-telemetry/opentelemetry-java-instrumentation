@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 import com.ibm.ws.http.dispatcher.internal.channel.HttpDispatcherLink;
 import com.ibm.wsspi.genericbnf.HeaderField;
 import com.ibm.wsspi.http.channel.HttpRequestMessage;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,11 +16,18 @@ import java.util.List;
 public class LibertyRequest {
   private final HttpDispatcherLink httpDispatcherLink;
   private final HttpRequestMessage httpRequestMessage;
+  private final String serverSocketAddress;
+  private final int serverSocketPort;
 
   public LibertyRequest(
-      HttpDispatcherLink httpDispatcherLink, HttpRequestMessage httpRequestMessage) {
+      HttpDispatcherLink httpDispatcherLink,
+      HttpRequestMessage httpRequestMessage,
+      InetAddress serverInetAddress,
+      int serverSocketPort) {
     this.httpDispatcherLink = httpDispatcherLink;
     this.httpRequestMessage = httpRequestMessage;
+    this.serverSocketAddress = serverInetAddress.getHostAddress();
+    this.serverSocketPort = serverSocketPort;
   }
 
   public String getMethod() {
@@ -61,6 +69,14 @@ public class LibertyRequest {
 
   public String getProtocol() {
     return httpRequestMessage.getVersion();
+  }
+
+  public String getServerSocketAddress() {
+    return serverSocketAddress;
+  }
+
+  public int getServerSocketPort() {
+    return serverSocketPort;
   }
 
   public HttpDispatcherLink dispatcher() {

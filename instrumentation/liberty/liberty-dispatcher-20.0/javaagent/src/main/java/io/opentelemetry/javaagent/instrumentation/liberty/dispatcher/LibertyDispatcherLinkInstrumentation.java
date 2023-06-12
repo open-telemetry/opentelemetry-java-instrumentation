@@ -58,7 +58,9 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Java8BytecodeBridge.currentContext();
-      request = new LibertyRequest(httpDispatcherLink, isc.getRequest());
+      request =
+          new LibertyRequest(
+              httpDispatcherLink, isc.getRequest(), isc.getLocalAddr(), isc.getLocalPort());
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
