@@ -6,11 +6,10 @@
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class ExperimentalSnippetHolder {
 
-  private static final AtomicReference<String> snippet = new AtomicReference<>(getSnippetSetting());
+  private static volatile String snippet = getSnippetSetting();
 
   private static String getSnippetSetting() {
     String result = ConfigPropertiesUtil.getString("otel.experimental.javascript-snippet");
@@ -18,11 +17,11 @@ public class ExperimentalSnippetHolder {
   }
 
   public static void setSnippet(String newValue) {
-    snippet.compareAndSet("", newValue);
+    snippet = newValue;
   }
 
   public static String getSnippet() {
-    return snippet.get();
+    return snippet;
   }
 
   private ExperimentalSnippetHolder() {}
