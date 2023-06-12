@@ -23,8 +23,8 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   String getSystem(REQUEST request);
 
   /**
-   * @deprecated This method is deprecated and will be removed in a future release.
-   *     There is no replacement for this concept.
+   * @deprecated This method is deprecated and will be removed in a future release. There is no
+   *     replacement for this concept.
    */
   @Nullable
   @Deprecated
