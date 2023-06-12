@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
+import akka.http.scaladsl.model.Uri;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
 import javax.annotation.Nullable;
 
-// TODO (trask) capture net attributes?
 class AkkaNetServerAttributesGetter
     implements NetServerAttributesGetter<HttpRequest, HttpResponse> {
 
@@ -31,12 +31,12 @@ class AkkaNetServerAttributesGetter
   @Nullable
   @Override
   public String getHostName(HttpRequest request) {
-    return null;
+    Uri.Host host = request.uri().authority().host();
+    return host.isEmpty() ? null : host.address();
   }
 
-  @Nullable
   @Override
   public Integer getHostPort(HttpRequest request) {
-    return null;
+    return request.uri().authority().port();
   }
 }

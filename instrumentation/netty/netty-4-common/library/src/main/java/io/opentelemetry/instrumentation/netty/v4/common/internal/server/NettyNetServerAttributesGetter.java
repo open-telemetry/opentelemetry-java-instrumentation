@@ -13,6 +13,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.ChannelUtil;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -28,7 +29,7 @@ final class NettyNetServerAttributesGetter
   @Override
   public String getNetworkTransport(
       HttpRequestAndChannel requestAndChannel, HttpResponse response) {
-    return requestAndChannel.channel() instanceof DatagramChannel ? "udp" : "tcp";
+    return ChannelUtil.getNetworkTransport(requestAndChannel.channel());
   }
 
   @Override

@@ -138,7 +138,7 @@ class HttpServerAttributesExtractorBothSemconvTest {
     request.put("header.host", "github.com");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
-    request.put("transport", "tcp");
+    request.put("transport", "udp");
     request.put("type", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "2.0");
@@ -183,7 +183,7 @@ class HttpServerAttributesExtractorBothSemconvTest {
         .containsOnly(
             entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
             entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
-            entry(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+            entry(NetworkAttributes.NETWORK_TRANSPORT, "udp"),
             entry(NetworkAttributes.NETWORK_TYPE, "ipv4"),
             entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
             entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),

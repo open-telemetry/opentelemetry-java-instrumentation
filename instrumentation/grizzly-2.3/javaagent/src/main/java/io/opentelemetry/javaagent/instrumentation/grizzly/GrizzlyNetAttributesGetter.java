@@ -24,7 +24,8 @@ final class GrizzlyNetAttributesGetter
     Transport transport = request.getConnection().getTransport();
     if (transport instanceof TCPNIOTransport) {
       return IP_TCP;
-    } else if (transport instanceof UDPNIOTransport) {
+    }
+    if (transport instanceof UDPNIOTransport) {
       return IP_UDP;
     }
     return null;

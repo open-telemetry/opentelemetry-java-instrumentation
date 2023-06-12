@@ -87,6 +87,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             netAttributesGetter,
+            HttpNetworkTransportFilter.INSTANCE,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
     this.resendCountIncrementer = resendCountIncrementer;

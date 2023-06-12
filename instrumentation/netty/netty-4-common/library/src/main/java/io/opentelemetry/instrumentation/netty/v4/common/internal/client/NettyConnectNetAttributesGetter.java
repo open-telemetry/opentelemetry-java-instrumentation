@@ -12,6 +12,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.socket.DatagramChannel;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.ChannelUtil;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -26,7 +27,7 @@ final class NettyConnectNetAttributesGetter
 
   @Override
   public String getNetworkTransport(NettyConnectionRequest request, @Nullable Channel channel) {
-    return channel instanceof DatagramChannel ? "udp" : "tcp";
+    return ChannelUtil.getNetworkTransport(channel);
   }
 
   @Nullable

@@ -20,14 +20,17 @@ import javax.annotation.Nullable;
 public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
 
   private final NetworkAttributesGetter<REQUEST, RESPONSE> getter;
+  private final NetworkTransportFilter networkTransportFilter;
   private final boolean emitStableUrlAttributes;
   private final boolean emitOldHttpAttributes;
 
   public InternalNetworkAttributesExtractor(
       NetworkAttributesGetter<REQUEST, RESPONSE> getter,
+      NetworkTransportFilter networkTransportFilter,
       boolean emitStableUrlAttributes,
       boolean emitOldHttpAttributes) {
     this.getter = getter;
+    this.networkTransportFilter = networkTransportFilter;
     this.emitStableUrlAttributes = emitStableUrlAttributes;
     this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
@@ -37,10 +40,11 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
     String protocolVersion = lowercase(getter.getNetworkProtocolVersion(request, response));
 
     if (emitStableUrlAttributes) {
-      internalSet(
-          attributes,
-          NetworkAttributes.NETWORK_TRANSPORT,
-          lowercase(getter.getNetworkTransport(request, response)));
+      String transport = lowercase(getter.getNetworkTransport(request, response));
+      if (networkTransportFilter.shouldAddNetworkTransport(
+          protocolName, protocolVersion, transport)) {
+        internalSet(attributes, NetworkAttributes.NETWORK_TRANSPORT, transport);
+      }
       internalSet(
           attributes,
           NetworkAttributes.NETWORK_TYPE,

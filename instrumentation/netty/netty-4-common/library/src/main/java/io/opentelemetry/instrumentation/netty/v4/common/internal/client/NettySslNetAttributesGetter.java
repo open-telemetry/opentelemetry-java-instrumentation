@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 
 import io.netty.channel.socket.DatagramChannel;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.ChannelUtil;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
@@ -23,7 +24,7 @@ final class NettySslNetAttributesGetter
 
   @Override
   public String getNetworkTransport(NettySslRequest request, @Nullable Void unused) {
-    return request.channel() instanceof DatagramChannel ? "udp" : "tcp";
+    return ChannelUtil.getNetworkTransport(request.channel());
   }
 
   @Nullable

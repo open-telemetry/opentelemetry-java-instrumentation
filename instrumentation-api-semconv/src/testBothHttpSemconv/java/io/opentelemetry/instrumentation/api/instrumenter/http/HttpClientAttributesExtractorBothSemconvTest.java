@@ -116,7 +116,7 @@ class HttpClientAttributesExtractorBothSemconvTest {
     request.put("header.content-length", "10");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.custom-request-header", "123,456");
-    request.put("transport", "tcp");
+    request.put("transport", "udp");
     request.put("type", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "1.1");
@@ -169,7 +169,7 @@ class HttpClientAttributesExtractorBothSemconvTest {
                 asList("654", "321")),
             entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
             entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"),
-            entry(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+            entry(NetworkAttributes.NETWORK_TRANSPORT, "udp"),
             entry(NetworkAttributes.NETWORK_TYPE, "ipv4"),
             entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
             entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"));
