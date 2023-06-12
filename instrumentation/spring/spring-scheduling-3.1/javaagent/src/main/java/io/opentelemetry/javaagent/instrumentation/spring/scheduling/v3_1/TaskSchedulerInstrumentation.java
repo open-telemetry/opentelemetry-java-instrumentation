@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -20,7 +19,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class TaskSchedulerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("org.springframework.scheduling.TaskScheduler"));
+    // we're only instrumenting the "real" scheduler implementations, and skipping all the decorator
+    // impls
+    return namedOneOf(
+        "org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler",
+        "org.springframework.scheduling.concurrent.ConcurrentTaskScheduler",
+        "org.springframework.scheduling.commonj.TimerManagerTaskScheduler");
   }
 
   @Override
