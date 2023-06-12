@@ -31,7 +31,7 @@ public final class ServerAttributesExtractor<REQUEST, RESPONSE>
 
   private final InternalServerAttributesExtractor<REQUEST, RESPONSE> internalExtractor;
 
-  public ServerAttributesExtractor(ServerAttributesGetter<REQUEST, RESPONSE> getter) {
+  ServerAttributesExtractor(ServerAttributesGetter<REQUEST, RESPONSE> getter) {
     // the ServerAttributesExtractor will always emit new semconv
     internalExtractor =
         new InternalServerAttributesExtractor<>(
