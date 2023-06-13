@@ -1,9 +1,11 @@
 name: GraalVM native tests
+
 on:
   schedule:
     # daily at 4:00 UTC
     - cron: '0 4 * * *'
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,3 +24,11 @@ jobs:
           gu --version
           native-image --version
           ./gradlew nativeTest
+
+  workflow-notification:
+    needs:
+      - build
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.build.result == 'success' }}
