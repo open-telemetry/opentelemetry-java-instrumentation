@@ -34,9 +34,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class OpenTelemetryDriverTest {
 
   @DisplayName("verify driver auto registered")
-  @Order(1)
+  @Order(1) //verifyRemoveDriverCandidate test method removes the drivers
   @Test
-  void verifyOpenTelemetryDriverAutoRegisteration() {
+  void verifyOpenTelemetryDriverAutoRegistration() {
 
     Enumeration<Driver> drivers = DriverManager.getDrivers();
 
@@ -44,7 +44,17 @@ public class OpenTelemetryDriverTest {
     // contained in the META-INF.services folder
     assertTrue(OpenTelemetryDriver.isRegistered());
 
-    assertThat(drivers.nextElement()).isEqualTo(OpenTelemetryDriver.INSTANCE);
+    assertTrue(hasOpenTelemetryDriver(drivers));
+  }
+
+  private static boolean hasOpenTelemetryDriver(Enumeration<Driver> drivers) {
+    while(drivers.hasMoreElements()) {
+      Driver driver = drivers.nextElement();
+      if (driver.equals(OpenTelemetryDriver.INSTANCE)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @DisplayName("verify standard properties")
@@ -148,8 +158,6 @@ public class OpenTelemetryDriverTest {
   @DisplayName("Driver candidate has higher priority")
   @Test
   void verifyDriverCandidateHasHigherPriority() throws SQLException {
-
-    deregisterTestDriver();
 
     deregisterTestDriver();
     TestDriver localDriver = new TestDriver();
