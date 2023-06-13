@@ -14,6 +14,8 @@ import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.junit.jupiter.api.Test;
 
@@ -54,6 +56,43 @@ class TemporaryMetricsViewTest {
             entry(SemanticAttributes.NET_PEER_NAME, "somehost2"),
             entry(SemanticAttributes.NET_PEER_PORT, 443L),
             entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"));
+  }
+
+  @Test
+  void shouldApplyClientDurationAndSizeView_stableSemconv() {
+    Attributes startAttributes =
+        Attributes.builder()
+            .put(
+                UrlAttributes.URL_FULL, "https://somehost/high/cardinality/12345?jsessionId=121454")
+            .put(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
+            .put(UrlAttributes.URL_SCHEME, "https")
+            .put(UrlAttributes.URL_PATH, "/high/cardinality/12345")
+            .put(UrlAttributes.URL_QUERY, "jsessionId=121454")
+            .put(NetworkAttributes.SERVER_ADDRESS, "somehost2")
+            .put(NetworkAttributes.SERVER_PORT, 443)
+            .build();
+
+    Attributes endAttributes =
+        Attributes.builder()
+            .put(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 500)
+            .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
+            .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
+            .put(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http")
+            .put(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")
+            .put(NetworkAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4")
+            .put(NetworkAttributes.SERVER_SOCKET_DOMAIN, "somehost20")
+            .put(NetworkAttributes.SERVER_SOCKET_PORT, 8080)
+            .build();
+
+    assertThat(applyClientDurationAndSizeView(startAttributes, endAttributes))
+        .containsOnly(
+            entry(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+            entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 500L),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+            entry(NetworkAttributes.SERVER_ADDRESS, "somehost2"),
+            entry(NetworkAttributes.SERVER_PORT, 443L),
+            entry(NetworkAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4"));
   }
 
   @Test
@@ -99,6 +138,48 @@ class TemporaryMetricsViewTest {
   }
 
   @Test
+  void shouldApplyServerDurationAndSizeView_stableSemconv() {
+    Attributes startAttributes =
+        Attributes.builder()
+            .put(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
+            .put(
+                UrlAttributes.URL_FULL, "https://somehost/high/cardinality/12345?jsessionId=121454")
+            .put(UrlAttributes.URL_SCHEME, "https")
+            .put(UrlAttributes.URL_PATH, "/high/cardinality/12345")
+            .put(UrlAttributes.URL_QUERY, "jsessionId=121454")
+            .put(NetworkAttributes.SERVER_ADDRESS, "somehost")
+            .put(NetworkAttributes.SERVER_PORT, 443)
+            .put(NetworkAttributes.CLIENT_ADDRESS, "somehost2")
+            .put(NetworkAttributes.CLIENT_PORT, 443)
+            .build();
+
+    Attributes endAttributes =
+        Attributes.builder()
+            .put(SemanticAttributes.HTTP_ROUTE, "/somehost/high/{name}/{id}")
+            .put(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 500)
+            .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
+            .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
+            .put(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http")
+            .put(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")
+            .put(NetworkAttributes.SERVER_SOCKET_ADDRESS, "4.3.2.1")
+            .put(NetworkAttributes.SERVER_SOCKET_PORT, 9090)
+            .put(NetworkAttributes.CLIENT_SOCKET_ADDRESS, "1.2.3.4")
+            .put(NetworkAttributes.CLIENT_SOCKET_PORT, 8080)
+            .build();
+
+    assertThat(applyServerDurationAndSizeView(startAttributes, endAttributes))
+        .containsOnly(
+            entry(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+            entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 500L),
+            entry(SemanticAttributes.HTTP_ROUTE, "/somehost/high/{name}/{id}"),
+            entry(UrlAttributes.URL_SCHEME, "https"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+            entry(NetworkAttributes.SERVER_ADDRESS, "somehost"),
+            entry(NetworkAttributes.SERVER_PORT, 443L));
+  }
+
+  @Test
   void shouldApplyActiveRequestsView() {
     Attributes attributes =
         Attributes.builder()
@@ -126,5 +207,35 @@ class TemporaryMetricsViewTest {
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
             entry(SemanticAttributes.NET_HOST_NAME, "somehost"),
             entry(SemanticAttributes.NET_HOST_PORT, 443L));
+  }
+
+  @Test
+  void shouldApplyActiveRequestsView_stableSemconv() {
+    Attributes attributes =
+        Attributes.builder()
+            .put(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
+            .put(
+                UrlAttributes.URL_FULL, "https://somehost/high/cardinality/12345?jsessionId=121454")
+            .put(UrlAttributes.URL_SCHEME, "https")
+            .put(UrlAttributes.URL_PATH, "/high/cardinality/12345")
+            .put(UrlAttributes.URL_QUERY, "jsessionId=121454")
+            .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
+            .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
+            .put(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http")
+            .put(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")
+            .put(NetworkAttributes.SERVER_ADDRESS, "somehost")
+            .put(NetworkAttributes.SERVER_PORT, 443)
+            .put(NetworkAttributes.SERVER_SOCKET_ADDRESS, "4.3.2.1")
+            .put(NetworkAttributes.SERVER_SOCKET_PORT, 9090)
+            .put(NetworkAttributes.CLIENT_SOCKET_ADDRESS, "1.2.3.4")
+            .put(NetworkAttributes.CLIENT_SOCKET_PORT, 8080)
+            .build();
+
+    assertThat(applyActiveRequestsView(attributes))
+        .containsOnly(
+            entry(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+            entry(UrlAttributes.URL_SCHEME, "https"),
+            entry(NetworkAttributes.SERVER_ADDRESS, "somehost"),
+            entry(NetworkAttributes.SERVER_PORT, 443L));
   }
 }

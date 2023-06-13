@@ -40,5 +40,14 @@ public final class NetworkAttributes {
 
   public static final AttributeKey<Long> SERVER_SOCKET_PORT = longKey("server.socket.port");
 
+  public static final AttributeKey<String> CLIENT_ADDRESS = stringKey("client.address");
+
+  public static final AttributeKey<Long> CLIENT_PORT = longKey("client.port");
+
+  public static final AttributeKey<String> CLIENT_SOCKET_ADDRESS =
+      stringKey("client.socket.address");
+
+  public static final AttributeKey<Long> CLIENT_SOCKET_PORT = longKey("client.socket.port");
+
   private NetworkAttributes() {}
 }

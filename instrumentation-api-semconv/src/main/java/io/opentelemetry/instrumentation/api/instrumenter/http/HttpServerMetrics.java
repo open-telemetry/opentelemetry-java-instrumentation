@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpRequestBodySize;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpResponseBodySize;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerDurationAndSizeView;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
@@ -21,14 +22,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 /**
  * {@link OperationListener} which keeps track of <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#http-server">HTTP
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/specification/metrics/semantic_conventions/http-metrics.md#http-server">HTTP
  * server metrics</a>.
  */
 public final class HttpServerMetrics implements OperationListener {
@@ -107,35 +106,21 @@ public final class HttpServerMetrics implements OperationListener {
     // it's important to use exactly the same attributes that were used when incrementing the active
     // request count (otherwise it will split the timeseries)
     activeRequests.add(-1, applyActiveRequestsView(state.startAttributes()), context);
+
     Attributes durationAndSizeAttributes =
         applyServerDurationAndSizeView(state.startAttributes(), endAttributes);
     duration.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_S, durationAndSizeAttributes, context);
-    Long requestLength =
-        getAttribute(
-            SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, endAttributes, state.startAttributes());
-    if (requestLength != null) {
-      requestSize.record(requestLength, durationAndSizeAttributes, context);
-    }
-    Long responseLength =
-        getAttribute(
-            SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-            endAttributes,
-            state.startAttributes());
-    if (responseLength != null) {
-      responseSize.record(responseLength, durationAndSizeAttributes, context);
-    }
-  }
 
-  @Nullable
-  private static <T> T getAttribute(AttributeKey<T> key, Attributes... attributesList) {
-    for (Attributes attributes : attributesList) {
-      T value = attributes.get(key);
-      if (value != null) {
-        return value;
-      }
+    Long requestBodySize = getHttpRequestBodySize(endAttributes, state.startAttributes());
+    if (requestBodySize != null) {
+      requestSize.record(requestBodySize, durationAndSizeAttributes, context);
     }
-    return null;
+
+    Long responseBodySize = getHttpResponseBodySize(endAttributes, state.startAttributes());
+    if (responseBodySize != null) {
+      responseSize.record(responseBodySize, durationAndSizeAttributes, context);
+    }
   }
 
   @AutoValue
