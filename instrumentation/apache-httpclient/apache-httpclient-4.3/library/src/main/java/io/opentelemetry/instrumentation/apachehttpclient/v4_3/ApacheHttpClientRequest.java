@@ -123,7 +123,7 @@ public final class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public InetSocketAddress serverSocketAddress() {
+  public InetSocketAddress getServerSocketAddress() {
     if (target == null) {
       return null;
     }

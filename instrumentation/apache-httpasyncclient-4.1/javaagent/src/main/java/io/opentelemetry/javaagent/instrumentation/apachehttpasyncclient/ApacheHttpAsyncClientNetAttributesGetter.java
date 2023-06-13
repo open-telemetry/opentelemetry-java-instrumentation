@@ -40,6 +40,6 @@ final class ApacheHttpAsyncClientNetAttributesGetter
   @Override
   public InetSocketAddress getServerInetSocketAddress(
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return request.serverSocketAddress();
+    return request.getServerSocketAddress();
   }
 }
