@@ -10,7 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
@@ -33,21 +33,25 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.apache.logging.log4j.ThreadContext;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.FormattedMessage;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class OpenTelemetryAppenderConfigTest {
+class OpenTelemetryAppenderConfigWithOpenTelemetryTest {
 
   private static final Logger logger = LogManager.getLogger("TestLogger");
 
   private static InMemoryLogRecordExporter logRecordExporter;
   private static Resource resource;
   private static InstrumentationScopeInfo instrumentationScopeInfo;
+  private static OpenTelemetry openTelemetry;
 
   @BeforeAll
   static void setupAll() {
@@ -61,7 +65,21 @@ class OpenTelemetryAppenderConfigTest {
             .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
             .build();
 
-    GlobalOpenTelemetry.set(OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build());
+    openTelemetry = OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build();
+    setOpenTelemetry(openTelemetry);
+  }
+
+  private static void setOpenTelemetry(OpenTelemetry openTelemetry) {
+    Configuration config = ((LoggerContext) LogManager.getContext(false)).getConfiguration();
+    config.getAppenders().values().stream()
+        .filter(a -> a instanceof OpenTelemetryAppender)
+        .forEach(a -> ((OpenTelemetryAppender) a).setOpenTelemetry(openTelemetry));
+  }
+
+  @AfterAll
+  static void cleanupAll() {
+    // This is to make sure that other test classes don't have issues with the logger provider set
+    setOpenTelemetry(null);
   }
 
   @BeforeEach
@@ -73,7 +91,10 @@ class OpenTelemetryAppenderConfigTest {
   @Test
   void initializeWithBuilder() {
     OpenTelemetryAppender appender =
-        OpenTelemetryAppender.builder().setName("OpenTelemetryAppender").build();
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemtry(openTelemetry)
+            .build();
     appender.start();
 
     appender.append(
