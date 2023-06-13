@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.servlet.snippet.InjectionState;
+import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import jakarta.servlet.ServletOutputStream;
 import javax.annotation.Nullable;
 
