@@ -23,7 +23,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SqsInstrumentationModule extends InstrumentationModule {
 
   public SqsInstrumentationModule() {
-    super("aws-sdk", "aws-sdk-2.2");
+    super("aws-sdk", "aws-sdk-2.2", "aws-sdk-2.2-sqs");
   }
 
   @Override
