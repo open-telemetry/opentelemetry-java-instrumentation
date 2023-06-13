@@ -34,7 +34,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class OpenTelemetryDriverTest {
 
   @DisplayName("verify driver auto registered")
-  @Order(1) //verifyRemoveDriverCandidate test method removes the drivers
+  @Order(1) // verifyRemoveDriverCandidate test method removes the drivers
   @Test
   void verifyOpenTelemetryDriverAutoRegistration() {
 
@@ -48,7 +48,7 @@ public class OpenTelemetryDriverTest {
   }
 
   private static boolean hasOpenTelemetryDriver(Enumeration<Driver> drivers) {
-    while(drivers.hasMoreElements()) {
+    while (drivers.hasMoreElements()) {
       Driver driver = drivers.nextElement();
       if (driver.equals(OpenTelemetryDriver.INSTANCE)) {
         return true;
@@ -75,7 +75,8 @@ public class OpenTelemetryDriverTest {
   @Test
   void verifyParentLoggerThrownAnException() {
     assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.getParentLogger())
-        .isInstanceOf(SQLFeatureNotSupportedException.class).hasMessage("Feature not supported");
+        .isInstanceOf(SQLFeatureNotSupportedException.class)
+        .hasMessage("Feature not supported");
   }
 
   @DisplayName("verify accepted urls")
@@ -99,17 +100,17 @@ public class OpenTelemetryDriverTest {
   @DisplayName("verify connection with null url")
   @Test
   void verifyConnectionWithNullUrl() {
-    assertThatThrownBy(
-        () -> OpenTelemetryDriver.INSTANCE.connect(null, null)).isInstanceOf(
-        IllegalArgumentException.class).hasMessage("url is required");
+    assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.connect(null, null))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("url is required");
   }
 
   @DisplayName("verify connection with empty url")
   @Test
   void verifyConnectionWithEmptyUrl() {
-    assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.connect(" ", null)).isInstanceOf(
-        IllegalArgumentException.class).hasMessage(
-        "url is required");
+    assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.connect(" ", null))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("url is required");
   }
 
   @DisplayName("verify connection with not accepted url")
@@ -140,10 +141,9 @@ public class OpenTelemetryDriverTest {
     OpenTelemetryDriver.addDriverCandidate(newDriver);
     OpenTelemetryDriver.removeDriverCandidate(newDriver);
 
-    assertThatThrownBy(
-        () -> OpenTelemetryDriver.INSTANCE.connect("jdbc:otel:test:", null)).isInstanceOf(
-        IllegalStateException.class).hasMessage(
-        "Unable to find a driver that accepts url: jdbc:test:");
+    assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.connect("jdbc:otel:test:", null))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Unable to find a driver that accepts url: jdbc:test:");
   }
 
   private static void unregisterDrivers() throws SQLException {
@@ -279,28 +279,26 @@ public class OpenTelemetryDriverTest {
   @DisplayName("verify get property info with empty url")
   @Test
   void verifyGetPropertyInfoWithEmptyUrl() {
-    assertThatThrownBy(
-        () -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(" ", null)).isInstanceOf(
-        IllegalArgumentException.class).hasMessage("url is required");
+    assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(" ", null))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("url is required");
   }
 
   @DisplayName("verify get property info with unknown driver url")
   @Test
   void verifyGetPropertyInfoWithUnknownDriverUrl() {
     String unknownUrl = "jdbc:unknown";
-    assertThatThrownBy(
-        () -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(unknownUrl, null)).isInstanceOf(
-        IllegalStateException.class).hasMessage(
-        "Unable to find a driver that accepts url: " + unknownUrl);
+    assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(unknownUrl, null))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Unable to find a driver that accepts url: " + unknownUrl);
   }
 
   @DisplayName("verify get property info with test driver url")
   @Test
   void verifyGetPropertyInfoWithUnknowDriverUrl() {
     String unknownUrl = "jdbc:unknown";
-    assertThatThrownBy(
-        () -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(unknownUrl, null)).isInstanceOf(
-            IllegalStateException.class)
+    assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(unknownUrl, null))
+        .isInstanceOf(IllegalStateException.class)
         .hasMessage("Unable to find a driver that accepts url: " + unknownUrl);
   }
 }
