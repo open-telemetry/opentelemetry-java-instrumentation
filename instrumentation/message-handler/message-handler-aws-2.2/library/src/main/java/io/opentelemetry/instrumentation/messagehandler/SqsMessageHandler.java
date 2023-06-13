@@ -46,8 +46,7 @@ public abstract class SqsMessageHandler extends MessageHandler<Message> {
   @Override
   protected Instrumenter<Collection<Message>, Void> getMessageInstrumenter() {
     return Instrumenter.<Collection<Message>, Void>builder(
-            openTelemetry, "io.opentelemetry.message-handler", getSpanNameExtractor())
-        .setInstrumentationVersion("1.0")
+            openTelemetry, "io.opentelemetry.message-handler-aws-2.2", getSpanNameExtractor())
         .addAttributesExtractor(getAttributesExtractor())
         .addSpanLinksExtractor(getSpanLinksExtractor())
         .buildInstrumenter(getSpanKindExtractor());
