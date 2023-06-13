@@ -19,7 +19,8 @@ final class ReactorNettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(HttpClientConfig request, @Nullable HttpClientResponse response) {
+  public String getNetworkProtocolName(
+      HttpClientConfig request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
     }
@@ -28,7 +29,7 @@ final class ReactorNettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolVersion(
+  public String getNetworkProtocolVersion(
       HttpClientConfig request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
@@ -39,19 +40,19 @@ final class ReactorNettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(HttpClientConfig request) {
+  public String getServerAddress(HttpClientConfig request) {
     return getHost(request);
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(HttpClientConfig request) {
+  public Integer getServerPort(HttpClientConfig request) {
     return getPort(request);
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getServerInetSocketAddress(
       HttpClientConfig request, @Nullable HttpClientResponse response) {
 
     // we're making use of the fact that HttpClientOperations is both a Connection and an

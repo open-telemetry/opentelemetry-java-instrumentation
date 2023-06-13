@@ -25,19 +25,19 @@ class InetSocketAddressNetClientAttributesGetterTest {
       implements NetClientAttributesGetter<InetSocketAddress, InetSocketAddress> {
 
     @Override
-    public String getPeerName(InetSocketAddress request) {
+    public String getServerAddress(InetSocketAddress request) {
       // net.peer.name and net.peer.port are tested in NetClientAttributesExtractorTest
       return null;
     }
 
     @Override
-    public Integer getPeerPort(InetSocketAddress request) {
+    public Integer getServerPort(InetSocketAddress request) {
       // net.peer.name and net.peer.port are tested in NetClientAttributesExtractorTest
       return null;
     }
 
     @Override
-    public InetSocketAddress getPeerSocketAddress(
+    public InetSocketAddress getServerInetSocketAddress(
         InetSocketAddress request, InetSocketAddress response) {
       return response;
     }

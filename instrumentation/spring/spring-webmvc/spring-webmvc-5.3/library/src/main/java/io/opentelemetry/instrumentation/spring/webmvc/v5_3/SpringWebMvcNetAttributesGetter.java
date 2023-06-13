@@ -8,13 +8,16 @@ package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-enum SpringWebMvcNetAttributesGetter implements NetServerAttributesGetter<HttpServletRequest> {
+enum SpringWebMvcNetAttributesGetter
+    implements NetServerAttributesGetter<HttpServletRequest, HttpServletResponse> {
   INSTANCE;
 
   @Nullable
   @Override
-  public String getProtocolName(HttpServletRequest request) {
+  public String getNetworkProtocolName(
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
     String protocol = request.getProtocol();
     if (protocol != null && protocol.startsWith("HTTP/")) {
       return "http";
@@ -24,7 +27,8 @@ enum SpringWebMvcNetAttributesGetter implements NetServerAttributesGetter<HttpSe
 
   @Nullable
   @Override
-  public String getProtocolVersion(HttpServletRequest request) {
+  public String getNetworkProtocolVersion(
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
     String protocol = request.getProtocol();
     if (protocol != null && protocol.startsWith("HTTP/")) {
       return protocol.substring("HTTP/".length());
@@ -34,12 +38,12 @@ enum SpringWebMvcNetAttributesGetter implements NetServerAttributesGetter<HttpSe
 
   @Nullable
   @Override
-  public String getHostName(HttpServletRequest request) {
+  public String getServerAddress(HttpServletRequest request) {
     return request.getServerName();
   }
 
   @Override
-  public Integer getHostPort(HttpServletRequest request) {
+  public Integer getServerPort(HttpServletRequest request) {
     return request.getServerPort();
   }
 
@@ -56,12 +60,14 @@ enum SpringWebMvcNetAttributesGetter implements NetServerAttributesGetter<HttpSe
 
   @Nullable
   @Override
-  public String getSockHostAddr(HttpServletRequest request) {
+  public String getServerSocketAddress(
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getLocalAddr();
   }
 
   @Override
-  public Integer getSockHostPort(HttpServletRequest request) {
+  public Integer getServerSocketPort(
+      HttpServletRequest request, @Nullable HttpServletResponse respo) {
     return request.getLocalPort();
   }
 }

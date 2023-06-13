@@ -54,7 +54,7 @@ abstract class AppServerTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
     String platformSuffix = windows ? "-windows" : ""
-    String extraTag = "20230509.4927948452"
+    String extraTag = "20230613.5255654528"
     String fullSuffix = "${serverVersion}-jdk$jdk$platformSuffix-$extraTag"
     return getTargetImagePrefix() + ":" + fullSuffix
   }
@@ -367,6 +367,31 @@ abstract class AppServerTest extends SmokeTest {
 
     where:
     [appServer, jdk, isWindows] << getTestParams()
+  }
+
+  @Unroll
+  def "JSP smoke test for Snippet Injection"() {
+    when:
+    def response = client().get("/app/jsp").aggregate().join()
+    TraceInspector traces = new TraceInspector(waitForTraces())
+    String responseBody = response.contentUtf8()
+
+    then:
+    response.status().isSuccess()
+    responseBody.contains("Successful JSP test")
+
+    responseBody.contains("<script>console.log(hi)</script>")
+
+    if (expectServerSpan()){
+      traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
+      traces.countSpansByName('GET /app/jsp') == 1
+    }
+    where:
+    [appServer, jdk] << getTestParams()
+  }
+
+  protected boolean expectServerSpan() {
+    true
   }
 
   protected String getSpanName(String path) {

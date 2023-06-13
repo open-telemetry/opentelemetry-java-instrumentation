@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 
 import io.netty.channel.socket.DatagramChannel;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.ChannelUtil;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
@@ -21,21 +22,27 @@ final class NettySslNetAttributesGetter
     return request.channel() instanceof DatagramChannel ? IP_UDP : IP_TCP;
   }
 
+  @Override
+  public String getNetworkTransport(NettySslRequest request, @Nullable Void unused) {
+    return ChannelUtil.getNetworkTransport(request.channel());
+  }
+
   @Nullable
   @Override
-  public String getPeerName(NettySslRequest nettySslRequest) {
+  public String getServerAddress(NettySslRequest nettySslRequest) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(NettySslRequest nettySslRequest) {
+  public Integer getServerPort(NettySslRequest nettySslRequest) {
     return null;
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getPeerSocketAddress(NettySslRequest request, @Nullable Void unused) {
+  public InetSocketAddress getServerInetSocketAddress(
+      NettySslRequest request, @Nullable Void unused) {
     if (request.remoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) request.remoteAddress();
     }

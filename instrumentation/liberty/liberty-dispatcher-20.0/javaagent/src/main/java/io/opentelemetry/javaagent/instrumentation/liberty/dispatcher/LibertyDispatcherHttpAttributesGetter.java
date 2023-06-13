@@ -14,24 +14,24 @@ public class LibertyDispatcherHttpAttributesGetter
 
   @Override
   @Nullable
-  public String getMethod(LibertyRequest libertyRequest) {
+  public String getHttpRequestMethod(LibertyRequest libertyRequest) {
     return libertyRequest.getMethod();
   }
 
   @Override
-  public List<String> getRequestHeader(LibertyRequest libertyRequest, String name) {
+  public List<String> getHttpRequestHeader(LibertyRequest libertyRequest, String name) {
     return libertyRequest.getHeaderValues(name);
   }
 
   @Override
   @Nullable
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       LibertyRequest libertyRequest, LibertyResponse libertyResponse, @Nullable Throwable error) {
     return libertyResponse.getStatus();
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       LibertyRequest libertyRequest, LibertyResponse libertyResponse, String name) {
     return libertyResponse.getHeaderValues(name);
   }

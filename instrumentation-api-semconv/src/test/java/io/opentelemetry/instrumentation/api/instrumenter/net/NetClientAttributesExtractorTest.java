@@ -29,30 +29,44 @@ class NetClientAttributesExtractorTest {
 
     @Override
     public String getTransport(Map<String, String> request, Map<String, String> response) {
-      return response.get("transport");
+      return response.get("netTransport");
     }
 
     @Nullable
     @Override
-    public String getProtocolName(
+    public String getNetworkTransport(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("transport");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkType(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("type");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkProtocolName(
         Map<String, String> request, @Nullable Map<String, String> response) {
       return request.get("protocolName");
     }
 
     @Nullable
     @Override
-    public String getProtocolVersion(
+    public String getNetworkProtocolVersion(
         Map<String, String> request, @Nullable Map<String, String> response) {
       return request.get("protocolVersion");
     }
 
     @Override
-    public String getPeerName(Map<String, String> request) {
+    public String getServerAddress(Map<String, String> request) {
       return request.get("peerName");
     }
 
     @Override
-    public Integer getPeerPort(Map<String, String> request) {
+    public Integer getServerPort(Map<String, String> request) {
       String peerPort = request.get("peerPort");
       return peerPort == null ? null : Integer.valueOf(peerPort);
     }
@@ -63,17 +77,18 @@ class NetClientAttributesExtractorTest {
     }
 
     @Override
-    public String getSockPeerAddr(Map<String, String> request, Map<String, String> response) {
-      return response.get("sockPeerAddr");
-    }
-
-    @Override
-    public String getSockPeerName(Map<String, String> request, Map<String, String> response) {
+    public String getServerSocketDomain(Map<String, String> request, Map<String, String> response) {
       return response.get("sockPeerName");
     }
 
     @Override
-    public Integer getSockPeerPort(Map<String, String> request, Map<String, String> response) {
+    public String getServerSocketAddress(
+        Map<String, String> request, Map<String, String> response) {
+      return response.get("sockPeerAddr");
+    }
+
+    @Override
+    public Integer getServerSocketPort(Map<String, String> request, Map<String, String> response) {
       String sockPeerPort = response.get("sockPeerPort");
       return sockPeerPort == null ? null : Integer.valueOf(sockPeerPort);
     }
@@ -86,7 +101,9 @@ class NetClientAttributesExtractorTest {
   void normal() {
     // given
     Map<String, String> map = new HashMap<>();
-    map.put("transport", IP_TCP);
+    map.put("netTransport", IP_TCP);
+    map.put("transport", "tcp");
+    map.put("type", "ipv6");
     map.put("protocolName", "http");
     map.put("protocolVersion", "1.1");
     map.put("peerName", "opentelemetry.io");
@@ -144,7 +161,7 @@ class NetClientAttributesExtractorTest {
   void doesNotSetDuplicates1() {
     // given
     Map<String, String> map = new HashMap<>();
-    map.put("transport", IP_TCP);
+    map.put("netTransport", IP_TCP);
     map.put("peerName", "1:2:3:4::");
     map.put("peerPort", "42");
     map.put("sockFamily", "inet6");
@@ -176,7 +193,7 @@ class NetClientAttributesExtractorTest {
   void doesNotSetDuplicates2() {
     // given
     Map<String, String> map = new HashMap<>();
-    map.put("transport", IP_TCP);
+    map.put("netTransport", IP_TCP);
     map.put("peerName", "opentelemetry.io");
     map.put("peerPort", "42");
     map.put("sockFamily", "inet6");

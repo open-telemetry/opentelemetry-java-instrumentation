@@ -19,7 +19,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringBootActuatorInstrumentationModule extends InstrumentationModule {
 
   public SpringBootActuatorInstrumentationModule() {
-    super("spring-boot-actuator-autoconfigure", "spring-boot-actuator-autoconfigure-2.0");
+    super(
+        "spring-boot-actuator-autoconfigure",
+        "spring-boot-actuator-autoconfigure-2.0",
+        // share the instrumentation name with MicrometerInstrumentationModule to lessen the users'
+        // confusion
+        "micrometer");
   }
 
   @Override

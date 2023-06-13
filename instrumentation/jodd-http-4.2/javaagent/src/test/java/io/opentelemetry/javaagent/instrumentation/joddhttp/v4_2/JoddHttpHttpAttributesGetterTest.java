@@ -25,7 +25,7 @@ class JoddHttpHttpAttributesGetterTest {
   @Test
   void getMethod() {
     for (String method : Arrays.asList("GET", "PUT", "POST", "PATCH")) {
-      assertEquals(method, attributesGetter.getMethod(new HttpRequest().method(method)));
+      assertEquals(method, attributesGetter.getHttpRequestMethod(new HttpRequest().method(method)));
     }
   }
 
@@ -43,20 +43,20 @@ class JoddHttpHttpAttributesGetterTest {
   }
 
   @Test
-  void getRequestHeader() {
+  void getHttpRequestHeader() {
     HttpRequest request =
         HttpRequest.get("/test")
             .header("single", "val1")
             .header("multiple", "val1")
             .header("multiple", "val2");
-    List<String> headerVals = attributesGetter.getRequestHeader(request, "single");
+    List<String> headerVals = attributesGetter.getHttpRequestHeader(request, "single");
     assertEquals(1, headerVals.size());
     assertEquals("val1", headerVals.get(0));
-    headerVals = attributesGetter.getRequestHeader(request, "multiple");
+    headerVals = attributesGetter.getHttpRequestHeader(request, "multiple");
     assertEquals(2, headerVals.size());
     assertEquals("val1", headerVals.get(0));
     assertEquals("val2", headerVals.get(1));
-    headerVals = attributesGetter.getRequestHeader(request, "not-existing");
+    headerVals = attributesGetter.getHttpRequestHeader(request, "not-existing");
     assertEquals(0, headerVals.size());
   }
 
@@ -65,7 +65,9 @@ class JoddHttpHttpAttributesGetterTest {
     for (Integer code :
         Arrays.asList(HTTP_OK, HTTP_FORBIDDEN, HTTP_INTERNAL_ERROR, HTTP_NOT_FOUND)) {
       assertEquals(
-          code, attributesGetter.getStatusCode(null, new HttpResponse().statusCode(code), null));
+          code,
+          attributesGetter.getHttpResponseStatusCode(
+              null, new HttpResponse().statusCode(code), null));
     }
   }
 
@@ -76,14 +78,14 @@ class JoddHttpHttpAttributesGetterTest {
             .header("single", "val1")
             .header("multiple", "val1")
             .header("multiple", "val2");
-    List<String> headerVals = attributesGetter.getResponseHeader(null, response, "single");
+    List<String> headerVals = attributesGetter.getHttpResponseHeader(null, response, "single");
     assertEquals(1, headerVals.size());
     assertEquals("val1", headerVals.get(0));
-    headerVals = attributesGetter.getResponseHeader(null, response, "multiple");
+    headerVals = attributesGetter.getHttpResponseHeader(null, response, "multiple");
     assertEquals(2, headerVals.size());
     assertEquals("val1", headerVals.get(0));
     assertEquals("val2", headerVals.get(1));
-    headerVals = attributesGetter.getResponseHeader(null, response, "not-existing");
+    headerVals = attributesGetter.getHttpResponseHeader(null, response, "not-existing");
     assertEquals(0, headerVals.size());
   }
 }

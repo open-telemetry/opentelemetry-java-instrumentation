@@ -17,7 +17,7 @@ class KubernetesHttpAttributesGetter
     implements HttpClientAttributesGetter<Request, ApiResponse<?>> {
 
   @Override
-  public String getMethod(Request request) {
+  public String getHttpRequestMethod(Request request) {
     return request.method();
   }
 
@@ -27,18 +27,19 @@ class KubernetesHttpAttributesGetter
   }
 
   @Override
-  public List<String> getRequestHeader(Request request, String name) {
+  public List<String> getHttpRequestHeader(Request request, String name) {
     return request.headers(name);
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       Request request, ApiResponse<?> apiResponse, @Nullable Throwable error) {
     return apiResponse.getStatusCode();
   }
 
   @Override
-  public List<String> getResponseHeader(Request request, ApiResponse<?> apiResponse, String name) {
+  public List<String> getHttpResponseHeader(
+      Request request, ApiResponse<?> apiResponse, String name) {
     return apiResponse.getHeaders().getOrDefault(name, emptyList());
   }
 }

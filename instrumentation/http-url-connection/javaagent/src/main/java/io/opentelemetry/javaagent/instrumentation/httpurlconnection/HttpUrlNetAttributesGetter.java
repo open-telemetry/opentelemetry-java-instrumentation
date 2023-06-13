@@ -13,25 +13,25 @@ class HttpUrlNetAttributesGetter implements NetClientAttributesGetter<HttpURLCon
 
   @Nullable
   @Override
-  public String getProtocolName(HttpURLConnection connection, @Nullable Integer integer) {
+  public String getNetworkProtocolName(HttpURLConnection connection, @Nullable Integer integer) {
     // HttpURLConnection hardcodes the protocol name&version
     return "http";
   }
 
   @Nullable
   @Override
-  public String getProtocolVersion(HttpURLConnection connection, @Nullable Integer integer) {
+  public String getNetworkProtocolVersion(HttpURLConnection connection, @Nullable Integer integer) {
     // HttpURLConnection hardcodes the protocol name&version
     return "1.1";
   }
 
   @Override
-  public String getPeerName(HttpURLConnection connection) {
+  public String getServerAddress(HttpURLConnection connection) {
     return connection.getURL().getHost();
   }
 
   @Override
-  public Integer getPeerPort(HttpURLConnection connection) {
+  public Integer getServerPort(HttpURLConnection connection) {
     return connection.getURL().getPort();
   }
 }

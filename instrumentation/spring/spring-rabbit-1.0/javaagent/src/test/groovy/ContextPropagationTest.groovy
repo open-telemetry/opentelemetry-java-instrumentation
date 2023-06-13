@@ -113,7 +113,6 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "<default>"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
             if (testHeaders) {
@@ -131,7 +130,6 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "<default>"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
@@ -148,7 +146,6 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testQueue"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             if (testHeaders) {
@@ -170,7 +167,6 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
           }
         }
       }

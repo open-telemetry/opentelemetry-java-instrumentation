@@ -10,8 +10,6 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.Locale;
-import java.util.function.BiPredicate;
 import javax.annotation.Nullable;
 
 /**
@@ -21,82 +19,40 @@ import javax.annotation.Nullable;
 public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
 
   private final NetClientAttributesGetter<REQUEST, RESPONSE> getter;
-  private final BiPredicate<Integer, REQUEST> capturePeerPortCondition;
   private final FallbackNamePortGetter<REQUEST> fallbackNamePortGetter;
+  private final boolean emitOldHttpAttributes;
 
   public InternalNetClientAttributesExtractor(
       NetClientAttributesGetter<REQUEST, RESPONSE> getter,
-      BiPredicate<Integer, REQUEST> capturePeerPortCondition,
-      FallbackNamePortGetter<REQUEST> fallbackNamePortGetter) {
+      FallbackNamePortGetter<REQUEST> fallbackNamePortGetter,
+      boolean emitOldHttpAttributes) {
     this.getter = getter;
-    this.capturePeerPortCondition = capturePeerPortCondition;
     this.fallbackNamePortGetter = fallbackNamePortGetter;
-  }
-
-  public void onStart(AttributesBuilder attributes, REQUEST request) {
-    String peerName = extractPeerName(request);
-
-    if (peerName != null) {
-      internalSet(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
-
-      Integer peerPort = extractPeerPort(request);
-      if (peerPort != null && peerPort > 0 && capturePeerPortCondition.test(peerPort, request)) {
-        internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
-      }
-    }
+    this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
 
   public void onEnd(AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
 
-    internalSet(
-        attributes, SemanticAttributes.NET_TRANSPORT, getter.getTransport(request, response));
-    String protocolName = getter.getProtocolName(request, response);
-    if (protocolName != null) {
+    if (emitOldHttpAttributes) {
       internalSet(
-          attributes, NetAttributes.NET_PROTOCOL_NAME, protocolName.toLowerCase(Locale.ROOT));
-    }
-    internalSet(
-        attributes,
-        NetAttributes.NET_PROTOCOL_VERSION,
-        getter.getProtocolVersion(request, response));
+          attributes, SemanticAttributes.NET_TRANSPORT, getter.getTransport(request, response));
 
-    String peerName = extractPeerName(request);
-
-    String sockPeerAddr = getter.getSockPeerAddr(request, response);
-    if (sockPeerAddr != null && !sockPeerAddr.equals(peerName)) {
-      internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_ADDR, sockPeerAddr);
-
-      Integer peerPort = extractPeerPort(request);
-      Integer sockPeerPort = getter.getSockPeerPort(request, response);
-      if (sockPeerPort != null && sockPeerPort > 0 && !sockPeerPort.equals(peerPort)) {
-        internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_PORT, (long) sockPeerPort);
-      }
-
-      String sockFamily = getter.getSockFamily(request, response);
-      if (sockFamily != null && !SemanticAttributes.NetSockFamilyValues.INET.equals(sockFamily)) {
-        internalSet(attributes, SemanticAttributes.NET_SOCK_FAMILY, sockFamily);
-      }
-
-      String sockPeerName = getter.getSockPeerName(request, response);
-      if (sockPeerName != null && !sockPeerName.equals(peerName)) {
-        internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_NAME, sockPeerName);
+      String peerName = extractPeerName(request);
+      String sockPeerAddr = getter.getServerSocketAddress(request, response);
+      if (sockPeerAddr != null && !sockPeerAddr.equals(peerName)) {
+        String sockFamily = getter.getSockFamily(request, response);
+        if (sockFamily != null && !SemanticAttributes.NetSockFamilyValues.INET.equals(sockFamily)) {
+          internalSet(attributes, SemanticAttributes.NET_SOCK_FAMILY, sockFamily);
+        }
       }
     }
   }
 
   private String extractPeerName(REQUEST request) {
-    String peerName = getter.getPeerName(request);
+    String peerName = getter.getServerAddress(request);
     if (peerName == null) {
       peerName = fallbackNamePortGetter.name(request);
     }
     return peerName;
-  }
-
-  private Integer extractPeerPort(REQUEST request) {
-    Integer peerPort = getter.getPeerPort(request);
-    if (peerPort == null) {
-      peerPort = fallbackNamePortGetter.port(request);
-    }
-    return peerPort;
   }
 }

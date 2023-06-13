@@ -65,12 +65,12 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    public String getMethod(Void unused) {
+    public String getHttpRequestMethod(Void unused) {
       return "GET";
     }
 
     @Override
-    public List<String> getRequestHeader(Void unused, String name) {
+    public List<String> getHttpRequestHeader(Void unused, String name) {
       if (name.equalsIgnoreCase("user-agent")) {
         return Collections.singletonList("OpenTelemetryBot");
       }
@@ -78,12 +78,12 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    public Integer getStatusCode(Void unused, Void unused2, @Nullable Throwable error) {
+    public Integer getHttpResponseStatusCode(Void unused, Void unused2, @Nullable Throwable error) {
       return 200;
     }
 
     @Override
-    public List<String> getResponseHeader(Void unused, Void unused2, String name) {
+    public List<String> getHttpResponseHeader(Void unused, Void unused2, String name) {
       return Collections.emptyList();
     }
   }
@@ -95,31 +95,31 @@ public class InstrumenterBenchmark {
 
     @Nullable
     @Override
-    public String getProtocolName(Void unused, @Nullable Void unused2) {
+    public String getNetworkProtocolName(Void unused, @Nullable Void unused2) {
       return "http";
     }
 
     @Nullable
     @Override
-    public String getProtocolVersion(Void unused, @Nullable Void unused2) {
+    public String getNetworkProtocolVersion(Void unused, @Nullable Void unused2) {
       return "2.0";
     }
 
     @Nullable
     @Override
-    public String getPeerName(Void request) {
+    public String getServerAddress(Void request) {
       return null;
     }
 
     @Nullable
     @Override
-    public Integer getPeerPort(Void request) {
+    public Integer getServerPort(Void request) {
       return null;
     }
 
     @Nullable
     @Override
-    public InetSocketAddress getPeerSocketAddress(Void request, @Nullable Void response) {
+    public InetSocketAddress getServerInetSocketAddress(Void request, @Nullable Void response) {
       return PEER_ADDRESS;
     }
   }

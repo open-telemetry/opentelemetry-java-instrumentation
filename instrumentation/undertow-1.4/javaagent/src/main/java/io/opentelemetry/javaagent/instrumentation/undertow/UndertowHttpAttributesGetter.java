@@ -16,24 +16,24 @@ public class UndertowHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpServerExchange, HttpServerExchange> {
 
   @Override
-  public String getMethod(HttpServerExchange exchange) {
+  public String getHttpRequestMethod(HttpServerExchange exchange) {
     return exchange.getRequestMethod().toString();
   }
 
   @Override
-  public List<String> getRequestHeader(HttpServerExchange exchange, String name) {
+  public List<String> getHttpRequestHeader(HttpServerExchange exchange, String name) {
     HeaderValues values = exchange.getRequestHeaders().get(name);
     return values == null ? Collections.emptyList() : values;
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       HttpServerExchange exchange, HttpServerExchange unused, @Nullable Throwable error) {
     return exchange.getStatusCode();
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       HttpServerExchange exchange, HttpServerExchange unused, String name) {
     HeaderValues values = exchange.getResponseHeaders().get(name);
     return values == null ? Collections.emptyList() : values;

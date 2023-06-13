@@ -71,6 +71,7 @@ class Jms3InstrumentationTest {
         new GenericContainer<>("quay.io/artemiscloud/activemq-artemis-broker:artemis.2.27.0")
             .withEnv("AMQ_USER", "test")
             .withEnv("AMQ_PASSWORD", "test")
+            .withEnv("JAVA_TOOL_OPTIONS", "-Dbrokerconfig.maxDiskUsage=-1")
             .withExposedPorts(61616, 8161)
             .waitingFor(Wait.forLogMessage(".*Server is now live.*", 1))
             .withStartupTimeout(Duration.ofMinutes(2))
@@ -106,8 +107,7 @@ class Jms3InstrumentationTest {
 
   @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
-  void testMessageConsumer(
-      DestinationFactory destinationFactory, String destinationKind, boolean isTemporary)
+  void testMessageConsumer(DestinationFactory destinationFactory, boolean isTemporary)
       throws JMSException {
 
     // given
@@ -147,7 +147,6 @@ class Jms3InstrumentationTest {
                           equalTo(
                               SemanticAttributes.MESSAGING_DESTINATION_NAME,
                               producerDestinationName),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                           equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
@@ -166,15 +165,13 @@ class Jms3InstrumentationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 actualDestinationName),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId))));
   }
 
   @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
-  void testMessageListener(
-      DestinationFactory destinationFactory, String destinationKind, boolean isTemporary)
+  void testMessageListener(DestinationFactory destinationFactory, boolean isTemporary)
       throws Exception {
 
     // given
@@ -217,7 +214,6 @@ class Jms3InstrumentationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 producerDestinationName),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
@@ -229,7 +225,6 @@ class Jms3InstrumentationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 actualDestinationName),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
@@ -257,8 +252,7 @@ class Jms3InstrumentationTest {
 
   @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
-  void shouldCaptureMessageHeaders(
-      DestinationFactory destinationFactory, String destinationKind, boolean isTemporary)
+  void shouldCaptureMessageHeaders(DestinationFactory destinationFactory, boolean isTemporary)
       throws Exception {
 
     // given
@@ -303,7 +297,6 @@ class Jms3InstrumentationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 producerDestinationName),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
@@ -321,7 +314,6 @@ class Jms3InstrumentationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 actualDestinationName),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             equalTo(
@@ -366,10 +358,10 @@ class Jms3InstrumentationTest {
       DestinationFactory tempQueue = Session::createTemporaryQueue;
 
       return Stream.of(
-          arguments(topic, "topic", false),
-          arguments(queue, "queue", false),
-          arguments(tempTopic, "topic", true),
-          arguments(tempQueue, "queue", true));
+          arguments(topic, false),
+          arguments(queue, false),
+          arguments(tempTopic, true),
+          arguments(tempQueue, true));
     }
   }
 

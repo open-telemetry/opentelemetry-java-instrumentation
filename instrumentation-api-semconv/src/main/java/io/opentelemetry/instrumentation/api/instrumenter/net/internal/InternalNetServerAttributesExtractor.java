@@ -10,37 +10,31 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.Locale;
-import java.util.function.BiPredicate;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class InternalNetServerAttributesExtractor<REQUEST> {
+public final class InternalNetServerAttributesExtractor<REQUEST, RESPONSE> {
 
-  private final NetServerAttributesGetter<REQUEST> getter;
-  private final BiPredicate<Integer, REQUEST> captureHostPortCondition;
+  private final NetServerAttributesGetter<REQUEST, RESPONSE> getter;
   private final FallbackNamePortGetter<REQUEST> fallbackNamePortGetter;
+  private final boolean emitOldHttpAttributes;
 
   public InternalNetServerAttributesExtractor(
-      NetServerAttributesGetter<REQUEST> getter,
-      BiPredicate<Integer, REQUEST> captureHostPortCondition,
-      FallbackNamePortGetter<REQUEST> fallbackNamePortGetter) {
+      NetServerAttributesGetter<REQUEST, RESPONSE> getter,
+      FallbackNamePortGetter<REQUEST> fallbackNamePortGetter,
+      boolean emitOldHttpAttributes) {
     this.getter = getter;
-    this.captureHostPortCondition = captureHostPortCondition;
     this.fallbackNamePortGetter = fallbackNamePortGetter;
+    this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
 
   public void onStart(AttributesBuilder attributes, REQUEST request) {
 
-    internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.getTransport(request));
-    String protocolName = getter.getProtocolName(request);
-    if (protocolName != null) {
-      internalSet(
-          attributes, NetAttributes.NET_PROTOCOL_NAME, protocolName.toLowerCase(Locale.ROOT));
+    if (emitOldHttpAttributes) {
+      internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.getTransport(request));
     }
-    internalSet(attributes, NetAttributes.NET_PROTOCOL_VERSION, getter.getProtocolVersion(request));
 
     boolean setSockFamily = false;
 
@@ -57,29 +51,12 @@ public final class InternalNetServerAttributesExtractor<REQUEST> {
     }
 
     String hostName = extractHostName(request);
-    Integer hostPort = extractHostPort(request);
-
-    if (hostName != null) {
-      internalSet(attributes, SemanticAttributes.NET_HOST_NAME, hostName);
-
-      if (hostPort != null && hostPort > 0 && captureHostPortCondition.test(hostPort, request)) {
-        internalSet(attributes, SemanticAttributes.NET_HOST_PORT, (long) hostPort);
-      }
-    }
-
-    String sockHostAddr = getter.getSockHostAddr(request);
+    String sockHostAddr = getter.getServerSocketAddress(request, null);
     if (sockHostAddr != null && !sockHostAddr.equals(hostName)) {
       setSockFamily = true;
-
-      internalSet(attributes, SemanticAttributes.NET_SOCK_HOST_ADDR, sockHostAddr);
-
-      Integer sockHostPort = getter.getSockHostPort(request);
-      if (sockHostPort != null && sockHostPort > 0 && !sockHostPort.equals(hostPort)) {
-        internalSet(attributes, SemanticAttributes.NET_SOCK_HOST_PORT, (long) sockHostPort);
-      }
     }
 
-    if (setSockFamily) {
+    if (emitOldHttpAttributes && setSockFamily) {
       String sockFamily = getter.getSockFamily(request);
       if (sockFamily != null && !SemanticAttributes.NetSockFamilyValues.INET.equals(sockFamily)) {
         internalSet(attributes, SemanticAttributes.NET_SOCK_FAMILY, sockFamily);
@@ -88,18 +65,10 @@ public final class InternalNetServerAttributesExtractor<REQUEST> {
   }
 
   private String extractHostName(REQUEST request) {
-    String peerName = getter.getHostName(request);
+    String peerName = getter.getServerAddress(request);
     if (peerName == null) {
       peerName = fallbackNamePortGetter.name(request);
     }
     return peerName;
-  }
-
-  private Integer extractHostPort(REQUEST request) {
-    Integer peerPort = getter.getHostPort(request);
-    if (peerPort == null) {
-      peerPort = fallbackNamePortGetter.port(request);
-    }
-    return peerPort;
   }
 }

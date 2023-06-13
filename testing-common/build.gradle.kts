@@ -37,9 +37,6 @@ dependencies {
   api("io.opentelemetry:opentelemetry-semconv")
   api("io.opentelemetry:opentelemetry-sdk")
   api("io.opentelemetry:opentelemetry-sdk-testing")
-  api("io.opentelemetry:opentelemetry-sdk-logs-testing")
-  api("io.opentelemetry:opentelemetry-sdk-metrics")
-  api("io.opentelemetry:opentelemetry-sdk-logs")
   api(project(":instrumentation-api"))
 
   api("org.assertj:assertj-core")

@@ -19,7 +19,7 @@ public enum OkHttpNetAttributesGetter implements NetClientAttributesGetter<Reque
 
   @Nullable
   @Override
-  public String getProtocolName(Request request, @Nullable Response response) {
+  public String getNetworkProtocolName(Request request, @Nullable Response response) {
     if (response == null) {
       return null;
     }
@@ -36,7 +36,7 @@ public enum OkHttpNetAttributesGetter implements NetClientAttributesGetter<Reque
 
   @Nullable
   @Override
-  public String getProtocolVersion(Request request, @Nullable Response response) {
+  public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
     if (response == null) {
       return null;
     }
@@ -55,12 +55,12 @@ public enum OkHttpNetAttributesGetter implements NetClientAttributesGetter<Reque
 
   @Override
   @Nullable
-  public String getPeerName(Request request) {
+  public String getServerAddress(Request request) {
     return request.url().host();
   }
 
   @Override
-  public Integer getPeerPort(Request request) {
+  public Integer getServerPort(Request request) {
     return request.url().port();
   }
 }

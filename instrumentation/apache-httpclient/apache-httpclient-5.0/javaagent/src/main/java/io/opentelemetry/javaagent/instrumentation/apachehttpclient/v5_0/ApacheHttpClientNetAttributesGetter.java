@@ -16,7 +16,7 @@ final class ApacheHttpClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(HttpRequest request, @Nullable HttpResponse response) {
+  public String getNetworkProtocolName(HttpRequest request, @Nullable HttpResponse response) {
     ProtocolVersion protocolVersion = getVersion(request, response);
     if (protocolVersion == null) {
       return null;
@@ -26,7 +26,7 @@ final class ApacheHttpClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolVersion(HttpRequest request, @Nullable HttpResponse response) {
+  public String getNetworkProtocolVersion(HttpRequest request, @Nullable HttpResponse response) {
     ProtocolVersion protocolVersion = getVersion(request, response);
     if (protocolVersion == null) {
       return null;
@@ -36,12 +36,12 @@ final class ApacheHttpClientNetAttributesGetter
 
   @Override
   @Nullable
-  public String getPeerName(HttpRequest request) {
+  public String getServerAddress(HttpRequest request) {
     return request.getAuthority().getHostName();
   }
 
   @Override
-  public Integer getPeerPort(HttpRequest request) {
+  public Integer getServerPort(HttpRequest request) {
     return request.getAuthority().getPort();
   }
 

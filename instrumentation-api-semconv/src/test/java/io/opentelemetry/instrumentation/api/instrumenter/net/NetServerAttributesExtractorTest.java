@@ -25,34 +25,46 @@ import org.junit.jupiter.api.Test;
 class NetServerAttributesExtractorTest {
 
   static class TestNetServerAttributesGetter
-      implements NetServerAttributesGetter<Map<String, String>> {
+      implements NetServerAttributesGetter<Map<String, String>, Void> {
 
     @Override
     public String getTransport(Map<String, String> request) {
+      return request.get("netTransport");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkTransport(Map<String, String> request, @Nullable Void response) {
       return request.get("transport");
     }
 
     @Nullable
     @Override
-    public String getProtocolName(Map<String, String> request) {
+    public String getNetworkType(Map<String, String> request, @Nullable Void response) {
+      return request.get("type");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkProtocolName(Map<String, String> request, Void response) {
       return request.get("protocolName");
     }
 
     @Nullable
     @Override
-    public String getProtocolVersion(Map<String, String> request) {
+    public String getNetworkProtocolVersion(Map<String, String> request, Void response) {
       return request.get("protocolVersion");
     }
 
     @Nullable
     @Override
-    public String getHostName(Map<String, String> request) {
+    public String getServerAddress(Map<String, String> request) {
       return request.get("hostName");
     }
 
     @Nullable
     @Override
-    public Integer getHostPort(Map<String, String> request) {
+    public Integer getServerPort(Map<String, String> request) {
       String hostPort = request.get("hostPort");
       return hostPort == null ? null : Integer.valueOf(hostPort);
     }
@@ -76,26 +88,28 @@ class NetServerAttributesExtractorTest {
 
     @Nullable
     @Override
-    public String getSockHostAddr(Map<String, String> request) {
+    public String getServerSocketAddress(Map<String, String> request, Void response) {
       return request.get("sockHostAddr");
     }
 
     @Nullable
     @Override
-    public Integer getSockHostPort(Map<String, String> request) {
+    public Integer getServerSocketPort(Map<String, String> request, Void response) {
       String sockHostPort = request.get("sockHostPort");
       return sockHostPort == null ? null : Integer.valueOf(sockHostPort);
     }
   }
 
-  AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+  AttributesExtractor<Map<String, String>, Void> extractor =
       NetServerAttributesExtractor.create(new TestNetServerAttributesGetter());
 
   @Test
   void normal() {
     // given
     Map<String, String> map = new HashMap<>();
-    map.put("transport", IP_TCP);
+    map.put("netTransport", IP_TCP);
+    map.put("transport", "tcp");
+    map.put("type", "ipv6");
     map.put("protocolName", "http");
     map.put("protocolVersion", "1.1");
     map.put("hostName", "opentelemetry.io");
@@ -113,23 +127,24 @@ class NetServerAttributesExtractorTest {
     extractor.onStart(startAttributes, context, map);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, map, null);
+    extractor.onEnd(endAttributes, context, map, null, null);
 
     // then
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"),
             entry(SemanticAttributes.NET_HOST_NAME, "opentelemetry.io"),
             entry(SemanticAttributes.NET_HOST_PORT, 80L),
             entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"),
             entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
-            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 42L),
+            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 42L));
+
+    assertThat(endAttributes.build())
+        .containsOnly(
+            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"),
             entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"),
             entry(SemanticAttributes.NET_SOCK_HOST_PORT, 8080L));
-
-    assertThat(endAttributes.build()).isEmpty();
   }
 
   @Test
@@ -142,7 +157,7 @@ class NetServerAttributesExtractorTest {
     extractor.onStart(startAttributes, context, emptyMap());
 
     AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, emptyMap(), emptyMap(), null);
+    extractor.onEnd(endAttributes, context, emptyMap(), null, null);
 
     // then
     assertThat(startAttributes.build()).isEmpty();
@@ -155,7 +170,7 @@ class NetServerAttributesExtractorTest {
   void doesNotSetDuplicates1() {
     // given
     Map<String, String> map = new HashMap<>();
-    map.put("transport", IP_TCP);
+    map.put("netTransport", IP_TCP);
     map.put("hostName", "4:3:2:1::");
     map.put("hostPort", "80");
     map.put("sockFamily", "inet6");
@@ -169,7 +184,7 @@ class NetServerAttributesExtractorTest {
     extractor.onStart(startAttributes, context, map);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, map, null);
+    extractor.onEnd(endAttributes, context, map, null, null);
 
     // then
     assertThat(startAttributes.build())
@@ -187,7 +202,7 @@ class NetServerAttributesExtractorTest {
   void doesNotSetDuplicates2() {
     // given
     Map<String, String> map = new HashMap<>();
-    map.put("transport", IP_TCP);
+    map.put("netTransport", IP_TCP);
     map.put("hostName", "opentelemetry.io");
     map.put("hostPort", "80");
     map.put("sockFamily", "inet6");
@@ -201,7 +216,7 @@ class NetServerAttributesExtractorTest {
     extractor.onStart(startAttributes, context, map);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, map, null);
+    extractor.onEnd(endAttributes, context, map, null, null);
 
     // then
     assertThat(startAttributes.build())
@@ -209,10 +224,10 @@ class NetServerAttributesExtractorTest {
             entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
             entry(SemanticAttributes.NET_HOST_NAME, "opentelemetry.io"),
             entry(SemanticAttributes.NET_HOST_PORT, 80L),
-            entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"),
-            entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"));
+            entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"));
 
-    assertThat(endAttributes.build()).isEmpty();
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"));
   }
 
   @Test
@@ -233,16 +248,16 @@ class NetServerAttributesExtractorTest {
     extractor.onStart(startAttributes, context, map);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, map, null);
+    extractor.onEnd(endAttributes, context, map, null, null);
 
     // then
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_HOST_NAME, "opentelemetry.io"),
-            entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
-            entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"));
+            entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"));
 
-    assertThat(endAttributes.build()).isEmpty();
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"));
   }
 
   @Test
@@ -260,7 +275,7 @@ class NetServerAttributesExtractorTest {
     extractor.onStart(startAttributes, context, map);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, map, null);
+    extractor.onEnd(endAttributes, context, map, null, null);
 
     // then
     assertThat(startAttributes.build())

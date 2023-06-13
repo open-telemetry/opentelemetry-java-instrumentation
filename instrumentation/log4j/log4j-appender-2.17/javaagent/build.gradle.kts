@@ -16,7 +16,6 @@ val testLatestDeps = findProperty("testLatestDeps") as Boolean
 dependencies {
   library("org.apache.logging.log4j:log4j-core:2.17.0")
 
-  compileOnly("io.opentelemetry:opentelemetry-api-logs")
   compileOnly(project(":javaagent-bootstrap"))
 
   implementation(project(":instrumentation:log4j:log4j-appender-2.17:library"))

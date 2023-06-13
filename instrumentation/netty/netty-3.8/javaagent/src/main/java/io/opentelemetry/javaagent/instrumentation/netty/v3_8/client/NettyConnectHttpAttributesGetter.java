@@ -24,24 +24,25 @@ enum NettyConnectHttpAttributesGetter
 
   @Nullable
   @Override
-  public String getMethod(NettyConnectionRequest nettyConnectionRequest) {
+  public String getHttpRequestMethod(NettyConnectionRequest nettyConnectionRequest) {
     return null;
   }
 
   @Override
-  public List<String> getRequestHeader(NettyConnectionRequest nettyConnectionRequest, String name) {
+  public List<String> getHttpRequestHeader(
+      NettyConnectionRequest nettyConnectionRequest, String name) {
     return Collections.emptyList();
   }
 
   @Nullable
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       NettyConnectionRequest nettyConnectionRequest, Channel channel, @Nullable Throwable error) {
     return null;
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       NettyConnectionRequest nettyConnectionRequest, Channel channel, String name) {
     return Collections.emptyList();
   }

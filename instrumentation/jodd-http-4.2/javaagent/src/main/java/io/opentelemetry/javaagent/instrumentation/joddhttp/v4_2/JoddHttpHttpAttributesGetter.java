@@ -15,7 +15,7 @@ final class JoddHttpHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, HttpResponse> {
 
   @Override
-  public String getMethod(HttpRequest request) {
+  public String getHttpRequestMethod(HttpRequest request) {
     return request.method();
   }
 
@@ -25,18 +25,19 @@ final class JoddHttpHttpAttributesGetter
   }
 
   @Override
-  public List<String> getRequestHeader(HttpRequest request, String name) {
+  public List<String> getHttpRequestHeader(HttpRequest request, String name) {
     return request.headers(name);
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       HttpRequest request, HttpResponse response, @Nullable Throwable error) {
     return response.statusCode();
   }
 
   @Override
-  public List<String> getResponseHeader(HttpRequest request, HttpResponse response, String name) {
+  public List<String> getHttpResponseHeader(
+      HttpRequest request, HttpResponse response, String name) {
     return response.headers(name);
   }
 }

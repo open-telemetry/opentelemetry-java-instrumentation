@@ -64,6 +64,7 @@ class SpringJmsListenerTest {
         new GenericContainer<>("quay.io/artemiscloud/activemq-artemis-broker:artemis.2.27.0")
             .withEnv("AMQ_USER", "test")
             .withEnv("AMQ_PASSWORD", "test")
+            .withEnv("JAVA_TOOL_OPTIONS", "-Dbrokerconfig.maxDiskUsage=-1")
             .withExposedPorts(61616, 8161)
             .waitingFor(Wait.forLogMessage(".*Server is now live.*", 1))
             .withStartupTimeout(Duration.ofMinutes(2))
@@ -114,7 +115,6 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,
                                 AbstractStringAssert::isNotBlank)),
@@ -127,7 +127,6 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,
@@ -144,7 +143,6 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,
@@ -197,7 +195,6 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,
                                 AbstractStringAssert::isNotBlank),
@@ -216,7 +213,6 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,
@@ -239,7 +235,6 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,

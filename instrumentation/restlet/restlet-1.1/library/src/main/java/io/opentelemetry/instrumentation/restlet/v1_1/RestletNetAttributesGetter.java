@@ -10,12 +10,13 @@ import com.noelios.restlet.http.HttpRequest;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import javax.annotation.Nullable;
 import org.restlet.data.Request;
+import org.restlet.data.Response;
 
-final class RestletNetAttributesGetter implements NetServerAttributesGetter<Request> {
+final class RestletNetAttributesGetter implements NetServerAttributesGetter<Request, Response> {
 
   @Nullable
   @Override
-  public String getProtocolName(Request request) {
+  public String getNetworkProtocolName(Request request, @Nullable Response response) {
     String protocol = getProtocolString(request);
     if (protocol.startsWith("HTTP/")) {
       return "http";
@@ -25,7 +26,7 @@ final class RestletNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
-  public String getProtocolVersion(Request request) {
+  public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
     String protocol = getProtocolString(request);
     if (protocol.startsWith("HTTP/")) {
       return protocol.substring("HTTP/".length());
@@ -39,14 +40,14 @@ final class RestletNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
-  public String getHostName(Request request) {
+  public String getServerAddress(Request request) {
     HttpCall call = httpCall(request);
     return call == null ? null : call.getHostDomain();
   }
 
   @Nullable
   @Override
-  public Integer getHostPort(Request request) {
+  public Integer getServerPort(Request request) {
     HttpCall call = httpCall(request);
     return call == null ? null : call.getServerPort();
   }
@@ -64,7 +65,7 @@ final class RestletNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
-  public String getSockHostAddr(Request request) {
+  public String getServerSocketAddress(Request request, @Nullable Response response) {
     HttpCall call = httpCall(request);
     return call == null ? null : call.getServerAddress();
   }

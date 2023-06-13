@@ -17,6 +17,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
@@ -32,7 +33,7 @@ class HttpServerAttributesExtractorBothSemconvTest {
       implements HttpServerAttributesGetter<Map<String, Object>, Map<String, Object>> {
 
     @Override
-    public String getMethod(Map<String, Object> request) {
+    public String getHttpRequestMethod(Map<String, Object> request) {
       return (String) request.get("method");
     }
 
@@ -54,25 +55,25 @@ class HttpServerAttributesExtractorBothSemconvTest {
     }
 
     @Override
-    public String getRoute(Map<String, Object> request) {
+    public String getHttpRoute(Map<String, Object> request) {
       return (String) request.get("route");
     }
 
     @Override
-    public List<String> getRequestHeader(Map<String, Object> request, String name) {
+    public List<String> getHttpRequestHeader(Map<String, Object> request, String name) {
       String values = (String) request.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
     }
 
     @Override
-    public Integer getStatusCode(
+    public Integer getHttpResponseStatusCode(
         Map<String, Object> request, Map<String, Object> response, @Nullable Throwable error) {
       String value = (String) response.get("statusCode");
       return value == null ? null : Integer.parseInt(value);
     }
 
     @Override
-    public List<String> getResponseHeader(
+    public List<String> getHttpResponseHeader(
         Map<String, Object> request, Map<String, Object> response, String name) {
       String values = (String) response.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
@@ -80,29 +81,45 @@ class HttpServerAttributesExtractorBothSemconvTest {
   }
 
   static class TestNetServerAttributesGetter
-      implements NetServerAttributesGetter<Map<String, Object>> {
+      implements NetServerAttributesGetter<Map<String, Object>, Map<String, Object>> {
 
     @Nullable
     @Override
-    public String getProtocolName(Map<String, Object> request) {
+    public String getNetworkTransport(
+        Map<String, Object> request, @Nullable Map<String, Object> response) {
+      return (String) request.get("transport");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkType(
+        Map<String, Object> request, @Nullable Map<String, Object> response) {
+      return (String) request.get("type");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkProtocolName(
+        Map<String, Object> request, Map<String, Object> response) {
       return (String) request.get("protocolName");
     }
 
     @Nullable
     @Override
-    public String getProtocolVersion(Map<String, Object> request) {
+    public String getNetworkProtocolVersion(
+        Map<String, Object> request, Map<String, Object> response) {
       return (String) request.get("protocolVersion");
     }
 
     @Nullable
     @Override
-    public String getHostName(Map<String, Object> request) {
+    public String getServerAddress(Map<String, Object> request) {
       return (String) request.get("hostName");
     }
 
     @Nullable
     @Override
-    public Integer getHostPort(Map<String, Object> request) {
+    public Integer getServerPort(Map<String, Object> request) {
       return (Integer) request.get("hostPort");
     }
   }
@@ -121,6 +138,8 @@ class HttpServerAttributesExtractorBothSemconvTest {
     request.put("header.host", "github.com");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
+    request.put("transport", "udp");
+    request.put("type", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "2.0");
 
@@ -144,9 +163,9 @@ class HttpServerAttributesExtractorBothSemconvTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_HOST_NAME, "github.com"),
-            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
+            entry(NetworkAttributes.SERVER_ADDRESS, "github.com"),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
+            entry(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_SCHEME, "http"),
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1?details=true"),
             entry(UrlAttributes.URL_SCHEME, "http"),
@@ -163,10 +182,19 @@ class HttpServerAttributesExtractorBothSemconvTest {
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
+            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
+            entry(NetworkAttributes.NETWORK_TRANSPORT, "udp"),
+            entry(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
+            entry(HttpAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
+            entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
+            entry(HttpAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")));

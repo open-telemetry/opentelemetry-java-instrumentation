@@ -47,7 +47,6 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
           }
         }
         span(3) {
@@ -61,7 +60,6 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
             "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testTopic"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
           }
@@ -76,7 +74,6 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testTopic"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
@@ -91,7 +88,6 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testTopic"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
@@ -114,7 +110,6 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
           }
         }
       }

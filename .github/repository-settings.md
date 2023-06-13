@@ -56,3 +56,16 @@ for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/d
 ## Code security and analysis
 
 * Secret scanning: Enabled
+
+## Secrets and variables > Actions
+
+* `GE_CACHE_PASSWORD`
+* `GE_CACHE_USERNAME`
+* `GPG_PASSWORD` - stored in OpenTelemetry-Java 1Password
+* `GPG_PRIVATE_KEY` - stored in OpenTelemetry-Java 1Password
+* `GRADLE_ENTERPRISE_ACCESS_KEY`
+* `GRADLE_PUBLISH_KEY`
+* `GRADLE_PUBLISH_SECRET`
+* `OPENTELEMETRYBOT_GITHUB_TOKEN` - owned by [@trask](https://github.com/trask)
+* `SONATYPE_KEY` - owned by [@trask](https://github.com/trask)
+* `SONATYPE_USER` - owned by [@trask](https://github.com/trask)

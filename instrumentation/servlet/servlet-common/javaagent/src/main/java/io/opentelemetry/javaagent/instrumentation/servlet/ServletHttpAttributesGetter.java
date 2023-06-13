@@ -21,7 +21,7 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public String getMethod(ServletRequestContext<REQUEST> requestContext) {
+  public String getHttpRequestMethod(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestMethod(requestContext.request());
   }
 
@@ -44,13 +44,14 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
   }
 
   @Override
-  public List<String> getRequestHeader(ServletRequestContext<REQUEST> requestContext, String name) {
+  public List<String> getHttpRequestHeader(
+      ServletRequestContext<REQUEST> requestContext, String name) {
     return accessor.getRequestHeaderValues(requestContext.request(), name);
   }
 
   @Override
   @Nullable
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       ServletRequestContext<REQUEST> requestContext,
       ServletResponseContext<RESPONSE> responseContext,
       @Nullable Throwable error) {
@@ -74,7 +75,7 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       ServletRequestContext<REQUEST> requestContext,
       ServletResponseContext<RESPONSE> responseContext,
       String name) {

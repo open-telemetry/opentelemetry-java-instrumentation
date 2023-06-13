@@ -16,7 +16,7 @@ enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Reque
 
   @Override
   @Nullable
-  public String getMethod(Request request) {
+  public String getHttpRequestMethod(Request request) {
     return request.getMethod();
   }
 
@@ -27,17 +27,18 @@ enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Reque
   }
 
   @Override
-  public List<String> getRequestHeader(Request request, String name) {
+  public List<String> getHttpRequestHeader(Request request, String name) {
     return request.getHeaders().getValuesList(name);
   }
 
   @Override
-  public Integer getStatusCode(Request request, Response response, @Nullable Throwable error) {
+  public Integer getHttpResponseStatusCode(
+      Request request, Response response, @Nullable Throwable error) {
     return response.getStatus();
   }
 
   @Override
-  public List<String> getResponseHeader(Request request, Response response, String name) {
+  public List<String> getHttpResponseHeader(Request request, Response response, String name) {
     return response.getHeaders().getValuesList(name);
   }
 }

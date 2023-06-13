@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InetSocketAddressUtil;
+import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
@@ -16,7 +19,8 @@ import javax.annotation.Nullable;
  * library/framework. It will be used by the NetClientAttributesExtractor to obtain the various
  * network attributes in a type-generic way.
  */
-public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
+public interface NetClientAttributesGetter<REQUEST, RESPONSE>
+    extends NetworkAttributesGetter<REQUEST, RESPONSE>, ServerAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
   default String getTransport(REQUEST request, @Nullable RESPONSE response) {
@@ -27,7 +31,11 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
    * Returns the application protocol used.
    *
    * <p>Examples: `amqp`, `http`, `mqtt`.
+   *
+   * @deprecated This method is deprecated and will be removed in the following release. Implement
+   *     {@link #getNetworkProtocolName(Object, Object)} instead.
    */
+  @Deprecated
   @Nullable
   default String getProtocolName(REQUEST request, @Nullable RESPONSE response) {
     return null;
@@ -37,17 +45,74 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
    * Returns the version of the application protocol used.
    *
    * <p>Examples: `3.1.1`.
+   *
+   * @deprecated This method is deprecated and will be removed in the following release. Implement
+   *     {@link #getNetworkProtocolVersion(Object, Object)} instead.
    */
+  @Deprecated
   @Nullable
   default String getProtocolVersion(REQUEST request, @Nullable RESPONSE response) {
     return null;
   }
 
+  /** {@inheritDoc} */
   @Nullable
-  String getPeerName(REQUEST request);
+  @Override
+  default String getNetworkType(REQUEST request, @Nullable RESPONSE response) {
+    return InetSocketAddressUtil.getNetworkType(getPeerSocketAddress(request, response), null);
+  }
 
+  /** {@inheritDoc} */
   @Nullable
-  Integer getPeerPort(REQUEST request);
+  @Override
+  default String getNetworkProtocolName(REQUEST request, @Nullable RESPONSE response) {
+    return getProtocolName(request, response);
+  }
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  default String getNetworkProtocolVersion(REQUEST request, @Nullable RESPONSE response) {
+    return getProtocolVersion(request, response);
+  }
+
+  /**
+   * Returns the logical peer name.
+   *
+   * @deprecated This method is deprecated and will be removed in the following release. Implement
+   *     {@link #getServerAddress(Object)} instead.
+   */
+  @Deprecated
+  @Nullable
+  default String getPeerName(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * Returns the logical peer port.
+   *
+   * @deprecated This method is deprecated and will be removed in the following release. Implement
+   *     {@link #getServerPort(Object)} instead.
+   */
+  @Deprecated
+  @Nullable
+  default Integer getPeerPort(REQUEST request) {
+    return null;
+  }
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  default String getServerAddress(REQUEST request) {
+    return getPeerName(request);
+  }
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  default Integer getServerPort(REQUEST request) {
+    return getPeerPort(request);
+  }
 
   /**
    * Returns an {@link InetSocketAddress} object representing the peer socket address.
@@ -55,10 +120,22 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
    * <p>Implementing this method is equivalent to implementing all four of {@link
    * #getSockFamily(Object, Object)}, {@link #getSockPeerAddr(Object, Object)}, {@link
    * #getSockPeerName(Object, Object)} and {@link #getSockPeerPort(Object, Object)}.
+   *
+   * @deprecated This method is deprecated and will be removed in the following release. Implement
+   *     {@link #getServerInetSocketAddress(Object, Object)} instead.
    */
+  @Deprecated
   @Nullable
   default InetSocketAddress getPeerSocketAddress(REQUEST request, @Nullable RESPONSE response) {
     return null;
+  }
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  default InetSocketAddress getServerInetSocketAddress(
+      REQUEST request, @Nullable RESPONSE response) {
+    return getPeerSocketAddress(request, response);
   }
 
   /**
@@ -76,7 +153,7 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
    */
   @Nullable
   default String getSockFamily(REQUEST request, @Nullable RESPONSE response) {
-    return InetSocketAddressUtil.getSockFamily(getPeerSocketAddress(request, response), null);
+    return InetSocketAddressUtil.getSockFamily(getServerInetSocketAddress(request, response), null);
   }
 
   /**
@@ -90,10 +167,14 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
    * simply return {@code null}. If the instrumented library does not expose {@link
    * InetSocketAddress} in its API, you might want to implement this method instead of {@link
    * #getPeerSocketAddress(Object, Object)}.
+   *
+   * @deprecated This method is deprecated and will be removed in the following release. Implement
+   *     {@link #getServerSocketAddress(Object, Object)} instead.
    */
+  @Deprecated
   @Nullable
   default String getSockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
-    return InetSocketAddressUtil.getHostAddress(getPeerSocketAddress(request, response));
+    return InetSocketAddressUtil.getIpAddress(getServerInetSocketAddress(request, response));
   }
 
   /**
@@ -106,10 +187,14 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
    * simply return {@code null}. If the instrumented library does not expose {@link
    * InetSocketAddress} in its API, you might want to implement this method instead of {@link
    * #getPeerSocketAddress(Object, Object)}.
+   *
+   * @deprecated This method is deprecated and will be removed in the following release. Implement
+   *     {@link #getServerSocketDomain(Object, Object)} instead.
    */
+  @Deprecated
   @Nullable
   default String getSockPeerName(REQUEST request, @Nullable RESPONSE response) {
-    return InetSocketAddressUtil.getHostName(getPeerSocketAddress(request, response));
+    return InetSocketAddressUtil.getDomainName(getServerInetSocketAddress(request, response));
   }
 
   /**
@@ -122,9 +207,34 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
    * simply return {@code null}. If the instrumented library does not expose {@link
    * InetSocketAddress} in its API, you might want to implement this method instead of {@link
    * #getPeerSocketAddress(Object, Object)}.
+   *
+   * @deprecated This method is deprecated and will be removed in the following release. Implement
+   *     {@link #getServerSocketPort(Object, Object)} instead.
    */
+  @Deprecated
   @Nullable
   default Integer getSockPeerPort(REQUEST request, @Nullable RESPONSE response) {
-    return InetSocketAddressUtil.getPort(getPeerSocketAddress(request, response));
+    return InetSocketAddressUtil.getPort(getServerInetSocketAddress(request, response));
+  }
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  default String getServerSocketDomain(REQUEST request, @Nullable RESPONSE response) {
+    return getSockPeerName(request, response);
+  }
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  default String getServerSocketAddress(REQUEST request, @Nullable RESPONSE response) {
+    return getSockPeerAddr(request, response);
+  }
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  default Integer getServerSocketPort(REQUEST request, @Nullable RESPONSE response) {
+    return getSockPeerPort(request, response);
   }
 }

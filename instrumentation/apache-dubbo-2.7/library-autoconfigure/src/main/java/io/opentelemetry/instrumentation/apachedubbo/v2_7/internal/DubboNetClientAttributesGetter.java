@@ -20,18 +20,19 @@ public final class DubboNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(DubboRequest request) {
+  public String getServerAddress(DubboRequest request) {
     return request.url().getHost();
   }
 
   @Override
-  public Integer getPeerPort(DubboRequest request) {
+  public Integer getServerPort(DubboRequest request) {
     return request.url().getPort();
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerSocketAddress(DubboRequest request, @Nullable Result response) {
+  public InetSocketAddress getServerInetSocketAddress(
+      DubboRequest request, @Nullable Result response) {
     return request.remoteAddress();
   }
 }

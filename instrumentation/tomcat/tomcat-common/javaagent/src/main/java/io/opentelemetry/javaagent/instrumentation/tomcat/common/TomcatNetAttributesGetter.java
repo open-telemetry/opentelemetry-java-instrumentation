@@ -11,12 +11,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributes
 import javax.annotation.Nullable;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.Request;
+import org.apache.coyote.Response;
 
-public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Request> {
+public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Request, Response> {
 
   @Nullable
   @Override
-  public String getProtocolName(Request request) {
+  public String getNetworkProtocolName(Request request, @Nullable Response response) {
     String protocol = messageBytesToString(request.protocol());
     if (protocol != null && protocol.startsWith("HTTP/")) {
       return "http";
@@ -26,7 +27,7 @@ public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
-  public String getProtocolVersion(Request request) {
+  public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
     String protocol = messageBytesToString(request.protocol());
     if (protocol != null && protocol.startsWith("HTTP/")) {
       return protocol.substring("HTTP/".length());
@@ -36,12 +37,12 @@ public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
-  public String getHostName(Request request) {
+  public String getServerAddress(Request request) {
     return messageBytesToString(request.serverName());
   }
 
   @Override
-  public Integer getHostPort(Request request) {
+  public Integer getServerPort(Request request) {
     return request.getServerPort();
   }
 
@@ -61,14 +62,14 @@ public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
-  public String getSockHostAddr(Request request) {
+  public String getServerSocketAddress(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_LOCAL_ADDR_ATTRIBUTE, request);
     return messageBytesToString(request.localAddr());
   }
 
   @Nullable
   @Override
-  public Integer getSockHostPort(Request request) {
+  public Integer getServerSocketPort(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_LOCALPORT_ATTRIBUTE, request);
     return request.getLocalPort();
   }

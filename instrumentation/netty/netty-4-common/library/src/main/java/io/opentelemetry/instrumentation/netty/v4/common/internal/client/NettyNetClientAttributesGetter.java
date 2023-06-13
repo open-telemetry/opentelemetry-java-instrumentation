@@ -13,6 +13,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.ChannelUtil;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -27,13 +28,19 @@ final class NettyNetClientAttributesGetter
   }
 
   @Override
-  public String getProtocolName(
+  public String getNetworkTransport(
+      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
+    return ChannelUtil.getNetworkTransport(requestAndChannel.channel());
+  }
+
+  @Override
+  public String getNetworkProtocolName(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return requestAndChannel.request().getProtocolVersion().protocolName();
   }
 
   @Override
-  public String getProtocolVersion(
+  public String getNetworkProtocolVersion(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     HttpVersion version = requestAndChannel.request().getProtocolVersion();
     return version.majorVersion() + "." + version.minorVersion();
@@ -41,19 +48,19 @@ final class NettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(HttpRequestAndChannel requestAndChannel) {
+  public String getServerAddress(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(HttpRequestAndChannel requestAndChannel) {
+  public Integer getServerPort(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getServerInetSocketAddress(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     SocketAddress address = requestAndChannel.remoteAddress();
     if (address instanceof InetSocketAddress) {

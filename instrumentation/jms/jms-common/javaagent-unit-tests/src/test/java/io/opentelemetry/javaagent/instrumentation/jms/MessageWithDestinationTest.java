@@ -34,7 +34,7 @@ class MessageWithDestinationTest {
     MessageWithDestination result = MessageWithDestination.create(message, null);
 
     // then
-    assertMessage("unknown", "unknown", /* expectedTemporary= */ false, result);
+    assertMessage("unknown", /* expectedTemporary= */ false, result);
   }
 
   @Test
@@ -46,7 +46,7 @@ class MessageWithDestinationTest {
     MessageWithDestination result = MessageWithDestination.create(message, destination);
 
     // then
-    assertMessage("unknown", "unknown", /* expectedTemporary= */ false, result);
+    assertMessage("unknown", /* expectedTemporary= */ false, result);
   }
 
   @ParameterizedTest
@@ -73,7 +73,7 @@ class MessageWithDestinationTest {
     MessageWithDestination result = MessageWithDestination.create(message, null);
 
     // then
-    assertMessage("queue", expectedDestinationName, expectedTemporary, result);
+    assertMessage(expectedDestinationName, expectedTemporary, result);
   }
 
   @ParameterizedTest
@@ -100,7 +100,7 @@ class MessageWithDestinationTest {
     MessageWithDestination result = MessageWithDestination.create(message, null);
 
     // then
-    assertMessage("topic", expectedDestinationName, expectedTemporary, result);
+    assertMessage(expectedDestinationName, expectedTemporary, result);
   }
 
   static Stream<Arguments> destinations() {
@@ -112,13 +112,9 @@ class MessageWithDestinationTest {
   }
 
   private void assertMessage(
-      String expectedDestinationKind,
-      String expectedDestinationName,
-      boolean expectedTemporary,
-      MessageWithDestination actual) {
+      String expectedDestinationName, boolean expectedTemporary, MessageWithDestination actual) {
 
     assertSame(message, actual.message());
-    assertEquals(expectedDestinationKind, actual.destinationKind());
     assertEquals(expectedDestinationName, actual.destinationName());
     assertEquals(expectedTemporary, actual.isTemporaryDestination());
   }

@@ -11,17 +11,17 @@ import javax.annotation.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 
 final class WebfluxServerNetAttributesGetter
-    implements NetServerAttributesGetter<ServerWebExchange> {
+    implements NetServerAttributesGetter<ServerWebExchange, ServerWebExchange> {
 
   @Nullable
   @Override
-  public String getHostName(ServerWebExchange request) {
+  public String getServerAddress(ServerWebExchange request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer getHostPort(ServerWebExchange request) {
+  public Integer getServerPort(ServerWebExchange request) {
     int port = request.getRequest().getURI().getPort();
     return port == -1 ? null : port;
   }
@@ -34,7 +34,8 @@ final class WebfluxServerNetAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getHostSocketAddress(ServerWebExchange request) {
+  public InetSocketAddress getServerInetSocketAddress(
+      ServerWebExchange request, ServerWebExchange response) {
     return request.getRequest().getLocalAddress();
   }
 }

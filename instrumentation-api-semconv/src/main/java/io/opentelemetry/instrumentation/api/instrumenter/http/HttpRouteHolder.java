@@ -35,7 +35,7 @@ public final class HttpRouteHolder {
       if (HttpRouteState.fromContextOrNull(context) != null) {
         return context;
       }
-      String method = getter.getMethod(request);
+      String method = getter.getHttpRequestMethod(request);
       return context.with(HttpRouteState.create(method, null, 0));
     };
   }

@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
@@ -20,11 +19,6 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Pulsar
   @Override
   public String getSystem(PulsarRequest request) {
     return "pulsar";
-  }
-
-  @Override
-  public String getDestinationKind(PulsarRequest request) {
-    return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Nullable

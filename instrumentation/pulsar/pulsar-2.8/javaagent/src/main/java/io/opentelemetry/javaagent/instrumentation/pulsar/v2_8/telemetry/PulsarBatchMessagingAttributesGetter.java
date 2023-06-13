@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -20,11 +19,6 @@ enum PulsarBatchMessagingAttributesGetter
   @Override
   public String getSystem(PulsarBatchRequest request) {
     return "pulsar";
-  }
-
-  @Override
-  public String getDestinationKind(PulsarBatchRequest request) {
-    return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Nullable

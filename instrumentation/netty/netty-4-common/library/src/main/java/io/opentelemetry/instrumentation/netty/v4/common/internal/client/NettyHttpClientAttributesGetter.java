@@ -35,28 +35,28 @@ final class NettyHttpClientAttributesGetter
   }
 
   private String getHost(HttpRequestAndChannel requestAndChannel) {
-    List<String> values = getRequestHeader(requestAndChannel, "host");
+    List<String> values = getHttpRequestHeader(requestAndChannel, "host");
     return values.isEmpty() ? null : values.get(0);
   }
 
   @Override
-  public String getMethod(HttpRequestAndChannel requestAndChannel) {
+  public String getHttpRequestMethod(HttpRequestAndChannel requestAndChannel) {
     return requestAndChannel.request().getMethod().name();
   }
 
   @Override
-  public List<String> getRequestHeader(HttpRequestAndChannel requestAndChannel, String name) {
+  public List<String> getHttpRequestHeader(HttpRequestAndChannel requestAndChannel, String name) {
     return requestAndChannel.request().headers().getAll(name);
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       HttpRequestAndChannel requestAndChannel, HttpResponse response, @Nullable Throwable error) {
     return response.getStatus().code();
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       HttpRequestAndChannel requestAndChannel, HttpResponse response, String name) {
     return response.headers().getAll(name);
   }

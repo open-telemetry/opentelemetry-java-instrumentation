@@ -17,8 +17,6 @@ public abstract class MessageWithDestination {
 
   public abstract String destinationName();
 
-  public abstract String destinationKind();
-
   public abstract boolean isTemporaryDestination();
 
   public static MessageWithDestination create(
@@ -40,7 +38,7 @@ public abstract class MessageWithDestination {
       return createMessageWithTopic(message, jmsDestination);
     }
     return new AutoValue_MessageWithDestination(
-        message, "unknown", "unknown", /* isTemporaryDestination= */ false);
+        message, "unknown", /* isTemporaryDestination= */ false);
   }
 
   private static MessageWithDestination createMessageWithQueue(
@@ -49,7 +47,7 @@ public abstract class MessageWithDestination {
     String queueName = getDestinationName(queue, DestinationAdapter::getQueueName);
     boolean temporary = queue.isTemporaryQueue() || queueName.startsWith(TIBCO_TMP_PREFIX);
 
-    return new AutoValue_MessageWithDestination(message, queueName, "queue", temporary);
+    return new AutoValue_MessageWithDestination(message, queueName, temporary);
   }
 
   private static MessageWithDestination createMessageWithTopic(
@@ -58,7 +56,7 @@ public abstract class MessageWithDestination {
     String topicName = getDestinationName(topic, DestinationAdapter::getTopicName);
     boolean temporary = topic.isTemporaryTopic() || topicName.startsWith(TIBCO_TMP_PREFIX);
 
-    return new AutoValue_MessageWithDestination(message, topicName, "topic", temporary);
+    return new AutoValue_MessageWithDestination(message, topicName, temporary);
   }
 
   private static String getDestinationName(DestinationAdapter destination, NameGetter nameGetter) {

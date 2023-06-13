@@ -25,12 +25,6 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
 
   @Nullable
   @Override
-  public String getDestinationKind(MessageWithDestination messageWithDestination) {
-    return messageWithDestination.destinationKind();
-  }
-
-  @Nullable
-  @Override
   public String getDestination(MessageWithDestination messageWithDestination) {
     return messageWithDestination.destinationName();
   }

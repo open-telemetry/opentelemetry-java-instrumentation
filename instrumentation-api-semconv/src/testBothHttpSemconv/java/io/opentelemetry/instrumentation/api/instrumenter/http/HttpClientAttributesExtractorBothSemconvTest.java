@@ -18,6 +18,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
@@ -38,24 +39,24 @@ class HttpClientAttributesExtractorBothSemconvTest {
     }
 
     @Override
-    public String getMethod(Map<String, String> request) {
+    public String getHttpRequestMethod(Map<String, String> request) {
       return request.get("method");
     }
 
     @Override
-    public List<String> getRequestHeader(Map<String, String> request, String name) {
+    public List<String> getHttpRequestHeader(Map<String, String> request, String name) {
       String value = request.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
     }
 
     @Override
-    public Integer getStatusCode(
+    public Integer getHttpResponseStatusCode(
         Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
       return Integer.parseInt(response.get("statusCode"));
     }
 
     @Override
-    public List<String> getResponseHeader(
+    public List<String> getHttpResponseHeader(
         Map<String, String> request, Map<String, String> response, String name) {
       String value = response.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
@@ -67,27 +68,41 @@ class HttpClientAttributesExtractorBothSemconvTest {
 
     @Nullable
     @Override
-    public String getProtocolName(
+    public String getNetworkTransport(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("transport");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkType(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("type");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkProtocolName(
         Map<String, String> request, @Nullable Map<String, String> response) {
       return request.get("protocolName");
     }
 
     @Nullable
     @Override
-    public String getProtocolVersion(
+    public String getNetworkProtocolVersion(
         Map<String, String> request, @Nullable Map<String, String> response) {
       return request.get("protocolVersion");
     }
 
     @Nullable
     @Override
-    public String getPeerName(Map<String, String> request) {
+    public String getServerAddress(Map<String, String> request) {
       return request.get("peerName");
     }
 
     @Nullable
     @Override
-    public Integer getPeerPort(Map<String, String> request) {
+    public Integer getServerPort(Map<String, String> request) {
       String statusCode = request.get("peerPort");
       return statusCode == null ? null : Integer.parseInt(statusCode);
     }
@@ -101,6 +116,8 @@ class HttpClientAttributesExtractorBothSemconvTest {
     request.put("header.content-length", "10");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.custom-request-header", "123,456");
+    request.put("transport", "udp");
+    request.put("type", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "1.1");
     request.put("peerName", "github.com");
@@ -126,6 +143,7 @@ class HttpClientAttributesExtractorBothSemconvTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
+            entry(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_URL, "http://github.com"),
             entry(UrlAttributes.URL_FULL, "http://github.com"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
@@ -133,20 +151,29 @@ class HttpClientAttributesExtractorBothSemconvTest {
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")),
             entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
-            entry(SemanticAttributes.NET_PEER_PORT, 123L));
+            entry(SemanticAttributes.NET_PEER_PORT, 123L),
+            entry(NetworkAttributes.SERVER_ADDRESS, "github.com"),
+            entry(NetworkAttributes.SERVER_PORT, 123L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
+            entry(HttpAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
+            entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
+            entry(HttpAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
             entry(SemanticAttributes.HTTP_RESEND_COUNT, 2L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")),
             entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"));
+            entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"),
+            entry(NetworkAttributes.NETWORK_TRANSPORT, "udp"),
+            entry(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"));
   }
 }

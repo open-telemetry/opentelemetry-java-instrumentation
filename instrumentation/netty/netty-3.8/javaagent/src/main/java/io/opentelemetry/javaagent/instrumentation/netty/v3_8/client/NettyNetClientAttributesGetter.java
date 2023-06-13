@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.ChannelUtil;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -27,13 +28,19 @@ final class NettyNetClientAttributesGetter
   }
 
   @Override
-  public String getProtocolName(
+  public String getNetworkTransport(
+      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
+    return ChannelUtil.getNetworkTransport(requestAndChannel.channel());
+  }
+
+  @Override
+  public String getNetworkProtocolName(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse httpResponse) {
     return requestAndChannel.request().getProtocolVersion().getProtocolName();
   }
 
   @Override
-  public String getProtocolVersion(
+  public String getNetworkProtocolVersion(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse httpResponse) {
     HttpVersion version = requestAndChannel.request().getProtocolVersion();
     return version.getMajorVersion() + "." + version.getMinorVersion();
@@ -41,19 +48,19 @@ final class NettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(HttpRequestAndChannel requestAndChannel) {
+  public String getServerAddress(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(HttpRequestAndChannel requestAndChannel) {
+  public Integer getServerPort(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getServerInetSocketAddress(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     SocketAddress address = requestAndChannel.channel().getRemoteAddress();
     if (address instanceof InetSocketAddress) {

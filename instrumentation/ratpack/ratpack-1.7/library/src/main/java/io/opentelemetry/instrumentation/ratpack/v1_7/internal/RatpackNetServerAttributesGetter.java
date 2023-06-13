@@ -9,17 +9,19 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributes
 import javax.annotation.Nullable;
 import ratpack.handling.Context;
 import ratpack.http.Request;
+import ratpack.http.Response;
 import ratpack.server.PublicAddress;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class RatpackNetServerAttributesGetter implements NetServerAttributesGetter<Request> {
+public final class RatpackNetServerAttributesGetter
+    implements NetServerAttributesGetter<Request, Response> {
 
   @Nullable
   @Override
-  public String getProtocolName(Request request) {
+  public String getNetworkProtocolName(Request request, @Nullable Response response) {
     String protocol = request.getProtocol();
     if (protocol.startsWith("HTTP/")) {
       return "http";
@@ -29,7 +31,7 @@ public final class RatpackNetServerAttributesGetter implements NetServerAttribut
 
   @Nullable
   @Override
-  public String getProtocolVersion(Request request) {
+  public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
     String protocol = request.getProtocol();
     if (protocol.startsWith("HTTP/")) {
       return protocol.substring("HTTP/".length());
@@ -39,14 +41,14 @@ public final class RatpackNetServerAttributesGetter implements NetServerAttribut
 
   @Nullable
   @Override
-  public String getHostName(Request request) {
+  public String getServerAddress(Request request) {
     PublicAddress publicAddress = getPublicAddress(request);
     return publicAddress == null ? null : publicAddress.get().getHost();
   }
 
   @Nullable
   @Override
-  public Integer getHostPort(Request request) {
+  public Integer getServerPort(Request request) {
     PublicAddress publicAddress = getPublicAddress(request);
     return publicAddress == null ? null : publicAddress.get().getPort();
   }

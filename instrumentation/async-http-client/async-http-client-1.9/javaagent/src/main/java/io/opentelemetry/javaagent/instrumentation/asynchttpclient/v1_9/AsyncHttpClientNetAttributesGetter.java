@@ -15,23 +15,23 @@ final class AsyncHttpClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getProtocolName(Request request, @Nullable Response response) {
+  public String getNetworkProtocolName(Request request, @Nullable Response response) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getProtocolVersion(Request request, @Nullable Response response) {
+  public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
     return null;
   }
 
   @Override
-  public String getPeerName(Request request) {
+  public String getServerAddress(Request request) {
     return request.getUri().getHost();
   }
 
   @Override
-  public Integer getPeerPort(Request request) {
+  public Integer getServerPort(Request request) {
     return request.getUri().getPort();
   }
 }

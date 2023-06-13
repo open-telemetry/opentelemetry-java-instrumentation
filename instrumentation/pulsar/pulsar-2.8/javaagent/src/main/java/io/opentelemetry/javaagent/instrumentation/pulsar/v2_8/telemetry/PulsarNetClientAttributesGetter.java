@@ -18,13 +18,13 @@ public final class PulsarNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(BasePulsarRequest request) {
+  public String getServerAddress(BasePulsarRequest request) {
     return request.getUrlData() != null ? request.getUrlData().getHost() : null;
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(BasePulsarRequest request) {
+  public Integer getServerPort(BasePulsarRequest request) {
     return request.getUrlData() != null ? request.getUrlData().getPort() : null;
   }
 }

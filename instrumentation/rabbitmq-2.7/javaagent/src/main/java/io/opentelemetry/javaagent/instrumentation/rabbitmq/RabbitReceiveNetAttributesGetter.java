@@ -15,25 +15,25 @@ public class RabbitReceiveNetAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(ReceiveRequest request) {
+  public String getServerAddress(ReceiveRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(ReceiveRequest request) {
+  public Integer getServerPort(ReceiveRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getSockPeerAddr(ReceiveRequest request, @Nullable GetResponse response) {
+  public String getServerSocketAddress(ReceiveRequest request, @Nullable GetResponse response) {
     return request.getConnection().getAddress().getHostAddress();
   }
 
   @Nullable
   @Override
-  public Integer getSockPeerPort(ReceiveRequest request, @Nullable GetResponse response) {
+  public Integer getServerSocketPort(ReceiveRequest request, @Nullable GetResponse response) {
     return request.getConnection().getPort();
   }
 

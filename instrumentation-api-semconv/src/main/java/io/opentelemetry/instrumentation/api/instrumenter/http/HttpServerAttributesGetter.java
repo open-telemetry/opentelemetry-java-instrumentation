@@ -76,8 +76,29 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
     return separatorPos == -1 ? null : target.substring(separatorPos + 1);
   }
 
+  /**
+   * Returns the matched route (path template in the format used by the respective server
+   * framework).
+   *
+   * <p>Examples: {@code /users/:userID?}, {@code {controller}/{action}/{id?}}
+   *
+   * @deprecated This method is deprecated and will be removed in a future release. Implement {@link
+   *     #getHttpRoute(Object)} instead.
+   */
+  @Deprecated
   @Nullable
   default String getRoute(REQUEST request) {
     return null;
+  }
+
+  /**
+   * Returns the matched route (path template in the format used by the respective server
+   * framework).
+   *
+   * <p>Examples: {@code /users/:userID?}, {@code {controller}/{action}/{id?}}
+   */
+  @Nullable
+  default String getHttpRoute(REQUEST request) {
+    return getRoute(request);
   }
 }

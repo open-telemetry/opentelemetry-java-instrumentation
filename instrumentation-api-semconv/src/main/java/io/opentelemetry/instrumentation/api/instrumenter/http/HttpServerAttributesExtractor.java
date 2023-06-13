@@ -16,6 +16,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -43,7 +45,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   /** Creates the HTTP server attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST> netAttributesGetter) {
+      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
     return builder(httpAttributesGetter, netAttributesGetter).build();
   }
 
@@ -53,7 +55,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
    */
   public static <REQUEST, RESPONSE> HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST> netAttributesGetter) {
+      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
     return new HttpServerAttributesExtractorBuilder<>(httpAttributesGetter, netAttributesGetter);
   }
 
@@ -64,12 +66,14 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
           "otel.instrumentation.http.prefer-forwarded-url-scheme", false);
 
   private final InternalUrlAttributesExtractor<REQUEST> internalUrlExtractor;
-  private final InternalNetServerAttributesExtractor<REQUEST> internalNetExtractor;
+  private final InternalNetServerAttributesExtractor<REQUEST, RESPONSE> internalNetExtractor;
+  private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
+  private final InternalServerAttributesExtractor<REQUEST, RESPONSE> internalServerExtractor;
   private final Function<Context, String> httpRouteHolderGetter;
 
   HttpServerAttributesExtractor(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST> netAttributesGetter,
+      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders) {
     this(
@@ -83,11 +87,13 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   // visible for tests
   HttpServerAttributesExtractor(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST> netAttributesGetter,
+      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders,
       Function<Context, String> httpRouteHolderGetter) {
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
+    HttpNetNamePortGetter<REQUEST> namePortGetter =
+        new HttpNetNamePortGetter<>(httpAttributesGetter);
     internalUrlExtractor =
         new InternalUrlAttributesExtractor<>(
             httpAttributesGetter,
@@ -96,9 +102,21 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
             SemconvStability.emitOldHttpSemconv());
     internalNetExtractor =
         new InternalNetServerAttributesExtractor<>(
+            netAttributesGetter, namePortGetter, SemconvStability.emitOldHttpSemconv());
+    internalNetworkExtractor =
+        new InternalNetworkAttributesExtractor<>(
             netAttributesGetter,
-            this::shouldCaptureHostPort,
-            new HttpNetNamePortGetter<>(httpAttributesGetter));
+            HttpNetworkTransportFilter.INSTANCE,
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv());
+    internalServerExtractor =
+        new InternalServerAttributesExtractor<>(
+            netAttributesGetter,
+            this::shouldCaptureServerPort,
+            namePortGetter,
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv(),
+            InternalServerAttributesExtractor.Mode.HOST);
     this.httpRouteHolderGetter = httpRouteHolderGetter;
   }
 
@@ -108,12 +126,13 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
 
     internalUrlExtractor.onStart(attributes, request);
     internalNetExtractor.onStart(attributes, request);
+    internalServerExtractor.onStart(attributes, request);
 
-    internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.getRoute(request));
+    internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.getHttpRoute(request));
     internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
   }
 
-  private boolean shouldCaptureHostPort(int port, REQUEST request) {
+  private boolean shouldCaptureServerPort(int port, REQUEST request) {
     String scheme = getter.getUrlScheme(request);
     if (scheme == null) {
       return true;
@@ -134,6 +153,10 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
 
     super.onEnd(attributes, context, request, response, error);
+
+    internalNetworkExtractor.onEnd(attributes, request, response);
+    internalServerExtractor.onEnd(attributes, request, response);
+
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteHolderGetter.apply(context));
   }
 
@@ -145,7 +168,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     }
 
     // try Forwarded
-    String forwarded = firstHeaderValue(getter.getRequestHeader(request, "forwarded"));
+    String forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "forwarded"));
     if (forwarded != null) {
       forwarded = extractProtoFromForwardedHeader(forwarded);
       if (forwarded != null) {
@@ -154,7 +177,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     }
 
     // try X-Forwarded-Proto
-    forwarded = firstHeaderValue(getter.getRequestHeader(request, "x-forwarded-proto"));
+    forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "x-forwarded-proto"));
     if (forwarded != null) {
       return extractProtoFromForwardedProtoHeader(forwarded);
     }
@@ -165,7 +188,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   @Nullable
   private String clientIp(REQUEST request) {
     // try Forwarded
-    String forwarded = firstHeaderValue(getter.getRequestHeader(request, "forwarded"));
+    String forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "forwarded"));
     if (forwarded != null) {
       forwarded = extractClientIpFromForwardedHeader(forwarded);
       if (forwarded != null) {
@@ -174,7 +197,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     }
 
     // try X-Forwarded-For
-    forwarded = firstHeaderValue(getter.getRequestHeader(request, "x-forwarded-for"));
+    forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "x-forwarded-for"));
     if (forwarded != null) {
       return extractClientIpFromForwardedForHeader(forwarded);
     }

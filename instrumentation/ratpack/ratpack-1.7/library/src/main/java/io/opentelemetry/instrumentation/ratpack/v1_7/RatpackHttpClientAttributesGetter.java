@@ -23,23 +23,23 @@ enum RatpackHttpClientAttributesGetter
 
   @Nullable
   @Override
-  public String getMethod(RequestSpec requestSpec) {
+  public String getHttpRequestMethod(RequestSpec requestSpec) {
     return requestSpec.getMethod().getName();
   }
 
   @Override
-  public List<String> getRequestHeader(RequestSpec requestSpec, String name) {
+  public List<String> getHttpRequestHeader(RequestSpec requestSpec, String name) {
     return requestSpec.getHeaders().getAll(name);
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       RequestSpec requestSpec, HttpResponse httpResponse, @Nullable Throwable error) {
     return httpResponse.getStatusCode();
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       RequestSpec requestSpec, HttpResponse httpResponse, String name) {
     return httpResponse.getHeaders().getAll(name);
   }

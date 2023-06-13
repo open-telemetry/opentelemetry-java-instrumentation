@@ -63,7 +63,6 @@ class MessagingAttributesExtractorTest {
     // then
     List<MapEntry<AttributeKey<?>, Object>> expectedEntries = new ArrayList<>();
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_SYSTEM, "myQueue"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"));
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_NAME, expectedDestination));
     if (temporary) {
       expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true));
@@ -116,11 +115,6 @@ class MessagingAttributesExtractorTest {
     @Override
     public String getSystem(Map<String, String> request) {
       return request.get("system");
-    }
-
-    @Override
-    public String getDestinationKind(Map<String, String> request) {
-      return request.get("destinationKind");
     }
 
     @Override

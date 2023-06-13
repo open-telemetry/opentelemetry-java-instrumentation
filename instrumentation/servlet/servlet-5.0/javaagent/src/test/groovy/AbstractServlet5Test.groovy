@@ -153,6 +153,9 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     response.contentUtf8() == result
     response.headers().contentLength() == result.length()
 
+    cleanup:
+    ExperimentalSnippetHolder.setSnippet("")
+
     def expectedRoute = expectedHttpRoute(HTML_SERVLET_OUTPUT_STREAM)
     assertTraces(1) {
       trace(0, 2) {
@@ -172,7 +175,7 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
   def "snippet injection with PrintWriter"() {
     setup:
-    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
+    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test2 </script>")
     def request = request(HTML_PRINT_WRITER, "GET")
     def response = client.execute(request).aggregate().join()
 
@@ -181,7 +184,7 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     String result = "<!DOCTYPE html>\n" +
       "<html lang=\"en\">\n" +
       "<head>\n" +
-      "  <script type=\"text/javascript\"> Test </script>\n" +
+      "  <script type=\"text/javascript\"> Test2 </script>\n" +
       "  <meta charset=\"UTF-8\">\n" +
       "  <title>Title</title>\n" +
       "</head>\n" +
@@ -192,6 +195,9 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
     response.contentUtf8() == result
     response.headers().contentLength() == result.length()
+
+    cleanup:
+    ExperimentalSnippetHolder.setSnippet("")
 
     def expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER)
     assertTraces(1) {

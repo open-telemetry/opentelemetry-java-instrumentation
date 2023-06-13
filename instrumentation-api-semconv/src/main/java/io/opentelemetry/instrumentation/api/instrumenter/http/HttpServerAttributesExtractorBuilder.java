@@ -16,13 +16,13 @@ import java.util.List;
 public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter;
-  final NetServerAttributesGetter<REQUEST> netAttributesGetter;
+  final NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter;
   List<String> capturedRequestHeaders = emptyList();
   List<String> capturedResponseHeaders = emptyList();
 
   HttpServerAttributesExtractorBuilder(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST> netAttributesGetter) {
+      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
     this.httpAttributesGetter = httpAttributesGetter;
     this.netAttributesGetter = netAttributesGetter;
   }

@@ -17,18 +17,19 @@ enum Vertx3NetAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(HttpClientRequest request) {
+  public String getServerAddress(HttpClientRequest request) {
     return null;
   }
 
   @Override
-  public Integer getPeerPort(HttpClientRequest request) {
+  public Integer getServerPort(HttpClientRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getSockPeerName(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public String getServerSocketDomain(
+      HttpClientRequest request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
     }
@@ -38,7 +39,8 @@ enum Vertx3NetAttributesGetter
 
   @Nullable
   @Override
-  public Integer getSockPeerPort(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public Integer getServerSocketPort(
+      HttpClientRequest request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
     }

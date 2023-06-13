@@ -22,8 +22,8 @@ class SpringListenerSuppressReceiveSpansTest extends AgentInstrumentationSpecifi
     expect:
     assertTraces(1) {
       trace(0, 2) {
-        SpringListenerTest.producerSpan(it, 0, "queue", "SpringListenerJms2")
-        SpringListenerTest.consumerSpan(it, 1, "queue", "SpringListenerJms2", "", span(0), "process")
+        SpringListenerTest.producerSpan(it, 0, "SpringListenerJms2")
+        SpringListenerTest.consumerSpan(it, 1, "SpringListenerJms2", "", span(0), "process")
       }
     }
 

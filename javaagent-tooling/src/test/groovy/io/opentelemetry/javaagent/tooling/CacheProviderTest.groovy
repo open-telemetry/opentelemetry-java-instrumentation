@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.tooling
 
 import io.opentelemetry.javaagent.tooling.muzzle.AgentCachingPoolStrategy
 import net.bytebuddy.description.type.TypeDescription
-import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.pool.TypePool
 import spock.lang.Specification
 
@@ -39,6 +38,8 @@ class CacheProviderTest extends Specification {
     expect:
     key1.hashCode() == key2.hashCode()
     key1.equals(key2)
+    // ensures that loader isn't collected
+    loader != null
   }
 
   def "key different ref equivalence"() {
@@ -56,6 +57,8 @@ class CacheProviderTest extends Specification {
 
     key1.hashCode() == key2.hashCode()
     key1.equals(key2)
+    // ensures that loader isn't collected
+    loader != null
   }
 
   def "key mismatch -- same loader - diff name"() {
@@ -70,6 +73,8 @@ class CacheProviderTest extends Specification {
     // not strictly guaranteed -- but important for performance
     fooKey.hashCode() != barKey.hashCode()
     !fooKey.equals(barKey)
+    // ensures that loader isn't collected
+    loader != null
   }
 
   def "key mismatch -- same name - diff loader"() {
@@ -89,6 +94,9 @@ class CacheProviderTest extends Specification {
     // not strictly guaranteed -- but important for performance
     fooKey1.hashCode() != fooKey2.hashCode()
     !fooKey1.equals(fooKey2)
+    // ensures that loader isn't collected
+    loader1 != null
+    loader2 != null
   }
 
   def "test basic caching"() {
@@ -105,6 +113,8 @@ class CacheProviderTest extends Specification {
     then:
     // not strictly guaranteed, but fine for this test
     cacheProvider.find("foo") != null
+    // ensures that loader isn't collected
+    loader != null
   }
 
   def "test loader equivalence"() {
@@ -125,6 +135,9 @@ class CacheProviderTest extends Specification {
     cacheProvider1B.find("foo") != null
 
     cacheProvider1A.find("foo").is(cacheProvider1B.find("foo"))
+
+    // ensures that loader isn't collected
+    loader1 != null
   }
 
   def "test loader separation"() {
@@ -147,26 +160,17 @@ class CacheProviderTest extends Specification {
     cacheProvider2.find("foo") != null
 
     !cacheProvider1.find("foo").is(cacheProvider2.find("foo"))
+
+    // ensures that loader isn't collected
+    loader1 != null
+    loader2 != null
   }
 
   static newVoid() {
-    return new TypePool.Resolution.Simple(TypeDescription.VOID)
+    return new TypePool.Resolution.Simple(TypeDescription.ForLoadedType.of(void.class))
   }
 
   static newClassLoader() {
     return new URLClassLoader([] as URL[], (ClassLoader) null)
-  }
-
-  static newLocator() {
-    return new ClassFileLocator() {
-      @Override
-      ClassFileLocator.Resolution locate(String name) throws IOException {
-        return null
-      }
-
-      @Override
-      void close() throws IOException {
-      }
-    }
   }
 }

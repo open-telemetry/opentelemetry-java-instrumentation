@@ -16,23 +16,23 @@ final class NettyHttpServerAttributesGetter
     implements HttpServerAttributesGetter<HttpRequestAndChannel, HttpResponse> {
 
   @Override
-  public String getMethod(HttpRequestAndChannel requestAndChannel) {
+  public String getHttpRequestMethod(HttpRequestAndChannel requestAndChannel) {
     return requestAndChannel.request().getMethod().getName();
   }
 
   @Override
-  public List<String> getRequestHeader(HttpRequestAndChannel requestAndChannel, String name) {
+  public List<String> getHttpRequestHeader(HttpRequestAndChannel requestAndChannel, String name) {
     return requestAndChannel.request().headers().getAll(name);
   }
 
   @Override
-  public Integer getStatusCode(
+  public Integer getHttpResponseStatusCode(
       HttpRequestAndChannel requestAndChannel, HttpResponse response, @Nullable Throwable error) {
     return response.getStatus().getCode();
   }
 
   @Override
-  public List<String> getResponseHeader(
+  public List<String> getHttpResponseHeader(
       HttpRequestAndChannel requestAndChannel, HttpResponse response, String name) {
     return response.headers().getAll(name);
   }

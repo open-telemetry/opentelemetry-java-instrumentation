@@ -18,8 +18,8 @@ import javax.annotation.Nullable;
  *     NetServerAttributesGetter#getHostSocketAddress(Object)} methods instead.
  */
 @Deprecated
-public abstract class InetSocketAddressNetServerAttributesGetter<REQUEST>
-    implements NetServerAttributesGetter<REQUEST> {
+public abstract class InetSocketAddressNetServerAttributesGetter<REQUEST, RESPONSE>
+    implements NetServerAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
   @Override

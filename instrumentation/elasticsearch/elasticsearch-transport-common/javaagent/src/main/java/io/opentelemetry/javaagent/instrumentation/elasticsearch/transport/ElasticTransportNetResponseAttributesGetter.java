@@ -14,19 +14,19 @@ public class ElasticTransportNetResponseAttributesGetter
 
   @Override
   @Nullable
-  public String getPeerName(ElasticTransportRequest request) {
+  public String getServerAddress(ElasticTransportRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public Integer getPeerPort(ElasticTransportRequest request) {
+  public Integer getServerPort(ElasticTransportRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getSockPeerAddr(
+  public String getServerSocketAddress(
       ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getAddress();
@@ -36,7 +36,7 @@ public class ElasticTransportNetResponseAttributesGetter
 
   @Nullable
   @Override
-  public String getSockPeerName(
+  public String getServerSocketDomain(
       ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getHost();
@@ -46,7 +46,7 @@ public class ElasticTransportNetResponseAttributesGetter
 
   @Nullable
   @Override
-  public Integer getSockPeerPort(
+  public Integer getServerSocketPort(
       ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getPort();
