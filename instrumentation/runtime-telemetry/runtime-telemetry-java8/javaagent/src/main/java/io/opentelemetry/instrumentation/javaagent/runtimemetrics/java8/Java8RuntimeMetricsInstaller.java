@@ -30,7 +30,7 @@ public class Java8RuntimeMetricsInstaller implements AgentListener {
     ConfigProperties config = autoConfiguredSdk.getConfig();
 
     boolean defaultEnabled = config.getBoolean("otel.instrumentation.common.default-enabled", true);
-    if (!config.getBoolean("otel.instrumentation.runtime-metrics.enabled", defaultEnabled)
+    if (!config.getBoolean("otel.instrumentation.runtime-telemetry.enabled", defaultEnabled)
         || Double.parseDouble(System.getProperty("java.specification.version")) >= 17) {
       return;
     }
