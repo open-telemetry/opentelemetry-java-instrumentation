@@ -4,7 +4,7 @@ ARG jdkImage
 FROM mcr.microsoft.com/windows/servercore:ltsc2022 as builder
 ARG version
 
-ADD https://s3-eu-west-1.amazonaws.com/payara.fish/Payara+Downloads/${version}/payara-${version}.zip /server.zip
+ADD https://nexus.payara.fish/repository/payara-community/fish/payara/distributions/payara/${version}/payara-${version}.zip /server.zip
 RUN ["powershell", "-Command", "expand-archive -Path /server.zip -DestinationPath /server"]
 RUN ["powershell", "-Command", "Get-ChildItem -Path /server/ -filter payara* | Rename-Item -NewName payara"]
 RUN ["powershell", "-Command", "remove-item -Path /server/payara/glassfish/modules/phonehome-bootstrap.jar"]
