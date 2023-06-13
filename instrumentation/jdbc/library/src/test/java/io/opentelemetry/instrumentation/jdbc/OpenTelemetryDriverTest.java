@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,10 +64,8 @@ public class OpenTelemetryDriverTest {
   @DisplayName("verify parent logger thrown an exception")
   @Test
   void verifyParentLoggerThrownAnException() {
-    assertThrows(
-        SQLFeatureNotSupportedException.class,
-        () -> OpenTelemetryDriver.INSTANCE.getParentLogger(),
-        "Feature not supported");
+    assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.getParentLogger())
+        .isInstanceOf(SQLFeatureNotSupportedException.class).hasMessage("Feature not supported");
   }
 
   @DisplayName("verify accepted urls")
@@ -90,18 +89,16 @@ public class OpenTelemetryDriverTest {
   @DisplayName("verify connection with null url")
   @Test
   void verifyConnectionWithNullUrl() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> OpenTelemetryDriver.INSTANCE.connect(null, null),
-        "url is required");
+    assertThatThrownBy(
+        () -> OpenTelemetryDriver.INSTANCE.connect(null, null)).isInstanceOf(
+        IllegalArgumentException.class).hasMessage("url is required");
   }
 
   @DisplayName("verify connection with empty url")
   @Test
   void verifyConnectionWithEmptyUrl() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> OpenTelemetryDriver.INSTANCE.connect(" ", null),
+    assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.connect(" ", null)).isInstanceOf(
+        IllegalArgumentException.class).hasMessage(
         "url is required");
   }
 
@@ -133,9 +130,9 @@ public class OpenTelemetryDriverTest {
     OpenTelemetryDriver.addDriverCandidate(newDriver);
     OpenTelemetryDriver.removeDriverCandidate(newDriver);
 
-    assertThrows(
-        IllegalStateException.class,
-        () -> OpenTelemetryDriver.INSTANCE.connect("jdbc:otel:test:", null),
+    assertThatThrownBy(
+        () -> OpenTelemetryDriver.INSTANCE.connect("jdbc:otel:test:", null)).isInstanceOf(
+        IllegalStateException.class).hasMessage(
         "Unable to find a driver that accepts url: jdbc:test:");
   }
 
@@ -274,29 +271,28 @@ public class OpenTelemetryDriverTest {
   @DisplayName("verify get property info with empty url")
   @Test
   void verifyGetPropertyInfoWithEmptyUrl() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(" ", null),
-        "url is required");
+    assertThatThrownBy(
+        () -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(" ", null)).isInstanceOf(
+        IllegalArgumentException.class).hasMessage("url is required");
   }
 
   @DisplayName("verify get property info with unknown driver url")
   @Test
   void verifyGetPropertyInfoWithUnknownDriverUrl() {
     String unknownUrl = "jdbc:unknown";
-    assertThrows(
-        IllegalStateException.class,
-        () -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(unknownUrl, null),
-        "Unable to find a driver that accepts url:" + unknownUrl);
+    assertThatThrownBy(
+        () -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(unknownUrl, null)).isInstanceOf(
+        IllegalStateException.class).hasMessage(
+        "Unable to find a driver that accepts url: " + unknownUrl);
   }
 
   @DisplayName("verify get property info with test driver url")
   @Test
   void verifyGetPropertyInfoWithUnknowDriverUrl() {
     String unknownUrl = "jdbc:unknown";
-    assertThrows(
-        IllegalStateException.class,
-        () -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(unknownUrl, null),
-        "Unable to find a driver that accepts url:" + unknownUrl);
+    assertThatThrownBy(
+        () -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(unknownUrl, null)).isInstanceOf(
+            IllegalStateException.class)
+        .hasMessage("Unable to find a driver that accepts url: " + unknownUrl);
   }
 }
