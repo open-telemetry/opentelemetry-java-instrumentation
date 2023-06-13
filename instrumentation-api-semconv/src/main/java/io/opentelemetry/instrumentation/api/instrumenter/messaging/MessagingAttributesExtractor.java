@@ -67,10 +67,6 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     internalSet(attributes, SemanticAttributes.MESSAGING_SYSTEM, getter.getSystem(request));
-    internalSet(
-        attributes,
-        SemanticAttributes.MESSAGING_DESTINATION_KIND,
-        getter.getDestinationKind(request));
     boolean isTemporaryDestination = getter.isTemporaryDestination(request);
     if (isTemporaryDestination) {
       internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true);

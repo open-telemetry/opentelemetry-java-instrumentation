@@ -7,12 +7,13 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
@@ -54,8 +55,8 @@ class OpenTelemetryAppenderConfigTest {
             .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
             .build();
 
-    GlobalLoggerProvider.resetForTest();
-    GlobalLoggerProvider.set(loggerProvider);
+    GlobalOpenTelemetry.resetForTest();
+    GlobalOpenTelemetry.set(OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build());
   }
 
   @BeforeEach

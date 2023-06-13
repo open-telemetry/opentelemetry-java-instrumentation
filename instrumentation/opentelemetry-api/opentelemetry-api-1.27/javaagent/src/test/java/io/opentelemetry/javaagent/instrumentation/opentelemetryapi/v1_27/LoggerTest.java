@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.logs;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
@@ -39,7 +39,8 @@ class LoggerTest {
   void setupLogger(TestInfo test) {
     instrumentationName = "test-" + test.getDisplayName();
     logger =
-        GlobalLoggerProvider.get()
+        GlobalOpenTelemetry.get()
+            .getLogsBridge()
             .loggerBuilder(instrumentationName)
             .setInstrumentationVersion("1.2.3")
             .setSchemaUrl("http://schema.org")

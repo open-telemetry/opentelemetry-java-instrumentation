@@ -5,7 +5,6 @@ plugins {
 dependencies {
   compileOnly(project(":instrumentation:java-util-logging:shaded-stub-for-instrumenting"))
 
-  compileOnly("io.opentelemetry:opentelemetry-api-logs")
   compileOnly(project(":javaagent-bootstrap"))
 
   // ensure no cross interference

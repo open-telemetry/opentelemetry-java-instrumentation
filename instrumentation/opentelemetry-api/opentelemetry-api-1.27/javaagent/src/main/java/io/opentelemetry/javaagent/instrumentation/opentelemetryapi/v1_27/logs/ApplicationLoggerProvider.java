@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.logs.bridge;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs;
 
 import application.io.opentelemetry.api.logs.LoggerBuilder;
 import application.io.opentelemetry.api.logs.LoggerProvider;
@@ -12,12 +12,10 @@ import application.io.opentelemetry.api.logs.LoggerProvider;
 @SuppressWarnings("UnnecessarilyFullyQualified")
 public class ApplicationLoggerProvider implements LoggerProvider {
 
-  public static final LoggerProvider INSTANCE = new ApplicationLoggerProvider();
-
   private final io.opentelemetry.api.logs.LoggerProvider agentLoggerProvider;
 
-  public ApplicationLoggerProvider() {
-    this.agentLoggerProvider = io.opentelemetry.api.logs.GlobalLoggerProvider.get();
+  public ApplicationLoggerProvider(io.opentelemetry.api.logs.LoggerProvider agentLoggerProvider) {
+    this.agentLoggerProvider = agentLoggerProvider;
   }
 
   @Override

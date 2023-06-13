@@ -180,7 +180,6 @@ public abstract class AbstractReactorKafkaTest {
             asList(
                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                 satisfies(
                     SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("producer")),
@@ -203,7 +202,6 @@ public abstract class AbstractReactorKafkaTest {
             asList(
                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, topic),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                 satisfies(
                     SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
@@ -225,7 +223,6 @@ public abstract class AbstractReactorKafkaTest {
             asList(
                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                 satisfies(
                     SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,

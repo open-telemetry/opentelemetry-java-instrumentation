@@ -22,8 +22,15 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   String getSystem(REQUEST request);
 
+  /**
+   * @deprecated This method is deprecated and will be removed in a future release. There is no
+   *     replacement for this concept.
+   */
   @Nullable
-  String getDestinationKind(REQUEST request);
+  @Deprecated
+  default String getDestinationKind(REQUEST request) {
+    return null;
+  }
 
   @Nullable
   String getDestination(REQUEST request);

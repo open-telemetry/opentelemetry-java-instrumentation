@@ -6,16 +6,17 @@
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.sdk.testing.assertj.LogAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
@@ -60,8 +61,8 @@ class OpenTelemetryAppenderConfigTest {
             .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
             .build();
 
-    GlobalLoggerProvider.resetForTest();
-    GlobalLoggerProvider.set(loggerProvider);
+    GlobalOpenTelemetry.resetForTest();
+    GlobalOpenTelemetry.set(OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build());
   }
 
   @BeforeEach

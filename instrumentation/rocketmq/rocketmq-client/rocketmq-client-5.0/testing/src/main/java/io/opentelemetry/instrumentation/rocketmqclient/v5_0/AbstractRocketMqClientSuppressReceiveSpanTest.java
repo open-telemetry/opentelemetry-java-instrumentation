@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_DESTINATION_KIND;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES;
@@ -22,7 +21,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
@@ -123,9 +121,6 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                     equalTo(
                                         MESSAGING_MESSAGE_ID,
                                         sendReceipt.getMessageId().toString()),
-                                    equalTo(
-                                        MESSAGING_DESTINATION_KIND,
-                                        SemanticAttributes.MessagingDestinationKindValues.TOPIC),
                                     equalTo(MESSAGING_DESTINATION_NAME, topic)),
                         span ->
                             span.hasKind(SpanKind.CONSUMER)
@@ -143,9 +138,6 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                     equalTo(
                                         MESSAGING_MESSAGE_ID,
                                         sendReceipt.getMessageId().toString()),
-                                    equalTo(
-                                        MESSAGING_DESTINATION_KIND,
-                                        SemanticAttributes.MessagingDestinationKindValues.TOPIC),
                                     equalTo(MESSAGING_DESTINATION_NAME, topic),
                                     equalTo(MESSAGING_OPERATION, "process")),
                         span ->

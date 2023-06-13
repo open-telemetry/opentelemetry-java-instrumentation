@@ -25,14 +25,10 @@ dependencies {
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api") {
     // OpenTelemetry SDK is not needed for compilation
     exclude(group = "io.opentelemetry", module = "opentelemetry-sdk")
-    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-metrics")
-    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-logs")
   }
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling") {
     // OpenTelemetry SDK is not needed for compilation
     exclude(group = "io.opentelemetry", module = "opentelemetry-sdk")
-    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-metrics")
-    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-logs")
   }
 
   // Used by byte-buddy but not brought in as a transitive dependency

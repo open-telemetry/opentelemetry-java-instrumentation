@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,7 @@ class SpringResourceConfigPropertiesTest {
 
   @BeforeEach
   void resetGlobalLoggerProvider() {
-    GlobalLoggerProvider.resetForTest();
+    GlobalOpenTelemetry.resetForTest();
   }
 
   @Test

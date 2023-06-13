@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.log4j.appender.v1_2;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
@@ -64,7 +64,11 @@ public final class LogEventMapper {
       instrumentationName = "ROOT";
     }
     LogRecordBuilder builder =
-        GlobalLoggerProvider.get().loggerBuilder(instrumentationName).build().logRecordBuilder();
+        GlobalOpenTelemetry.get()
+            .getLogsBridge()
+            .loggerBuilder(instrumentationName)
+            .build()
+            .logRecordBuilder();
 
     // message
     if (message != null) {
@@ -82,7 +86,7 @@ public final class LogEventMapper {
     // throwable
     if (throwable != null) {
       // TODO (trask) extract method for recording exception into
-      // io.opentelemetry:opentelemetry-api-logs
+      // io.opentelemetry:opentelemetry-api
       attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
       attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
       StringWriter writer = new StringWriter();

@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
@@ -39,7 +39,7 @@ class OpenTelemetryAutoConfigurationTest {
 
   @BeforeEach
   void resetGlobalLoggerProvider() {
-    GlobalLoggerProvider.resetForTest();
+    GlobalOpenTelemetry.resetForTest();
   }
 
   @Test

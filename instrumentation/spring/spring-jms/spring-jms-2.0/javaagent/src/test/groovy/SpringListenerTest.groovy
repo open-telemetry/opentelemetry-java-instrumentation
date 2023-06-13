@@ -31,11 +31,11 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
       traces.sort(orderByRootSpanKind(CONSUMER, PRODUCER))
 
       trace(0, 1) {
-        consumerSpan(it, 0, "queue", "SpringListenerJms2", "", null, "receive")
+        consumerSpan(it, 0, "SpringListenerJms2", "", null, "receive")
       }
       trace(1, 2) {
-        producerSpan(it, 0, "queue", "SpringListenerJms2")
-        consumerSpan(it, 1, "queue", "SpringListenerJms2", "", span(0), "process")
+        producerSpan(it, 0, "SpringListenerJms2")
+        consumerSpan(it, 1, "SpringListenerJms2", "", span(0), "process")
       }
     }
 
@@ -46,7 +46,7 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
     config << [AnnotatedListenerConfig, ManualListenerConfig]
   }
 
-  static producerSpan(TraceAssert trace, int index, String destinationType, String destinationName, boolean testHeaders = false) {
+  static producerSpan(TraceAssert trace, int index, String destinationName, boolean testHeaders = false) {
     trace.span(index) {
       name destinationName + " send"
       kind PRODUCER
@@ -54,7 +54,6 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destinationName
-        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" destinationType
         if (destinationName == "(temporary)") {
           "$SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY" true
         }
@@ -70,7 +69,7 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
   // passing messageId = null will verify message.id is not captured,
   // passing messageId = "" will verify message.id is captured (but won't verify anything about the value),
   // any other value for messageId will verify that message.id is captured and has that same value
-  static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, Object parentOrLinkedSpan, String operation, boolean testHeaders = false) {
+  static consumerSpan(TraceAssert trace, int index, String destinationName, String messageId, Object parentOrLinkedSpan, String operation, boolean testHeaders = false) {
     trace.span(index) {
       name destinationName + " " + operation
       kind CONSUMER
@@ -82,7 +81,6 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destinationName
-        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" destinationType
         "$SemanticAttributes.MESSAGING_OPERATION" operation
         if (messageId != null) {
           //In some tests we don't know exact messageId, so we pass "" and verify just the existence of the attribute

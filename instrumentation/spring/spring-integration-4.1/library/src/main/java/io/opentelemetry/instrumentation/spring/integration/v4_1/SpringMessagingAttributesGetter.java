@@ -23,12 +23,6 @@ enum SpringMessagingAttributesGetter
 
   @Override
   @Nullable
-  public String getDestinationKind(MessageWithChannel messageWithChannel) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String getDestination(MessageWithChannel messageWithChannel) {
     return null;
   }

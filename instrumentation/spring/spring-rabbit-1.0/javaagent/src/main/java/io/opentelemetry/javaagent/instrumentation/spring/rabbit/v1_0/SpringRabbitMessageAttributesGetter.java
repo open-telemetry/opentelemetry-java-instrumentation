@@ -20,11 +20,6 @@ enum SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Me
   }
 
   @Override
-  public String getDestinationKind(Message message) {
-    return "queue";
-  }
-
-  @Override
   @Nullable
   public String getDestination(Message message) {
     return message.getMessageProperties().getReceivedRoutingKey();

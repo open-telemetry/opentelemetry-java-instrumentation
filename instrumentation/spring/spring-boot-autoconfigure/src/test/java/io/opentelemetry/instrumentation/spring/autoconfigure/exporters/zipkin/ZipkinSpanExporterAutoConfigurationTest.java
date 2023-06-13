@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.logs.GlobalLoggerProvider;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +27,7 @@ class ZipkinSpanExporterAutoConfigurationTest {
 
   @BeforeEach
   void resetGlobalLoggerProvider() {
-    GlobalLoggerProvider.resetForTest();
+    GlobalOpenTelemetry.resetForTest();
   }
 
   @Test
