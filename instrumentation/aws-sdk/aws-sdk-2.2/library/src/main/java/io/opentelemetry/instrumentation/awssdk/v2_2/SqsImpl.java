@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -16,16 +21,17 @@ public class SqsImpl {
     // called from advice
   }
 
-  public static SdkRequest injectIntoSqsSendMessageRequest(TextMapPropagator messagingPropagator,
-      SdkRequest rawRequest, io.opentelemetry.context.Context otelContext) {
+  public static SdkRequest injectIntoSqsSendMessageRequest(
+      TextMapPropagator messagingPropagator,
+      SdkRequest rawRequest,
+      io.opentelemetry.context.Context otelContext) {
     SendMessageRequest request = (SendMessageRequest) rawRequest;
     Map<String, MessageAttributeValue> messageAttributes =
         new HashMap<>(request.messageAttributes());
 
     // Need to use a full method to allow @NoMuzzle annotation (@NoMuzzle is not transitively
     // applied to called methods)
-    messagingPropagator.inject(
-        otelContext, messageAttributes, SqsImpl::injectSqsAttribute);
+    messagingPropagator.inject(otelContext, messageAttributes, SqsImpl::injectSqsAttribute);
 
     if (messageAttributes.size() > 10) { // Too many attributes, we don't want to break the call.
       return request;

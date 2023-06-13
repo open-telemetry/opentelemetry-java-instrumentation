@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -24,8 +29,10 @@ public final class SqsAccess {
   }
 
   @NoMuzzle
-  public static SdkRequest injectIntoSqsSendMessageRequest(TextMapPropagator messagingPropagator,
-      SdkRequest rawRequest, io.opentelemetry.context.Context otelContext) {
+  public static SdkRequest injectIntoSqsSendMessageRequest(
+      TextMapPropagator messagingPropagator,
+      SdkRequest rawRequest,
+      io.opentelemetry.context.Context otelContext) {
     if (!enabled) {
       return rawRequest;
     }
