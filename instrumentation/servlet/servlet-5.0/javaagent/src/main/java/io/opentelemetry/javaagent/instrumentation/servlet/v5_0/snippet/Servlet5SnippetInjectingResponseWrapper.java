@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.Se
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.javaagent.instrumentation.servlet.snippet.SnippetInjectingPrintWriter;
-import io.opentelemetry.javaagent.instrumentation.servlet.snippet.SnippetInjectingResponseWrapper;
+import io.opentelemetry.javaagent.bootstrap.servlet.SnippetInjectingResponseWrapper;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;

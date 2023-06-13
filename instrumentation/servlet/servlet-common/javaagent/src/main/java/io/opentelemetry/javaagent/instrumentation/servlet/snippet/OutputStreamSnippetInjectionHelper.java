@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.snippet;
 
+import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
+
 import static java.util.logging.Level.FINE;
 
 import java.io.IOException;
