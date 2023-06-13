@@ -27,7 +27,7 @@ jobs:
 
   workflow-notification:
     needs:
-      - analyze
+      - build
     if: always()
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
