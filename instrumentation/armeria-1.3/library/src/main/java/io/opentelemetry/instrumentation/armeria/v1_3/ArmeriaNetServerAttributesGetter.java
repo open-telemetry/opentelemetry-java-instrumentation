@@ -41,7 +41,8 @@ final class ArmeriaNetServerAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerSocketAddress(RequestContext ctx) {
+  public InetSocketAddress getClientInetSocketAddress(
+      RequestContext ctx, @Nullable RequestLog requestLog) {
     SocketAddress address = ctx.remoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;

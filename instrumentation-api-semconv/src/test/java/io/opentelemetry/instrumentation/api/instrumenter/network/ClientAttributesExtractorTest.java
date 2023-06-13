@@ -19,41 +19,35 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
-class ServerAttributesExtractorTest {
+class ClientAttributesExtractorTest {
 
-  static class TestServerAttributesGetter
-      implements ServerAttributesGetter<Map<String, String>, Void> {
+  static class TestClientAttributesGetter
+      implements ClientAttributesGetter<Map<String, String>, Void> {
 
     @Nullable
     @Override
-    public String getServerAddress(Map<String, String> request) {
+    public String getClientAddress(Map<String, String> request) {
       return request.get("address");
     }
 
     @Nullable
     @Override
-    public Integer getServerPort(Map<String, String> request) {
-      String port = request.get("port");
-      return port == null ? null : Integer.parseInt(port);
+    public Integer getClientPort(Map<String, String> request) {
+      String value = request.get("port");
+      return value == null ? null : Integer.parseInt(value);
     }
 
     @Nullable
     @Override
-    public String getServerSocketDomain(Map<String, String> request, @Nullable Void response) {
-      return request.get("socketDomain");
-    }
-
-    @Nullable
-    @Override
-    public String getServerSocketAddress(Map<String, String> request, @Nullable Void response) {
+    public String getClientSocketAddress(Map<String, String> request, @Nullable Void response) {
       return request.get("socketAddress");
     }
 
     @Nullable
     @Override
-    public Integer getServerSocketPort(Map<String, String> request, @Nullable Void response) {
-      String port = request.get("socketPort");
-      return port == null ? null : Integer.parseInt(port);
+    public Integer getClientSocketPort(Map<String, String> request, @Nullable Void response) {
+      String value = request.get("socketPort");
+      return value == null ? null : Integer.parseInt(value);
     }
   }
 
@@ -62,33 +56,31 @@ class ServerAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("address", "opentelemetry.io");
     request.put("port", "80");
-    request.put("socketDomain", "proxy.opentelemetry.io");
     request.put("socketAddress", "1.2.3.4");
     request.put("socketPort", "8080");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        ServerAttributesExtractor.create(new TestServerAttributesGetter());
+        ClientAttributesExtractor.create(new TestClientAttributesGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(NetworkAttributes.SERVER_ADDRESS, "opentelemetry.io"),
-            entry(NetworkAttributes.SERVER_PORT, 80L));
+            entry(NetworkAttributes.CLIENT_ADDRESS, "opentelemetry.io"),
+            entry(NetworkAttributes.CLIENT_PORT, 80L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(NetworkAttributes.SERVER_SOCKET_DOMAIN, "proxy.opentelemetry.io"),
-            entry(NetworkAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4"),
-            entry(NetworkAttributes.SERVER_SOCKET_PORT, 8080L));
+            entry(NetworkAttributes.CLIENT_SOCKET_ADDRESS, "1.2.3.4"),
+            entry(NetworkAttributes.CLIENT_SOCKET_PORT, 8080L));
   }
 
   @Test
   void noAttributes() {
     AttributesExtractor<Map<String, String>, Void> extractor =
-        ServerAttributesExtractor.create(new TestServerAttributesGetter());
+        ClientAttributesExtractor.create(new TestClientAttributesGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), emptyMap());
@@ -102,25 +94,41 @@ class ServerAttributesExtractorTest {
   @Test
   void doesNotSetNegativePortValues() {
     Map<String, String> request = new HashMap<>();
-    request.put("address", "opentelemetry.io");
     request.put("port", "-12");
-    request.put("socketAddress", "1.2.3.4");
     request.put("socketPort", "-42");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        ServerAttributesExtractor.create(new TestServerAttributesGetter());
+        ClientAttributesExtractor.create(new TestClientAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build()).isEmpty();
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, null, null);
+    assertThat(endAttributes.build()).isEmpty();
+  }
+
+  @Test
+  void doesNotSetDuplicates() {
+    Map<String, String> request = new HashMap<>();
+    request.put("address", "opentelemetry.io");
+    request.put("port", "80");
+    request.put("socketAddress", "opentelemetry.io");
+    request.put("socketPort", "80");
+
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        ClientAttributesExtractor.create(new TestClientAttributesGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
-        .containsOnly(entry(NetworkAttributes.SERVER_ADDRESS, "opentelemetry.io"));
+        .containsOnly(
+            entry(NetworkAttributes.CLIENT_ADDRESS, "opentelemetry.io"),
+            entry(NetworkAttributes.CLIENT_PORT, 80L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
-    assertThat(endAttributes.build())
-        .containsOnly(entry(NetworkAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4"));
+    assertThat(endAttributes.build()).isEmpty();
   }
-
-  // TODO: add more test cases around duplicate data once
-  // https://github.com/open-telemetry/semantic-conventions/issues/85 clears up
 }
