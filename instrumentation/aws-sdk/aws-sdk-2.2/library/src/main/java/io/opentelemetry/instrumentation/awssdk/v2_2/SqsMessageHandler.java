@@ -67,7 +67,7 @@ public abstract class SqsMessageHandler extends MessageHandler<Message> {
 
       @Nullable
       @Override
-      @SuppressWarnings("deprecation")
+      @SuppressWarnings({"deprecation"}) // Inheriting from interface
       public String getDestinationKind(Collection<Message> messages) {
         return null;
       }

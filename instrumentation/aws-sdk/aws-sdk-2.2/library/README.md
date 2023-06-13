@@ -33,11 +33,11 @@ configuration for this behavior.
 4. It will call the doHandleMessages function you provided wrapped in the messaging span.
 
 ```java
-Collection<SQSEvent.SQSMessage> sqsMessages;
+Collection<Message> sqsMessages;
 
 SqsMessageHandler messageHandler = new SqsMessageHandler(opentelemetry) {
   @Override
-  protected void doHandleMessages(Collection<SQSEvent.SQSMessage> messages) {
+  protected void doHandleMessages(Collection<Message> messages) {
     // Do my business logic
   }
 };
