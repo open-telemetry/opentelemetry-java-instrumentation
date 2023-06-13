@@ -30,7 +30,7 @@ import software.amazon.awssdk.core.SdkPojo;
  *     href="https://github.com/aws/aws-sdk-java-v2/blob/2.2.0/services/sqs/src/main/resources/codegen-resources/service-2.json#L821-L856">Definition
  *     JSON</a>
  */
-public final class SqsMessageAccess {
+final class SqsMessageAccess {
 
   @Nullable private static final MethodHandle GET_ATTRIBUTES;
   @Nullable private static final MethodHandle GET_MESSAGE_ATTRIBUTES;
@@ -68,7 +68,7 @@ public final class SqsMessageAccess {
   }
 
   @SuppressWarnings("unchecked")
-  public static Map<String, String> getAttributes(Object message) {
+  static Map<String, String> getAttributes(Object message) {
     if (GET_ATTRIBUTES == null) {
       return Collections.emptyMap();
     }

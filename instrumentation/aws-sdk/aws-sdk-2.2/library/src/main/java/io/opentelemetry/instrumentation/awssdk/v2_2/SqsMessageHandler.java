@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.messagehandler;
+package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -19,8 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperat
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
-import io.opentelemetry.instrumentation.awssdk.v2_2.SqsMessageAccess;
-import io.opentelemetry.instrumentation.awssdk.v2_2.SqsParentContext;
+import io.opentelemetry.instrumentation.messagehandler.MessageHandler;
 import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Level;
@@ -46,7 +45,7 @@ public abstract class SqsMessageHandler extends MessageHandler<Message> {
   @Override
   protected Instrumenter<Collection<Message>, Void> getMessageInstrumenter() {
     return Instrumenter.<Collection<Message>, Void>builder(
-            openTelemetry, "io.opentelemetry.message-handler-aws-2.2", getSpanNameExtractor())
+            openTelemetry, "io.opentelemetry.aws-sdk-2.2", getSpanNameExtractor())
         .addAttributesExtractor(getAttributesExtractor())
         .addSpanLinksExtractor(getSpanLinksExtractor())
         .buildInstrumenter(getSpanKindExtractor());
