@@ -23,4 +23,12 @@ public class HttpInboundServiceContextImpl {
   public int getLocalPort() {
     throw new UnsupportedOperationException();
   }
+
+  public InetAddress getRemoteAddr() {
+    throw new UnsupportedOperationException();
+  }
+
+  public int getRemotePort() {
+    throw new UnsupportedOperationException();
+  }
 }

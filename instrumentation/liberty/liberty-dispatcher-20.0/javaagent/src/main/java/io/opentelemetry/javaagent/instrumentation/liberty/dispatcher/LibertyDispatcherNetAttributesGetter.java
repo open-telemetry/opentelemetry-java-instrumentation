@@ -47,12 +47,12 @@ public class LibertyDispatcherNetAttributesGetter
   @Override
   @Nullable
   public String getClientSocketAddress(LibertyRequest request, @Nullable LibertyResponse response) {
-    return request.dispatcher().getRemoteHostAddress();
+    return request.getClientSocketAddress();
   }
 
   @Override
   public Integer getClientSocketPort(LibertyRequest request, @Nullable LibertyResponse response) {
-    return request.dispatcher().getRemotePort();
+    return request.getClientSocketPort();
   }
 
   @Nullable
