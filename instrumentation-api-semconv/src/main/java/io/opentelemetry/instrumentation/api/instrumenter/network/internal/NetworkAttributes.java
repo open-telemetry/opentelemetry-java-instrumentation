@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.network.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -27,6 +28,17 @@ public final class NetworkAttributes {
 
   public static final AttributeKey<String> NETWORK_PROTOCOL_VERSION =
       stringKey("network.protocol.version");
+
+  public static final AttributeKey<String> SERVER_ADDRESS = stringKey("server.address");
+
+  public static final AttributeKey<Long> SERVER_PORT = longKey("server.port");
+
+  public static final AttributeKey<String> SERVER_SOCKET_DOMAIN = stringKey("server.socket.domain");
+
+  public static final AttributeKey<String> SERVER_SOCKET_ADDRESS =
+      stringKey("server.socket.address");
+
+  public static final AttributeKey<Long> SERVER_SOCKET_PORT = longKey("server.socket.port");
 
   private NetworkAttributes() {}
 }

@@ -19,7 +19,7 @@ internal object KtorNetClientAttributesGetter : NetClientAttributesGetter<HttpRe
     return "${version.major}.${version.minor}"
   }
 
-  override fun getPeerName(request: HttpRequestData) = request.url.host
+  override fun getServerAddress(request: HttpRequestData) = request.url.host
 
-  override fun getPeerPort(request: HttpRequestData) = request.url.port
+  override fun getServerPort(request: HttpRequestData) = request.url.port
 }

@@ -47,13 +47,13 @@ public class JavaHttpClientNetAttributesGetter
 
   @Override
   @Nullable
-  public String getPeerName(HttpRequest request) {
+  public String getServerAddress(HttpRequest request) {
     return request.uri().getHost();
   }
 
   @Override
   @Nullable
-  public Integer getPeerPort(HttpRequest request) {
+  public Integer getServerPort(HttpRequest request) {
     return request.uri().getPort();
   }
 }

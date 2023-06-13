@@ -15,19 +15,19 @@ final class CassandraNetAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(CassandraRequest request) {
+  public String getServerAddress(CassandraRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(CassandraRequest request) {
+  public Integer getServerPort(CassandraRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerSocketAddress(
+  public InetSocketAddress getServerInetSocketAddress(
       CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
     return executionInfo == null ? null : executionInfo.getQueriedHost().getSocketAddress();
   }

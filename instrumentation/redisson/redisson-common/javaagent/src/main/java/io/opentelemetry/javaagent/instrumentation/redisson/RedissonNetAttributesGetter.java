@@ -14,18 +14,19 @@ final class RedissonNetAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(RedissonRequest redissonRequest) {
+  public String getServerAddress(RedissonRequest redissonRequest) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(RedissonRequest redissonRequest) {
+  public Integer getServerPort(RedissonRequest redissonRequest) {
     return null;
   }
 
   @Override
-  public InetSocketAddress getPeerSocketAddress(RedissonRequest request, @Nullable Void unused) {
+  public InetSocketAddress getServerInetSocketAddress(
+      RedissonRequest request, @Nullable Void unused) {
     return request.getAddress();
   }
 }

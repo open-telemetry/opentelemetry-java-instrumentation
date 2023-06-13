@@ -11,12 +11,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 final class LettuceConnectNetAttributesGetter implements NetClientAttributesGetter<RedisURI, Void> {
 
   @Override
-  public String getPeerName(RedisURI redisUri) {
+  public String getServerAddress(RedisURI redisUri) {
     return redisUri.getHost();
   }
 
   @Override
-  public Integer getPeerPort(RedisURI redisUri) {
+  public Integer getServerPort(RedisURI redisUri) {
     return redisUri.getPort();
   }
 }

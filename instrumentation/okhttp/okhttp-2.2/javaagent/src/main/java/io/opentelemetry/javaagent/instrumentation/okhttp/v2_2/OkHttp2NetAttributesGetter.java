@@ -51,12 +51,12 @@ public final class OkHttp2NetAttributesGetter
 
   @Override
   @Nullable
-  public String getPeerName(Request request) {
+  public String getServerAddress(Request request) {
     return request.url().getHost();
   }
 
   @Override
-  public Integer getPeerPort(Request request) {
+  public Integer getServerPort(Request request) {
     return request.url().getPort();
   }
 }

@@ -16,18 +16,19 @@ final class PlayWsClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(Request request) {
+  public String getServerAddress(Request request) {
     return request.getUri().getHost();
   }
 
   @Override
-  public Integer getPeerPort(Request request) {
+  public Integer getServerPort(Request request) {
     return request.getUri().getPort();
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerSocketAddress(Request request, @Nullable Response response) {
+  public InetSocketAddress getServerInetSocketAddress(
+      Request request, @Nullable Response response) {
     if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) response.getRemoteAddress();
     }

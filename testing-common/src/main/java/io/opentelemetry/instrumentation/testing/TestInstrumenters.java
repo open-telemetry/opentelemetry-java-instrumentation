@@ -187,13 +187,13 @@ final class TestInstrumenters {
 
     @Nullable
     @Override
-    public String getHostName(String unused) {
+    public String getServerAddress(String unused) {
       return null;
     }
 
     @Nullable
     @Override
-    public Integer getHostPort(String unused) {
+    public Integer getServerPort(String unused) {
       return null;
     }
   }

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -25,13 +26,13 @@ class InetSocketAddressNetServerAttributesGetterTest {
       implements NetServerAttributesGetter<Addresses, Addresses> {
 
     @Override
-    public String getHostName(Addresses request) {
+    public String getServerAddress(Addresses request) {
       // net.host.name and net.host.port are tested in NetClientAttributesExtractorTest
       return null;
     }
 
     @Override
-    public Integer getHostPort(Addresses request) {
+    public Integer getServerPort(Addresses request) {
       // net.host.name and net.host.port are tested in NetClientAttributesExtractorTest
       return null;
     }
@@ -42,7 +43,7 @@ class InetSocketAddressNetServerAttributesGetterTest {
     }
 
     @Override
-    public InetSocketAddress getHostSocketAddress(Addresses request) {
+    public InetSocketAddress getServerInetSocketAddress(Addresses request, Addresses response) {
       return request.host;
     }
   }
@@ -82,12 +83,14 @@ class InetSocketAddressNetServerAttributesGetterTest {
     }
     builder.put(SemanticAttributes.NET_SOCK_PEER_ADDR, request.peer.getAddress().getHostAddress());
     builder.put(SemanticAttributes.NET_SOCK_PEER_PORT, 123L);
-    builder.put(SemanticAttributes.NET_SOCK_HOST_ADDR, request.host.getAddress().getHostAddress());
-    builder.put(SemanticAttributes.NET_SOCK_HOST_PORT, 456L);
 
     assertThat(startAttributes.build()).isEqualTo(builder.build());
 
-    assertThat(endAttributes.build()).isEmpty();
+    assertThat(endAttributes.build())
+        .containsOnly(
+            entry(
+                SemanticAttributes.NET_SOCK_HOST_ADDR, request.host.getAddress().getHostAddress()),
+            entry(SemanticAttributes.NET_SOCK_HOST_PORT, 456L));
   }
 
   @Test

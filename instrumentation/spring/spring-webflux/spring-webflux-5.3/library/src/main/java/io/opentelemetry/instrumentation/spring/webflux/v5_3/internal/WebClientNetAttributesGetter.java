@@ -19,12 +19,12 @@ public final class WebClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(ClientRequest request) {
+  public String getServerAddress(ClientRequest request) {
     return request.url().getHost();
   }
 
   @Override
-  public Integer getPeerPort(ClientRequest request) {
+  public Integer getServerPort(ClientRequest request) {
     return request.url().getPort();
   }
 }

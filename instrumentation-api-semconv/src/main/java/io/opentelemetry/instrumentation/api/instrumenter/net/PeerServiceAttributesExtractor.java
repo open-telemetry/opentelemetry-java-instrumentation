@@ -57,11 +57,11 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       return;
     }
 
-    String peerName = attributesGetter.getPeerName(request);
-    String peerService = mapToPeerService(peerName);
+    String serverAddress = attributesGetter.getServerAddress(request);
+    String peerService = mapToPeerService(serverAddress);
     if (peerService == null) {
-      String sockPeerName = attributesGetter.getSockPeerName(request, response);
-      peerService = mapToPeerService(sockPeerName);
+      String serverSocketDomain = attributesGetter.getServerSocketDomain(request, response);
+      peerService = mapToPeerService(serverSocketDomain);
     }
     if (peerService != null) {
       attributes.put(SemanticAttributes.PEER_SERVICE, peerService);
@@ -69,7 +69,7 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Nullable
-  private String mapToPeerService(String endpoint) {
+  private String mapToPeerService(@Nullable String endpoint) {
     if (endpoint == null) {
       return null;
     }

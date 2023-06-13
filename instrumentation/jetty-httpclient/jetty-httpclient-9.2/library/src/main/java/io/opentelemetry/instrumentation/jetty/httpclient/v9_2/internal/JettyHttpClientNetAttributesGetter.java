@@ -46,13 +46,13 @@ public class JettyHttpClientNetAttributesGetter
 
   @Override
   @Nullable
-  public String getPeerName(Request request) {
+  public String getServerAddress(Request request) {
     return request.getHost();
   }
 
   @Override
   @Nullable
-  public Integer getPeerPort(Request request) {
+  public Integer getServerPort(Request request) {
     return request.getPort();
   }
 }

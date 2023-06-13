@@ -57,13 +57,13 @@ class NetServerAttributesExtractorBothSemconvTest {
 
     @Nullable
     @Override
-    public String getHostName(Map<String, String> request) {
+    public String getServerAddress(Map<String, String> request) {
       return request.get("hostName");
     }
 
     @Nullable
     @Override
-    public Integer getHostPort(Map<String, String> request) {
+    public Integer getServerPort(Map<String, String> request) {
       String hostPort = request.get("hostPort");
       return hostPort == null ? null : Integer.valueOf(hostPort);
     }
@@ -87,13 +87,13 @@ class NetServerAttributesExtractorBothSemconvTest {
 
     @Nullable
     @Override
-    public String getSockHostAddr(Map<String, String> request) {
+    public String getServerSocketAddress(Map<String, String> request, Void response) {
       return request.get("sockHostAddr");
     }
 
     @Nullable
     @Override
-    public Integer getSockHostPort(Map<String, String> request) {
+    public Integer getServerSocketPort(Map<String, String> request, Void response) {
       String sockHostPort = request.get("sockHostPort");
       return sockHostPort == null ? null : Integer.valueOf(sockHostPort);
     }
@@ -134,14 +134,18 @@ class NetServerAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
             entry(SemanticAttributes.NET_HOST_NAME, "opentelemetry.io"),
             entry(SemanticAttributes.NET_HOST_PORT, 80L),
+            entry(NetworkAttributes.SERVER_ADDRESS, "opentelemetry.io"),
+            entry(NetworkAttributes.SERVER_PORT, 80L),
             entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"),
             entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
-            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 42L),
-            entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"),
-            entry(SemanticAttributes.NET_SOCK_HOST_PORT, 8080L));
+            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 42L));
 
     assertThat(endAttributes.build())
         .containsOnly(
+            entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"),
+            entry(SemanticAttributes.NET_SOCK_HOST_PORT, 8080L),
+            entry(NetworkAttributes.SERVER_SOCKET_ADDRESS, "4:3:2:1::"),
+            entry(NetworkAttributes.SERVER_SOCKET_PORT, 8080L),
             entry(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
             entry(NetworkAttributes.NETWORK_TYPE, "ipv6"),
             entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),

@@ -17,13 +17,13 @@ public enum R2dbcNetAttributesGetter implements NetClientAttributesGetter<DbExec
 
   @Nullable
   @Override
-  public String getPeerName(DbExecution request) {
+  public String getServerAddress(DbExecution request) {
     return request.getHost();
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(DbExecution request) {
+  public Integer getServerPort(DbExecution request) {
     return request.getPort();
   }
 }

@@ -44,13 +44,13 @@ public class ServletNetAttributesGetter<REQUEST, RESPONSE>
 
   @Nullable
   @Override
-  public String getHostName(ServletRequestContext<REQUEST> requestContext) {
+  public String getServerAddress(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestServerName(requestContext.request());
   }
 
   @Nullable
   @Override
-  public Integer getHostPort(ServletRequestContext<REQUEST> requestContext) {
+  public Integer getServerPort(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestServerPort(requestContext.request());
   }
 
@@ -68,13 +68,17 @@ public class ServletNetAttributesGetter<REQUEST, RESPONSE>
 
   @Nullable
   @Override
-  public String getSockHostAddr(ServletRequestContext<REQUEST> requestContext) {
+  public String getServerSocketAddress(
+      ServletRequestContext<REQUEST> requestContext,
+      @Nullable ServletResponseContext<RESPONSE> response) {
     return accessor.getRequestLocalAddr(requestContext.request());
   }
 
   @Nullable
   @Override
-  public Integer getSockHostPort(ServletRequestContext<REQUEST> requestContext) {
+  public Integer getServerSocketPort(
+      ServletRequestContext<REQUEST> requestContext,
+      @Nullable ServletResponseContext<RESPONSE> response) {
     return accessor.getRequestLocalPort(requestContext.request());
   }
 }

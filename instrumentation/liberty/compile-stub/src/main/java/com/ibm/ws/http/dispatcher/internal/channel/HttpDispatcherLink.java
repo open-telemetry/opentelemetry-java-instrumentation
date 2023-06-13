@@ -19,14 +19,6 @@ public class HttpDispatcherLink {
     throw new UnsupportedOperationException();
   }
 
-  public String getLocalHostAddress() {
-    throw new UnsupportedOperationException();
-  }
-
-  public int getLocalPort() {
-    throw new UnsupportedOperationException();
-  }
-
   public HttpResponse getResponse() {
     throw new UnsupportedOperationException();
   }

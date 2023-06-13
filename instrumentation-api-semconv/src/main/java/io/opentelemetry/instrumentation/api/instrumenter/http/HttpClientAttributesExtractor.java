@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
@@ -55,6 +56,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
   private final InternalNetClientAttributesExtractor<REQUEST, RESPONSE> internalNetExtractor;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
+  private final InternalServerAttributesExtractor<REQUEST, RESPONSE> internalServerExtractor;
   private final ToIntFunction<Context> resendCountIncrementer;
 
   HttpClientAttributesExtractor(
@@ -78,18 +80,25 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       List<String> capturedResponseHeaders,
       ToIntFunction<Context> resendCountIncrementer) {
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
+    HttpNetNamePortGetter<REQUEST> namePortGetter =
+        new HttpNetNamePortGetter<>(httpAttributesGetter);
     internalNetExtractor =
         new InternalNetClientAttributesExtractor<>(
-            netAttributesGetter,
-            this::shouldCapturePeerPort,
-            new HttpNetNamePortGetter<>(httpAttributesGetter),
-            SemconvStability.emitOldHttpSemconv());
+            netAttributesGetter, namePortGetter, SemconvStability.emitOldHttpSemconv());
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             netAttributesGetter,
             HttpNetworkTransportFilter.INSTANCE,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
+    internalServerExtractor =
+        new InternalServerAttributesExtractor<>(
+            netAttributesGetter,
+            this::shouldCaptureServerPort,
+            namePortGetter,
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv(),
+            InternalServerAttributesExtractor.Mode.PEER);
     this.resendCountIncrementer = resendCountIncrementer;
   }
 
@@ -97,7 +106,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    internalNetExtractor.onStart(attributes, request);
+    internalServerExtractor.onStart(attributes, request);
 
     String fullUrl = stripSensitiveData(getter.getUrlFull(request));
     if (SemconvStability.emitStableHttpSemconv()) {
@@ -108,7 +117,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     }
   }
 
-  private boolean shouldCapturePeerPort(int port, REQUEST request) {
+  private boolean shouldCaptureServerPort(int port, REQUEST request) {
     String url = getter.getUrlFull(request);
     if (url == null) {
       return true;
@@ -131,6 +140,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
     internalNetExtractor.onEnd(attributes, request, response);
     internalNetworkExtractor.onEnd(attributes, request, response);
+    internalServerExtractor.onEnd(attributes, request, response);
 
     int resendCount = resendCountIncrementer.applyAsInt(context);
     if (resendCount > 0) {

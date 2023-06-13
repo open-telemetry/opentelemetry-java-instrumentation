@@ -26,12 +26,12 @@ class HttpUrlNetAttributesGetter implements NetClientAttributesGetter<HttpURLCon
   }
 
   @Override
-  public String getPeerName(HttpURLConnection connection) {
+  public String getServerAddress(HttpURLConnection connection) {
     return connection.getURL().getHost();
   }
 
   @Override
-  public Integer getPeerPort(HttpURLConnection connection) {
+  public Integer getServerPort(HttpURLConnection connection) {
     return connection.getURL().getPort();
   }
 }

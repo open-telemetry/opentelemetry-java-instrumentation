@@ -26,11 +26,11 @@ internal class KtorNetServerAttributesGetter : NetServerAttributesGetter<Applica
     return null
   }
 
-  override fun getHostName(request: ApplicationRequest): String {
+  override fun getServerAddress(request: ApplicationRequest): String {
     return request.local.host
   }
 
-  override fun getHostPort(request: ApplicationRequest): Int {
+  override fun getServerPort(request: ApplicationRequest): Int {
     return request.local.port
   }
 }

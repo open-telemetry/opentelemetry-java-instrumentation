@@ -78,11 +78,11 @@ public final class ApacheHttpClientRequest {
     return protocolVersion.getMajor() + "." + protocolVersion.getMinor();
   }
 
-  public String getPeerName() {
+  public String getServerAddress() {
     return uri != null ? uri.getHost() : null;
   }
 
-  public Integer getPeerPort() {
+  public Integer getServerPort() {
     if (uri == null) {
       return null;
     }
@@ -136,7 +136,7 @@ public final class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public InetSocketAddress peerSocketAddress() {
+  public InetSocketAddress getServerSocketAddress() {
     if (target == null) {
       return null;
     }

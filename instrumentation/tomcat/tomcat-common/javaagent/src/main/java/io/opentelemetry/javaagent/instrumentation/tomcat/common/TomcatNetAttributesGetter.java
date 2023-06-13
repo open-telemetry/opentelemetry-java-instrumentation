@@ -37,12 +37,12 @@ public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
-  public String getHostName(Request request) {
+  public String getServerAddress(Request request) {
     return messageBytesToString(request.serverName());
   }
 
   @Override
-  public Integer getHostPort(Request request) {
+  public Integer getServerPort(Request request) {
     return request.getServerPort();
   }
 
@@ -62,14 +62,14 @@ public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
-  public String getSockHostAddr(Request request) {
+  public String getServerSocketAddress(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_LOCAL_ADDR_ATTRIBUTE, request);
     return messageBytesToString(request.localAddr());
   }
 
   @Nullable
   @Override
-  public Integer getSockHostPort(Request request) {
+  public Integer getServerSocketPort(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_LOCALPORT_ATTRIBUTE, request);
     return request.getLocalPort();
   }

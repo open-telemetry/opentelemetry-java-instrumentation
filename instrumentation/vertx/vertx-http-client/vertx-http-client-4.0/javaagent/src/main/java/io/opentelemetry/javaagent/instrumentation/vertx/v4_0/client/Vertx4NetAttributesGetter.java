@@ -42,18 +42,19 @@ final class Vertx4NetAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(HttpClientRequest request) {
+  public String getServerAddress(HttpClientRequest request) {
     return request.getHost();
   }
 
   @Override
-  public Integer getPeerPort(HttpClientRequest request) {
+  public Integer getServerPort(HttpClientRequest request) {
     return request.getPort();
   }
 
   @Nullable
   @Override
-  public String getSockPeerAddr(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public String getServerSocketAddress(
+      HttpClientRequest request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
     }
@@ -63,7 +64,8 @@ final class Vertx4NetAttributesGetter
 
   @Nullable
   @Override
-  public String getSockPeerName(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public String getServerSocketDomain(
+      HttpClientRequest request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
     }
@@ -73,7 +75,8 @@ final class Vertx4NetAttributesGetter
 
   @Nullable
   @Override
-  public Integer getSockPeerPort(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public Integer getServerSocketPort(
+      HttpClientRequest request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
     }

@@ -41,14 +41,14 @@ public final class RatpackNetServerAttributesGetter
 
   @Nullable
   @Override
-  public String getHostName(Request request) {
+  public String getServerAddress(Request request) {
     PublicAddress publicAddress = getPublicAddress(request);
     return publicAddress == null ? null : publicAddress.get().getHost();
   }
 
   @Nullable
   @Override
-  public Integer getHostPort(Request request) {
+  public Integer getServerPort(Request request) {
     PublicAddress publicAddress = getPublicAddress(request);
     return publicAddress == null ? null : publicAddress.get().getPort();
   }

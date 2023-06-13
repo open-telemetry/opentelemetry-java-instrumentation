@@ -15,13 +15,13 @@ final class OpenSearchRestNetResponseAttributesGetter
 
   @Override
   @Nullable
-  public String getPeerName(OpenSearchRestRequest request) {
+  public String getServerAddress(OpenSearchRestRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public Integer getPeerPort(OpenSearchRestRequest request) {
+  public Integer getServerPort(OpenSearchRestRequest request) {
     return null;
   }
 
@@ -37,7 +37,7 @@ final class OpenSearchRestNetResponseAttributesGetter
 
   @Override
   @Nullable
-  public String getSockPeerAddr(OpenSearchRestRequest request, @Nullable Response response) {
+  public String getServerSocketAddress(OpenSearchRestRequest request, @Nullable Response response) {
     if (response != null && response.getHost().getAddress() != null) {
       return response.getHost().getAddress().getHostAddress();
     }

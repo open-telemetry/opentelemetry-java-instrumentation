@@ -14,24 +14,24 @@ public class RabbitChannelNetAttributesGetter
 
   @Nullable
   @Override
-  public String getPeerName(ChannelAndMethod channelAndMethod) {
+  public String getServerAddress(ChannelAndMethod channelAndMethod) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer getPeerPort(ChannelAndMethod channelAndMethod) {
+  public Integer getServerPort(ChannelAndMethod channelAndMethod) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getSockPeerAddr(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
+  public String getServerSocketAddress(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     return channelAndMethod.getChannel().getConnection().getAddress().getHostAddress();
   }
 
   @Override
-  public Integer getSockPeerPort(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
+  public Integer getServerSocketPort(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     return channelAndMethod.getChannel().getConnection().getPort();
   }
 

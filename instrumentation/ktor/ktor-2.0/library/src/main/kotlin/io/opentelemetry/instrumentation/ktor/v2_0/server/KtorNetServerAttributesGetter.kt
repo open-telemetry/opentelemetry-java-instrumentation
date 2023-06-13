@@ -18,11 +18,11 @@ internal class KtorNetServerAttributesGetter : NetServerAttributesGetter<Applica
   override fun getNetworkProtocolVersion(request: ApplicationRequest, response: ApplicationResponse?): String? =
     if (request.httpVersion.startsWith("HTTP/")) request.httpVersion.substring("HTTP/".length) else null
 
-  override fun getHostName(request: ApplicationRequest): String {
+  override fun getServerAddress(request: ApplicationRequest): String {
     return request.local.host
   }
 
-  override fun getHostPort(request: ApplicationRequest): Int {
+  override fun getServerPort(request: ApplicationRequest): Int {
     return request.local.port
   }
 
