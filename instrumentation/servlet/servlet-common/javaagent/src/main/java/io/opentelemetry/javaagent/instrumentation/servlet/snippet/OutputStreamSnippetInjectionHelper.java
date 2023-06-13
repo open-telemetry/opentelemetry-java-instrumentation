@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.snippet;
 
-import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
-
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
