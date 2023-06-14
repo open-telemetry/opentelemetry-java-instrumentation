@@ -39,19 +39,19 @@ class ServerAttributesExtractorTest {
 
     @Nullable
     @Override
-    public String getServerSocketDomain(Map<String, String> request, @Nullable Void unused) {
+    public String getServerSocketDomain(Map<String, String> request, @Nullable Void response) {
       return request.get("socketDomain");
     }
 
     @Nullable
     @Override
-    public String getServerSocketAddress(Map<String, String> request, @Nullable Void unused) {
+    public String getServerSocketAddress(Map<String, String> request, @Nullable Void response) {
       return request.get("socketAddress");
     }
 
     @Nullable
     @Override
-    public Integer getServerSocketPort(Map<String, String> request, @Nullable Void unused) {
+    public Integer getServerSocketPort(Map<String, String> request, @Nullable Void response) {
       String port = request.get("socketPort");
       return port == null ? null : Integer.parseInt(port);
     }

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.snippet;
 
+import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
+import io.opentelemetry.javaagent.bootstrap.servlet.SnippetInjectingResponseWrapper;
 import java.io.PrintWriter;
 
 public class SnippetInjectingPrintWriter extends PrintWriter {

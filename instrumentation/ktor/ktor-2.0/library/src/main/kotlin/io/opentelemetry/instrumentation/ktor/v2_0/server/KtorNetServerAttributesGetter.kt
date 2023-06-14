@@ -26,7 +26,7 @@ internal class KtorNetServerAttributesGetter : NetServerAttributesGetter<Applica
     return request.local.port
   }
 
-  override fun getSockPeerAddr(request: ApplicationRequest): String? {
+  override fun getClientSocketAddress(request: ApplicationRequest, response: ApplicationResponse?): String? {
     val remote = request.local.remoteHost
     if ("unknown" != remote && isIpAddress(remote)) {
       return remote

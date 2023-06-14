@@ -79,23 +79,27 @@ final class GrizzlyNetAttributesGetter
 
   @Nullable
   @Override
-  public String getSockPeerAddr(HttpRequestPacket request) {
+  public String getClientSocketAddress(
+      HttpRequestPacket request, @Nullable HttpResponsePacket response) {
     return request.getRemoteAddress();
   }
 
   @Override
-  public Integer getSockPeerPort(HttpRequestPacket request) {
+  public Integer getClientSocketPort(
+      HttpRequestPacket request, @Nullable HttpResponsePacket response) {
     return request.getRemotePort();
   }
 
   @Nullable
   @Override
-  public String getServerSocketAddress(HttpRequestPacket request, HttpResponsePacket response) {
+  public String getServerSocketAddress(
+      HttpRequestPacket request, @Nullable HttpResponsePacket response) {
     return request.getLocalAddress();
   }
 
   @Override
-  public Integer getServerSocketPort(HttpRequestPacket request, HttpResponsePacket response) {
+  public Integer getServerSocketPort(
+      HttpRequestPacket request, @Nullable HttpResponsePacket response) {
     return request.getLocalPort();
   }
 }

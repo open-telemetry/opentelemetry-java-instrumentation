@@ -28,14 +28,15 @@ final class WebfluxServerNetAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getPeerSocketAddress(ServerWebExchange request) {
+  public InetSocketAddress getClientInetSocketAddress(
+      ServerWebExchange request, @Nullable ServerWebExchange response) {
     return request.getRequest().getRemoteAddress();
   }
 
   @Nullable
   @Override
   public InetSocketAddress getServerInetSocketAddress(
-      ServerWebExchange request, ServerWebExchange response) {
+      ServerWebExchange request, @Nullable ServerWebExchange response) {
     return request.getRequest().getLocalAddress();
   }
 }

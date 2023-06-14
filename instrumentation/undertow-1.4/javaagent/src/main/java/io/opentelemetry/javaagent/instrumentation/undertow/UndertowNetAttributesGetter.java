@@ -49,7 +49,8 @@ public class UndertowNetAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerSocketAddress(HttpServerExchange exchange) {
+  public InetSocketAddress getClientInetSocketAddress(
+      HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
     return exchange.getConnection().getPeerAddress(InetSocketAddress.class);
   }
 

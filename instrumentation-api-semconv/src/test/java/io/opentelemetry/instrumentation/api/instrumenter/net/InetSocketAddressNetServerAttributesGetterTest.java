@@ -38,7 +38,7 @@ class InetSocketAddressNetServerAttributesGetterTest {
     }
 
     @Override
-    public InetSocketAddress getPeerSocketAddress(Addresses request) {
+    public InetSocketAddress getClientInetSocketAddress(Addresses request, Addresses response) {
       return request.peer;
     }
 
@@ -77,20 +77,21 @@ class InetSocketAddressNetServerAttributesGetterTest {
     extractor.onEnd(endAttributes, context, request, request, null);
 
     // then
-    AttributesBuilder builder = Attributes.builder();
     if (!request.isIpv4()) {
-      builder.put(SemanticAttributes.NET_SOCK_FAMILY, "inet6");
+      assertThat(startAttributes.build())
+          .isEqualTo(Attributes.of(SemanticAttributes.NET_SOCK_FAMILY, "inet6"));
+    } else {
+      assertThat(startAttributes.build()).isEmpty();
     }
-    builder.put(SemanticAttributes.NET_SOCK_PEER_ADDR, request.peer.getAddress().getHostAddress());
-    builder.put(SemanticAttributes.NET_SOCK_PEER_PORT, 123L);
-
-    assertThat(startAttributes.build()).isEqualTo(builder.build());
 
     assertThat(endAttributes.build())
         .containsOnly(
             entry(
                 SemanticAttributes.NET_SOCK_HOST_ADDR, request.host.getAddress().getHostAddress()),
-            entry(SemanticAttributes.NET_SOCK_HOST_PORT, 456L));
+            entry(SemanticAttributes.NET_SOCK_HOST_PORT, 456L),
+            entry(
+                SemanticAttributes.NET_SOCK_PEER_ADDR, request.peer.getAddress().getHostAddress()),
+            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 123L));
   }
 
   @Test
@@ -115,7 +116,8 @@ class InetSocketAddressNetServerAttributesGetterTest {
     // then
     assertThat(startAttributes.build()).isEmpty();
 
-    assertThat(endAttributes.build()).isEmpty();
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.NET_SOCK_PEER_PORT, 123L));
   }
 
   static final class Addresses {
