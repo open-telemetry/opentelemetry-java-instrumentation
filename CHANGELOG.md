@@ -76,6 +76,8 @@
   ([#8677](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8677))
 - Replace "1" with the appropriate units and don't fall back to "1" if the unit is unknown
   ([#8668](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8668))
+- Added setOpenTelemetry method to log4j appender
+  ([#8231](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8231))
 
 ### 🛠️ Bug fixes
 
