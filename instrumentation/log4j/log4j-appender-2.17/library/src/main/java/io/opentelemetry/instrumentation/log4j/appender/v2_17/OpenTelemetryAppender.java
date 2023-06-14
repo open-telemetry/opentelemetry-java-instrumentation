@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
@@ -43,6 +44,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   static final String PLUGIN_NAME = "OpenTelemetry";
 
   private final LogEventMapper<ReadOnlyStringMap> mapper;
+  @Nullable private OpenTelemetry openTelemetry;
 
   @PluginBuilderFactory
   public static <B extends Builder<B>> B builder() {
@@ -56,6 +58,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
     @PluginBuilderAttribute private String captureContextDataAttributes;
+
+    @Nullable private OpenTelemetry openTelemetry;
 
     /**
      * Sets whether experimental attributes should be set to logs. These attributes may be changed
@@ -93,6 +97,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
       return asBuilder();
     }
 
+    @CanIgnoreReturnValue
+    public B setOpenTelemetry(OpenTelemetry openTelemetry) {
+      this.openTelemetry = openTelemetry;
+      return asBuilder();
+    }
+
     @Override
     public OpenTelemetryAppender build() {
       return new OpenTelemetryAppender(
@@ -104,7 +114,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
           captureExperimentalAttributes,
           captureMapMessageAttributes,
           captureMarkerAttribute,
-          captureContextDataAttributes);
+          captureContextDataAttributes,
+          openTelemetry);
     }
   }
 
@@ -117,7 +128,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureExperimentalAttributes,
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
-      String captureContextDataAttributes) {
+      String captureContextDataAttributes,
+      OpenTelemetry openTelemetry) {
 
     super(name, filter, layout, ignoreExceptions, properties);
     this.mapper =
@@ -127,6 +139,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
             captureMapMessageAttributes,
             captureMarkerAttribute,
             splitAndFilterBlanksAndNulls(captureContextDataAttributes));
+    this.openTelemetry = openTelemetry;
   }
 
   private static List<String> splitAndFilterBlanksAndNulls(String value) {
@@ -139,14 +152,23 @@ public class OpenTelemetryAppender extends AbstractAppender {
         .collect(Collectors.toList());
   }
 
+  public void setOpenTelemetry(OpenTelemetry openTelemetry) {
+    this.openTelemetry = openTelemetry;
+  }
+
+  private OpenTelemetry getOpenTelemetry() {
+    return openTelemetry == null ? GlobalOpenTelemetry.get() : openTelemetry;
+  }
+
   @Override
   public void append(LogEvent event) {
     String instrumentationName = event.getLoggerName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }
+
     LogRecordBuilder builder =
-        GlobalOpenTelemetry.get()
+        getOpenTelemetry()
             .getLogsBridge()
             .loggerBuilder(instrumentationName)
             .build()
