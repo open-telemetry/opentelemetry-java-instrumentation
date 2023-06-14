@@ -39,7 +39,7 @@ class ServerAttributesExtractorInetSocketAddressTest {
     @Nullable
     @Override
     public InetSocketAddress getServerInetSocketAddress(
-        InetSocketAddress request, @Nullable Void unused) {
+        InetSocketAddress request, @Nullable Void response) {
       return request;
     }
   }

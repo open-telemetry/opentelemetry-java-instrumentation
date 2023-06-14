@@ -54,12 +54,12 @@ final class RestletNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Override
   @Nullable
-  public String getSockPeerAddr(Request request) {
+  public String getClientSocketAddress(Request request, @Nullable Response response) {
     return request.getClientInfo().getAddress();
   }
 
   @Override
-  public Integer getSockPeerPort(Request request) {
+  public Integer getClientSocketPort(Request request, @Nullable Response response) {
     return request.getClientInfo().getPort();
   }
 

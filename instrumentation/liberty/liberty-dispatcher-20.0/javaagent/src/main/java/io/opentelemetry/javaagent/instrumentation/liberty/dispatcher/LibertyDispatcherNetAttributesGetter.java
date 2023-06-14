@@ -46,24 +46,24 @@ public class LibertyDispatcherNetAttributesGetter
 
   @Override
   @Nullable
-  public String getSockPeerAddr(LibertyRequest request) {
-    return request.dispatcher().getRemoteHostAddress();
+  public String getClientSocketAddress(LibertyRequest request, @Nullable LibertyResponse response) {
+    return request.getClientSocketAddress();
   }
 
   @Override
-  public Integer getSockPeerPort(LibertyRequest request) {
-    return request.dispatcher().getRemotePort();
+  public Integer getClientSocketPort(LibertyRequest request, @Nullable LibertyResponse response) {
+    return request.getClientSocketPort();
   }
 
   @Nullable
   @Override
-  public String getServerSocketAddress(LibertyRequest request, LibertyResponse response) {
+  public String getServerSocketAddress(LibertyRequest request, @Nullable LibertyResponse response) {
     return request.getServerSocketAddress();
   }
 
   @Nullable
   @Override
-  public Integer getServerSocketPort(LibertyRequest request, LibertyResponse response) {
+  public Integer getServerSocketPort(LibertyRequest request, @Nullable LibertyResponse response) {
     return request.getServerSocketPort();
   }
 }

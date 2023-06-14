@@ -56,13 +56,17 @@ public class ServletNetAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public String getSockPeerAddr(ServletRequestContext<REQUEST> requestContext) {
+  public String getClientSocketAddress(
+      ServletRequestContext<REQUEST> requestContext,
+      @Nullable ServletResponseContext<RESPONSE> response) {
     return accessor.getRequestRemoteAddr(requestContext.request());
   }
 
   @Override
   @Nullable
-  public Integer getSockPeerPort(ServletRequestContext<REQUEST> requestContext) {
+  public Integer getClientSocketPort(
+      ServletRequestContext<REQUEST> requestContext,
+      @Nullable ServletResponseContext<RESPONSE> response) {
     return accessor.getRequestRemotePort(requestContext.request());
   }
 

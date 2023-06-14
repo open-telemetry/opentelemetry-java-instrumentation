@@ -5,29 +5,34 @@
 
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
-import com.ibm.ws.http.dispatcher.internal.channel.HttpDispatcherLink;
 import com.ibm.wsspi.genericbnf.HeaderField;
 import com.ibm.wsspi.http.channel.HttpRequestMessage;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 
 public class LibertyRequest {
-  private final HttpDispatcherLink httpDispatcherLink;
   private final HttpRequestMessage httpRequestMessage;
   private final String serverSocketAddress;
   private final int serverSocketPort;
+  private final String clientSocketAddress;
+  private final int clientSocketPort;
 
   public LibertyRequest(
-      HttpDispatcherLink httpDispatcherLink,
       HttpRequestMessage httpRequestMessage,
-      InetAddress serverInetAddress,
-      int serverSocketPort) {
-    this.httpDispatcherLink = httpDispatcherLink;
+      @Nullable InetAddress serverInetAddress,
+      int serverSocketPort,
+      @Nullable InetAddress clientInetAddress,
+      int clientSocketPort) {
     this.httpRequestMessage = httpRequestMessage;
-    this.serverSocketAddress = serverInetAddress.getHostAddress();
+    this.serverSocketAddress =
+        serverInetAddress == null ? null : serverInetAddress.getHostAddress();
     this.serverSocketPort = serverSocketPort;
+    this.clientSocketAddress =
+        clientInetAddress == null ? null : clientInetAddress.getHostAddress();
+    this.clientSocketPort = clientSocketPort;
   }
 
   public String getMethod() {
@@ -79,8 +84,12 @@ public class LibertyRequest {
     return serverSocketPort;
   }
 
-  public HttpDispatcherLink dispatcher() {
-    return httpDispatcherLink;
+  public String getClientSocketAddress() {
+    return clientSocketAddress;
+  }
+
+  public int getClientSocketPort() {
+    return clientSocketPort;
   }
 
   public HttpRequestMessage request() {
