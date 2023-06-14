@@ -44,7 +44,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   static final String PLUGIN_NAME = "OpenTelemetry";
 
   private final LogEventMapper<ReadOnlyStringMap> mapper;
-  private OpenTelemetry openTelemetry;
+  @Nullable private OpenTelemetry openTelemetry;
 
   @PluginBuilderFactory
   public static <B extends Builder<B>> B builder() {
@@ -59,7 +59,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
     @PluginBuilderAttribute private String captureContextDataAttributes;
 
-    private OpenTelemetry openTelemetry;
+    @Nullable private OpenTelemetry openTelemetry;
 
     /**
      * Sets whether experimental attributes should be set to logs. These attributes may be changed
@@ -156,7 +156,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     this.openTelemetry = openTelemetry;
   }
 
-  public OpenTelemetry getOpenTelemetry() {
+  private OpenTelemetry getOpenTelemetry() {
     return openTelemetry == null ? GlobalOpenTelemetry.get() : openTelemetry;
   }
 
