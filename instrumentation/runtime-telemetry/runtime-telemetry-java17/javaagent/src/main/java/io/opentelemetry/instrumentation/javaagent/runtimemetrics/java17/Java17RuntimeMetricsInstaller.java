@@ -32,7 +32,8 @@ public class Java17RuntimeMetricsInstaller implements AgentListener {
       runtimeMetrics = RuntimeMetrics.builder(openTelemetry).enableAllFeatures().build();
     } else if (config.getBoolean("otel.instrumentation.runtime-telemetry-java17.enabled", false)) {
       runtimeMetrics = RuntimeMetrics.create(openTelemetry);
-    } else if (config.getBoolean("otel.instrumentation.runtime-telemetry.enabled", defaultEnabled)) {
+    } else if (config.getBoolean(
+        "otel.instrumentation.runtime-telemetry.enabled", defaultEnabled)) {
       // This only uses metrics gathered by JMX
       runtimeMetrics = RuntimeMetrics.builder(openTelemetry).disableAllFeatures().build();
     }
