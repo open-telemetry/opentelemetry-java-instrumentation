@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import software.amazon.awssdk.core.SdkRequest;
+import software.amazon.awssdk.core.interceptor.Context;
+import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
 // helper class for calling methods that use sqs types in SqsImpl
 // if SqsImpl is not present these methods are no op
@@ -37,6 +39,17 @@ final class SqsAccess {
       return rawRequest;
     }
     return SqsImpl.injectIntoSqsSendMessageRequest(messagingPropagator, rawRequest, otelContext);
+  }
+
+  @NoMuzzle
+  static void afterReceiveMessageExecution(
+      TracingExecutionInterceptor config,
+      Context.AfterExecution context,
+      ExecutionAttributes executionAttributes) {
+    if (!enabled) {
+      return;
+    }
+    SqsImpl.afterConsumerResponse(config, executionAttributes, context);
   }
 
   private SqsAccess() {}

@@ -20,14 +20,9 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class AwsSdkInstrumentationModule extends InstrumentationModule {
+public class AwsSdkInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
   public AwsSdkInstrumentationModule() {
-    super("aws-sdk", "aws-sdk-2.2");
-  }
-
-  @Override
-  public boolean isHelperClass(String className) {
-    return className.startsWith("io.opentelemetry.contrib.awsxray.");
+    super("aws-sdk-2.2-core");
   }
 
   /**

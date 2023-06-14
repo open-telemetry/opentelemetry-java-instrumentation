@@ -20,10 +20,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SqsInstrumentationModule extends InstrumentationModule {
+public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public SqsInstrumentationModule() {
-    super("aws-sdk", "aws-sdk-2.2", "aws-sdk-2.2-sqs");
+    super("aws-sdk-2.2-sqs");
   }
 
   @Override

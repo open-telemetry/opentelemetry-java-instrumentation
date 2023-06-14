@@ -6,11 +6,16 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
+import software.amazon.awssdk.core.interceptor.Context;
+import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
+import software.amazon.awssdk.http.SdkHttpResponse;
+import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 // this class is only used from SqsAccess from method with @NoMuzzle annotation
@@ -21,7 +26,7 @@ final class SqsImpl {
     // called from advice
   }
 
-  public static SdkRequest injectIntoSqsSendMessageRequest(
+  static SdkRequest injectIntoSqsSendMessageRequest(
       TextMapPropagator messagingPropagator,
       SdkRequest rawRequest,
       io.opentelemetry.context.Context otelContext) {
@@ -29,9 +34,12 @@ final class SqsImpl {
     Map<String, MessageAttributeValue> messageAttributes =
         new HashMap<>(request.messageAttributes());
 
-    // Need to use a full method to allow @NoMuzzle annotation (@NoMuzzle is not transitively
-    // applied to called methods)
-    messagingPropagator.inject(otelContext, messageAttributes, SqsImpl::injectSqsAttribute);
+    messagingPropagator.inject(
+        otelContext,
+        messageAttributes,
+        (carrier, k, v) -> {
+          carrier.put(k, MessageAttributeValue.builder().stringValue(v).dataType("String").build());
+        });
 
     if (messageAttributes.size() > 10) { // Too many attributes, we don't want to break the call.
       return request;
@@ -39,10 +47,48 @@ final class SqsImpl {
     return request.toBuilder().messageAttributes(messageAttributes).build();
   }
 
-  private static void injectSqsAttribute(
-      @Nullable Map<String, MessageAttributeValue> carrier, String k, String v) {
-    if (carrier != null) {
-      carrier.put(k, MessageAttributeValue.builder().stringValue(v).dataType("String").build());
+  /** Create and close CONSUMER span for each message consumed. */
+  static void afterConsumerResponse(
+      TracingExecutionInterceptor config,
+      ExecutionAttributes executionAttributes,
+      Context.AfterExecution context) {
+    ReceiveMessageResponse response = (ReceiveMessageResponse) context.response();
+    SdkHttpResponse httpResponse = context.httpResponse();
+    for (Message message : response.messages()) {
+      createConsumerSpan(config, message, executionAttributes, httpResponse);
+    }
+  }
+
+  private static void createConsumerSpan(
+      TracingExecutionInterceptor config,
+      Message message,
+      ExecutionAttributes executionAttributes,
+      SdkHttpResponse httpResponse) {
+
+    io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.root();
+
+    TextMapPropagator messagingPropagator = config.getMessagingPropagator();
+    if (messagingPropagator != null) {
+      parentContext =
+          SqsParentContext.ofMessageAttributes(message.messageAttributes(), messagingPropagator);
+    }
+
+    if (config.shouldUseXrayPropagator()
+        && parentContext == io.opentelemetry.context.Context.root()) {
+      parentContext = SqsParentContext.ofSystemAttributes(message.attributesAsStrings());
+    }
+
+    Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter =
+        config.getConsumerInstrumenter();
+    if (consumerInstrumenter.shouldStart(parentContext, executionAttributes)) {
+      io.opentelemetry.context.Context context =
+          consumerInstrumenter.start(parentContext, executionAttributes);
+
+      // TODO: Even if we keep HTTP attributes (see afterMarshalling), does it make sense here
+      //  per-message?
+      // TODO: Should we really create root spans if we can't extract anything, or should we attach
+      //  to the current context?
+      consumerInstrumenter.end(context, executionAttributes, httpResponse, null);
     }
   }
 }

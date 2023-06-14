@@ -16,10 +16,7 @@ import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.ClientType;
@@ -32,7 +29,6 @@ import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
-import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 /** AWS request execution interceptor. */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
@@ -53,6 +49,20 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter;
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
+
+  Instrumenter<ExecutionAttributes, SdkHttpResponse> getConsumerInstrumenter() {
+    return consumerInstrumenter;
+  }
+
+  @Nullable
+  TextMapPropagator getMessagingPropagator() {
+    return messagingPropagator;
+  }
+
+  boolean shouldUseXrayPropagator() {
+    return useXrayPropagator;
+  }
+
   @Nullable private final TextMapPropagator messagingPropagator;
   private final boolean useXrayPropagator;
   private final FieldMapper fieldMapper;
@@ -256,7 +266,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void afterExecution(
       Context.AfterExecution context, ExecutionAttributes executionAttributes) {
     if (SqsReceiveMessageRequestAccess.isInstance(context.request())) {
-      afterConsumerResponse(executionAttributes, context.response(), context.httpResponse());
+      SqsAccess.afterReceiveMessageExecution(this, context, executionAttributes);
     }
 
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
@@ -275,45 +285,6 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       requestInstrumenter.end(otelContext, executionAttributes, httpResponse, null);
     }
     clearAttributes(executionAttributes);
-  }
-
-  /** Create and close CONSUMER span for each message consumed. */
-  private void afterConsumerResponse(
-      ExecutionAttributes executionAttributes, SdkResponse response, SdkHttpResponse httpResponse) {
-    List<Object> messages = getMessages(response);
-    for (Object message : messages) {
-      createConsumerSpan(message, executionAttributes, httpResponse);
-    }
-  }
-
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  private void createConsumerSpan(
-      Object message, ExecutionAttributes executionAttributes, SdkHttpResponse httpResponse) {
-
-    io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.root();
-
-    if (messagingPropagator != null) {
-      // TODO: Dirty cast, only occurs due to partial removal of reflection.
-      parentContext =
-          SqsParentContext.ofMessageAttributes(
-              (Map<String, MessageAttributeValue>)
-                  (Map) SqsMessageAccess.getMessageAttributes(message),
-              messagingPropagator);
-    }
-
-    if (useXrayPropagator && parentContext == io.opentelemetry.context.Context.root()) {
-      parentContext = SqsParentContext.ofSystemAttributes(SqsMessageAccess.getAttributes(message));
-    }
-    if (consumerInstrumenter.shouldStart(parentContext, executionAttributes)) {
-      io.opentelemetry.context.Context context =
-          consumerInstrumenter.start(parentContext, executionAttributes);
-
-      // TODO: Even if we keep HTTP attributes (see afterMarshalling), does it make sense here
-      //  per-message?
-      // TODO: Should we really create root spans if we can't extract anything, or should we attach
-      //  to the current context?
-      consumerInstrumenter.end(context, executionAttributes, httpResponse, null);
-    }
   }
 
   // Certain headers in the request like User-Agent are only available after execution.
@@ -364,11 +335,5 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
    */
   static io.opentelemetry.context.Context getContext(ExecutionAttributes attributes) {
     return attributes.getAttribute(CONTEXT_ATTRIBUTE);
-  }
-
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  static List<Object> getMessages(SdkResponse response) {
-    Optional<List> optional = response.getValueForField("Messages", List.class);
-    return optional.isPresent() ? optional.get() : Collections.emptyList();
   }
 }
