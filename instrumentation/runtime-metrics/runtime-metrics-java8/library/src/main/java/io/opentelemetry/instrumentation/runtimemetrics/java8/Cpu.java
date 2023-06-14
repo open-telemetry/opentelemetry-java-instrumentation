@@ -89,7 +89,7 @@ public final class Cpu {
         meter
             .gaugeBuilder("process.runtime.jvm.system.cpu.load_1m")
             .setDescription("Average CPU load of the whole system for the last minute")
-            .setUnit("{run_queue_length}")
+            .setUnit("1")
             .buildWithCallback(
                 observableMeasurement -> {
                   double loadAverage = osBean.getSystemLoadAverage();
