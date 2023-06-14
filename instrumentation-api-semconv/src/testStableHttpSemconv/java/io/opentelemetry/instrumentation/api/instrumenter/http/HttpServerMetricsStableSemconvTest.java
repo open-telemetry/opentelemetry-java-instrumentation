@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 class HttpServerMetricsStableSemconvTest {
 
   static final double[] DURATION_BUCKETS =
-      HistogramAdviceUtil.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
+      HttpMetricsUtil.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
 
   @Test
   void collectsMetrics() {
