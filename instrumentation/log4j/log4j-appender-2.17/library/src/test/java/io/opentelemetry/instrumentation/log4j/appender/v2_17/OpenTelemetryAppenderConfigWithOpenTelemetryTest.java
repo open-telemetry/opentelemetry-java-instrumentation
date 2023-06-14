@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -38,6 +39,7 @@ class OpenTelemetryAppenderConfigWithOpenTelemetryTest extends OpenTelemetryAppe
             .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
             .build();
 
+    GlobalOpenTelemetry.resetForTest();
     openTelemetry = OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build();
     setOpenTelemetry(openTelemetry);
   }
@@ -60,7 +62,7 @@ class OpenTelemetryAppenderConfigWithOpenTelemetryTest extends OpenTelemetryAppe
     OpenTelemetryAppender appender =
         OpenTelemetryAppender.builder()
             .setName("OpenTelemetryAppender")
-            .setOpenTelemtry(openTelemetry)
+            .setOpenTelemetry(openTelemetry)
             .build();
     appender.start();
 
