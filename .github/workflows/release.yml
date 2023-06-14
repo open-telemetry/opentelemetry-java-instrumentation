@@ -219,11 +219,3 @@ jobs:
           gh pr create --title "$message" \
                        --body "$body" \
                        --base main
-
-  create-operator-pull-request:
-    needs: release
-    uses: ./.github/workflows/reusable-create-operator-pull-request.yml
-    with:
-      version: ${{ needs.release.outputs.version }}
-    secrets:
-      OPENTELEMETRYBOT_GITHUB_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
