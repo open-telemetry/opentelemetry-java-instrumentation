@@ -17,11 +17,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+@SuppressWarnings("SystemOut")
 public class GreetingServlet extends HttpServlet {
   private static final long serialVersionUID = 1L;
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    System.err.println("called GreetingServlet doGet");
     String path = (req.getContextPath() + "/headers").replace("//", "/");
     URL url = new URL("http", "localhost", req.getLocalPort(), path);
     URLConnection urlConnection = url.openConnection();
@@ -34,6 +36,7 @@ public class GreetingServlet extends HttpServlet {
           bytesRead + " bytes read by " + urlConnection.getClass().getName() + "\n" + responseBody);
       outputStream.flush();
     }
+    System.err.println("GreetingServlet doGet completed");
   }
 
   // We have to run on Java 8, so no Java 9 stream transfer goodies for us.
