@@ -48,7 +48,7 @@ public final class Classes {
         meter
             .counterBuilder("process.runtime.jvm.classes.loaded")
             .setDescription("Number of classes loaded since JVM start")
-            .setUnit("1")
+            .setUnit("{class}")
             .buildWithCallback(
                 observableMeasurement ->
                     observableMeasurement.record(classBean.getTotalLoadedClassCount())));
@@ -57,7 +57,7 @@ public final class Classes {
         meter
             .counterBuilder("process.runtime.jvm.classes.unloaded")
             .setDescription("Number of classes unloaded since JVM start")
-            .setUnit("1")
+            .setUnit("{class}")
             .buildWithCallback(
                 observableMeasurement ->
                     observableMeasurement.record(classBean.getUnloadedClassCount())));
@@ -65,7 +65,7 @@ public final class Classes {
         meter
             .upDownCounterBuilder("process.runtime.jvm.classes.current_loaded")
             .setDescription("Number of classes currently loaded")
-            .setUnit("1")
+            .setUnit("{class}")
             .buildWithCallback(
                 observableMeasurement ->
                     observableMeasurement.record(classBean.getLoadedClassCount())));

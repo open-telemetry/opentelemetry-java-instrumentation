@@ -47,7 +47,7 @@ final class Bridging {
 
   static String baseUnit(Meter.Id id) {
     String baseUnit = id.getBaseUnit();
-    return baseUnit == null ? "1" : baseUnit;
+    return baseUnit == null ? "" : baseUnit;
   }
 
   static String statisticInstrumentName(
