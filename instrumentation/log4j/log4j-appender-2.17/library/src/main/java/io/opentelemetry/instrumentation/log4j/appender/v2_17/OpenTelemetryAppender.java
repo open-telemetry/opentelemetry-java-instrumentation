@@ -98,7 +98,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
 
     @CanIgnoreReturnValue
-    public B setOpenTelemtry(OpenTelemetry openTelemetry) {
+    public B setOpenTelemetry(OpenTelemetry openTelemetry) {
       this.openTelemetry = openTelemetry;
       return asBuilder();
     }
