@@ -14,7 +14,7 @@ import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 // this class is only used from SqsAccess from method with @NoMuzzle annotation
-public class SqsImpl {
+final class SqsImpl {
   private SqsImpl() {}
 
   public static void init() {

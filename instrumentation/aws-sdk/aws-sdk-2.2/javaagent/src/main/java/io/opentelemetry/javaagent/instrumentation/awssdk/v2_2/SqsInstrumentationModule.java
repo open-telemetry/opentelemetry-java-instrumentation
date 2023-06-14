@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.awssdk.v2_2.SqsImpl;
+import io.opentelemetry.instrumentation.awssdk.v2_2.SqsAdviceBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -48,8 +48,9 @@ public class SqsInstrumentationModule extends InstrumentationModule {
   public static class RegisterAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit() {
-      // using SqsImpl class here to make sure it is available from SqsAccess
-      SqsImpl.init();
+      // (indirectly) using SqsImpl class here to make sure it is available from SqsAccess
+      // (injected into app classloader) and checked by Muzzle
+      SqsAdviceBridge.init();
     }
   }
 }

@@ -11,7 +11,7 @@ import software.amazon.awssdk.core.SdkRequest;
 
 // helper class for calling methods that use sqs types in SqsImpl
 // if SqsImpl is not present these methods are no op
-public final class SqsAccess {
+final class SqsAccess {
   private static final boolean enabled = isSqsImplPresent();
 
   private static boolean isSqsImplPresent() {
@@ -29,7 +29,7 @@ public final class SqsAccess {
   }
 
   @NoMuzzle
-  public static SdkRequest injectIntoSqsSendMessageRequest(
+  static SdkRequest injectIntoSqsSendMessageRequest(
       TextMapPropagator messagingPropagator,
       SdkRequest rawRequest,
       io.opentelemetry.context.Context otelContext) {
