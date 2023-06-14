@@ -45,7 +45,7 @@ class CpuTest {
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("Average CPU load of the whole system for the last minute")
-                        .hasUnit("{run_queue_length}")
+                        .hasUnit("1")
                         .hasDoubleGaugeSatisfying(
                             gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(2.2)))));
     testing.waitAndAssertMetrics(
