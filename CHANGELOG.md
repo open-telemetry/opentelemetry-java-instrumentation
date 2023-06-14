@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.27.0 (2023-06-14)
+
 ### Migration notes
 
 - Jersey 3.0 instrumentation suppression keys have changed from `jaxrs-2.0` to `jaxrs-3.0`,
