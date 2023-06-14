@@ -56,6 +56,13 @@ public class AsyncGreetingServlet extends GreetingServlet {
 
   private static void handleRequest(AsyncContext ac) {
     System.err.println("dispatch async request");
-    ac.dispatch("/greeting");
+    try {
+      ac.dispatch("/greeting");
+      System.err.println("async request dispatched");
+    } catch (Throwable throwable) {
+      System.err.println("dispatching async request failed");
+      throwable.printStackTrace();
+      throw throwable;
+    }
   }
 }
