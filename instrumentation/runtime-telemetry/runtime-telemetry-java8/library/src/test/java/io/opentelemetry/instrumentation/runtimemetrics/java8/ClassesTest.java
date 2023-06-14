@@ -44,7 +44,7 @@ class ClassesTest {
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("Number of classes loaded since JVM start")
-                        .hasUnit("1")
+                        .hasUnit("{class}")
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.isMonotonic()
@@ -60,7 +60,7 @@ class ClassesTest {
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("Number of classes unloaded since JVM start")
-                        .hasUnit("1")
+                        .hasUnit("{class}")
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.isMonotonic()
@@ -76,7 +76,7 @@ class ClassesTest {
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("Number of classes currently loaded")
-                        .hasUnit("1")
+                        .hasUnit("{class}")
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.isNotMonotonic()

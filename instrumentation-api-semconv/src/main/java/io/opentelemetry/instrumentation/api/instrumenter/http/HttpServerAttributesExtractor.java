@@ -15,7 +15,9 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
@@ -69,6 +71,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   private final InternalNetServerAttributesExtractor<REQUEST, RESPONSE> internalNetExtractor;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final InternalServerAttributesExtractor<REQUEST, RESPONSE> internalServerExtractor;
+  private final InternalClientAttributesExtractor<REQUEST, RESPONSE> internalClientExtractor;
   private final Function<Context, String> httpRouteHolderGetter;
 
   HttpServerAttributesExtractor(
@@ -117,6 +120,12 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
             InternalServerAttributesExtractor.Mode.HOST);
+    internalClientExtractor =
+        new InternalClientAttributesExtractor<>(
+            netAttributesGetter,
+            new ClientAddressGetter<>(httpAttributesGetter),
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv());
     this.httpRouteHolderGetter = httpRouteHolderGetter;
   }
 
@@ -127,9 +136,9 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     internalUrlExtractor.onStart(attributes, request);
     internalNetExtractor.onStart(attributes, request);
     internalServerExtractor.onStart(attributes, request);
+    internalClientExtractor.onStart(attributes, request);
 
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.getHttpRoute(request));
-    internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
   }
 
   private boolean shouldCaptureServerPort(int port, REQUEST request) {
@@ -156,6 +165,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
 
     internalNetworkExtractor.onEnd(attributes, request, response);
     internalServerExtractor.onEnd(attributes, request, response);
+    internalClientExtractor.onEnd(attributes, request, response);
 
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteHolderGetter.apply(context));
   }
@@ -185,26 +195,6 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     return null;
   }
 
-  @Nullable
-  private String clientIp(REQUEST request) {
-    // try Forwarded
-    String forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "forwarded"));
-    if (forwarded != null) {
-      forwarded = extractClientIpFromForwardedHeader(forwarded);
-      if (forwarded != null) {
-        return forwarded;
-      }
-    }
-
-    // try X-Forwarded-For
-    forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "x-forwarded-for"));
-    if (forwarded != null) {
-      return extractClientIpFromForwardedForHeader(forwarded);
-    }
-
-    return null;
-  }
-
   /**
    * This method is internal and is hence not for public use. Its API is unstable and can change at
    * any time.
@@ -212,5 +202,43 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public SpanKey internalGetSpanKey() {
     return SpanKey.HTTP_SERVER;
+  }
+
+  private static final class ClientAddressGetter<REQUEST>
+      implements FallbackNamePortGetter<REQUEST> {
+
+    private final HttpServerAttributesGetter<REQUEST, ?> getter;
+
+    private ClientAddressGetter(HttpServerAttributesGetter<REQUEST, ?> getter) {
+      this.getter = getter;
+    }
+
+    @Nullable
+    @Override
+    public String name(REQUEST request) {
+      // try Forwarded
+      String forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "forwarded"));
+      if (forwarded != null) {
+        forwarded = extractClientIpFromForwardedHeader(forwarded);
+        if (forwarded != null) {
+          return forwarded;
+        }
+      }
+
+      // try X-Forwarded-For
+      forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "x-forwarded-for"));
+      if (forwarded != null) {
+        return extractClientIpFromForwardedForHeader(forwarded);
+      }
+
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public Integer port(REQUEST request) {
+      // TODO: client.port will be implemented in a future PR
+      return null;
+    }
   }
 }

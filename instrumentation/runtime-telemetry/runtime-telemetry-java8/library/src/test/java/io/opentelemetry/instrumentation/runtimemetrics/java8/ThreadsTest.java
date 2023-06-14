@@ -44,7 +44,7 @@ class ThreadsTest {
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("Number of executing threads")
-                        .hasUnit("1")
+                        .hasUnit("{thread}")
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.isNotMonotonic()

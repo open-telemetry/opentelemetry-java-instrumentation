@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InetSocketAddressUtil;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import java.net.InetSocketAddress;
@@ -20,7 +21,9 @@ import javax.annotation.Nullable;
  * the various network attributes in a type-generic way.
  */
 public interface NetServerAttributesGetter<REQUEST, RESPONSE>
-    extends NetworkAttributesGetter<REQUEST, RESPONSE>, ServerAttributesGetter<REQUEST, RESPONSE> {
+    extends NetworkAttributesGetter<REQUEST, RESPONSE>,
+        ServerAttributesGetter<REQUEST, RESPONSE>,
+        ClientAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
   default String getTransport(REQUEST request) {
@@ -60,7 +63,8 @@ public interface NetServerAttributesGetter<REQUEST, RESPONSE>
   @Override
   default String getNetworkType(REQUEST request, @Nullable RESPONSE response) {
     return InetSocketAddressUtil.getNetworkType(
-        getPeerSocketAddress(request), getServerInetSocketAddress(request, null));
+        getClientInetSocketAddress(request, response),
+        getServerInetSocketAddress(request, response));
   }
 
   /** {@inheritDoc} */
@@ -131,7 +135,7 @@ public interface NetServerAttributesGetter<REQUEST, RESPONSE>
   @Nullable
   default String getSockFamily(REQUEST request) {
     return InetSocketAddressUtil.getSockFamily(
-        getPeerSocketAddress(request), getServerInetSocketAddress(request, null));
+        getClientInetSocketAddress(request, null), getServerInetSocketAddress(request, null));
   }
 
   /**
@@ -139,10 +143,22 @@ public interface NetServerAttributesGetter<REQUEST, RESPONSE>
    *
    * <p>Implementing this method is equivalent to implementing all three of {@link
    * #getSockFamily(Object)}, {@link #getSockPeerAddr(Object)} and {@link #getSockPeerPort(Object)}.
+   *
+   * @deprecated This method is deprecated and will be removed in the following release. Implement
+   *     {@link #getClientInetSocketAddress(Object, Object)} instead.
    */
+  @Deprecated
   @Nullable
   default InetSocketAddress getPeerSocketAddress(REQUEST request) {
     return null;
+  }
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  default InetSocketAddress getClientInetSocketAddress(
+      REQUEST request, @Nullable RESPONSE response) {
+    return getPeerSocketAddress(request);
   }
 
   /**
@@ -155,10 +171,14 @@ public interface NetServerAttributesGetter<REQUEST, RESPONSE>
    * #getPeerSocketAddress(Object)} method. If this method is not implemented, it will simply return
    * {@code null}. If the instrumented library does not expose {@link InetSocketAddress} in its API,
    * you might want to implement this method instead of {@link #getPeerSocketAddress(Object)}.
+   *
+   * @deprecated This method is deprecated and will be removed in the following release. Implement
+   *     {@link #getClientSocketAddress(Object, Object)} instead.
    */
+  @Deprecated
   @Nullable
   default String getSockPeerAddr(REQUEST request) {
-    return InetSocketAddressUtil.getIpAddress(getPeerSocketAddress(request));
+    return InetSocketAddressUtil.getIpAddress(getClientInetSocketAddress(request, null));
   }
 
   /**
@@ -170,10 +190,28 @@ public interface NetServerAttributesGetter<REQUEST, RESPONSE>
    * #getPeerSocketAddress(Object)} method. If this method is not implemented, it will simply return
    * {@code null}. If the instrumented library does not expose {@link InetSocketAddress} in its API,
    * you might want to implement this method instead of {@link #getPeerSocketAddress(Object)}.
+   *
+   * @deprecated This method is deprecated and will be removed in the following release. Implement
+   *     {@link #getClientSocketPort(Object, Object)} instead.
    */
+  @Deprecated
   @Nullable
   default Integer getSockPeerPort(REQUEST request) {
-    return InetSocketAddressUtil.getPort(getPeerSocketAddress(request));
+    return InetSocketAddressUtil.getPort(getClientInetSocketAddress(request, null));
+  }
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  default String getClientSocketAddress(REQUEST request, @Nullable RESPONSE response) {
+    return getSockPeerAddr(request);
+  }
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  default Integer getClientSocketPort(REQUEST request, @Nullable RESPONSE response) {
+    return getSockPeerPort(request);
   }
 
   /**

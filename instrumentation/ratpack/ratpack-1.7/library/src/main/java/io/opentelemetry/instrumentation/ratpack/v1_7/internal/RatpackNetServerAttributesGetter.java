@@ -62,7 +62,7 @@ public final class RatpackNetServerAttributesGetter
   }
 
   @Override
-  public Integer getSockPeerPort(Request request) {
+  public Integer getClientSocketPort(Request request, @Nullable Response response) {
     return request.getRemoteAddress().getPort();
   }
 }

@@ -51,7 +51,7 @@ public final class Threads {
         meter
             .upDownCounterBuilder("process.runtime.jvm.threads.count")
             .setDescription("Number of executing threads")
-            .setUnit("1")
+            .setUnit("{thread}")
             .buildWithCallback(
                 observableMeasurement -> {
                   observableMeasurement.record(

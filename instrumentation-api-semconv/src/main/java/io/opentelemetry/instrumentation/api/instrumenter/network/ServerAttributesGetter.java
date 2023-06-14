@@ -25,7 +25,9 @@ public interface ServerAttributesGetter<REQUEST, RESPONSE> {
    * <p>Examples: {@code example.com}
    */
   @Nullable
-  String getServerAddress(REQUEST request);
+  default String getServerAddress(REQUEST request) {
+    return null;
+  }
 
   /**
    * Return the logical server port number.
@@ -33,12 +35,14 @@ public interface ServerAttributesGetter<REQUEST, RESPONSE> {
    * <p>Examples: {@code 80}, {@code 8080}, {@code 443}
    */
   @Nullable
-  Integer getServerPort(REQUEST request);
+  default Integer getServerPort(REQUEST request) {
+    return null;
+  }
 
   /**
    * Returns an {@link InetSocketAddress} object representing the server socket address.
    *
-   * <p>Implementing this method is equivalent to implementing all three of {@link
+   * <p>Implementing this method is equivalent to implementing all of {@link
    * #getServerSocketDomain(Object, Object)}, {@link #getServerSocketAddress(Object, Object)} and
    * {@link #getServerSocketPort(Object, Object)}.
    */

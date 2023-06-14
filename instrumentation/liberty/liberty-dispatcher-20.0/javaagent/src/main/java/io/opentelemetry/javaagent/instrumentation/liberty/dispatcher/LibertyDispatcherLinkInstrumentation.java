@@ -52,7 +52,6 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.This HttpDispatcherLink httpDispatcherLink,
         @Advice.FieldValue("isc") HttpInboundServiceContextImpl isc,
         @Advice.Local("otelRequest") LibertyRequest request,
         @Advice.Local("otelContext") Context context,
@@ -60,7 +59,11 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
       Context parentContext = Java8BytecodeBridge.currentContext();
       request =
           new LibertyRequest(
-              httpDispatcherLink, isc.getRequest(), isc.getLocalAddr(), isc.getLocalPort());
+              isc.getRequest(),
+              isc.getLocalAddr(),
+              isc.getLocalPort(),
+              isc.getRemoteAddr(),
+              isc.getRemotePort());
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }

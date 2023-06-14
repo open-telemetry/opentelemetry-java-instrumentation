@@ -48,14 +48,14 @@ public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Override
   @Nullable
-  public String getSockPeerAddr(Request request) {
+  public String getClientSocketAddress(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_HOST_ADDR_ATTRIBUTE, request);
     return messageBytesToString(request.remoteAddr());
   }
 
   @Override
   @Nullable
-  public Integer getSockPeerPort(Request request) {
+  public Integer getClientSocketPort(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_REMOTEPORT_ATTRIBUTE, request);
     return request.getRemotePort();
   }

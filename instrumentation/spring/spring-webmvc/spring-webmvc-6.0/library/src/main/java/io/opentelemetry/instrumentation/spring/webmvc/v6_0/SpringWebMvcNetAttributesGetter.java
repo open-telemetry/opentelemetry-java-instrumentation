@@ -49,12 +49,14 @@ enum SpringWebMvcNetAttributesGetter
 
   @Override
   @Nullable
-  public String getSockPeerAddr(HttpServletRequest request) {
+  public String getClientSocketAddress(
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getRemoteAddr();
   }
 
   @Override
-  public Integer getSockPeerPort(HttpServletRequest request) {
+  public Integer getClientSocketPort(
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getRemotePort();
   }
 
