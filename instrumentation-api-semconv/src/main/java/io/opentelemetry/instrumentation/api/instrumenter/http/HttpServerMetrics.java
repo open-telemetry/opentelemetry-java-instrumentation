@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpRequestBodySize;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpResponseBodySize;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createDurationHistogram;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.nanosToUnit;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerDurationAndSizeView;
 import static java.util.logging.Level.FINE;
@@ -14,7 +16,6 @@ import static java.util.logging.Level.FINE;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.api.metrics.Meter;
@@ -22,7 +23,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -31,8 +31,6 @@ import java.util.logging.Logger;
  * server metrics</a>.
  */
 public final class HttpServerMetrics implements OperationListener {
-
-  private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
 
   private static final ContextKey<State> HTTP_SERVER_REQUEST_METRICS_STATE =
       ContextKey.named("http-server-request-metrics-state");
@@ -60,14 +58,9 @@ public final class HttpServerMetrics implements OperationListener {
             .setUnit("{requests}")
             .setDescription("The number of concurrent HTTP requests that are currently in-flight")
             .build();
-
-    DoubleHistogramBuilder durationBuilder =
-        meter
-            .histogramBuilder("http.server.duration")
-            .setUnit("s")
-            .setDescription("The duration of the inbound HTTP request");
-    HistogramAdviceUtil.setHttpDurationBuckets(durationBuilder);
-    duration = durationBuilder.build();
+    duration =
+        createDurationHistogram(
+            meter, "http.server.duration", "The duration of the inbound HTTP request");
     requestSize =
         meter
             .histogramBuilder("http.server.request.size")
@@ -110,7 +103,7 @@ public final class HttpServerMetrics implements OperationListener {
     Attributes durationAndSizeAttributes =
         applyServerDurationAndSizeView(state.startAttributes(), endAttributes);
     duration.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_S, durationAndSizeAttributes, context);
+        nanosToUnit(endNanos - state.startTimeNanos()), durationAndSizeAttributes, context);
 
     Long requestBodySize = getHttpRequestBodySize(endAttributes, state.startAttributes());
     if (requestBodySize != null) {
