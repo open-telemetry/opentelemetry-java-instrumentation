@@ -19,85 +19,88 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperat
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
-import io.opentelemetry.instrumentation.messagehandler.MessageHandler;
-import java.util.Collection;
+import io.opentelemetry.instrumentation.messagehandler.MessageReceiver;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkPojo;
+import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 
-public abstract class SqsMessageHandler extends MessageHandler<Message> {
-  private static final Logger logger = Logger.getLogger(SqsMessageHandler.class.getName());
-
+public class SqsMessageReceiver
+    extends MessageReceiver<ReceiveMessageRequest, ReceiveMessageResponse> {
   private final OpenTelemetry openTelemetry;
-  private final MessageOperation messageOperation;
   private final String destination;
+  private final SqsClient sqsClient;
 
-  public SqsMessageHandler(
-      OpenTelemetry openTelemetry, String destination, MessageOperation messageOperation) {
+  public SqsMessageReceiver(OpenTelemetry openTelemetry, String destination, SqsClient sqsClient) {
     this.openTelemetry = openTelemetry;
-    this.messageOperation = messageOperation;
     this.destination = destination;
+    this.sqsClient = sqsClient;
   }
 
   @Override
-  protected Instrumenter<Collection<Message>, Void> getMessageInstrumenter() {
-    return Instrumenter.<Collection<Message>, Void>builder(
+  public ReceiveMessageResponse doReceive(ReceiveMessageRequest request) {
+    return sqsClient.receiveMessage(request);
+  }
+
+  @Override
+  protected Instrumenter<ReceiveMessageResponse, Void> getMessageInstrumenter() {
+    return Instrumenter.<ReceiveMessageResponse, Void>builder(
             openTelemetry, "io.opentelemetry.aws-sdk-2.2", getSpanNameExtractor())
         .addAttributesExtractor(getAttributesExtractor())
         .addSpanLinksExtractor(getSpanLinksExtractor())
         .buildInstrumenter(getSpanKindExtractor());
   }
 
-  protected SpanNameExtractor<Collection<Message>> getSpanNameExtractor() {
-    return MessagingSpanNameExtractor.create(getMessageingAttributesGetter(), messageOperation);
+  protected SpanNameExtractor<ReceiveMessageResponse> getSpanNameExtractor() {
+    return MessagingSpanNameExtractor.create(
+        getMessageingAttributesGetter(), MessageOperation.RECEIVE);
   }
 
-  private MessagingAttributesGetter<Collection<Message>, Void> getMessageingAttributesGetter() {
+  protected MessagingAttributesGetter<ReceiveMessageResponse, Void>
+      getMessageingAttributesGetter() {
     String destination = this.destination;
 
-    return new MessagingAttributesGetter<Collection<Message>, Void>() {
+    return new MessagingAttributesGetter<ReceiveMessageResponse, Void>() {
       @Nullable
       @Override
-      public String getSystem(Collection<Message> messages) {
+      public String getSystem(ReceiveMessageResponse v) {
         return "AmazonSQS";
       }
 
       @Nullable
       @Override
       @SuppressWarnings({"deprecation"}) // Inheriting from interface
-      public String getDestinationKind(Collection<Message> messages) {
+      public String getDestinationKind(ReceiveMessageResponse v) {
         return null;
       }
 
       @Nullable
       @Override
-      public String getDestination(Collection<Message> messages) {
+      public String getDestination(ReceiveMessageResponse v) {
         return destination;
       }
 
       @Override
-      public boolean isTemporaryDestination(Collection<Message> messages) {
+      public boolean isTemporaryDestination(ReceiveMessageResponse v) {
         return false;
       }
 
       @Nullable
       @Override
-      public String getConversationId(Collection<Message> messages) {
+      public String getConversationId(ReceiveMessageResponse v) {
         return null;
       }
 
       @Nullable
       @Override
-      public Long getMessagePayloadSize(Collection<Message> messages) {
+      public Long getMessagePayloadSize(ReceiveMessageResponse v) {
         long total = 0;
 
-        for (Message message : messages) {
-          if (message.body() != null) {
-            total += message.body().length();
-          }
+        for (Message message : v.messages()) {
+          total += message.body().length();
         }
 
         return total;
@@ -105,40 +108,32 @@ public abstract class SqsMessageHandler extends MessageHandler<Message> {
 
       @Nullable
       @Override
-      public Long getMessagePayloadCompressedSize(Collection<Message> messages) {
+      public Long getMessagePayloadCompressedSize(ReceiveMessageResponse v) {
         return null;
       }
 
       @Nullable
       @Override
-      public String getMessageId(Collection<Message> messages, @Nullable Void unused) {
+      public String getMessageId(ReceiveMessageResponse request, Void v) {
         return null;
       }
     };
   }
 
-  protected SpanKindExtractor<Collection<Message>> getSpanKindExtractor() {
-    if (messageOperation == MessageOperation.RECEIVE
-        || messageOperation == MessageOperation.PROCESS) {
-      return SpanKindExtractor.alwaysConsumer();
-    } else if (messageOperation == MessageOperation.SEND) {
-      return SpanKindExtractor.alwaysProducer();
-    } else {
-      logger.log(
-          Level.WARNING, "Unknown Messaging Operation {0}", new Object[] {messageOperation.name()});
-      return SpanKindExtractor.alwaysConsumer();
-    }
+  protected SpanKindExtractor<ReceiveMessageResponse> getSpanKindExtractor() {
+    return SpanKindExtractor.alwaysConsumer();
   }
 
-  protected AttributesExtractor<Collection<Message>, Void> getAttributesExtractor() {
-    return MessagingAttributesExtractor.create(getMessageingAttributesGetter(), messageOperation);
+  protected AttributesExtractor<ReceiveMessageResponse, Void> getAttributesExtractor() {
+    return MessagingAttributesExtractor.create(
+        getMessageingAttributesGetter(), MessageOperation.RECEIVE);
   }
 
-  protected SpanLinksExtractor<Collection<Message>> getSpanLinksExtractor() {
-    TextMapPropagator messagingPropagator = openTelemetry.getPropagators().getTextMapPropagator();
+  protected SpanLinksExtractor<ReceiveMessageResponse> getSpanLinksExtractor() {
+    return (spanLinks, parentContext, response) -> {
+      TextMapPropagator messagingPropagator = openTelemetry.getPropagators().getTextMapPropagator();
 
-    return (spanLinks, parentContext, sqsMessages) -> {
-      for (Message message : sqsMessages) {
+      for (Message message : response.messages()) {
         Map<String, SdkPojo> messageAtributes = SqsMessageAccess.getMessageAttributes(message);
 
         Context context =

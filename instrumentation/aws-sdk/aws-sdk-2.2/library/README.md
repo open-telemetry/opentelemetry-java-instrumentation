@@ -25,22 +25,22 @@ propagating the trace through them. If this does not fulfill your use case, perh
 using the same SDK with a different non-AWS managed service, let us know so we can provide
 configuration for this behavior.
 
-## Using SqsMessageHandler
+## Using SqsMessageReceiver
 
-1. Retrieve a collection of messages to process.
-2. Create a SqsMessageHandler and provide the business logic on what to do with the messages.
-3. Call the handleMessages function and pass in your messages.
-4. It will call the doHandleMessages function you provided wrapped in the messaging span.
+This instrumentation takes a ReceiveMessageRequest and returns a ReceiveMessageResponse for SQS.
+A span is created for the call to SQS with appropriate attributes and span links.
+Span links comes from each of the response's messages as if this were a batch of messages.
+
+1. Setup SqsMessageReceiver so that it knows how to pull information from SQS.
+Pass in your OpenTelemetry, the name of the destination, and SqsClient.
+2. Call the receive method on SqsMessageReceiver and pass in the request.
+3. It will return the response and wrap the call in a span.
 
 ```java
-Collection<Message> sqsMessages;
+OpenTelemetry openTelemetry;
+SqsClient sqsClient;
+ReceiveMessageRequest request;
 
-SqsMessageHandler messageHandler = new SqsMessageHandler(opentelemetry) {
-  @Override
-  protected void doHandleMessages(Collection<Message> messages) {
-    // Do my business logic
-  }
-};
-
-messageHandler.handleMessages(sqsMessages, "destination.name", MessageOperation.RECEIVE);
+SqsMessageReceiver messageReceiver = new SqsMessageReceiver(openTelemetry, "destination", sqsClient);
+ReceiveMessageResponse response = messageReceiver.receive(request);
 ```
