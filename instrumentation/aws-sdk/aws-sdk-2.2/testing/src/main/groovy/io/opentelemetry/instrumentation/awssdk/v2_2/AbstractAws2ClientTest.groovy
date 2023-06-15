@@ -506,8 +506,8 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
   def "timeout and retry errors not captured"() {
     setup:
     // One retry so two requests.
-    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
-    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
+    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(5000)))
+    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(5000)))
     def client = S3Client.builder()
       .overrideConfiguration(createOverrideConfigurationBuilder()
         .retryPolicy(RetryPolicy.builder().numRetries(1).build())
