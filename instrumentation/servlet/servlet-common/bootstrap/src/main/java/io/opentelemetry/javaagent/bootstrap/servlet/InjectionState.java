@@ -64,7 +64,7 @@ public class InjectionState {
       if (isContainHead) {
         setHeadTagWritten();
       }
-      HEAD_PREFIX_BUILDER.delete(0,HEAD_PREFIX_BUILDER.length());
+      HEAD_PREFIX_BUILDER.delete(0, HEAD_PREFIX_BUILDER.length());
     }
   }
 
