@@ -18,78 +18,20 @@ import javax.annotation.Nullable;
 public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
     extends HttpCommonAttributesGetter<REQUEST, RESPONSE>, UrlAttributesGetter<REQUEST> {
 
-  /**
-   * Returns the URI scheme.
-   *
-   * @deprecated This method is deprecated and will be removed in a future release. Implement {@link
-   *     #getUrlScheme(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String getScheme(REQUEST request) {
-    return null;
-  }
-
-  // TODO: make this required to implement
   /** {@inheritDoc} */
   @Nullable
   @Override
-  default String getUrlScheme(REQUEST request) {
-    return getScheme(request);
-  }
+  String getUrlScheme(REQUEST request);
 
-  /**
-   * Returns the path and query pieces of the URL, joined by the {@code ?} character.
-   *
-   * @deprecated This method is deprecated and will be removed in the following release. Implement
-   *     {@link #getUrlPath(Object)} and {@link #getUrlQuery(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String getTarget(REQUEST request) {
-    return null;
-  }
-
-  // TODO: make this required to implement
   /** {@inheritDoc} */
   @Nullable
   @Override
-  default String getUrlPath(REQUEST request) {
-    String target = getTarget(request);
-    if (target == null) {
-      return null;
-    }
-    int separatorPos = target.indexOf('?');
-    return separatorPos == -1 ? target : target.substring(0, separatorPos);
-  }
+  String getUrlPath(REQUEST request);
 
-  // TODO: make this required to implement
   /** {@inheritDoc} */
   @Nullable
   @Override
-  default String getUrlQuery(REQUEST request) {
-    String target = getTarget(request);
-    if (target == null) {
-      return null;
-    }
-    int separatorPos = target.indexOf('?');
-    return separatorPos == -1 ? null : target.substring(separatorPos + 1);
-  }
-
-  /**
-   * Returns the matched route (path template in the format used by the respective server
-   * framework).
-   *
-   * <p>Examples: {@code /users/:userID?}, {@code {controller}/{action}/{id?}}
-   *
-   * @deprecated This method is deprecated and will be removed in a future release. Implement {@link
-   *     #getHttpRoute(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String getRoute(REQUEST request) {
-    return null;
-  }
+  String getUrlQuery(REQUEST request);
 
   /**
    * Returns the matched route (path template in the format used by the respective server
@@ -99,6 +41,6 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
    */
   @Nullable
   default String getHttpRoute(REQUEST request) {
-    return getRoute(request);
+    return null;
   }
 }
