@@ -17,16 +17,12 @@ public abstract class MessageReceiver<REQEUST, RESPONSE> {
   protected abstract RESPONSE doReceive(REQEUST request);
 
   public RESPONSE receive(REQEUST request) {
-
     Instrumenter<RESPONSE, Void> instrumenter = getMessageInstrumenter();
-
     Context parentContext = Context.current();
-
     Throwable error = null;
     RESPONSE response = null;
 
     Instant startTime = Instant.now();
-
     try {
       response = doReceive(request);
     } catch (Throwable t) {

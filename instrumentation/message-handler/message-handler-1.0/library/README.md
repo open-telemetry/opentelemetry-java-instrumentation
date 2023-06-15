@@ -1,8 +1,8 @@
 # Message Handler
 
-This package contains handlers to instrument message system spans for a batch of messages.
+This package contains instrumentation for message systems.
 
-The handler will create a single new messaging span, add span links to it, and set the messaging attributes behind the scene. These values are based off of the messages passed in.
+The instrumentation will receive or process messages and wrap the calls in a span with appropriate attributes and span links.
 
-## Available Handlers
+## Available Message Receivers
 - `SqsMessageReceiver` - Receive SQS messages

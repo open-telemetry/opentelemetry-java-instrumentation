@@ -318,8 +318,7 @@ public class SqsMessageReceiverTest extends XrayTestInstrumenter {
         RuntimeException.class,
         () -> {
           try (Scope scope = parentSpan.makeCurrent()) {
-            ReceiveMessageResponse response = messageHandler.receive(request);
-            assertThat(response.messages().size()).isEqualTo(0);
+            messageHandler.receive(request);
           }
         });
 
