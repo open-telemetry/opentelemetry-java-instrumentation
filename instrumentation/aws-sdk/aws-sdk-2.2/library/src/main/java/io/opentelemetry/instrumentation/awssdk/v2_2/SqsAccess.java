@@ -23,7 +23,7 @@ final class SqsAccess {
       // successfully applied (muzzle passed)
       // using package name here because library instrumentation classes are relocated when embedded
       // in the agent
-      Class.forName(SqsAccess.class.getPackage().getName() + ".SqsImpl");
+      Class.forName(SqsAccess.class.getName().replace(".SqsAccess", ".SqsImpl"));
       return true;
     } catch (ClassNotFoundException e) {
       return false;
