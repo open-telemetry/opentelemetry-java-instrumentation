@@ -46,19 +46,20 @@ class RatpackServerTest extends Specification {
       }
     }
 
-    when:
-    app.test { httpClient -> "hi-foo" == httpClient.get("foo").body.text }
+    expect:
+    app.test { httpClient ->
+      assert "hi-foo" == httpClient.get("foo").body.text
 
-    then:
-    new PollingConditions().eventually {
-      def spanData = spanExporter.finishedSpanItems.find { it.name == "GET /foo" }
-      def attributes = spanData.attributes.asMap()
+      new PollingConditions().eventually {
+        def spanData = spanExporter.finishedSpanItems.find { it.name == "GET /foo" }
+        def attributes = spanData.attributes.asMap()
 
-      spanData.kind == SpanKind.SERVER
-      attributes[SemanticAttributes.HTTP_ROUTE] == "/foo"
-      attributes[SemanticAttributes.HTTP_TARGET] == "/foo"
-      attributes[SemanticAttributes.HTTP_METHOD] == "GET"
-      attributes[SemanticAttributes.HTTP_STATUS_CODE] == 200L
+        spanData.kind == SpanKind.SERVER
+        attributes[SemanticAttributes.HTTP_ROUTE] == "/foo"
+        attributes[SemanticAttributes.HTTP_TARGET] == "/foo"
+        attributes[SemanticAttributes.HTTP_METHOD] == "GET"
+        attributes[SemanticAttributes.HTTP_STATUS_CODE] == 200L
+      }
     }
   }
 
@@ -81,7 +82,7 @@ class RatpackServerTest extends Specification {
     }
 
     app.test { httpClient ->
-      "hi-foo" == httpClient.get("foo").body.text
+      assert "hi-foo" == httpClient.get("foo").body.text
 
       new PollingConditions().eventually {
         def spanData = spanExporter.finishedSpanItems.find { it.name == "GET /foo" }
@@ -130,8 +131,9 @@ class RatpackServerTest extends Specification {
     }
 
     app.test { httpClient ->
-      "hi-foo" == httpClient.get("foo").body.text
-      "hi-bar" == httpClient.get("bar").body.text
+      assert "hi-foo" == httpClient.get("foo").body.text
+      assert "hi-bar" == httpClient.get("bar").body.text
+
       new PollingConditions().eventually {
         def spanData = spanExporter.finishedSpanItems.find { it.name == "GET /foo" }
         def spanDataChild = spanExporter.finishedSpanItems.find { it.name == "a-span" }

@@ -39,51 +39,57 @@ class RatpackServerApplicationTest extends Specification {
 
   def "add span on handlers"() {
     expect:
-    app.test { httpClient -> "hi-foo" == httpClient.get("foo").body.text }
+    app.test { httpClient ->
+      assert "hi-foo" == httpClient.get("foo").body.text
 
-    new PollingConditions().eventually {
-      def spanData = app.spanExporter.finishedSpanItems.find { it.name == "GET /foo" }
-      def attributes = spanData.attributes.asMap()
+      new PollingConditions().eventually {
+        def spanData = app.spanExporter.finishedSpanItems.find { it.name == "GET /foo" }
+        def attributes = spanData.attributes.asMap()
 
-      spanData.kind == SpanKind.SERVER
-      attributes[HTTP_ROUTE] == "/foo"
-      attributes[HTTP_TARGET] == "/foo"
-      attributes[HTTP_METHOD] == "GET"
-      attributes[HTTP_STATUS_CODE] == 200L
+        spanData.kind == SpanKind.SERVER
+        attributes[HTTP_ROUTE] == "/foo"
+        attributes[HTTP_TARGET] == "/foo"
+        attributes[HTTP_METHOD] == "GET"
+        attributes[HTTP_STATUS_CODE] == 200L
+      }
     }
   }
 
   def "propagate trace to http calls"() {
     expect:
-    app.test { httpClient -> "hi-bar" == httpClient.get("bar").body.text }
+    app.test { httpClient ->
+      assert "hi-bar" == httpClient.get("bar").body.text
 
-    new PollingConditions().eventually {
-      def spanData = app.spanExporter.finishedSpanItems.find { it.name == "GET /bar" }
-      def spanDataClient = app.spanExporter.finishedSpanItems.find { it.name == "GET" }
-      def attributes = spanData.attributes.asMap()
+      new PollingConditions().eventually {
+        def spanData = app.spanExporter.finishedSpanItems.find { it.name == "GET /bar" }
+        def spanDataClient = app.spanExporter.finishedSpanItems.find { it.name == "GET" }
+        def attributes = spanData.attributes.asMap()
 
-      spanData.traceId == spanDataClient.traceId
+        spanData.traceId == spanDataClient.traceId
 
-      spanData.kind == SpanKind.SERVER
-      attributes[HTTP_ROUTE] == "/bar"
-      attributes[HTTP_TARGET] == "/bar"
-      attributes[HTTP_METHOD] == "GET"
-      attributes[HTTP_STATUS_CODE] == 200L
+        spanData.kind == SpanKind.SERVER
+        attributes[HTTP_ROUTE] == "/bar"
+        attributes[HTTP_TARGET] == "/bar"
+        attributes[HTTP_METHOD] == "GET"
+        attributes[HTTP_STATUS_CODE] == 200L
 
-      spanDataClient.kind == SpanKind.CLIENT
-      def attributesClient = spanDataClient.attributes.asMap()
-      attributesClient[HTTP_ROUTE] == "/other"
-      attributesClient[HTTP_METHOD] == "GET"
-      attributesClient[HTTP_STATUS_CODE] == 200L
+        spanDataClient.kind == SpanKind.CLIENT
+        def attributesClient = spanDataClient.attributes.asMap()
+        attributesClient[HTTP_ROUTE] == "/other"
+        attributesClient[HTTP_METHOD] == "GET"
+        attributesClient[HTTP_STATUS_CODE] == 200L
+      }
     }
   }
 
   def "ignore handlers before OpenTelemetryServerHandler"() {
     expect:
-    app.test { httpClient -> "ignored" == httpClient.get("ignore").body.text }
+    app.test { httpClient ->
+      assert "ignored" == httpClient.get("ignore").body.text
 
-    new PollingConditions(initialDelay: 0.1, timeout: 0.3).eventually {
-      !app.spanExporter.finishedSpanItems.any { it.name == "GET /ignore" }
+      new PollingConditions(initialDelay: 0.1, timeout: 0.3).eventually {
+        !app.spanExporter.finishedSpanItems.any { it.name == "GET /ignore" }
+      }
     }
   }
 }
