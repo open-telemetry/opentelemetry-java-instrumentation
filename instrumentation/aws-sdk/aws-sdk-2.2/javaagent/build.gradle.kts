@@ -10,6 +10,22 @@ muzzle {
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
+    excludeInstrumentationName("aws-sdk-2.2-sqs")
+
+    // several software.amazon.awssdk artifacts are missing for this version
+    skip("2.17.200")
+  }
+}
+
+muzzle {
+  pass {
+    group.set("software.amazon.awssdk")
+    module.set("sqs")
+    versions.set("[2.2.0,)")
+    // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
+    // client, which is not target of instrumentation anyways.
+    extraDependency("software.amazon.awssdk:protocol-core")
+
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
   }
@@ -17,8 +33,10 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library-autoconfigure"))
+  implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
 
   library("software.amazon.awssdk:aws-core:2.2.0")
+  library("software.amazon.awssdk:sqs:2.2.0")
 
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
   // Make sure these don't add HTTP headers
@@ -37,8 +55,11 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
+  // TODO run tests both with and without experimental span attributes, with & without extra propagation
+  systemProperties(mapOf(
+    "otel.instrumentation.aws-sdk.experimental-span-attributes" to "true",
+    "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging" to "true",
+  ))
 }
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>().configureEach {

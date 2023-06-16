@@ -11,9 +11,10 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
-import software.amazon.awssdk.core.client.builder.SdkClientBuilder
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import software.amazon.awssdk.services.sqs.SqsBaseClientBuilder
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
@@ -31,30 +32,39 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
 
   @Shared
   def sqs
-  @Shared
-  SqsClient client
+
   @Shared
   int sqsPort
 
-  void configureSdkClient(SdkClientBuilder builder) {
-    builder.overrideConfiguration(createOverrideConfigurationBuilder().build())
+  ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
+      .queueUrl("http://localhost:$sqsPort/000000000000/testSdkSqs")
+      .build()
+
+  CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
+      .queueName("testSdkSqs")
+      .build()
+
+  SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
+      .queueUrl("http://localhost:$sqsPort/000000000000/testSdkSqs")
+      .messageBody("{\"type\": \"hello\"}")
+      .build()
+
+  void configureSdkClient(SqsBaseClientBuilder builder) {
+    builder
+      .overrideConfiguration(createOverrideConfigurationBuilder().build())
+      .endpointOverride(new URI("http://localhost:" + sqsPort))
+    builder
+        .region(Region.AP_NORTHEAST_1)
+        .credentialsProvider(CREDENTIALS_PROVIDER)
   }
 
   abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder()
 
   def setupSpec() {
-
     sqsPort = PortUtils.findOpenPort()
     sqs = SQSRestServerBuilder.withPort(sqsPort).withInterface("localhost").start()
     println getClass().name + " SQS server started at: localhost:$sqsPort/"
 
-    def builder = SqsClient.builder()
-    configureSdkClient(builder)
-    client = builder
-      .endpointOverride(new URI("http://localhost:" + sqsPort))
-      .region(Region.AP_NORTHEAST_1)
-      .credentialsProvider(CREDENTIALS_PROVIDER)
-      .build()
   }
 
   def cleanupSpec() {
@@ -63,25 +73,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
     }
   }
 
-  def "simple sqs producer-consumer services"() {
-    setup:
-    CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
-      .queueName("testSdkSqs")
-      .build()
-    client.createQueue(createQueueRequest)
-
-    when:
-    SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
-      .queueUrl("http://localhost:$sqsPort/000000000000/testSdkSqs")
-      .messageBody("{\"type\": \"hello\"}")
-      .build()
-    client.sendMessage(sendMessageRequest)
-    ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
-      .queueUrl("http://localhost:$sqsPort/000000000000/testSdkSqs")
-      .build()
-    client.receiveMessage(receiveMessageRequest)
-
-    then:
+  void assertSqsTraces() {
     assertTraces(3) {
       trace(0, 1) {
 
@@ -176,5 +168,39 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
         }
       }
     }
+  }
+
+  def "simple sqs producer-consumer services: sync"() {
+    setup:
+    def builder = SqsClient.builder()
+    configureSdkClient(builder)
+    def client = builder.build()
+
+    client.createQueue(createQueueRequest)
+
+    when:
+    client.sendMessage(sendMessageRequest)
+
+    client.receiveMessage(receiveMessageRequest)
+
+    then:
+    assertSqsTraces()
+  }
+
+  def "simple sqs producer-consumer services: async"() {
+    setup:
+    def builder = SqsAsyncClient.builder()
+    configureSdkClient(builder)
+    def client = builder.build()
+
+    client.createQueue(createQueueRequest).get()
+
+    when:
+    client.sendMessage(sendMessageRequest).get()
+
+    client.receiveMessage(receiveMessageRequest).get()
+
+    then:
+    assertSqsTraces()
   }
 }
