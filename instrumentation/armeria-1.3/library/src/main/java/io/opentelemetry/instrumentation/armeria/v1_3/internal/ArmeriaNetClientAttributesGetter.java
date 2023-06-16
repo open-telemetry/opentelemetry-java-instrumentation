@@ -11,7 +11,6 @@ import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 /**
@@ -67,11 +66,7 @@ public final class ArmeriaNetClientAttributesGetter
   @Nullable
   public InetSocketAddress getServerInetSocketAddress(
       RequestContext ctx, @Nullable RequestLog requestLog) {
-    SocketAddress address = ctx.remoteAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+    return RequestContextAccess.remoteAddress(ctx);
   }
 
   private static HttpRequest request(RequestContext ctx) {
