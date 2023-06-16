@@ -153,7 +153,8 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
     if (contentType == null) {
       contentType = super.getHeader("content-type");
     }
-    return contentType != null && contentType.startsWith("text/html");
+    return contentType != null
+        && (contentType.startsWith("text/html") || "application/xhtml+xml".equals(contentType));
   }
 
   @Override
