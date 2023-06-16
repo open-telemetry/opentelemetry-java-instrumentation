@@ -9,8 +9,8 @@ import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
+import io.opentelemetry.instrumentation.armeria.v1_3.internal.RequestContextAccess;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class ArmeriaNetServerAttributesGetter
@@ -43,21 +43,13 @@ final class ArmeriaNetServerAttributesGetter
   @Nullable
   public InetSocketAddress getClientInetSocketAddress(
       RequestContext ctx, @Nullable RequestLog requestLog) {
-    SocketAddress address = ctx.remoteAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+    return RequestContextAccess.remoteAddress(ctx);
   }
 
   @Nullable
   @Override
   public InetSocketAddress getServerInetSocketAddress(
       RequestContext ctx, @Nullable RequestLog log) {
-    SocketAddress address = ctx.localAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+    return RequestContextAccess.localAddress(ctx);
   }
 }
