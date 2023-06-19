@@ -15,4 +15,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }
