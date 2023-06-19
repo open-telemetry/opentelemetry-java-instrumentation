@@ -22,6 +22,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   List<String> capturedRequestHeaders = emptyList();
   List<String> capturedResponseHeaders = emptyList();
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
+  boolean captureServerSocketAttributes = false;
 
   HttpServerAttributesExtractorBuilder(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
@@ -90,6 +91,20 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Configures the extractor to capture the optional {@code server.socket.address} and {@code
+   * server.socket.port} attributes, which are not collected by default.
+   *
+   * @param captureServerSocketAttributes {@code true} if the extractor should collect the optional
+   *     {@code server.socket.address} and {@code server.socket.port} attributes.
+   */
+  @CanIgnoreReturnValue
+  public HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> setCaptureServerSocketAttributes(
+      boolean captureServerSocketAttributes) {
+    this.captureServerSocketAttributes = captureServerSocketAttributes;
+    return this;
+  }
+
+  /**
    * Returns a new {@link HttpServerAttributesExtractor} with the settings of this {@link
    * HttpServerAttributesExtractorBuilder}.
    */
@@ -99,6 +114,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
         netAttributesGetter,
         capturedRequestHeaders,
         capturedResponseHeaders,
-        knownMethods);
+        knownMethods,
+        captureServerSocketAttributes);
   }
 }

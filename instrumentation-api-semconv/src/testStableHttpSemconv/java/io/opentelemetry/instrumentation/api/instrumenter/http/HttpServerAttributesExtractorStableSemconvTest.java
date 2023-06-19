@@ -134,6 +134,21 @@ class HttpServerAttributesExtractorStableSemconvTest {
       String value = request.get("hostPort");
       return value == null ? null : Integer.parseInt(value);
     }
+
+    @Nullable
+    @Override
+    public String getServerSocketAddress(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("serverSocketAddress");
+    }
+
+    @Nullable
+    @Override
+    public Integer getServerSocketPort(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      String value = request.get("serverSocketPort");
+      return value == null ? null : Integer.parseInt(value);
+    }
   }
 
   @Test
@@ -154,6 +169,8 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("type", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "2.0");
+    request.put("serverSocketAddress", "1.2.3.4");
+    request.put("serverSocketPort", "42");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
@@ -169,6 +186,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
             singletonList("Custom-Request-Header"),
             singletonList("Custom-Response-Header"),
             HttpConstants.KNOWN_METHODS,
+            false,
             routeFromContext);
 
     AttributesBuilder startAttributes = Attributes.builder();

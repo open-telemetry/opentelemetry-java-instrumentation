@@ -80,13 +80,15 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders,
-      Set<String> knownMethods) {
+      Set<String> knownMethods,
+      boolean captureServerSocketAttributes) {
     this(
         httpAttributesGetter,
         netAttributesGetter,
         capturedRequestHeaders,
         capturedResponseHeaders,
         knownMethods,
+        captureServerSocketAttributes,
         HttpRouteHolder::getRoute);
   }
 
@@ -97,6 +99,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders,
       Set<String> knownMethods,
+      boolean captureServerSocketAttributes,
       Function<Context, String> httpRouteHolderGetter) {
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders, knownMethods);
     HttpNetAddressPortExtractor<REQUEST> addressPortExtractor =
@@ -123,7 +126,10 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
             addressPortExtractor,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
-            InternalServerAttributesExtractor.Mode.HOST);
+            InternalServerAttributesExtractor.Mode.HOST,
+            // we're not capturing these by default, since they're opt-in
+            // we'll add a configuration flag if someone happens to request them
+            /* captureServerSocketAttributes= */ false);
     internalClientExtractor =
         new InternalClientAttributesExtractor<>(
             netAttributesGetter,
