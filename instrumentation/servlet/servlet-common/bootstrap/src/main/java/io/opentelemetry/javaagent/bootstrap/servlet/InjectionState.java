@@ -5,28 +5,15 @@
 
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
 // this is shared by both ServletOutputStream and PrintWriter injection
 public class InjectionState {
   private static final int HEAD_TAG_WRITTEN_FAKE_VALUE = -1;
+  private static final int HEAD_TAG_PREFIX_LENGTH = 4;
   private final SnippetInjectingResponseWrapper wrapper;
   private int headTagBytesSeen = 0;
-  private final Map<String, Integer> tagCount = new HashMap<>();
-  private final Map<String, AtomicInteger> headAppearCount = new HashMap<>();
 
   public InjectionState(SnippetInjectingResponseWrapper wrapper) {
     this.wrapper = wrapper;
-    List<String> headTagList = ExperimentalSnippetHolder.getHeadTagList();
-    if (headTagList != null) {
-      for (String tag : headTagList) {
-        tagCount.put(tag, tag.length());
-        headAppearCount.put(tag, new AtomicInteger(0));
-      }
-    }
   }
 
   public int getHeadTagBytesSeen() {
@@ -53,25 +40,32 @@ public class InjectionState {
     if (isHeadTagWritten()) {
       return false;
     }
-    inHeadTag(b);
-    return isHeadTagWritten();
+    if (inHeadTag(b) && headTagBytesSeen < HEAD_TAG_PREFIX_LENGTH) {
+      headTagBytesSeen++;
+    } else if (headTagBytesSeen != HEAD_TAG_PREFIX_LENGTH) {
+      headTagBytesSeen = 0;
+    }
+    if (headTagBytesSeen == HEAD_TAG_PREFIX_LENGTH && b == '>') {
+      setHeadTagWritten();
+      return true;
+    } else {
+      return false;
+    }
   }
 
-  private void inHeadTag(int b) {
-    if (!tagCount.isEmpty()) {
-      tagCount.forEach(
-          (headTag, count) -> {
-            char[] headTagBytes = headTag.toCharArray();
-            if (headTagBytes[headAppearCount.get(headTag).get()] == b) {
-              if (headAppearCount.get(headTag).get() == count - 1) {
-                setHeadTagWritten();
-              } else {
-                headAppearCount.get(headTag).addAndGet(1);
-              }
-            } else {
-              headAppearCount.get(headTag).set(0);
-            }
-          });
+  private boolean inHeadTag(int b) {
+    if (headTagBytesSeen == 0 && b == '<') {
+      return true;
+    } else if (headTagBytesSeen == 1 && b == 'h') {
+      return true;
+    } else if (headTagBytesSeen == 2 && b == 'e') {
+      return true;
+    } else if (headTagBytesSeen == 3 && b == 'a') {
+      return true;
+    } else if (headTagBytesSeen == 4 && b == 'd') {
+      return true;
+    } else {
+      return headTagBytesSeen == HEAD_TAG_PREFIX_LENGTH;
     }
   }
 
