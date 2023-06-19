@@ -33,14 +33,27 @@ public final class CommonConfig {
   CommonConfig(InstrumentationConfig config) {
     peerServiceMapping =
         config.getMap("otel.instrumentation.common.peer-service-mapping", emptyMap());
+    // TODO (mateusz): remove the old config names in 2.0
     clientRequestHeaders =
-        config.getList("otel.instrumentation.http.capture-headers.client.request", emptyList());
+        config.getList(
+            "otel.instrumentation.http.client.capture-request-headers",
+            config.getList(
+                "otel.instrumentation.http.capture-headers.client.request", emptyList()));
     clientResponseHeaders =
-        config.getList("otel.instrumentation.http.capture-headers.client.response", emptyList());
+        config.getList(
+            "otel.instrumentation.http.client.capture-response-headers",
+            config.getList(
+                "otel.instrumentation.http.capture-headers.client.response", emptyList()));
     serverRequestHeaders =
-        config.getList("otel.instrumentation.http.capture-headers.server.request", emptyList());
+        config.getList(
+            "otel.instrumentation.http.server.capture-request-headers",
+            config.getList(
+                "otel.instrumentation.http.capture-headers.server.request", emptyList()));
     serverResponseHeaders =
-        config.getList("otel.instrumentation.http.capture-headers.server.response", emptyList());
+        config.getList(
+            "otel.instrumentation.http.server.capture-response-headers",
+            config.getList(
+                "otel.instrumentation.http.capture-headers.server.response", emptyList()));
     statementSanitizationEnabled =
         config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
   }
