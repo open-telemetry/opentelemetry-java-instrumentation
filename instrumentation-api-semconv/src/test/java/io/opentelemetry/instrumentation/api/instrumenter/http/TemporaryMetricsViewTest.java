@@ -174,9 +174,7 @@ class TemporaryMetricsViewTest {
             entry(SemanticAttributes.HTTP_ROUTE, "/somehost/high/{name}/{id}"),
             entry(UrlAttributes.URL_SCHEME, "https"),
             entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
-            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-            entry(NetworkAttributes.SERVER_ADDRESS, "somehost"),
-            entry(NetworkAttributes.SERVER_PORT, 443L));
+            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"));
   }
 
   @Test
@@ -234,8 +232,6 @@ class TemporaryMetricsViewTest {
     assertThat(applyActiveRequestsView(attributes))
         .containsOnly(
             entry(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-            entry(UrlAttributes.URL_SCHEME, "https"),
-            entry(NetworkAttributes.SERVER_ADDRESS, "somehost"),
-            entry(NetworkAttributes.SERVER_PORT, 443L));
+            entry(UrlAttributes.URL_SCHEME, "https"));
   }
 }
