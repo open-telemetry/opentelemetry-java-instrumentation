@@ -19,6 +19,7 @@ import io.vertx.core.http.HttpMethod
 import spock.lang.Shared
 
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey
 
@@ -54,7 +55,7 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
   @Override
   int sendRequest(HttpClientRequest request, String method, URI uri, Map<String, String> headers) {
     // Vertx doesn't seem to provide any synchronous API so bridge through a callback
-    return sendRequest(request).get()
+    return sendRequest(request).get(30, TimeUnit.SECONDS)
   }
 
   @Override
