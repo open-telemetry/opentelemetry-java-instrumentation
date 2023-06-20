@@ -22,10 +22,7 @@ import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
-class HttpClientMetricsStableSemconvTest {
-
-  static final double[] DURATION_BUCKETS =
-      HttpMetricsUtil.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
+class HttpClientExperimentalMetricsStableSemconvTest {
 
   @Test
   void collectsMetrics() {
@@ -33,7 +30,8 @@ class HttpClientMetricsStableSemconvTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
 
-    OperationListener listener = HttpClientMetrics.get().create(meterProvider.get("test"));
+    OperationListener listener =
+        HttpClientExperimentalMetrics.get().create(meterProvider.get("test"));
 
     Attributes requestAttributes =
         Attributes.builder()
@@ -82,14 +80,14 @@ class HttpClientMetricsStableSemconvTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("http.client.duration")
-                    .hasUnit("s")
+                    .hasName("http.client.request.size")
+                    .hasUnit("By")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
                                 point ->
                                     point
-                                        .hasSum(0.15 /* seconds */)
+                                        .hasSum(100 /* bytes */)
                                         .hasAttributesSatisfying(
                                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
@@ -105,8 +103,33 @@ class HttpClientMetricsStableSemconvTest {
                                             exemplar ->
                                                 exemplar
                                                     .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00"))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))));
+                                                    .hasSpanId("090a0b0c0d0e0f00")))),
+            metric ->
+                assertThat(metric)
+                    .hasName("http.client.response.size")
+                    .hasUnit("By")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(200 /* bytes */)
+                                        .hasAttributesSatisfying(
+                                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(
+                                                NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
+                                            equalTo(
+                                                NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+                                            equalTo(NetworkAttributes.SERVER_ADDRESS, "localhost"),
+                                            equalTo(NetworkAttributes.SERVER_PORT, 1234),
+                                            equalTo(
+                                                NetworkAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4"))
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                                    .hasSpanId("090a0b0c0d0e0f00")))));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
@@ -114,11 +137,16 @@ class HttpClientMetricsStableSemconvTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("http.client.duration")
+                    .hasName("http.client.request.size")
                     .hasHistogramSatisfying(
                         histogram ->
-                            histogram.hasPointsSatisfying(
-                                point -> point.hasSum(0.3 /* seconds */))));
+                            histogram.hasPointsSatisfying(point -> point.hasSum(200 /* bytes */))),
+            metric ->
+                assertThat(metric)
+                    .hasName("http.client.response.size")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(point -> point.hasSum(400 /* bytes */))));
   }
 
   private static long nanos(int millis) {

@@ -9,8 +9,10 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -31,6 +33,7 @@ public final class SpringWebTelemetryBuilder {
       httpAttributesExtractorBuilder =
           HttpClientAttributesExtractor.builder(
               SpringWebHttpAttributesGetter.INSTANCE, new SpringWebNetAttributesGetter());
+  private boolean emitExperimentalHttpClientMetrics = false;
 
   SpringWebTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -89,13 +92,26 @@ public final class SpringWebTelemetryBuilder {
   }
 
   /**
+   * Configures the instrumentation to emit experimental HTTP client metrics.
+   *
+   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public SpringWebTelemetryBuilder setEmitExperimentalHttpClientMetrics(
+      boolean emitExperimentalHttpClientMetrics) {
+    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
+    return this;
+  }
+
+  /**
    * Returns a new {@link SpringWebTelemetry} with the settings of this {@link
    * SpringWebTelemetryBuilder}.
    */
   public SpringWebTelemetry build() {
     SpringWebHttpAttributesGetter httpAttributeGetter = SpringWebHttpAttributesGetter.INSTANCE;
 
-    Instrumenter<HttpRequest, ClientHttpResponse> instrumenter =
+    InstrumenterBuilder<HttpRequest, ClientHttpResponse> builder =
         Instrumenter.<HttpRequest, ClientHttpResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
@@ -103,9 +119,13 @@ public final class SpringWebTelemetryBuilder {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
-            .addOperationMetrics(HttpClientMetrics.get())
-            .buildClientInstrumenter(HttpRequestSetter.INSTANCE);
+            .addOperationMetrics(HttpClientMetrics.get());
+    if (emitExperimentalHttpClientMetrics) {
+      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+    }
 
+    Instrumenter<HttpRequest, ClientHttpResponse> instrumenter =
+        builder.buildClientInstrumenter(HttpRequestSetter.INSTANCE);
     return new SpringWebTelemetry(instrumenter);
   }
 }

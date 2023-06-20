@@ -26,6 +26,7 @@ public final class NettyClientTelemetryBuilder {
   private Set<String> knownMethods = null;
   private final List<AttributesExtractor<HttpRequestAndChannel, HttpResponse>>
       additionalAttributesExtractors = new ArrayList<>();
+  private boolean emitExperimentalHttpClientMetrics = false;
 
   NettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -85,11 +86,29 @@ public final class NettyClientTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Configures the instrumentation to emit experimental HTTP client metrics.
+   *
+   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public NettyClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
+      boolean emitExperimentalHttpClientMetrics) {
+    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
+    return this;
+  }
+
   /** Returns a new {@link NettyClientTelemetry} with the given configuration. */
   public NettyClientTelemetry build() {
     return new NettyClientTelemetry(
         new NettyClientInstrumenterFactory(
-                openTelemetry, "io.opentelemetry.netty-4.1", false, false, Collections.emptyMap())
+                openTelemetry,
+                "io.opentelemetry.netty-4.1",
+                false,
+                false,
+                Collections.emptyMap(),
+                emitExperimentalHttpClientMetrics)
             .createHttpInstrumenter(
                 capturedRequestHeaders,
                 capturedResponseHeaders,

@@ -94,6 +94,19 @@ public final class JettyClientTelemetryBuilder {
   }
 
   /**
+   * Configures the instrumentation to emit experimental HTTP client metrics.
+   *
+   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public JettyClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
+      boolean emitExperimentalHttpClientMetrics) {
+    instrumenterBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
+    return this;
+  }
+
+  /**
    * Returns a new {@link JettyClientTelemetry} with the settings of this {@link
    * JettyClientTelemetryBuilder}.
    */
