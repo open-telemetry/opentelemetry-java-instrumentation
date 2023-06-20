@@ -225,7 +225,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterExecution(
       Context.AfterExecution context, ExecutionAttributes executionAttributes) {
-    if (SqsAccess.isReceiveMessageRequest(context.request())) {
+    if (SqsAccess.isReceiveMessageResponse(context.response())) {
       SqsAccess.afterReceiveMessageExecution(this, context, executionAttributes);
     }
 

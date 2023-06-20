@@ -8,9 +8,11 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import software.amazon.awssdk.core.SdkRequest;
+import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 // helper class for calling methods that use sqs types in SqsImpl
@@ -58,6 +60,11 @@ final class SqsAccess {
       SdkRequest request, boolean useXrayPropagator, TextMapPropagator messagingPropagator) {
     assert enabled; // enabled checked already in instance check.
     return SqsImpl.modifyReceiveMessageRequest(request, useXrayPropagator, messagingPropagator);
+  }
+
+  @NoMuzzle
+  static boolean isReceiveMessageResponse(SdkResponse response) {
+    return enabled && response instanceof ReceiveMessageResponse;
   }
 
   @NoMuzzle
