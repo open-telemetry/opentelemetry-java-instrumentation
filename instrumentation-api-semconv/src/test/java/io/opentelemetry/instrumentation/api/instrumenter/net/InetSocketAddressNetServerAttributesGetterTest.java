@@ -117,7 +117,9 @@ class InetSocketAddressNetServerAttributesGetterTest {
     assertThat(startAttributes.build()).isEmpty();
 
     assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.NET_SOCK_PEER_PORT, 123L));
+        .containsOnly(
+            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 123L),
+            entry(SemanticAttributes.NET_SOCK_HOST_PORT, 456L));
   }
 
   static final class Addresses {

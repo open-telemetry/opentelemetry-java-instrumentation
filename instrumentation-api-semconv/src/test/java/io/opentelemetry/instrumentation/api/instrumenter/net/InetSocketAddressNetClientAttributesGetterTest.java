@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -103,6 +104,9 @@ class InetSocketAddressNetClientAttributesGetterTest {
     // then
     assertThat(startAttributes.build()).isEmpty();
 
-    assertThat(endAttributes.build()).isEmpty();
+    assertThat(endAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.NET_SOCK_PEER_NAME, "api.github.com"),
+            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 456L));
   }
 }
