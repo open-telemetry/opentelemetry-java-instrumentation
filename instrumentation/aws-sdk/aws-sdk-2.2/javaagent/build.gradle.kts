@@ -53,17 +53,26 @@ dependencies {
   latestDepTestLibrary("software.amazon.awssdk:sqs:+")
 }
 
-tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-  // TODO run tests both with and without experimental span attributes, with & without extra propagation
-  systemProperties(mapOf(
-    "otel.instrumentation.aws-sdk.experimental-span-attributes" to "true",
-    "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging" to "true",
-  ))
-}
+tasks {
+  val testExperimentalSqs by registering(Test::class) {
+    group = "verification"
 
-tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>().configureEach {
-  mergeServiceFiles {
-    include("software/amazon/awssdk/global/handlers/execution.interceptors")
+    systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
+  }
+
+  check {
+    dependsOn(testExperimentalSqs)
+  }
+
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    // TODO run tests both with and without experimental span attributes
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+  }
+
+  withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>().configureEach {
+    mergeServiceFiles {
+      include("software/amazon/awssdk/global/handlers/execution.interceptors")
+    }
   }
 }

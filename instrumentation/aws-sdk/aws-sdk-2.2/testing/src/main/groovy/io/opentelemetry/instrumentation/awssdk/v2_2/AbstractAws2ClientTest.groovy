@@ -5,12 +5,14 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2
 
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
 import io.opentelemetry.testing.internal.armeria.common.MediaType
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension
+import org.junit.jupiter.api.Assumptions
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.ResponseInputStream
@@ -48,6 +50,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -317,7 +320,22 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     return AttributeValue.builder().s(value).build()
   }
 
+  def isSqsAttributeInjectionEnabled() {
+    // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
+    return ConfigPropertiesUtil.getBoolean("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false)
+  }
+
+  void assumeSupportedConfig(service, operation) {
+    Assumptions.assumeFalse(
+        service == "Sqs"
+            && operation == "SendMessage"
+            && isSqsAttributeInjectionEnabled(),
+        "Cannot check Sqs.SendMessage here due to hard-coded MD5.")
+  }
+
   def "send #operation request with builder #builder.class.getName() mocked response"() {
+    assumeSupportedConfig(service, operation)
+
     setup:
     configureSdkClient(builder)
     def client = builder
@@ -384,6 +402,16 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
         </CreateQueueResponse>
         """
+    "Sqs"     | "SendMessage"       | "POST" | ""                    | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsClient.builder()     | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) } | """
+        <SendMessageResponse>
+            <SendMessageResult>
+                <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
+                <MD5OfMessageAttributes>3ae8f24a165a8cedc005670c81a27295</MD5OfMessageAttributes>
+                <MessageId>5fea7756-0ea4-451a-a703-a558b933e274</MessageId>
+            </SendMessageResult>
+            <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>
+        </SendMessageResponse>
+        """
     "Ec2"     | "AllocateAddress"   | "POST" | ""                    | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2Client.builder()     | { c -> c.allocateAddress() }                                                                     | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
            <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
@@ -399,6 +427,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
   }
 
   def "send #operation async request with builder #builder.class.getName() mocked response"() {
+    assumeSupportedConfig(service, operation)
     setup:
     configureSdkClient(builder)
     def client = builder
@@ -464,6 +493,16 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>
             <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
         </CreateQueueResponse>
+        """
+    "Sqs"   | "SendMessage"       | "POST" | ""                            | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsAsyncClient.builder() | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) }                                 | """
+        <SendMessageResponse>
+            <SendMessageResult>
+                <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
+                <MD5OfMessageAttributes>3ae8f24a165a8cedc005670c81a27295</MD5OfMessageAttributes>
+                <MessageId>5fea7756-0ea4-451a-a703-a558b933e274</MessageId>
+            </SendMessageResult>
+            <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>
+        </SendMessageResponse>
         """
     "Ec2"   | "AllocateAddress"   | "POST" | ""                            | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2AsyncClient.builder() | { c -> c.allocateAddress() }                                                                                                     | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
