@@ -45,25 +45,22 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
 
   public void onStart(AttributesBuilder attributes, REQUEST request) {
     String serverAddress = extractServerAddress(request);
+    if (emitStableUrlAttributes) {
+      internalSet(attributes, NetworkAttributes.SERVER_ADDRESS, serverAddress);
+    }
+    if (emitOldHttpAttributes) {
+      internalSet(attributes, oldSemconvMode.address, serverAddress);
+    }
 
-    if (serverAddress != null) {
+    Integer serverPort = extractServerPort(request);
+    if (serverPort != null
+        && serverPort > 0
+        && captureServerPortCondition.test(serverPort, request)) {
       if (emitStableUrlAttributes) {
-        internalSet(attributes, NetworkAttributes.SERVER_ADDRESS, serverAddress);
+        internalSet(attributes, NetworkAttributes.SERVER_PORT, (long) serverPort);
       }
       if (emitOldHttpAttributes) {
-        internalSet(attributes, oldSemconvMode.address, serverAddress);
-      }
-
-      Integer serverPort = extractServerPort(request);
-      if (serverPort != null
-          && serverPort > 0
-          && captureServerPortCondition.test(serverPort, request)) {
-        if (emitStableUrlAttributes) {
-          internalSet(attributes, NetworkAttributes.SERVER_PORT, (long) serverPort);
-        }
-        if (emitOldHttpAttributes) {
-          internalSet(attributes, oldSemconvMode.port, (long) serverPort);
-        }
+        internalSet(attributes, oldSemconvMode.port, (long) serverPort);
       }
     }
   }
@@ -79,28 +76,26 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
       if (emitOldHttpAttributes) {
         internalSet(attributes, oldSemconvMode.socketAddress, serverSocketAddress);
       }
+    }
 
-      Integer serverPort = extractServerPort(request);
-      Integer serverSocketPort = getter.getServerSocketPort(request, response);
-      if (serverSocketPort != null
-          && serverSocketPort > 0
-          && !serverSocketPort.equals(serverPort)) {
-        if (emitStableUrlAttributes) {
-          internalSet(attributes, NetworkAttributes.SERVER_SOCKET_PORT, (long) serverSocketPort);
-        }
-        if (emitOldHttpAttributes) {
-          internalSet(attributes, oldSemconvMode.socketPort, (long) serverSocketPort);
-        }
+    Integer serverPort = extractServerPort(request);
+    Integer serverSocketPort = getter.getServerSocketPort(request, response);
+    if (serverSocketPort != null && serverSocketPort > 0 && !serverSocketPort.equals(serverPort)) {
+      if (emitStableUrlAttributes) {
+        internalSet(attributes, NetworkAttributes.SERVER_SOCKET_PORT, (long) serverSocketPort);
       }
+      if (emitOldHttpAttributes) {
+        internalSet(attributes, oldSemconvMode.socketPort, (long) serverSocketPort);
+      }
+    }
 
-      String serverSocketDomain = getter.getServerSocketDomain(request, response);
-      if (serverSocketDomain != null && !serverSocketDomain.equals(serverAddress)) {
-        if (emitStableUrlAttributes) {
-          internalSet(attributes, NetworkAttributes.SERVER_SOCKET_DOMAIN, serverSocketDomain);
-        }
-        if (emitOldHttpAttributes && oldSemconvMode.socketDomain != null) {
-          internalSet(attributes, oldSemconvMode.socketDomain, serverSocketDomain);
-        }
+    String serverSocketDomain = getter.getServerSocketDomain(request, response);
+    if (serverSocketDomain != null && !serverSocketDomain.equals(serverAddress)) {
+      if (emitStableUrlAttributes) {
+        internalSet(attributes, NetworkAttributes.SERVER_SOCKET_DOMAIN, serverSocketDomain);
+      }
+      if (emitOldHttpAttributes && oldSemconvMode.socketDomain != null) {
+        internalSet(attributes, oldSemconvMode.socketDomain, serverSocketDomain);
       }
     }
   }
