@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.bootstrap.servlet;
 // this is shared by both ServletOutputStream and PrintWriter injection
 public class InjectionState {
   private static final int HEAD_TAG_WRITTEN_FAKE_VALUE = -1;
-  private static final int HEAD_TAG_PREFIX_LENGTH = 4;
+  private static final int HEAD_TAG_PREFIX_LENGTH = "<head".length();
   private final SnippetInjectingResponseWrapper wrapper;
   private int headTagBytesSeen = 0;
 
