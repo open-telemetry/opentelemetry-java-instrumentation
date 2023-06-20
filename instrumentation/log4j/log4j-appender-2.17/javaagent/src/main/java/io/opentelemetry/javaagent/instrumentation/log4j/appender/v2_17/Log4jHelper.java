@@ -12,6 +12,7 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -66,6 +67,7 @@ public final class Log4jHelper {
             .logRecordBuilder();
     Map<String, String> contextData = ThreadContext.getImmutableContext();
     mapper.mapLogEvent(builder, message, level, marker, throwable, contextData);
+    builder.setTimestamp(Instant.now());
     builder.emit();
   }
 
