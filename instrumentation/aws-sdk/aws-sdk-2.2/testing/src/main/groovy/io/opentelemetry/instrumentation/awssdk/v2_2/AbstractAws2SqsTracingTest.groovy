@@ -64,7 +64,6 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
     def server = sqs.waitUntilStarted()
     sqsPort = server.localAddress().port
     println getClass().name + " SQS server started at: localhost:$sqsPort/"
-
   }
 
   def cleanupSpec() {
