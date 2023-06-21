@@ -35,6 +35,7 @@ public final class LibertyDispatcherSingletons {
                 HttpServerAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
             .addOperationMetrics(HttpServerMetrics.get())

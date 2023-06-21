@@ -26,6 +26,7 @@ public final class ArmeriaSingletons {
         ArmeriaTelemetry.builder(GlobalOpenTelemetry.get())
             .setCapturedClientRequestHeaders(CommonConfig.get().getClientRequestHeaders())
             .setCapturedClientResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+            .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
             .addClientAttributeExtractor(
                 PeerServiceAttributesExtractor.create(
                     new ArmeriaNetClientAttributesGetter(),

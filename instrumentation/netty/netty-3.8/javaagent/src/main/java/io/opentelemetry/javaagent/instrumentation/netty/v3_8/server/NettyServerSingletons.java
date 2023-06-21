@@ -36,6 +36,7 @@ final class NettyServerSingletons {
                         httpServerAttributesGetter, new NettyNetServerAttributesGetter())
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(

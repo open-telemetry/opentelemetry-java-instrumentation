@@ -17,6 +17,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtr
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -29,6 +31,7 @@ public final class JavaHttpClientInstrumenterFactory {
       OpenTelemetry openTelemetry,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders,
+      @Nullable Set<String> knownMethods,
       List<AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>>>
           additionalExtractors) {
     JavaHttpClientAttributesGetter httpAttributesGetter = JavaHttpClientAttributesGetter.INSTANCE;
@@ -36,9 +39,12 @@ public final class JavaHttpClientInstrumenterFactory {
     HttpClientAttributesExtractorBuilder<HttpRequest, HttpResponse<?>>
         httpAttributesExtractorBuilder =
             HttpClientAttributesExtractor.builder(
-                httpAttributesGetter, new JavaHttpClientNetAttributesGetter());
-    httpAttributesExtractorBuilder.setCapturedRequestHeaders(capturedRequestHeaders);
-    httpAttributesExtractorBuilder.setCapturedResponseHeaders(capturedResponseHeaders);
+                    httpAttributesGetter, new JavaHttpClientNetAttributesGetter())
+                .setCapturedRequestHeaders(capturedRequestHeaders)
+                .setCapturedResponseHeaders(capturedResponseHeaders);
+    if (knownMethods != null) {
+      httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
+    }
 
     return Instrumenter.<HttpRequest, HttpResponse<?>>builder(
             openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributesGetter))

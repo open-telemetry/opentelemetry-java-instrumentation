@@ -44,6 +44,10 @@ class KtorClientTracingBuilder {
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(headers)
   }
 
+  fun setKnownMethods(knownMethods: Set<String>) {
+    httpAttributesExtractorBuilder.setKnownMethods(knownMethods)
+  }
+
   fun addAttributesExtractors(vararg extractors: AttributesExtractor<in HttpRequestData, in HttpResponse>) =
     addAttributesExtractors(extractors.asList())
 

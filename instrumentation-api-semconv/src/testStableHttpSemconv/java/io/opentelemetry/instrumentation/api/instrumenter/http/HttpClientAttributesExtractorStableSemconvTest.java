@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.internal.Networ
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.ToIntFunction;
@@ -34,6 +35,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class HttpClientAttributesExtractorStableSemconvTest {
 
@@ -144,6 +146,7 @@ class HttpClientAttributesExtractorStableSemconvTest {
             new TestNetClientAttributesGetter(),
             singletonList("Custom-Request-Header"),
             singletonList("Custom-Response-Header"),
+            HttpRequestMethodUtil.KNOWN_METHODS,
             resendCountFromContext);
 
     AttributesBuilder startAttributes = Attributes.builder();
@@ -218,5 +221,83 @@ class HttpClientAttributesExtractorStableSemconvTest {
           arguments("http", "3.0", "tcp", "tcp"),
           arguments("http", "42", "tcp", "tcp"));
     }
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {"CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"})
+  void shouldExtractKnownMethods(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(
+            new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build()).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, requestMethod);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"get", "PURGE", "Get", "not a method really"})
+  void shouldUseOtherForUnknownMethods(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(
+            new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpRequestMethodUtil._OTHER)
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"only", "custom", "methods", "allowed"})
+  void shouldExtractKnownMethods_override(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.builder(
+                new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
+            .setKnownMethods(new HashSet<>(asList("only", "custom", "methods", "allowed")))
+            .build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build()).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, requestMethod);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {"CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"})
+  void shouldUseOtherForUnknownMethods_override(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.builder(
+                new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
+            .setKnownMethods(new HashSet<>(asList("only", "custom", "methods", "allowed")))
+            .build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpRequestMethodUtil._OTHER)
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 }

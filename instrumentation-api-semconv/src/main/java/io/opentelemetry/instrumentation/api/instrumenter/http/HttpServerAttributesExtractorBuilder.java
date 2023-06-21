@@ -11,6 +11,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import java.util.List;
+import java.util.Set;
 
 /** A builder of {@link HttpServerAttributesExtractor}. */
 public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
@@ -19,6 +20,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   final NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter;
   List<String> capturedRequestHeaders = emptyList();
   List<String> capturedResponseHeaders = emptyList();
+  Set<String> knownMethods = HttpRequestMethodUtil.KNOWN_METHODS;
 
   HttpServerAttributesExtractorBuilder(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
@@ -65,11 +67,37 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Configures the extractor to recognize an alternative set of HTTP request methods.
+   *
+   * <p>By default, this extractor defines "known" methods as the ones listed in <a
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
+   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>. If an
+   * unknown method is encountered, the extractor will use the value {@value
+   * HttpRequestMethodUtil#_OTHER} instead of it and put the original value in an extra {@code
+   * http.request.method_original} attribute.
+   *
+   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
+   * not supplement it.
+   *
+   * @param knownMethods A set of recognized HTTP request methods.
+   */
+  @CanIgnoreReturnValue
+  public HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> setKnownMethods(
+      Set<String> knownMethods) {
+    this.knownMethods = knownMethods;
+    return this;
+  }
+
+  /**
    * Returns a new {@link HttpServerAttributesExtractor} with the settings of this {@link
    * HttpServerAttributesExtractorBuilder}.
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new HttpServerAttributesExtractor<>(
-        httpAttributesGetter, netAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
+        httpAttributesGetter,
+        netAttributesGetter,
+        capturedRequestHeaders,
+        capturedResponseHeaders,
+        knownMethods);
   }
 }

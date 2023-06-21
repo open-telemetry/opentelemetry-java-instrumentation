@@ -136,6 +136,7 @@ class HttpClientAttributesExtractorBothSemconvTest {
             new TestNetClientAttributesGetter(),
             singletonList("Custom-Request-Header"),
             singletonList("Custom-Response-Header"),
+            HttpRequestMethodUtil.KNOWN_METHODS,
             resendCountFromContext);
 
     AttributesBuilder startAttributes = Attributes.builder();

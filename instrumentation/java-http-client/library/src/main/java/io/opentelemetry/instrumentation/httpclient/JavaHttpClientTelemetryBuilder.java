@@ -17,6 +17,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import javax.annotation.Nullable;
 
 public final class JavaHttpClientTelemetryBuilder {
 
@@ -27,6 +29,7 @@ public final class JavaHttpClientTelemetryBuilder {
 
   private List<String> capturedRequestHeaders = emptyList();
   private List<String> capturedResponseHeaders = emptyList();
+  @Nullable private Set<String> knownMethods = null;
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -65,10 +68,32 @@ public final class JavaHttpClientTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Configures the instrumentation to recognize an alternative set of HTTP request methods.
+   *
+   * <p>By default, this instrumentation defines "known" methods as the ones listed in <a
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
+   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   *
+   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
+   * not supplement it.
+   *
+   * @param knownMethods A set of recognized HTTP request methods.
+   */
+  @CanIgnoreReturnValue
+  public JavaHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+    this.knownMethods = knownMethods;
+    return this;
+  }
+
   public JavaHttpClientTelemetry build() {
     Instrumenter<HttpRequest, HttpResponse<?>> instrumenter =
         JavaHttpClientInstrumenterFactory.createInstrumenter(
-            openTelemetry, capturedRequestHeaders, capturedResponseHeaders, additionalExtractors);
+            openTelemetry,
+            capturedRequestHeaders,
+            capturedResponseHeaders,
+            knownMethods,
+            additionalExtractors);
 
     return new JavaHttpClientTelemetry(
         instrumenter, new HttpHeadersSetter(openTelemetry.getPropagators()));

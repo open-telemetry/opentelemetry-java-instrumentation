@@ -156,6 +156,7 @@ class HttpServerAttributesExtractorBothSemconvTest {
             new TestNetServerAttributesGetter(),
             singletonList("Custom-Request-Header"),
             singletonList("Custom-Response-Header"),
+            HttpRequestMethodUtil.KNOWN_METHODS,
             routeFromContext);
 
     AttributesBuilder startAttributes = Attributes.builder();

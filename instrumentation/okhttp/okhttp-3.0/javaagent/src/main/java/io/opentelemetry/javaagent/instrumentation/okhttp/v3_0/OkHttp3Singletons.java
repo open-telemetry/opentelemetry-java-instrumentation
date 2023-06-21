@@ -28,6 +28,7 @@ public final class OkHttp3Singletons {
           GlobalOpenTelemetry.get(),
           CommonConfig.get().getClientRequestHeaders(),
           CommonConfig.get().getClientResponseHeaders(),
+          CommonConfig.get().getKnownHttpRequestMethods(),
           emptyList());
 
   public static final Interceptor CONTEXT_INTERCEPTOR =

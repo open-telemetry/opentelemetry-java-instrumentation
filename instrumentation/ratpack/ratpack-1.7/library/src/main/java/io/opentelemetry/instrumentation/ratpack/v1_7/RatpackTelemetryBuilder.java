@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackNetClientAt
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackNetServerAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import ratpack.http.Request;
 import ratpack.http.Response;
 import ratpack.http.client.HttpResponse;
@@ -110,6 +111,25 @@ public final class RatpackTelemetryBuilder {
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setCapturedClientResponseHeaders(List<String> responseHeaders) {
     httpClientAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the instrumentation to recognize an alternative set of HTTP request methods.
+   *
+   * <p>By default, this instrumentation defines "known" methods as the ones listed in <a
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
+   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   *
+   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
+   * not supplement it.
+   *
+   * @param knownMethods A set of recognized HTTP request methods.
+   */
+  @CanIgnoreReturnValue
+  public RatpackTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+    httpClientAttributesExtractorBuilder.setKnownMethods(knownMethods);
+    httpServerAttributesExtractorBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
