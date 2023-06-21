@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -47,15 +48,22 @@ final class SqsImpl {
   }
 
   /** Create and close CONSUMER span for each message consumed. */
-  static void afterReceiveMessageExecution(
+  static boolean afterReceiveMessageExecution(
       TracingExecutionInterceptor config,
       ExecutionAttributes executionAttributes,
       Context.AfterExecution context) {
+
+    if (!(context.response() instanceof ReceiveMessageResponse)) {
+      return false;
+    }
+
     ReceiveMessageResponse response = (ReceiveMessageResponse) context.response();
     SdkHttpResponse httpResponse = context.httpResponse();
     for (Message message : response.messages()) {
       createConsumerSpan(config, message, executionAttributes, httpResponse);
     }
+
+    return true;
   }
 
   private static void createConsumerSpan(
@@ -129,5 +137,22 @@ final class SqsImpl {
       builder.messageAttributeNames(messageAttributeNames);
     }
     return builder.build();
+  }
+
+  @Nullable
+  public static SdkRequest modifyRequest(
+      SdkRequest request,
+      io.opentelemetry.context.Context otelContext,
+      boolean useXrayPropagator,
+      TextMapPropagator messagingPropagator) {
+    if (request instanceof ReceiveMessageRequest) {
+      return modifyReceiveMessageRequest(request, useXrayPropagator, messagingPropagator);
+    } else if (messagingPropagator != null) {
+      if (request instanceof SendMessageRequest) {
+        return injectIntoSendMessageRequest(messagingPropagator, request, otelContext);
+      }
+      // TODO: Support SendMessageBatchRequest
+    }
+    return null;
   }
 }
