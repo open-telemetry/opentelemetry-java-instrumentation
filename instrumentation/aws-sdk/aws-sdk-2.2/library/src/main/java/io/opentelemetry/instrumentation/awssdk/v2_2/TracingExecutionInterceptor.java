@@ -227,7 +227,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Context.AfterExecution context, ExecutionAttributes executionAttributes) {
 
     // Other special handling could be shortcut-&&ed after this (false is returned if not handled).
-    SqsAccess.afterReceiveMessageExecution(this, context, executionAttributes);
+    SqsAccess.afterReceiveMessageExecution(context, executionAttributes, this);
 
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     if (otelContext != null) {

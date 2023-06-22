@@ -27,9 +27,9 @@ final class SqsImpl {
   private SqsImpl() {}
 
   static SdkRequest injectIntoSendMessageRequest(
-      TextMapPropagator messagingPropagator,
       SdkRequest rawRequest,
-      io.opentelemetry.context.Context otelContext) {
+      io.opentelemetry.context.Context otelContext,
+      TextMapPropagator messagingPropagator) {
     SendMessageRequest request = (SendMessageRequest) rawRequest;
     Map<String, MessageAttributeValue> messageAttributes =
         new HashMap<>(request.messageAttributes());
@@ -49,9 +49,9 @@ final class SqsImpl {
 
   /** Create and close CONSUMER span for each message consumed. */
   static boolean afterReceiveMessageExecution(
-      TracingExecutionInterceptor config,
+      Context.AfterExecution context,
       ExecutionAttributes executionAttributes,
-      Context.AfterExecution context) {
+      TracingExecutionInterceptor config) {
 
     if (!(context.response() instanceof ReceiveMessageResponse)) {
       return false;
@@ -60,17 +60,17 @@ final class SqsImpl {
     ReceiveMessageResponse response = (ReceiveMessageResponse) context.response();
     SdkHttpResponse httpResponse = context.httpResponse();
     for (Message message : response.messages()) {
-      createConsumerSpan(config, message, executionAttributes, httpResponse);
+      createConsumerSpan(message, httpResponse, executionAttributes, config);
     }
 
     return true;
   }
 
   private static void createConsumerSpan(
-      TracingExecutionInterceptor config,
       Message message,
+      SdkHttpResponse httpResponse,
       ExecutionAttributes executionAttributes,
-      SdkHttpResponse httpResponse) {
+      TracingExecutionInterceptor config) {
 
     io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.root();
 
@@ -149,7 +149,7 @@ final class SqsImpl {
       return modifyReceiveMessageRequest(request, useXrayPropagator, messagingPropagator);
     } else if (messagingPropagator != null) {
       if (request instanceof SendMessageRequest) {
-        return injectIntoSendMessageRequest(messagingPropagator, request, otelContext);
+        return injectIntoSendMessageRequest(request, otelContext, messagingPropagator);
       }
       // TODO: Support SendMessageBatchRequest
     }

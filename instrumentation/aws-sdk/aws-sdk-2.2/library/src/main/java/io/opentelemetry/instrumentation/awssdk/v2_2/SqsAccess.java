@@ -40,10 +40,10 @@ final class SqsAccess {
 
   @NoMuzzle
   static boolean afterReceiveMessageExecution(
-      TracingExecutionInterceptor config,
       Context.AfterExecution context,
-      ExecutionAttributes executionAttributes) {
-    return enabled && SqsImpl.afterReceiveMessageExecution(config, executionAttributes, context);
+      ExecutionAttributes executionAttributes,
+      TracingExecutionInterceptor config) {
+    return enabled && SqsImpl.afterReceiveMessageExecution(context, executionAttributes, config);
   }
 
   /**
