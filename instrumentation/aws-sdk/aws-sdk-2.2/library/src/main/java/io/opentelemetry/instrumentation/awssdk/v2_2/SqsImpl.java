@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
+import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.http.SdkHttpResponse;
@@ -26,38 +27,17 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 final class SqsImpl {
   private SqsImpl() {}
 
-  static SdkRequest injectIntoSendMessageRequest(
-      SdkRequest rawRequest,
-      io.opentelemetry.context.Context otelContext,
-      TextMapPropagator messagingPropagator) {
-    SendMessageRequest request = (SendMessageRequest) rawRequest;
-    Map<String, MessageAttributeValue> messageAttributes =
-        new HashMap<>(request.messageAttributes());
-
-    messagingPropagator.inject(
-        otelContext,
-        messageAttributes,
-        (carrier, k, v) -> {
-          carrier.put(k, MessageAttributeValue.builder().stringValue(v).dataType("String").build());
-        });
-
-    if (messageAttributes.size() > 10) { // Too many attributes, we don't want to break the call.
-      return request;
-    }
-    return request.toBuilder().messageAttributes(messageAttributes).build();
-  }
-
-  /** Create and close CONSUMER span for each message consumed. */
   static boolean afterReceiveMessageExecution(
       Context.AfterExecution context,
       ExecutionAttributes executionAttributes,
       TracingExecutionInterceptor config) {
 
-    if (!(context.response() instanceof ReceiveMessageResponse)) {
+    SdkResponse rawResponse = context.response();
+    if (!(rawResponse instanceof ReceiveMessageResponse)) {
       return false;
     }
 
-    ReceiveMessageResponse response = (ReceiveMessageResponse) context.response();
+    ReceiveMessageResponse response = (ReceiveMessageResponse) rawResponse;
     SdkHttpResponse httpResponse = context.httpResponse();
     for (Message message : response.messages()) {
       createConsumerSpan(message, httpResponse, executionAttributes, config);
@@ -99,9 +79,49 @@ final class SqsImpl {
     }
   }
 
-  static SdkRequest modifyReceiveMessageRequest(
-      SdkRequest rawRequest, boolean useXrayPropagator, TextMapPropagator messagingPropagator) {
-    ReceiveMessageRequest request = (ReceiveMessageRequest) rawRequest;
+  @Nullable
+  static SdkRequest modifyRequest(
+      SdkRequest request,
+      io.opentelemetry.context.Context otelContext,
+      boolean useXrayPropagator,
+      TextMapPropagator messagingPropagator) {
+    if (request instanceof ReceiveMessageRequest) {
+      return modifyReceiveMessageRequest(
+          (ReceiveMessageRequest) request, useXrayPropagator, messagingPropagator);
+    } else if (messagingPropagator != null) {
+      if (request instanceof SendMessageRequest) {
+        return injectIntoSendMessageRequest(
+            (SendMessageRequest) request, otelContext, messagingPropagator);
+      }
+      // TODO: Support SendMessageBatchRequest
+    }
+    return null;
+  }
+
+  private static SdkRequest injectIntoSendMessageRequest(
+      SendMessageRequest request,
+      io.opentelemetry.context.Context otelContext,
+      TextMapPropagator messagingPropagator) {
+    Map<String, MessageAttributeValue> messageAttributes =
+        new HashMap<>(request.messageAttributes());
+
+    messagingPropagator.inject(
+        otelContext,
+        messageAttributes,
+        (carrier, k, v) -> {
+          carrier.put(k, MessageAttributeValue.builder().stringValue(v).dataType("String").build());
+        });
+
+    if (messageAttributes.size() > 10) { // Too many attributes, we don't want to break the call.
+      return request;
+    }
+    return request.toBuilder().messageAttributes(messageAttributes).build();
+  }
+
+  private static SdkRequest modifyReceiveMessageRequest(
+      ReceiveMessageRequest request,
+      boolean useXrayPropagator,
+      TextMapPropagator messagingPropagator) {
     boolean hasXrayAttribute = true;
     List<String> existingAttributeNames = null;
     if (useXrayPropagator) {
@@ -137,22 +157,5 @@ final class SqsImpl {
       builder.messageAttributeNames(messageAttributeNames);
     }
     return builder.build();
-  }
-
-  @Nullable
-  public static SdkRequest modifyRequest(
-      SdkRequest request,
-      io.opentelemetry.context.Context otelContext,
-      boolean useXrayPropagator,
-      TextMapPropagator messagingPropagator) {
-    if (request instanceof ReceiveMessageRequest) {
-      return modifyReceiveMessageRequest(request, useXrayPropagator, messagingPropagator);
-    } else if (messagingPropagator != null) {
-      if (request instanceof SendMessageRequest) {
-        return injectIntoSendMessageRequest(request, otelContext, messagingPropagator);
-      }
-      // TODO: Support SendMessageBatchRequest
-    }
-    return null;
   }
 }
