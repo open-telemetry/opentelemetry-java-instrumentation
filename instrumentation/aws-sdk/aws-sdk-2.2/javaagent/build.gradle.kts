@@ -15,9 +15,26 @@ muzzle {
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
   }
-}
 
-muzzle {
+  fail {
+    group.set("software.amazon.awssdk")
+    module.set("aws-core")
+    versions.set("[2.2.0,)")
+    // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
+    // client, which is not target of instrumentation anyways.
+    extraDependency("software.amazon.awssdk:protocol-core")
+
+    // "fail" asserts that *all* the instrumentation modules fail to load, but the core one is
+    // actually expected to succeed, so exclude it from checks.
+    excludeInstrumentationName("aws-sdk-2.2-core")
+
+    // If we don't exclude this, Muzzle must fail due to the unresolved SQS references.
+    // excludeInstrumentationName("aws-sdk-2.2-sqs")
+
+    // several software.amazon.awssdk artifacts are missing for this version
+    skip("2.17.200")
+  }
+
   pass {
     group.set("software.amazon.awssdk")
     module.set("sqs")

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.awssdk.v2_2.SqsAdviceBridge;
@@ -23,7 +23,7 @@ public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModul
   @Override
   public void doTransform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor(), SqsInstrumentationModule.class.getName() + "$RegisterAdvice");
+        none(), SqsInstrumentationModule.class.getName() + "$RegisterAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -32,7 +32,7 @@ public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModul
     public static void onExit() {
       // (indirectly) using SqsImpl class here to make sure it is available from SqsAccess
       // (injected into app classloader) and checked by Muzzle
-      SqsAdviceBridge.init();
+      SqsAdviceBridge.referenceForMuzzleOnly();
     }
   }
 }

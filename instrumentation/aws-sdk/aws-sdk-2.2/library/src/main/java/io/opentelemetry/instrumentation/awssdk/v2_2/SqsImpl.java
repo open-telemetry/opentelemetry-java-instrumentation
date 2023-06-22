@@ -25,10 +25,6 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 final class SqsImpl {
   private SqsImpl() {}
 
-  public static void init() {
-    // called from advice
-  }
-
   static SdkRequest injectIntoSendMessageRequest(
       TextMapPropagator messagingPropagator,
       SdkRequest rawRequest,
