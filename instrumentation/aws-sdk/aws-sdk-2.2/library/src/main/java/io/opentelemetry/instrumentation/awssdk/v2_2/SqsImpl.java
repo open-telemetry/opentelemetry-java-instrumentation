@@ -91,7 +91,7 @@ final class SqsImpl {
     }
   }
 
-  public static SdkRequest modifyReceiveMessageRequest(
+  static SdkRequest modifyReceiveMessageRequest(
       SdkRequest rawRequest, boolean useXrayPropagator, TextMapPropagator messagingPropagator) {
     ReceiveMessageRequest request = (ReceiveMessageRequest) rawRequest;
     boolean hasXrayAttribute = true;
