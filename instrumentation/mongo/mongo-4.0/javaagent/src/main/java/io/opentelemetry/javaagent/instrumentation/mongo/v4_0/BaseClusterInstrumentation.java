@@ -34,6 +34,14 @@ final class BaseClusterInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("com.mongodb.selector.ServerSelector")))
             .and(takesArgument(1, named("com.mongodb.internal.async.SingleResultCallback"))),
         this.getClass().getName() + "$SingleResultCallbackArg1Advice");
+
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(isPublic())
+            .and(named("selectServerAsync"))
+            .and(takesArgument(0, named("com.mongodb.selector.ServerSelector")))
+            .and(takesArgument(2, named("com.mongodb.internal.async.SingleResultCallback"))),
+        this.getClass().getName() + "$SingleResultCallbackArg2Advice");
   }
 
   @SuppressWarnings("unused")
@@ -42,6 +50,16 @@ final class BaseClusterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapCallback(
         @Advice.Argument(value = 1, readOnly = false) SingleResultCallback<Object> callback) {
+      callback = new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SingleResultCallbackArg2Advice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void wrapCallback(
+        @Advice.Argument(value = 2, readOnly = false) SingleResultCallback<Object> callback) {
       callback = new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
     }
   }
