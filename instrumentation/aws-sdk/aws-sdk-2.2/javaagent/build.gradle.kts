@@ -28,9 +28,6 @@ muzzle {
     // actually expected to succeed, so exclude it from checks.
     excludeInstrumentationName("aws-sdk-2.2-core")
 
-    // If we don't exclude this, Muzzle must fail due to the unresolved SQS references.
-    // excludeInstrumentationName("aws-sdk-2.2-sqs")
-
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
   }
