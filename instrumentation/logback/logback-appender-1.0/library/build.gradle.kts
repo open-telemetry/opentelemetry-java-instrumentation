@@ -36,6 +36,10 @@ dependencies {
   }
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+
+  testAnnotationProcessor("com.google.auto.service:auto-service")
+  testCompileOnly("com.google.auto.service:auto-service-annotations")
 }
 
 graalvmNative {
@@ -83,7 +87,28 @@ testing {
 }
 
 tasks {
+  val testUseGlobalOpenTelemetry by registering(Test::class) {
+    filter {
+      includeTestsMatching("*OpenTelemetryAppenderGlobalTest*")
+    }
+    include("**/*OpenTelemetryAppenderGlobalTest.*")
+    jvmArgs(
+      "-Dotel.java.global-autoconfigure.enabled=true",
+      "-Dlogback.configurationFile=" + project.projectDir.toString() + "/src/test/resources/logback-use-global.xml",
+      "-Dotel.metrics.exporter=none",
+      "-Dotel.traces.exporter=none",
+      "-Dotel.logs.exporter=none"
+    )
+  }
+
+  test {
+    filter {
+      excludeTestsMatching("*OpenTelemetryAppenderGlobalTest")
+    }
+  }
+
   check {
+    dependsOn(testUseGlobalOpenTelemetry)
     dependsOn(testing.suites)
   }
 }

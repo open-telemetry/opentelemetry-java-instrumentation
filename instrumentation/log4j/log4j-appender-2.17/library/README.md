@@ -56,3 +56,45 @@ The following demonstrates how you might configure the appender in your `log4j.x
 
 In this example Log4j2 log events will be sent to both the console appender and
 the `OpenTelemetryAppender`.
+
+In order to function, `OpenTelemetryAppender` needs access to an `OpenTelemetry` instance. This can
+be programmatically set during application startup as follows:
+
+```java
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppender;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+
+public class Application {
+
+  public static void main(String[] args) {
+    OpenTelemetrySdk openTelemetrySdk = // Configure OpenTelemetrySdk
+
+    // Get Configuration, iterate through appenders, and call setOpenTelemetrySdk(...) on any OpenTelemetryAppender
+    Configuration config = ((LoggerContext) LogManager.getContext(false)).getConfiguration();
+    config.getAppenders().values().stream()
+        .filter(a -> a instanceof OpenTelemetryAppender)
+        .forEach(a -> ((OpenTelemetryAppender) a).setOpenTelemetry(openTelemetrySdk));
+
+    // ... proceed with application
+  }
+}
+```
+
+Optionally, you can configure `OpenTelemetryAppender` to use the `GlobalOpenTelemetry` instance:
+```xml
+<OpenTelemetry name="OpenTelemetryAppender" useGlobalOpenTelemetry="true" />
+```
+
+Note: Setting `useGlobalOpenTelemetry` causes `OpenTelemetryAppender` to
+call `GlobalOpenTelemetry.get()`, which initializes `GlobalOpenTelemetry` and prevents future calls
+to `GlobalOpenTelemetry.set(...)`. `GlobalOpenTelemetry.get()` will return a noop instance unless
+you've opted
+into [autoconfigure](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure)
+via:
+
+- Add dependency on `io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:OPENTELEMETRY_VERSION`
+- Opt into `GlobalOpenTelemetry` autoconfigure by
+  setting `-Dotel.java.global-autoconfigure.enabled=true`

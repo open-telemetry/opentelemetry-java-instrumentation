@@ -26,7 +26,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-class OpenTelemetryAppenderConfigWithOpenTelemetryTest extends OpenTelemetryAppenderConfigTestBase {
+class OpenTelemetryAppenderTest extends AbstractOpenTelemetryConfigTest {
+
   @BeforeAll
   static void setupAll() {
     logRecordExporter = InMemoryLogRecordExporter.create();

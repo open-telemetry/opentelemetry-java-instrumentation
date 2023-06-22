@@ -7,17 +7,13 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
@@ -26,7 +22,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -35,29 +30,13 @@ import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-class OpenTelemetryAppenderConfigTest {
+abstract class AbstractOpenTelemetryAppenderTest {
 
   private static final Logger logger = LoggerFactory.getLogger("TestLogger");
 
-  private static InMemoryLogRecordExporter logRecordExporter;
-  private static Resource resource;
-  private static InstrumentationScopeInfo instrumentationScopeInfo;
-
-  @BeforeAll
-  static void setupAll() {
-    logRecordExporter = InMemoryLogRecordExporter.create();
-    resource = Resource.getDefault();
-    instrumentationScopeInfo = InstrumentationScopeInfo.create("TestLogger");
-
-    SdkLoggerProvider loggerProvider =
-        SdkLoggerProvider.builder()
-            .setResource(resource)
-            .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
-            .build();
-
-    GlobalOpenTelemetry.resetForTest();
-    GlobalOpenTelemetry.set(OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build());
-  }
+  static InMemoryLogRecordExporter logRecordExporter;
+  static Resource resource;
+  static InstrumentationScopeInfo instrumentationScopeInfo;
 
   @BeforeEach
   void setup() {
@@ -130,12 +109,12 @@ class OpenTelemetryAppenderConfigTest {
         .contains("logWithExtras");
 
     String file = logData.getAttributes().get(SemanticAttributes.CODE_FILEPATH);
-    assertThat(file).isEqualTo("OpenTelemetryAppenderConfigTest.java");
+    assertThat(file).isEqualTo("AbstractOpenTelemetryAppenderTest.java");
 
     String codeClass = logData.getAttributes().get(SemanticAttributes.CODE_NAMESPACE);
     assertThat(codeClass)
         .isEqualTo(
-            "io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppenderConfigTest");
+            "io.opentelemetry.instrumentation.logback.appender.v1_0.AbstractOpenTelemetryAppenderTest");
 
     String method = logData.getAttributes().get(SemanticAttributes.CODE_FUNCTION);
     assertThat(method).isEqualTo("logWithExtras");

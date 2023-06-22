@@ -35,7 +35,7 @@ import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-abstract class OpenTelemetryAppenderConfigTestBase {
+abstract class AbstractOpenTelemetryConfigTest {
 
   static final Logger logger = LogManager.getLogger("TestLogger");
 
