@@ -1,0 +1,37 @@
+# This action updates the CloudFoundry java-buildpack release index after each release.
+# See https://github.com/cloudfoundry/java-buildpack/blob/main/docs/extending-repositories.md
+# Prerequisite: the repo must have a branch named "cloudfoundry".
+
+name: Update cloudfoundry release index
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+
+  update-cloudfoundry-index-yml:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.create-github-release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: 'cloudfoundry'
+
+      - run: sudo apt-get install jq python3-pip
+      - run: pip install yq
+
+      - run: |
+          wget https://repo1.maven.org/maven2/io/opentelemetry/javaagent/opentelemetry-javaagent/maven-metadata.xml
+          xq -r .metadata.versioning.versions.version[] maven-metadata.xml | sed -E 's/(.*)/\1: https:\/\/repo1.maven.org\/maven2\/io\/opentelemetry\/javaagent\/opentelemetry-javaagent\/\1\/opentelemetry-javaagent-\1.jar/' > index.yml
+
+      - run: |
+          git config user.name ${{ github.actor }}
+          git config user.email ${{ github.actor }}@users.noreply.github.com
+          git add index.yml
+          git commit -m "Updated index.yml"
+          git push
