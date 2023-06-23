@@ -19,14 +19,13 @@ public final class ElasticsearchRestInstrumenterFactory {
       String instrumentationName) {
     ElasticsearchDbAttributesGetter dbClientAttributesGetter =
         new ElasticsearchDbAttributesGetter();
-    ElasticsearchClientAttributeExtractor esClientAtrributesExtractor = new ElasticsearchClientAttributeExtractor();
-    ElasticsearchSpanNameExtractor nameExtractor = new ElasticsearchSpanNameExtractor(
-        dbClientAttributesGetter);
+    ElasticsearchClientAttributeExtractor esClientAtrributesExtractor =
+        new ElasticsearchClientAttributeExtractor();
+    ElasticsearchSpanNameExtractor nameExtractor =
+        new ElasticsearchSpanNameExtractor(dbClientAttributesGetter);
 
     return Instrumenter.<ElasticsearchRestRequest, Response>builder(
-            GlobalOpenTelemetry.get(),
-            instrumentationName,
-            nameExtractor)
+            GlobalOpenTelemetry.get(), instrumentationName, nameExtractor)
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
         .addAttributesExtractor(esClientAtrributesExtractor)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());

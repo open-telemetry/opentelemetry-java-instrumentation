@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import co.elastic.clients.elasticsearch.ElasticsearchClient
+import co.elastic.clients.elasticsearch.core.IndexRequest
 import co.elastic.clients.elasticsearch.core.InfoResponse
 import co.elastic.clients.json.jackson.JacksonJsonpMapper
 import co.elastic.clients.transport.ElasticsearchTransport
@@ -101,7 +101,7 @@ class ElasticsearchClient8Test extends AgentInstrumentationSpecification {
     client.index { r ->
       r.id("test-id")
           .index("test-index")
-          .document(new TestDoc("test-value-a", 123))
+          .document(new Person("person-name"))
           .timeout(t -> t.time("1s"))
     }
 
@@ -139,5 +139,11 @@ class ElasticsearchClient8Test extends AgentInstrumentationSpecification {
         }
       }
     }
+  }
+
+  class Person {
+    public String name;
+
+    Person(String name) { this.name = name }
   }
 }

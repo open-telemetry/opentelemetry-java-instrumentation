@@ -84,7 +84,8 @@ public class ElasticsearchRest6Test {
                     .hasAttributesSatisfyingExactly(
                         equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
                         equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                        equalTo(SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"));
+                        equalTo(
+                            SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"));
               },
               span -> {
                 span.hasName("GET")
@@ -161,7 +162,8 @@ public class ElasticsearchRest6Test {
                     .hasAttributesSatisfyingExactly(
                         equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
                         equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                        equalTo(SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"));
+                        equalTo(
+                            SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"));
               },
               span -> {
                 span.hasName("GET")

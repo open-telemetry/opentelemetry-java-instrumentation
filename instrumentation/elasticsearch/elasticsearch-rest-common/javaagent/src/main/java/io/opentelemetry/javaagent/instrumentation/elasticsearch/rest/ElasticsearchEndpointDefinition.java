@@ -1,7 +1,11 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 
 import javax.annotation.Nullable;
-
 
 public class ElasticsearchEndpointDefinition {
   private final String endpointName;
@@ -13,8 +17,12 @@ public class ElasticsearchEndpointDefinition {
   }
 
   @Nullable
-  public String getEndpointName() {return endpointName;}
+  public String getEndpointName() {
+    return endpointName;
+  }
 
   @Nullable
-  public String[] getRoutes() {return routes;}
+  public String[] getRoutes() {
+    return routes;
+  }
 }

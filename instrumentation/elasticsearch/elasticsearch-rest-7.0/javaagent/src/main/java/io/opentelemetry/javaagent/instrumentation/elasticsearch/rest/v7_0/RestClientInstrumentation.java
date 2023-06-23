@@ -61,11 +61,11 @@ public class RestClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = currentContext();
-      VirtualField<Request, ElasticsearchEndpointDefinition> virtualField = VirtualField.find(
-          Request.class,
-          ElasticsearchEndpointDefinition.class);
-      otelRequest = ElasticsearchRestRequest.create(request.getMethod(), request.getEndpoint(),
-          virtualField.get(request));
+      VirtualField<Request, ElasticsearchEndpointDefinition> virtualField =
+          VirtualField.find(Request.class, ElasticsearchEndpointDefinition.class);
+      otelRequest =
+          ElasticsearchRestRequest.create(
+              request.getMethod(), request.getEndpoint(), virtualField.get(request));
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
@@ -103,12 +103,12 @@ public class RestClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = currentContext();
-      VirtualField<Request, ElasticsearchEndpointDefinition> virtualField = VirtualField.find(
-          Request.class,
-          ElasticsearchEndpointDefinition.class);
+      VirtualField<Request, ElasticsearchEndpointDefinition> virtualField =
+          VirtualField.find(Request.class, ElasticsearchEndpointDefinition.class);
 
-      otelRequest = ElasticsearchRestRequest.create(request.getMethod(), request.getEndpoint(),
-          virtualField.get(request));
+      otelRequest =
+          ElasticsearchRestRequest.create(
+              request.getMethod(), request.getEndpoint(), virtualField.get(request));
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
