@@ -21,6 +21,8 @@ import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
+import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
+import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 // this class is only used from SqsAccess from method with @NoMuzzle annotation
@@ -92,10 +94,34 @@ final class SqsImpl {
       if (request instanceof SendMessageRequest) {
         return injectIntoSendMessageRequest(
             (SendMessageRequest) request, otelContext, messagingPropagator);
+      } else if (request instanceof SendMessageBatchRequest) {
+        return injectIntoSendMessageBatchRequest(
+            (SendMessageBatchRequest) request, otelContext, messagingPropagator);
       }
       // TODO: Support SendMessageBatchRequest
     }
     return null;
+  }
+
+  private static SdkRequest injectIntoSendMessageBatchRequest(
+      SendMessageBatchRequest request,
+      io.opentelemetry.context.Context otelContext,
+      TextMapPropagator messagingPropagator) {
+    ArrayList<SendMessageBatchRequestEntry> entries = new ArrayList<>(request.entries());
+    for (int i = 0; i < entries.size(); ++i) {
+      SendMessageBatchRequestEntry entry = entries.get(i);
+      Map<String, MessageAttributeValue> messageAttributes =
+          new HashMap<>(entry.messageAttributes());
+
+      // TODO: Per https://github.com/open-telemetry/oteps/pull/220, each message should get
+      //  a separate context. We don't support this yet, also because it would be inconsistent
+      //  with the header-based X-Ray propagation
+      //  (probably could override it here by setting the X-Ray message system attribute)
+      if (injectIntoMessageAttributes(messageAttributes, otelContext, messagingPropagator)) {
+        entries.set(i, entry.toBuilder().messageAttributes(messageAttributes).build());
+      }
+    }
+    return request.toBuilder().entries(entries).build();
   }
 
   private static SdkRequest injectIntoSendMessageRequest(
@@ -104,7 +130,16 @@ final class SqsImpl {
       TextMapPropagator messagingPropagator) {
     Map<String, MessageAttributeValue> messageAttributes =
         new HashMap<>(request.messageAttributes());
+    if (!injectIntoMessageAttributes(messageAttributes, otelContext, messagingPropagator)) {
+      return request;
+    }
+    return request.toBuilder().messageAttributes(messageAttributes).build();
+  }
 
+  private static boolean injectIntoMessageAttributes(
+      Map<String, MessageAttributeValue> messageAttributes,
+      io.opentelemetry.context.Context otelContext,
+      TextMapPropagator messagingPropagator) {
     messagingPropagator.inject(
         otelContext,
         messageAttributes,
@@ -112,10 +147,10 @@ final class SqsImpl {
           carrier.put(k, MessageAttributeValue.builder().stringValue(v).dataType("String").build());
         });
 
-    if (messageAttributes.size() > 10) { // Too many attributes, we don't want to break the call.
-      return request;
-    }
-    return request.toBuilder().messageAttributes(messageAttributes).build();
+    // Return whether the injection resulted in an attribute count that is still supported.
+    // See
+    // https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-metadata.html#sqs-message-attributes
+    return messageAttributes.size() <= 10;
   }
 
   private static SdkRequest modifyReceiveMessageRequest(
