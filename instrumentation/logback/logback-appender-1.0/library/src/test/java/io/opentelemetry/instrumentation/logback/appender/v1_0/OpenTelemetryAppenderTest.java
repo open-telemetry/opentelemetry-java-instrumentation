@@ -33,8 +33,14 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
         OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build();
 
     LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-    ((OpenTelemetryAppender)
-            loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).getAppender("OpenTelemetry"))
-        .setOpenTelemetry(openTelemetrySdk);
+    loggerContext
+        .getLogger(Logger.ROOT_LOGGER_NAME)
+        .iteratorForAppenders()
+        .forEachRemaining(
+            appender -> {
+              if (appender instanceof OpenTelemetryAppender) {
+                ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetrySdk);
+              }
+            });
   }
 }

@@ -74,11 +74,18 @@ public class Application {
   public static void main(String[] args) {
     OpenTelemetrySdk openTelemetrySdk = // Configure OpenTelemetrySdk
 
-    // Get LoggerContext, get OpenTelemetryAppender from Root Logger, and call setOpenTelemetrySdk(...)
+    // Get LoggerContext, iterate through Root Logger appenders, and call setOpenTelemetrySdk(...)
+    // for each OpenTelemetryAppender
     LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-    ((OpenTelemetryAppender)
-        loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).getAppender("OpenTelemetryAppender"))
-        .setOpenTelemetry(openTelemetrySdk);
+    loggerContext
+        .getLogger(Logger.ROOT_LOGGER_NAME)
+        .iteratorForAppenders()
+        .forEachRemaining(
+            appender -> {
+              if (appender instanceof OpenTelemetryAppender) {
+                ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetrySdk);
+              }
+            });
 
     // ... proceed with application
   }
