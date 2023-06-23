@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
@@ -61,10 +60,10 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
   abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder()
 
   def setupSpec() {
-    sqsPort = PortUtils.findOpenPort()
-    sqs = SQSRestServerBuilder.withPort(sqsPort).withInterface("localhost").start()
+    sqs = SQSRestServerBuilder.withPort(0).withInterface("localhost").start()
+    def server = sqs.waitUntilStarted()
+    sqsPort = server.localAddress().port
     println getClass().name + " SQS server started at: localhost:$sqsPort/"
-
   }
 
   def cleanupSpec() {
@@ -181,9 +180,10 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
     when:
     client.sendMessage(sendMessageRequest)
 
-    client.receiveMessage(receiveMessageRequest)
+    def resp = client.receiveMessage(receiveMessageRequest)
 
     then:
+    resp.messages().size() == 1
     assertSqsTraces()
   }
 
@@ -198,9 +198,10 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
     when:
     client.sendMessage(sendMessageRequest).get()
 
-    client.receiveMessage(receiveMessageRequest).get()
+    def resp = client.receiveMessage(receiveMessageRequest).get()
 
     then:
+    resp.messages().size() == 1
     assertSqsTraces()
   }
 }
