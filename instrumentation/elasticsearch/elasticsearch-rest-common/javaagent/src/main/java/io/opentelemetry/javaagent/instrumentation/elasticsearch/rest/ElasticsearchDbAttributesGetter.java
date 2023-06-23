@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGe
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
-final class ElasticsearchRestAttributesGetter
+final class ElasticsearchDbAttributesGetter
     implements DbClientAttributesGetter<ElasticsearchRestRequest> {
 
   @Override
@@ -38,12 +38,13 @@ final class ElasticsearchRestAttributesGetter
   @Override
   @Nullable
   public String getStatement(ElasticsearchRestRequest request) {
-    return request.getMethod() + " " + request.getOperation();
+    return null;
   }
 
   @Override
   @Nullable
   public String getOperation(ElasticsearchRestRequest request) {
-    return request.getMethod();
+    ElasticsearchEndpointDefinition endpointDefinition = request.getEndpointDefinition();
+    return endpointDefinition != null ? endpointDefinition.getEndpointName() : null;
   }
 }

@@ -70,8 +70,8 @@ class ElasticsearchRest7Test extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "GET"
-            "$SemanticAttributes.DB_STATEMENT" "GET _cluster/health"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_URL" "${httpHost.toURI()}/_cluster/health"
           }
         }
         span(1) {
@@ -141,8 +141,8 @@ class ElasticsearchRest7Test extends AgentInstrumentationSpecification {
           childOf(span(0))
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "GET"
-            "$SemanticAttributes.DB_STATEMENT" "GET _cluster/health"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_URL" "${httpHost.toURI()}/_cluster/health"
           }
         }
         span(2) {

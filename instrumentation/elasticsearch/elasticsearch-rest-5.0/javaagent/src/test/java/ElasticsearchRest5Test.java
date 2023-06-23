@@ -92,8 +92,8 @@ public class ElasticsearchRest5Test {
                     .hasNoParent()
                     .hasAttributesSatisfyingExactly(
                         equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                        equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                        equalTo(SemanticAttributes.DB_STATEMENT, "GET _cluster/health"));
+                        equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                        equalTo(SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"));
               },
               span -> {
                 span.hasName("GET")
@@ -170,8 +170,8 @@ public class ElasticsearchRest5Test {
                     .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfyingExactly(
                         equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                        equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                        equalTo(SemanticAttributes.DB_STATEMENT, "GET _cluster/health"));
+                        equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                        equalTo(SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"));
               },
               span -> {
                 span.hasName("GET")
