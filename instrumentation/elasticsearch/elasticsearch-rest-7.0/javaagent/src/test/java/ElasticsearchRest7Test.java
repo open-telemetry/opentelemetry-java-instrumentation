@@ -3,12 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+
 import groovy.json.JsonSlurper;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpHost;
 import org.apache.http.util.EntityUtils;
 import org.assertj.core.api.AbstractLongAssert;
@@ -22,13 +29,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 public class ElasticsearchRest7Test {
   @RegisterExtension
@@ -42,8 +42,8 @@ public class ElasticsearchRest7Test {
 
   @BeforeAll
   static void setUp() {
-    elasticsearch = new ElasticsearchContainer(
-        "docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2");
+    elasticsearch =
+        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2");
     // limit memory usage
     elasticsearch.withEnv("ES_JAVA_OPTS", "-Xmx256m -Xms256m");
     elasticsearch.start();
@@ -72,31 +72,34 @@ public class ElasticsearchRest7Test {
     Assertions.assertEquals(((Map) result).get("status"), "green");
 
     testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("GET")
-                .hasKind(SpanKind.CLIENT)
-                .hasNoParent()
-                .hasAttributesSatisfyingExactly(
-                    equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                    equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                    equalTo(
-                        SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health")
-                ),
-            span -> span.hasName("GET")
-                .hasKind(SpanKind.CLIENT)
-                .hasParent(trace.getSpan(0))
-                .hasAttributesSatisfyingExactly(
-                    equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
-                    equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
-                    equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                    equalTo(AttributeKey.stringKey("net.protocol.name"), "http"),
-                    equalTo(AttributeKey.stringKey("net.protocol.version"), "1.1"),
-                    equalTo(SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"),
-                    equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
-                    satisfies(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                        AbstractLongAssert::isPositive)
-                )
-        ));
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(
+                                SemanticAttributes.HTTP_URL,
+                                httpHost.toURI() + "/_cluster/health")),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
+                            equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(AttributeKey.stringKey("net.protocol.name"), "http"),
+                            equalTo(AttributeKey.stringKey("net.protocol.version"), "1.1"),
+                            equalTo(
+                                SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"),
+                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
+                            satisfies(
+                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                AbstractLongAssert::isPositive))));
   }
 
   @Test
@@ -104,70 +107,78 @@ public class ElasticsearchRest7Test {
   public void elasticsearchStatusAsync() throws Exception {
     AsyncRequest asyncRequest = new AsyncRequest();
     CountDownLatch countDownLatch = new CountDownLatch(1);
-    ResponseListener responseListener = new ResponseListener() {
-      @Override
-      public void onSuccess(Response response) {
+    ResponseListener responseListener =
+        new ResponseListener() {
+          @Override
+          public void onSuccess(Response response) {
 
-        runWithSpan("callback", () -> {
-          asyncRequest.setRequestResponse(response);
-          countDownLatch.countDown();
-        });
-      }
+            runWithSpan(
+                "callback",
+                () -> {
+                  asyncRequest.setRequestResponse(response);
+                  countDownLatch.countDown();
+                });
+          }
 
-      @Override
-      public void onFailure(Exception e) {
-        runWithSpan("callback", () -> {
-          asyncRequest.setException(e);
-          countDownLatch.countDown();
-        });
-      }
-    };
+          @Override
+          public void onFailure(Exception e) {
+            runWithSpan(
+                "callback",
+                () -> {
+                  asyncRequest.setException(e);
+                  countDownLatch.countDown();
+                });
+          }
+        };
 
-    runWithSpan("parent", () ->
-        client.performRequestAsync(new Request("GET", "_cluster/health"), responseListener)
-    );
+    runWithSpan(
+        "parent",
+        () -> client.performRequestAsync(new Request("GET", "_cluster/health"), responseListener));
     countDownLatch.await(10, TimeUnit.SECONDS);
 
     if (asyncRequest.getException() != null) {
       throw asyncRequest.getException();
     }
-    Object result = new JsonSlurper().parseText(
-        EntityUtils.toString(asyncRequest.getRequestResponse().getEntity()));
+    Object result =
+        new JsonSlurper()
+            .parseText(EntityUtils.toString(asyncRequest.getRequestResponse().getEntity()));
     Assertions.assertInstanceOf(Map.class, result);
     Assertions.assertEquals(((Map) result).get("status"), "green");
 
     testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent")
-                .hasKind(SpanKind.INTERNAL)
-                .hasNoParent(),
-            span -> span.hasName("GET")
-                .hasKind(SpanKind.CLIENT)
-                .hasParent(trace.getSpan(0))
-                .hasAttributesSatisfyingExactly(
-                    equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                    equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                    equalTo(
-                        SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health")
-                ),
-            span -> span.hasName("GET")
-                .hasKind(SpanKind.CLIENT)
-                .hasParent(trace.getSpan(1))
-                .hasAttributesSatisfyingExactly(
-                    equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
-                    equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
-                    equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                    equalTo(AttributeKey.stringKey("net.protocol.name"), "http"),
-                    equalTo(AttributeKey.stringKey("net.protocol.version"), "1.1"),
-                    equalTo(SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"),
-                    equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
-                    satisfies(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                        AbstractLongAssert::isPositive)
-                ),
-            span -> span.hasName("callback")
-                .hasKind(SpanKind.INTERNAL)
-                .hasParent(trace.getSpan(0))
-        ));
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(
+                                SemanticAttributes.HTTP_URL,
+                                httpHost.toURI() + "/_cluster/health")),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
+                            equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(AttributeKey.stringKey("net.protocol.name"), "http"),
+                            equalTo(AttributeKey.stringKey("net.protocol.version"), "1.1"),
+                            equalTo(
+                                SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"),
+                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
+                            satisfies(
+                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                AbstractLongAssert::isPositive)),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   private static class AsyncRequest {
