@@ -96,9 +96,7 @@ public class ElasticsearchClient8Test {
                     equalTo(AttributeKey.stringKey("net.protocol.version"), "1.1"),
                     equalTo(SemanticAttributes.HTTP_URL, httpHost.toURI() + "/"),
                     equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
-                    equalTo(SemanticAttributes.USER_AGENT_ORIGINAL,
-                        "elastic-java/" + RestClientBuilder.VERSION + " (Java/"
-                            + System.getProperty("java.version") + ")"),
+                    equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, userAgent()),
                     satisfies(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
                         AbstractLongAssert::isPositive)
                 )
@@ -144,13 +142,16 @@ public class ElasticsearchClient8Test {
                     equalTo(SemanticAttributes.HTTP_URL,
                         httpHost.toURI() + "/test-index/_doc/test-id?timeout=1s"),
                     equalTo(SemanticAttributes.HTTP_STATUS_CODE, 201L),
-                    equalTo(SemanticAttributes.USER_AGENT_ORIGINAL,
-                        "elastic-java/" + RestClientBuilder.VERSION + " (Java/"
-                            + System.getProperty("java.version") + ")"),
+                    equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, userAgent()),
                     satisfies(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
                         AbstractLongAssert::isPositive)
                 )
         ));
+  }
+
+  private static String userAgent() {
+    return "elastic-java/" + RestClientBuilder.VERSION + " (Java/"
+        + System.getProperty("java.version") + ")";
   }
 
   private static class Person {
