@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("co.elastic.clients")
     module.set("elasticsearch-java")
-    versions.set("[8.0,)")
+    versions.set("[7.16,)")
     assertInverse.set(true)
   }
 }
