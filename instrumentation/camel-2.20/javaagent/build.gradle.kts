@@ -45,6 +45,7 @@ dependencies {
   testImplementation("org.spockframework:spock-spring")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.elasticmq:elasticmq-rest-sqs_2.12:1.0.0")
+  testImplementation("com.squareup.okhttp3:okhttp:4.11.0")
 
   testImplementation("org.testcontainers:localstack")
   testImplementation("org.testcontainers:cassandra")
