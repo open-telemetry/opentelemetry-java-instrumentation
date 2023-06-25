@@ -48,7 +48,12 @@ dependencies {
   testImplementation("com.squareup.okhttp3:okhttp:4.11.0")
 
   testImplementation("org.testcontainers:localstack")
-  testImplementation("org.testcontainers:cassandra")
+  testImplementation("org.testcontainers:cassandra:1.18.3")
+  testImplementation("org.testcontainers:testcontainers:1.18.3")
+  testImplementation("org.testcontainers:junit-jupiter:1.18.3")
+  testImplementation("com.datastax.oss:java-driver-core:4.1.0") {
+    exclude(group = "io.dropwizard.metrics", module = "metrics-core")
+  }
 
   latestDepTestLibrary("org.apache.camel:camel-core:2.+") // documented limitation
   latestDepTestLibrary("org.apache.camel:camel-spring-boot-starter:2.+") // documented limitation

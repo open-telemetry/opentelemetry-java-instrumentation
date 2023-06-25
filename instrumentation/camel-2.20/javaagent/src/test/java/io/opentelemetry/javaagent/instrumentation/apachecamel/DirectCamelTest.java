@@ -48,7 +48,7 @@ public class DirectCamelTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
+            trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("input")
                     .hasKind(SpanKind.INTERNAL)
                     .hasNoParent()

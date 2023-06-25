@@ -79,7 +79,8 @@ public class SingleServiceCamelTest {
                         equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
                         equalTo(SemanticAttributes.HTTP_URL, requestUrl),
                         equalTo(AttributeKey.stringKey("camel.uri"),
-                            requestUrl.replace("localhost", "0.0.0.0")))
+                            requestUrl.replace("localhost", "0.0.0.0"))
+                    )
             )
     );
   }

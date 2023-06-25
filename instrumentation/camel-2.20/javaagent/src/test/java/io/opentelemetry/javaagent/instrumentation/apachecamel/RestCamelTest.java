@@ -68,7 +68,7 @@ public class RestCamelTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
+            trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("start")
                     .hasKind(SpanKind.INTERNAL)
                     .hasAttributesSatisfying(
