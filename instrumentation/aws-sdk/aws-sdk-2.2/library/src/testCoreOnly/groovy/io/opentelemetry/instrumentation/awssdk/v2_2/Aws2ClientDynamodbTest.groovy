@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 
-class Aws2ClientTest extends AbstractAws2ClientCoreTest implements LibraryTestTrait {
+class Aws2ClientDynamodbTest extends AbstractAws2ClientCoreTest implements LibraryTestTrait {
   @Override
   ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder()

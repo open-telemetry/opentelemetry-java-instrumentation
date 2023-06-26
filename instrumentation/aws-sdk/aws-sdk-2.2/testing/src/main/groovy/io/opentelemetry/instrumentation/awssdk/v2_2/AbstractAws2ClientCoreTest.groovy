@@ -11,46 +11,23 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
 import io.opentelemetry.testing.internal.armeria.common.MediaType
-import org.junit.jupiter.api.Assumptions
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
-import software.amazon.awssdk.core.ResponseInputStream
-import software.amazon.awssdk.core.async.AsyncResponseTransformer
 import software.amazon.awssdk.core.client.builder.SdkClientBuilder
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
-import software.amazon.awssdk.core.exception.SdkClientException
-import software.amazon.awssdk.core.retry.RetryPolicy
-import software.amazon.awssdk.http.apache.ApacheHttpClient
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.*
-import software.amazon.awssdk.services.ec2.Ec2AsyncClient
-import software.amazon.awssdk.services.ec2.Ec2Client
-import software.amazon.awssdk.services.kinesis.KinesisClient
-import software.amazon.awssdk.services.kinesis.model.DeleteStreamRequest
-import software.amazon.awssdk.services.rds.RdsAsyncClient
-import software.amazon.awssdk.services.rds.RdsClient
-import software.amazon.awssdk.services.rds.model.DeleteOptionGroupRequest
-import software.amazon.awssdk.services.s3.S3AsyncClient
-import software.amazon.awssdk.services.s3.S3Client
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest
-import software.amazon.awssdk.services.s3.model.GetObjectRequest
-import software.amazon.awssdk.services.sqs.SqsAsyncClient
-import software.amazon.awssdk.services.sqs.SqsClient
-import software.amazon.awssdk.services.sqs.model.CreateQueueRequest
-import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import java.time.Duration
 import java.util.concurrent.Future
 
 import static com.google.common.collect.ImmutableMap.of
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.api.trace.StatusCode.ERROR
+
 
 @Unroll
 abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
