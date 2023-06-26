@@ -15,23 +15,9 @@ muzzle {
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
   }
+}
 
-  fail {
-    group.set("software.amazon.awssdk")
-    module.set("aws-core")
-    versions.set("[2.2.0,)")
-    // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
-    // client, which is not target of instrumentation anyways.
-    extraDependency("software.amazon.awssdk:protocol-core")
-
-    // "fail" asserts that *all* the instrumentation modules fail to load, but the core one is
-    // actually expected to succeed, so exclude it from checks.
-    excludeInstrumentationName("aws-sdk-2.2-core")
-
-    // several software.amazon.awssdk artifacts are missing for this version
-    skip("2.17.200")
-  }
-
+muzzle {
   pass {
     group.set("software.amazon.awssdk")
     module.set("sqs")
@@ -67,26 +53,17 @@ dependencies {
   latestDepTestLibrary("software.amazon.awssdk:sqs:+")
 }
 
-tasks {
-  val testExperimentalSqs by registering(Test::class) {
-    group = "verification"
+tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  // TODO run tests both with and without experimental span attributes, with & without extra propagation
+  systemProperties(mapOf(
+    "otel.instrumentation.aws-sdk.experimental-span-attributes" to "true",
+    "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging" to "true",
+  ))
+}
 
-    systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
-  }
-
-  check {
-    dependsOn(testExperimentalSqs)
-  }
-
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    // TODO run tests both with and without experimental span attributes
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-  }
-
-  withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>().configureEach {
-    mergeServiceFiles {
-      include("software/amazon/awssdk/global/handlers/execution.interceptors")
-    }
+tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>().configureEach {
+  mergeServiceFiles {
+    include("software/amazon/awssdk/global/handlers/execution.interceptors")
   }
 }

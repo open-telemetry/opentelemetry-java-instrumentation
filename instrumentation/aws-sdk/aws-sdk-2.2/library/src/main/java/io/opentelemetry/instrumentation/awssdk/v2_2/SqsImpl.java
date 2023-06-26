@@ -7,9 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.interceptor.Context;
@@ -17,7 +15,6 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
-import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
@@ -25,7 +22,11 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 final class SqsImpl {
   private SqsImpl() {}
 
-  static SdkRequest injectIntoSendMessageRequest(
+  public static void init() {
+    // called from advice
+  }
+
+  static SdkRequest injectIntoSqsSendMessageRequest(
       TextMapPropagator messagingPropagator,
       SdkRequest rawRequest,
       io.opentelemetry.context.Context otelContext) {
@@ -47,7 +48,7 @@ final class SqsImpl {
   }
 
   /** Create and close CONSUMER span for each message consumed. */
-  static void afterReceiveMessageExecution(
+  static void afterConsumerResponse(
       TracingExecutionInterceptor config,
       ExecutionAttributes executionAttributes,
       Context.AfterExecution context) {
@@ -89,45 +90,5 @@ final class SqsImpl {
       //  to the current context?
       consumerInstrumenter.end(context, executionAttributes, httpResponse, null);
     }
-  }
-
-  static SdkRequest modifyReceiveMessageRequest(
-      SdkRequest rawRequest, boolean useXrayPropagator, TextMapPropagator messagingPropagator) {
-    ReceiveMessageRequest request = (ReceiveMessageRequest) rawRequest;
-    boolean hasXrayAttribute = true;
-    List<String> existingAttributeNames = null;
-    if (useXrayPropagator) {
-      existingAttributeNames = request.attributeNamesAsStrings();
-      hasXrayAttribute =
-          existingAttributeNames.contains(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
-    }
-
-    boolean hasMessageAttribute = true;
-    List<String> existingMessageAttributeNames = null;
-    if (messagingPropagator != null) {
-      existingMessageAttributeNames = request.messageAttributeNames();
-      hasMessageAttribute = existingMessageAttributeNames.containsAll(messagingPropagator.fields());
-    }
-
-    if (hasMessageAttribute && hasXrayAttribute) {
-      return request;
-    }
-
-    ReceiveMessageRequest.Builder builder = request.toBuilder();
-    if (!hasXrayAttribute) {
-      List<String> attributeNames = new ArrayList<>(existingAttributeNames);
-      attributeNames.add(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
-      builder.attributeNamesWithStrings(attributeNames);
-    }
-    if (messagingPropagator != null) {
-      List<String> messageAttributeNames = new ArrayList<>(existingMessageAttributeNames);
-      for (String field : messagingPropagator.fields()) {
-        if (!existingMessageAttributeNames.contains(field)) {
-          messageAttributeNames.add(field);
-        }
-      }
-      builder.messageAttributeNames(messageAttributeNames);
-    }
-    return builder.build();
   }
 }

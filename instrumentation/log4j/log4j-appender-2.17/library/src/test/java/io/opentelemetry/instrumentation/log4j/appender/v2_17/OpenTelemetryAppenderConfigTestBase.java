@@ -9,7 +9,6 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -25,6 +24,7 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -107,8 +107,8 @@ abstract class OpenTelemetryAppenderConfigTestBase {
             satisfies(SemanticAttributes.EXCEPTION_STACKTRACE, v -> v.contains("logWithExtras")));
 
     assertThat(logDataList.get(0).getTimestampEpochNanos())
-        .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
-        .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
+        .isGreaterThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(start.toEpochMilli()))
+        .isLessThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
   }
 
   @Test
