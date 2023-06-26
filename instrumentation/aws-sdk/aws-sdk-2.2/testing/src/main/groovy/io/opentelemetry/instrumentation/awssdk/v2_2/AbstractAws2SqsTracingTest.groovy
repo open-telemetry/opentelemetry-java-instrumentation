@@ -86,7 +86,6 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
     true
   }
 
-
   void configureSdkClient(SqsBaseClientBuilder builder) {
     builder
       .overrideConfiguration(createOverrideConfigurationBuilder().build())
