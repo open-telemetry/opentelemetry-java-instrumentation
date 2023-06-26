@@ -19,6 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -141,7 +142,7 @@ class HttpClientAttributesExtractorTest {
             new TestNetClientAttributesGetter(),
             singletonList("Custom-Request-Header"),
             singletonList("Custom-Response-Header"),
-            HttpRequestMethodUtil.KNOWN_METHODS,
+            HttpConstants.KNOWN_METHODS,
             resendCountFromContext);
 
     AttributesBuilder startAttributes = Attributes.builder();
@@ -312,7 +313,7 @@ class HttpClientAttributesExtractorTest {
             new TestNetClientAttributesGetter(),
             emptyList(),
             emptyList(),
-            HttpRequestMethodUtil.KNOWN_METHODS,
+            HttpConstants.KNOWN_METHODS,
             resendCountFromContext);
 
     AttributesBuilder attributes = Attributes.builder();

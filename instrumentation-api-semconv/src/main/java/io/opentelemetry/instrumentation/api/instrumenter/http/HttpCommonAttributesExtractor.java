@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.lowercase;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.requestAttributeKey;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.responseAttributeKey;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRequestMethodUtil._OTHER;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.AttributesBuilder;

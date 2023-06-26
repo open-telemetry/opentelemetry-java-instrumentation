@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.List;
 import java.util.Set;
 
@@ -20,7 +21,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   final NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter;
   List<String> capturedRequestHeaders = emptyList();
   List<String> capturedResponseHeaders = emptyList();
-  Set<String> knownMethods = HttpRequestMethodUtil.KNOWN_METHODS;
+  Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
 
   HttpServerAttributesExtractorBuilder(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
@@ -72,9 +73,9 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * <p>By default, this extractor defines "known" methods as the ones listed in <a
    * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
    * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>. If an
-   * unknown method is encountered, the extractor will use the value {@value
-   * HttpRequestMethodUtil#_OTHER} instead of it and put the original value in an extra {@code
-   * http.request.method_original} attribute.
+   * unknown method is encountered, the extractor will use the value {@value HttpConstants#_OTHER}
+   * instead of it and put the original value in an extra {@code http.request.method_original}
+   * attribute.
    *
    * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
    * not supplement it.

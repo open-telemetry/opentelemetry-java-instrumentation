@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.unmodifiableList;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +19,6 @@ import java.util.Set;
  * any time.
  */
 public final class CommonConfig {
-
-  private static final List<String> DEFAULT_KNOWN_METHODS =
-      unmodifiableList(
-          asList("CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"));
 
   private static final CommonConfig instance = new CommonConfig(InstrumentationConfig.get());
 
@@ -65,7 +61,9 @@ public final class CommonConfig {
             "otel.instrumentation.http.server.capture-response-headers");
     knownHttpRequestMethods =
         new HashSet<>(
-            config.getList("otel.instrumentation.http.known-methods", DEFAULT_KNOWN_METHODS));
+            config.getList(
+                "otel.instrumentation.http.known-methods",
+                new ArrayList<>(HttpConstants.KNOWN_METHODS)));
     statementSanitizationEnabled =
         config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
   }

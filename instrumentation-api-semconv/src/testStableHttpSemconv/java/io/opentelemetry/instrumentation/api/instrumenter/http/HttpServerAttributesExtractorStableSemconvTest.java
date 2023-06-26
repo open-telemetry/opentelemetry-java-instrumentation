@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -167,7 +168,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
             new TestNetServerAttributesGetter(),
             singletonList("Custom-Request-Header"),
             singletonList("Custom-Response-Header"),
-            HttpRequestMethodUtil.KNOWN_METHODS,
+            HttpConstants.KNOWN_METHODS,
             routeFromContext);
 
     AttributesBuilder startAttributes = Attributes.builder();
@@ -248,8 +249,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {"CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"})
+  @ArgumentsSource(ValidRequestMethodsProvider.class)
   void shouldExtractKnownMethods(String requestMethod) {
     Map<String, String> request = new HashMap<>();
     request.put("method", requestMethod);
@@ -262,11 +262,32 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onStart(attributes, Context.root(), request);
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
-    assertThat(attributes.build()).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, requestMethod);
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, requestMethod)
+        .doesNotContainKey(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"get", "PURGE", "Get", "not a method really"})
+  @ValueSource(strings = {"get", "Get"})
+  void shouldTreatMethodsAsCaseSensitive(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(
+            new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"PURGE", "not a method really"})
   void shouldUseOtherForUnknownMethods(String requestMethod) {
     Map<String, String> request = new HashMap<>();
     request.put("method", requestMethod);
@@ -280,7 +301,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpRequestMethodUtil._OTHER)
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
         .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 
@@ -300,12 +321,13 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onStart(attributes, Context.root(), request);
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
-    assertThat(attributes.build()).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, requestMethod);
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, requestMethod)
+        .doesNotContainKey(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {"CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"})
+  @ArgumentsSource(ValidRequestMethodsProvider.class)
   void shouldUseOtherForUnknownMethods_override(String requestMethod) {
     Map<String, String> request = new HashMap<>();
     request.put("method", requestMethod);
@@ -321,7 +343,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpRequestMethodUtil._OTHER)
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
         .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 }
