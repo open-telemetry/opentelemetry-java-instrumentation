@@ -26,7 +26,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 final class SqsImpl {
   static {
     // Force loading of SqsClient; this ensures that an exception is thrown at this point when the
-    // SQS library is not present, which will cause SnsAccess to have enabled=false in library mode.
+    // SQS library is not present, which will cause SqsAccess to have enabled=false in library mode.
     @SuppressWarnings("unused")
     String ensureLoadedDummy = SqsClient.class.getName();
   }
