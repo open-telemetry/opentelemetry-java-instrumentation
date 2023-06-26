@@ -22,17 +22,17 @@ Those three pieces of information can be included in log statements produced by 
 by specifying them in the pattern/format. This way any services or tools that parse the application 
 logs can correlate traces/spans with log statements.
 
-> Note: If the current `Span` is invalid, there will be no OTEL info in the MDC
+> Note: If the current `Span` is invalid, the OpenTelemetry appender will not inject any trace information.
 
 ## Supported logging libraries
 
-> Note: There are also log appenders for exporting logs to OpenTelemetry, not to be confused with the MDC appenders
+> Note: There are also log appenders for exporting logs to OpenTelemetry, not to be confused with the MDC appenders.
 
-| Library | Version | Documentation                                                                        |
-|---------|---------|--------------------------------------------------------------------------------------|
-| Log4j 1 | 1.2+    |                                                                                      |
-| Log4j 2 | 2.7+    | [opentelemetry-log4j-context-data-2.17-autoconfigure](../instrumentation/log4j/log4j-context-data/log4j-context-data-2.17/library-autoconfigure) |                                                                                     |
-| Logback | 1.0+    | [opentelemetry-logback-mdc-1.0](../instrumentation/logback/logback-mdc-1.0/library)  |
+| Library | Auto-instrumented versions | Standalone Library Instrumentation                                                   |
+|---------|----------------------------|--------------------------------------------------------------------------------------|
+| Log4j 1 | 1.2+                       |                                                                                      |
+| Log4j 2 | 2.7+                       | [opentelemetry-log4j-context-data-2.17-autoconfigure](../instrumentation/log4j/log4j-context-data/log4j-context-data-2.17/library-autoconfigure) |                                                                                     |
+| Logback | 1.0+                       | [opentelemetry-logback-mdc-1.0](../instrumentation/logback/logback-mdc-1.0/library)  |
 
 ## Frameworks
 

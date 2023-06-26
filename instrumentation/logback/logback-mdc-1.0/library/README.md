@@ -48,6 +48,7 @@ The following demonstrates how you might configure the appender in your `logback
     <appender-ref ref="CONSOLE"/>
   </appender>
 
+  <!-- Use the wrapped "OTEL" appender instead of the original "CONSOLE" one -->
   <root level="INFO">
     <appender-ref ref="OTEL"/>
   </root>
