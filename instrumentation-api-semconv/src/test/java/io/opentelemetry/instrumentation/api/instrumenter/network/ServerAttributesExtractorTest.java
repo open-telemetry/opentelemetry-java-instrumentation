@@ -121,6 +121,27 @@ class ServerAttributesExtractorTest {
         .containsOnly(entry(NetworkAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4"));
   }
 
-  // TODO: add more test cases around duplicate data once
-  // https://github.com/open-telemetry/semantic-conventions/issues/85 clears up
+  @Test
+  void doesNotSetDuplicates() {
+    Map<String, String> request = new HashMap<>();
+    request.put("address", "1.2.3.4");
+    request.put("port", "80");
+    request.put("socketDomain", "1.2.3.4");
+    request.put("socketAddress", "1.2.3.4");
+    request.put("socketPort", "80");
+
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        ServerAttributesExtractor.create(new TestServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(NetworkAttributes.SERVER_ADDRESS, "1.2.3.4"),
+            entry(NetworkAttributes.SERVER_PORT, 80L));
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, null, null);
+    assertThat(endAttributes.build()).isEmpty();
+  }
 }

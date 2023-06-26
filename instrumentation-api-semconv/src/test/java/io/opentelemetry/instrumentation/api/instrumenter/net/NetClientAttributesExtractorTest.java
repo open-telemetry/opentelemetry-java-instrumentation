@@ -157,7 +157,8 @@ class NetClientAttributesExtractorTest {
   }
 
   @Test
-  @DisplayName("does not set any net.sock.* attributes when net.peer.name = net.sock.peer.addr")
+  @DisplayName(
+      "does not set those net.sock.peer.* attributes that duplicate corresponding net.peer.* attributes")
   void doesNotSetDuplicates1() {
     // given
     Map<String, String> map = new HashMap<>();
@@ -184,7 +185,11 @@ class NetClientAttributesExtractorTest {
             entry(SemanticAttributes.NET_PEER_NAME, "1:2:3:4::"),
             entry(SemanticAttributes.NET_PEER_PORT, 42L));
 
-    assertThat(endAttributes.build()).containsOnly(entry(SemanticAttributes.NET_TRANSPORT, IP_TCP));
+    assertThat(endAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
+            entry(SemanticAttributes.NET_SOCK_PEER_NAME, "proxy.opentelemetry.io"),
+            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 123L));
   }
 
   @Test
