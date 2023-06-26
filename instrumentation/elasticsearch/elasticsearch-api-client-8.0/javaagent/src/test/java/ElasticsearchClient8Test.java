@@ -82,7 +82,6 @@ public class ElasticsearchClient8Test {
   }
 
   @Test
-  // ignore deprecation interface
   public void elasticsearchStatus() throws IOException {
     InfoResponse response = client.info();
     Assertions.assertEquals(response.version().number(), "7.17.2");
@@ -118,14 +117,13 @@ public class ElasticsearchClient8Test {
   }
 
   @Test
-  // ignore deprecation interface
   public void elasticsearchIndex() throws IOException {
     client.index(
         r ->
             r.id("test-id")
                 .index("test-index")
                 .document(new Person("person-name"))
-                .timeout(t -> t.time("1s")));
+                .timeout(t -> t.time("10s")));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -140,7 +138,7 @@ public class ElasticsearchClient8Test {
                             equalTo(SemanticAttributes.HTTP_METHOD, "PUT"),
                             equalTo(
                                 SemanticAttributes.HTTP_URL,
-                                httpHost.toURI() + "/test-index/_doc/test-id?timeout=1s"),
+                                httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
                             equalTo(
                                 AttributeKey.stringKey("db.elasticsearch.path_parts.index"),
                                 "test-index"),
@@ -159,7 +157,7 @@ public class ElasticsearchClient8Test {
                             equalTo(AttributeKey.stringKey("net.protocol.version"), "1.1"),
                             equalTo(
                                 SemanticAttributes.HTTP_URL,
-                                httpHost.toURI() + "/test-index/_doc/test-id?timeout=1s"),
+                                httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 201L),
                             equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, userAgent()),
                             satisfies(
@@ -168,7 +166,6 @@ public class ElasticsearchClient8Test {
   }
 
   @Test
-  // ignore deprecation interface
   public void elasticsearchStatusAsync() throws Exception {
     CountDownLatch countDownLatch = new CountDownLatch(1);
     AsyncRequest request = new AsyncRequest();
@@ -233,9 +230,8 @@ public class ElasticsearchClient8Test {
       return response;
     }
 
-    public AsyncRequest setResponse(InfoResponse response) {
+    public void setResponse(InfoResponse response) {
       this.response = response;
-      return this;
     }
   }
 

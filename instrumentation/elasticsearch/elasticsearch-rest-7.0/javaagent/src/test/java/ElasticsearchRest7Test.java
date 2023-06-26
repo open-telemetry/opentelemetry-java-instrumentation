@@ -3,21 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-
-import groovy.json.JsonSlurper;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpHost;
-import org.apache.http.util.EntityUtils;
 import org.assertj.core.api.AbstractLongAssert;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
@@ -29,6 +20,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 public class ElasticsearchRest7Test {
   @RegisterExtension
@@ -39,6 +38,8 @@ public class ElasticsearchRest7Test {
   static HttpHost httpHost;
 
   static RestClient client;
+
+  static ObjectMapper objectMapper;
 
   @BeforeAll
   static void setUp() {
@@ -58,6 +59,8 @@ public class ElasticsearchRest7Test {
                         .setConnectTimeout(Integer.MAX_VALUE)
                         .setSocketTimeout(Integer.MAX_VALUE))
             .build();
+
+    objectMapper = new ObjectMapper();
   }
 
   @AfterAll
@@ -65,11 +68,11 @@ public class ElasticsearchRest7Test {
     elasticsearch.stop();
   }
 
+  @Test
   public void elasticsearchStatus() throws Exception {
     Response response = client.performRequest(new Request("GET", "_cluster/health"));
-    Object result = new JsonSlurper().parseText(EntityUtils.toString(response.getEntity()));
-    Assertions.assertInstanceOf(Map.class, result);
-    Assertions.assertEquals(((Map) result).get("status"), "green");
+    Map<?, ?> result = objectMapper.readValue(response.getEntity().getContent(), Map.class);
+    Assertions.assertEquals(result.get("status"), "green");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -103,7 +106,6 @@ public class ElasticsearchRest7Test {
   }
 
   @Test
-  // ignore deprecation interface
   public void elasticsearchStatusAsync() throws Exception {
     AsyncRequest asyncRequest = new AsyncRequest();
     CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -134,16 +136,17 @@ public class ElasticsearchRest7Test {
     runWithSpan(
         "parent",
         () -> client.performRequestAsync(new Request("GET", "_cluster/health"), responseListener));
+    //noinspection ResultOfMethodCallIgnored
     countDownLatch.await(10, TimeUnit.SECONDS);
 
     if (asyncRequest.getException() != null) {
       throw asyncRequest.getException();
     }
-    Object result =
-        new JsonSlurper()
-            .parseText(EntityUtils.toString(asyncRequest.getRequestResponse().getEntity()));
-    Assertions.assertInstanceOf(Map.class, result);
-    Assertions.assertEquals(((Map) result).get("status"), "green");
+
+    Map<?, ?> result =
+        objectMapper.readValue(
+            asyncRequest.getRequestResponse().getEntity().getContent(), Map.class);
+    Assertions.assertEquals(result.get("status"), "green");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -189,18 +192,16 @@ public class ElasticsearchRest7Test {
       return requestResponse;
     }
 
-    public AsyncRequest setRequestResponse(Response requestResponse) {
+    public void setRequestResponse(Response requestResponse) {
       this.requestResponse = requestResponse;
-      return this;
     }
 
     public Exception getException() {
       return exception;
     }
 
-    public AsyncRequest setException(Exception exception) {
+    public void setException(Exception exception) {
       this.exception = exception;
-      return this;
     }
   }
 }

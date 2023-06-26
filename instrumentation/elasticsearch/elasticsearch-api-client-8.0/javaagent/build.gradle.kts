@@ -20,10 +20,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
 
-  testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
-  testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
-
   testImplementation("org.testcontainers:elasticsearch")
 }
 
