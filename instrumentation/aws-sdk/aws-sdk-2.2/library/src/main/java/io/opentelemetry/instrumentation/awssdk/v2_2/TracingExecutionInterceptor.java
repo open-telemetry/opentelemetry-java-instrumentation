@@ -121,13 +121,17 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       throw throwable;
     }
 
-    SdkRequest sqsModifiedRequest =
+    SdkRequest modifiedRequest =
         SqsAccess.modifyRequest(request, otelContext, useXrayPropagator, messagingPropagator);
-    if (sqsModifiedRequest != null) {
-      return sqsModifiedRequest;
+    if (modifiedRequest != null) {
+      return modifiedRequest;
+    }
+    modifiedRequest = SnsAccess.modifyRequest(request, otelContext, messagingPropagator);
+    if (modifiedRequest != null) {
+      return modifiedRequest;
     }
 
-    // Insert other special handling here, following the same pattern as SQS.
+    // Insert other special handling here, following the same pattern as SQS and SNS.
 
     return request;
   }
