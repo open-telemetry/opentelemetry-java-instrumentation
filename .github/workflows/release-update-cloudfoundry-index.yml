@@ -5,7 +5,7 @@
 name: Update cloudfoundry release index
 on:
   release:
-    types: [released]
+    types: [published]
   workflow_dispatch:
 
 permissions:
