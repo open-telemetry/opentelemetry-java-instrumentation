@@ -17,7 +17,7 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 /**
- * Premain-Class for the OpenTelemetry Java agent.
+ * Premain-Class for the OpenTelemetry Javaagent.
  *
  * <p>The bootstrap process of the agent is somewhat complicated and care has to be taken to make
  * sure things do not get broken by accident.

@@ -1,6 +1,6 @@
 # Muzzle
 
-Muzzle is a safety feature of the Java agent that prevents applying instrumentation when a mismatch
+Muzzle is a safety feature of the Javaagent that prevents applying instrumentation when a mismatch
 between the instrumentation code and the instrumented application code is detected.
 It ensures API compatibility between symbols (classes, methods, fields) on the application classpath
 and references to those symbols made by instrumentation advices defined in the agent.

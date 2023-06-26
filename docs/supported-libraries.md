@@ -135,7 +135,8 @@ These are the supported libraries and frameworks:
 | [Vibur DBCP](https://www.vibur.org/)                                                                                                        | 11.0+                         | [opentelemetry-vibur-dbcp-11.0](../instrumentation/vibur-dbcp-11.0/library)                                                                                                                                                                                                                                                                                                             | [Database Pool Metrics]                                                                |
 | [ZIO](https://zio.dev/)                                                                                                                     | 2.0.0+                        | N/A                                                                                                                                                                                                                                                                                                                                                                                     | Context propagation                                                                    |
 
-**[1]** Standalone library instrumentation refers to instrumentation that can be used without the Java agent.
+**[1]** Standalone library instrumentation refers to instrumentation that can be used without the
+Javaagent.
 
 **[2]** Provides `http.route`: Provides route-based span name for existing `SERVER` span. If applicable, provides `http.route` span and metric attribute on existing `SERVER` span and metrics.
 

@@ -1,6 +1,6 @@
-# OpenTelemetry Java Agent Features
+# OpenTelemetry Javaagent Features
 
-This lists out some of the features specific to java agents that OpenTelemetry Auto Instrumentation
+This lists out some of the features specific to javaagents that OpenTelemetry Auto Instrumentation
 provides.
 
 - Bundled exporters
@@ -24,7 +24,7 @@ provides.
 - [Safety mechanisms](./safety-mechanisms.md) to prevent application linkage errors
   - Collect all references from instrumentation to library and only apply instrumentation if they exist in application
   - Verify above at compile time
-  - Instrumentation tests that run the java agent in a near-production configuration
+  - Instrumentation tests that run the javaagent in a near-production configuration
   - Ability to run tests against a fixed version and the latest version of dependencies
   - Docker-based smoke tests to verify agent behavior across JVM runtimes, Java application servers
 - Ability to create custom distributions, agents with different components / configuration

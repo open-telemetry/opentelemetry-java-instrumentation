@@ -21,8 +21,8 @@ Some libraries will have no way of intercepting requests because they only expos
 and no interception hooks. For these libraries it is not possible to create library
 instrumentation.
 
-**Java agent instrumentation**: This is logic that is similar to library instrumentation, but instead
-of a user initializing classes themselves, a Java agent automatically initializes them during
+**Javaagent instrumentation**: This is logic that is similar to library instrumentation, but instead
+of a user initializing classes themselves, a Javaagent automatically initializes them during
 class loading by manipulating byte code. This allows a user to develop their apps without thinking
 about instrumentation and get it "for free". Often, the agent instrumentation will generate
 bytecode that is more or less identical to what a user would have written themselves in their app.
@@ -272,7 +272,7 @@ class LibraryYarpcTest extends AbstractYarpcTest implements LibraryTestTrait {
 }
 ```
 
-## Writing Java agent instrumentation
+## Writing Javaagent instrumentation
 
 Now that you have working and tested library instrumentation, implement the javaagent
 instrumentation so that the users of the agent do not have to modify their apps to enable telemetry
@@ -321,7 +321,7 @@ bytecode instrumentation as when the agent is run against a normal app, and mean
 instrumentation will be hidden inside the javaagent (loaded by the `AgentClassLoader`) and will not
 be directly accessible in your test code. Make sure not to use the classes from the javaagent
 instrumentation in your test code. If for some reason you need to write unit tests for the javaagent
-code, see [this section](#writing-java-agent-unit-tests).
+code, see [this section](#writing-javaagent-unit-tests).
 
 ## Additional considerations regarding instrumentations
 
@@ -383,7 +383,7 @@ All classes from the newly added bootstrap module will be loaded by the bootstra
 globally available within the JVM. **IMPORTANT: Note that you _cannot_ use any third-party libraries
 here, including the instrumented library - you can only use JDK and OpenTelemetry API classes.**
 
-## Writing Java agent unit tests
+## Writing Javaagent unit tests
 
 As mentioned before, tests in the `javaagent` module cannot access the javaagent instrumentation
 classes directly because of class loader separation - the javaagent classes are hidden and not

@@ -44,7 +44,7 @@
 
 ## About
 
-This project provides a Java agent JAR that can be attached to any Java 8+
+This project provides a Javaagent JAR that can be attached to any Java 8+
 application and dynamically injects bytecode to capture telemetry from a
 number of popular libraries and frameworks.
 You can export the telemetry data in a variety of formats.
@@ -53,7 +53,7 @@ or environment variables. The net result is the ability to gather telemetry
 data from a Java application without code changes.
 
 This repository also publishes standalone instrumentation for several libraries (and growing)
-that can be used if you prefer that over using the Java agent.
+that can be used if you prefer that over using the Javaagent.
 Please see the standalone library instrumentation column
 on [Supported Libraries](docs/supported-libraries.md#libraries--frameworks).
 if you are looking for documentation on using those.
@@ -74,7 +74,7 @@ java -javaagent:path/to/opentelemetry-javaagent.jar \
      -jar myapp.jar
 ```
 
-By default, the OpenTelemetry Java agent uses
+By default, the OpenTelemetry Javaagent uses
 [OTLP exporter](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp)
 configured to send data to
 [OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/main/receiver/otlpreceiver/README.md)

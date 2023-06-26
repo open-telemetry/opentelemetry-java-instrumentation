@@ -1,7 +1,7 @@
-# OpenTelemetry Java Agent Safety Mechanisms
+# OpenTelemetry Javaagent Safety Mechanisms
 
 This document outlines the safety mechanisms we have in place to have confidence
-that the Java agent can be attached to a user's application with a very low chance of
+that the Javaagent can be attached to a user's application with a very low chance of
 affecting it negatively, for example introducing crashes.
 
 ## Instrumentation tests
@@ -53,7 +53,7 @@ potentially cause linkage errors.
 
 See more detail about the class loader separation [here](./contributing/javaagent-structure.md).
 
-The Java agent makes sure to include as little code as possible in the user app's class loader, and
+The Javaagent makes sure to include as little code as possible in the user app's class loader, and
 all code that is included is either unique to the agent itself or shaded in the agent build. This is
 because if the agent included classes that are also used by the user's app and there was a version
 mismatch, it could cause linkage crashes.

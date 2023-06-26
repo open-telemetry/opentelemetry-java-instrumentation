@@ -151,7 +151,7 @@
 
 ## Version 1.25.1 (2023-04-27)
 
-- Fix apache pulsar instrumentation missing from the Java agent
+- Fix apache pulsar instrumentation missing from the Javaagent
   ([#8378](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8378))
 
 ## Version 1.25.0 (2023-04-13)

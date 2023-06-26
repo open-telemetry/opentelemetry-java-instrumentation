@@ -32,7 +32,7 @@ java -version
 ./gradlew assemble
 ```
 
-and then you can find the java agent artifact at
+and then you can find the javaagent artifact at
 
 `javaagent/build/libs/opentelemetry-javaagent-<version>.jar`.
 

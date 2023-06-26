@@ -4,7 +4,7 @@
 
 These two things must seamlessly interoperate:
 
-* Instrumentation provided by the Java agent
+* Instrumentation provided by the Javaagent
 * Instrumentation provided by the user app, using any 1.0+ version of the OpenTelemetry API
 
 ## Design
@@ -20,15 +20,15 @@ The rest of this section describes the components in the diagram above.
 using the OpenTelemetry API.
 
 **Versioned Bridge** - a bridge between the version of the OpenTelemetry API
-brought by the user app, and the (shaded) OpenTelemetry API used internally by the Java agent.
-The Java agent will rewrite io.opentelemetry.api.OpenTelemetry via bytecode instrumentation
+brought by the user app, and the (shaded) OpenTelemetry API used internally by the Javaagent.
+The Javaagent will rewrite io.opentelemetry.api.OpenTelemetry via bytecode instrumentation
 so that users will get the versioned bridge as their implementation of the OpenTelemetry API.
 In order to implement the OpenTelemetry API brought by the user app,
 the versioned bridge needs to be injected into the class loader where that OpenTelemetry API lives.
-The Java agent will inject an appropriate version of the bridge
+The Javaagent will inject an appropriate version of the bridge
 that supports the version of the OpenTelemetry API brought by the user.
-If the Java agent does not recognize the version of the OpenTelemetry API brought by the user app,
-then it will not inject one (e.g. running an old version of the Java agent with a new version
+If the Javaagent does not recognize the version of the OpenTelemetry API brought by the user app,
+then it will not inject one (e.g. running an old version of the Javaagent with a new version
 of OpenTelemetry API).
 
 **Bytecode Instrumentation** - bytecode instrumentation of well-known libraries.
@@ -73,7 +73,7 @@ This may lead us to apply the Versioned Bridge as bytecode instrumentation
 on the user-brought OpenTelemetry SDK, which is not as clean, but would avoid this issue.
 
 Users who have configured the underlying SDK / exporter could be surprised
-that the Java agent takes over, and their configuration work / exporter is not carried over.
+that the Javaagent takes over, and their configuration work / exporter is not carried over.
 
 ## Alternate Design 1
 
@@ -82,7 +82,7 @@ the bytecode instrumentation could use the OpenTelemetry API brought by the user
 
 ![Alternate Design 1](alt-design-1.png)
 
-The Java agent could check which version of the OpenTelemetry API was brought by the user,
+The Javaagent could check which version of the OpenTelemetry API was brought by the user,
 and only apply the bytecode instrumentation if it's compatible
 with that version of the OpenTelemetry API.
 

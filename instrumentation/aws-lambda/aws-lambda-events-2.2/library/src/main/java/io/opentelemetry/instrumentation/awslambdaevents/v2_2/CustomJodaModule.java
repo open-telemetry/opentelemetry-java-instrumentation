@@ -22,7 +22,7 @@ import org.joda.time.format.DateTimeFormatter;
  *
  * <p>It enables parsing of {@link DateTime} which is used by some standard events. A custom module
  * was used as opposed to Jackson standard module for parsing Joda to avoid adding more libraries to
- * the Java Agent.
+ * the Javaagent.
  *
  * <p>Supporting custom POJOs using Joda is out of the scope of this class.
  */

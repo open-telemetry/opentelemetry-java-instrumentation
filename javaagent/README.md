@@ -1,1 +1,1 @@
-# Java Agent for Auto Instrumentation
+# Javaagent for Auto Instrumentation

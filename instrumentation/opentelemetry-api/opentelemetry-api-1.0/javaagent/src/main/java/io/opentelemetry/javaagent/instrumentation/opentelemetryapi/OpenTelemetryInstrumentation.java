@@ -74,7 +74,7 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
       Logger.getLogger(application.io.opentelemetry.api.GlobalOpenTelemetry.class.getName())
           .log(
               WARNING,
-              "You are currently using the OpenTelemetry Instrumentation Java Agent;"
+              "You are currently using the OpenTelemetry Instrumentation Javaagent;"
                   + " all GlobalOpenTelemetry.set calls are ignored - the agent provides"
                   + " the global OpenTelemetry object used by your application.",
               new Throwable());
@@ -89,7 +89,7 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
       Logger.getLogger(application.io.opentelemetry.api.GlobalOpenTelemetry.class.getName())
           .log(
               WARNING,
-              "You are currently using the OpenTelemetry Instrumentation Java Agent;"
+              "You are currently using the OpenTelemetry Instrumentation Javaagent;"
                   + " all GlobalOpenTelemetry.resetForTest calls are ignored - the agent provides"
                   + " the global OpenTelemetry object used by your application.",
               new Throwable());

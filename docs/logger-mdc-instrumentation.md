@@ -8,7 +8,7 @@ The Mapped Diagnostic Context (MDC) is
 It contains thread-local contextual information which is later copied to each logging event captured
 by a logging library.
 
-The OTel Java agent injects several pieces of information about the current span into each logging
+The OTel Javaagent injects several pieces of information about the current span into each logging
 event's MDC copy:
 
 - `trace_id` - the current trace id

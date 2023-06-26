@@ -5,8 +5,12 @@ This subsystem provides a framework for collecting and reporting metrics provide
 local [MBeans](https://docs.oracle.com/javase/tutorial/jmx/mbeans/index.html)
 available within the instrumented application. The required MBeans and corresponding metrics can be described using a YAML configuration file. The individual metric configurations allow precise metric selection and identification.
 
-The selected JMX metrics are reported using the Java Agent internal SDK. This means that they share the configuration and metric exporter with other metrics collected by the agent and are controlled by the same properties, for example `otel.metric.export.interval` or `otel.metrics.exporter`.
-The Open Telemetry resource description for the metrics reported by JMX Metric Insight will be the same as for other metrics exported by the SDK, while the instrumentation scope will be `io.opentelemetry.jmx`.
+The selected JMX metrics are reported using the Javaagent internal SDK. This means that they share
+the configuration and metric exporter with other metrics collected by the agent and are controlled
+by the same properties, for example `otel.metric.export.interval` or `otel.metrics.exporter`.
+The Open Telemetry resource description for the metrics reported by JMX Metric Insight will be the
+same as for other metrics exported by the SDK, while the instrumentation scope will
+be `io.opentelemetry.jmx`.
 
 To control the time interval between MBean detection attempts, one can use the `otel.jmx.discovery.delay` property, which defines the number of milliseconds to elapse between the first and the next detection cycle. JMX Metric Insight may dynamically adjust the time interval between further attempts, but it guarantees that the MBean discovery will run perpetually.
 
@@ -129,7 +133,8 @@ Using the above rule, when running on HotSpot JVM for Java 11, the following com
 - {pool="CodeHeap 'non-nmethods'", type="NON_HEAP"}
 - {pool="G1 Survivor Space", type="HEAP"}
 
-**Note**: Heap and memory pool metrics above are given just as examples. The Java Agent already reports such metrics, no additional configuration is needed from the users.
+**Note**: Heap and memory pool metrics above are given just as examples. The Javaagent already
+reports such metrics, no additional configuration is needed from the users.
 
 ### Mapping multiple MBean attributes to the same metric
 
