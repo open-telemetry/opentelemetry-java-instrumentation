@@ -163,6 +163,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
           name "Sqs.ReceiveMessage"
           kind CONSUMER
           childOf span(0)
+          hasNoLinks() // TODO: Link to receive operation?
           attributes {
             "aws.agent" "java-aws-sdk"
             "rpc.method" "ReceiveMessage"
@@ -187,6 +188,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
           name "Sqs.ReceiveMessage"
           kind CLIENT
           hasNoParent()
+          hasNoLinks()
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "00000000-0000-0000-0000-000000000000"
@@ -298,6 +300,8 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             name "Sqs.ReceiveMessage"
             kind CONSUMER
             childOf span(0)
+            hasNoLinks() // TODO: Link to receive operation?
+
             attributes {
               "aws.agent" "java-aws-sdk"
               "rpc.method" "ReceiveMessage"
@@ -349,6 +353,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
 
             // TODO This is not nice at all, and can also happen if producer is not instrumented
             hasNoParent()
+            hasNoLinks() // TODO: Link to receive operation?
 
             attributes {
               "aws.agent" "java-aws-sdk"
