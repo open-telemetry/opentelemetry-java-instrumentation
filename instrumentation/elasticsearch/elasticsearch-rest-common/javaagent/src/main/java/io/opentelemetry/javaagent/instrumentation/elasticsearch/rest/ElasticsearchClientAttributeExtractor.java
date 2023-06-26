@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 
+import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -13,8 +15,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.internal.Networ
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.elasticsearch.client.Response;
-import javax.annotation.Nullable;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import javax.annotation.Nullable;
+import org.elasticsearch.client.Response;
 
 public class ElasticsearchClientAttributeExtractor
     implements AttributesExtractor<ElasticsearchRestRequest, Response> {
@@ -40,7 +40,8 @@ public class ElasticsearchClientAttributeExtractor
       }
       if (SemconvStability.emitOldHttpSemconv()) {
         internalSet(attributes, SemanticAttributes.NET_PEER_NAME, hostAddress.getHostAddress());
-        internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) response.getHost().getPort());
+        internalSet(
+            attributes, SemanticAttributes.NET_PEER_PORT, (long) response.getHost().getPort());
       }
     }
   }
@@ -83,10 +84,10 @@ public class ElasticsearchClientAttributeExtractor
   /**
    * Identifies the corresponding URL route by matching the actual URL path against valid URL routes
    * for that corresponding endpoint definition.
-   * <p>
-   * Once the correct URL route is found, this method retrieves the URL path parameters from the URL
-   * path by using the corresponding URL route regex with embedded named capture groups for the URL
-   * path parameters.
+   *
+   * <p>Once the correct URL route is found, this method retrieves the URL path parameters from the
+   * URL path by using the corresponding URL route regex with embedded named capture groups for the
+   * URL path parameters.
    */
   private void setPathPartsAttributes(
       AttributesBuilder attributes, ElasticsearchRestRequest request) {
@@ -125,8 +126,8 @@ public class ElasticsearchClientAttributeExtractor
   /**
    * For a given route creates, compiles and caches a regular expression pattern and retrieves a set
    * of pathPartNames (names of the URL path parameters).
-   * <p>
-   * The regex pattern is later being used to match against a URL path to retrieve the URL path
+   *
+   * <p>The regex pattern is later being used to match against a URL path to retrieve the URL path
    * parameters for that route pattern using named regex capture groups.
    *
    * @param route The route to create the regex pattern for.
