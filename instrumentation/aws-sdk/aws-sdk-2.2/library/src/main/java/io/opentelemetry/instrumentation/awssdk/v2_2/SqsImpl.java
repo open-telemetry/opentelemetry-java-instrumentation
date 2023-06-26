@@ -15,6 +15,7 @@ import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.http.SdkHttpResponse;
+import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
@@ -23,6 +24,13 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 // this class is only used from SqsAccess from method with @NoMuzzle annotation
 final class SqsImpl {
+  static {
+    // Force loading of SqsClient; this ensures that an exception is thrown at this point when the
+    // SQS library is not present, which will cause SnsAccess to have enabled=false in library mode.
+    @SuppressWarnings("unused")
+    String ensureLoadedDummy = SqsClient.class.getName();
+  }
+
   private SqsImpl() {}
 
   static SdkRequest injectIntoSendMessageRequest(
