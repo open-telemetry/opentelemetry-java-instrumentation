@@ -27,9 +27,8 @@ import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -84,6 +83,16 @@ public class ContextPropagationTest {
     }
   }
 
+  @Test
+  public void testWithoutHeaders() throws Exception {
+    test(false);
+  }
+
+  @Test
+  public void testWithHeaders() throws Exception {
+    test(true);
+  }
+
   private static List<AttributeAssertion> getAssertions(
       String destination,
       String operation,
@@ -121,9 +130,7 @@ public class ContextPropagationTest {
     return assertions;
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  public void test(boolean testHeaders) throws Exception {
+  private static void test(boolean testHeaders) throws Exception {
     try (Connection connection = connectionFactory.newConnection()) {
       try (Channel ignored = connection.createChannel()) {
         testing.runWithSpan(
