@@ -15,8 +15,6 @@ jobs:
 
   update-cloudfoundry-index-yml:
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.create-github-release.outputs.version }}
     steps:
       - uses: actions/checkout@v3
         with:
