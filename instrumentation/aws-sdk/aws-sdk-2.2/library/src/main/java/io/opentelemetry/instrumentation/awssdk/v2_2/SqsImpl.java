@@ -98,7 +98,6 @@ final class SqsImpl {
         return injectIntoSendMessageBatchRequest(
             (SendMessageBatchRequest) request, otelContext, messagingPropagator);
       }
-      // TODO: Support SendMessageBatchRequest
     }
     return null;
   }
