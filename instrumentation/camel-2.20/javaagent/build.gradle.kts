@@ -51,7 +51,7 @@ dependencies {
   testImplementation("org.testcontainers:cassandra:1.18.3")
   testImplementation("org.testcontainers:testcontainers:1.18.3")
   testImplementation("org.testcontainers:junit-jupiter:1.18.3")
-  testImplementation("com.datastax.oss:java-driver-core:4.1.0") {
+  testImplementation("com.datastax.oss:java-driver-core:4.16.0") {
     exclude(group = "io.dropwizard.metrics", module = "metrics-core")
   }
 
