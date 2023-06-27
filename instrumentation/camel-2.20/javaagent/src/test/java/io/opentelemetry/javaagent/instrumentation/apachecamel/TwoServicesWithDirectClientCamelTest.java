@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.AttributeKey;
@@ -25,7 +26,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public class TwoServicesWithDirectClientCamelTest {
+public class TwoServicesWithDirectClientCamelTest extends RetryOnAddressAlreadyInUse {
   @RegisterExtension
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
   private static ConfigurableApplicationContext server;
@@ -38,7 +39,7 @@ public class TwoServicesWithDirectClientCamelTest {
 
   @BeforeAll
   public static void setupSpec() {
-    setupSpecUnderRetry();
+    withRetryOnAddressAlreadyInUse(TwoServicesWithDirectClientCamelTest::setupSpecUnderRetry);
   }
 
   public static void setupSpecUnderRetry() {
@@ -136,7 +137,15 @@ public class TwoServicesWithDirectClientCamelTest {
                         equalTo(AttributeKey.stringKey("net.protocol.version"), "1.1"),
                         equalTo(SemanticAttributes.NET_HOST_NAME, "127.0.0.1"),
                         equalTo(SemanticAttributes.NET_HOST_PORT, portTwo),
-                        equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")
+                        equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                        satisfies(
+                            SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
+                            val -> val.isInstanceOf(Long.class)
+                        ),
+                        satisfies(
+                            SemanticAttributes.NET_SOCK_PEER_PORT,
+                            val -> val.isInstanceOf(Long.class)
+                        )
                     ),
                 span -> span.hasName("POST /serviceTwo")
                     .hasKind(SpanKind.INTERNAL)

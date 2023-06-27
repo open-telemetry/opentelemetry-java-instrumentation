@@ -6,6 +6,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.instrumentation.apachecamel.RetryOnAddressAlreadyInUse;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
@@ -22,7 +23,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 @Testcontainers
-public class CassandraTest {
+public class CassandraTest extends RetryOnAddressAlreadyInUse {
 
   @RegisterExtension
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -31,7 +32,7 @@ public class CassandraTest {
 
   @Container
   private static final CassandraContainer<?> cassandra =
-      (CassandraContainer) new CassandraContainer<>("cassandra:3.11.2").withExposedPorts(9042);
+      new CassandraContainer<>("cassandra:3.11.2").withExposedPorts(9042);
 
   private static String host;
 
@@ -41,7 +42,7 @@ public class CassandraTest {
 
   @BeforeAll
   public static void setupSpec() {
-    setupSpecUnderRetry();
+    withRetryOnAddressAlreadyInUse(CassandraTest::setupSpecUnderRetry);
   }
 
   private static void cassandraSetup() {

@@ -27,7 +27,7 @@ import java.io.IOException;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
-public class SingleServiceCamelTest {
+public class SingleServiceCamelTest extends RetryOnAddressAlreadyInUse {
 
   @RegisterExtension
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -40,7 +40,7 @@ public class SingleServiceCamelTest {
 
   @BeforeAll
   public static void setupSpec() {
-    setupSpecUnderRetry();
+    withRetryOnAddressAlreadyInUse(SingleServiceCamelTest::setupSpecUnderRetry);
   }
 
   public static void setupSpecUnderRetry() {

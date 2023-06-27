@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.AttributeKey;
@@ -23,7 +24,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public class RestCamelTest {
+public class RestCamelTest extends RetryOnAddressAlreadyInUse {
 
   @RegisterExtension
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -33,7 +34,7 @@ public class RestCamelTest {
 
   @BeforeAll
   public static void setupSpec() {
-    setupSpecUnderRetry();
+    withRetryOnAddressAlreadyInUse(RestCamelTest::setupSpecUnderRetry);
   }
 
   public static void setupSpecUnderRetry() {
@@ -97,7 +98,15 @@ public class RestCamelTest {
                         equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                         equalTo(SemanticAttributes.NET_HOST_PORT, Long.valueOf(port)),
                         equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                        equalTo(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1")
+                        equalTo(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                        satisfies(
+                            SemanticAttributes.USER_AGENT_ORIGINAL,
+                            val -> val.isInstanceOf(String.class)
+                        ),
+                        satisfies(
+                            SemanticAttributes.NET_SOCK_PEER_PORT,
+                            val -> val.isInstanceOf(Long.class)
+                        )
                     ),
                 span -> span.hasName("GET /api/{module}/unit/{unitId}")
                     .hasKind(SpanKind.INTERNAL)
@@ -105,7 +114,11 @@ public class RestCamelTest {
                     .hasAttributesSatisfying(
                         equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                         equalTo(SemanticAttributes.HTTP_URL,
-                            "http://localhost:" + port + "/api/firstModule/unit/unitOne")
+                            "http://localhost:" + port + "/api/firstModule/unit/unitOne"),
+                        satisfies(
+                            AttributeKey.stringKey("camel.uri"),
+                            val -> val.isInstanceOf(String.class)
+                        )
                     ),
                 span -> span.hasName("moduleUnit")
                     .hasKind(SpanKind.INTERNAL)
