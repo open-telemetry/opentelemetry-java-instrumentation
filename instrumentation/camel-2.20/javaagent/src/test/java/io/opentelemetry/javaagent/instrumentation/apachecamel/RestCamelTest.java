@@ -21,10 +21,14 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
 public class RestCamelTest extends RetryOnAddressAlreadyInUse {
+
+  private static final Logger logger = LoggerFactory.getLogger(RestCamelTest.class);
 
   @RegisterExtension
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -43,7 +47,7 @@ public class RestCamelTest extends RetryOnAddressAlreadyInUse {
     SpringApplication app = new SpringApplication(RestConfig.class);
     app.setDefaultProperties(ImmutableMap.of("restServer.port", port));
     server = app.run();
-    System.out.println("http server started at: http://localhost:$port/");
+    logger.info("http server started at: http://localhost:{}/", port);
   }
 
   @AfterAll

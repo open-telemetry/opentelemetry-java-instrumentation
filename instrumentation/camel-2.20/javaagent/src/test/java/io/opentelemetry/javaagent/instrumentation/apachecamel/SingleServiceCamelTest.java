@@ -23,10 +23,14 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
 public class SingleServiceCamelTest extends RetryOnAddressAlreadyInUse {
+
+  private static final Logger logger = LoggerFactory.getLogger(SingleServiceCamelTest.class);
 
   @RegisterExtension
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -47,7 +51,7 @@ public class SingleServiceCamelTest extends RetryOnAddressAlreadyInUse {
     SpringApplication app = new SpringApplication(SingleServiceConfig.class);
     app.setDefaultProperties(ImmutableMap.of("camelService.port", port));
     server = app.run();
-    System.out.println("http server started at: http://localhost:$port/");
+    logger.info("http server started at: http://localhost:{}/", port);
   }
 
   @AfterAll
