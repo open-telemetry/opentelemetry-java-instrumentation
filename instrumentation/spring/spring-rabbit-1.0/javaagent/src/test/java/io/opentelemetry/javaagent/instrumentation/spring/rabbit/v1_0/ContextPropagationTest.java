@@ -3,6 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0; /*
+                                                                        * Copyright The OpenTelemetry Authors
+                                                                        * SPDX-License-Identifier: Apache-2.0
+                                                                        */
+
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
