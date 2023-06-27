@@ -26,13 +26,15 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class ViewRenderTest{
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
   private static Stream<Arguments> provideParameters() {
     return Stream.of(
-//        Arguments.of(new FreemarkerViewRenderer(), "/views/ftl/utf8.ftl"),
+        Arguments.of(new FreemarkerViewRenderer(), "/views/ftl/utf8.ftl"),
         Arguments.of(new MustacheViewRenderer(), "/views/mustache/utf8.mustache"),
         Arguments.of(new FreemarkerViewRenderer(), "/views/ftl/utf8.ftl"),
         Arguments.of(new MustacheViewRenderer(),  "/views/mustache/utf8.mustache"));
   }
+
   @ParameterizedTest
   @MethodSource("provideParameters")
   void testSpan(ViewRenderer renderer, String template) throws IOException {
@@ -56,9 +58,7 @@ class ViewRenderTest{
                         .hasParent(trace.getSpan(0))
               )
     );
-
   }
-
 
   @Test
   void testDontCreateSpanWithoutParent() throws InterruptedException, IOException {
