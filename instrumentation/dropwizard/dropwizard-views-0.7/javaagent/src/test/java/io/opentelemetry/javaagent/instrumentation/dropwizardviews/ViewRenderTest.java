@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardviews;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.dropwizard.views.View;
 import io.dropwizard.views.ViewRenderer;
@@ -49,7 +48,7 @@ class ViewRenderTest {
         () -> {
           renderer.render(view, Locale.ENGLISH, outputStream);
         });
-    assertTrue(outputStream.toString("UTF-8").contains("This is an example of a view"));
+    assertThat(outputStream.toString("UTF-8")).contains("This is an example of a view");
     testing.waitAndAssertTraces(
         trace ->
             trace
@@ -65,6 +64,6 @@ class ViewRenderTest {
     View view = new View("/views/ftl/utf8.ftl", StandardCharsets.UTF_8) {};
     new FreemarkerViewRenderer().render(view, Locale.ENGLISH, outputStream);
     Thread.sleep(500);
-    assertEquals(0, testing.spans().size());
+    assertThat(testing.spans().size()).isEqualTo(0);
   }
 }
