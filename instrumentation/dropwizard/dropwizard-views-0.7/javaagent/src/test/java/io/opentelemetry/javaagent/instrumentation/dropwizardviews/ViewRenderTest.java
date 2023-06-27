@@ -3,11 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.dropwizardviews; /*
-                                                                     * Copyright The OpenTelemetry Authors
-                                                                     * SPDX-License-Identifier: Apache-2.0
-                                                                     */
-
+package io.opentelemetry.javaagent.instrumentation.dropwizardviews;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -61,7 +57,7 @@ class ViewRenderTest {
   }
 
   @Test
-  void testDontCreateSpanWithoutParent() throws InterruptedException, IOException {
+  void testDoesNotCreateSpanWithoutParent() throws InterruptedException, IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     View view = new View("/views/ftl/utf8.ftl", StandardCharsets.UTF_8) {};
     new FreemarkerViewRenderer().render(view, Locale.ENGLISH, outputStream);
