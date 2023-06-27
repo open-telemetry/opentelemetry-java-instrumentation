@@ -1,7 +1,12 @@
-package io.opentelemetry.javaagent.instrumentation.dropwizardviews;/*
+/*
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
+package io.opentelemetry.javaagent.instrumentation.dropwizardviews; /*
+                                                                     * Copyright The OpenTelemetry Authors
+                                                                     * SPDX-License-Identifier: Apache-2.0
+                                                                     */
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -24,7 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class ViewRenderTest{
+class ViewRenderTest {
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static Stream<Arguments> provideParameters() {
@@ -32,7 +37,7 @@ class ViewRenderTest{
         Arguments.of(new FreemarkerViewRenderer(), "/views/ftl/utf8.ftl"),
         Arguments.of(new MustacheViewRenderer(), "/views/mustache/utf8.mustache"),
         Arguments.of(new FreemarkerViewRenderer(), "/views/ftl/utf8.ftl"),
-        Arguments.of(new MustacheViewRenderer(),  "/views/mustache/utf8.mustache"));
+        Arguments.of(new MustacheViewRenderer(), "/views/mustache/utf8.mustache"));
   }
 
   @ParameterizedTest
@@ -40,24 +45,19 @@ class ViewRenderTest{
   void testSpan(ViewRenderer renderer, String template) throws IOException {
     View view = new View(template, StandardCharsets.UTF_8) {};
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    testing.runWithSpan("parent", () -> {
-      renderer.render(view, Locale.ENGLISH, outputStream);
-    });
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          renderer.render(view, Locale.ENGLISH, outputStream);
+        });
     assertTrue(outputStream.toString("UTF-8").contains("This is an example of a view"));
     testing.waitAndAssertTraces(
-      trace ->
-          trace
-              .hasSize(2)
-              .hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasNoParent(),
-                span ->
-                    span.hasName("Render " + template)
-                        .hasParent(trace.getSpan(0))
-              )
-    );
+        trace ->
+            trace
+                .hasSize(2)
+                .hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span -> span.hasName("Render " + template).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -66,7 +66,7 @@ class ViewRenderTest{
     View view = new View("/views/ftl/utf8.ftl", StandardCharsets.UTF_8) {};
     new FreemarkerViewRenderer().render(view, Locale.ENGLISH, outputStream);
     Thread.sleep(500);
-    assertEquals(0,testing.spans().size());
+    assertEquals(0, testing.spans().size());
   }
 
   @AfterEach
