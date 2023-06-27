@@ -19,13 +19,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class ViewRenderTest {
+  @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static Stream<Arguments> provideParameters() {
@@ -63,10 +64,5 @@ class ViewRenderTest {
     new FreemarkerViewRenderer().render(view, Locale.ENGLISH, outputStream);
     Thread.sleep(500);
     assertEquals(0, testing.spans().size());
-  }
-
-  @AfterEach
-  void cleanUp() {
-    testing.clearData();
   }
 }
