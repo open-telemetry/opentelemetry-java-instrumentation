@@ -19,7 +19,7 @@ event's MDC copy:
   (same as `Span.current().getSpanContext().getTraceFlags().asHex()`).
 
 Those three pieces of information can be included in log statements produced by the logging library
-by specifying them in the pattern/format. This way any services or tools that parse the application 
+by specifying them in the pattern/format. This way any services or tools that parse the application
 logs can correlate traces/spans with log statements.
 
 > Note: If the current `Span` is invalid, the OpenTelemetry appender will not inject any trace information.
