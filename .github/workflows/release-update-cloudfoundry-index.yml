@@ -4,8 +4,8 @@
 
 name: Update cloudfoundry release index
 on:
-  release:
-    types: [published]
+  schedule:
+    - cron: '25 4 * * *' # Daily at 4:25 AM UTC
   workflow_dispatch:
 
 permissions:
@@ -31,5 +31,5 @@ jobs:
           git config user.name ${{ github.actor }}
           git config user.email ${{ github.actor }}@users.noreply.github.com
           git add index.yml
-          git commit -m "Updated index.yml"
+          git diff-index --quiet --cached HEAD || git commit -m "Updated index.yml"
           git push
