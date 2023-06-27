@@ -28,6 +28,7 @@ public class RestCamelTest extends RetryOnAddressAlreadyInUse {
 
   @RegisterExtension
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
   private static ConfigurableApplicationContext server;
 
   private static Integer port;
@@ -60,71 +61,70 @@ public class RestCamelTest extends RetryOnAddressAlreadyInUse {
 
     // run client and server in separate threads to simulate "real" rest client/server call
     new Thread(
-        () -> template.sendBodyAndHeaders(
-            "direct:start",
-            null,
-            ImmutableMap.of("module", "firstModule", "unitId", "unitOne")
-        )
-    ).start();
+            () ->
+                template.sendBodyAndHeaders(
+                    "direct:start",
+                    null,
+                    ImmutableMap.of("module", "firstModule", "unitId", "unitOne")))
+        .start();
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("start")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasAttributesSatisfying(
-                        equalTo(AttributeKey.stringKey("camel.uri"), "direct://start")
-                    ),
-                span -> span.hasName("GET")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParentSpanId(trace.getSpan(0).getSpanId())
-                    .hasAttributesSatisfying(
-                        equalTo(AttributeKey.stringKey("camel.uri"),
-                            "rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D"),
-                        equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                        equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L)
-                    ),
-                span -> span.hasName("GET /api/{module}/unit/{unitId}")
-                    .hasKind(SpanKind.SERVER)
-                    .hasParentSpanId(trace.getSpan(1).getSpanId())
-                    .hasAttributesSatisfying(
-                        equalTo(SemanticAttributes.HTTP_SCHEME, "http"),
-                        equalTo(SemanticAttributes.HTTP_TARGET, "/api/firstModule/unit/unitOne"),
-                        equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
-                        equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                        equalTo(SemanticAttributes.HTTP_ROUTE, "/api/{module}/unit/{unitId}"),
-                        equalTo(AttributeKey.stringKey("net.protocol.name"), "http"),
-                        equalTo(AttributeKey.stringKey("net.protocol.version"), "1.1"),
-                        equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                        equalTo(SemanticAttributes.NET_HOST_PORT, Long.valueOf(port)),
-                        equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                        equalTo(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1"),
-                        satisfies(
-                            SemanticAttributes.USER_AGENT_ORIGINAL,
-                            val -> val.isInstanceOf(String.class)
-                        ),
-                        satisfies(
-                            SemanticAttributes.NET_SOCK_PEER_PORT,
-                            val -> val.isInstanceOf(Long.class)
-                        )
-                    ),
-                span -> span.hasName("GET /api/{module}/unit/{unitId}")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasParentSpanId(trace.getSpan(2).getSpanId())
-                    .hasAttributesSatisfying(
-                        equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                        equalTo(SemanticAttributes.HTTP_URL,
-                            "http://localhost:" + port + "/api/firstModule/unit/unitOne"),
-                        satisfies(
-                            AttributeKey.stringKey("camel.uri"),
-                            val -> val.isInstanceOf(String.class)
-                        )
-                    ),
-                span -> span.hasName("moduleUnit")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasParentSpanId(trace.getSpan(3).getSpanId())
-                    .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://moduleUnit")
-            )
-    );
+                span ->
+                    span.hasName("start")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasAttributesSatisfying(
+                            equalTo(AttributeKey.stringKey("camel.uri"), "direct://start")),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParentSpanId(trace.getSpan(0).getSpanId())
+                        .hasAttributesSatisfying(
+                            equalTo(
+                                AttributeKey.stringKey("camel.uri"),
+                                "rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D"),
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L)),
+                span ->
+                    span.hasName("GET /api/{module}/unit/{unitId}")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParentSpanId(trace.getSpan(1).getSpanId())
+                        .hasAttributesSatisfying(
+                            equalTo(SemanticAttributes.HTTP_SCHEME, "http"),
+                            equalTo(
+                                SemanticAttributes.HTTP_TARGET, "/api/firstModule/unit/unitOne"),
+                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(SemanticAttributes.HTTP_ROUTE, "/api/{module}/unit/{unitId}"),
+                            equalTo(AttributeKey.stringKey("net.protocol.name"), "http"),
+                            equalTo(AttributeKey.stringKey("net.protocol.version"), "1.1"),
+                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                            equalTo(SemanticAttributes.NET_HOST_PORT, Long.valueOf(port)),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            equalTo(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                            satisfies(
+                                SemanticAttributes.USER_AGENT_ORIGINAL,
+                                val -> val.isInstanceOf(String.class)),
+                            satisfies(
+                                SemanticAttributes.NET_SOCK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class))),
+                span ->
+                    span.hasName("GET /api/{module}/unit/{unitId}")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParentSpanId(trace.getSpan(2).getSpanId())
+                        .hasAttributesSatisfying(
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(
+                                SemanticAttributes.HTTP_URL,
+                                "http://localhost:" + port + "/api/firstModule/unit/unitOne"),
+                            satisfies(
+                                AttributeKey.stringKey("camel.uri"),
+                                val -> val.isInstanceOf(String.class))),
+                span ->
+                    span.hasName("moduleUnit")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParentSpanId(trace.getSpan(3).getSpanId())
+                        .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://moduleUnit")));
   }
 }

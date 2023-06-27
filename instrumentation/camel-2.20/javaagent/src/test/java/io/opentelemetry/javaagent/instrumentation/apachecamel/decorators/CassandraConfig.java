@@ -20,8 +20,9 @@ class CassandraConfig {
       @Override
       public void configure() {
         from("direct:input")
-          .setHeader("CamelCqlQuery", simple("select * from test.users where id=1 ALLOW FILTERING"))
-          .toD("cql://{{cassandra.host}}:{{cassandra.port}}/test");
+            .setHeader(
+                "CamelCqlQuery", simple("select * from test.users where id=1 ALLOW FILTERING"))
+            .toD("cql://{{cassandra.host}}:{{cassandra.port}}/test");
       }
     };
   }

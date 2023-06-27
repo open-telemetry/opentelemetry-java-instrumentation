@@ -22,6 +22,7 @@ public class MulticastDirectCamelTest {
 
   @RegisterExtension
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
   private static ConfigurableApplicationContext server;
 
   @BeforeAll
@@ -48,19 +49,20 @@ public class MulticastDirectCamelTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactlyInAnyOrder(
-                span -> span.hasName("input")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasNoParent()
-                    .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://input"),
-                span -> span.hasName("first")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://first"),
-                span -> span.hasName("second")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://second")
-            )
-    );
+                span ->
+                    span.hasName("input")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://input"),
+                span ->
+                    span.hasName("first")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://first"),
+                span ->
+                    span.hasName("second")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://second")));
   }
 }

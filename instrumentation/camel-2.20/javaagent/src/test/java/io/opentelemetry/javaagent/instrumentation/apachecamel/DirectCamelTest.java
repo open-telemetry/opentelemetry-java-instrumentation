@@ -22,6 +22,7 @@ public class DirectCamelTest {
 
   @RegisterExtension
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
   private static ConfigurableApplicationContext server;
 
   @BeforeAll
@@ -49,15 +50,15 @@ public class DirectCamelTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("input")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasNoParent()
-                    .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://input"),
-                span -> span.hasName("receiver")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://receiver")
-            )
-    );
+                span ->
+                    span.hasName("input")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://input"),
+                span ->
+                    span.hasName("receiver")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://receiver")));
   }
 }

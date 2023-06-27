@@ -1,4 +1,11 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
+
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.collect.ImmutableMap;
@@ -19,8 +26,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.testcontainers.containers.CassandraContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 @Testcontainers
 public class CassandraTest extends RetryOnAddressAlreadyInUse {
@@ -46,13 +51,14 @@ public class CassandraTest extends RetryOnAddressAlreadyInUse {
   }
 
   private static void cassandraSetup() {
-    cqlSession = CqlSession
-        .builder()
-        .addContactPoint(cassandra.getContactPoint())
-        .withLocalDatacenter(cassandra.getLocalDatacenter())
-        .build();
+    cqlSession =
+        CqlSession.builder()
+            .addContactPoint(cassandra.getContactPoint())
+            .withLocalDatacenter(cassandra.getLocalDatacenter())
+            .build();
 
-    cqlSession.execute("CREATE KEYSPACE IF NOT EXISTS test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};");
+    cqlSession.execute(
+        "CREATE KEYSPACE IF NOT EXISTS test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};");
     cqlSession.execute("CREATE TABLE IF NOT EXISTS test.users (id int PRIMARY KEY, name TEXT);");
   }
 
@@ -64,9 +70,7 @@ public class CassandraTest extends RetryOnAddressAlreadyInUse {
     host = cassandra.getHost();
 
     SpringApplication app = new SpringApplication(CassandraConfig.class);
-    app.setDefaultProperties(
-        ImmutableMap.of("cassandra.host", host, "cassandra.port", port)
-    );
+    app.setDefaultProperties(ImmutableMap.of("cassandra.host", host, "cassandra.port", port));
     server = app.run();
   }
 
@@ -90,17 +94,20 @@ public class CassandraTest extends RetryOnAddressAlreadyInUse {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasKind(SpanKind.INTERNAL)
-                    .hasNoParent()
-                    .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://input"),
-                span -> span.hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfying(
-                        equalTo(AttributeKey.stringKey("camel.uri"), "cql://" + host + ":" + port + "/test"),
-                        equalTo(SemanticAttributes.DB_NAME, "test"),
-                        equalTo(SemanticAttributes.DB_STATEMENT, "select * from test.users where id=? ALLOW FILTERING"),
-                        equalTo(SemanticAttributes.DB_SYSTEM, "cassandra")
-                    )
-            )
-    );
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://input"),
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfying(
+                            equalTo(
+                                AttributeKey.stringKey("camel.uri"),
+                                "cql://" + host + ":" + port + "/test"),
+                            equalTo(SemanticAttributes.DB_NAME, "test"),
+                            equalTo(
+                                SemanticAttributes.DB_STATEMENT,
+                                "select * from test.users where id=? ALLOW FILTERING"),
+                            equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"))));
   }
 }

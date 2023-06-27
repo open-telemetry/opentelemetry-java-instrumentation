@@ -29,12 +29,9 @@ class RestConfig {
             .port("{{restServer.port}}")
             .producerComponent("http");
 
-        rest("/api")
-            .get("/{module}/unit/{unitId}")
-            .to("direct:moduleUnit");
+        rest("/api").get("/{module}/unit/{unitId}").to("direct:moduleUnit");
 
-        from("direct:moduleUnit")
-            .transform().simple("${header.unitId} of ${header.module}");
+        from("direct:moduleUnit").transform().simple("${header.unitId} of ${header.module}");
 
         // producer - client route
         from("direct:start")
