@@ -65,7 +65,6 @@ In order to function, `OpenTelemetryAppender` needs access to an `OpenTelemetry`
 be programmatically set during application startup as follows:
 
 ```java
-import ch.qos.logback.classic.LoggerContext;
 import io.opentelemetry.instrumentation.logback.OpenTelemetryAppender;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 
@@ -74,18 +73,8 @@ public class Application {
   public static void main(String[] args) {
     OpenTelemetrySdk openTelemetrySdk = // Configure OpenTelemetrySdk
 
-    // Get LoggerContext, iterate through Root Logger appenders, and call setOpenTelemetrySdk(...)
-    // for each OpenTelemetryAppender
-    LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-    loggerContext
-        .getLogger(Logger.ROOT_LOGGER_NAME)
-        .iteratorForAppenders()
-        .forEachRemaining(
-            appender -> {
-              if (appender instanceof OpenTelemetryAppender) {
-                ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetrySdk);
-              }
-            });
+    // Find OpenTelemetryAppender in logback configuration and install openTelemetrySdk
+    OpenTelemetryAppender.install(openTelemetrySdk);
 
     // ... proceed with application
   }

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
-import ch.qos.logback.classic.LoggerContext;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -46,16 +45,7 @@ public class Slf4j2Test {
     OpenTelemetrySdk openTelemetrySdk =
         OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build();
 
-    LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-    loggerContext
-        .getLogger(Logger.ROOT_LOGGER_NAME)
-        .iteratorForAppenders()
-        .forEachRemaining(
-            appender -> {
-              if (appender instanceof OpenTelemetryAppender) {
-                ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetrySdk);
-              }
-            });
+    OpenTelemetryAppender.install(openTelemetrySdk);
   }
 
   @BeforeEach

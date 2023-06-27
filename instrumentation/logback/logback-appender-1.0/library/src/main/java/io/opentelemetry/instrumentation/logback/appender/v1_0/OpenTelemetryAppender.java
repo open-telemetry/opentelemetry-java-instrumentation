@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static java.util.Collections.emptyList;
 
+import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -15,6 +16,8 @@ import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEv
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.slf4j.ILoggerFactory;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
@@ -30,6 +33,28 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private LoggingEventMapper mapper;
 
   public OpenTelemetryAppender() {}
+
+  /**
+   * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
+   * the {@link LoggerContext}.
+   */
+  public static void install(OpenTelemetry openTelemetry) {
+    ILoggerFactory loggerFactorySpi = LoggerFactory.getILoggerFactory();
+    if (!(loggerFactorySpi instanceof LoggerContext)) {
+      return;
+    }
+    LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
+    for (ch.qos.logback.classic.Logger logger : loggerContext.getLoggerList()) {
+      logger
+          .iteratorForAppenders()
+          .forEachRemaining(
+              appender -> {
+                if (appender instanceof OpenTelemetryAppender) {
+                  ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetry);
+                }
+              });
+    }
+  }
 
   @Override
   public void start() {

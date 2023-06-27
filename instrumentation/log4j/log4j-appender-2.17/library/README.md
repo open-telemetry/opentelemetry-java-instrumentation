@@ -61,9 +61,6 @@ In order to function, `OpenTelemetryAppender` needs access to an `OpenTelemetry`
 be programmatically set during application startup as follows:
 
 ```java
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.config.Configuration;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppender;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 
@@ -72,11 +69,8 @@ public class Application {
   public static void main(String[] args) {
     OpenTelemetrySdk openTelemetrySdk = // Configure OpenTelemetrySdk
 
-    // Get Configuration, iterate through appenders, and call setOpenTelemetrySdk(...) on any OpenTelemetryAppender
-    Configuration config = ((LoggerContext) LogManager.getContext(false)).getConfiguration();
-    config.getAppenders().values().stream()
-        .filter(a -> a instanceof OpenTelemetryAppender)
-        .forEach(a -> ((OpenTelemetryAppender) a).setOpenTelemetry(openTelemetrySdk));
+    // Find OpenTelemetryAppender in log4j configuration and install openTelemetrySdk
+    OpenTelemetryAppender.install(openTelemetrySdk);
 
     // ... proceed with application
   }

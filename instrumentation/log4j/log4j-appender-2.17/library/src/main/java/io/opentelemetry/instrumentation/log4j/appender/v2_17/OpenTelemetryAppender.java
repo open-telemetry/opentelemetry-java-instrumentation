@@ -20,13 +20,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Core;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
@@ -45,6 +48,28 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
   private final LogEventMapper<ReadOnlyStringMap> mapper;
   private OpenTelemetry openTelemetry;
+
+  /**
+   * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
+   * the {@link LoggerContext}.
+   */
+  public static void install(OpenTelemetry openTelemetry) {
+    org.apache.logging.log4j.spi.LoggerContext loggerContextSpi = LogManager.getContext(false);
+    if (!(loggerContextSpi instanceof LoggerContext)) {
+      return;
+    }
+    LoggerContext loggerContext = (LoggerContext) loggerContextSpi;
+    Configuration config = loggerContext.getConfiguration();
+    config
+        .getAppenders()
+        .values()
+        .forEach(
+            appender -> {
+              if (appender instanceof OpenTelemetryAppender) {
+                ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetry);
+              }
+            });
+  }
 
   @PluginBuilderFactory
   public static <B extends Builder<B>> B builder() {
