@@ -27,6 +27,8 @@ final class PluginImplUtil {
    * @param implSimpleClassName The simple name of the impl class, e.g. {@code "SqsImpl"}. *
    */
   static boolean isImplPresent(String implSimpleClassName) {
+    // We use getName().replace() instead of getPackage() because the latter is not guaranteed to
+    // work in all cases (e.g., we might be loaded into a custom classloader that doesn't handle it)
     String implFullClassName =
         PluginImplUtil.class.getName().replace(".PluginImplUtil", "." + implSimpleClassName);
     try {
