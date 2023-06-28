@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 public final class SqsAdviceBridge {
   private SqsAdviceBridge() {}
 
-  public static void referenceForMuzzleOnly() {
-    throw new UnsupportedOperationException(
-        SqsImpl.class.getName() + " referencing for muzzle, should never be actually called");
+  public static void init() {
+    // called from advice
+    SqsImpl.init(); // Reference the actual, package-private, implementation class for Muzzle
   }
 }

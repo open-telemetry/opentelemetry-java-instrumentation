@@ -15,6 +15,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.awscore.AwsResponse;
@@ -121,15 +122,54 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       throw throwable;
     }
 
-    if (SqsAccess.isReceiveMessageRequest(request)) {
-      return SqsAccess.modifyReceiveMessageRequest(request, useXrayPropagator, messagingPropagator);
+    if (SqsReceiveMessageRequestAccess.isInstance(request)) {
+      return modifySqsReceiveMessageRequest(request);
     } else if (messagingPropagator != null) {
-      if (SqsAccess.isSendMessageRequest(request)) {
-        return SqsAccess.injectIntoSendMessageRequest(messagingPropagator, request, otelContext);
+      if (SqsSendMessageRequestAccess.isInstance(request)) {
+        return SqsAccess.injectIntoSqsSendMessageRequest(messagingPropagator, request, otelContext);
       }
       // TODO: Support SendMessageBatchRequest (and thus SendMessageBatchRequestEntry)
     }
     return request;
+  }
+
+  private SdkRequest modifySqsReceiveMessageRequest(SdkRequest request) {
+    boolean hasXrayAttribute = true;
+    List<String> existingAttributeNames = null;
+    if (useXrayPropagator) {
+      existingAttributeNames = SqsReceiveMessageRequestAccess.getAttributeNames(request);
+      hasXrayAttribute =
+          existingAttributeNames.contains(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
+    }
+
+    boolean hasMessageAttribute = true;
+    List<String> existingMessageAttributeNames = null;
+    if (messagingPropagator != null) {
+      existingMessageAttributeNames =
+          SqsReceiveMessageRequestAccess.getMessageAttributeNames(request);
+      hasMessageAttribute = existingMessageAttributeNames.containsAll(messagingPropagator.fields());
+    }
+
+    if (hasMessageAttribute && hasXrayAttribute) {
+      return request;
+    }
+
+    SdkRequest.Builder builder = request.toBuilder();
+    if (!hasXrayAttribute) {
+      List<String> attributeNames = new ArrayList<>(existingAttributeNames);
+      attributeNames.add(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
+      SqsReceiveMessageRequestAccess.attributeNamesWithStrings(builder, attributeNames);
+    }
+    if (messagingPropagator != null) {
+      List<String> messageAttributeNames = new ArrayList<>(existingMessageAttributeNames);
+      for (String field : messagingPropagator.fields()) {
+        if (!existingMessageAttributeNames.contains(field)) {
+          messageAttributeNames.add(field);
+        }
+      }
+      SqsReceiveMessageRequestAccess.messageAttributeNames(builder, messageAttributeNames);
+    }
+    return builder.build();
   }
 
   @Override
@@ -225,7 +265,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterExecution(
       Context.AfterExecution context, ExecutionAttributes executionAttributes) {
-    if (SqsAccess.isReceiveMessageResponse(context.response())) {
+    if (SqsReceiveMessageRequestAccess.isInstance(context.request())) {
       SqsAccess.afterReceiveMessageExecution(this, context, executionAttributes);
     }
 

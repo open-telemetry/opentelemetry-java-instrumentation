@@ -15,7 +15,7 @@ class Aws2ClientTest extends AbstractAws2ClientTest implements LibraryTestTrait 
       .addExecutionInterceptor(
         AwsSdkTelemetry.builder(getOpenTelemetry())
           .setCaptureExperimentalSpanAttributes(true)
-          .setUseConfiguredPropagatorForMessaging(isSqsAttributeInjectionEnabled())
+          .setUseConfiguredPropagatorForMessaging(true) // Default on in tests to cover more code
           .build()
           .newExecutionInterceptor())
   }
