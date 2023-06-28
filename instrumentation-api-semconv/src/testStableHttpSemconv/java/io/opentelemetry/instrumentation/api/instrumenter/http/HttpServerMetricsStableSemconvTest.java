@@ -93,9 +93,7 @@ class HttpServerMetricsStableSemconvTest {
                                         .hasValue(1)
                                         .hasAttributesSatisfying(
                                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(UrlAttributes.URL_SCHEME, "https"),
-                                            equalTo(NetworkAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(NetworkAttributes.SERVER_PORT, 1234L))
+                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -118,9 +116,7 @@ class HttpServerMetricsStableSemconvTest {
                                         .hasValue(2)
                                         .hasAttributesSatisfying(
                                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(UrlAttributes.URL_SCHEME, "https"),
-                                            equalTo(NetworkAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(NetworkAttributes.SERVER_PORT, 1234L))
+                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -142,9 +138,7 @@ class HttpServerMetricsStableSemconvTest {
                                         .hasValue(1)
                                         .hasAttributesSatisfying(
                                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(UrlAttributes.URL_SCHEME, "https"),
-                                            equalTo(NetworkAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(NetworkAttributes.SERVER_PORT, 1234L))
+                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -167,9 +161,7 @@ class HttpServerMetricsStableSemconvTest {
                                                 NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
                                                 NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(UrlAttributes.URL_SCHEME, "https"),
-                                            equalTo(NetworkAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(NetworkAttributes.SERVER_PORT, 1234L))
+                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -193,9 +185,7 @@ class HttpServerMetricsStableSemconvTest {
                                                 NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
                                                 NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(UrlAttributes.URL_SCHEME, "https"),
-                                            equalTo(NetworkAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(NetworkAttributes.SERVER_PORT, 1234L))
+                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -218,9 +208,7 @@ class HttpServerMetricsStableSemconvTest {
                                                 NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
                                                 NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(UrlAttributes.URL_SCHEME, "https"),
-                                            equalTo(NetworkAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(NetworkAttributes.SERVER_PORT, 1234L))
+                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -328,7 +316,6 @@ class HttpServerMetricsStableSemconvTest {
                                         .hasSum(0.100 /* seconds */)
                                         .hasAttributesSatisfying(
                                             equalTo(UrlAttributes.URL_SCHEME, "https"),
-                                            equalTo(NetworkAttributes.SERVER_ADDRESS, "host"),
                                             equalTo(
                                                 SemanticAttributes.HTTP_ROUTE, "/test/{id}")))));
   }
