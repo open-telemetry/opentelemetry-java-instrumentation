@@ -1,5 +1,3 @@
-473 456 254:1 /docker/containers/be522444b60caf2d3934b8b24b916a8a314f4b68d4595aa419874657e8d103f2/hostname /etc/hostname rw,relatime - ext4 /dev/vda1 rw
-root@be522444b60c:/# cat /proc/self/mountinfo
 456 375 0:143 / / rw,relatime master:175 - overlay overlay rw,lowerdir=/var/lib/docker/overlay2/l/CBPR2ETR4Z3UMOOGIIRDVT2P27:/var/lib/docker/overlay2/l/46FCA2JFPCSNFGAR5TSYLLNHLK,upperdir=/var/lib/docker/overlay2/3ef3e5a1a87b4e220c1da9a7901654e945b0ef5398e1b67fccb42fdb7750829e/diff,workdir=/var/lib/docker/overlay2/3ef3e5a1a87b4e220c1da9a7901654e945b0ef5398e1b67fccb42fdb7750829e/work
 457 456 0:146 / /proc rw,nosuid,nodev,noexec,relatime - proc proc rw
 466 456 0:147 / /dev rw,nosuid - tmpfs tmpfs rw,size=65536k,mode=755
