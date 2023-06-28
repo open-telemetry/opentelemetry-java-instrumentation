@@ -33,7 +33,7 @@ public class MessageInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class MessageRecycleAdvice {
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void after(@Advice.This Message<?> message) {
       // Clean context to prevent memory leak.
       VirtualFieldStore.inject(message, null);

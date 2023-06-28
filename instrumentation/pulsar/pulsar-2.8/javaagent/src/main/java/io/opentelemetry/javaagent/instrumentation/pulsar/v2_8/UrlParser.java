@@ -10,7 +10,8 @@ public class UrlParser {
   private UrlParser() {}
 
   public static UrlData parseUrl(String url) {
-    if (url == null) {
+    // if there are multiple addresses then they are separated with , or ;
+    if (url == null || url.indexOf(',') != -1 || url.indexOf(';') != -1) {
       return null;
     }
 
@@ -33,7 +34,11 @@ public class UrlParser {
       port = null;
     } else {
       host = authority.substring(0, portStart);
-      port = Integer.parseInt(authority.substring(portStart + 1));
+      try {
+        port = Integer.parseInt(authority.substring(portStart + 1));
+      } catch (NumberFormatException exception) {
+        port = null;
+      }
     }
 
     return new UrlData(host, port);

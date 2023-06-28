@@ -88,12 +88,12 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConsumerInternalReceiveAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Timer before() {
       return Timer.start();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void after(
         @Advice.Enter Timer timer,
         @Advice.This Consumer<?> consumer,
@@ -117,7 +117,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
       return Timer.start();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void after(
         @Advice.Enter Timer timer,
         @Advice.This Consumer<?> consumer,
@@ -137,7 +137,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
       return Timer.start();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void after(
         @Advice.Enter Timer timer,
         @Advice.This Consumer<?> consumer,
@@ -154,7 +154,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
       return Timer.start();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void after(
         @Advice.Enter Timer timer,
         @Advice.This Consumer<?> consumer,
