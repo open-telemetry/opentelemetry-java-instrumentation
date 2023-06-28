@@ -20,21 +20,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 final class SqsAccess {
   private SqsAccess() {}
 
-  private static final boolean enabled = isSqsImplPresent();
-
-  private static boolean isSqsImplPresent() {
-    try {
-      // for library instrumentation SqsImpl is always available
-      // for javaagent instrumentation SqsImpl is available only when SqsInstrumentationModule was
-      // successfully applied (muzzle passed)
-      // using package name here because library instrumentation classes are relocated when embedded
-      // in the agent
-      Class.forName(SqsAccess.class.getName().replace(".SqsAccess", ".SqsImpl"));
-      return true;
-    } catch (ClassNotFoundException e) {
-      return false;
-    }
-  }
+  private static final boolean enabled = PluginImplUtil.isImplPresent("SqsImpl");
 
   @NoMuzzle
   static boolean isSendMessageRequest(SdkRequest request) {
