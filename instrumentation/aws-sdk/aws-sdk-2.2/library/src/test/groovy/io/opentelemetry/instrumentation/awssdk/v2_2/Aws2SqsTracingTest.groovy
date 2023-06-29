@@ -18,4 +18,9 @@ class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest implements LibraryTe
           .build()
           .newExecutionInterceptor())
   }
+
+  @Override
+  boolean isSqsAttributeInjectionEnabled() {
+    false
+  }
 }

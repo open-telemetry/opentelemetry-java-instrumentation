@@ -121,14 +121,14 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       throw throwable;
     }
 
-    if (SqsAccess.isReceiveMessageRequest(request)) {
-      return SqsAccess.modifyReceiveMessageRequest(request, useXrayPropagator, messagingPropagator);
-    } else if (messagingPropagator != null) {
-      if (SqsAccess.isSendMessageRequest(request)) {
-        return SqsAccess.injectIntoSendMessageRequest(messagingPropagator, request, otelContext);
-      }
-      // TODO: Support SendMessageBatchRequest (and thus SendMessageBatchRequestEntry)
+    SdkRequest sqsModifiedRequest =
+        SqsAccess.modifyRequest(request, otelContext, useXrayPropagator, messagingPropagator);
+    if (sqsModifiedRequest != null) {
+      return sqsModifiedRequest;
     }
+
+    // Insert other special handling here, following the same pattern as SQS.
+
     return request;
   }
 
@@ -225,9 +225,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterExecution(
       Context.AfterExecution context, ExecutionAttributes executionAttributes) {
-    if (SqsAccess.isReceiveMessageResponse(context.response())) {
-      SqsAccess.afterReceiveMessageExecution(this, context, executionAttributes);
-    }
+
+    // Other special handling could be shortcut-&&ed after this (false is returned if not handled).
+    SqsAccess.afterReceiveMessageExecution(context, executionAttributes, this);
 
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     if (otelContext != null) {
