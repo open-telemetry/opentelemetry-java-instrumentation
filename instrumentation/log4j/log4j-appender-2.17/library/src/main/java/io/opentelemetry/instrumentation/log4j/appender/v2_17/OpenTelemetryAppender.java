@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
@@ -83,7 +82,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
     @PluginBuilderAttribute private String captureContextDataAttributes;
-    @PluginBuilderAttribute private boolean useGlobalOpenTelemetry;
 
     @Nullable private OpenTelemetry openTelemetry;
 
@@ -123,22 +121,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       return asBuilder();
     }
 
-    /**
-     * Configures whether to use {@link io.opentelemetry.api.GlobalOpenTelemetry}. Defaults to
-     * false. Required for a pure XML / JSON configuration approach. If {@code false}, you MUST
-     * programmatically call {@link #setOpenTelemetry(OpenTelemetry)} or {@link
-     * OpenTelemetryAppender#setOpenTelemetry(OpenTelemetry)}.
-     */
-    @CanIgnoreReturnValue
-    public B setUseGlobalOpenTelemetry(boolean useGlobalOpenTelemetry) {
-      this.useGlobalOpenTelemetry = useGlobalOpenTelemetry;
-      return asBuilder();
-    }
-
-    /**
-     * Configures the {@link OpenTelemetry} used to append logs. Takes precedent over {@link
-     * #setUseGlobalOpenTelemetry(boolean)}.
-     */
+    /** Configures the {@link OpenTelemetry} used to append logs. */
     @CanIgnoreReturnValue
     public B setOpenTelemetry(OpenTelemetry openTelemetry) {
       this.openTelemetry = openTelemetry;
@@ -149,8 +132,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     public OpenTelemetryAppender build() {
       OpenTelemetry openTelemetry = this.openTelemetry;
       if (openTelemetry == null) {
-        openTelemetry =
-            this.useGlobalOpenTelemetry ? GlobalOpenTelemetry.get() : OpenTelemetry.noop();
+        openTelemetry = OpenTelemetry.noop();
       }
       return new OpenTelemetryAppender(
           getName(),
@@ -200,8 +182,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
   }
 
   /**
-   * Configures the {@link OpenTelemetry} used to append logs. You MUST programmatically call if
-   * {@link Builder#setUseGlobalOpenTelemetry(boolean)} is {@code false}.
+   * Configures the {@link OpenTelemetry} used to append logs. This MUST be called for the appender
+   * to function. See {@link #install(OpenTelemetry)} for simple installation option.
    */
   public void setOpenTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;

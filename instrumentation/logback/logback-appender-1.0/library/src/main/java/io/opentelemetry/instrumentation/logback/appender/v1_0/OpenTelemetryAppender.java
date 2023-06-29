@@ -10,7 +10,6 @@ import static java.util.Collections.emptyList;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import java.util.Arrays;
@@ -27,7 +26,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureMarkerAttribute = false;
   private boolean captureKeyValuePairAttributes = false;
   private List<String> captureMdcAttributes = emptyList();
-  private boolean useGlobalOpenTelemetry = false;
 
   private OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
@@ -66,8 +64,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             captureMarkerAttribute,
             captureKeyValuePairAttributes);
     if (openTelemetry == null) {
-      openTelemetry =
-          this.useGlobalOpenTelemetry ? GlobalOpenTelemetry.get() : OpenTelemetry.noop();
+      openTelemetry = OpenTelemetry.noop();
     }
     super.start();
   }
@@ -126,20 +123,11 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   }
 
   /**
-   * Sets the {@link OpenTelemetry} used to append logs. Takes precedent over {@link
-   * #setUseGlobalOpenTelemetry(boolean)}.
+   * Configures the {@link OpenTelemetry} used to append logs. This MUST be called for the appender
+   * to function. See {@link #install(OpenTelemetry)} for simple installation option.
    */
   public void setOpenTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
-  }
-
-  /**
-   * Sets whether to use {@link io.opentelemetry.api.GlobalOpenTelemetry}. Defaults to false.
-   * Required for a pure XML configuration approach. If {@code false}, you MUST programmatically
-   * call {@link #setOpenTelemetry(OpenTelemetry)}.
-   */
-  public void setUseGlobalOpenTelemetry(boolean useGlobalOpenTelemetry) {
-    this.useGlobalOpenTelemetry = useGlobalOpenTelemetry;
   }
 
   // copied from SDK's DefaultConfigProperties
