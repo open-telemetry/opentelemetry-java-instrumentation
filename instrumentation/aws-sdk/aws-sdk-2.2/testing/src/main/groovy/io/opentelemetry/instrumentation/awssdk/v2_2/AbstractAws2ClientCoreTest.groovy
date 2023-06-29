@@ -31,7 +31,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 @Unroll
 abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
-  def isSqsAttributeInjectionEnabled() {
+  static boolean isSqsAttributeInjectionEnabled() {
     // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
     return ConfigPropertiesUtil.getBoolean("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false)
   }

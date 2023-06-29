@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.interceptor.Context;
@@ -17,8 +15,6 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 // helper class for calling methods that use sqs types in SqsImpl
 // if SqsImpl is not present these methods are no op
 final class SqsAccess {
-  private static final Logger logger = Logger.getLogger(SqsAccess.class.getName());
-
   private SqsAccess() {}
 
   private static final boolean enabled = PluginImplUtil.isImplPresent("SqsImpl");

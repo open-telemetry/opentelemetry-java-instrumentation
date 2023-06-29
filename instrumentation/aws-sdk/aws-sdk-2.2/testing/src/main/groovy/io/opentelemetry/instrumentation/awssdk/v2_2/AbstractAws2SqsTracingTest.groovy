@@ -79,7 +79,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
       .build()
 
   boolean isSqsAttributeInjectionEnabled() {
-    AbstractAws2ClientTest.isSqsAttributeInjectionEnabled()
+    AbstractAws2ClientCoreTest.isSqsAttributeInjectionEnabled()
   }
 
   boolean isXrayInjectionEnabled() {
