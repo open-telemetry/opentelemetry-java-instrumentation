@@ -11,6 +11,8 @@ import com.amazonaws.auth.AWSCredentialsProviderChain
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider
 import com.amazonaws.auth.InstanceProfileCredentialsProvider
+import com.amazonaws.auth.NoOpSigner
+import com.amazonaws.auth.SignerFactory
 import com.amazonaws.auth.SystemPropertiesCredentialsProvider
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.handlers.RequestHandler2
@@ -271,5 +273,19 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
         }
       }
     }
+  }
+
+  def "calling generatePresignedUrl does not leak context"() {
+    setup:
+    SignerFactory.registerSigner("noop", NoOpSigner)
+    def client = new AmazonS3Client(new ClientConfiguration().withSignerOverride("noop"))
+      .withEndpoint("${server.httpUri()}")
+
+    when:
+    client.generatePresignedUrl("someBucket", "someKey", new Date())
+
+    then:
+    // expecting no active span after call to generatePresignedUrl
+    !Span.current().getSpanContext().isValid()
   }
 }

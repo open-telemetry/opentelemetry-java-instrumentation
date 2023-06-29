@@ -39,8 +39,6 @@ final class TemporaryMetricsView {
     view.add(HttpAttributes.HTTP_RESPONSE_STATUS_CODE);
     view.add(NetworkAttributes.NETWORK_PROTOCOL_NAME);
     view.add(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
-    view.add(NetworkAttributes.SERVER_ADDRESS);
-    view.add(NetworkAttributes.SERVER_PORT);
     return view;
   }
 
@@ -54,6 +52,8 @@ final class TemporaryMetricsView {
     view.add(SemanticAttributes.NET_SOCK_PEER_ADDR);
     // stable semconv
     view.add(NetworkAttributes.SERVER_SOCKET_ADDRESS);
+    view.add(NetworkAttributes.SERVER_ADDRESS);
+    view.add(NetworkAttributes.SERVER_PORT);
     return view;
   }
 
@@ -83,8 +83,6 @@ final class TemporaryMetricsView {
     view.add(SemanticAttributes.NET_HOST_PORT);
     // stable semconv
     view.add(HttpAttributes.HTTP_REQUEST_METHOD);
-    view.add(NetworkAttributes.SERVER_ADDRESS);
-    view.add(NetworkAttributes.SERVER_PORT);
     view.add(UrlAttributes.URL_SCHEME);
     return view;
   }

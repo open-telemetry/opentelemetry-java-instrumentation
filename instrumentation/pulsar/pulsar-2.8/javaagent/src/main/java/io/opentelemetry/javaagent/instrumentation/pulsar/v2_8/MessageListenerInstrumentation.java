@@ -44,7 +44,7 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConsumerConfigurationDataMethodAdvice {
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void after(
         @Advice.This ConsumerConfigurationData<?> data,
         @Advice.Return(readOnly = false, typing = Assigner.Typing.DYNAMIC)

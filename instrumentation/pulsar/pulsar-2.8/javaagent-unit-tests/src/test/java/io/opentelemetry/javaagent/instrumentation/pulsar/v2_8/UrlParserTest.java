@@ -16,6 +16,8 @@ public class UrlParserTest {
   void parseUrl() {
     assertThat(UrlParser.parseUrl(null)).isNull();
     assertThat(UrlParser.parseUrl("localhost:1")).isNull();
+    assertThat(UrlParser.parseUrl("localhost:1,localhost:2")).isNull();
+    assertThat(UrlParser.parseUrl("localhost:1;localhost:2")).isNull();
 
     {
       UrlData url = UrlParser.parseUrl("pulsar://localhost:1");
@@ -29,6 +31,11 @@ public class UrlParserTest {
     }
     {
       UrlData url = UrlParser.parseUrl("pulsar://localhost");
+      assertThat(url.getHost()).isEqualTo("localhost");
+      assertThat(url.getPort()).isNull();
+    }
+    {
+      UrlData url = UrlParser.parseUrl("pulsar://localhost:xxx");
       assertThat(url.getHost()).isEqualTo("localhost");
       assertThat(url.getPort()).isNull();
     }

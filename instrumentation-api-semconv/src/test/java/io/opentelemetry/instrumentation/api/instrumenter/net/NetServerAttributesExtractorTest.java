@@ -166,7 +166,7 @@ class NetServerAttributesExtractorTest {
 
   @Test
   @DisplayName(
-      "does not set any net.sock.host.* attributes when net.host.name = net.sock.host.addr")
+      "does not set those net.sock.host.* attributes that duplicate corresponding net.host.* attributes")
   void doesNotSetDuplicates1() {
     // given
     Map<String, String> map = new HashMap<>();
@@ -193,7 +193,8 @@ class NetServerAttributesExtractorTest {
             entry(SemanticAttributes.NET_HOST_NAME, "4:3:2:1::"),
             entry(SemanticAttributes.NET_HOST_PORT, 80L));
 
-    assertThat(endAttributes.build()).isEmpty();
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.NET_SOCK_HOST_PORT, 8080L));
   }
 
   @Test
