@@ -11,7 +11,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.logs.Severity;
@@ -64,7 +63,6 @@ class OpenTelemetryAppenderTest {
             .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
             .build();
 
-    GlobalOpenTelemetry.resetForTest();
     openTelemetry = OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build();
     OpenTelemetryAppender.install(openTelemetry);
   }
