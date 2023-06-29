@@ -17,8 +17,11 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
+import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
@@ -30,24 +33,69 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.apache.logging.log4j.ThreadContext;
+import org.apache.logging.log4j.core.impl.Log4jLogEvent;
+import org.apache.logging.log4j.message.FormattedMessage;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-abstract class OpenTelemetryAppenderConfigTestBase {
+class OpenTelemetryAppenderTest {
 
-  static final Logger logger = LogManager.getLogger("TestLogger");
+  private static final Logger logger = LogManager.getLogger("TestLogger");
 
-  static InMemoryLogRecordExporter logRecordExporter;
-  static Resource resource;
-  static InstrumentationScopeInfo instrumentationScopeInfo;
-  static OpenTelemetry openTelemetry;
+  private static InMemoryLogRecordExporter logRecordExporter;
+  private static Resource resource;
+  private static InstrumentationScopeInfo instrumentationScopeInfo;
+  private static OpenTelemetry openTelemetry;
+
+  @BeforeAll
+  static void setupAll() {
+    logRecordExporter = InMemoryLogRecordExporter.create();
+    resource = Resource.getDefault();
+    instrumentationScopeInfo = InstrumentationScopeInfo.create("TestLogger");
+
+    SdkLoggerProvider loggerProvider =
+        SdkLoggerProvider.builder()
+            .setResource(resource)
+            .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
+            .build();
+
+    openTelemetry = OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build();
+    OpenTelemetryAppender.install(openTelemetry);
+  }
 
   @BeforeEach
   void setup() {
     logRecordExporter.reset();
     ThreadContext.clearAll();
+  }
+
+  @AfterAll
+  static void cleanupAll() {
+    // This is to make sure that other test classes don't have issues with the logger provider set
+    OpenTelemetryAppender.install(null);
+  }
+
+  @Test
+  void initializeWithBuilder() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(openTelemetry)
+            .build();
+    appender.start();
+
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setMessage(new FormattedMessage("log message 1", (Object) null))
+            .build());
+
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
+    assertThat(logDataList)
+        .satisfiesExactly(logRecordData -> assertThat(logDataList.get(0)).hasBody("log message 1"));
   }
 
   @Test

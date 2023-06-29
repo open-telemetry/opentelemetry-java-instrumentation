@@ -60,3 +60,23 @@ The following demonstrates how you might configure the appender in your `logback
 
 In this example Logback log events will be sent to both the console appender and
 the `OpenTelemetryAppender`.
+
+In order to function, `OpenTelemetryAppender` needs access to an `OpenTelemetry` instance. This must
+be set programmatically during application startup as follows:
+
+```java
+import io.opentelemetry.instrumentation.logback.OpenTelemetryAppender;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+
+public class Application {
+
+  public static void main(String[] args) {
+    OpenTelemetrySdk openTelemetrySdk = // Configure OpenTelemetrySdk
+
+    // Find OpenTelemetryAppender in logback configuration and install openTelemetrySdk
+    OpenTelemetryAppender.install(openTelemetrySdk);
+
+    // ... proceed with application
+  }
+}
+```

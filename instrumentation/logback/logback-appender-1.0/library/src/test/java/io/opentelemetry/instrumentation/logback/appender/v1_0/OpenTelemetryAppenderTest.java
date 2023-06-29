@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
@@ -35,7 +34,7 @@ import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-class OpenTelemetryAppenderConfigTest {
+class OpenTelemetryAppenderTest {
 
   private static final Logger logger = LoggerFactory.getLogger("TestLogger");
 
@@ -54,9 +53,10 @@ class OpenTelemetryAppenderConfigTest {
             .setResource(resource)
             .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
             .build();
+    OpenTelemetrySdk openTelemetrySdk =
+        OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build();
 
-    GlobalOpenTelemetry.resetForTest();
-    GlobalOpenTelemetry.set(OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build());
+    OpenTelemetryAppender.install(openTelemetrySdk);
   }
 
   @BeforeEach
@@ -130,12 +130,12 @@ class OpenTelemetryAppenderConfigTest {
         .contains("logWithExtras");
 
     String file = logData.getAttributes().get(SemanticAttributes.CODE_FILEPATH);
-    assertThat(file).isEqualTo("OpenTelemetryAppenderConfigTest.java");
+    assertThat(file).isEqualTo("OpenTelemetryAppenderTest.java");
 
     String codeClass = logData.getAttributes().get(SemanticAttributes.CODE_NAMESPACE);
     assertThat(codeClass)
         .isEqualTo(
-            "io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppenderConfigTest");
+            "io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppenderTest");
 
     String method = logData.getAttributes().get(SemanticAttributes.CODE_FUNCTION);
     assertThat(method).isEqualTo("logWithExtras");
