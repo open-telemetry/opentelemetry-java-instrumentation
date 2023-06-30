@@ -5,11 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
@@ -42,7 +37,7 @@ class CouchbaseClient32Test {
   static Collection collection;
 
   @BeforeAll
-  static void setupSpec() {
+  static void setup() {
     couchbase =
         new CouchbaseContainer("couchbase/server:6.5.1")
             .withExposedPorts(8091)
@@ -61,7 +56,7 @@ class CouchbaseClient32Test {
   }
 
   @AfterAll
-  static void cleanupSpec() {
+  static void cleanup() {
     cluster.disconnect();
     couchbase.stop();
   }
