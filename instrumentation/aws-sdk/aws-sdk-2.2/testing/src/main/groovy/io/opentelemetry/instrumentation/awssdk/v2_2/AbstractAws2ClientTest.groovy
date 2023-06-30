@@ -28,6 +28,7 @@ import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
+import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest
@@ -200,6 +201,17 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
     request.request().headers().get("X-Amzn-Trace-Id") != null
     request.request().headers().get("traceparent") == null
 
+    if (service == "Sns" && operation == "Publish") {
+      def content = request.request().content().toStringUtf8()
+      def containsId = content.contains("${traces[0][0].traceId}-${traces[0][0].spanId}")
+      def containsTp = content.contains("=traceparent")
+      if (isSqsAttributeInjectionEnabled()) {
+        assert containsId && containsTp
+      } else {
+        assert !containsId && !containsTp
+      }
+    }
+
     where:
     service | operation           | method | path                          | requestId                              | builder                  | call                                                                                                                             | body
     "S3"    | "CreateBucket"      | "PUT"  | path("somebucket")            | "UNKNOWN"                              | S3AsyncClient.builder()  | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }                                              | ""
@@ -234,6 +246,16 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
           <ResponseMetadata><RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId></ResponseMetadata>
         </DeleteOptionGroupResponse>
         """
+    "Sns" | "Publish" | "POST" | "" | "f187a3c1-376f-11df-8963-01868b7c937a" | SnsAsyncClient.builder() | { SnsAsyncClient c -> c.publish(r -> r.message("hello")) } | """
+      <PublishResponse xmlns="https://sns.amazonaws.com/doc/2010-03-31/">
+          <PublishResult>
+              <MessageId>94f20ce6-13c5-43a0-9a9e-ca52d816e90b</MessageId>
+          </PublishResult>
+          <ResponseMetadata>
+              <RequestId>f187a3c1-376f-11df-8963-01868b7c937a</RequestId>
+          </ResponseMetadata>
+      </PublishResponse> 
+      """
   }
 
   // TODO(anuraaga): Without AOP instrumentation of the HTTP client, we cannot model retries as

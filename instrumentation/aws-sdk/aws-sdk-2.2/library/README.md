@@ -18,9 +18,23 @@ DynamoDbClient client = DynamoDbClient.builder()
 
 ## Trace propagation
 
-The AWS SDK instrumentation currently only supports injecting the trace header into the request
+The AWS SDK instrumentation always injects the trace header into the request
 using the [AWS Trace Header](https://docs.aws.amazon.com/xray/latest/devguide/xray-concepts.html#xray-concepts-tracingheader) format.
 This format is the only format recognized by AWS managed services, and populating will allow
-propagating the trace through them. If this does not fulfill your use case, perhaps because you are
+propagating the trace through them.
+
+Additionally, you can enable an experimental option to use the configured propagator to inject into
+message attributes (see [parent README](../../README.md)). This currently supports the following AWS APIs:
+
+* SQS.SendMessage
+* SQS.SendMessageBatch
+* SNS.Publish
+  (SNS.PublishBatch is not supported at the moment because it is not available in the minimum SDK
+  version targeted by the instrumentation)
+
+Note that injection will only happen if, after injection, a maximum of 10 attributes is used to not
+run over API limitations set by AWS.
+
+If this does not fulfill your use case, perhaps because you are
 using the same SDK with a different non-AWS managed service, let us know so we can provide
 configuration for this behavior.
