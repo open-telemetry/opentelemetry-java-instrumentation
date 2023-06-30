@@ -55,7 +55,7 @@ dependencies {
 
   // When updating, update above in plugins too
   implementation("com.diffplug.spotless:spotless-plugin-gradle:6.19.0")
-  implementation("com.google.guava:guava:32.1.0-jre")
+  implementation("com.google.guava:guava:32.1.1-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("com.github.johnrengelman:shadow:8.1.1")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
