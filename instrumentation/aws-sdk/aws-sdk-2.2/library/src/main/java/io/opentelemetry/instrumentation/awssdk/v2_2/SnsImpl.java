@@ -33,9 +33,9 @@ class SnsImpl {
       return injectIntoPublishRequest((PublishRequest) request, otelContext, messagingPropagator);
     } else {
       // NB: We do not support PublishBatchRequest which was only introduced in 2.17.84.
-      // To add support, either raise the minimum requirement for the SNS-specific features, or use
-      // reflection + NoMuzzle (NB: Can use SnsRequest base class, MessageAttributeValue class,
-      // etc).
+      // To add support, some targeted use of @NoMuzzle + checks that the needed class
+      // is available should work. See
+      // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8830#discussion_r1247570985
       return null;
     }
   }
