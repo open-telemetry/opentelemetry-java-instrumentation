@@ -21,6 +21,9 @@ jobs:
 
       - name: Update Gradle Wrapper
         uses: gradle-update/update-gradle-wrapper-action@v1
+        with:
+          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          github-token: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
 
   workflow-notification:
     needs:
