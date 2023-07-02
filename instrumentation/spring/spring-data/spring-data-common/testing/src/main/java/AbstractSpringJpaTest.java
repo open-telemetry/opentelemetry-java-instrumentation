@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,16 +11,20 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import java.util.Optional;
 import org.hibernate.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public abstract class AbstractSpringJpaTest<
@@ -41,6 +46,8 @@ public abstract class AbstractSpringJpaTest<
   abstract List<ENTITY> findByLastName(REPOSITORY repository, String lastName);
 
   abstract List<ENTITY> findSpecialCustomers(REPOSITORY repository);
+
+  abstract Optional<ENTITY> findOneByLastName(REPOSITORY repository, String lastName);
 
   void clearData() {
     testing.clearData();
@@ -318,5 +325,65 @@ public abstract class AbstractSpringJpaTest<
                                     val -> val.startsWith("select ")),
                                 equalTo(SemanticAttributes.DB_OPERATION, "SELECT"),
                                 equalTo(SemanticAttributes.DB_SQL_TABLE, "JpaCustomer"))));
+  }
+
+  @Test
+  void testFailedRepositoryMethod() {
+    REPOSITORY repo = repository();
+    String repoClassName = repositoryClass().getName();
+
+    String commonLastName = "Smith";
+    repo.save(newCustomer("Alice", commonLastName));
+    repo.save(newCustomer("Bob", commonLastName));
+
+    clearData();
+
+    try {
+      findOneByLastName(repo, commonLastName);
+      fail(
+          "Expected an IncorrectResultSizeDataAccessException to be thrown because more than one result is returned by the query");
+    } catch (IncorrectResultSizeDataAccessException e) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace
+                  .hasSize(2)
+                  .hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("JpaCustomerRepository.findOneByLastName")
+                              .hasKind(SpanKind.INTERNAL)
+                              .hasStatus(StatusData.error())
+                              .hasEventsSatisfyingExactly(
+                                  event ->
+                                      event
+                                          .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                                          .hasAttributesSatisfying(
+                                              attrs ->
+                                                  assertThat(attrs)
+                                                      .hasSize(3)
+                                                      .containsEntry(
+                                                          SemanticAttributes.EXCEPTION_TYPE,
+                                                          e.getClass().getName())
+                                                      .containsKey(
+                                                          SemanticAttributes.EXCEPTION_MESSAGE)
+                                                      .containsKey(
+                                                          SemanticAttributes.EXCEPTION_STACKTRACE)))
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(SemanticAttributes.CODE_NAMESPACE, repoClassName),
+                                  equalTo(SemanticAttributes.CODE_FUNCTION, "findOneByLastName")),
+                      span ->
+                          span.hasName("SELECT test.JpaCustomer")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasParent(trace.getSpan(0))
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(SemanticAttributes.DB_SYSTEM, "hsqldb"),
+                                  equalTo(SemanticAttributes.DB_NAME, "test"),
+                                  equalTo(SemanticAttributes.DB_USER, "sa"),
+                                  equalTo(SemanticAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
+                                  satisfies(
+                                      SemanticAttributes.DB_STATEMENT,
+                                      val -> val.startsWith("select ")),
+                                  equalTo(SemanticAttributes.DB_OPERATION, "SELECT"),
+                                  equalTo(SemanticAttributes.DB_SQL_TABLE, "JpaCustomer"))));
+    }
   }
 }
