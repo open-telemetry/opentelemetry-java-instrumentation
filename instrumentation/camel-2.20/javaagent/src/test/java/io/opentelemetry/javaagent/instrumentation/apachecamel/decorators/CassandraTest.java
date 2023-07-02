@@ -46,8 +46,8 @@ public class CassandraTest extends RetryOnAddressAlreadyInUse {
   private static CqlSession cqlSession;
 
   @BeforeAll
-  public static void setupSpec() {
-    withRetryOnAddressAlreadyInUse(CassandraTest::setupSpecUnderRetry);
+  public static void setUp() {
+    withRetryOnAddressAlreadyInUse(CassandraTest::setUpUnderRetry);
   }
 
   private static void cassandraSetup() {
@@ -62,7 +62,7 @@ public class CassandraTest extends RetryOnAddressAlreadyInUse {
     cqlSession.execute("CREATE TABLE IF NOT EXISTS test.users (id int PRIMARY KEY, name TEXT);");
   }
 
-  public static void setupSpecUnderRetry() {
+  public static void setUpUnderRetry() {
     cassandra.start();
     cassandraSetup();
 
@@ -75,7 +75,7 @@ public class CassandraTest extends RetryOnAddressAlreadyInUse {
   }
 
   @AfterAll
-  public static void cleanupSpec() {
+  public static void cleanUp() {
     if (server != null) {
       server.close();
       server = null;

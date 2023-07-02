@@ -39,11 +39,11 @@ public class TwoServicesWithDirectClientCamelTest extends RetryOnAddressAlreadyI
   private static Integer portTwo;
 
   @BeforeAll
-  public static void setupSpec() {
-    withRetryOnAddressAlreadyInUse(TwoServicesWithDirectClientCamelTest::setupSpecUnderRetry);
+  public static void setUp() {
+    withRetryOnAddressAlreadyInUse(TwoServicesWithDirectClientCamelTest::setUpUnderRetry);
   }
 
-  public static void setupSpecUnderRetry() {
+  public static void setUpUnderRetry() {
     portOne = PortUtils.findOpenPort();
     portTwo = PortUtils.findOpenPort();
     SpringApplication app = new SpringApplication(TwoServicesConfig.class);
@@ -53,7 +53,7 @@ public class TwoServicesWithDirectClientCamelTest extends RetryOnAddressAlreadyI
   }
 
   @AfterAll
-  public static void cleanupSpec() {
+  public static void cleanUp() {
     if (server != null) {
       server.close();
       server = null;

@@ -38,11 +38,11 @@ public class RestCamelTest extends RetryOnAddressAlreadyInUse {
   private static Integer port;
 
   @BeforeAll
-  public static void setupSpec() {
-    withRetryOnAddressAlreadyInUse(RestCamelTest::setupSpecUnderRetry);
+  public static void setUp() {
+    withRetryOnAddressAlreadyInUse(RestCamelTest::setUpUnderRetry);
   }
 
-  public static void setupSpecUnderRetry() {
+  public static void setUpUnderRetry() {
     port = PortUtils.findOpenPort();
     SpringApplication app = new SpringApplication(RestConfig.class);
     app.setDefaultProperties(ImmutableMap.of("restServer.port", port));
@@ -51,7 +51,7 @@ public class RestCamelTest extends RetryOnAddressAlreadyInUse {
   }
 
   @AfterAll
-  public static void cleanupSpec() {
+  public static void cleanUp() {
     if (server != null) {
       server.close();
       server = null;

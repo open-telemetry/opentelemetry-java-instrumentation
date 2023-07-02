@@ -26,13 +26,13 @@ public class MulticastDirectCamelTest {
   private static ConfigurableApplicationContext server;
 
   @BeforeAll
-  public static void setupSpec() {
+  public static void setUp() {
     SpringApplication app = new SpringApplication(MulticastConfig.class);
     server = app.run();
   }
 
   @AfterAll
-  public static void cleanupSpec() {
+  public static void cleanUp() {
     if (server != null) {
       server.close();
       server = null;

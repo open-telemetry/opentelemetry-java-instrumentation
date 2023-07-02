@@ -42,11 +42,11 @@ public class SingleServiceCamelTest extends RetryOnAddressAlreadyInUse {
   private static final OkHttpClient client = new OkHttpClient();
 
   @BeforeAll
-  public static void setupSpec() {
-    withRetryOnAddressAlreadyInUse(SingleServiceCamelTest::setupSpecUnderRetry);
+  public static void setUp() {
+    withRetryOnAddressAlreadyInUse(SingleServiceCamelTest::setUpUnderRetry);
   }
 
-  public static void setupSpecUnderRetry() {
+  public static void setUpUnderRetry() {
     port = PortUtils.findOpenPort();
     SpringApplication app = new SpringApplication(SingleServiceConfig.class);
     app.setDefaultProperties(ImmutableMap.of("camelService.port", port));
@@ -55,7 +55,7 @@ public class SingleServiceCamelTest extends RetryOnAddressAlreadyInUse {
   }
 
   @AfterAll
-  public static void cleanupSpec() {
+  public static void cleanUp() {
     if (server != null) {
       server.close();
       server = null;
