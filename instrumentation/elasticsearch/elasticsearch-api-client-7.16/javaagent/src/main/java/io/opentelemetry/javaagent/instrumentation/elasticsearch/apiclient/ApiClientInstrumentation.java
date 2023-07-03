@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient.v8_0;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -49,10 +49,7 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
       if (endpointId.startsWith("es/") && endpointId.length() > 3) {
         endpointId = endpointId.substring(3);
       }
-      virtualField.set(
-          request,
-          new ElasticsearchEndpointDefinition(
-              endpointId, ElasticsearchEndpointMap.get().get(endpointId)));
+      virtualField.set(request, ElasticsearchEndpointMap.get(endpointId));
     }
   }
 }

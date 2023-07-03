@@ -12,7 +12,7 @@ muzzle {
 }
 
 dependencies {
-  library("co.elastic.clients:elasticsearch-java:8.0.0")
+  library("co.elastic.clients:elasticsearch-java:7.16.0")
 
   implementation(project(":instrumentation:elasticsearch:elasticsearch-rest-common:javaagent"))
 

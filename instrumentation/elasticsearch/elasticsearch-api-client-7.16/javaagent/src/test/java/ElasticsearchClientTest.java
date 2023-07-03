@@ -24,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpHost;
 import org.assertj.core.api.AbstractLongAssert;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -32,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
-public class ElasticsearchClient8Test {
+public class ElasticsearchClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -74,11 +73,7 @@ public class ElasticsearchClient8Test {
   }
 
   private static String userAgent() {
-    return "elastic-java/"
-        + RestClientBuilder.VERSION
-        + " (Java/"
-        + System.getProperty("java.version")
-        + ")";
+    return "elastic-java/7.16.0" + " (Java/" + System.getProperty("java.version") + ")";
   }
 
   @Test

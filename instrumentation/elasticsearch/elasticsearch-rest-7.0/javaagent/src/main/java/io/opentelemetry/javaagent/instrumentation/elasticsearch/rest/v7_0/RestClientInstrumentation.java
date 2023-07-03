@@ -65,7 +65,10 @@ public class RestClientInstrumentation implements TypeInstrumentation {
           VirtualField.find(Request.class, ElasticsearchEndpointDefinition.class);
       otelRequest =
           ElasticsearchRestRequest.create(
-              request.getMethod(), request.getEndpoint(), virtualField.get(request));
+              request.getMethod(),
+              request.getEndpoint(),
+              virtualField.get(request),
+              request.getEntity());
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
@@ -108,7 +111,10 @@ public class RestClientInstrumentation implements TypeInstrumentation {
 
       otelRequest =
           ElasticsearchRestRequest.create(
-              request.getMethod(), request.getEndpoint(), virtualField.get(request));
+              request.getMethod(),
+              request.getEndpoint(),
+              virtualField.get(request),
+              request.getEntity());
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }

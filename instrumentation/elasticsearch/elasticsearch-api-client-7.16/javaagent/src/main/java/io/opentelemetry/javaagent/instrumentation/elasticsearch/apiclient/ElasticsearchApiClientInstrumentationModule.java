@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient.v8_0;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient;
 
 import static java.util.Collections.singletonList;
 
@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class ElasticsearchApiClientInstrumentationModule extends InstrumentationModule {
   public ElasticsearchApiClientInstrumentationModule() {
-    super("elasticsearch-client", "elasticsearch-api-client", "elasticsearch");
+    super("elasticsearch-api-client-7.16", "elasticsearch");
   }
 
   @Override
