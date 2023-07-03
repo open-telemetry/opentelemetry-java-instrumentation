@@ -4,6 +4,7 @@
  */
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import spring.jpa.JpaCustomer;
 import spring.jpa.JpaCustomerRepository;
@@ -51,5 +52,10 @@ public class SprintJpaTest extends AbstractSpringJpaTest<JpaCustomer, JpaCustome
   @Override
   List<JpaCustomer> findSpecialCustomers(JpaCustomerRepository repository) {
     return repository.findSpecialCustomers();
+  }
+
+  @Override
+  Optional<JpaCustomer> findOneByLastName(JpaCustomerRepository repository, String lastName) {
+    return repository.findOneByLastName(lastName);
   }
 }
