@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
+package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
@@ -16,10 +16,11 @@ import java.util.List;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+// TODO: Copy & paste with only trivial adaptions from v2
 abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule {
 
   protected AbstractAwsSdkInstrumentationModule(String additionalInstrumentationName) {
-    super("aws-sdk", "aws-sdk-2.2", additionalInstrumentationName);
+    super("aws-sdk", "aws-sdk-1.11", additionalInstrumentationName);
   }
 
   @Override
@@ -31,7 +32,7 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // We don't actually transform it but want to make sure we only apply the instrumentation when
     // our key dependency is present.
-    return hasClassesNamed("software.amazon.awssdk.core.interceptor.ExecutionInterceptor");
+    return hasClassesNamed("com.amazonaws.AmazonWebServiceClient");
   }
 
   @Override
@@ -48,7 +49,7 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
       // This is essentially the entry point of the AWS SDK, all clients implement it. We can ensure
       // our interceptor service definition is injected as early as possible if we typematch against
       // it.
-      return named("software.amazon.awssdk.core.SdkClient");
+      return named("com.amazonaws.AmazonWebServiceClient");
     }
 
     @Override

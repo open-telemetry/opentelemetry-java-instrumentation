@@ -70,7 +70,7 @@ final class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void afterResponse(Request<?> request, Response<?> response) {
-    if (SqsReceiveMessageRequestAccess.isInstance(request.getOriginalRequest())) {
+    if (SqsAccess.isReceiveMessageRequest(request.getOriginalRequest())) {
       afterConsumerResponse(request, response);
     }
     finish(request, response, null);

@@ -120,6 +120,7 @@ include(":testing-common")
 include(":testing-common:integration-tests")
 include(":testing-common:library-for-integration-tests")
 
+/*
 // smoke tests
 include(":smoke-tests")
 include(":smoke-tests:images:fake-backend")
@@ -131,7 +132,8 @@ include(":smoke-tests:images:servlet")
 hideFromDependabot(":smoke-tests:images:servlet:servlet-3.0")
 hideFromDependabot(":smoke-tests:images:servlet:servlet-5.0")
 hideFromDependabot(":smoke-tests:images:spring-boot")
-
+*/
+/*
 hideFromDependabot("instrumentation:akka:akka-actor-2.3:javaagent")
 hideFromDependabot(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
 hideFromDependabot(":instrumentation:akka:akka-http-10.0:javaagent")
@@ -142,16 +144,19 @@ hideFromDependabot(":instrumentation:apache-dubbo-2.7:javaagent")
 hideFromDependabot(":instrumentation:apache-dubbo-2.7:library-autoconfigure")
 hideFromDependabot(":instrumentation:apache-dubbo-2.7:testing")
 hideFromDependabot(":instrumentation:apache-httpasyncclient-4.1:javaagent")
+*/
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.3:library")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.3:testing")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent")
+/*
 hideFromDependabot(":instrumentation:armeria-1.3:javaagent")
 hideFromDependabot(":instrumentation:armeria-1.3:library")
 hideFromDependabot(":instrumentation:armeria-1.3:testing")
 hideFromDependabot(":instrumentation:async-http-client:async-http-client-1.9:javaagent")
 hideFromDependabot(":instrumentation:async-http-client:async-http-client-2.0:javaagent")
+*/
 hideFromDependabot(":instrumentation:aws-lambda:aws-lambda-core-1.0:javaagent")
 hideFromDependabot(":instrumentation:aws-lambda:aws-lambda-core-1.0:library")
 hideFromDependabot(":instrumentation:aws-lambda:aws-lambda-core-1.0:testing")
@@ -166,6 +171,7 @@ hideFromDependabot(":instrumentation:aws-sdk:aws-sdk-2.2:javaagent")
 hideFromDependabot(":instrumentation:aws-sdk:aws-sdk-2.2:library")
 hideFromDependabot(":instrumentation:aws-sdk:aws-sdk-2.2:library-autoconfigure")
 hideFromDependabot(":instrumentation:aws-sdk:aws-sdk-2.2:testing")
+/*
 hideFromDependabot(":instrumentation:azure-core:azure-core-1.14:javaagent")
 hideFromDependabot(":instrumentation:azure-core:azure-core-1.14:library-instrumentation-shaded")
 hideFromDependabot(":instrumentation:azure-core:azure-core-1.19:javaagent")
@@ -184,6 +190,7 @@ hideFromDependabot(":instrumentation:cdi-testing")
 hideFromDependabot(":instrumentation:graphql-java-12.0:javaagent")
 hideFromDependabot(":instrumentation:graphql-java-12.0:library")
 hideFromDependabot(":instrumentation:graphql-java-12.0:testing")
+*/
 hideFromDependabot(":instrumentation:internal:internal-application-logger:bootstrap")
 hideFromDependabot(":instrumentation:internal:internal-application-logger:javaagent")
 hideFromDependabot(":instrumentation:internal:internal-class-loader:javaagent")
@@ -195,6 +202,7 @@ hideFromDependabot(":instrumentation:internal:internal-reflection:javaagent")
 hideFromDependabot(":instrumentation:internal:internal-reflection:javaagent-integration-tests")
 hideFromDependabot(":instrumentation:internal:internal-url-class-loader:javaagent")
 hideFromDependabot(":instrumentation:internal:internal-url-class-loader:javaagent-integration-tests")
+/*
 hideFromDependabot(":instrumentation:c3p0-0.9:javaagent")
 hideFromDependabot(":instrumentation:c3p0-0.9:library")
 hideFromDependabot(":instrumentation:c3p0-0.9:testing")
@@ -223,11 +231,13 @@ hideFromDependabot(":instrumentation:elasticsearch:elasticsearch-transport-commo
 hideFromDependabot(":instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent")
 hideFromDependabot(":instrumentation:elasticsearch:elasticsearch-transport-5.3:javaagent")
 hideFromDependabot(":instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent")
+*/
 hideFromDependabot(":instrumentation:executors:bootstrap")
 hideFromDependabot(":instrumentation:executors:javaagent")
 hideFromDependabot(":instrumentation:executors:testing")
 hideFromDependabot(":instrumentation:external-annotations:javaagent")
 hideFromDependabot(":instrumentation:external-annotations:javaagent-unit-tests")
+/*
 hideFromDependabot(":instrumentation:finatra-2.9:javaagent")
 hideFromDependabot(":instrumentation:geode-1.4:javaagent")
 hideFromDependabot(":instrumentation:google-http-client-1.19:javaagent")
@@ -366,6 +376,7 @@ hideFromDependabot(":instrumentation:mongo:mongo-3.7:javaagent")
 hideFromDependabot(":instrumentation:mongo:mongo-4.0:javaagent")
 hideFromDependabot(":instrumentation:mongo:mongo-async-3.3:javaagent")
 hideFromDependabot(":instrumentation:mongo:mongo-common:testing")
+*/
 hideFromDependabot(":instrumentation:netty:netty-3.8:javaagent")
 hideFromDependabot(":instrumentation:netty:netty-4.0:javaagent")
 hideFromDependabot(":instrumentation:netty:netty-4.1:javaagent")
@@ -374,11 +385,12 @@ hideFromDependabot(":instrumentation:netty:netty-4.1:testing")
 hideFromDependabot(":instrumentation:netty:netty-4-common:javaagent")
 hideFromDependabot(":instrumentation:netty:netty-4-common:library")
 hideFromDependabot(":instrumentation:netty:netty-common:library")
+/*
 hideFromDependabot(":instrumentation:okhttp:okhttp-2.2:javaagent")
 hideFromDependabot(":instrumentation:okhttp:okhttp-3.0:javaagent")
 hideFromDependabot(":instrumentation:okhttp:okhttp-3.0:library")
 hideFromDependabot(":instrumentation:okhttp:okhttp-3.0:testing")
-hideFromDependabot(":instrumentation:opencensus-shim:testing")
+*/
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")
@@ -389,13 +401,13 @@ hideFromDependabot(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagen
 hideFromDependabot(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-instrumentation-api:javaagent")
 hideFromDependabot(":instrumentation:opentelemetry-instrumentation-api:testing")
+/*
 hideFromDependabot(":instrumentation:oracle-ucp-11.2:javaagent")
 hideFromDependabot(":instrumentation:oracle-ucp-11.2:library")
 hideFromDependabot(":instrumentation:oracle-ucp-11.2:testing")
 hideFromDependabot(":instrumentation:oshi:javaagent")
 hideFromDependabot(":instrumentation:oshi:library")
 hideFromDependabot(":instrumentation:oshi:testing")
-hideFromDependabot(":instrumentation:payara:javaagent")
 hideFromDependabot(":instrumentation:play:play-mvc:play-mvc-2.4:javaagent")
 hideFromDependabot(":instrumentation:play:play-mvc:play-mvc-2.6:javaagent")
 hideFromDependabot(":instrumentation:play:play-ws:play-ws-1.0:javaagent")
@@ -457,10 +469,6 @@ hideFromDependabot(":instrumentation:rxjava:rxjava-3.1.1:library")
 hideFromDependabot(":instrumentation:rxjava:rxjava-3.1.1:javaagent")
 hideFromDependabot(":instrumentation:rxjava:rxjava-3-common:library")
 hideFromDependabot(":instrumentation:rxjava:rxjava-3-common:testing")
-hideFromDependabot(":instrumentation:quarkus-resteasy-reactive:javaagent")
-hideFromDependabot(":instrumentation:quarkus-resteasy-reactive:common-testing")
-hideFromDependabot(":instrumentation:quarkus-resteasy-reactive:quarkus2-testing")
-hideFromDependabot(":instrumentation:quarkus-resteasy-reactive:quarkus3-testing")
 hideFromDependabot(":instrumentation:scala-fork-join-2.8:javaagent")
 hideFromDependabot(":instrumentation:servlet:servlet-common:bootstrap")
 hideFromDependabot(":instrumentation:servlet:servlet-common:javaagent")
@@ -536,10 +544,13 @@ hideFromDependabot(":instrumentation:vibur-dbcp-11.0:library")
 hideFromDependabot(":instrumentation:vibur-dbcp-11.0:testing")
 hideFromDependabot(":instrumentation:wicket-8.0:javaagent")
 hideFromDependabot(":instrumentation:zio:zio-2.0:javaagent")
+*/
 
+/*
 // benchmark
 include(":benchmark-overhead-jmh")
 include(":benchmark-jfr-analyzer")
+*/
 
 // this effectively hides the submodule from dependabot because dependabot only regex parses gradle
 // files looking for certain patterns

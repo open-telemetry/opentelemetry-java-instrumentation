@@ -15,7 +15,25 @@ muzzle {
     module.set("aws-java-sdk-core")
     versions.set("[1.10.33,)")
     assertInverse.set(true)
+
+    excludeInstrumentationName("aws-sdk-1.11-sqs")
   }
+
+
+  fail {
+    group.set("com.amazonaws")
+    module.set("aws-java-sdk-core")
+    versions.set("[1.10.33,)")
+
+    excludeInstrumentationName("aws-sdk-1.11-core")
+  }
+
+  pass {
+    group.set("com.amazonaws")
+    module.set("aws-java-sdk-sqs")
+    versions.set("[1.10.33,)")
+  }
+
 }
 
 dependencies {

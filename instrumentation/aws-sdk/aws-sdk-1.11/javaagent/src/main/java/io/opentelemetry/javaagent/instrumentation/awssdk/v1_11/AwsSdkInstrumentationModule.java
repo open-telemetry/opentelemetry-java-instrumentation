@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class AwsSdkInstrumentationModule extends InstrumentationModule {
   public AwsSdkInstrumentationModule() {
-    super("aws-sdk", "aws-sdk-1.11");
+    super("aws-sdk", "aws-sdk-1.11", "aws-sdk-1.11-core");
   }
 
   @Override
