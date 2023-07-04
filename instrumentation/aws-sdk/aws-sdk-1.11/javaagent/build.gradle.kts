@@ -19,7 +19,6 @@ muzzle {
     excludeInstrumentationName("aws-sdk-1.11-sqs")
   }
 
-
   fail {
     group.set("com.amazonaws")
     module.set("aws-java-sdk-core")
@@ -33,7 +32,6 @@ muzzle {
     module.set("aws-java-sdk-sqs")
     versions.set("[1.10.33,)")
   }
-
 }
 
 dependencies {

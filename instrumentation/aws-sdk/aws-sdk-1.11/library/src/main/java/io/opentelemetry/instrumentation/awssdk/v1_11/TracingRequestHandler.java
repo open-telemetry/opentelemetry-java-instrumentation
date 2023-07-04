@@ -14,7 +14,6 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.util.List;
 import javax.annotation.Nullable;
 
 /** Tracing Request Handler. */
@@ -58,38 +57,16 @@ final class TracingRequestHandler extends RequestHandler2 {
   @Override
   @CanIgnoreReturnValue
   public AmazonWebServiceRequest beforeMarshalling(AmazonWebServiceRequest request) {
-    if (SqsReceiveMessageRequestAccess.isInstance(request)) {
-      if (!SqsReceiveMessageRequestAccess.getAttributeNames(request)
-          .contains(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE)) {
-        SqsReceiveMessageRequestAccess.withAttributeNames(
-            request, SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
-      }
-    }
+    // TODO: We are modifying the request in-place instead of using clone() as recommended
+    //  by the Javadoc in the interface.
+    SqsAccess.beforeMarshalling(request);
     return request;
   }
 
   @Override
   public void afterResponse(Request<?> request, Response<?> response) {
-    if (SqsAccess.isReceiveMessageRequest(request.getOriginalRequest())) {
-      afterConsumerResponse(request, response);
-    }
+    SqsAccess.afterResponse(request, response, consumerInstrumenter);
     finish(request, response, null);
-  }
-
-  /** Create and close CONSUMER span for each message consumed. */
-  private void afterConsumerResponse(Request<?> request, Response<?> response) {
-    Object receiveMessageResult = response.getAwsResponse();
-    List<?> messages = SqsReceiveMessageResultAccess.getMessages(receiveMessageResult);
-    for (Object message : messages) {
-      createConsumerSpan(message, request, response);
-    }
-  }
-
-  private void createConsumerSpan(Object message, Request<?> request, Response<?> response) {
-    Context parentContext =
-        SqsParentContext.ofSystemAttributes(SqsMessageAccess.getAttributes(message));
-    Context context = consumerInstrumenter.start(parentContext, request);
-    consumerInstrumenter.end(context, request, response, null);
   }
 
   @Override
