@@ -3,6 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.InfoResponse;
@@ -15,6 +19,9 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpHost;
 import org.assertj.core.api.AbstractLongAssert;
 import org.elasticsearch.client.RestClient;
@@ -24,15 +31,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
-import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
-import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-
-public class ElasticsearchClientTest {
+class ElasticsearchClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -180,8 +180,8 @@ public class ElasticsearchClientTest {
                         runWithSpan(
                             "callback",
                             () -> {
-                              countDownLatch.countDown();
                               request.setResponse(infoResponse);
+                              countDownLatch.countDown();
                             })));
     //noinspection ResultOfMethodCallIgnored
     countDownLatch.await(10, TimeUnit.SECONDS);
@@ -226,7 +226,7 @@ public class ElasticsearchClientTest {
   }
 
   private static class AsyncRequest {
-    InfoResponse response = null;
+    volatile InfoResponse response = null;
 
     public InfoResponse getResponse() {
       return response;

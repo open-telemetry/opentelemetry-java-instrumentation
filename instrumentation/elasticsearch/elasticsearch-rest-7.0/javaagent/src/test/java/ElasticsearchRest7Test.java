@@ -29,7 +29,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
-public class ElasticsearchRest7Test {
+class ElasticsearchRest7Test {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -189,8 +189,8 @@ public class ElasticsearchRest7Test {
   }
 
   private static class AsyncRequest {
-    Response requestResponse = null;
-    Exception exception = null;
+    volatile Response requestResponse = null;
+    volatile Exception exception = null;
 
     public Response getRequestResponse() {
       return requestResponse;

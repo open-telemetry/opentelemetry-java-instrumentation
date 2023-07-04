@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
@@ -24,6 +25,8 @@ public class ElasticsearchClientAttributeExtractor
 
   private static final String PATH_PARTS_ATTRIBUTE_PREFIX = "db.elasticsearch.path_parts.";
 
+  private static final Cache<String, AttributeKey<String>> pathPartKeysCache = Cache.weak();
+
   private static void setServerAttributes(AttributesBuilder attributes, Response response) {
     HttpHost host = response.getHost();
     if (host != null) {
@@ -33,8 +36,7 @@ public class ElasticsearchClientAttributeExtractor
       }
       if (SemconvStability.emitOldHttpSemconv()) {
         internalSet(attributes, SemanticAttributes.NET_PEER_NAME, host.getHostName());
-        internalSet(
-            attributes, SemanticAttributes.NET_PEER_PORT, (long) host.getPort());
+        internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) host.getPort());
       }
     }
   }
@@ -63,8 +65,10 @@ public class ElasticsearchClientAttributeExtractor
     endpointDef.processPathParts(
         request.getEndpoint(),
         (key, value) -> {
-          String attributeKey = PATH_PARTS_ATTRIBUTE_PREFIX + key;
-          internalSet(attributes, AttributeKey.stringKey(attributeKey), value);
+          AttributeKey<String> attributeKey =
+              pathPartKeysCache.computeIfAbsent(
+                  key, k -> AttributeKey.stringKey(PATH_PARTS_ATTRIBUTE_PREFIX + k));
+          internalSet(attributes, attributeKey, value);
         });
   }
 
