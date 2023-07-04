@@ -25,7 +25,7 @@ public class ElasticsearchClientAttributeExtractor
 
   private static final String PATH_PARTS_ATTRIBUTE_PREFIX = "db.elasticsearch.path_parts.";
 
-  private static final Cache<String, AttributeKey<String>> pathPartKeysCache = Cache.weak();
+  private static final Cache<String, AttributeKey<String>> pathPartKeysCache = Cache.bounded(64);
 
   private static void setServerAttributes(AttributesBuilder attributes, Response response) {
     HttpHost host = response.getHost();
