@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
-import io.opentelemetry.api.common.AttributeKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -18,7 +19,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public class MulticastDirectCamelTest {
+class MulticastDirectCamelTest {
 
   @RegisterExtension
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -26,13 +27,13 @@ public class MulticastDirectCamelTest {
   private static ConfigurableApplicationContext server;
 
   @BeforeAll
-  public static void setUp() {
+  static void setUp() {
     SpringApplication app = new SpringApplication(MulticastConfig.class);
     server = app.run();
   }
 
   @AfterAll
-  public static void cleanUp() {
+  static void cleanUp() {
     if (server != null) {
       server.close();
       server = null;
@@ -40,7 +41,7 @@ public class MulticastDirectCamelTest {
   }
 
   @Test
-  public void parallelMulticastToTwoChildServices() {
+  void parallelMulticastToTwoChildServices() {
     CamelContext camelContext = server.getBean(CamelContext.class);
     ProducerTemplate template = camelContext.createProducerTemplate();
 
@@ -53,16 +54,16 @@ public class MulticastDirectCamelTest {
                     span.hasName("input")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://input"),
+                        .hasAttribute(stringKey("camel.uri"), "direct://input"),
                 span ->
                     span.hasName("first")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://first"),
+                        .hasAttribute(stringKey("camel.uri"), "direct://first"),
                 span ->
                     span.hasName("second")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://second")));
+                        .hasAttribute(stringKey("camel.uri"), "direct://second")));
   }
 }

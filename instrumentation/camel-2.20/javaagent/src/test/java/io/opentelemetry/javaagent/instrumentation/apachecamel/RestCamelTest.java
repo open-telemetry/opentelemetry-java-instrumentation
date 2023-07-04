@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public class RestCamelTest extends RetryOnAddressAlreadyInUse {
+class RestCamelTest {
 
   private static final Logger logger = LoggerFactory.getLogger(RestCamelTest.class);
 
@@ -38,11 +38,7 @@ public class RestCamelTest extends RetryOnAddressAlreadyInUse {
   private static Integer port;
 
   @BeforeAll
-  public static void setUp() {
-    withRetryOnAddressAlreadyInUse(RestCamelTest::setUpUnderRetry);
-  }
-
-  public static void setUpUnderRetry() {
+  static void setUp() {
     port = PortUtils.findOpenPort();
     SpringApplication app = new SpringApplication(RestConfig.class);
     app.setDefaultProperties(ImmutableMap.of("restServer.port", port));
@@ -51,7 +47,7 @@ public class RestCamelTest extends RetryOnAddressAlreadyInUse {
   }
 
   @AfterAll
-  public static void cleanUp() {
+  static void cleanUp() {
     if (server != null) {
       server.close();
       server = null;
@@ -59,7 +55,7 @@ public class RestCamelTest extends RetryOnAddressAlreadyInUse {
   }
 
   @Test
-  public void restComponentServerAndClientCallWithJettyBackend() {
+  void restComponentServerAndClientCallWithJettyBackend() {
     CamelContext camelContext = server.getBean(CamelContext.class);
     ProducerTemplate template = camelContext.createProducerTemplate();
 
@@ -78,22 +74,21 @@ public class RestCamelTest extends RetryOnAddressAlreadyInUse {
                 span ->
                     span.hasName("start")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfying(
-                            equalTo(AttributeKey.stringKey("camel.uri"), "direct://start")),
+                        .hasAttributesSatisfying(equalTo(stringKey("camel.uri"), "direct://start")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasParentSpanId(trace.getSpan(0).getSpanId())
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfying(
                             equalTo(
-                                AttributeKey.stringKey("camel.uri"),
+                                stringKey("camel.uri"),
                                 "rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D"),
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L)),
                 span ->
                     span.hasName("GET /api/{module}/unit/{unitId}")
                         .hasKind(SpanKind.SERVER)
-                        .hasParentSpanId(trace.getSpan(1).getSpanId())
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfying(
                             equalTo(SemanticAttributes.HTTP_SCHEME, "http"),
                             equalTo(
@@ -101,8 +96,8 @@ public class RestCamelTest extends RetryOnAddressAlreadyInUse {
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_ROUTE, "/api/{module}/unit/{unitId}"),
-                            equalTo(AttributeKey.stringKey("net.protocol.name"), "http"),
-                            equalTo(AttributeKey.stringKey("net.protocol.version"), "1.1"),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_HOST_PORT, Long.valueOf(port)),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -116,19 +111,18 @@ public class RestCamelTest extends RetryOnAddressAlreadyInUse {
                 span ->
                     span.hasName("GET /api/{module}/unit/{unitId}")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParentSpanId(trace.getSpan(2).getSpanId())
+                        .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfying(
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(
                                 SemanticAttributes.HTTP_URL,
                                 "http://localhost:" + port + "/api/firstModule/unit/unitOne"),
                             satisfies(
-                                AttributeKey.stringKey("camel.uri"),
-                                val -> val.isInstanceOf(String.class))),
+                                stringKey("camel.uri"), val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("moduleUnit")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParentSpanId(trace.getSpan(3).getSpanId())
-                        .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://moduleUnit")));
+                        .hasParent(trace.getSpan(3))
+                        .hasAttribute(stringKey("camel.uri"), "direct://moduleUnit")));
   }
 }

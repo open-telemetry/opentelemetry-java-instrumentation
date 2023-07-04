@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public class TwoServicesWithDirectClientCamelTest extends RetryOnAddressAlreadyInUse {
+class TwoServicesWithDirectClientCamelTest {
   @RegisterExtension
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -39,11 +39,7 @@ public class TwoServicesWithDirectClientCamelTest extends RetryOnAddressAlreadyI
   private static Integer portTwo;
 
   @BeforeAll
-  public static void setUp() {
-    withRetryOnAddressAlreadyInUse(TwoServicesWithDirectClientCamelTest::setUpUnderRetry);
-  }
-
-  public static void setUpUnderRetry() {
+  static void setUp() {
     portOne = PortUtils.findOpenPort();
     portTwo = PortUtils.findOpenPort();
     SpringApplication app = new SpringApplication(TwoServicesConfig.class);
@@ -53,14 +49,14 @@ public class TwoServicesWithDirectClientCamelTest extends RetryOnAddressAlreadyI
   }
 
   @AfterAll
-  public static void cleanUp() {
+  static void cleanUp() {
     if (server != null) {
       server.close();
       server = null;
     }
   }
 
-  public void createAndStartClient() throws Exception {
+  void createAndStartClient() throws Exception {
     clientContext = new DefaultCamelContext();
     clientContext.addRoutes(
         new RouteBuilder() {
@@ -76,7 +72,7 @@ public class TwoServicesWithDirectClientCamelTest extends RetryOnAddressAlreadyI
   }
 
   @Test
-  public void twoCamelServiceSpans() throws Exception {
+  void twoCamelServiceSpans() throws Exception {
     createAndStartClient();
 
     ProducerTemplate template = clientContext.createProducerTemplate();
@@ -90,11 +86,11 @@ public class TwoServicesWithDirectClientCamelTest extends RetryOnAddressAlreadyI
                     span.hasName("input")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttribute(AttributeKey.stringKey("camel.uri"), "direct://input"),
+                        .hasAttribute(stringKey("camel.uri"), "direct://input"),
                 span ->
                     span.hasName("POST")
                         .hasKind(SpanKind.CLIENT)
-                        .hasParentSpanId(trace.getSpan(0).getSpanId())
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfying(
                             equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
                             equalTo(
@@ -102,12 +98,12 @@ public class TwoServicesWithDirectClientCamelTest extends RetryOnAddressAlreadyI
                                 "http://localhost:" + portOne + "/serviceOne"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
                             equalTo(
-                                AttributeKey.stringKey("camel.uri"),
+                                stringKey("camel.uri"),
                                 "http://localhost:" + portOne + "/serviceOne")),
                 span ->
                     span.hasName("POST /serviceOne")
                         .hasKind(SpanKind.SERVER)
-                        .hasParentSpanId(trace.getSpan(1).getSpanId())
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfying(
                             equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
                             equalTo(
@@ -115,12 +111,12 @@ public class TwoServicesWithDirectClientCamelTest extends RetryOnAddressAlreadyI
                                 "http://localhost:" + portOne + "/serviceOne"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
                             equalTo(
-                                AttributeKey.stringKey("camel.uri"),
+                                stringKey("camel.uri"),
                                 "http://0.0.0.0:" + portOne + "/serviceOne")),
                 span ->
                     span.hasName("POST")
                         .hasKind(SpanKind.CLIENT)
-                        .hasParentSpanId(trace.getSpan(2).getSpanId())
+                        .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfying(
                             equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
                             equalTo(
@@ -128,12 +124,12 @@ public class TwoServicesWithDirectClientCamelTest extends RetryOnAddressAlreadyI
                                 "http://127.0.0.1:" + portTwo + "/serviceTwo"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
                             equalTo(
-                                AttributeKey.stringKey("camel.uri"),
+                                stringKey("camel.uri"),
                                 "http://127.0.0.1:" + portTwo + "/serviceTwo")),
                 span ->
                     span.hasName("POST /serviceTwo")
                         .hasKind(SpanKind.SERVER)
-                        .hasParentSpanId(trace.getSpan(3).getSpanId())
+                        .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfying(
                             equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
@@ -143,8 +139,8 @@ public class TwoServicesWithDirectClientCamelTest extends RetryOnAddressAlreadyI
                                 SemanticAttributes.USER_AGENT_ORIGINAL,
                                 "Jakarta Commons-HttpClient/3.1"),
                             equalTo(SemanticAttributes.HTTP_ROUTE, "/serviceTwo"),
-                            equalTo(AttributeKey.stringKey("net.protocol.name"), "http"),
-                            equalTo(AttributeKey.stringKey("net.protocol.version"), "1.1"),
+                            equalTo(stringKey("net.protocol.name"), "http"),
+                            equalTo(stringKey("net.protocol.version"), "1.1"),
                             equalTo(SemanticAttributes.NET_HOST_NAME, "127.0.0.1"),
                             equalTo(SemanticAttributes.NET_HOST_PORT, portTwo),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
@@ -157,14 +153,14 @@ public class TwoServicesWithDirectClientCamelTest extends RetryOnAddressAlreadyI
                 span ->
                     span.hasName("POST /serviceTwo")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParentSpanId(trace.getSpan(4).getSpanId())
+                        .hasParent(trace.getSpan(4))
                         .hasAttributesSatisfying(
                             equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
                             equalTo(
                                 SemanticAttributes.HTTP_URL,
                                 "http://127.0.0.1:" + portTwo + "/serviceTwo"),
                             equalTo(
-                                AttributeKey.stringKey("camel.uri"),
+                                stringKey("camel.uri"),
                                 "jetty:http://0.0.0.0:" + portTwo + "/serviceTwo?arg=value"))));
   }
 }

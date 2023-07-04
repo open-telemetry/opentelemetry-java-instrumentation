@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public class SingleServiceCamelTest extends RetryOnAddressAlreadyInUse {
+class SingleServiceCamelTest {
 
   private static final Logger logger = LoggerFactory.getLogger(SingleServiceCamelTest.class);
 
@@ -42,11 +42,7 @@ public class SingleServiceCamelTest extends RetryOnAddressAlreadyInUse {
   private static final OkHttpClient client = new OkHttpClient();
 
   @BeforeAll
-  public static void setUp() {
-    withRetryOnAddressAlreadyInUse(SingleServiceCamelTest::setUpUnderRetry);
-  }
-
-  public static void setUpUnderRetry() {
+  static void setUp() {
     port = PortUtils.findOpenPort();
     SpringApplication app = new SpringApplication(SingleServiceConfig.class);
     app.setDefaultProperties(ImmutableMap.of("camelService.port", port));
@@ -55,7 +51,7 @@ public class SingleServiceCamelTest extends RetryOnAddressAlreadyInUse {
   }
 
   @AfterAll
-  public static void cleanUp() {
+  static void cleanUp() {
     if (server != null) {
       server.close();
       server = null;
@@ -63,7 +59,7 @@ public class SingleServiceCamelTest extends RetryOnAddressAlreadyInUse {
   }
 
   @Test
-  public void singleCamelServiceSpan() throws IOException {
+  void singleCamelServiceSpan() throws IOException {
     String requestUrl = "http://localhost:" + port + "/camelService";
 
     Request request =
@@ -84,7 +80,7 @@ public class SingleServiceCamelTest extends RetryOnAddressAlreadyInUse {
                             equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
                             equalTo(SemanticAttributes.HTTP_URL, requestUrl),
                             equalTo(
-                                AttributeKey.stringKey("camel.uri"),
+                                stringKey("camel.uri"),
                                 requestUrl.replace("localhost", "0.0.0.0")))));
   }
 }
