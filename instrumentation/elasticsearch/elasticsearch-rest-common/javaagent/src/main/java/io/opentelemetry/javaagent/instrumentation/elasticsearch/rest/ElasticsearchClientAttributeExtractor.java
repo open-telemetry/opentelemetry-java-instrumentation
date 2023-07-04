@@ -15,8 +15,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.internal.Networ
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.net.InetAddress;
 import javax.annotation.Nullable;
+import org.apache.http.HttpHost;
 import org.elasticsearch.client.Response;
 
 public class ElasticsearchClientAttributeExtractor
@@ -25,16 +25,16 @@ public class ElasticsearchClientAttributeExtractor
   private static final String PATH_PARTS_ATTRIBUTE_PREFIX = "db.elasticsearch.path_parts.";
 
   private static void setServerAttributes(AttributesBuilder attributes, Response response) {
-    InetAddress hostAddress = response.getHost().getAddress();
-    if (hostAddress != null) {
+    HttpHost host = response.getHost();
+    if (host != null) {
       if (SemconvStability.emitStableHttpSemconv()) {
-        internalSet(attributes, NetworkAttributes.SERVER_ADDRESS, hostAddress.getHostAddress());
-        internalSet(attributes, NetworkAttributes.SERVER_PORT, (long) response.getHost().getPort());
+        internalSet(attributes, NetworkAttributes.SERVER_ADDRESS, host.getHostName());
+        internalSet(attributes, NetworkAttributes.SERVER_PORT, (long) host.getPort());
       }
       if (SemconvStability.emitOldHttpSemconv()) {
-        internalSet(attributes, SemanticAttributes.NET_PEER_NAME, hostAddress.getHostAddress());
+        internalSet(attributes, SemanticAttributes.NET_PEER_NAME, host.getHostName());
         internalSet(
-            attributes, SemanticAttributes.NET_PEER_PORT, (long) response.getHost().getPort());
+            attributes, SemanticAttributes.NET_PEER_PORT, (long) host.getPort());
       }
     }
   }
