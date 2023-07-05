@@ -84,6 +84,19 @@ class TestServlet3 {
             byte[] body = endpoint.body.getBytes()
             resp.getOutputStream().write(body, 0, body.length)
             break
+          case AbstractServlet3Test.HTML_PRINT_WRITER_WITH_OTHER_HEAD:
+            resp.contentType = "text/html"
+            resp.status = endpoint.status
+            resp.setContentLengthLong(endpoint.body.length())
+            resp.writer.print(endpoint.body)
+            break
+          case AbstractServlet3Test.HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD:
+            resp.contentType = "text/html"
+            resp.status = endpoint.status
+            resp.setContentLength(endpoint.body.length())
+            byte[] body = endpoint.body.getBytes()
+            resp.getOutputStream().write(body, 0, body.length)
+            break
         }
       }
     }

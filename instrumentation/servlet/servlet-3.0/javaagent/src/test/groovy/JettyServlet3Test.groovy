@@ -266,6 +266,8 @@ class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
   protected void setupServlets(ServletContextHandler context) {
     super.setupServlets(context)
     addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER_WITH_OTHER_HEAD.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + SUCCESS.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + QUERY_PARAM.path, TestServlet3.DispatchAsync)

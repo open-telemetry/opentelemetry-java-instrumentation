@@ -363,6 +363,8 @@ class TomcatServlet3TestForward extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER_WITH_OTHER_HEAD.path, RequestDispatcherServlet.Forward)
   }
 }
 
