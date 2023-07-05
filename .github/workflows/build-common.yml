@@ -285,6 +285,15 @@ jobs:
         run: git config --system core.longpaths true
         if: matrix.os == 'windows-latest'
 
+        # downloading the liberty image (a bit over 10gb) fails without freeing up more disk space on the runner
+      - name: Free disk space
+        run: |
+          df -h
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          df -h
+        if: matrix.os == 'ubuntu-latest'
+
       - uses: actions/checkout@v3
 
       - name: Set up JDK for running Gradle
