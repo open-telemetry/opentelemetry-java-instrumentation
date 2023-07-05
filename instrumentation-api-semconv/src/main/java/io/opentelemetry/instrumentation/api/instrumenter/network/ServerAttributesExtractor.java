@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.network;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
 import javax.annotation.Nullable;
 
@@ -37,7 +37,7 @@ public final class ServerAttributesExtractor<REQUEST, RESPONSE>
         new InternalServerAttributesExtractor<>(
             getter,
             (port, request) -> true,
-            FallbackNamePortGetter.noop(),
+            FallbackAddressPortExtractor.noop(),
             /* emitStableUrlAttributes= */ true,
             /* emitOldHttpAttributes= */ false,
             // this param does not matter when old semconv is off

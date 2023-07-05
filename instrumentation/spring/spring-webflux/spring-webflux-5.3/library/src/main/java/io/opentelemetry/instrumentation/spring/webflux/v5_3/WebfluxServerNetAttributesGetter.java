@@ -16,7 +16,7 @@ final class WebfluxServerNetAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(ServerWebExchange request) {
-    return null;
+    return request.getRequest().getURI().getHost();
   }
 
   @Nullable

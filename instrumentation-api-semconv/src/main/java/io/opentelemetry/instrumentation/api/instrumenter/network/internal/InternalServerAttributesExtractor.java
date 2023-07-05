@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.function.BiPredicate;
@@ -23,7 +22,7 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
 
   private final ServerAttributesGetter<REQUEST, RESPONSE> getter;
   private final BiPredicate<Integer, REQUEST> captureServerPortCondition;
-  private final FallbackNamePortGetter<REQUEST> fallbackNamePortGetter;
+  private final FallbackAddressPortExtractor<REQUEST> fallbackAddressPortExtractor;
   private final boolean emitStableUrlAttributes;
   private final boolean emitOldHttpAttributes;
   private final Mode oldSemconvMode;
@@ -31,45 +30,45 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
   public InternalServerAttributesExtractor(
       ServerAttributesGetter<REQUEST, RESPONSE> getter,
       BiPredicate<Integer, REQUEST> captureServerPortCondition,
-      FallbackNamePortGetter<REQUEST> fallbackNamePortGetter,
+      FallbackAddressPortExtractor<REQUEST> fallbackAddressPortExtractor,
       boolean emitStableUrlAttributes,
       boolean emitOldHttpAttributes,
       Mode oldSemconvMode) {
     this.getter = getter;
     this.captureServerPortCondition = captureServerPortCondition;
-    this.fallbackNamePortGetter = fallbackNamePortGetter;
+    this.fallbackAddressPortExtractor = fallbackAddressPortExtractor;
     this.emitStableUrlAttributes = emitStableUrlAttributes;
     this.emitOldHttpAttributes = emitOldHttpAttributes;
     this.oldSemconvMode = oldSemconvMode;
   }
 
   public void onStart(AttributesBuilder attributes, REQUEST request) {
-    String serverAddress = extractServerAddress(request);
+    AddressAndPort serverAddressAndPort = extractServerAddressAndPort(request);
+
     if (emitStableUrlAttributes) {
-      internalSet(attributes, NetworkAttributes.SERVER_ADDRESS, serverAddress);
+      internalSet(attributes, NetworkAttributes.SERVER_ADDRESS, serverAddressAndPort.address);
     }
     if (emitOldHttpAttributes) {
-      internalSet(attributes, oldSemconvMode.address, serverAddress);
+      internalSet(attributes, oldSemconvMode.address, serverAddressAndPort.address);
     }
 
-    Integer serverPort = extractServerPort(request);
-    if (serverPort != null
-        && serverPort > 0
-        && captureServerPortCondition.test(serverPort, request)) {
+    if (serverAddressAndPort.port != null
+        && serverAddressAndPort.port > 0
+        && captureServerPortCondition.test(serverAddressAndPort.port, request)) {
       if (emitStableUrlAttributes) {
-        internalSet(attributes, NetworkAttributes.SERVER_PORT, (long) serverPort);
+        internalSet(attributes, NetworkAttributes.SERVER_PORT, (long) serverAddressAndPort.port);
       }
       if (emitOldHttpAttributes) {
-        internalSet(attributes, oldSemconvMode.port, (long) serverPort);
+        internalSet(attributes, oldSemconvMode.port, (long) serverAddressAndPort.port);
       }
     }
   }
 
   public void onEnd(AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
-    String serverAddress = extractServerAddress(request);
+    AddressAndPort serverAddressAndPort = extractServerAddressAndPort(request);
 
     String serverSocketAddress = getter.getServerSocketAddress(request, response);
-    if (serverSocketAddress != null && !serverSocketAddress.equals(serverAddress)) {
+    if (serverSocketAddress != null && !serverSocketAddress.equals(serverAddressAndPort.address)) {
       if (emitStableUrlAttributes) {
         internalSet(attributes, NetworkAttributes.SERVER_SOCKET_ADDRESS, serverSocketAddress);
       }
@@ -78,9 +77,10 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
       }
     }
 
-    Integer serverPort = extractServerPort(request);
     Integer serverSocketPort = getter.getServerSocketPort(request, response);
-    if (serverSocketPort != null && serverSocketPort > 0 && !serverSocketPort.equals(serverPort)) {
+    if (serverSocketPort != null
+        && serverSocketPort > 0
+        && !serverSocketPort.equals(serverAddressAndPort.port)) {
       if (emitStableUrlAttributes) {
         internalSet(attributes, NetworkAttributes.SERVER_SOCKET_PORT, (long) serverSocketPort);
       }
@@ -90,7 +90,7 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
     }
 
     String serverSocketDomain = getter.getServerSocketDomain(request, response);
-    if (serverSocketDomain != null && !serverSocketDomain.equals(serverAddress)) {
+    if (serverSocketDomain != null && !serverSocketDomain.equals(serverAddressAndPort.address)) {
       if (emitStableUrlAttributes) {
         internalSet(attributes, NetworkAttributes.SERVER_SOCKET_DOMAIN, serverSocketDomain);
       }
@@ -100,20 +100,14 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
     }
   }
 
-  private String extractServerAddress(REQUEST request) {
-    String serverAddress = getter.getServerAddress(request);
-    if (serverAddress == null) {
-      serverAddress = fallbackNamePortGetter.name(request);
+  private AddressAndPort extractServerAddressAndPort(REQUEST request) {
+    AddressAndPort addressAndPort = new AddressAndPort();
+    addressAndPort.address = getter.getServerAddress(request);
+    addressAndPort.port = getter.getServerPort(request);
+    if (addressAndPort.address == null && addressAndPort.port == null) {
+      fallbackAddressPortExtractor.extract(addressAndPort, request);
     }
-    return serverAddress;
-  }
-
-  private Integer extractServerPort(REQUEST request) {
-    Integer serverPort = getter.getServerPort(request);
-    if (serverPort == null) {
-      serverPort = fallbackNamePortGetter.port(request);
-    }
-    return serverPort;
+    return addressAndPort;
   }
 
   /**

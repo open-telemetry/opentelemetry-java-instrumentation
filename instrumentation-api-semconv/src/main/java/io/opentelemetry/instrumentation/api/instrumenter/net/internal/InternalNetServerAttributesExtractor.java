@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPort;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 /**
@@ -18,15 +20,15 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 public final class InternalNetServerAttributesExtractor<REQUEST, RESPONSE> {
 
   private final NetServerAttributesGetter<REQUEST, RESPONSE> getter;
-  private final FallbackNamePortGetter<REQUEST> fallbackNamePortGetter;
+  private final FallbackAddressPortExtractor<REQUEST> fallbackAddressPortExtractor;
   private final boolean emitOldHttpAttributes;
 
   public InternalNetServerAttributesExtractor(
       NetServerAttributesGetter<REQUEST, RESPONSE> getter,
-      FallbackNamePortGetter<REQUEST> fallbackNamePortGetter,
+      FallbackAddressPortExtractor<REQUEST> fallbackAddressPortExtractor,
       boolean emitOldHttpAttributes) {
     this.getter = getter;
-    this.fallbackNamePortGetter = fallbackNamePortGetter;
+    this.fallbackAddressPortExtractor = fallbackAddressPortExtractor;
     this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
 
@@ -59,9 +61,11 @@ public final class InternalNetServerAttributesExtractor<REQUEST, RESPONSE> {
 
   private String extractServerAddress(REQUEST request) {
     String serverAddress = getter.getServerAddress(request);
-    if (serverAddress == null) {
-      serverAddress = fallbackNamePortGetter.name(request);
+    if (serverAddress != null) {
+      return serverAddress;
     }
-    return serverAddress;
+    AddressAndPort addressAndPort = new AddressAndPort();
+    fallbackAddressPortExtractor.extract(addressAndPort, request);
+    return addressAndPort.getAddress();
   }
 }

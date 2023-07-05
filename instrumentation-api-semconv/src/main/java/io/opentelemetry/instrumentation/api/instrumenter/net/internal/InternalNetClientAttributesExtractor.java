@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPort;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
@@ -19,15 +21,15 @@ import javax.annotation.Nullable;
 public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
 
   private final NetClientAttributesGetter<REQUEST, RESPONSE> getter;
-  private final FallbackNamePortGetter<REQUEST> fallbackNamePortGetter;
+  private final FallbackAddressPortExtractor<REQUEST> fallbackAddressPortExtractor;
   private final boolean emitOldHttpAttributes;
 
   public InternalNetClientAttributesExtractor(
       NetClientAttributesGetter<REQUEST, RESPONSE> getter,
-      FallbackNamePortGetter<REQUEST> fallbackNamePortGetter,
+      FallbackAddressPortExtractor<REQUEST> fallbackAddressPortExtractor,
       boolean emitOldHttpAttributes) {
     this.getter = getter;
-    this.fallbackNamePortGetter = fallbackNamePortGetter;
+    this.fallbackAddressPortExtractor = fallbackAddressPortExtractor;
     this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
 
@@ -49,10 +51,12 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
   }
 
   private String extractPeerName(REQUEST request) {
-    String peerName = getter.getServerAddress(request);
-    if (peerName == null) {
-      peerName = fallbackNamePortGetter.name(request);
+    String serverAddress = getter.getServerAddress(request);
+    if (serverAddress != null) {
+      return serverAddress;
     }
-    return peerName;
+    AddressAndPort addressAndPort = new AddressAndPort();
+    fallbackAddressPortExtractor.extract(addressAndPort, request);
+    return addressAndPort.getAddress();
   }
 }
