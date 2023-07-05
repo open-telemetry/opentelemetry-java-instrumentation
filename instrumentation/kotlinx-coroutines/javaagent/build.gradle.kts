@@ -10,12 +10,16 @@ muzzle {
     group.set("org.jetbrains.kotlinx")
     module.set("kotlinx-coroutines-core")
     versions.set("[1.0.0,1.3.8)")
+    extraDependency(project(":instrumentation-annotations"))
+    extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
   // 1.3.9 (and beyond?) have changed how artifact names are resolved due to multiplatform variants
   pass {
     group.set("org.jetbrains.kotlinx")
     module.set("kotlinx-coroutines-core-jvm")
     versions.set("[1.3.9,)")
+    extraDependency(project(":instrumentation-annotations"))
+    extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
 }
 
