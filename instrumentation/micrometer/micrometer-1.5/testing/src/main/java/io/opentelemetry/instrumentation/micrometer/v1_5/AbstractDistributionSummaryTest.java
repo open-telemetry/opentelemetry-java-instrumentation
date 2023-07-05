@@ -12,17 +12,13 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attri
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Metrics;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.metrics.internal.aggregator.ExplicitBucketHistogramUtils;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractDistributionSummaryTest {
 
-  static final double[] DEFAULT_BUCKETS =
-      ExplicitBucketHistogramUtils.DEFAULT_HISTOGRAM_BUCKET_BOUNDARIES.stream()
-          .mapToDouble(d -> d)
-          .toArray();
+  static final double[] NO_BUCKETS = new double[0];
 
   protected abstract InstrumentationExtension testing();
 
@@ -65,7 +61,7 @@ public abstract class AbstractDistributionSummaryTest {
                                                 .hasSum(7)
                                                 .hasCount(3)
                                                 .hasAttributes(attributeEntry("tag", "value"))
-                                                .hasBucketBoundaries(DEFAULT_BUCKETS)))));
+                                                .hasBucketBoundaries(NO_BUCKETS)))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
