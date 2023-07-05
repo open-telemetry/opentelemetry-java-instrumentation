@@ -285,6 +285,7 @@ jobs:
         run: git config --system core.longpaths true
         if: matrix.os == 'windows-latest'
 
+        # downloading the liberty image (a bit over 10gb) fails without freeing up more disk space on the runner
       - name: Free disk space
         run: |
           df -h
