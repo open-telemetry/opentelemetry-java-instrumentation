@@ -5,11 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines
 
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
 import io.opentelemetry.context.Scope
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.extension.kotlin.getOpenTelemetryContext
+import io.opentelemetry.instrumentation.annotations.SpanAttribute
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
@@ -491,6 +494,34 @@ class KotlinCoroutinesInstrumentationTest {
         )
       },
     )
+  }
+
+  @Test
+  fun `test WithSpan annotation`() {
+    runBlocking {
+      annotated1()
+    }
+  }
+
+  @WithSpan(value = "a1", kind = SpanKind.CLIENT)
+  private suspend fun annotated1() {
+    delay(10)
+    annotated2(1, true, 'a', 2.0, 3.0f, 4, 5, 6, "test")
+  }
+
+  @WithSpan
+  private suspend fun annotated2(
+    @SpanAttribute byteValue: Byte,
+    @SpanAttribute booleanValue: Boolean,
+    @SpanAttribute charValue: Char,
+    @SpanAttribute doubleValue: Double,
+    @SpanAttribute floatValue: Float,
+    @SpanAttribute intValue: Int,
+    @SpanAttribute longValue: Long,
+    @SpanAttribute shortValue: Short,
+    @SpanAttribute("stringValue") s: String
+  ) {
+    delay(10)
   }
 
   private fun tracedChild(opName: String) {

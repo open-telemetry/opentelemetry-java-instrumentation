@@ -22,6 +22,11 @@ muzzle {
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-extension-kotlin")
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+  compileOnly(project(":opentelemetry-instrumentation-annotations-shaded-for-instrumenting", configuration = "shadow"))
+
+  implementation("org.ow2.asm:asm-tree")
+  implementation("org.ow2.asm:asm-util")
+  implementation(project(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent"))
 
   testInstrumentation(project(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
@@ -29,6 +34,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-kotlin")
   testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
   testImplementation(project(":instrumentation:reactor:reactor-3.1:library"))
+  testImplementation(project(":instrumentation-annotations"))
 
   // Use first version with flow support since we have tests for it.
   testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0")
@@ -39,6 +45,7 @@ tasks {
   withType(KotlinCompile::class).configureEach {
     kotlinOptions {
       jvmTarget = "1.8"
+      javaParameters = true
     }
   }
 }

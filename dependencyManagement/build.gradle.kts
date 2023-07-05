@@ -64,6 +64,7 @@ val CORE_DEPENDENCIES = listOf(
   "net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}",
   "org.ow2.asm:asm:${asmVersion}",
   "org.ow2.asm:asm-tree:${asmVersion}",
+  "org.ow2.asm:asm-util:${asmVersion}",
   "org.openjdk.jmh:jmh-core:${jmhVersion}",
   "org.openjdk.jmh:jmh-generator-bytecode:${jmhVersion}",
   "org.mockito:mockito-core:${mockitoVersion}",
