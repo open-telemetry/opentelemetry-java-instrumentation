@@ -25,7 +25,7 @@ final class SqsImpl {
 
   private SqsImpl() {}
 
-  public static boolean afterResponse(
+  static boolean afterResponse(
       Request<?> request,
       Response<?> response,
       Instrumenter<Request<?>, Response<?>> consumerInstrumenter) {
