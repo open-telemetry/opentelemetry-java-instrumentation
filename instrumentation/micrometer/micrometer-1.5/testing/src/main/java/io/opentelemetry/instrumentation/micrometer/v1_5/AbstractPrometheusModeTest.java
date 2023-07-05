@@ -34,7 +34,7 @@ public abstract class AbstractPrometheusModeTest {
         Counter.builder("testPrometheusCounter")
             .description("This is a test counter")
             .tags("tag", "value")
-            .baseUnit("items")
+            .baseUnit("")
             .register(Metrics.globalRegistry);
 
     // when
@@ -50,7 +50,7 @@ public abstract class AbstractPrometheusModeTest {
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test counter")
-                            .hasUnit("items")
+                            .hasUnit("")
                             .hasDoubleSumSatisfying(
                                 sum ->
                                     sum.isMonotonic()
