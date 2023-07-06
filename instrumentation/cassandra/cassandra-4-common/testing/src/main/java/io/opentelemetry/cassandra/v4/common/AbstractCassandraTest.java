@@ -300,6 +300,7 @@ public abstract class AbstractCassandraTest {
     DriverConfigLoader configLoader =
         DefaultDriverConfigLoader.builder()
             .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))
+            .withDuration(DefaultDriverOption.CONNECTION_INIT_QUERY_TIMEOUT, Duration.ofSeconds(10))
             .build();
     return wrap(
         CqlSession.builder()
