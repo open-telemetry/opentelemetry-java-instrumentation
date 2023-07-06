@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.quarkus.resteasy.reactive;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -21,6 +21,8 @@ public class QuarkusResteasyReactiveInstrumentationModule extends Instrumentatio
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new InvocationHandlerInstrumentation());
+    return asList(
+        new AbstractResteasyReactiveContextInstrumentation(),
+        new InvocationHandlerInstrumentation());
   }
 }
