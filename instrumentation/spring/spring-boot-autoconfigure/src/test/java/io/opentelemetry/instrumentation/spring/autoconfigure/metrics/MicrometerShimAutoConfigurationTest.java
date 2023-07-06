@@ -8,10 +8,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.metrics;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -24,11 +22,6 @@ class MicrometerShimAutoConfigurationTest {
           .withConfiguration(
               AutoConfigurations.of(
                   OpenTelemetryAutoConfiguration.class, MicrometerShimAutoConfiguration.class));
-
-  @BeforeEach
-  void resetGlobalLoggerProvider() {
-    GlobalOpenTelemetry.resetForTest();
-  }
 
   @Test
   void metricsEnabled() {
