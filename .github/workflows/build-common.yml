@@ -162,6 +162,14 @@ jobs:
             vm: openj9
       fail-fast: false
     steps:
+      # tests may fail without freeing up more disk space on the runner
+      - name: Free disk space
+        run: |
+          df -h
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          df -h
+
       - uses: actions/checkout@v3
 
       - id: setup-test-java
@@ -285,7 +293,7 @@ jobs:
         run: git config --system core.longpaths true
         if: matrix.os == 'windows-latest'
 
-        # downloading the liberty image (a bit over 10gb) fails without freeing up more disk space on the runner
+      # downloading the liberty image (a bit over 10gb) fails without freeing up more disk space on the runner
       - name: Free disk space
         run: |
           df -h
