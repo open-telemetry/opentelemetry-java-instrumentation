@@ -14,15 +14,19 @@ muzzle {
     group.set("com.amazonaws")
     module.set("aws-java-sdk-core")
 
-    // Here we use 33 because at the moment, it Muzzle still works here and we want to keep the assertInverse
-    // But feel free to upgrade the version up to 106 if needed.
-    versions.set("[$minVersion,)")
+    // Here we use 1.10(!).33 because at the moment, that version still passes Muzzle and we want to
+    // keep the assertInverse. But feel free to upgrade the version up to $minVersion if needed.
+    versions.set("[1.10.33,)")
     assertInverse.set(true)
 
     excludeInstrumentationName("aws-sdk-1.11-sqs")
   }
 
   fail {
+    // Set name manually, otherwise this may cause random configuration errors due to the overlap with
+    // the previous pass/assertInverse which might attempt to generate configurations with colliding
+    // names.
+    name.set("core-only-should-disable-sqs")
     group.set("com.amazonaws")
     module.set("aws-java-sdk-core")
     versions.set("[$minVersion,)")
