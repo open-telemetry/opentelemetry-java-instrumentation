@@ -65,7 +65,32 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         + "<p>test works</p>\n"
         + "</body>\n"
         + "</html>")
-
+  public static final ServerEndpoint HTML_PRINT_WRITER_WITH_OTHER_HEAD_STYLE =
+    new ServerEndpoint("HTML_PRINT_WRITER_WITH_OTHER_HEAD",  "htmlPrintWriterWithOtherHead",
+      200,
+      "<!DOCTYPE html>\n"
+        + "<html lang=\"en\">\n"
+        + "<head lang=\"en\">\n"
+        + "  <meta charset=\"UTF-8\">\n"
+        + "  <title>Title</title>\n"
+        + "</head>\n"
+        + "<body>\n"
+        + "<p>test works</p>\n"
+        + "</body>\n"
+        + "</html>")
+  public static final ServerEndpoint HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD_STYLE =
+    new ServerEndpoint("HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD",  "htmlServletOutputStreamWithOtherHead",
+      200,
+      "<!DOCTYPE html>\n"
+        + "<html lang=\"en\">\n"
+        + "<head lang=\"en\">\n"
+        + "  <meta charset=\"UTF-8\">\n"
+        + "  <title>Title</title>\n"
+        + "</head>\n"
+        + "<body>\n"
+        + "<p>test works</p>\n"
+        + "</body>\n"
+        + "</html>")
   protected void setupServlets(CONTEXT context) {
     def servlet = servlet()
 
@@ -80,6 +105,8 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     addServlet(context, CAPTURE_PARAMETERS.path, servlet)
     addServlet(context, HTML_PRINT_WRITER.path, servlet)
     addServlet(context, HTML_SERVLET_OUTPUT_STREAM.path, servlet)
+    addServlet(context, HTML_PRINT_WRITER_WITH_OTHER_HEAD_STYLE.path,servlet)
+    addServlet(context, HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD_STYLE.path,servlet)
   }
 
   protected ServerEndpoint lastRequest
@@ -200,6 +227,91 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     ExperimentalSnippetHolder.setSnippet("")
 
     def expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER)
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "GET" + (expectedRoute != null ? " " + expectedRoute : "")
+          kind SpanKind.SERVER
+          hasNoParent()
+        }
+        span(1) {
+          name "controller"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+      }
+    }
+  }
+
+  def 'snippet injection with PrintWriterWithOtherHeadStyle'() {
+    setup:
+    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
+    def request = request(HTML_PRINT_WRITER_WITH_OTHER_HEAD_STYLE, "GET")
+    def response = client.execute(request).aggregate().join()
+
+    expect:
+    response.status().code() == HTML_PRINT_WRITER_WITH_OTHER_HEAD_STYLE.status
+    String result = "<!DOCTYPE html>\n" +
+      "<html lang=\"en\">\n" +
+      "<head lang=\"en\">\n" +
+      "  <script type=\"text/javascript\"> Test </script>\n" +
+      "  <meta charset=\"UTF-8\">\n" +
+      "  <title>Title</title>\n" +
+      "</head>\n" +
+      "<body>\n" +
+      "<p>test works</p>\n" +
+      "</body>\n" +
+      "</html>"
+    println "result from call ${response.contentUtf8()}"
+    response.contentUtf8() == result
+    response.headers().contentLength() == result.length()
+
+    cleanup:
+    ExperimentalSnippetHolder.setSnippet("")
+
+    def expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER_WITH_OTHER_HEAD_STYLE)
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "GET" + (expectedRoute != null ? " " + expectedRoute : "")
+          kind SpanKind.SERVER
+          hasNoParent()
+        }
+        span(1) {
+          name "controller"
+          kind SpanKind.INTERNAL
+          childOf span(0)
+        }
+      }
+    }
+  }
+
+  def 'snippet injection with ServletOutputStreamWithOtherHeadStyle'() {
+    setup:
+    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test Test</script>")
+    def request = request(HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD_STYLE, "GET")
+    def response = client.execute(request).aggregate().join()
+
+    expect:
+    response.status().code() == HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD_STYLE.status
+    String result = "<!DOCTYPE html>\n" +
+      "<html lang=\"en\">\n" +
+      "<head lang=\"en\">\n" +
+      "  <script type=\"text/javascript\"> Test Test</script>\n" +
+      "  <meta charset=\"UTF-8\">\n" +
+      "  <title>Title</title>\n" +
+      "</head>\n" +
+      "<body>\n" +
+      "<p>test works</p>\n" +
+      "</body>\n" +
+      "</html>"
+    response.contentUtf8() == result
+    response.headers().contentLength() == result.length()
+
+    cleanup:
+    ExperimentalSnippetHolder.setSnippet("")
+
+    def expectedRoute = expectedHttpRoute(HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD_STYLE)
     assertTraces(1) {
       trace(0, 2) {
         span(0) {

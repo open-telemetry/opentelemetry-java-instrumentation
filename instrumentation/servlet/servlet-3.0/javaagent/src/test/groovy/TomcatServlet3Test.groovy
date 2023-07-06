@@ -363,8 +363,8 @@ class TomcatServlet3TestForward extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, RequestDispatcherServlet.Forward)
-    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD.path, RequestDispatcherServlet.Forward)
-    addServlet(context, "/dispatch" + HTML_PRINT_WRITER_WITH_OTHER_HEAD.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD_STYLE.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER_WITH_OTHER_HEAD_STYLE.path, RequestDispatcherServlet.Forward)
   }
 }
 
@@ -408,6 +408,8 @@ class TomcatServlet3TestInclude extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER_WITH_OTHER_HEAD_STYLE.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD_STYLE.path, RequestDispatcherServlet.Include)
   }
 }
 
@@ -437,6 +439,8 @@ class TomcatServlet3TestDispatchImmediate extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, TestServlet3.DispatchImmediate)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER_WITH_OTHER_HEAD_STYLE.path, TestServlet3.DispatchImmediate)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD_STYLE.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
   }
 }
@@ -462,6 +466,8 @@ class TomcatServlet3TestDispatchAsync extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + HTML_PRINT_WRITER_WITH_OTHER_HEAD_STYLE.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD_STYLE.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
   }
 
