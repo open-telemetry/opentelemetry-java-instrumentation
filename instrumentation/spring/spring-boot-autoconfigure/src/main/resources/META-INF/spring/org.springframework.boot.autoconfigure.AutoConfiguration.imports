@@ -13,3 +13,5 @@ io.opentelemetry.instrumentation.spring.autoconfigure.metrics.MicrometerShimAuto
 io.opentelemetry.instrumentation.spring.autoconfigure.propagators.PropagationAutoConfiguration
 io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration
 io.opentelemetry.instrumentation.spring.autoconfigure.webmvc.WebMvcFilterAutoConfigurationSpring6
+io.opentelemetry.instrumentation.spring.autoconfigure.log.OtelLogbackAutoConfiguration
+
