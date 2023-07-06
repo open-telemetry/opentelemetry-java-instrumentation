@@ -6,7 +6,7 @@ dependencies {
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
   library("com.amazonaws:aws-java-sdk-core:1.11.0")
-  library("com.amazonaws:aws-java-sdk-sqs:1.11.106")
+  library("com.amazonaws:aws-java-sdk-sqs:1.11.0")
   compileOnly(project(":muzzle"))
 
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
