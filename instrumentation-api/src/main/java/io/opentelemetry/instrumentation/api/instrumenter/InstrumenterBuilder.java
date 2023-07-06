@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.WARNING;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -346,7 +346,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         return computedSchemaUrls.iterator().next();
       default:
         logger.log(
-            FINE,
+            WARNING,
             "Multiple schemaUrls were detected: {0}. The built Instrumenter will have no schemaUrl assigned.",
             computedSchemaUrls);
         return null;
