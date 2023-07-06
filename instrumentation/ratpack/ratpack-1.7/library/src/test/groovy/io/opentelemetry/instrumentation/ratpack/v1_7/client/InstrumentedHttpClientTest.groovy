@@ -86,35 +86,35 @@ class InstrumentedHttpClientTest extends Specification {
     }
 
     app.test { httpClient ->
-      "bar" == httpClient.get("foo").body.text
-    }
+      assert "bar" == httpClient.get("foo").body.text
 
-    new PollingConditions().eventually {
-      def spanData = spanExporter.finishedSpanItems.find { it.name == "GET /foo" }
-      def spanClientData = spanExporter.finishedSpanItems.find { it.name == "GET" && it.kind == CLIENT }
-      def spanDataApi = spanExporter.finishedSpanItems.find { it.name == "GET /bar" && it.kind == SERVER }
+      new PollingConditions().eventually {
+        def spanData = spanExporter.finishedSpanItems.find { it.name == "GET /foo" }
+        def spanClientData = spanExporter.finishedSpanItems.find { it.name == "GET" && it.kind == CLIENT }
+        def spanDataApi = spanExporter.finishedSpanItems.find { it.name == "GET /bar" && it.kind == SERVER }
 
-      spanData.traceId == spanClientData.traceId
-      spanData.traceId == spanDataApi.traceId
+        spanData.traceId == spanClientData.traceId
+        spanData.traceId == spanDataApi.traceId
 
-      spanData.kind == SERVER
-      spanClientData.kind == CLIENT
-      def atts = spanClientData.attributes.asMap()
-      atts[HTTP_ROUTE] == "/bar"
-      atts[HTTP_METHOD] == "GET"
-      atts[HTTP_STATUS_CODE] == 200L
+        spanData.kind == SERVER
+        spanClientData.kind == CLIENT
+        def atts = spanClientData.attributes.asMap()
+        atts[HTTP_ROUTE] == "/bar"
+        atts[HTTP_METHOD] == "GET"
+        atts[HTTP_STATUS_CODE] == 200L
 
-      def attributes = spanData.attributes.asMap()
-      attributes[HTTP_ROUTE] == "/foo"
-      attributes[SemanticAttributes.HTTP_TARGET] == "/foo"
-      attributes[HTTP_METHOD] == "GET"
-      attributes[HTTP_STATUS_CODE] == 200L
+        def attributes = spanData.attributes.asMap()
+        attributes[HTTP_ROUTE] == "/foo"
+        attributes[SemanticAttributes.HTTP_TARGET] == "/foo"
+        attributes[HTTP_METHOD] == "GET"
+        attributes[HTTP_STATUS_CODE] == 200L
 
-      def attsApi = spanDataApi.attributes.asMap()
-      attsApi[HTTP_ROUTE] == "/bar"
-      attsApi[SemanticAttributes.HTTP_TARGET] == "/bar"
-      attsApi[HTTP_METHOD] == "GET"
-      attsApi[HTTP_STATUS_CODE] == 200L
+        def attsApi = spanDataApi.attributes.asMap()
+        attsApi[HTTP_ROUTE] == "/bar"
+        attsApi[SemanticAttributes.HTTP_TARGET] == "/bar"
+        attsApi[HTTP_METHOD] == "GET"
+        attsApi[HTTP_STATUS_CODE] == 200L
+      }
     }
   }
 
@@ -148,38 +148,38 @@ class InstrumentedHttpClientTest extends Specification {
     }
 
     app.test { httpClient ->
-      "hello" == httpClient.get("path-name").body.text
+      assert "hello" == httpClient.get("path-name").body.text
       latch.await(1, TimeUnit.SECONDS)
-    }
 
-    new PollingConditions().eventually {
-      spanExporter.finishedSpanItems.size() == 3
-      def spanData = spanExporter.finishedSpanItems.find { spanData -> spanData.name == "GET /path-name" }
-      def spanClientData1 = spanExporter.finishedSpanItems.find { s -> s.name == "GET" && s.attributes.asMap()[HTTP_ROUTE] == "/foo" }
-      def spanClientData2 = spanExporter.finishedSpanItems.find { s -> s.name == "GET" && s.attributes.asMap()[HTTP_ROUTE] == "/bar" }
+      new PollingConditions().eventually {
+        spanExporter.finishedSpanItems.size() == 3
+        def spanData = spanExporter.finishedSpanItems.find { spanData -> spanData.name == "GET /path-name" }
+        def spanClientData1 = spanExporter.finishedSpanItems.find { s -> s.name == "GET" && s.attributes.asMap()[HTTP_ROUTE] == "/foo" }
+        def spanClientData2 = spanExporter.finishedSpanItems.find { s -> s.name == "GET" && s.attributes.asMap()[HTTP_ROUTE] == "/bar" }
 
-      spanData.traceId == spanClientData1.traceId
-      spanData.traceId == spanClientData2.traceId
+        spanData.traceId == spanClientData1.traceId
+        spanData.traceId == spanClientData2.traceId
 
-      spanData.kind == SERVER
+        spanData.kind == SERVER
 
-      spanClientData1.kind == CLIENT
-      def atts = spanClientData1.attributes.asMap()
-      atts[HTTP_ROUTE] == "/foo"
-      atts[HTTP_METHOD] == "GET"
-      atts[HTTP_STATUS_CODE] == 200L
+        spanClientData1.kind == CLIENT
+        def atts = spanClientData1.attributes.asMap()
+        atts[HTTP_ROUTE] == "/foo"
+        atts[HTTP_METHOD] == "GET"
+        atts[HTTP_STATUS_CODE] == 200L
 
-      spanClientData2.kind == CLIENT
-      def atts2 = spanClientData2.attributes.asMap()
-      atts2[HTTP_ROUTE] == "/bar"
-      atts2[HTTP_METHOD] == "GET"
-      atts2[HTTP_STATUS_CODE] == 200L
+        spanClientData2.kind == CLIENT
+        def atts2 = spanClientData2.attributes.asMap()
+        atts2[HTTP_ROUTE] == "/bar"
+        atts2[HTTP_METHOD] == "GET"
+        atts2[HTTP_STATUS_CODE] == 200L
 
-      def attributes = spanData.attributes.asMap()
-      attributes[HTTP_ROUTE] == "/path-name"
-      attributes[SemanticAttributes.HTTP_TARGET] == "/path-name"
-      attributes[HTTP_METHOD] == "GET"
-      attributes[HTTP_STATUS_CODE] == 200L
+        def attributes = spanData.attributes.asMap()
+        attributes[HTTP_ROUTE] == "/path-name"
+        attributes[SemanticAttributes.HTTP_TARGET] == "/path-name"
+        attributes[HTTP_METHOD] == "GET"
+        attributes[HTTP_STATUS_CODE] == 200L
+      }
     }
   }
 
@@ -214,28 +214,30 @@ class InstrumentedHttpClientTest extends Specification {
       }
     }
 
-    app.test { httpClient -> "error" == httpClient.get("path-name").body.text }
+    app.test { httpClient ->
+      assert "error" == httpClient.get("path-name").body.text
 
-    new PollingConditions().eventually {
-      def spanData = spanExporter.finishedSpanItems.find { it.name == "GET /path-name" }
-      def spanClientData = spanExporter.finishedSpanItems.find { it.name == "GET" }
+      new PollingConditions().eventually {
+        def spanData = spanExporter.finishedSpanItems.find { it.name == "GET /path-name" }
+        def spanClientData = spanExporter.finishedSpanItems.find { it.name == "GET" }
 
-      spanData.traceId == spanClientData.traceId
+        spanData.traceId == spanClientData.traceId
 
-      spanData.kind == SERVER
-      spanClientData.kind == CLIENT
-      def atts = spanClientData.attributes.asMap()
-      atts[HTTP_ROUTE] == "/foo"
-      atts[HTTP_METHOD] == "GET"
-      atts[HTTP_STATUS_CODE] == null
-      spanClientData.status.statusCode == StatusCode.ERROR
-      spanClientData.events.first().name == "exception"
+        spanData.kind == SERVER
+        spanClientData.kind == CLIENT
+        def atts = spanClientData.attributes.asMap()
+        atts[HTTP_ROUTE] == "/foo"
+        atts[HTTP_METHOD] == "GET"
+        atts[HTTP_STATUS_CODE] == null
+        spanClientData.status.statusCode == StatusCode.ERROR
+        spanClientData.events.first().name == "exception"
 
-      def attributes = spanData.attributes.asMap()
-      attributes[HTTP_ROUTE] == "/path-name"
-      attributes[SemanticAttributes.HTTP_TARGET] == "/path-name"
-      attributes[HTTP_METHOD] == "GET"
-      attributes[HTTP_STATUS_CODE] == 200L
+        def attributes = spanData.attributes.asMap()
+        attributes[HTTP_ROUTE] == "/path-name"
+        attributes[SemanticAttributes.HTTP_TARGET] == "/path-name"
+        attributes[HTTP_METHOD] == "GET"
+        attributes[HTTP_STATUS_CODE] == 200L
+      }
     }
   }
 
