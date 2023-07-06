@@ -42,6 +42,9 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-exporter-zipkin")
   compileOnly(project(":instrumentation-annotations"))
 
+  compileOnly("ch.qos.logback:logback-classic:1.3.0")
+  compileOnly("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:1.28.0-alpha-SNAPSHOT")
+
   compileOnly(project(":instrumentation:resources:library"))
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
