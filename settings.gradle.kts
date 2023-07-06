@@ -223,6 +223,8 @@ hideFromDependabot(":instrumentation:elasticsearch:elasticsearch-transport-commo
 hideFromDependabot(":instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent")
 hideFromDependabot(":instrumentation:elasticsearch:elasticsearch-transport-5.3:javaagent")
 hideFromDependabot(":instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent")
+hideFromDependabot(":instrumentation:elasticsearch:elasticsearch-api-client-7.16:javaagent")
+hideFromDependabot(":instrumentation:elasticsearch:elasticsearch-api-client-7.16:javaagent-unit-tests")
 hideFromDependabot(":instrumentation:executors:bootstrap")
 hideFromDependabot(":instrumentation:executors:javaagent")
 hideFromDependabot(":instrumentation:executors:testing")
