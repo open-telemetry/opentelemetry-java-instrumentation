@@ -18,8 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * This instrumentation might work with versions before 1.11.0, but this was the first version that
- * is tested. It could possibly be extended earlier.
+ * This instrumentation requires at least version 1.11.106.
  */
 public class AwsClientInstrumentation implements TypeInstrumentation {
 

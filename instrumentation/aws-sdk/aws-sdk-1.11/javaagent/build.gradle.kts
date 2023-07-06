@@ -2,18 +2,21 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
-// compiling against 1.11.0, but instrumentation should work against 1.10.33 with varying effects,
-// depending on the version's implementation. (i.e. DeleteOptionGroup may have less handlerCounts than
-// expected in 1.11.84. Testing against 1.11.0 instead of 1.10.33 because the RequestHandler class
-// used in testing is abstract in 1.10.33
-// keeping base test version on 1.11.0 because RequestHandler2 is abstract in 1.10.33,
-// therefore keeping base version as 1.11.0 even though the instrumentation probably
-// is able to support up to 1.10.33
+val minVersion = "1.11.106";
+
+// All v1.11.x versions are out of support (https://github.com/aws/aws-sdk-java#supported-minor-versions)
+// but we opportunistically try to work with this minor version as well. Versions from
+// 1.11.106 (released Mar 21, 2017) are expected to work (this is where the handler context became
+// available from AmazonWebServiceRequest instead of only from Request; also pre-106 causes some
+// weird behavior with IntelliJ in some cases).
 muzzle {
   pass {
     group.set("com.amazonaws")
     module.set("aws-java-sdk-core")
-    versions.set("[1.10.33,)")
+
+    // Here we use 33 because at the moment, it Muzzle still works here and we want to keep the assertInverse
+    // But feel free to upgrade the version up to 106 if needed.
+    versions.set("[$minVersion,)")
     assertInverse.set(true)
 
     excludeInstrumentationName("aws-sdk-1.11-sqs")
@@ -22,7 +25,7 @@ muzzle {
   fail {
     group.set("com.amazonaws")
     module.set("aws-java-sdk-core")
-    versions.set("[1.10.33,)")
+    versions.set("[$minVersion,)")
 
     excludeInstrumentationName("aws-sdk-1.11-core")
   }
@@ -30,7 +33,7 @@ muzzle {
   pass {
     group.set("com.amazonaws")
     module.set("aws-java-sdk-sqs")
-    versions.set("[1.10.33,)")
+    versions.set("[$minVersion,)")
   }
 }
 
@@ -39,14 +42,14 @@ dependencies {
 
   implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:library"))
 
-  library("com.amazonaws:aws-java-sdk-core:1.11.0")
+  library("com.amazonaws:aws-java-sdk-core:$minVersion")
 
-  testLibrary("com.amazonaws:aws-java-sdk-s3:1.11.106")
-  testLibrary("com.amazonaws:aws-java-sdk-rds:1.11.106")
-  testLibrary("com.amazonaws:aws-java-sdk-ec2:1.11.106")
-  testLibrary("com.amazonaws:aws-java-sdk-kinesis:1.11.106")
-  testLibrary("com.amazonaws:aws-java-sdk-dynamodb:1.11.106")
-  testLibrary("com.amazonaws:aws-java-sdk-sns:1.11.106")
+  testLibrary("com.amazonaws:aws-java-sdk-s3:$minVersion")
+  testLibrary("com.amazonaws:aws-java-sdk-rds:$minVersion")
+  testLibrary("com.amazonaws:aws-java-sdk-ec2:$minVersion")
+  testLibrary("com.amazonaws:aws-java-sdk-kinesis:$minVersion")
+  testLibrary("com.amazonaws:aws-java-sdk-dynamodb:$minVersion")
+  testLibrary("com.amazonaws:aws-java-sdk-sns:$minVersion")
 
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
@@ -65,28 +68,6 @@ dependencies {
 
 testing {
   suites {
-    // Features used in test_1_11_106 (builder) is available since 1.11.84, but
-    // using 1.11.106 because of previous concerns with byte code differences
-    // in 1.11.106, also, the DeleteOptionGroup request generates more spans
-    // in 1.11.106 than 1.11.84.
-    // We test older version in separate test set to test newer version and latest deps in the 'default'
-    // test dir. Otherwise we get strange warnings in Idea.
-    val test_before_1_11_106 by registering(JvmTestSuite::class) {
-      dependencies {
-        implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
-
-        implementation("com.amazonaws:aws-java-sdk-s3:1.11.0")
-        implementation("com.amazonaws:aws-java-sdk-rds:1.11.0")
-        implementation("com.amazonaws:aws-java-sdk-ec2:1.11.0")
-        implementation("com.amazonaws:aws-java-sdk-kinesis:1.11.0")
-        implementation("com.amazonaws:aws-java-sdk-dynamodb:1.11.0")
-        implementation("com.amazonaws:aws-java-sdk-sns:1.11.0")
-
-        // needed by S3
-        implementation("javax.xml.bind:jaxb-api:2.3.1")
-      }
-    }
-
     // We test SQS separately since we have special logic for it and want to make sure the presence of
     // SQS on the classpath doesn't conflict with tests for usage of the core SDK. This only affects
     // the agent.
@@ -94,7 +75,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        implementation("com.amazonaws:aws-java-sdk-sqs:1.11.106")
+        implementation("com.amazonaws:aws-java-sdk-sqs:$minVersion")
       }
     }
   }
