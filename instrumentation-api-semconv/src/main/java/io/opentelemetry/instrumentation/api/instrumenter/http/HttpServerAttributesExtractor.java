@@ -15,8 +15,8 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
@@ -95,8 +95,8 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       List<String> capturedResponseHeaders,
       Function<Context, String> httpRouteHolderGetter) {
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
-    HttpNetNamePortGetter<REQUEST> namePortGetter =
-        new HttpNetNamePortGetter<>(httpAttributesGetter);
+    HttpNetAddressPortExtractor<REQUEST> addressPortExtractor =
+        new HttpNetAddressPortExtractor<>(httpAttributesGetter);
     internalUrlExtractor =
         new InternalUrlAttributesExtractor<>(
             httpAttributesGetter,
@@ -105,7 +105,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
             SemconvStability.emitOldHttpSemconv());
     internalNetExtractor =
         new InternalNetServerAttributesExtractor<>(
-            netAttributesGetter, namePortGetter, SemconvStability.emitOldHttpSemconv());
+            netAttributesGetter, addressPortExtractor, SemconvStability.emitOldHttpSemconv());
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             netAttributesGetter,
@@ -116,14 +116,14 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
         new InternalServerAttributesExtractor<>(
             netAttributesGetter,
             this::shouldCaptureServerPort,
-            namePortGetter,
+            addressPortExtractor,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
             InternalServerAttributesExtractor.Mode.HOST);
     internalClientExtractor =
         new InternalClientAttributesExtractor<>(
             netAttributesGetter,
-            new ClientAddressGetter<>(httpAttributesGetter),
+            new ClientAddressAndPortExtractor<>(httpAttributesGetter),
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
     this.httpRouteHolderGetter = httpRouteHolderGetter;
@@ -204,41 +204,34 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     return SpanKey.HTTP_SERVER;
   }
 
-  private static final class ClientAddressGetter<REQUEST>
-      implements FallbackNamePortGetter<REQUEST> {
+  private static final class ClientAddressAndPortExtractor<REQUEST>
+      implements FallbackAddressPortExtractor<REQUEST> {
 
     private final HttpServerAttributesGetter<REQUEST, ?> getter;
 
-    private ClientAddressGetter(HttpServerAttributesGetter<REQUEST, ?> getter) {
+    private ClientAddressAndPortExtractor(HttpServerAttributesGetter<REQUEST, ?> getter) {
       this.getter = getter;
     }
 
-    @Nullable
     @Override
-    public String name(REQUEST request) {
+    public void extract(AddressPortSink sink, REQUEST request) {
       // try Forwarded
       String forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "forwarded"));
       if (forwarded != null) {
         forwarded = extractClientIpFromForwardedHeader(forwarded);
         if (forwarded != null) {
-          return forwarded;
+          sink.setAddress(forwarded);
+          return;
         }
       }
 
       // try X-Forwarded-For
       forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "x-forwarded-for"));
       if (forwarded != null) {
-        return extractClientIpFromForwardedForHeader(forwarded);
+        sink.setAddress(extractClientIpFromForwardedForHeader(forwarded));
       }
 
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public Integer port(REQUEST request) {
       // TODO: client.port will be implemented in a future PR
-      return null;
     }
   }
 }

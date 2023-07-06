@@ -80,11 +80,11 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       List<String> capturedResponseHeaders,
       ToIntFunction<Context> resendCountIncrementer) {
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
-    HttpNetNamePortGetter<REQUEST> namePortGetter =
-        new HttpNetNamePortGetter<>(httpAttributesGetter);
+    HttpNetAddressPortExtractor<REQUEST> addressPortExtractor =
+        new HttpNetAddressPortExtractor<>(httpAttributesGetter);
     internalNetExtractor =
         new InternalNetClientAttributesExtractor<>(
-            netAttributesGetter, namePortGetter, SemconvStability.emitOldHttpSemconv());
+            netAttributesGetter, addressPortExtractor, SemconvStability.emitOldHttpSemconv());
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             netAttributesGetter,
@@ -95,7 +95,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
         new InternalServerAttributesExtractor<>(
             netAttributesGetter,
             this::shouldCaptureServerPort,
-            namePortGetter,
+            addressPortExtractor,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
             InternalServerAttributesExtractor.Mode.PEER);
