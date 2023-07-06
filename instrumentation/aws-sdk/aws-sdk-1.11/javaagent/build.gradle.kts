@@ -2,7 +2,7 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
-val minVersion = "1.11.106";
+val minVersion = "1.11.106"
 
 // All v1.11.x versions are out of support (https://github.com/aws/aws-sdk-java#supported-minor-versions)
 // but we opportunistically try to work with this minor version as well. Versions from

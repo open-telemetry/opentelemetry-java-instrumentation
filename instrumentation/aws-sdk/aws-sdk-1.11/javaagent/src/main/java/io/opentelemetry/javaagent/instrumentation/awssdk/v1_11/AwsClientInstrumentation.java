@@ -17,9 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * This instrumentation requires at least version 1.11.106.
- */
+/** This instrumentation requires at least version 1.11.106. */
 public class AwsClientInstrumentation implements TypeInstrumentation {
 
   @Override
