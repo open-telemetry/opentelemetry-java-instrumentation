@@ -48,9 +48,9 @@ dependencies {
   testImplementation("com.squareup.okhttp3:okhttp:4.11.0")
 
   testImplementation("org.testcontainers:localstack")
-  testImplementation("org.testcontainers:cassandra:1.18.3")
-  testImplementation("org.testcontainers:testcontainers:1.18.3")
-  testImplementation("org.testcontainers:junit-jupiter:1.18.3")
+  testImplementation("org.testcontainers:cassandra")
+  testImplementation("org.testcontainers:testcontainers")
+  testImplementation("org.testcontainers:junit-jupiter")
   testImplementation("com.datastax.oss:java-driver-core:4.16.0") {
     exclude(group = "io.dropwizard.metrics", module = "metrics-core")
   }
