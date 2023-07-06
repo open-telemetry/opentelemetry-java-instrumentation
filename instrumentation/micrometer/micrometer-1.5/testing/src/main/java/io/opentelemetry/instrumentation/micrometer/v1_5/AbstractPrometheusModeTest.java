@@ -44,7 +44,7 @@ public abstract class AbstractPrometheusModeTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testPrometheusCounter.items",
+            "testPrometheusCounter",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
