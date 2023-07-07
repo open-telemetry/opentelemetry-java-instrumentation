@@ -34,12 +34,25 @@ For more information, see the `extendedAgent` task in [build.gradle](build.gradl
 
 ## Extensions examples
 
+* Custom `AutoConfigurationCustomizer`: [DemoAutoConfigurationCustomizerProvider](src/main/java/com/example/javaagent/DemoAutoConfigurationCustomizerProvider.java)
 * Custom `IdGenerator`: [DemoIdGenerator](src/main/java/com/example/javaagent/DemoIdGenerator.java)
 * Custom `TextMapPropagator`: [DemoPropagator](src/main/java/com/example/javaagent/DemoPropagator.java)
 * Custom `Sampler`: [DemoSampler](src/main/java/com/example/javaagent/DemoSampler.java)
 * Custom `SpanProcessor`: [DemoSpanProcessor](src/main/java/com/example/javaagent/DemoSpanProcessor.java)
 * Custom `SpanExporter`: [DemoSpanExporter](src/main/java/com/example/javaagent/DemoSpanExporter.java)
 * Additional instrumentation: [DemoServlet3InstrumentationModule](src/main/java/com/example/javaagent/instrumentation/DemoServlet3InstrumentationModule.java)
+
+Configuration to apply select custom classes:
+
+| System property      | Environment variable | Value                                  |
+|----------------------|----------------------|----------------------------------------|
+| otel.traces.exporter | OTEL_TRACES_EXPORTER | com.example.javaagent.DemoSpanExporter |
+| otel.propagators     | OTEL_PROPAGATORS     | com.example.javaagent.DemoPropagator   |
+| otel.traces.sampler  | OTEL_TRACES_SAMPLER  | com.example.javaagent.DemoSampler      |
+
+Otherwise customizations must be applied using an `AutoConfigurationCustomizer`.
+See [DemoAutoConfigurationCustomizerProvider](src/main/java/com/example/javaagent/DemoAutoConfigurationCustomizerProvider.java)
+for an example.
 
 ## Sample use cases
 
