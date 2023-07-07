@@ -13,12 +13,15 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
+import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.export.MetricReader;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
+import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricExporter;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
@@ -28,7 +31,6 @@ import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -41,6 +43,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
   private static final OpenTelemetrySdk openTelemetry;
   private static final InMemorySpanExporter testSpanExporter;
   private static final InMemoryMetricExporter testMetricExporter;
+  private static final InMemoryLogRecordExporter testLogRecordExporter;
   private static final MetricReader metricReader;
   private static boolean forceFlushCalled;
 
@@ -49,6 +52,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
 
     testSpanExporter = InMemorySpanExporter.create();
     testMetricExporter = InMemoryMetricExporter.create(AggregationTemporality.DELTA);
+    testLogRecordExporter = InMemoryLogRecordExporter.create();
 
     metricReader =
         PeriodicMetricReader.builder(testMetricExporter)
@@ -66,6 +70,10 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
                     .addSpanProcessor(SimpleSpanProcessor.create(testSpanExporter))
                     .build())
             .setMeterProvider(SdkMeterProvider.builder().registerMetricReader(metricReader).build())
+            .setLoggerProvider(
+                SdkLoggerProvider.builder()
+                    .addLogRecordProcessor(SimpleLogRecordProcessor.create(testLogRecordExporter))
+                    .build())
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
             .buildAndRegisterGlobal();
   }
@@ -98,6 +106,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
     openTelemetry.getSdkMeterProvider().forceFlush().join(10, TimeUnit.SECONDS);
     testSpanExporter.reset();
     testMetricExporter.reset();
+    testLogRecordExporter.reset();
     forceFlushCalled = false;
   }
 
@@ -123,8 +132,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
 
   @Override
   public List<LogRecordData> getExportedLogRecords() {
-    // no logs support yet
-    return Collections.emptyList();
+    return testLogRecordExporter.getFinishedLogRecordItems();
   }
 
   @Override

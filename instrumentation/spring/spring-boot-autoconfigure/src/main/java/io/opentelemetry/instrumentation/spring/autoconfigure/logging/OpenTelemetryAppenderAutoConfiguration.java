@@ -9,7 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.event.ApplicationPreparedEvent;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnBean(OpenTelemetry.class)
 public class OpenTelemetryAppenderAutoConfiguration {
 
-  @Bean
+  @Configuration
   @ConditionalOnProperty(
       prefix = "otel.springboot.log4j-appender",
       name = "enabled",
@@ -27,15 +27,19 @@ public class OpenTelemetryAppenderAutoConfiguration {
   @ConditionalOnClass({
     io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppender.class
   })
-  ApplicationListener<ApplicationPreparedEvent> log4jOtelAppenderInitializer(
-      OpenTelemetry openTelemetry) {
-    return event -> {
-      io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppender.install(
-          openTelemetry);
-    };
+  static class Log4jAppenderConfig {
+
+    @Bean
+    ApplicationListener<ApplicationReadyEvent> log4jOtelAppenderInitializer(
+        OpenTelemetry openTelemetry) {
+      return event -> {
+        io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppender.install(
+            openTelemetry);
+      };
+    }
   }
 
-  @Bean
+  @Configuration
   @ConditionalOnProperty(
       prefix = "otel.springboot.logback-appender",
       name = "enabled",
@@ -43,11 +47,17 @@ public class OpenTelemetryAppenderAutoConfiguration {
   @ConditionalOnClass({
     io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender.class
   })
-  ApplicationListener<ApplicationPreparedEvent> logbackOtelAppenderInitializer(
-      OpenTelemetry openTelemetry) {
-    return event -> {
-      io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender.install(
-          openTelemetry);
-    };
+  static class LogbackAppenderConfig {
+
+    @Bean
+    ApplicationListener<ApplicationReadyEvent> logbackOtelAppenderInitializer(
+        OpenTelemetry openTelemetry) {
+      System.out.println("listener bean");
+      return event -> {
+        System.out.println("running the listener");
+        io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender.install(
+            openTelemetry);
+      };
+    }
   }
 }
