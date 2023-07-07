@@ -82,6 +82,7 @@ class MulticastDirectCamelTest extends AbstractHttpServerUsingTest<ConfigurableA
                     span.hasName("second")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttribute(stringKey("camel.uri"), "direct://second")));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("camel.uri"), "direct://second"))));
   }
 }
