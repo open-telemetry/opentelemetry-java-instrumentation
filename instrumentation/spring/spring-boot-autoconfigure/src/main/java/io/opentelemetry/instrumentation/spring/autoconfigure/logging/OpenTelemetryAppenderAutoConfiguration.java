@@ -52,9 +52,7 @@ public class OpenTelemetryAppenderAutoConfiguration {
     @Bean
     ApplicationListener<ApplicationReadyEvent> logbackOtelAppenderInitializer(
         OpenTelemetry openTelemetry) {
-      System.out.println("listener bean");
       return event -> {
-        System.out.println("running the listener");
         io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender.install(
             openTelemetry);
       };
