@@ -48,6 +48,11 @@ dependencies {
 
   testImplementation("org.testcontainers:localstack")
   testImplementation("org.testcontainers:cassandra")
+  testImplementation("org.testcontainers:testcontainers")
+  testImplementation("org.testcontainers:junit-jupiter")
+  testImplementation("com.datastax.oss:java-driver-core:4.16.0") {
+    exclude(group = "io.dropwizard.metrics", module = "metrics-core")
+  }
 
   latestDepTestLibrary("org.apache.camel:camel-core:2.+") // documented limitation
   latestDepTestLibrary("org.apache.camel:camel-spring-boot-starter:2.+") // documented limitation
