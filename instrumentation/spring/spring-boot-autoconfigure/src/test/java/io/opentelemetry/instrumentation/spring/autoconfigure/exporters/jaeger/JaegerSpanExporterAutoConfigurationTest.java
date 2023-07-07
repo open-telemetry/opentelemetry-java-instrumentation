@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,7 +15,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
-/** Spring Boot auto configuration test for {@link JaegerGrpcSpanExporter}. */
+/**
+ * Spring Boot auto configuration test for {@link
+ * io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter}.
+ */
+@SuppressWarnings("deprecation")
 class JaegerSpanExporterAutoConfigurationTest {
 
   private final ApplicationContextRunner contextRunner =
@@ -37,7 +40,10 @@ class JaegerSpanExporterAutoConfigurationTest {
         .withPropertyValues("otel.exporter.jaeger.enabled=true")
         .run(
             context ->
-                assertThat(context.getBean("otelJaegerSpanExporter", JaegerGrpcSpanExporter.class))
+                assertThat(
+                        context.getBean(
+                            "otelJaegerSpanExporter",
+                            io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter.class))
                     .isNotNull());
   }
 
@@ -74,7 +80,10 @@ class JaegerSpanExporterAutoConfigurationTest {
   void noProperty() {
     this.contextRunner.run(
         context ->
-            assertThat(context.getBean("otelJaegerSpanExporter", JaegerGrpcSpanExporter.class))
+            assertThat(
+                    context.getBean(
+                        "otelJaegerSpanExporter",
+                        io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter.class))
                 .isNotNull());
   }
 }
