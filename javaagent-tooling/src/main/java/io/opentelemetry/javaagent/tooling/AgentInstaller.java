@@ -41,6 +41,7 @@ import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
@@ -119,7 +120,7 @@ public class AgentInstaller {
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         installOpenTelemetrySdk(extensionClassLoader);
 
-    ConfigProperties sdkConfig = autoConfiguredSdk.getConfig();
+    ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
     InstrumentationConfig.internalInitializeConfig(new ConfigPropertiesBridge(sdkConfig));
     copyNecessaryConfigToSystemProperties(sdkConfig);
 
@@ -286,7 +287,8 @@ public class AgentInstaller {
     // the application is already setting the global LogManager and AgentListener won't be able
     // to touch it due to class loader locking.
     boolean shouldForceSynchronousAgentListenersCalls =
-        autoConfiguredSdk.getConfig().getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
+        AutoConfigureUtil.getConfig(autoConfiguredSdk)
+            .getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
     boolean javaBefore9 = isJavaBefore9();
     if (!shouldForceSynchronousAgentListenersCalls && javaBefore9 && isAppUsingCustomLogManager()) {
       logger.fine("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");
