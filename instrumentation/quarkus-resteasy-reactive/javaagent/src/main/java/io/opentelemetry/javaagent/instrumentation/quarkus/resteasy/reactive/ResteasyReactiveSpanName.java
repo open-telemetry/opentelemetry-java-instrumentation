@@ -22,8 +22,7 @@ final class ResteasyReactiveSpanName {
 
   public static final ResteasyReactiveSpanName INSTANCE = new ResteasyReactiveSpanName();
 
-  void updateServerSpanName(
-      ResteasyReactiveRequestContext requestContext, HttpRouteSource source) {
+  void updateServerSpanName(ResteasyReactiveRequestContext requestContext, HttpRouteSource source) {
     Context context = Context.current();
     String jaxRsName = calculateJaxRsName(requestContext);
     HttpRouteHolder.updateHttpRoute(context, source, jaxRsName);
