@@ -142,22 +142,22 @@ These are the supported libraries and frameworks:
 
 **[3]** Controller Spans are `INTERNAL` spans capturing the controller and/or view execution. See [Suppressing controller and/or view spans](https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/#suppressing-controller-andor-view-spans).
 
-[Elasticsearch Client Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/specification/database/elasticsearch.md
-[HTTP Server Spans]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#http-server-semantic-conventions
-[HTTP Client Spans]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#http-client
-[HTTP Server Metrics]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#http-server
-[HTTP Client Metrics]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#http-client
-[RPC Server Spans]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/rpc.md#server-attributes
-[RPC Client Spans]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/rpc.md#common-attributes
-[RPC Server Metrics]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc-metrics.md#rpc-server
-[RPC Client Metrics]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc-metrics.md#rpc-client
-[Messaging Spans]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md
-[Database Client Spans]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/database.md
-[Database Pool Metrics]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/database-metrics.md
-[JVM Runtime Metrics]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/runtime-environment-metrics.md#jvm-metrics
-[System Metrics]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/system-metrics.md
-[GraphQL Server Spans]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/instrumentation/graphql.md
-[FaaS Server Spans]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/faas.md
+[Elasticsearch Client Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/elasticsearch.md
+[HTTP Server Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-server
+[HTTP Client Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-client
+[HTTP Server Metrics]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-server
+[HTTP Client Metrics]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-client
+[RPC Server Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#server-attributes
+[RPC Client Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#client-attributes
+[RPC Server Metrics]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-server
+[RPC Client Metrics]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-client
+[Messaging Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md
+[Database Client Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md
+[Database Pool Metrics]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-metrics.md
+[JVM Runtime Metrics]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/system/runtime-environment-metrics.md#jvm-metrics
+[System Metrics]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/system/system-metrics.md
+[GraphQL Server Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/graphql.md
+[FaaS Server Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md
 
 ## Application Servers
 
