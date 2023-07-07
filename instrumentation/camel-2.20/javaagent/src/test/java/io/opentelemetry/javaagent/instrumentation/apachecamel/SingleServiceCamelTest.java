@@ -10,65 +10,56 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.io.IOException;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
+import java.net.URI;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-class SingleServiceCamelTest {
-
-  private static final Logger logger = LoggerFactory.getLogger(SingleServiceCamelTest.class);
+class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  public static final InstrumentationExtension testing =
+      HttpServerInstrumentationExtension.forAgent();
 
-  private static ConfigurableApplicationContext server;
-
-  private static Integer port;
-
-  private static final OkHttpClient client = new OkHttpClient();
-
-  @BeforeAll
-  static void setUp() {
-    port = PortUtils.findOpenPort();
+  @Override
+  protected ConfigurableApplicationContext setupServer() {
     SpringApplication app = new SpringApplication(SingleServiceConfig.class);
     app.setDefaultProperties(ImmutableMap.of("camelService.port", port));
-    server = app.run();
-    logger.info("http server started at: http://localhost:{}/", port);
+    return app.run();
+  }
+
+  @Override
+  protected void stopServer(ConfigurableApplicationContext ctx) {
+    ctx.close();
+  }
+
+  @Override
+  protected String getContextPath() {
+    return "";
+  }
+
+  @BeforeAll
+  protected void setUp() {
+    startServer();
   }
 
   @AfterAll
-  static void cleanUp() {
-    if (server != null) {
-      server.close();
-      server = null;
-    }
+  protected void cleanUp() {
+    cleanupServer();
   }
 
   @Test
-  void singleCamelServiceSpan() throws IOException {
-    String requestUrl = "http://localhost:" + port + "/camelService";
+  public void singleCamelServiceSpan() {
+    URI requestUrl = address.resolve("/camelService");
 
-    Request request =
-        new Request.Builder()
-            .url(requestUrl)
-            .post(RequestBody.create("testContent", MediaType.parse("text/plain")))
-            .build();
-
-    client.newCall(request).execute();
+    client.post(requestUrl.toString(), "testContent").aggregate().join();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -76,11 +67,11 @@ class SingleServiceCamelTest {
                 span ->
                     span.hasName("POST /camelService")
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
-                            equalTo(SemanticAttributes.HTTP_URL, requestUrl),
+                            equalTo(SemanticAttributes.HTTP_URL, requestUrl.toString()),
                             equalTo(
                                 stringKey("camel.uri"),
-                                requestUrl.replace("localhost", "0.0.0.0")))));
+                                requestUrl.toString().replace("localhost", "0.0.0.0")))));
   }
 }

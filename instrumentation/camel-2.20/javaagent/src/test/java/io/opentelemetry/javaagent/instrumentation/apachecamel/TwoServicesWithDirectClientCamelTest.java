@@ -12,8 +12,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
@@ -26,11 +27,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-class TwoServicesWithDirectClientCamelTest {
+class TwoServicesWithDirectClientCamelTest
+    extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
-
-  private static ConfigurableApplicationContext server;
+  public static final InstrumentationExtension testing =
+      HttpServerInstrumentationExtension.forAgent();
 
   private static CamelContext clientContext;
 
@@ -38,22 +39,34 @@ class TwoServicesWithDirectClientCamelTest {
 
   private static Integer portTwo;
 
-  @BeforeAll
-  static void setUp() {
-    portOne = PortUtils.findOpenPort();
+  @Override
+  protected ConfigurableApplicationContext setupServer() {
+    portOne = port;
     portTwo = PortUtils.findOpenPort();
     SpringApplication app = new SpringApplication(TwoServicesConfig.class);
     app.setDefaultProperties(
         ImmutableMap.of("service.one.port", portOne, "service.two.port", portTwo));
-    server = app.run();
+    return app.run();
+  }
+
+  @Override
+  protected void stopServer(ConfigurableApplicationContext ctx) {
+    ctx.close();
+  }
+
+  @Override
+  protected String getContextPath() {
+    return "";
+  }
+
+  @BeforeAll
+  protected void setUp() {
+    startServer();
   }
 
   @AfterAll
-  static void cleanUp() {
-    if (server != null) {
-      server.close();
-      server = null;
-    }
+  protected void cleanUp() {
+    cleanupServer();
   }
 
   void createAndStartClient() throws Exception {
@@ -86,12 +99,13 @@ class TwoServicesWithDirectClientCamelTest {
                     span.hasName("input")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttribute(stringKey("camel.uri"), "direct://input"),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("camel.uri"), "direct://input")),
                 span ->
                     span.hasName("POST")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
                             equalTo(
                                 SemanticAttributes.HTTP_URL,
@@ -104,7 +118,7 @@ class TwoServicesWithDirectClientCamelTest {
                     span.hasName("POST /serviceOne")
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
                             equalTo(
                                 SemanticAttributes.HTTP_URL,
@@ -117,7 +131,7 @@ class TwoServicesWithDirectClientCamelTest {
                     span.hasName("POST")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(2))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
                             equalTo(
                                 SemanticAttributes.HTTP_URL,
@@ -130,7 +144,7 @@ class TwoServicesWithDirectClientCamelTest {
                     span.hasName("POST /serviceTwo")
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(3))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
                             equalTo(SemanticAttributes.HTTP_SCHEME, "http"),
@@ -154,7 +168,7 @@ class TwoServicesWithDirectClientCamelTest {
                     span.hasName("POST /serviceTwo")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(4))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
                             equalTo(
                                 SemanticAttributes.HTTP_URL,

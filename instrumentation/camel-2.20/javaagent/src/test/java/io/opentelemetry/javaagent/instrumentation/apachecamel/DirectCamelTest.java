@@ -6,10 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.AfterAll;
@@ -19,31 +21,44 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-class DirectCamelTest {
+class DirectCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  public static final InstrumentationExtension testing =
+      HttpServerInstrumentationExtension.forAgent();
 
-  private static ConfigurableApplicationContext server;
+  private ConfigurableApplicationContext appContext;
+
+  @Override
+  protected ConfigurableApplicationContext setupServer() {
+    SpringApplication app = new SpringApplication(DirectConfig.class);
+    appContext = app.run();
+    return appContext;
+  }
+
+  @Override
+  protected void stopServer(ConfigurableApplicationContext ctx) {
+    ctx.close();
+  }
+
+  @Override
+  protected String getContextPath() {
+    return "";
+  }
 
   @BeforeAll
-  static void setUp() {
-    SpringApplication app = new SpringApplication(DirectConfig.class);
-    server = app.run();
+  protected void setUp() {
+    startServer();
   }
 
   @AfterAll
-  static void cleanUp() {
-    if (server != null) {
-      server.close();
-      server = null;
-    }
+  protected void cleanUp() {
+    cleanupServer();
   }
 
   @Test
   void simpleDirectToSingleService() {
-
-    CamelContext camelContext = server.getBean(CamelContext.class);
+    CamelContext camelContext = appContext.getBean(CamelContext.class);
     ProducerTemplate template = camelContext.createProducerTemplate();
 
     template.sendBody("direct:input", "Example request");
@@ -55,11 +70,13 @@ class DirectCamelTest {
                     span.hasName("input")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttribute(stringKey("camel.uri"), "direct://input"),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("camel.uri"), "direct://input")),
                 span ->
                     span.hasName("receiver")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttribute(stringKey("camel.uri"), "direct://receiver")));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("camel.uri"), "direct://receiver"))));
   }
 }

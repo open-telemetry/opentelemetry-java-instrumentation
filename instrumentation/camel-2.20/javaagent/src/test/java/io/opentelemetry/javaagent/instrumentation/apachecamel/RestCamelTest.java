@@ -11,9 +11,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
@@ -21,42 +21,48 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-class RestCamelTest {
-
-  private static final Logger logger = LoggerFactory.getLogger(RestCamelTest.class);
+class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  public static final InstrumentationExtension testing =
+      HttpServerInstrumentationExtension.forAgent();
 
-  private static ConfigurableApplicationContext server;
+  private ConfigurableApplicationContext appContext;
 
-  private static Integer port;
-
-  @BeforeAll
-  static void setUp() {
-    port = PortUtils.findOpenPort();
+  @Override
+  protected ConfigurableApplicationContext setupServer() {
     SpringApplication app = new SpringApplication(RestConfig.class);
     app.setDefaultProperties(ImmutableMap.of("restServer.port", port));
-    server = app.run();
-    logger.info("http server started at: http://localhost:{}/", port);
+    appContext = app.run();
+    return appContext;
+  }
+
+  @Override
+  protected void stopServer(ConfigurableApplicationContext ctx) {
+    ctx.close();
+  }
+
+  @Override
+  protected String getContextPath() {
+    return "";
+  }
+
+  @BeforeAll
+  protected void setUp() {
+    startServer();
   }
 
   @AfterAll
-  static void cleanUp() {
-    if (server != null) {
-      server.close();
-      server = null;
-    }
+  protected void cleanUp() {
+    cleanupServer();
   }
 
   @Test
   void restComponentServerAndClientCallWithJettyBackend() {
-    CamelContext camelContext = server.getBean(CamelContext.class);
+    CamelContext camelContext = appContext.getBean(CamelContext.class);
     ProducerTemplate template = camelContext.createProducerTemplate();
 
     // run client and server in separate threads to simulate "real" rest client/server call
@@ -74,12 +80,13 @@ class RestCamelTest {
                 span ->
                     span.hasName("start")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfying(equalTo(stringKey("camel.uri"), "direct://start")),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("camel.uri"), "direct://start")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("camel.uri"),
                                 "rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D"),
@@ -89,7 +96,7 @@ class RestCamelTest {
                     span.hasName("GET /api/{module}/unit/{unitId}")
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_SCHEME, "http"),
                             equalTo(
                                 SemanticAttributes.HTTP_TARGET, "/api/firstModule/unit/unitOne"),
@@ -112,7 +119,7 @@ class RestCamelTest {
                     span.hasName("GET /api/{module}/unit/{unitId}")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(2))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(
                                 SemanticAttributes.HTTP_URL,
@@ -123,6 +130,7 @@ class RestCamelTest {
                     span.hasName("moduleUnit")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(3))
-                        .hasAttribute(stringKey("camel.uri"), "direct://moduleUnit")));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("camel.uri"), "direct://moduleUnit"))));
   }
 }

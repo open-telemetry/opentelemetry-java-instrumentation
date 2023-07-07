@@ -11,8 +11,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
@@ -27,12 +28,13 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
-class CassandraTest {
+class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  public static final InstrumentationExtension testing =
+      HttpServerInstrumentationExtension.forAgent();
 
-  private static ConfigurableApplicationContext server;
+  private ConfigurableApplicationContext appContext;
 
   @Container
   private static final CassandraContainer<?> cassandra =
@@ -40,21 +42,45 @@ class CassandraTest {
 
   private static String host;
 
-  private static Integer port;
+  private static Integer cassandraPort;
 
   private static CqlSession cqlSession;
 
-  @BeforeAll
-  static void setUp() {
+  @Override
+  protected ConfigurableApplicationContext setupServer() {
     cassandra.start();
     cassandraSetup();
 
-    port = cassandra.getFirstMappedPort();
+    cassandraPort = cassandra.getFirstMappedPort();
     host = cassandra.getHost();
 
     SpringApplication app = new SpringApplication(CassandraConfig.class);
-    app.setDefaultProperties(ImmutableMap.of("cassandra.host", host, "cassandra.port", port));
-    server = app.run();
+    app.setDefaultProperties(
+        ImmutableMap.of("cassandra.host", host, "cassandra.port", cassandraPort));
+    appContext = app.run();
+    return appContext;
+  }
+
+  @Override
+  protected void stopServer(ConfigurableApplicationContext ctx) {
+    ctx.close();
+  }
+
+  @Override
+  protected String getContextPath() {
+    return "";
+  }
+
+  @BeforeAll
+  protected void setUp() {
+    startServer();
+  }
+
+  @AfterAll
+  protected void cleanUp() {
+    cleanupServer();
+    cqlSession.close();
+    cassandra.stop();
   }
 
   static void cassandraSetup() {
@@ -69,19 +95,9 @@ class CassandraTest {
     cqlSession.execute("CREATE TABLE IF NOT EXISTS test.users (id int PRIMARY KEY, name TEXT);");
   }
 
-  @AfterAll
-  static void cleanUp() {
-    if (server != null) {
-      server.close();
-      server = null;
-    }
-    cqlSession.close();
-    cassandra.stop();
-  }
-
   @Test
   void testCassandra() {
-    CamelContext camelContext = server.getBean(CamelContext.class);
+    CamelContext camelContext = appContext.getBean(CamelContext.class);
     ProducerTemplate template = camelContext.createProducerTemplate();
 
     template.requestBody("direct:input", (Object) null);
@@ -92,11 +108,14 @@ class CassandraTest {
                 span ->
                     span.hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttribute(stringKey("camel.uri"), "direct://input"),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("camel.uri"), "direct://input")),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            equalTo(stringKey("camel.uri"), "cql://" + host + ":" + port + "/test"),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("camel.uri"),
+                                "cql://" + host + ":" + cassandraPort + "/test"),
                             equalTo(SemanticAttributes.DB_NAME, "test"),
                             equalTo(
                                 SemanticAttributes.DB_STATEMENT,
