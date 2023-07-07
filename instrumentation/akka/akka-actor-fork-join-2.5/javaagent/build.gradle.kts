@@ -7,7 +7,7 @@ muzzle {
   pass {
     group.set("com.typesafe.akka")
     module.set("akka-actor_2.11")
-    versions.set("[2.5,)")
+    versions.set("[2.5,2.6)") //Akka's custom ForkJoin was removed in 2.6, replaced by the java.concurrent version
     assertInverse.set(true)
   }
 }
