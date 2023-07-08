@@ -230,8 +230,11 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void afterExecution(
       Context.AfterExecution context, ExecutionAttributes executionAttributes) {
 
-    // Other special handling could be shortcut-&&ed after this (false is returned if not handled).
-    SqsAccess.afterReceiveMessageExecution(context, executionAttributes, this);
+    if (executionAttributes.getAttribute(SDK_HTTP_REQUEST_ATTRIBUTE) != null) {
+      // Other special handling could be shortcut-&&ed after this (false is returned if not
+      // handled).
+      SqsAccess.afterReceiveMessageExecution(context, executionAttributes, this);
+    }
 
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     if (otelContext != null) {
