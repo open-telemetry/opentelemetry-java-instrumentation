@@ -23,22 +23,6 @@ class CamelSpan {
     }
   }
 
-  static sqsProduce(TraceAssert traceAssert, int index, queueName, parentSpan = null) {
-    return traceAssert.span(index) {
-      name queueName
-      kind INTERNAL
-      if (index == 0) {
-        hasNoParent()
-      } else {
-        childOf parentSpan
-      }
-      attributes {
-        "camel.uri" "aws-sqs://${queueName}?amazonSQSClient=%23sqsClient&delay=1000"
-        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" queueName
-      }
-    }
-  }
-
   static sqsConsume(TraceAssert traceAssert, int index, queueName, parentSpan = null) {
     return traceAssert.span(index) {
       name queueName
