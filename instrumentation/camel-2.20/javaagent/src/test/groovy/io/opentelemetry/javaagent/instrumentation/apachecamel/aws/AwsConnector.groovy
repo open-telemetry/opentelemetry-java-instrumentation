@@ -63,16 +63,6 @@ class AwsConnector {
       .get("QueueArn")
   }
 
-  private static final String SNS_POLICY = "{" +
-    "  \"Statement\": [" +
-    "    {" +
-    "      \"Effect\": \"Allow\"," +
-    "      \"Principal\": \"*\"," +
-    "      \"Action\": \"sns:Publish\"," +
-    "      \"Resource\": \"%s\"" +
-    "    }]" +
-    "}"
-
   def setQueuePublishingPolicy(String queueUrl, String queueArn) {
     println "Set policy for queue ${queueArn}"
     sqsClient.setQueueAttributes(queueUrl, Collections.singletonMap("Policy", String.format(SQS_POLICY, queueArn)))
