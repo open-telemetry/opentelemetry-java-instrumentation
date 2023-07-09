@@ -13,7 +13,7 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 
-public class CamelSpringApplication {
+class CamelSpringApplication {
 
   private final SpringApplication springApplication;
   private ConfigurableApplicationContext context;

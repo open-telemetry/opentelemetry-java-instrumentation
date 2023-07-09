@@ -19,7 +19,9 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 class AwsSpanAssertions {
 
-  public static SpanDataAssert sqs(
+  private AwsSpanAssertions() {}
+
+  static SpanDataAssert sqs(
       SpanDataAssert span,
       int index,
       String spanName,

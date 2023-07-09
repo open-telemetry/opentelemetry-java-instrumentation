@@ -16,6 +16,8 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 class CamelSpanAssertions {
 
+  private CamelSpanAssertions() {}
+
   static void direct(SpanDataAssert span, String spanName) {
     span.hasName(spanName)
         .hasKind(SpanKind.INTERNAL)
