@@ -48,6 +48,9 @@ public final class PulsarSingletons {
   private static final Instrumenter<PulsarRequest, Void> PRODUCER_INSTRUMENTER =
       createProducerInstrumenter();
 
+  private static final boolean messagingReceiveInstrumentationEnabled =
+      ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+
   public static Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter() {
     return CONSUMER_PROCESS_INSTRUMENTER;
   }
@@ -64,34 +67,42 @@ public final class PulsarSingletons {
     MessagingAttributesGetter<PulsarRequest, Void> getter =
         PulsarMessagingAttributesGetter.INSTANCE;
 
-    return Instrumenter.<PulsarRequest, Void>builder(
+    InstrumenterBuilder<PulsarRequest, Void> builder =
+        Instrumenter.<PulsarRequest, Void>builder(
             TELEMETRY,
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
         .addAttributesExtractor(
             createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
         .addAttributesExtractor(
-            NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
-        .buildConsumerInstrumenter(MessageTextMapGetter.INSTANCE);
+            NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
+
+    if (messagingReceiveInstrumentationEnabled) {
+      builder.addSpanLinksExtractor(new PulsarRequestSpanLinksExtractor(PROPAGATOR));
+    }
+
+    return builder.buildConsumerInstrumenter(MessageTextMapGetter.INSTANCE);
   }
 
   private static Instrumenter<PulsarBatchRequest, Void> createConsumerBatchReceiveInstrumenter() {
     MessagingAttributesGetter<PulsarBatchRequest, Void> getter =
         PulsarBatchMessagingAttributesGetter.INSTANCE;
 
-    return Instrumenter.<PulsarBatchRequest, Void>builder(
-            TELEMETRY,
-            INSTRUMENTATION_NAME,
-            MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
-        .addAttributesExtractor(
-            createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
-        .addAttributesExtractor(
-            NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
-        .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
-        .addSpanLinksExtractor(
-            new PulsarBatchRequestSpanLinksExtractor(
-                GlobalOpenTelemetry.getPropagators().getTextMapPropagator()))
-        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    InstrumenterBuilder<PulsarBatchRequest, Void> builder =
+        Instrumenter.<PulsarBatchRequest, Void>builder(
+                TELEMETRY,
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
+            .addAttributesExtractor(
+                createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
+            .addAttributesExtractor(
+                NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
+            .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
+    if (messagingReceiveInstrumentationEnabled) {
+      builder.addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(PROPAGATOR));
+    }
+
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   private static Instrumenter<PulsarRequest, Void> createConsumerProcessInstrumenter() {
