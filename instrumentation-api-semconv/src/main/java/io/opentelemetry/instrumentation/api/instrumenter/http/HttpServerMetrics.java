@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessage
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpResponseBodySize;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerDurationAndSizeView;
-import static io.opentelemetry.instrumentation.api.metrics.DurationHistogramFactory.create;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
@@ -22,6 +21,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.metrics.DurationHistogram;
+import io.opentelemetry.instrumentation.api.metrics.DurationHistogramFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -58,7 +58,7 @@ public final class HttpServerMetrics implements OperationListener {
             .setUnit("{requests}")
             .setDescription("The number of concurrent HTTP requests that are currently in-flight")
             .build();
-    duration = create(meter, "http.server.duration", "The duration of the inbound HTTP request");
+    duration = DurationHistogramFactory.create(meter, "http.server.duration", "The duration of the inbound HTTP request");
     requestSize =
         meter
             .histogramBuilder("http.server.request.size")
