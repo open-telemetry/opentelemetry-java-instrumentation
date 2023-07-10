@@ -31,7 +31,6 @@ class RestClientWrapper {
   private static final Class<?> proxyClass = createProxyClass();
   private static final Field targetField = getTargetField(proxyClass);
   private static final Field instrumenterField = getInstrumenterField(proxyClass);
-  // private static final Constructor<?> constructor = getProxyConstructor(proxyClass);
   private static final Function<RestClient, RestClient> proxyFactory = getProxyFactory(proxyClass);
 
   @SuppressWarnings("unchecked")
@@ -48,10 +47,12 @@ class RestClientWrapper {
                   Instrumenter<ElasticsearchRestRequest, Response> instrumenter =
                       (Instrumenter<ElasticsearchRestRequest, Response>)
                           instrumenterField.get(proxy);
+                  // target is null when running proxy constructor
                   if (target == null || instrumenter == null) {
                     return null;
                   }
 
+                  // instrument performRequest and performRequestAsync methods
                   if ("performRequest".equals(method.getName())
                       && args.length == 1
                       && args[0] instanceof Request
@@ -107,6 +108,7 @@ class RestClientWrapper {
                     }
                   }
 
+                  // delegate to wrapped RestClient
                   return method.invoke(target, args);
                 }))
         .make()
@@ -139,7 +141,7 @@ class RestClientWrapper {
           && parameterTypes[2] == List.class) {
         return restClient -> {
           List<Node> nodes = restClient.getNodes();
-          // all the proxy methods will delegate to the wrapped RestClient we need to fill only the
+          // all the proxy methods will delegate to the wrapped RestClient, we need to fill only the
           // arguments that are required by the constructor
           Object[] arguments = new Object[parameterTypes.length];
           arguments[1] = new Header[0];
@@ -150,8 +152,7 @@ class RestClientWrapper {
             }
           }
           try {
-            RestClient wrapped = (RestClient) constructor.newInstance(arguments);
-            return wrapped;
+            return (RestClient) constructor.newInstance(arguments);
           } catch (Exception exception) {
             throw new IllegalStateException("Failed to construct proxy instance", exception);
           }
@@ -172,6 +173,7 @@ class RestClientWrapper {
       RestClient restClient, Instrumenter<ElasticsearchRestRequest, Response> instrumenter) {
     RestClient wrapped = proxyFactory.apply(restClient);
     try {
+      // set wrapped RestClient instance and the instrumenter on the proxy
       targetField.set(wrapped, restClient);
       instrumenterField.set(wrapped, instrumenter);
       return wrapped;
