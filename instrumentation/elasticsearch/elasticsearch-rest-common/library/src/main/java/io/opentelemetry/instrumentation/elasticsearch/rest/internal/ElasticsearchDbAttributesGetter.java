@@ -25,15 +25,10 @@ import org.apache.http.HttpEntity;
 final class ElasticsearchDbAttributesGetter
     implements DbClientAttributesGetter<ElasticsearchRestRequest> {
 
-  // private static final boolean CAPTURE_SEARCH_QUERY = false;
-  private final boolean captureSearchQuery;
-  /*
-     InstrumentationConfig.get()
-         .getBoolean("otel.instrumentation.elasticsearch.capture-search-query", false);
-  */
-
   private static final Logger logger =
       Logger.getLogger(ElasticsearchDbAttributesGetter.class.getName());
+
+  private final boolean captureSearchQuery;
 
   ElasticsearchDbAttributesGetter(boolean captureSearchQuery) {
     this.captureSearchQuery = captureSearchQuery;
