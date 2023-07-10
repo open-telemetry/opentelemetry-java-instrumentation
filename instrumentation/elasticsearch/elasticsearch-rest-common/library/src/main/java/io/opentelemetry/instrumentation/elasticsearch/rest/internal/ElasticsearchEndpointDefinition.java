@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
+package io.opentelemetry.instrumentation.elasticsearch.rest.internal;
 
 import static java.util.Collections.unmodifiableList;
 
@@ -17,6 +17,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class ElasticsearchEndpointDefinition {
 
   private static final String UNDERSCORE_REPLACEMENT = "0";
@@ -62,11 +66,16 @@ public final class ElasticsearchEndpointDefinition {
     }
   }
 
-  List<Route> getRoutes() {
+  public List<Route> getRoutes() {
     return routes;
   }
 
-  static final class Route {
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  // Visible for testing
+  public static final class Route {
     private final String name;
     private final boolean hasParameters;
 
@@ -77,7 +86,7 @@ public final class ElasticsearchEndpointDefinition {
       this.hasParameters = name.contains("{") && name.contains("}");
     }
 
-    String getName() {
+    public String getName() {
       return name;
     }
 
@@ -104,7 +113,12 @@ public final class ElasticsearchEndpointDefinition {
     }
   }
 
-  static final class EndpointPattern {
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  // Visible for testing
+  public static final class EndpointPattern {
     private static final Pattern PATH_PART_NAMES_PATTERN = Pattern.compile("\\{([^}]+)}");
     private final Pattern pattern;
     private final List<String> pathPartNames;
@@ -136,7 +150,7 @@ public final class ElasticsearchEndpointDefinition {
     }
 
     /** Builds a regex pattern from the parameterized route pattern. */
-    static Pattern buildRegexPattern(String routeStr) {
+    public static Pattern buildRegexPattern(String routeStr) {
       StringBuilder regexStr = new StringBuilder();
       regexStr.append('^');
       int startIdx = routeStr.indexOf("{");

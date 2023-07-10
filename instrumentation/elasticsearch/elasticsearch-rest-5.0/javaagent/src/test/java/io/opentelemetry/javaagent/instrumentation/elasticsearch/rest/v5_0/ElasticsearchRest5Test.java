@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
+
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,7 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
-class ElasticsearchRest6Test {
+class ElasticsearchRest5Test {
+
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -37,9 +40,16 @@ class ElasticsearchRest6Test {
   static ObjectMapper objectMapper;
 
   @BeforeAll
-  static void setUp() {
-    elasticsearch =
-        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.16");
+  static void setup() {
+    if (!Boolean.getBoolean("testLatestDeps")) {
+      elasticsearch =
+          new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:5.6.16")
+              .withEnv("xpack.ml.enabled", "false")
+              .withEnv("xpack.security.enabled", "false");
+    } else {
+      elasticsearch =
+          new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.16");
+    }
     // limit memory usage
     elasticsearch.withEnv("ES_JAVA_OPTS", "-Xmx256m -Xms256m");
     elasticsearch.start();
@@ -64,14 +74,15 @@ class ElasticsearchRest6Test {
   }
 
   @Test
-  @SuppressWarnings({"deprecation", "rawtypes"})
-  // ignore deprecation interface
-  public void elasticsearchStatus() throws IOException {
-
+  @SuppressWarnings("rawtypes")
+  void elasticsearchStatus() throws IOException {
     Response response = client.performRequest("GET", "_cluster/health");
+
     Map result = objectMapper.readValue(response.getEntity().getContent(), Map.class);
 
-    Assertions.assertEquals(result.get("status"), "green");
+    // usually this test reports green status, but sometimes it is yellow
+    Assertions.assertTrue(
+        "green".equals(result.get("status")) || "yellow".equals(result.get("status")));
 
     testing.waitAndAssertTraces(
         trace -> {
@@ -99,7 +110,7 @@ class ElasticsearchRest6Test {
                         equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
                         equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
                         equalTo(SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"),
-                        equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
+                        equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
                         equalTo(
                             SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
                             response.getEntity().getContentLength()));
@@ -108,9 +119,8 @@ class ElasticsearchRest6Test {
   }
 
   @Test
-  @SuppressWarnings({"deprecation", "rawtypes"})
-  // ignore deprecation interface
-  public void elasticsearchStatusAsync() throws Exception {
+  @SuppressWarnings("rawtypes")
+  void elasticsearchStatusAsync() throws Exception {
     Response[] requestResponse = {null};
     Exception[] exception = {null};
     CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -136,19 +146,21 @@ class ElasticsearchRest6Test {
                 });
           }
         };
+
     testing.runWithSpan(
         "parent",
         () -> {
           client.performRequestAsync("GET", "_cluster/health", responseListener);
         });
     countDownLatch.await();
-
     if (exception[0] != null) {
       throw exception[0];
     }
     Map result = objectMapper.readValue(requestResponse[0].getEntity().getContent(), Map.class);
 
-    Assertions.assertEquals(result.get("status"), "green");
+    // usually this test reports green status, but sometimes it is yellow
+    Assertions.assertTrue(
+        "green".equals(result.get("status")) || "yellow".equals(result.get("status")));
 
     testing.waitAndAssertTraces(
         trace -> {

@@ -3,12 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
+package io.opentelemetry.instrumentation.elasticsearch.rest.internal;
 
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,15 +18,26 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 final class ElasticsearchDbAttributesGetter
     implements DbClientAttributesGetter<ElasticsearchRestRequest> {
 
-  private static final boolean CAPTURE_SEARCH_QUERY =
-      InstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.elasticsearch.capture-search-query", false);
+  // private static final boolean CAPTURE_SEARCH_QUERY = false;
+  private final boolean captureSearchQuery;
+  /*
+     InstrumentationConfig.get()
+         .getBoolean("otel.instrumentation.elasticsearch.capture-search-query", false);
+  */
 
   private static final Logger logger =
       Logger.getLogger(ElasticsearchDbAttributesGetter.class.getName());
+
+  ElasticsearchDbAttributesGetter(boolean captureSearchQuery) {
+    this.captureSearchQuery = captureSearchQuery;
+  }
 
   @Override
   public String getSystem(ElasticsearchRestRequest request) {
@@ -57,7 +67,7 @@ final class ElasticsearchDbAttributesGetter
   public String getStatement(ElasticsearchRestRequest request) {
     ElasticsearchEndpointDefinition epDefinition = request.getEndpointDefinition();
     HttpEntity httpEntity = request.getHttpEntity();
-    if (CAPTURE_SEARCH_QUERY
+    if (captureSearchQuery
         && epDefinition != null
         && epDefinition.isSearchEndpoint()
         && httpEntity != null
