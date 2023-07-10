@@ -12,11 +12,12 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistryListener;
 import com.codahale.metrics.Timer;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.api.metrics.ObservableDoubleGauge;
+import io.opentelemetry.instrumentation.api.metrics.DurationHistogram;
+import io.opentelemetry.instrumentation.api.metrics.DurationHistogramFactory;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,20 +25,18 @@ import java.util.concurrent.TimeUnit;
 
 public final class DropwizardMetricsAdapter implements MetricRegistryListener {
 
-  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
-
   private static final VirtualField<Counter, LongUpDownCounter> otelUpDownCounterField =
       VirtualField.find(Counter.class, LongUpDownCounter.class);
   private static final VirtualField<Histogram, LongHistogram> otelHistogramField =
       VirtualField.find(Histogram.class, LongHistogram.class);
   private static final VirtualField<Meter, LongCounter> otelCounterField =
       VirtualField.find(Meter.class, LongCounter.class);
-  private static final VirtualField<Timer, DoubleHistogram> otelDoubleHistogramField =
-      VirtualField.find(Timer.class, DoubleHistogram.class);
+  private static final VirtualField<Timer, DurationHistogram> otelDurationHistogramField =
+      VirtualField.find(Timer.class, DurationHistogram.class);
 
   private final io.opentelemetry.api.metrics.Meter otelMeter;
 
-  private final Map<String, DoubleHistogram> otelDoubleHistograms = new ConcurrentHashMap<>();
+  private final Map<String, DurationHistogram> otelDurationHistograms = new ConcurrentHashMap<>();
   private final Map<String, LongCounter> otelCounters = new ConcurrentHashMap<>();
   private final Map<String, LongHistogram> otelHistograms = new ConcurrentHashMap<>();
   private final Map<String, LongUpDownCounter> otelUpDownCounters = new ConcurrentHashMap<>();
@@ -150,25 +149,25 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
   @Override
   public void onTimerAdded(String name, Timer dropwizardTimer) {
     dropwizardTimers.put(name, dropwizardTimer);
-    DoubleHistogram otelHistogram =
-        otelDoubleHistograms.computeIfAbsent(
-            name, n -> otelMeter.histogramBuilder(n).setUnit("ms").build());
-    otelDoubleHistogramField.set(dropwizardTimer, otelHistogram);
+    DurationHistogram otelHistogram =
+        otelDurationHistograms.computeIfAbsent(
+            name, n -> DurationHistogramFactory.create(otelMeter.histogramBuilder(n)));
+    otelDurationHistogramField.set(dropwizardTimer, otelHistogram);
   }
 
   @Override
   public void onTimerRemoved(String name) {
     Timer dropwizardTimer = dropwizardTimers.remove(name);
-    otelDoubleHistograms.remove(name);
+    otelDurationHistograms.remove(name);
     if (dropwizardTimer != null) {
-      otelDoubleHistogramField.set(dropwizardTimer, null);
+      otelDurationHistogramField.set(dropwizardTimer, null);
     }
   }
 
   public void timerUpdate(Timer dropwizardTimer, long nanos) {
-    DoubleHistogram otelHistogram = otelDoubleHistogramField.get(dropwizardTimer);
+    DurationHistogram otelHistogram = otelDurationHistogramField.get(dropwizardTimer);
     if (otelHistogram != null) {
-      otelHistogram.record(nanos / NANOS_PER_MS);
+      otelHistogram.record(nanos, TimeUnit.NANOSECONDS);
     }
   }
 }

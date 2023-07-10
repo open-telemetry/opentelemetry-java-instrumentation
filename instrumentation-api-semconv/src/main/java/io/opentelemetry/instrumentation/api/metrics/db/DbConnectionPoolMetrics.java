@@ -11,13 +11,14 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BatchCallback;
-import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.api.metrics.ObservableMeasurement;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.api.metrics.DurationHistogram;
+import io.opentelemetry.instrumentation.api.metrics.DurationHistogramFactory;
 
 /**
  * A helper class that models the <a
@@ -104,7 +105,6 @@ public final class DbConnectionPoolMetrics {
     return meter.batchCallback(callback, observableMeasurement, additionalMeasurements);
   }
 
-  // TODO: should be a BoundLongCounter
   public LongCounter connectionTimeouts() {
     return meter
         .counterBuilder("db.client.connections.timeouts")
@@ -114,31 +114,23 @@ public final class DbConnectionPoolMetrics {
         .build();
   }
 
-  // TODO: should be a BoundDoubleHistogram
-  public DoubleHistogram connectionCreateTime() {
-    return meter
-        .histogramBuilder("db.client.connections.create_time")
-        .setUnit("ms")
-        .setDescription("The time it took to create a new connection.")
-        .build();
+  public DurationHistogram connectionCreateTime() {
+    return DurationHistogramFactory.create(
+        meter, "db.client.connections.create_time", "The time it took to create a new connection.");
   }
 
-  // TODO: should be a BoundDoubleHistogram
-  public DoubleHistogram connectionWaitTime() {
-    return meter
-        .histogramBuilder("db.client.connections.wait_time")
-        .setUnit("ms")
-        .setDescription("The time it took to obtain an open connection from the pool.")
-        .build();
+  public DurationHistogram connectionWaitTime() {
+    return DurationHistogramFactory.create(
+        meter,
+        "db.client.connections.wait_time",
+        "The time it took to obtain an open connection from the pool.");
   }
 
-  // TODO: should be a BoundDoubleHistogram
-  public DoubleHistogram connectionUseTime() {
-    return meter
-        .histogramBuilder("db.client.connections.use_time")
-        .setUnit("ms")
-        .setDescription("The time between borrowing a connection and returning it to the pool.")
-        .build();
+  public DurationHistogram connectionUseTime() {
+    return DurationHistogramFactory.create(
+        meter,
+        "db.client.connections.use_time",
+        "The time between borrowing a connection and returning it to the pool.");
   }
 
   public Attributes getAttributes() {

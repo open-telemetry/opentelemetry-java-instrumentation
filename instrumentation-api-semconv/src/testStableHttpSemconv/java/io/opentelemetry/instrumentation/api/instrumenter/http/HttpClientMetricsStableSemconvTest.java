@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
+import io.opentelemetry.instrumentation.api.metrics.DurationHistogramFactory;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +26,7 @@ import org.junit.jupiter.api.Test;
 class HttpClientMetricsStableSemconvTest {
 
   static final double[] DURATION_BUCKETS =
-      HttpMetricsUtil.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
+      DurationHistogramFactory.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
 
   @Test
   void collectsMetrics() {
