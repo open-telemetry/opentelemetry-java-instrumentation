@@ -18,9 +18,9 @@ final class PulsarRequestSpanLinksExtractor implements SpanLinksExtractor<Pulsar
     this.singleRecordLinkExtractor =
         new PropagatorBasedSpanLinksExtractor<>(propagator, MessageTextMapGetter.INSTANCE);
   }
+
   @Override
-  public void extract(SpanLinksBuilder spanLinks, Context parentContext,
-      PulsarRequest req) {
+  public void extract(SpanLinksBuilder spanLinks, Context parentContext, PulsarRequest req) {
     singleRecordLinkExtractor.extract(
         spanLinks, Context.root(), PulsarRequest.create(req.getMessage(), req.getUrlData()));
   }

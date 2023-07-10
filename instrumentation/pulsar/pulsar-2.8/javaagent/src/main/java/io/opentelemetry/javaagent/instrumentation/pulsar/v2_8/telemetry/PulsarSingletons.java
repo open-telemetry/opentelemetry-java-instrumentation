@@ -69,13 +69,13 @@ public final class PulsarSingletons {
 
     InstrumenterBuilder<PulsarRequest, Void> builder =
         Instrumenter.<PulsarRequest, Void>builder(
-            TELEMETRY,
-            INSTRUMENTATION_NAME,
-            MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
-        .addAttributesExtractor(
-            createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
-        .addAttributesExtractor(
-            NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
+                TELEMETRY,
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
+            .addAttributesExtractor(
+                createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
+            .addAttributesExtractor(
+                NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
 
     if (messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(new PulsarRequestSpanLinksExtractor(PROPAGATOR));
