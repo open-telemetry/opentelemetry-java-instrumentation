@@ -21,7 +21,30 @@ class AwsSpanAssertions {
 
   private AwsSpanAssertions() {}
 
-  static SpanDataAssert sqs(
+  static void sqs(SpanDataAssert span, int index, String spanName) {
+    sqs(span, index, spanName, null, null, CLIENT, null);
+  }
+
+  static void sqs(SpanDataAssert span, int index, String spanName, String queueUrl) {
+    sqs(span, index, spanName, queueUrl, null, CLIENT, null);
+  }
+
+  static void sqs(
+      SpanDataAssert span, int index, String spanName, String queueUrl, String queueName) {
+    sqs(span, index, spanName, queueUrl, queueName, CLIENT, null);
+  }
+
+  public static void sqs(
+      SpanDataAssert span,
+      int index,
+      String spanName,
+      String queueUrl,
+      String queueName,
+      SpanKind spanKind) {
+    sqs(span, index, spanName, queueUrl, queueName, spanKind, null);
+  }
+
+  static void sqs(
       SpanDataAssert span,
       int index,
       String spanName,
@@ -35,7 +58,7 @@ class AwsSpanAssertions {
       span.hasParent(parentSpan);
     }
 
-    return span.hasName(spanName)
+    span.hasName(spanName)
         .hasKind(spanKind)
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
@@ -54,6 +77,11 @@ class AwsSpanAssertions {
             equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
             satisfies(
                 SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                val ->
+                    val.satisfiesAnyOf(
+                        v -> assertThat(v).isNull(), v -> assertThat(v).isInstanceOf(Long.class))),
+            satisfies(
+                SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
                 val ->
                     val.satisfiesAnyOf(
                         v -> assertThat(v).isNull(), v -> assertThat(v).isInstanceOf(Long.class))),
@@ -85,28 +113,5 @@ class AwsSpanAssertions {
                 stringKey("rpc.method"),
                 stringAssert -> stringAssert.isEqualTo(spanName.substring(4))),
             equalTo(stringKey("rpc.service"), "AmazonSQS"));
-  }
-
-  static void sqs(SpanDataAssert span, int index, String spanName) {
-    sqs(span, index, spanName, null, null, CLIENT, null);
-  }
-
-  static void sqs(SpanDataAssert span, int index, String spanName, String queueUrl) {
-    sqs(span, index, spanName, queueUrl, null, CLIENT, null);
-  }
-
-  static void sqs(
-      SpanDataAssert span, int index, String spanName, String queueUrl, String queueName) {
-    sqs(span, index, spanName, queueUrl, queueName, CLIENT, null);
-  }
-
-  public static void sqs(
-      SpanDataAssert span,
-      int index,
-      String spanName,
-      String queueUrl,
-      String queueName,
-      SpanKind spanKind) {
-    sqs(span, index, spanName, queueUrl, queueName, spanKind, null);
   }
 }
