@@ -25,6 +25,7 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -110,6 +111,30 @@ class InstrumenterTest {
         @Nullable Throwable error) {
       attributes.put("resp3", response.get("resp3"));
       attributes.put("resp2", response.get("resp2_2"));
+    }
+  }
+
+  static class AttributesExtractorWithSchemaUrl
+      implements AttributesExtractor<Map<String, String>, Map<String, String>>, SchemaUrlProvider {
+
+    @Override
+    public void onStart(
+        AttributesBuilder attributes, Context parentContext, Map<String, String> request) {
+      attributes.put("key", "value");
+    }
+
+    @Override
+    public void onEnd(
+        AttributesBuilder attributes,
+        Context context,
+        Map<String, String> request,
+        @Nullable Map<String, String> response,
+        @Nullable Throwable error) {}
+
+    @Nullable
+    @Override
+    public String internalGetSchemaUrl() {
+      return "schemaUrl from extractor";
     }
   }
 
@@ -583,11 +608,60 @@ class InstrumenterTest {
   }
 
   @Test
-  void schemaUrl() {
+  void schemaUrl_setExplicitly() {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", name -> "span")
             .setSchemaUrl("https://opentelemetry.io/schemas/1.0.0")
+            .buildInstrumenter();
+
+    Context context = instrumenter.start(Context.root(), emptyMap());
+    assertThat(Span.fromContext(context)).isNotNull();
+
+    instrumenter.end(context, emptyMap(), emptyMap(), null);
+
+    InstrumentationScopeInfo expectedLibraryInfo =
+        InstrumentationScopeInfo.builder("test")
+            .setSchemaUrl("https://opentelemetry.io/schemas/1.0.0")
+            .build();
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
+  }
+
+  @Test
+  void schemaUrl_computedFromExtractors() {
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", name -> "span")
+            .addAttributesExtractor(new AttributesExtractorWithSchemaUrl())
+            .buildInstrumenter();
+
+    Context context = instrumenter.start(Context.root(), emptyMap());
+    assertThat(Span.fromContext(context)).isNotNull();
+
+    instrumenter.end(context, emptyMap(), emptyMap(), null);
+
+    InstrumentationScopeInfo expectedLibraryInfo =
+        InstrumentationScopeInfo.builder("test").setSchemaUrl("schemaUrl from extractor").build();
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
+  }
+
+  @Test
+  void schemaUrl_schemaSetExplicitlyOverridesSchemaComputedFromExtractors() {
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", name -> "span")
+            .setSchemaUrl("https://opentelemetry.io/schemas/1.0.0")
+            .addAttributesExtractor(new AttributesExtractorWithSchemaUrl())
             .buildInstrumenter();
 
     Context context = instrumenter.start(Context.root(), emptyMap());
