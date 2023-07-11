@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.pulsar.client.admin.PulsarAdmin
 import org.apache.pulsar.client.api.Consumer
@@ -149,7 +150,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
         }
         producerSpan(it, 1, span(0), topic, msgId)
-        receiveSpan(it, 2, span(1), topic, msgId)
+        receiveSpan(it, 2, null, topic, msgId, span(1))
         processSpan(it, 3, span(2), topic, msgId)
       }
     }
@@ -188,7 +189,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
         }
         producerSpan(it, 1, span(0), topic, msgId)
-        receiveSpan(it, 2, span(1), topic, msgId)
+        receiveSpan(it, 2, null, topic, msgId, span(1))
       }
     }
   }
@@ -231,7 +232,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
         }
         producerSpan(it, 1, span(0), topic, msgId)
-        receiveSpan(it, 2, span(1), topic, msgId)
+        receiveSpan(it, 2, null, topic, msgId, span(1))
         span(3) {
           name "callback"
           kind INTERNAL
@@ -276,7 +277,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
         }
         producerSpan(it, 1, span(0), topic, msgId)
-        receiveSpan(it, 2, span(1), topic, msgId)
+        receiveSpan(it, 2, null, topic, msgId,  span(1))
       }
     }
   }
@@ -430,7 +431,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
         }
         producerSpan(it, 1, span(0), topic, msgId, true)
-        receiveSpan(it, 2, span(1), topic, msgId, null, true)
+        receiveSpan(it, 2, null, topic, msgId, span(1), true)
         processSpan(it, 3, span(2), topic, msgId, true)
       }
     }
@@ -504,7 +505,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
         }
         producerSpan(it, 1, span(0), topic, ~/${topic}-partition-.*send/, { it.startsWith(topic) }, msgId)
-        receiveSpan(it, 2, span(1), topic,  ~/${topic}-partition-.*receive/, { it.startsWith(topic) }, msgId)
+        receiveSpan(it, 2, null, topic,  ~/${topic}-partition-.*receive/, { it.startsWith(topic) }, msgId, span(1))
         processSpan(it, 3, span(2), topic, ~/${topic}-partition-.*process/, { it.startsWith(topic) }, msgId)
       }
     }
@@ -562,7 +563,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
             hasNoParent()
           }
           producerSpan(it, 1, span(0), topic, null, { it.startsWith(topicNamePrefix) }, String)
-          receiveSpan(it, 2, span(1), topic, null, { it.startsWith(topicNamePrefix) }, String)
+          receiveSpan(it, 2, null, topic, null, { it.startsWith(topicNamePrefix) }, String, span(1))
           processSpan(it, 3, span(2), topic, null, { it.startsWith(topicNamePrefix) }, String)
         }
       }
@@ -601,11 +602,11 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     }
   }
 
-  def receiveSpan(TraceAssert trace, int index, Object parentSpan, String topic, Object msgId, Object linkedSpan = null, boolean headers = false) {
+  def receiveSpan(TraceAssert trace, int index, SpanData parentSpan, String topic, Object msgId, Object linkedSpan = null, boolean headers = false) {
     receiveSpan(trace, index, parentSpan, topic, null, { it == topic }, msgId, linkedSpan, headers)
   }
 
-  def receiveSpan(TraceAssert trace, int index, Object parentSpan, String topic, Pattern namePattern, Closure destination, Object msgId, Object linkedSpan = null, boolean headers = false) {
+  def receiveSpan(TraceAssert trace, int index, SpanData parentSpan, String topic, Pattern namePattern, Closure destination, Object msgId, Object linkedSpan = null, boolean headers = false) {
     trace.span(index) {
       if (namePattern != null) {
         name namePattern
@@ -613,7 +614,11 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         name "$topic receive"
       }
       kind CONSUMER
-      childOf parentSpan
+      if (parentSpan == null) {
+        hasNoParent()
+      } else {
+        childOf parentSpan
+      }
       if (linkedSpan == null) {
         hasNoLinks()
       } else {
