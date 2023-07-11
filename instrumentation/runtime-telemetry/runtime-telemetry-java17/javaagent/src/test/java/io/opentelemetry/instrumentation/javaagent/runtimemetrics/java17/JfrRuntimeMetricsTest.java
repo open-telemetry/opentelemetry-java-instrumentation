@@ -13,18 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JfrRuntimeMetricsTest {
-  //  @SafeVarargs
-  //  private static void waitAndAssertMetrics(Consumer<MetricAssert>... assertions) {
-  //    await()
-  //        .untilAsserted(
-  //            () -> {
-  //              Collection<MetricData> metrics = AgentTestRunner.instance().getExportedMetrics();
-  //              assertThat(metrics).isNotEmpty();
-  //              for (Consumer<MetricAssert> assertion : assertions) {
-  //                assertThat(metrics).anySatisfy(metric -> assertion.accept(assertThat(metric)));
-  //              }
-  //            });
-  //  }
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
