@@ -106,14 +106,19 @@ public final class PulsarSingletons {
     MessagingAttributesGetter<PulsarRequest, Void> getter =
         PulsarMessagingAttributesGetter.INSTANCE;
 
-    return Instrumenter.<PulsarRequest, Void>builder(
-            TELEMETRY,
-            INSTRUMENTATION_NAME,
-            MessagingSpanNameExtractor.create(getter, MessageOperation.PROCESS))
-        .addAttributesExtractor(
-            createMessagingAttributesExtractor(getter, MessageOperation.PROCESS))
-        .addSpanLinksExtractor(new PulsarRequestSpanLinksExtractor(PROPAGATOR))
-        .buildInstrumenter();
+    boolean enabled = ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+    InstrumenterBuilder<PulsarRequest, Void> builder =
+        Instrumenter.<PulsarRequest, Void>builder(
+                TELEMETRY,
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(getter, MessageOperation.PROCESS))
+            .addAttributesExtractor(
+                createMessagingAttributesExtractor(getter, MessageOperation.PROCESS));
+    if (!enabled) {
+      builder.addSpanLinksExtractor(new PulsarRequestSpanLinksExtractor(PROPAGATOR));
+    }
+
+    return builder.buildInstrumenter();
   }
 
   private static Instrumenter<PulsarRequest, Void> createProducerInstrumenter() {
