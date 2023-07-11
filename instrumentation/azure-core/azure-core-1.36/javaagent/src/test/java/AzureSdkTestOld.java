@@ -52,7 +52,8 @@ class AzureSdkTestOld {
   }
 
   private static com.azure.core.util.tracing.Tracer createAzTracer() {
-    Iterable<com.azure.core.util.tracing.Tracer> tracers = ServiceLoader.load(com.azure.core.util.tracing.Tracer.class);
+    Iterable<com.azure.core.util.tracing.Tracer> tracers = ServiceLoader.load(
+        com.azure.core.util.tracing.Tracer.class);
     Iterator<Tracer> it = tracers.iterator();
     return it.hasNext() ? it.next() : null;
   }
