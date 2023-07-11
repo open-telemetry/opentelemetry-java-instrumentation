@@ -64,7 +64,7 @@ public final class PulsarSingletons {
     MessagingAttributesGetter<PulsarRequest, Void> getter =
         PulsarMessagingAttributesGetter.INSTANCE;
 
-    final boolean enabled = ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+    boolean enabled = ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
     InstrumenterBuilder<PulsarRequest, Void> builder =
         Instrumenter.<PulsarRequest, Void>builder(
                 TELEMETRY,
@@ -85,7 +85,7 @@ public final class PulsarSingletons {
     MessagingAttributesGetter<PulsarBatchRequest, Void> getter =
         PulsarBatchMessagingAttributesGetter.INSTANCE;
 
-    final boolean enabled = ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+    boolean enabled = ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
     InstrumenterBuilder<PulsarBatchRequest, Void> builder =
         Instrumenter.<PulsarBatchRequest, Void>builder(
                 TELEMETRY,
