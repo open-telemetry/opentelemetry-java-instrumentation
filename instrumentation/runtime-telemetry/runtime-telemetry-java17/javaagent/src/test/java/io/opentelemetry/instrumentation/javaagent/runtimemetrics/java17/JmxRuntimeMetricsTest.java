@@ -5,13 +5,8 @@
 
 package io.opentelemetry.instrumentation.javaagent.runtimemetrics.java17;
 
-import static org.awaitility.Awaitility.await;
-
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.metrics.data.MetricData;
-import java.util.List;
-import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -43,16 +38,5 @@ public class JmxRuntimeMetricsTest {
         metric -> metric.hasName("process.runtime.jvm.buffer.limit"),
         metric -> metric.hasName("process.runtime.jvm.buffer.count"),
         metric -> metric.hasName("process.runtime.jvm.buffer.usage"));
-
-    await()
-        .untilAsserted(
-            () -> {
-              List<MetricData> metrics =
-                  testing.instrumentationMetrics("io.opentelemetry.runtime-telemetry-java8");
-            });
-  }
-
-  private Predicate<? super MetricData> hasMetricName(String name) {
-    return metric -> metric.getName().equals(name);
   }
 }
