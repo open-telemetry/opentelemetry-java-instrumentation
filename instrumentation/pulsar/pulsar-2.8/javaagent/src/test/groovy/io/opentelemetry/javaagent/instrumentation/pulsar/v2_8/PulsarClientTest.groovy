@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8
 
+import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -142,15 +143,17 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     latch.await(1, TimeUnit.MINUTES)
 
     then:
-    assertTraces(1) {
-      trace(0, 4) {
+    assertTraces(2) {
+      trace(0, 2) {
         span(0) {
           name "parent"
           kind INTERNAL
           hasNoParent()
         }
         producerSpan(it, 1, span(0), topic, msgId)
-        receiveSpan(it, 2, null, topic, msgId, span(1))
+      }
+      trace(1, 2) {
+        receiveSpan(it, 2, null, topic, msgId, traces.get(0).get(1))
         processSpan(it, 3, span(2), topic, msgId)
       }
     }
@@ -181,15 +184,17 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     consumer.acknowledge(receivedMsg)
 
     then:
-    assertTraces(1) {
-      trace(0, 3) {
+    assertTraces(2) {
+      trace(0, 2) {
         span(0) {
           name "parent"
           kind INTERNAL
           hasNoParent()
         }
         producerSpan(it, 1, span(0), topic, msgId)
-        receiveSpan(it, 2, null, topic, msgId, span(1))
+      }
+      trace(1, 1) {
+        receiveSpan(it, 2, null, topic, msgId, traces.get(0).get(1))
       }
     }
   }
@@ -224,19 +229,22 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     result.get(1, TimeUnit.MINUTES)
 
     then:
-    assertTraces(1) {
-      trace(0, 4) {
+    assertTraces(2) {
+      trace(0, 2) {
         span(0) {
           name "parent"
           kind INTERNAL
           hasNoParent()
         }
         producerSpan(it, 1, span(0), topic, msgId)
-        receiveSpan(it, 2, null, topic, msgId, span(1))
-        span(3) {
+      }
+
+      trace(1, 2) {
+        receiveSpan(it, 0, null, topic, msgId, traces.get(0).get(1))
+        span(1) {
           name "callback"
           kind INTERNAL
-          childOf span(2)
+          childOf span(0)
           attributes {
           }
         }
@@ -269,15 +277,17 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     consumer.acknowledge(receivedMsg)
 
     then:
-    assertTraces(1) {
-      trace(0, 3) {
+    assertTraces(2) {
+      trace(0, 2) {
         span(0) {
           name "parent"
           kind INTERNAL
           hasNoParent()
         }
         producerSpan(it, 1, span(0), topic, msgId)
-        receiveSpan(it, 2, null, topic, msgId,  span(1))
+      }
+      trace(1, 1) {
+        receiveSpan(it, 0, null, topic, msgId, traces.get(0).get(1))
       }
     }
   }
@@ -423,16 +433,19 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     latch.await(1, TimeUnit.MINUTES)
 
     then:
-    assertTraces(1) {
-      trace(0, 4) {
+    assertTraces(2) {
+      trace(0, 2) {
         span(0) {
           name "parent"
           kind INTERNAL
           hasNoParent()
         }
         producerSpan(it, 1, span(0), topic, msgId, true)
-        receiveSpan(it, 2, null, topic, msgId, span(1), true)
-        processSpan(it, 3, span(2), topic, msgId, true)
+      }
+
+      trace(1, 2) {
+        receiveSpan(it, 0, null, topic, msgId, traces.get(0).get(1), true)
+        processSpan(it, 1, span(0), topic, msgId, true)
       }
     }
   }
@@ -497,16 +510,19 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     latch.await(1, TimeUnit.MINUTES)
 
     then:
-    assertTraces(1) {
-      trace(0, 4) {
+    assertTraces(2) {
+      trace(0, 2) {
         span(0) {
           name "parent"
           kind INTERNAL
           hasNoParent()
         }
         producerSpan(it, 1, span(0), topic, ~/${topic}-partition-.*send/, { it.startsWith(topic) }, msgId)
-        receiveSpan(it, 2, null, topic,  ~/${topic}-partition-.*receive/, { it.startsWith(topic) }, msgId, span(1))
-        processSpan(it, 3, span(2), topic, ~/${topic}-partition-.*process/, { it.startsWith(topic) }, msgId)
+      }
+
+      trace(1, 2) {
+        receiveSpan(it, 0, null, topic,  ~/${topic}-partition-.*receive/, { it.startsWith(topic) }, msgId, traces.get(0).get(1))
+        processSpan(it, 1, span(0), topic, ~/${topic}-partition-.*process/, { it.startsWith(topic) }, msgId)
       }
     }
   }
@@ -552,21 +568,44 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     latch.await(1, TimeUnit.MINUTES)
 
     then:
-    assertTraces(2) {
-      traces.sort(orderByRootSpanName("parent1", "parent2"))
-      for (int i in 1..2) {
-        def topic = i == 1 ? topic1 : topic2
-        trace(i - 1, 4) {
-          span(0) {
-            name "parent" + i
-            kind INTERNAL
-            hasNoParent()
-          }
-          producerSpan(it, 1, span(0), topic, null, { it.startsWith(topicNamePrefix) }, String)
-          receiveSpan(it, 2, null, topic, null, { it.startsWith(topicNamePrefix) }, String, span(1))
-          processSpan(it, 3, span(2), topic, null, { it.startsWith(topicNamePrefix) }, String)
+    assertTraces(4) {
+      def parent1 = findIndex("parent1", traces)
+      def parent2 = findIndex("parent2", traces)
+      def receive1 = findIndex(traces.get(parent1).get(0).traceId, traces)
+      def receive2 = findIndex(traces.get(parent2).get(0).traceId, traces)
+
+      trace(parent1, 2) {
+        def topic = topic1
+        span(0) {
+          name "parent1"
+          kind INTERNAL
+          hasNoParent()
+        }
+        producerSpan(it, 1, span(0), topic, null, { it.startsWith(topicNamePrefix) }, String)
+        def linkedSpan = span(1)
+
+        trace(receive1, 2) {it0 ->
+          receiveSpan(it0, 0, null, topic, null, { it.startsWith(topicNamePrefix) }, String, linkedSpan)
+          processSpan(it0, 1, it0.span(0), topic, null, { it.startsWith(topicNamePrefix) }, String)
         }
       }
+
+      trace(parent2, 2) {
+        def topic = topic2
+        span(0) {
+          name "parent2"
+          kind INTERNAL
+          hasNoParent()
+        }
+        producerSpan(it, 1, span(0), topic, null, { it.startsWith(topicNamePrefix) }, String)
+        def linkedSpan = span(1)
+
+        trace(receive2, 2) {it0 ->
+          receiveSpan(it0, 0, null, topic, null, { it.startsWith(topicNamePrefix) }, String, linkedSpan)
+          processSpan(it0, 1, it0.span(0), topic, null, { it.startsWith(topicNamePrefix) }, String)
+        }
+      }
+
     }
   }
 
@@ -671,5 +710,32 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         }
       }
     }
+  }
+
+
+
+  def findIndex(String rootSpanName, List<List<SpanData>> traces) {
+    for (int i = 0; i < traces.size(); i++) {
+      if (rootSpanName == traces.get(i).get(0).name) {
+        return i
+      }
+    }
+
+    return -1
+  }
+
+  def findIndex(SpanContext context, List<List<SpanData>> traces) {
+    for (int i = 0; i < traces.size(); i++) {
+      def traceId = context.traceId
+      for (def span : traces.get(i)) {
+        for (def link : span.links) {
+          if (link.spanContext.traceId == traceId) {
+            return i
+          }
+        }
+      }
+    }
+
+    return -1
   }
 }
