@@ -101,7 +101,7 @@ public final class SpringIntegrationTelemetryBuilder {
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     SpringMessagingAttributesGetter.INSTANCE,
-                    MessageOperation.SEND,
+                    MessageOperation.PUBLISH,
                     capturedHeaders))
             .buildInstrumenter(SpanKindExtractor.alwaysProducer());
     return new SpringIntegrationTelemetry(
