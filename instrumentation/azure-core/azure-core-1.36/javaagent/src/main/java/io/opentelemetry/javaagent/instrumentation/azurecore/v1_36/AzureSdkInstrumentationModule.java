@@ -53,8 +53,7 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return namedOneOf(
-          "com.azure.core.util.tracing.TracerProvider",
-          "com.azure.core.util.tracing.Tracer");
+          "com.azure.core.util.tracing.TracerProvider", "com.azure.core.util.tracing.Tracer");
     }
 
     @Override

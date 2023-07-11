@@ -12,10 +12,10 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import java.util.Iterator;
 import java.util.ServiceLoader;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 // some azure sdks (e.g. EventHubs) are still looking up Tracer via service loader
 // and not yet using the new TracerProvider
@@ -52,8 +52,8 @@ class AzureSdkTestOld {
   }
 
   private static com.azure.core.util.tracing.Tracer createAzTracer() {
-    Iterable<com.azure.core.util.tracing.Tracer> tracers = ServiceLoader.load(
-        com.azure.core.util.tracing.Tracer.class);
+    Iterable<com.azure.core.util.tracing.Tracer> tracers =
+        ServiceLoader.load(com.azure.core.util.tracing.Tracer.class);
     Iterator<Tracer> it = tracers.iterator();
     return it.hasNext() ? it.next() : null;
   }
