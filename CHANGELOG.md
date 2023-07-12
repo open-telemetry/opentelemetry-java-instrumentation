@@ -2,6 +2,71 @@
 
 ## Unreleased
 
+### Migration notes
+
+- Rename HTTP configuration settings
+  ([#8758](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8758))
+  - `otel.instrumentation.http.capture-headers.client.request`
+    → `otel.instrumentation.http.client.capture-request-headers`
+  - `otel.instrumentation.http.capture-headers.client.response`
+    → `otel.instrumentation.http.client.capture-response-headers`
+  - `otel.instrumentation.http.capture-headers.server.request`
+    → `otel.instrumentation.http.server.capture-request-headers`
+  - `otel.instrumentation.http.capture-headers.server.response`
+    → `otel.instrumentation.http.server.capture-response-headers`
+
+### 📈 Enhancements
+
+- Support latest armeria release
+  ([#8745](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8745))
+- Support latest mongo release
+  ([#8785](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8785))
+- Remove `server.{address,port}` from HTTP server metrics
+  ([#8771](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8771))
+- aws-sdk-2.2.: Support injection into SQS.SendMessageBatch message attributes
+  ([#8798](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8798))
+- Log4j and Logback appenders opt-in to using GlobalOpenTelemetry
+  ([#8791](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8791))
+- aws-sdk-2.2: SNS.Publish support with experimental messaging propagator flag
+  ([#8830](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8830))
+- support for adding baggage to log4j 2 ContextData
+  ([#8810](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8810))
+- Micrometer bridge: interpret no SLO config as no buckets advice
+  ([#8856](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8856))
+- Instrumentation for Elasticsearch 8+
+  ([#8799](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8799))
+- Add support for schemaUrls auto-computed from `AttributesExtrator`s
+  ([#8864](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8864))
+- Initialize appenders in the spring boot starter
+  ([#8888](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8888))
+- Support reactor-netty 1.0.34+
+  ([#8922](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8922))
+- Rename messaging operation "send" to "publish" per spec
+  ([#8929](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8929))
+- Extract query arguments without regex on lettuce 6
+  ([#8932](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8932))
+
+### 🛠️ Bug fixes
+
+- Fix logging timestamp
+  ([#8761](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8761))
+- Minor fixes to the `server.*` attributes extrator
+  ([#8772](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8772))
+- Fix context leak on call to AmazonS3.generatePresignedUrl
+  ([#8815](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8815))
+- Fix exception when pulsar has multiple service addresses
+  ([#8816](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8816))
+- Fix NPE in aws instrumentation on duplicate TracingExecutionInterceptor
+  ([#8896](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8896))
+- (micrometer) don't add . to empty unit with prometheus naming conventions
+  ([#8872](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8872))
+- Set server span name for aborted requests in quarkus resteasy native
+  ([#8891](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8891))
+- Fix instrumentation of Azure SDK EventHubs library
+  ([#8916](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8916))
+- Fix http attributes of AWS SDK V2 instrumentation
+  ([#8931](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8931))
+
 ## Version 1.27.0 (2023-06-14)
 
 ### Migration notes
