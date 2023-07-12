@@ -144,6 +144,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
+      sortTracesByRootSpanStartEpoch(traces)
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -185,6 +186,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
+      sortTracesByRootSpanStartEpoch(traces)
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -230,6 +232,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
+      sortTracesByRootSpanStartEpoch(traces)
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -278,6 +281,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
+      sortTracesByRootSpanStartEpoch(traces)
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -321,6 +325,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     then:
     def producer
     assertTraces(2) {
+      sortTracesByRootSpanStartEpoch(traces)
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -374,6 +379,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     then:
     def producer
     assertTraces(2) {
+      sortTracesByRootSpanStartEpoch(traces)
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -434,6 +440,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
+      sortTracesByRootSpanStartEpoch(traces)
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -511,6 +518,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
+      sortTracesByRootSpanStartEpoch(traces)
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -571,8 +579,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     assertTraces(4) {
       def parent1 = findIndex("parent1", traces)
       def parent2 = findIndex("parent2", traces)
-      def receive1 = findIndex(traces.get(parent1).get(0).traceId, traces)
-      def receive2 = findIndex(traces.get(parent2).get(0).traceId, traces)
+      def receive1 = findIndex(traces.get(parent1).get(0).spanContext, traces)
+      def receive2 = findIndex(traces.get(parent2).get(0).spanContext, traces)
 
       trace(parent1, 2) {
         def topic = topic1
@@ -737,5 +745,13 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     }
 
     return -1
+  }
+
+  def sortTracesByRootSpanStartEpoch(List<List<SpanData>> traces) {
+    traces.sort{a, b ->
+      def root0 = a[0]
+      def root1 = b[0]
+      return Long.compare(root0.startEpochNanos, root1.startEpochNanos)
+    }
   }
 }
