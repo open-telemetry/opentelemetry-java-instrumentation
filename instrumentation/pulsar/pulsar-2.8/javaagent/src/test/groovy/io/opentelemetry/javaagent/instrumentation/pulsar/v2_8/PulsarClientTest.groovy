@@ -578,7 +578,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       if (namePattern != null) {
         name namePattern
       } else {
-        name "$topic send"
+        name "$topic publish"
       }
       kind PRODUCER
       childOf parentSpan

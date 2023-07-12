@@ -154,7 +154,7 @@ public class ContextPropagationTest {
                   .hasSpansSatisfyingExactly(
                       span -> span.hasName("parent"),
                       span ->
-                          span.hasName("<default> send")
+                          span.hasName("<default> publish")
                               .hasKind(SpanKind.PRODUCER)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(

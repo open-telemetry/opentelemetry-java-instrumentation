@@ -71,7 +71,7 @@ public final class SpringIntegrationTelemetryBuilder {
   }
 
   private static String producerSpanName(MessageWithChannel messageWithChannel) {
-    return messageWithChannel.getChannelName() + " send";
+    return messageWithChannel.getChannelName() + " publish";
   }
 
   /**

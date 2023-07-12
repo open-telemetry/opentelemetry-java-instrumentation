@@ -60,12 +60,12 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
           trace.hasSpansSatisfyingExactlyInAnyOrder(
               span -> span.hasName("producer"),
               span ->
-                  span.hasName("testBatchTopic send")
+                  span.hasName("testBatchTopic publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(sendAttributes(record1)),
               span ->
-                  span.hasName("testBatchTopic send")
+                  span.hasName("testBatchTopic publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(sendAttributes(record2)));
@@ -131,7 +131,7 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("producer"),
               span ->
-                  span.hasName("testBatchTopic send")
+                  span.hasName("testBatchTopic publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(sendAttributes(record)));

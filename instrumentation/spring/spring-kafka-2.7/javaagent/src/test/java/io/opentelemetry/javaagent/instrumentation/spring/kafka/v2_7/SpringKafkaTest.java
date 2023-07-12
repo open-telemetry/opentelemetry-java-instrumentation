@@ -62,7 +62,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("producer"),
               span ->
-                  span.hasName("testSingleTopic send")
+                  span.hasName("testSingleTopic publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -158,7 +158,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("producer"),
               span ->
-                  span.hasName("testSingleTopic send")
+                  span.hasName("testSingleTopic publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -252,7 +252,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           trace.hasSpansSatisfyingExactlyInAnyOrder(
               span -> span.hasName("producer"),
               span ->
-                  span.hasName("testBatchTopic send")
+                  span.hasName("testBatchTopic publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -269,7 +269,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                               SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
                               stringAssert -> stringAssert.startsWith("producer"))),
               span ->
-                  span.hasName("testBatchTopic send")
+                  span.hasName("testBatchTopic publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -355,7 +355,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("producer"),
               span ->
-                  span.hasName("testBatchTopic send")
+                  span.hasName("testBatchTopic publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
