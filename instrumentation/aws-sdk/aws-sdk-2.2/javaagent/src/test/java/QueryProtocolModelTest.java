@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 
-public class QueryProtocolModelTest extends AbstractQueryProtocolModelTest {
+class QueryProtocolModelTest extends AbstractQueryProtocolModelTest {
   private final AgentInstrumentationExtension extension = AgentInstrumentationExtension.create();
 
   @Override
