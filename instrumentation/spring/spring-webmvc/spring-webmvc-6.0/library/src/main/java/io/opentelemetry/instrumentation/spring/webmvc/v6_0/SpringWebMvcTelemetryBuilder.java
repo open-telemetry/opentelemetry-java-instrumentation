@@ -9,6 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
@@ -20,6 +21,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import javax.annotation.Nullable;
 
 /** A builder of {@link SpringWebMvcTelemetry}. */
 public final class SpringWebMvcTelemetryBuilder {
@@ -33,6 +36,12 @@ public final class SpringWebMvcTelemetryBuilder {
       httpAttributesExtractorBuilder =
           HttpServerAttributesExtractor.builder(
               SpringWebMvcHttpAttributesGetter.INSTANCE, SpringWebMvcNetAttributesGetter.INSTANCE);
+
+  @Nullable
+  private Function<
+          SpanNameExtractor<HttpServletRequest>,
+          ? extends SpanNameExtractor<? super HttpServletRequest>>
+      spanNameExtractorTransformer;
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -71,6 +80,17 @@ public final class SpringWebMvcTelemetryBuilder {
     return this;
   }
 
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public SpringWebMvcTelemetryBuilder setSpanNameExtractor(
+      Function<
+              SpanNameExtractor<HttpServletRequest>,
+              ? extends SpanNameExtractor<? super HttpServletRequest>>
+          spanNameExtractor) {
+    this.spanNameExtractorTransformer = spanNameExtractor;
+    return this;
+  }
+
   /**
    * Configures the instrumentation to recognize an alternative set of HTTP request methods.
    *
@@ -98,11 +118,16 @@ public final class SpringWebMvcTelemetryBuilder {
     SpringWebMvcHttpAttributesGetter httpAttributesGetter =
         SpringWebMvcHttpAttributesGetter.INSTANCE;
 
+    SpanNameExtractor<HttpServletRequest> originalSpanNameExtractor =
+        HttpSpanNameExtractor.create(httpAttributesGetter);
+    SpanNameExtractor<? super HttpServletRequest> spanNameExtractor = originalSpanNameExtractor;
+    if (spanNameExtractorTransformer != null) {
+      spanNameExtractor = spanNameExtractorTransformer.apply(originalSpanNameExtractor);
+    }
+
     Instrumenter<HttpServletRequest, HttpServletResponse> instrumenter =
         Instrumenter.<HttpServletRequest, HttpServletResponse>builder(
-                openTelemetry,
-                INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
