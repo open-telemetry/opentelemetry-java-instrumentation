@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.28.0 (2023-07-12)
+
 ### Migration notes
 
 - Rename HTTP configuration settings
