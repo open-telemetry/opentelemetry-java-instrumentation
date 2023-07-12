@@ -52,7 +52,7 @@ public abstract class AbstractQueryProtocolModelTest {
 
   protected abstract ClientOverrideConfiguration.Builder createClientOverrideConfigurationBuilder();
 
-  protected abstract InstrumentationExtension getInstrumentationExtension();
+  protected abstract InstrumentationExtension getTesting();
 
   @Test
   void testClientWithQueryProtocolModel() {
@@ -84,7 +84,7 @@ public abstract class AbstractQueryProtocolModelTest {
 
     ses.sendEmail(emailRequest);
 
-    getInstrumentationExtension()
+    getTesting()
         .waitAndAssertTraces(
             trace -> {
               trace.hasSpansSatisfyingExactly(

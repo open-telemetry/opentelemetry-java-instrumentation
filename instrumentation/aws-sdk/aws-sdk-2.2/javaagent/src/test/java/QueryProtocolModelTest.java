@@ -4,25 +4,22 @@
  */
 
 import io.opentelemetry.instrumentation.awssdk.v2_2.AbstractQueryProtocolModelTest;
-import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 
 class QueryProtocolModelTest extends AbstractQueryProtocolModelTest {
-  private final AgentInstrumentationExtension extension = AgentInstrumentationExtension.create();
+  @RegisterExtension
+  private final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Override
   protected ClientOverrideConfiguration.Builder createClientOverrideConfigurationBuilder() {
-    return ClientOverrideConfiguration.builder()
-        .addExecutionInterceptor(
-            AwsSdkTelemetry.builder(extension.getOpenTelemetry())
-                .build()
-                .newExecutionInterceptor());
+    return ClientOverrideConfiguration.builder();
   }
 
   @Override
-  protected InstrumentationExtension getInstrumentationExtension() {
-    return extension;
+  protected InstrumentationExtension getTesting() {
+    return testing;
   }
 }
