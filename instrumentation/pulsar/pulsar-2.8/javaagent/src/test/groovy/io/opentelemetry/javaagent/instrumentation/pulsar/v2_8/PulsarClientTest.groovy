@@ -144,7 +144,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
-      sortTracesByRootSpanStartEpoch(traces)
+      traces.sort(orderByRootSpanKind(INTERNAL, CONSUMER))
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -154,8 +154,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         producerSpan(it, 1, span(0), topic, msgId)
       }
       trace(1, 2) {
-        receiveSpan(it, 2, null, topic, msgId, traces.get(0).get(1))
-        processSpan(it, 3, span(2), topic, msgId)
+        receiveSpan(it, 0, null, topic, msgId, traces.get(0).get(1))
+        processSpan(it, 1, span(0), topic, msgId)
       }
     }
   }
@@ -186,7 +186,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
-      sortTracesByRootSpanStartEpoch(traces)
+      traces.sort(orderByRootSpanKind(INTERNAL, CONSUMER))
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -196,7 +196,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         producerSpan(it, 1, span(0), topic, msgId)
       }
       trace(1, 1) {
-        receiveSpan(it, 2, null, topic, msgId, traces.get(0).get(1))
+        receiveSpan(it, 0, null, topic, msgId, traces.get(0).get(1))
       }
     }
   }
@@ -232,7 +232,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
-      sortTracesByRootSpanStartEpoch(traces)
+      traces.sort(orderByRootSpanKind(INTERNAL, CONSUMER))
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -281,7 +281,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
-      sortTracesByRootSpanStartEpoch(traces)
+      traces.sort(orderByRootSpanKind(INTERNAL, CONSUMER))
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -325,7 +325,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     then:
     def producer
     assertTraces(2) {
-      sortTracesByRootSpanStartEpoch(traces)
+      traces.sort(orderByRootSpanName("parent", "receive-parent"))
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -379,7 +379,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     then:
     def producer
     assertTraces(2) {
-      sortTracesByRootSpanStartEpoch(traces)
+      traces.sort(orderByRootSpanName("parent", "receive-parent"))
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -440,7 +440,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
-      sortTracesByRootSpanStartEpoch(traces)
+      traces.sort(orderByRootSpanKind(INTERNAL, CONSUMER))
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -518,7 +518,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
-      sortTracesByRootSpanStartEpoch(traces)
+      traces.sort(orderByRootSpanKind(INTERNAL, CONSUMER))
       trace(0, 2) {
         span(0) {
           name "parent"
@@ -745,13 +745,5 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     }
 
     return -1
-  }
-
-  def sortTracesByRootSpanStartEpoch(List<List<SpanData>> traces) {
-    traces.sort{a, b ->
-      def root0 = a[0]
-      def root1 = b[0]
-      return Long.compare(root0.startEpochNanos, root1.startEpochNanos)
-    }
   }
 }
