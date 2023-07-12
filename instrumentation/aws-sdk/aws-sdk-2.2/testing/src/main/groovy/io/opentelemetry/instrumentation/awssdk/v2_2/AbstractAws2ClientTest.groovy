@@ -299,6 +299,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "S3"
             "$SemanticAttributes.RPC_METHOD" "GetObject"
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "somebucket"
           }

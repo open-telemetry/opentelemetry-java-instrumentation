@@ -18,6 +18,7 @@ dependencies {
   testLibrary("software.amazon.awssdk:kinesis:2.2.0")
   testLibrary("software.amazon.awssdk:rds:2.2.0")
   testLibrary("software.amazon.awssdk:s3:2.2.0")
+  testLibrary("software.amazon.awssdk:ses:2.2.0")
 }
 
 testing {

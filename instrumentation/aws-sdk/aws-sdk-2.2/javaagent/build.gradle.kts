@@ -81,6 +81,7 @@ dependencies {
   testLibrary("software.amazon.awssdk:s3:2.2.0")
   testLibrary("software.amazon.awssdk:sqs:2.2.0")
   testLibrary("software.amazon.awssdk:sns:2.2.0")
+  testLibrary("software.amazon.awssdk:ses:2.2.0")
 }
 
 tasks {
