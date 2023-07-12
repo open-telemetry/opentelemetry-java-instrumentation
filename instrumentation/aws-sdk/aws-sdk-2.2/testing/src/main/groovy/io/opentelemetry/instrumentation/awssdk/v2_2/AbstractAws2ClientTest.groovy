@@ -52,8 +52,9 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
         "Cannot check Sqs.SendMessage here due to hard-coded MD5.")
   }
 
-  // Force localhost instead of relying on mock server because 127.0.0.1
-  // does not play well with s3
+  // Force localhost instead of relying on mock server because using ip is yet another corner case of the virtual
+  // bucket changes introduced by aws sdk v2.18.0. When using IP, there is no way to prefix the hostname with the
+  // bucket name as label.
   def clientUri = URI.create("http://localhost:${server.httpPort()}")
 
   def "send #operation request with builder #builder.class.getName() mocked response"() {
