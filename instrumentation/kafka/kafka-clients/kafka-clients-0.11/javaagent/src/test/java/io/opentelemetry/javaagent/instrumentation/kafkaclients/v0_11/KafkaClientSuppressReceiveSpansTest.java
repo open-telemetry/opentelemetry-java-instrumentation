@@ -62,7 +62,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(SHARED_TOPIC + " send")
+                    span.hasName(SHARED_TOPIC + " publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(sendAttributes("10", greeting, false)),
@@ -100,7 +100,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(SHARED_TOPIC + " send")
+                    span.hasName(SHARED_TOPIC + " publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(sendAttributes(null, null, false)),
@@ -138,7 +138,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(SHARED_TOPIC + " send")
+                    span.hasName(SHARED_TOPIC + " publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(sendAttributes(null, greeting, false)),

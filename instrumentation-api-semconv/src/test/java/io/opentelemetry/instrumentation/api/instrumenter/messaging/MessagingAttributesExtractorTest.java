@@ -92,7 +92,7 @@ class MessagingAttributesExtractorTest {
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // given
     AttributesExtractor<Map<String, String>, String> underTest =
-        MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessageOperation.SEND);
+        MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessageOperation.PUBLISH);
 
     Context context = Context.root();
 

@@ -34,7 +34,7 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(SHARED_TOPIC + " send")
+                    span.hasName(SHARED_TOPIC + " publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(sendAttributes(null, message, false))));
@@ -54,7 +54,7 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(SHARED_TOPIC + " send")
+                    span.hasName(SHARED_TOPIC + " publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(sendAttributes(null, message, false))),

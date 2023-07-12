@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.CompleteableCommand;
+import io.lettuce.core.protocol.OtelCommandArgsUtil;
 import io.lettuce.core.protocol.RedisCommand;
 import io.lettuce.core.tracing.TraceContext;
 import io.lettuce.core.tracing.TraceContextProvider;
@@ -170,7 +171,8 @@ final class OpenTelemetryTracing implements Tracing {
     @Nullable private List<Object> events;
     @Nullable private Throwable error;
     @Nullable private Span span;
-    @Nullable private String args;
+    @Nullable private List<String> argsList;
+    @Nullable private String argsString;
 
     OpenTelemetrySpan(Context context, SpanBuilder spanBuilder, RedisCommandSanitizer sanitizer) {
       this.context = context;
@@ -224,7 +226,7 @@ final class OpenTelemetryTracing implements Tracing {
       span.updateName(command.getType().name());
 
       if (command.getArgs() != null) {
-        args = command.getArgs().toCommandString();
+        argsList = OtelCommandArgsUtil.getCommandArgs(command.getArgs());
       }
 
       if (command instanceof CompleteableCommand) {
@@ -294,7 +296,7 @@ final class OpenTelemetryTracing implements Tracing {
     @CanIgnoreReturnValue
     public synchronized Tracer.Span tag(String key, String value) {
       if (key.equals("redis.args")) {
-        args = value;
+        argsString = value;
         return this;
       }
       if (span != null) {
@@ -325,7 +327,8 @@ final class OpenTelemetryTracing implements Tracing {
 
     private void finish(Span span) {
       if (name != null) {
-        String statement = sanitizer.sanitize(name, splitArgs(args));
+        String statement =
+            sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
         span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
       }
       span.end();

@@ -45,7 +45,7 @@ public final class JmsInstrumenterFactory {
 
   public Instrumenter<MessageWithDestination, Void> createProducerInstrumenter() {
     JmsMessageAttributesGetter getter = JmsMessageAttributesGetter.INSTANCE;
-    MessageOperation operation = MessageOperation.SEND;
+    MessageOperation operation = MessageOperation.PUBLISH;
 
     return Instrumenter.<MessageWithDestination, Void>builder(
             openTelemetry,

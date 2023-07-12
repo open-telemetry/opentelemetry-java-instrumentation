@@ -171,6 +171,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "http.method" "POST"
             "http.status_code" 200
             "http.url" { it.startsWith("http://localhost:$sqsPort") }
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -310,6 +311,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "http.method" "POST"
               "http.status_code" 200
               "http.url" { it.startsWith("http://localhost:$sqsPort") }
+              "$SemanticAttributes.USER_AGENT_ORIGINAL" String
               "net.peer.name" "localhost"
               "net.peer.port" sqsPort
               "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -364,6 +366,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "http.status_code" 200
               "http.url" { it.startsWith("http://localhost:$sqsPort") }
               "net.peer.name" "localhost"
+              "$SemanticAttributes.USER_AGENT_ORIGINAL" String
               "net.peer.port" sqsPort
               "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
               "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }

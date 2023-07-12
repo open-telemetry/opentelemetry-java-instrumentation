@@ -13,7 +13,7 @@ import java.util.Locale;
  * that may be used in a messaging system.
  */
 public enum MessageOperation {
-  SEND,
+  PUBLISH,
   RECEIVE,
   PROCESS;
 

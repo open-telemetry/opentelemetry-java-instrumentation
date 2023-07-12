@@ -35,7 +35,7 @@ abstract class AbstractSpringCloudStreamProducerTest extends InstrumentationSpec
           name "producer"
         }
         span(1) {
-          name "testProducer.output send"
+          name "testProducer.output publish"
           childOf span(0)
           kind PRODUCER
         }
