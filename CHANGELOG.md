@@ -4,7 +4,7 @@
 
 ### Migration notes
 
-- Rename HTTP configuration settings,
+- Rename HTTP configuration settings
   ([#8758](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8758))
   - `otel.instrumentation.http.capture-headers.client.request`
     → `otel.instrumentation.http.client.capture-request-headers`
@@ -41,6 +41,10 @@
   ([#8888](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8888))
 - Support reactor-netty 1.0.34+
   ([#8922](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8922))
+- Rename messaging operation "send" to "publish" per spec
+  ([#8929](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8929))
+- Extract query arguments without regex on lettuce 6
+  ([#8932](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8932))
 
 ### 🛠️ Bug fixes
 
@@ -60,6 +64,8 @@
   ([#8891](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8891))
 - Fix instrumentation of Azure SDK EventHubs library
   ([#8916](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8916))
+- Fix http attributes of AWS SDK V2 instrumentation
+  ([#8931](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8931))
 
 ## Version 1.27.0 (2023-06-14)
 
