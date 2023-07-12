@@ -55,7 +55,7 @@ public abstract class AbstractQueryProtocolModelTest {
   protected abstract InstrumentationExtension getInstrumentationExtension();
 
   @Test
-  public void testClientWithQueryProtocolModel() {
+  void testClientWithQueryProtocolModel() {
     server.enqueue(
         HttpResponse.of(
             HttpStatus.OK,
