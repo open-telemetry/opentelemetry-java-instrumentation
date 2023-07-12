@@ -40,7 +40,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("producer"),
                     span ->
-                        span.hasName("testSingleTopic send")
+                        span.hasName("testSingleTopic publish")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -110,7 +110,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("producer"),
                     span ->
-                        span.hasName("testSingleTopic send")
+                        span.hasName("testSingleTopic publish")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -180,7 +180,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
               trace.hasSpansSatisfyingExactlyInAnyOrder(
                   span -> span.hasName("producer"),
                   span ->
-                      span.hasName("testBatchTopic send")
+                      span.hasName("testBatchTopic publish")
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
@@ -198,7 +198,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                   AbstractLongAssert::isNotNegative),
                               equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10")),
                   span ->
-                      span.hasName("testBatchTopic send")
+                      span.hasName("testBatchTopic publish")
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
@@ -270,7 +270,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("producer"),
                   span ->
-                      span.hasName("testBatchTopic send")
+                      span.hasName("testBatchTopic publish")
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(

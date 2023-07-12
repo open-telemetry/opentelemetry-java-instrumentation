@@ -322,7 +322,7 @@ class Jms1Test extends AgentInstrumentationSpecification {
 
   static producerSpan(TraceAssert trace, int index, String destinationName, SpanData parentSpan = null, boolean testHeaders = false) {
     trace.span(index) {
-      name destinationName + " send"
+      name destinationName + " publish"
       kind PRODUCER
       if (parentSpan == null) {
         hasNoParent()

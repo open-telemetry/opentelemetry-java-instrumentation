@@ -265,7 +265,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
 
   static producerSpan(TraceAssert trace, int index, String destinationName, SpanData parentSpan = null) {
     trace.span(index) {
-      name destinationName + " send"
+      name destinationName + " publish"
       kind PRODUCER
       if (parentSpan == null) {
         hasNoParent()

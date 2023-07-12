@@ -34,7 +34,7 @@ public class RabbitInstrumenterHelper {
   public void onPublish(Span span, String exchange, String routingKey) {
     String exchangeName = normalizeExchangeName(exchange);
     span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_NAME, exchangeName);
-    span.updateName(exchangeName + " send");
+    span.updateName(exchangeName + " publish");
     if (routingKey != null && !routingKey.isEmpty()) {
       span.setAttribute(SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
     }

@@ -88,7 +88,7 @@ class WrapperTest extends KafkaClientBaseTest {
                 span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent();
               },
               span -> {
-                span.hasName(SHARED_TOPIC + " send")
+                span.hasName(SHARED_TOPIC + " publish")
                     .hasKind(SpanKind.PRODUCER)
                     .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfyingExactly(sendAttributes(testHeaders));
