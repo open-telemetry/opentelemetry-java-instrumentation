@@ -43,8 +43,6 @@ testing {
 
 tasks {
   withType<Test> {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-
     // NB: If you'd like to change these, there is some cleanup work to be done, as most tests ignore this and
     // set the value directly (the "library" does not normally query it, only library-autoconfigure)
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
