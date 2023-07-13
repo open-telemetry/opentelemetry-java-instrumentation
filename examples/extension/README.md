@@ -42,15 +42,8 @@ For more information, see the `extendedAgent` task in [build.gradle](build.gradl
 * Custom `SpanExporter`: [DemoSpanExporter](src/main/java/com/example/javaagent/DemoSpanExporter.java)
 * Additional instrumentation: [DemoServlet3InstrumentationModule](src/main/java/com/example/javaagent/instrumentation/DemoServlet3InstrumentationModule.java)
 
-Configuration to apply select custom classes:
-
-| System property      | Environment variable | Value                                  |
-|----------------------|----------------------|----------------------------------------|
-| otel.traces.exporter | OTEL_TRACES_EXPORTER | com.example.javaagent.DemoSpanExporter |
-| otel.propagators     | OTEL_PROPAGATORS     | com.example.javaagent.DemoPropagator   |
-| otel.traces.sampler  | OTEL_TRACES_SAMPLER  | com.example.javaagent.DemoSampler      |
-
-Otherwise customizations must be applied using an `AutoConfigurationCustomizer`.
+To apply the above extension classes to the Java Agent, include an `AutoConfigurationCustomizer` in
+your extension.
 See [DemoAutoConfigurationCustomizerProvider](src/main/java/com/example/javaagent/DemoAutoConfigurationCustomizerProvider.java)
 for an example.
 
