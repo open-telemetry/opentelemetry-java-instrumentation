@@ -27,6 +27,11 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isHelperClass(String className) {
+    return className.startsWith("io.lettuce.core.protocol.OtelCommandArgsUtil");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new DefaultClientResourcesInstrumentation(), new LettuceAsyncCommandInstrumentation());

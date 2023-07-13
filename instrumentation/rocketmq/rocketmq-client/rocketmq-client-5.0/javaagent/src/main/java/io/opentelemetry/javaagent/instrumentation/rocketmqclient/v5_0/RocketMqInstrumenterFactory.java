@@ -32,7 +32,7 @@ final class RocketMqInstrumenterFactory {
   public static Instrumenter<PublishingMessageImpl, SendReceiptImpl> createProducerInstrumenter(
       OpenTelemetry openTelemetry, List<String> capturedHeaders) {
     RocketMqProducerAttributeGetter getter = RocketMqProducerAttributeGetter.INSTANCE;
-    MessageOperation operation = MessageOperation.SEND;
+    MessageOperation operation = MessageOperation.PUBLISH;
 
     AttributesExtractor<PublishingMessageImpl, SendReceiptImpl> attributesExtractor =
         buildMessagingAttributesExtractor(getter, operation, capturedHeaders);

@@ -121,7 +121,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public SpanKey internalGetSpanKey() {
     switch (operation) {
-      case SEND:
+      case PUBLISH:
         return SpanKey.PRODUCER;
       case RECEIVE:
         return SpanKey.CONSUMER_RECEIVE;

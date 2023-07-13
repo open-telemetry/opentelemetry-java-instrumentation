@@ -129,9 +129,9 @@ public final class PulsarSingletons {
         Instrumenter.<PulsarRequest, Void>builder(
                 TELEMETRY,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessageOperation.SEND))
+                MessagingSpanNameExtractor.create(getter, MessageOperation.PUBLISH))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(getter, MessageOperation.SEND))
+                createMessagingAttributesExtractor(getter, MessageOperation.PUBLISH))
             .addAttributesExtractor(
                 NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
 

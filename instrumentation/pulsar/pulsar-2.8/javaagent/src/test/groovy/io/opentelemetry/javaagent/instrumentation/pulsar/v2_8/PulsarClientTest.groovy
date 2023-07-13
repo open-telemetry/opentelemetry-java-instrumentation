@@ -479,7 +479,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
         }
-        producerSpan(it, 1, span(0), topic, ~/${topic}-partition-.*send/, { it.startsWith(topic) }, msgId)
+        producerSpan(it, 1, span(0), topic, ~/${topic}-partition-.*publish/, { it.startsWith(topic) }, msgId)
       }
     }
   }
@@ -525,7 +525,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
         }
-        producerSpan(it, 1, span(0), topic, ~/${topic}-partition-.*send/, { it.startsWith(topic) }, msgId)
+        producerSpan(it, 1, span(0), topic, ~/${topic}-partition-.*publish/, { it.startsWith(topic) }, msgId)
       }
 
       trace(1, 2) {
@@ -626,7 +626,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       if (namePattern != null) {
         name namePattern
       } else {
-        name "$topic send"
+        name "$topic publish"
       }
       kind PRODUCER
       childOf parentSpan
