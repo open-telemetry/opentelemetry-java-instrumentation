@@ -55,7 +55,7 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("producer"),
               span ->
-                  span.hasName("testSingleTopic send")
+                  span.hasName("testSingleTopic publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(sendAttributes(record)));
@@ -96,7 +96,7 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("producer"),
               span ->
-                  span.hasName("testSingleTopic send")
+                  span.hasName("testSingleTopic publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(sendAttributes(record)));

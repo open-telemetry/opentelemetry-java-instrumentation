@@ -17,6 +17,8 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -42,8 +44,15 @@ public abstract class AbstractQuarkusJaxRsTest {
   }
 
   private static AggregatedHttpResponse request(String path) {
+    return request(path, Collections.emptyMap());
+  }
+
+  private static AggregatedHttpResponse request(String path, Map<String, String> headers) {
     AggregatedHttpRequest request =
         AggregatedHttpRequest.of(HttpMethod.GET, "h1c://localhost:" + port + path);
+    if (!headers.isEmpty()) {
+      request = AggregatedHttpRequest.of(request.headers().toBuilder().add(headers).build());
+    }
     return client.execute(request).aggregate().join();
   }
 
@@ -95,5 +104,17 @@ public abstract class AbstractQuarkusJaxRsTest {
                 span ->
                     span.hasName("GET /test-sub-resource-locator/call/sub")
                         .hasKind(SpanKind.SERVER)));
+  }
+
+  @Test
+  void testAbort() {
+    AggregatedHttpResponse response = request("/hello", Collections.singletonMap("abort", "true"));
+    assertThat(response.status().code()).isEqualTo(401);
+    assertThat(response.contentUtf8()).isEqualTo("Aborted");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /hello").hasKind(SpanKind.SERVER)));
   }
 }

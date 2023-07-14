@@ -81,7 +81,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
         rabbitSpan(it, 1, null, null, null, "exchange.declare", span(0))
         rabbitSpan(it, 2, null, null, null, "queue.declare", span(0))
         rabbitSpan(it, 3, null, null, null, "queue.bind", span(0))
-        rabbitSpan(it, 4, exchangeName, routingKey, "send", "$exchangeName", span(0))
+        rabbitSpan(it, 4, exchangeName, routingKey, "publish", "$exchangeName", span(0))
 
         producerSpan = span(4)
       }
@@ -124,7 +124,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
           hasNoParent()
         }
         rabbitSpan(it, 1, null, null, null, "queue.declare", span(0))
-        rabbitSpan(it, 2, "<default>", null, "send", "<default>", span(0))
+        rabbitSpan(it, 2, "<default>", null, "publish", "<default>", span(0))
 
         producerSpan = span(2)
       }
@@ -185,7 +185,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
       }
       (1..messageCount).each {
         trace(3 + it, 2) {
-          rabbitSpan(it, 0, exchangeName, null, "send", "$exchangeName")
+          rabbitSpan(it, 0, exchangeName, null, "publish", "$exchangeName")
           rabbitSpan(it, 1, exchangeName, null, "process", resource, span(0), null, null, null, setTimestamp)
         }
       }
@@ -239,7 +239,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
         rabbitSpan(it, 0, null, null, null, "basic.consume")
       }
       trace(4, 2) {
-        rabbitSpan(it, 0, exchangeName, null, "send", "$exchangeName")
+        rabbitSpan(it, 0, exchangeName, null, "publish", "$exchangeName")
         rabbitSpan(it, 1, exchangeName, null, "process", "<generated>", span(0), null, error, error.message)
       }
     }
@@ -304,7 +304,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
           hasNoParent()
         }
         rabbitSpan(it, 1, null, null, null, "queue.declare", span(0))
-        rabbitSpan(it, 2, "<default>", "some-routing-queue", "send", "<default>", span(0))
+        rabbitSpan(it, 2, "<default>", "some-routing-queue", "publish", "<default>", span(0))
 
         producerSpan = span(2)
       }
@@ -351,7 +351,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
         rabbitSpan(it, 0, null, null, null, "queue.declare")
       }
       trace(1, 2) {
-        rabbitSpan(it, 0, "<default>", null, "send", "<default>", null, null, null, null, false, true)
+        rabbitSpan(it, 0, "<default>", null, "publish", "<default>", null, null, null, null, false, true)
         rabbitSpan(it, 1, "<default>", null, "process", "<generated>", span(0), null, null, null, false, true)
       }
       trace(2, 1) {
@@ -428,7 +428,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" exchange
 
         "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" { it == null || it == routingKey || it.startsWith("amq.gen-") }
-        if (operation != null && operation != "send") {
+        if (operation != null && operation != "publish") {
           "$SemanticAttributes.MESSAGING_OPERATION" operation
         }
         if (expectTimestamp) {

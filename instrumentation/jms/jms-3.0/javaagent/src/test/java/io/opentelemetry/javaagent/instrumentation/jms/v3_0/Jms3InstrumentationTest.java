@@ -139,7 +139,7 @@ class Jms3InstrumentationTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("producer parent").hasNoParent(),
               span ->
-                  span.hasName(producerDestinationName + " send")
+                  span.hasName(producerDestinationName + " publish")
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -206,7 +206,7 @@ class Jms3InstrumentationTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span ->
-                    span.hasName(producerDestinationName + " send")
+                    span.hasName(producerDestinationName + " publish")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -289,7 +289,7 @@ class Jms3InstrumentationTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span ->
-                    span.hasName(producerDestinationName + " send")
+                    span.hasName(producerDestinationName + " publish")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

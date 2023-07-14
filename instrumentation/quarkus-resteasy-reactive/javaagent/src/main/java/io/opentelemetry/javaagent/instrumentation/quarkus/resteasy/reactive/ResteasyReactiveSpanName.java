@@ -15,22 +15,25 @@ import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 import org.jboss.resteasy.reactive.server.mapping.RuntimeResource;
 import org.jboss.resteasy.reactive.server.mapping.URITemplate;
 
-public final class ResteasyReactiveSpanName {
+final class ResteasyReactiveSpanName {
   // remember previous path to handle sub path locators
   private static final VirtualField<ResteasyReactiveRequestContext, String> pathField =
       VirtualField.find(ResteasyReactiveRequestContext.class, String.class);
 
   public static final ResteasyReactiveSpanName INSTANCE = new ResteasyReactiveSpanName();
 
-  public void updateServerSpanName(ResteasyReactiveRequestContext requestContext) {
+  void updateServerSpanName(ResteasyReactiveRequestContext requestContext, HttpRouteSource source) {
     Context context = Context.current();
     String jaxRsName = calculateJaxRsName(requestContext);
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.NESTED_CONTROLLER, jaxRsName);
+    HttpRouteHolder.updateHttpRoute(context, source, jaxRsName);
     pathField.set(requestContext, jaxRsName);
   }
 
   private static String calculateJaxRsName(ResteasyReactiveRequestContext requestContext) {
     RuntimeResource target = requestContext.getTarget();
+    if (target == null) {
+      return null;
+    }
     URITemplate classPath = target.getClassPath();
     URITemplate path = target.getPath();
     String name = normalize(classPath) + normalize(path);

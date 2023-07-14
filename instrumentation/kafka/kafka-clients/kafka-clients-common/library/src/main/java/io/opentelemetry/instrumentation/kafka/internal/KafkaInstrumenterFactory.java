@@ -86,7 +86,7 @@ public final class KafkaInstrumenterFactory {
       Iterable<AttributesExtractor<KafkaProducerRequest, RecordMetadata>> extractors) {
 
     KafkaProducerAttributesGetter getter = KafkaProducerAttributesGetter.INSTANCE;
-    MessageOperation operation = MessageOperation.SEND;
+    MessageOperation operation = MessageOperation.PUBLISH;
 
     return Instrumenter.<KafkaProducerRequest, RecordMetadata>builder(
             openTelemetry,

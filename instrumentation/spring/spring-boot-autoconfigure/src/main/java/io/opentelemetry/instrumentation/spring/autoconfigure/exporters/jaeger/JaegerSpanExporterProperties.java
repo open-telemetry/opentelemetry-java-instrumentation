@@ -19,6 +19,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>Get max wait time for Collector to process Span Batches
  */
 @ConfigurationProperties(prefix = "otel.exporter.jaeger")
+@Deprecated
 public final class JaegerSpanExporterProperties {
 
   private boolean enabled = true;

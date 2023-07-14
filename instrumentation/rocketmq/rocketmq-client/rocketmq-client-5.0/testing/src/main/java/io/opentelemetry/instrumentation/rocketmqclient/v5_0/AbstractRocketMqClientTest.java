@@ -422,7 +422,7 @@ public abstract class AbstractRocketMqClientTest {
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
-        .hasName(topic + " send")
+        .hasName(topic + " publish")
         .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(attributeAssertions);
   }
@@ -450,7 +450,7 @@ public abstract class AbstractRocketMqClientTest {
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
-        .hasName(topic + " send")
+        .hasName(topic + " publish")
         .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(attributeAssertions);
   }
@@ -478,7 +478,7 @@ public abstract class AbstractRocketMqClientTest {
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
-        .hasName(topic + " send")
+        .hasName(topic + " publish")
         .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(attributeAssertions);
   }

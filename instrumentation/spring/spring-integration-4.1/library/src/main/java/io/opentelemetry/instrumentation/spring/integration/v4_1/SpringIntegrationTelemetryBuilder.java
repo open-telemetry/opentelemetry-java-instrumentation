@@ -71,7 +71,7 @@ public final class SpringIntegrationTelemetryBuilder {
   }
 
   private static String producerSpanName(MessageWithChannel messageWithChannel) {
-    return messageWithChannel.getChannelName() + " send";
+    return messageWithChannel.getChannelName() + " publish";
   }
 
   /**
@@ -101,7 +101,7 @@ public final class SpringIntegrationTelemetryBuilder {
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     SpringMessagingAttributesGetter.INSTANCE,
-                    MessageOperation.SEND,
+                    MessageOperation.PUBLISH,
                     capturedHeaders))
             .buildInstrumenter(SpanKindExtractor.alwaysProducer());
     return new SpringIntegrationTelemetry(

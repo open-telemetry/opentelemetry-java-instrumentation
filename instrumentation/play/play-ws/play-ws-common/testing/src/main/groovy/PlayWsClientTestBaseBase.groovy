@@ -31,6 +31,9 @@ abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST>
   AsyncHttpClient asyncHttpClient
 
   @Shared
+  AsyncHttpClient asyncHttpClientWithReadTimeout
+
+  @Shared
   ActorMaterializer materializer
 
   def setupSpec() {
@@ -44,21 +47,30 @@ abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST>
     // failure ahc will try the next address which isn't necessary for this test.
     RequestBuilderBase.DEFAULT_NAME_RESOLVER = new CustomNameResolver(ImmediateEventExecutor.INSTANCE)
 
-    AsyncHttpClientConfig asyncHttpClientConfig =
-      new DefaultAsyncHttpClientConfig.Builder()
-        .setMaxRequestRetry(0)
-        .setShutdownQuietPeriod(0)
-        .setShutdownTimeout(0)
-        .setMaxRedirects(3)
-        .setConnectTimeout(CONNECT_TIMEOUT_MS)
-        .setReadTimeout(READ_TIMEOUT_MS)
-        .build()
+    asyncHttpClient = createClient(false)
+    asyncHttpClientWithReadTimeout = createClient(true)
+  }
 
-    asyncHttpClient = new DefaultAsyncHttpClient(asyncHttpClientConfig)
+  def createClient(boolean readTimeout) {
+    DefaultAsyncHttpClientConfig.Builder builder = new DefaultAsyncHttpClientConfig.Builder()
+      .setMaxRequestRetry(0)
+      .setShutdownQuietPeriod(0)
+      .setShutdownTimeout(0)
+      .setMaxRedirects(3)
+      .setConnectTimeout(CONNECT_TIMEOUT_MS)
+
+    if (readTimeout) {
+      builder.setReadTimeout(READ_TIMEOUT_MS)
+    }
+
+    AsyncHttpClientConfig asyncHttpClientConfig =builder.build()
+    return new DefaultAsyncHttpClient(asyncHttpClientConfig)
   }
 
   def cleanupSpec() {
     system?.terminate()
+    asyncHttpClient?.close()
+    asyncHttpClientWithReadTimeout?.close()
   }
 
   @Override

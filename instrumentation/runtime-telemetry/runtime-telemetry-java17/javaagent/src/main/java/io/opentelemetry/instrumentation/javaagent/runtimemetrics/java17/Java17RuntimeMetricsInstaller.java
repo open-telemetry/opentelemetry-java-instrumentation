@@ -11,6 +11,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetrics;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
 /** An {@link AgentListener} that enables runtime metrics during agent startup. */
@@ -19,7 +20,7 @@ public class Java17RuntimeMetricsInstaller implements AgentListener {
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
-    ConfigProperties config = autoConfiguredSdk.getConfig();
+    ConfigProperties config = AutoConfigureUtil.getConfig(autoConfiguredSdk);
 
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     RuntimeMetrics runtimeMetrics = null;
