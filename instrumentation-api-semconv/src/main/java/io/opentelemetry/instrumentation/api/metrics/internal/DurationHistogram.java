@@ -11,7 +11,12 @@ import io.opentelemetry.context.Context;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.concurrent.ThreadSafe;
 
-/** A Histogram instrument that records durations */
+/**
+ * A Histogram instrument that records durations.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 @ThreadSafe
 public final class DurationHistogram {
 
