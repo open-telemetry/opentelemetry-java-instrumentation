@@ -15,6 +15,10 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class DurationHistogramFactory {
   public static final List<Double> DURATION_SECONDS_BUCKETS =
       unmodifiableList(
