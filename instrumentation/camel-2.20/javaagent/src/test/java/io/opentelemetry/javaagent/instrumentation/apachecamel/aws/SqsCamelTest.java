@@ -18,11 +18,11 @@ class SqsCamelTest {
   @RegisterExtension
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final SqsConnector sqsConnector = SqsConnector.elasticMq();
+  private static final AwsConnector awsConnector = AwsConnector.elasticMq();
 
   @AfterAll
   static void cleanUp() {
-    sqsConnector.disconnect();
+    awsConnector.disconnect();
   }
 
   private static void waitAndClearSetupTraces(String queueUrl, String queueName) {
@@ -36,12 +36,12 @@ class SqsCamelTest {
   @Test
   void camelSqsProducerToCamelSqsConsumer() {
     String queueName = "sqsCamelTest";
-    String queueUrl = sqsConnector.createQueue(queueName);
+    String queueUrl = awsConnector.createQueue(queueName);
     waitAndClearSetupTraces(queueUrl, queueName);
 
     CamelSpringApplication camelApp =
         new CamelSpringApplication(
-            sqsConnector, SqsConfig.class, ImmutableMap.of("queueName", queueName));
+            awsConnector, SqsConfig.class, ImmutableMap.of("queueName", queueName));
 
     camelApp.start();
     camelApp.producerTemplate().sendBody("direct:input", "{\"type\": \"hello\"}");
@@ -93,15 +93,15 @@ class SqsCamelTest {
   @Test
   void awsSdkSqsProducerToCamelSqsConsumer() {
     String queueName = "sqsCamelTest";
-    String queueUrl = sqsConnector.createQueue(queueName);
+    String queueUrl = awsConnector.createQueue(queueName);
     waitAndClearSetupTraces(queueUrl, queueName);
 
     CamelSpringApplication camelApp =
         new CamelSpringApplication(
-            sqsConnector, SqsConfig.class, ImmutableMap.of("queueName", queueName));
+            awsConnector, SqsConfig.class, ImmutableMap.of("queueName", queueName));
 
     camelApp.start();
-    sqsConnector.sendSampleMessage(queueUrl);
+    awsConnector.sendSampleMessage(queueUrl);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -147,16 +147,16 @@ class SqsCamelTest {
   @Test
   void camelSqsProducerToAwsSdkSqsConsumer() {
     String queueName = "sqsCamelTestSdkConsumer";
-    String queueUrl = sqsConnector.createQueue(queueName);
+    String queueUrl = awsConnector.createQueue(queueName);
     waitAndClearSetupTraces(queueUrl, queueName);
 
     CamelSpringApplication camelApp =
         new CamelSpringApplication(
-            sqsConnector, SqsConfig.class, ImmutableMap.of("queueSdkConsumerName", queueName));
+            awsConnector, SqsConfig.class, ImmutableMap.of("queueSdkConsumerName", queueName));
 
     camelApp.start();
     camelApp.producerTemplate().sendBody("direct:inputSdkConsumer", "{\"type\": \"hello\"}");
-    sqsConnector.receiveMessage(queueUrl);
+    awsConnector.receiveMessage(queueUrl);
 
     testing.waitAndAssertTraces(
         trace ->

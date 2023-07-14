@@ -41,6 +41,11 @@ class CamelSpanAssertions {
   }
 
   static void sqsConsume(SpanDataAssert span, int index, String queueName, SpanData parentSpan) {
+    sqsConsume(span, index, queueName, parentSpan, 1000);
+  }
+
+  static void sqsConsume(
+      SpanDataAssert span, int index, String queueName, SpanData parentSpan, int delay) {
     if (index == 0) {
       span.hasNoParent();
     } else {
@@ -51,10 +56,37 @@ class CamelSpanAssertions {
         .hasAttributesSatisfying(
             equalTo(
                 stringKey("camel.uri"),
-                "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=1000"),
+                "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=" + delay),
             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, queueName),
             satisfies(
                 SemanticAttributes.MESSAGING_MESSAGE_ID,
                 stringAssert -> stringAssert.isInstanceOf(String.class)));
+  }
+
+  static void snsPublish(SpanDataAssert span, int index, String topicName, SpanData parentSpan) {
+    if (index == 0) {
+      span.hasNoParent();
+    } else {
+      span.hasParentSpanId(parentSpan.getSpanId());
+    }
+    span.hasName(topicName)
+        .hasKind(SpanKind.INTERNAL)
+        .hasAttributesSatisfying(
+            equalTo(
+                stringKey("camel.uri"), "aws-sns://" + topicName + "?amazonSNSClient=%23snsClient"),
+            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, topicName));
+  }
+
+  static void s3(SpanDataAssert span, int index, SpanData parentSpan, String bucketName) {
+    if (index == 0) {
+      span.hasNoParent();
+    } else {
+      span.hasParentSpanId(parentSpan.getSpanId());
+    }
+    span.hasName("aws-s3")
+        .hasKind(SpanKind.INTERNAL)
+        .hasAttributesSatisfying(
+            equalTo(
+                stringKey("camel.uri"), "aws-s3://" + bucketName + "?amazonS3Client=%23s3Client"));
   }
 }
