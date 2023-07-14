@@ -398,16 +398,16 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 ##### Enabling/Disabling Features
 
-| Feature          | Property                                 | Default Value | ConditionalOnClass     |
-|------------------|------------------------------------------|---------------|------------------------|
-| spring-web       | otel.springboot.httpclients.enabled      | `true`        | RestTemplate           |
-| spring-webmvc    | otel.springboot.httpclients.enabled      | `true`        | OncePerRequestFilter   |
-| spring-webflux   | otel.springboot.httpclients.enabled      | `true`        | WebClient              |
-| @WithSpan        | otel.springboot.aspects.enabled          | `true`        | WithSpan, Aspect       |
-| Otlp Exporter    | otel.exporter.otlp.enabled               | `true`        | OtlpGrpcSpanExporter   |
-| Jaeger Exporter  | otel.exporter.jaeger.enabled             | `true`        | JaegerGrpcSpanExporter |
-| Zipkin Exporter  | otel.exporter.zipkin.enabled             | `true`        | ZipkinSpanExporter     |
-| Logging Exporter | otel.exporter.logging.enabled            | `true`        | LoggingSpanExporter    |
+| Feature          | Property                                    | Default Value | ConditionalOnClass     |
+|------------------|---------------------------------------------|---------------|------------------------|
+| spring-web       | otel.instrumentation.spring-webmvc.enabled  | `true`        | RestTemplate           |
+| spring-webmvc    | otel.instrumentation.spring-web.enabled     | `true`        | OncePerRequestFilter   |
+| spring-webflux   | otel.instrumentation.spring-webflux.enabled | `true`        | WebClient              |
+| @WithSpan        | otel.instrumentation.annotations.enabled    | `true`        | WithSpan, Aspect       |
+| Otlp Exporter    | otel.exporter.otlp.enabled                  | `true`        | OtlpGrpcSpanExporter   |
+| Jaeger Exporter  | otel.exporter.jaeger.enabled                | `true`        | JaegerGrpcSpanExporter |
+| Zipkin Exporter  | otel.exporter.zipkin.enabled                | `true`        | ZipkinSpanExporter     |
+| Logging Exporter | otel.exporter.logging.enabled               | `true`        | LoggingSpanExporter    |
 
 <!-- Slf4j Log Correlation  otel.springboot.loggers.slf4j.enabled		true   		org.slf4j.MDC -->
 
