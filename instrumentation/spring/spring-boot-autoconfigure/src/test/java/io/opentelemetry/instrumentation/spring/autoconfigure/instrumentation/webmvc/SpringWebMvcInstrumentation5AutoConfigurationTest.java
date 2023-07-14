@@ -21,7 +21,7 @@ class SpringWebMvcInstrumentation5AutoConfigurationTest {
       new ApplicationContextRunner()
           .withBean(OpenTelemetry.class, OpenTelemetry::noop)
           .withConfiguration(
-              AutoConfigurations.of(SpringWebMvcInstrumentationAutoConfiguration.class));
+              AutoConfigurations.of(SpringWebMvc5InstrumentationAutoConfiguration.class));
 
   @BeforeEach
   void setUp() {
@@ -32,19 +32,19 @@ class SpringWebMvcInstrumentation5AutoConfigurationTest {
   void instrumentationEnabled() {
     contextRunner
         .withPropertyValues("otel.instrumentation.spring-webmvc.enabled=true")
-        .run(context -> assertThat(context.getBean("otelWebMvc5Filter", Filter.class)).isNotNull());
+        .run(context -> assertThat(context.getBean("otelWebMvcFilter", Filter.class)).isNotNull());
   }
 
   @Test
   void instrumentationDisabled() {
     contextRunner
         .withPropertyValues("otel.instrumentation.spring-webmvc.enabled=false")
-        .run(context -> assertThat(context.containsBean("otelWebMvc5Filter")).isFalse());
+        .run(context -> assertThat(context.containsBean("otelWebMvcFilter")).isFalse());
   }
 
   @Test
   void defaultConfiguration() {
     contextRunner.run(
-        context -> assertThat(context.getBean("otelWebMvc5Filter", Filter.class)).isNotNull());
+        context -> assertThat(context.getBean("otelWebMvcFilter", Filter.class)).isNotNull());
   }
 }
