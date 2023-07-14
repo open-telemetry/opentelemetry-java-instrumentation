@@ -15,8 +15,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
-import io.opentelemetry.instrumentation.api.metrics.DurationHistogram;
-import io.opentelemetry.instrumentation.api.metrics.DurationHistogramFactory;
+import io.opentelemetry.instrumentation.api.metrics.internal.DurationHistogram;
+import io.opentelemetry.instrumentation.api.metrics.internal.DurationHistogramFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 

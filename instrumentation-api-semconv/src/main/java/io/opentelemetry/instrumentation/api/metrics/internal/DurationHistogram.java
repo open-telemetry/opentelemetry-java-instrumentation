@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.metrics;
+package io.opentelemetry.instrumentation.api.metrics.internal;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
@@ -13,11 +13,11 @@ import javax.annotation.concurrent.ThreadSafe;
 
 /** A Histogram instrument that records durations */
 @ThreadSafe
-public class DurationHistogram {
+public final class DurationHistogram {
 
   private final DoubleHistogram delegate;
 
-  public DurationHistogram(DoubleHistogram delegate) {
+  DurationHistogram(DoubleHistogram delegate) {
     this.delegate = delegate;
   }
 

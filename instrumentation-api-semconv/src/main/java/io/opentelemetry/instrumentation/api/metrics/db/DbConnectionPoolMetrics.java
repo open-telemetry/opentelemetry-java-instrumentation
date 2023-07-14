@@ -17,8 +17,8 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.api.metrics.ObservableMeasurement;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import io.opentelemetry.instrumentation.api.metrics.DurationHistogram;
-import io.opentelemetry.instrumentation.api.metrics.DurationHistogramFactory;
+import io.opentelemetry.instrumentation.api.metrics.internal.DurationHistogram;
+import io.opentelemetry.instrumentation.api.metrics.internal.DurationHistogramFactory;
 
 /**
  * A helper class that models the <a

@@ -9,7 +9,7 @@ import com.zaxxer.hikari.metrics.IMetricsTracker;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.LongCounter;
-import io.opentelemetry.instrumentation.api.metrics.DurationHistogram;
+import io.opentelemetry.instrumentation.api.metrics.internal.DurationHistogram;
 import java.util.concurrent.TimeUnit;
 
 final class OpenTelemetryMetricsTracker implements IMetricsTracker {
@@ -54,7 +54,7 @@ final class OpenTelemetryMetricsTracker implements IMetricsTracker {
 
   @Override
   public void recordConnectionUsageMillis(long elapsedBorrowedMillis) {
-    useTime.record(elapsedBorrowedMillis, TimeUnit.MICROSECONDS, attributes);
+    useTime.record(elapsedBorrowedMillis, TimeUnit.MILLISECONDS, attributes);
     userMetricsTracker.recordConnectionUsageMillis(elapsedBorrowedMillis);
   }
 

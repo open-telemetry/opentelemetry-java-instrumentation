@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.metrics;
+package io.opentelemetry.instrumentation.api.metrics.internal;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class DurationHistogramFactory {
+public final class DurationHistogramFactory {
   public static final List<Double> DURATION_SECONDS_BUCKETS =
       unmodifiableList(
           asList(
