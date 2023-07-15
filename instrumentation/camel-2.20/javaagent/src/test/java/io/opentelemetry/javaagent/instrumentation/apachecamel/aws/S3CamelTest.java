@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
- @Disabled("Does not work with localstack - X-Ray features needed")
+@Disabled("Does not work with localstack - X-Ray features needed")
 public class S3CamelTest {
 
   @RegisterExtension
