@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.aws;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -64,19 +63,14 @@ class AwsConnector {
 
     awsConnector.sqsClient =
         (AmazonSQSAsyncClient)
-            AmazonSQSAsyncClient.asyncBuilder()
-                .withCredentials(new DefaultAWSCredentialsProviderChain())
-                .withRegion(Regions.US_EAST_1)
-                .build();
+            AmazonSQSAsyncClient.asyncBuilder().withRegion(Regions.US_EAST_1).build();
 
     awsConnector.s3Client =
-        (AmazonS3Client)
-            AmazonS3Client.builder()
-                .withCredentials(new DefaultAWSCredentialsProviderChain())
-                .withRegion(Regions.US_EAST_1)
-                .build();
+        (AmazonS3Client) AmazonS3Client.builder().withRegion(Regions.US_EAST_1).build();
 
-    awsConnector.snsClient = (AmazonSNSAsyncClient) AmazonSNSAsyncClient.asyncBuilder().build();
+    awsConnector.snsClient =
+        (AmazonSNSAsyncClient)
+            AmazonSNSAsyncClient.asyncBuilder().withRegion(Regions.US_EAST_1).build();
 
     return awsConnector;
   }

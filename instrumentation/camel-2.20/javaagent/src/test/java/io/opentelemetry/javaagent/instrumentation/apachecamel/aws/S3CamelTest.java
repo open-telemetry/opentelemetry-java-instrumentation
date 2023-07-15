@@ -12,23 +12,30 @@ import com.amazonaws.services.sqs.model.PurgeQueueInProgressException;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Disabled("Does not work with localstack - X-Ray features needed")
+ @Disabled("Does not work with localstack - X-Ray features needed")
 public class S3CamelTest {
 
   @RegisterExtension
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  public static AwsConnector awsConnector = AwsConnector.liveAws();
   private static final Logger logger = LoggerFactory.getLogger(S3CamelTest.class);
 
   // To account for any delay interacting with real AWS environment
   private static final int sqsDelay = 10000;
+
+  private static AwsConnector awsConnector;
+
+  @BeforeAll
+  protected static void setUp() {
+    awsConnector = AwsConnector.liveAws();
+  }
 
   private static void waitAndClearSetupTraces(
       String queueUrl, String queueName, String bucketName) {

@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -26,7 +27,12 @@ class SnsCamelTest {
 
   private static final Logger logger = LoggerFactory.getLogger(SnsCamelTest.class);
 
-  private static final AwsConnector awsConnector = AwsConnector.liveAws();
+  private static AwsConnector awsConnector;
+
+  @BeforeAll
+  protected static void setUp() {
+    awsConnector = AwsConnector.liveAws();
+  }
 
   @Test
   void awsSdkSnsProducerToCamelSqsConsumer() {
