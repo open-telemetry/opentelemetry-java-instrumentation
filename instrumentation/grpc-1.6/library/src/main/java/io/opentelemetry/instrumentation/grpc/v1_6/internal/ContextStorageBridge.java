@@ -128,7 +128,7 @@ public final class ContextStorageBridge extends Context.Storage {
       if (!propagateGrpcDeadline && originalStorage != null) {
         Context originalCurrent = originalStorage.current();
         // check whether grpc context would have propagated without otel context
-        if (originalCurrent == null) {
+        if (originalCurrent == null || originalCurrent == Context.ROOT) {
           // Because we are propagating gRPC context via OpenTelemetry here, we may also propagate a
           // deadline where it wasn't present before. Notably, this could happen with no user
           // intention when using the javaagent which will add OpenTelemetry propagation
