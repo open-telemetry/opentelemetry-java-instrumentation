@@ -28,7 +28,7 @@ testing {
     val testDisableThreadLocals by registering(JvmTestSuite::class) {
       sources {
         groovy {
-          setSrcDirs(listOf("src/test/groovy"))
+          setSrcDirs(listOf("src/test/groovy")).exclude("AutoLog4jBaggageTest.groovy")
         }
       }
       dependencies {
@@ -53,9 +53,22 @@ tasks {
   test {
     jvmArgs("-Dlog4j2.is.webapp=false")
     jvmArgs("-Dlog4j2.enable.threadlocals=true")
+    filter {
+      excludeTestsMatching("AutoLog4jBaggageTest")
+    }
+  }
+
+  val testAddBaggage by registering(Test::class) {
+    filter {
+      includeTestsMatching("AutoLog4jBaggageTest")
+    }
+    jvmArgs("-Dlog4j2.is.webapp=false")
+    jvmArgs("-Dlog4j2.enable.threadlocals=true")
+    jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
   }
 
   named("check") {
     dependsOn(testing.suites)
+    dependsOn(testAddBaggage)
   }
 }

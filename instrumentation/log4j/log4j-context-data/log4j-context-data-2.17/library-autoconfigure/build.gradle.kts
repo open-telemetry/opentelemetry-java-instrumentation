@@ -9,3 +9,22 @@ dependencies {
 
   testImplementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
 }
+
+tasks {
+  test {
+    filter {
+      excludeTestsMatching("LibraryLog4j2BaggageTest")
+    }
+  }
+
+  val testAddBaggage by registering(Test::class) {
+    filter {
+      includeTestsMatching("LibraryLog4j2BaggageTest")
+    }
+    jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
+  }
+
+  named("check") {
+    dependsOn(testAddBaggage)
+  }
+}
