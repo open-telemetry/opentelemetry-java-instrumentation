@@ -125,6 +125,8 @@ public final class RatpackTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
    */
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setKnownMethods(Set<String> knownMethods) {

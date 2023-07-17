@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.netty.v4_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.server.NettyServerInstrumenterFactory;
 import java.util.Collections;
 import java.util.List;
@@ -60,6 +61,7 @@ public final class NettyServerTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
    */
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {

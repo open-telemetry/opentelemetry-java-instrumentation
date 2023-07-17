@@ -80,6 +80,7 @@ public final class SpringWebTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
    */
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder setKnownMethods(Set<String> knownMethods) {

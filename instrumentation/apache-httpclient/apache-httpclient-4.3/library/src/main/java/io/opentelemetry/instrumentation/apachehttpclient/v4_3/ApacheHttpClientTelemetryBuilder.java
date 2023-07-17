@@ -84,6 +84,7 @@ public final class ApacheHttpClientTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
    */
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {

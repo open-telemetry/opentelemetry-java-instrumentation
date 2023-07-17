@@ -79,6 +79,7 @@ public final class RestletTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
    */
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
