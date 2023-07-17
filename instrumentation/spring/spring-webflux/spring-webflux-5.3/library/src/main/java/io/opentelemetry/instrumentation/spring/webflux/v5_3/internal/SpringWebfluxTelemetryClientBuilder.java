@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtr
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxTelemetry;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
@@ -90,6 +91,12 @@ public final class SpringWebfluxTelemetryClientBuilder {
   public SpringWebfluxTelemetryClientBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public SpringWebfluxTelemetryClientBuilder setKnownMethods(Set<String> knownMethods) {
+    httpClientAttributesExtractorBuilder.setKnownMethods(knownMethods);
     return this;
   }
 

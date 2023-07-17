@@ -7,8 +7,12 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 
 import static java.util.Collections.emptyMap;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -27,6 +31,7 @@ public final class CommonConfig {
   private final List<String> clientResponseHeaders;
   private final List<String> serverRequestHeaders;
   private final List<String> serverResponseHeaders;
+  private final Set<String> knownHttpRequestMethods;
   private final boolean statementSanitizationEnabled;
 
   CommonConfig(InstrumentationConfig config) {
@@ -54,7 +59,11 @@ public final class CommonConfig {
             config,
             "otel.instrumentation.http.capture-headers.server.response",
             "otel.instrumentation.http.server.capture-response-headers");
-
+    knownHttpRequestMethods =
+        new HashSet<>(
+            config.getList(
+                "otel.instrumentation.http.known-methods",
+                new ArrayList<>(HttpConstants.KNOWN_METHODS)));
     statementSanitizationEnabled =
         config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
   }
@@ -77,6 +86,10 @@ public final class CommonConfig {
 
   public List<String> getServerResponseHeaders() {
     return serverResponseHeaders;
+  }
+
+  public Set<String> getKnownHttpRequestMethods() {
+    return knownHttpRequestMethods;
   }
 
   public boolean isStatementSanitizationEnabled() {

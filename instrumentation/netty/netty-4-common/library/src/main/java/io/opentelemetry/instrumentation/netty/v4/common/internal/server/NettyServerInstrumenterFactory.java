@@ -10,12 +10,15 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.util.List;
+import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -27,19 +30,23 @@ public final class NettyServerInstrumenterFactory {
       OpenTelemetry openTelemetry,
       String instrumentationName,
       List<String> capturedRequestHeaders,
-      List<String> capturedResponseHeaders) {
+      List<String> capturedResponseHeaders,
+      @Nullable Set<String> knownMethods) {
 
     NettyHttpServerAttributesGetter httpAttributesGetter = new NettyHttpServerAttributesGetter();
 
+    HttpServerAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse> extractorBuilder =
+        HttpServerAttributesExtractor.builder(
+                httpAttributesGetter, new NettyNetServerAttributesGetter())
+            .setCapturedRequestHeaders(capturedRequestHeaders)
+            .setCapturedResponseHeaders(capturedResponseHeaders);
+    if (knownMethods != null) {
+      extractorBuilder.setKnownMethods(knownMethods);
+    }
     return Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
             openTelemetry, instrumentationName, HttpSpanNameExtractor.create(httpAttributesGetter))
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-        .addAttributesExtractor(
-            HttpServerAttributesExtractor.builder(
-                    httpAttributesGetter, new NettyNetServerAttributesGetter())
-                .setCapturedRequestHeaders(capturedRequestHeaders)
-                .setCapturedResponseHeaders(capturedResponseHeaders)
-                .build())
+        .addAttributesExtractor(extractorBuilder.build())
         .addOperationMetrics(HttpServerMetrics.get())
         .addContextCustomizer((context, request, attributes) -> NettyErrorHolder.init(context))
         .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))

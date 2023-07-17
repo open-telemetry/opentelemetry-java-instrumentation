@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -78,12 +79,14 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
-      List<String> capturedResponseHeaders) {
+      List<String> capturedResponseHeaders,
+      Set<String> knownMethods) {
     this(
         httpAttributesGetter,
         netAttributesGetter,
         capturedRequestHeaders,
         capturedResponseHeaders,
+        knownMethods,
         HttpRouteHolder::getRoute);
   }
 
@@ -93,8 +96,9 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders,
+      Set<String> knownMethods,
       Function<Context, String> httpRouteHolderGetter) {
-    super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
+    super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders, knownMethods);
     HttpNetAddressPortExtractor<REQUEST> addressPortExtractor =
         new HttpNetAddressPortExtractor<>(httpAttributesGetter);
     internalUrlExtractor =

@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
@@ -56,6 +57,12 @@ public final class JettyClientInstrumenterBuilder {
   @CanIgnoreReturnValue
   public JettyClientInstrumenterBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public JettyClientInstrumenterBuilder setKnownMethods(Set<String> knownMethods) {
+    httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
     return this;
   }
 

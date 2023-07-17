@@ -20,6 +20,7 @@ public final class RestletSingletons {
       RestletTelemetry.builder(GlobalOpenTelemetry.get())
           .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
           .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+          .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
           .build()
           .getServerInstrumenter();
 

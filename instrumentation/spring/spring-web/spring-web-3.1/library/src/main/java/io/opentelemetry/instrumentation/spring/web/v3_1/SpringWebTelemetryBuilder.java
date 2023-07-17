@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
 
@@ -65,6 +66,25 @@ public final class SpringWebTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the instrumentation to recognize an alternative set of HTTP request methods.
+   *
+   * <p>By default, this instrumentation defines "known" methods as the ones listed in <a
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
+   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   *
+   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
+   * not supplement it.
+   *
+   * @param knownMethods A set of recognized HTTP request methods.
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   */
+  @CanIgnoreReturnValue
+  public SpringWebTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+    httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
     return this;
   }
 

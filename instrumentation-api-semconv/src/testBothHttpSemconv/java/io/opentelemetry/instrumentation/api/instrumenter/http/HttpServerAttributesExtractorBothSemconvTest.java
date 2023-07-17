@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributes
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -156,6 +157,7 @@ class HttpServerAttributesExtractorBothSemconvTest {
             new TestNetServerAttributesGetter(),
             singletonList("Custom-Request-Header"),
             singletonList("Custom-Response-Header"),
+            HttpConstants.KNOWN_METHODS,
             routeFromContext);
 
     AttributesBuilder startAttributes = Attributes.builder();

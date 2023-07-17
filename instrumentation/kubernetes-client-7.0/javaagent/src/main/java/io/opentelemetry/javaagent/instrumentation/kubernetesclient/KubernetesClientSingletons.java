@@ -41,6 +41,7 @@ public class KubernetesClientSingletons {
                 HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build());
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {

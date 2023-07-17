@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHtt
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.requestAttributeKey;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.responseAttributeKey;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -17,7 +18,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -35,19 +38,29 @@ abstract class HttpCommonAttributesExtractor<
   final GETTER getter;
   private final List<String> capturedRequestHeaders;
   private final List<String> capturedResponseHeaders;
+  private final Set<String> knownMethods;
 
   HttpCommonAttributesExtractor(
-      GETTER getter, List<String> capturedRequestHeaders, List<String> capturedResponseHeaders) {
+      GETTER getter,
+      List<String> capturedRequestHeaders,
+      List<String> capturedResponseHeaders,
+      Set<String> knownMethods) {
     this.getter = getter;
     this.capturedRequestHeaders = lowercase(capturedRequestHeaders);
     this.capturedResponseHeaders = lowercase(capturedResponseHeaders);
+    this.knownMethods = new HashSet<>(knownMethods);
   }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     String method = getter.getHttpRequestMethod(request);
     if (SemconvStability.emitStableHttpSemconv()) {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+      if (knownMethods.contains(method)) {
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+      } else {
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      }
     }
     if (SemconvStability.emitOldHttpSemconv()) {
       internalSet(attributes, SemanticAttributes.HTTP_METHOD, method);
