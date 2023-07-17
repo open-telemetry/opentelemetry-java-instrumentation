@@ -11,7 +11,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 class CamelSpanAssertions {
@@ -25,13 +24,8 @@ class CamelSpanAssertions {
         .hasAttribute(stringKey("camel.uri"), "direct://" + spanName);
   }
 
-  static void sqsProduce(SpanDataAssert span, int index, String queueName, SpanData parentSpan) {
-    if (index == 0) {
-      span.hasNoParent();
-    } else {
-      span.hasParentSpanId(parentSpan.getSpanId());
-    }
-    span.hasName(queueName)
+  static SpanDataAssert sqsProduce(SpanDataAssert span, String queueName) {
+    return span.hasName(queueName)
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
             equalTo(
@@ -40,18 +34,12 @@ class CamelSpanAssertions {
             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, queueName));
   }
 
-  static void sqsConsume(SpanDataAssert span, int index, String queueName, SpanData parentSpan) {
-    sqsConsume(span, index, queueName, parentSpan, 1000);
+  static SpanDataAssert sqsConsume(SpanDataAssert span, String queueName) {
+    return sqsConsume(span, queueName, 1000);
   }
 
-  static void sqsConsume(
-      SpanDataAssert span, int index, String queueName, SpanData parentSpan, int delay) {
-    if (index == 0) {
-      span.hasNoParent();
-    } else {
-      span.hasParentSpanId(parentSpan.getSpanId());
-    }
-    span.hasName(queueName)
+  static SpanDataAssert sqsConsume(SpanDataAssert span, String queueName, int delay) {
+    return span.hasName(queueName)
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfying(
             equalTo(
@@ -63,13 +51,8 @@ class CamelSpanAssertions {
                 stringAssert -> stringAssert.isInstanceOf(String.class)));
   }
 
-  static void snsPublish(SpanDataAssert span, int index, String topicName, SpanData parentSpan) {
-    if (index == 0) {
-      span.hasNoParent();
-    } else {
-      span.hasParentSpanId(parentSpan.getSpanId());
-    }
-    span.hasName(topicName)
+  static SpanDataAssert snsPublish(SpanDataAssert span, String topicName) {
+    return span.hasName(topicName)
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfying(
             equalTo(
@@ -77,13 +60,8 @@ class CamelSpanAssertions {
             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, topicName));
   }
 
-  static void s3(SpanDataAssert span, int index, SpanData parentSpan, String bucketName) {
-    if (index == 0) {
-      span.hasNoParent();
-    } else {
-      span.hasParentSpanId(parentSpan.getSpanId());
-    }
-    span.hasName("aws-s3")
+  static SpanDataAssert s3(SpanDataAssert span, String bucketName) {
+    return span.hasName("aws-s3")
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfying(
             equalTo(

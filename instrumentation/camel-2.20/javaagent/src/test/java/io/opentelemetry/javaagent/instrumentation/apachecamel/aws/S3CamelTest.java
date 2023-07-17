@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Disabled("Does not work with localstack - X-Ray features needed")
-public class S3CamelTest {
+class S3CamelTest {
 
   @RegisterExtension
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -35,37 +35,6 @@ public class S3CamelTest {
   @BeforeAll
   protected static void setUp() {
     awsConnector = AwsConnector.liveAws();
-  }
-
-  private static void waitAndClearSetupTraces(
-      String queueUrl, String queueName, String bucketName) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.CreateQueue", queueUrl, queueName)),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.s3(span, 0, "S3.CreateBucket", bucketName, "PUT", null)),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.GetQueueAttributes", queueUrl)),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.SetQueueAttributes", queueUrl)),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    AwsSpanAssertions.s3(
-                        span, 0, "S3.SetBucketNotificationConfiguration", bucketName, "PUT", null)),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.ReceiveMessage", queueUrl)),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    AwsSpanAssertions.sqs(
-                        span, 0, "SQS.ReceiveMessage", queueUrl, null, CONSUMER)));
-    testing.clearData();
   }
 
   @Test
@@ -88,31 +57,34 @@ public class S3CamelTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.ListQueues")),
+                span -> AwsSpanAssertions.sqs(span, "SQS.ListQueues").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.s3(span, 0, "S3.ListObjects", bucketName, "GET", null)),
+                span ->
+                    AwsSpanAssertions.s3(span, "S3.ListObjects", bucketName, "GET").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> CamelSpanAssertions.direct(span, "input"),
-                span -> CamelSpanAssertions.s3(span, 1, trace.getSpan(0), bucketName),
+                span -> CamelSpanAssertions.s3(span, bucketName).hasParent(trace.getSpan(0)),
                 span ->
-                    AwsSpanAssertions.s3(
-                        span, 2, "S3.PutObject", bucketName, "PUT", trace.getSpan(1)),
+                    AwsSpanAssertions.s3(span, "S3.PutObject", bucketName, "PUT")
+                        .hasParent(trace.getSpan(1)),
                 span ->
-                    AwsSpanAssertions.sqs(
-                        span, 3, "SQS.ReceiveMessage", queueUrl, null, CONSUMER, trace.getSpan(2)),
+                    AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl, null, CONSUMER)
+                        .hasParent(trace.getSpan(2)),
                 span ->
-                    CamelSpanAssertions.sqsConsume(span, 4, queueName, trace.getSpan(2), sqsDelay)),
+                    CamelSpanAssertions.sqsConsume(span, queueName, sqsDelay)
+                        .hasParent(trace.getSpan(2))),
         // HTTP "client" receiver span, one per each SQS request
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    AwsSpanAssertions.sqs(span, 0, "SQS.ReceiveMessage", queueUrl, null, CLIENT)),
+                    AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl, null, CLIENT)
+                        .hasNoParent()),
         // camel cleaning received msg
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.DeleteMessage", queueUrl)));
+                span -> AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl).hasNoParent()));
 
     camelApp.stop();
     awsConnector.deleteBucket(bucketName);
@@ -135,5 +107,42 @@ public class S3CamelTest {
     awsConnector.receiveMessage(queueUrl);
 
     return queueUrl;
+  }
+
+  private static void waitAndClearSetupTraces(
+      String queueUrl, String queueName, String bucketName) {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.CreateQueue", queueUrl, queueName)
+                        .hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.s3(span, "S3.CreateBucket", bucketName, "PUT").hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.GetQueueAttributes", queueUrl).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.SetQueueAttributes", queueUrl).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.s3(
+                            span, "S3.SetBucketNotificationConfiguration", bucketName, "PUT")
+                        .hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl, null, CONSUMER)
+                        .hasNoParent()));
+    testing.clearData();
   }
 }

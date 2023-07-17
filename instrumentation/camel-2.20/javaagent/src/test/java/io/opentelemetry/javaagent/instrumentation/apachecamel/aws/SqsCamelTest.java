@@ -29,7 +29,7 @@ class SqsCamelTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.CreateQueue", queueUrl, queueName)));
+                span -> AwsSpanAssertions.sqs(span, "SQS.CreateQueue", queueUrl, queueName)));
     testing.clearData();
   }
 
@@ -48,45 +48,28 @@ class SqsCamelTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(1)
-                .hasSpansSatisfyingExactly(
-                    span -> AwsSpanAssertions.sqs(span, 0, "SQS.ListQueues")),
+            trace.hasSpansSatisfyingExactly(
+                span -> AwsSpanAssertions.sqs(span, "SQS.ListQueues").hasNoParent()),
         trace ->
-            trace
-                .hasSize(5)
-                .hasSpansSatisfyingExactly(
-                    span -> CamelSpanAssertions.direct(span, "input"),
-                    span -> CamelSpanAssertions.sqsProduce(span, 1, queueName, trace.getSpan(0)),
-                    span ->
-                        AwsSpanAssertions.sqs(
-                            span,
-                            2,
-                            "SQS.SendMessage",
-                            queueUrl,
-                            null,
-                            SpanKind.PRODUCER,
-                            trace.getSpan(1)),
-                    span ->
-                        AwsSpanAssertions.sqs(
-                            span,
-                            3,
-                            "SQS.ReceiveMessage",
-                            queueUrl,
-                            null,
-                            SpanKind.CONSUMER,
-                            trace.getSpan(2)),
-                    span -> CamelSpanAssertions.sqsConsume(span, 4, queueName, trace.getSpan(2))),
+            trace.hasSpansSatisfyingExactly(
+                span -> CamelSpanAssertions.direct(span, "input"),
+                span -> CamelSpanAssertions.sqsProduce(span, queueName).hasParent(trace.getSpan(0)),
+                span ->
+                    AwsSpanAssertions.sqs(
+                            span, "SQS.SendMessage", queueUrl, null, SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(1)),
+                span ->
+                    AwsSpanAssertions.sqs(
+                            span, "SQS.ReceiveMessage", queueUrl, null, SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(2)),
+                span ->
+                    CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(2))),
         trace ->
-            trace
-                .hasSize(1)
-                .hasSpansSatisfyingExactly(
-                    span -> AwsSpanAssertions.sqs(span, 0, "SQS.ReceiveMessage", queueUrl)),
+            trace.hasSpansSatisfyingExactly(
+                span -> AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl).hasNoParent()),
         trace ->
-            trace
-                .hasSize(1)
-                .hasSpansSatisfyingExactly(
-                    span -> AwsSpanAssertions.sqs(span, 0, "SQS.DeleteMessage", queueUrl)));
+            trace.hasSpansSatisfyingExactly(
+                span -> AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl).hasNoParent()));
     camelApp.stop();
   }
 
@@ -105,42 +88,29 @@ class SqsCamelTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(1)
-                .hasSpansSatisfyingExactly(
-                    span -> AwsSpanAssertions.sqs(span, 0, "SQS.ListQueues")),
+            trace.hasSpansSatisfyingExactly(
+                span -> AwsSpanAssertions.sqs(span, "SQS.ListQueues").hasNoParent()),
         trace ->
-            trace
-                .hasSize(3)
-                .hasSpansSatisfyingExactly(
-                    span ->
-                        AwsSpanAssertions.sqs(
-                            span, 0, "SQS.SendMessage", queueUrl, null, SpanKind.PRODUCER),
-                    span ->
-                        AwsSpanAssertions.sqs(
-                            span,
-                            1,
-                            "SQS.ReceiveMessage",
-                            queueUrl,
-                            null,
-                            SpanKind.CONSUMER,
-                            trace.getSpan(0)),
-                    span -> CamelSpanAssertions.sqsConsume(span, 2, queueName, trace.getSpan(0))),
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.sqs(
+                            span, "SQS.SendMessage", queueUrl, null, SpanKind.PRODUCER)
+                        .hasNoParent(),
+                span ->
+                    AwsSpanAssertions.sqs(
+                            span, "SQS.ReceiveMessage", queueUrl, null, SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(0))),
         trace ->
-            trace
-                .hasSize(1)
-                .hasSpansSatisfyingExactly(
-                    span -> AwsSpanAssertions.sqs(span, 0, "SQS.ReceiveMessage", queueUrl)),
+            trace.hasSpansSatisfyingExactly(
+                span -> AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl).hasNoParent()),
         trace ->
-            trace
-                .hasSize(1)
-                .hasSpansSatisfyingExactly(
-                    span -> AwsSpanAssertions.sqs(span, 0, "SQS.DeleteMessage", queueUrl)),
+            trace.hasSpansSatisfyingExactly(
+                span -> AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl).hasNoParent()),
         trace ->
-            trace
-                .hasSize(1)
-                .hasSpansSatisfyingExactly(
-                    span -> AwsSpanAssertions.sqs(span, 0, "SQS.ReceiveMessage", queueUrl)));
+            trace.hasSpansSatisfyingExactly(
+                span -> AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl).hasNoParent()));
     camelApp.stop();
   }
 
@@ -160,43 +130,26 @@ class SqsCamelTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(1)
-                .hasSpansSatisfyingExactly(
-                    span -> AwsSpanAssertions.sqs(span, 0, "SQS.ListQueues")),
+            trace.hasSpansSatisfyingExactly(span -> AwsSpanAssertions.sqs(span, "SQS.ListQueues")),
         trace ->
-            trace
-                .hasSize(4)
-                .hasSpansSatisfyingExactly(
-                    span -> CamelSpanAssertions.direct(span, "inputSdkConsumer"),
-                    span -> CamelSpanAssertions.sqsProduce(span, 1, queueName, trace.getSpan(0)),
-                    span ->
-                        AwsSpanAssertions.sqs(
-                            span,
-                            2,
-                            "SQS.SendMessage",
-                            queueUrl,
-                            null,
-                            SpanKind.PRODUCER,
-                            trace.getSpan(1)),
-                    span ->
-                        AwsSpanAssertions.sqs(
-                            span,
-                            3,
-                            "SQS.ReceiveMessage",
-                            queueUrl,
-                            null,
-                            SpanKind.CONSUMER,
-                            trace.getSpan(2))),
+            trace.hasSpansSatisfyingExactly(
+                span -> CamelSpanAssertions.direct(span, "inputSdkConsumer"),
+                span -> CamelSpanAssertions.sqsProduce(span, queueName).hasParent(trace.getSpan(0)),
+                span ->
+                    AwsSpanAssertions.sqs(
+                            span, "SQS.SendMessage", queueUrl, null, SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(1)),
+                span ->
+                    AwsSpanAssertions.sqs(
+                            span, "SQS.ReceiveMessage", queueUrl, null, SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(2))),
         /*
          * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
          * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
          */
         trace ->
-            trace
-                .hasSize(1)
-                .hasSpansSatisfyingExactly(
-                    span -> AwsSpanAssertions.sqs(span, 0, "SQS.ReceiveMessage", queueUrl)));
+            trace.hasSpansSatisfyingExactly(
+                span -> AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl).hasNoParent()));
     camelApp.stop();
   }
 }

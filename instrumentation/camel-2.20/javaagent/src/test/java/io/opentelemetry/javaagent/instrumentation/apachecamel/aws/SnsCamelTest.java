@@ -10,8 +10,6 @@ import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.HashMap;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -45,48 +43,48 @@ class SnsCamelTest {
             SnsConfig.class,
             ImmutableMap.of("topicName", topicName, "queueName", queueName));
 
-    Map<String, String> metaData = setupTestInfrastructure(queueName, topicName);
-    String queueUrl = metaData.get("queueUrl");
-    String topicArn = metaData.get("topicArn");
-    waitAndClearSetupTraces(queueUrl, queueName);
+    SnsMetadata metaData = setupTestInfrastructure(queueName, topicName);
+    waitAndClearSetupTraces(metaData.queueUrl, queueName);
 
     camelApp.start();
-    awsConnector.publishSampleNotification(topicArn);
+    awsConnector.publishSampleNotification(metaData.topicArn);
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.ListQueues")),
+                span -> AwsSpanAssertions.sqs(span, "SQS.ListQueues").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sns(span, 0, "SNS.ListTopics", null)),
+                span -> AwsSpanAssertions.sns(span, "SNS.ListTopics").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sns(span, 0, "SNS.Publish", null),
+                span -> AwsSpanAssertions.sns(span, "SNS.Publish").hasNoParent(),
                 span ->
                     AwsSpanAssertions.sqs(
-                        span,
-                        1,
-                        "SQS.ReceiveMessage",
-                        queueUrl,
-                        null,
-                        SpanKind.CONSUMER,
-                        trace.getSpan(0)),
-                span -> CamelSpanAssertions.sqsConsume(span, 2, queueName, trace.getSpan(0))),
+                            span, "SQS.ReceiveMessage", metaData.queueUrl, null, SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(0))),
         // http client span
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.ReceiveMessage", queueUrl)),
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", metaData.queueUrl)
+                        .hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.DeleteMessage", queueUrl)),
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", metaData.queueUrl)
+                        .hasNoParent()),
         // camel polling
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.ReceiveMessage", queueUrl)));
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", metaData.queueUrl)
+                        .hasNoParent()));
 
     try {
-      awsConnector.purgeQueue(queueUrl);
+      awsConnector.purgeQueue(metaData.queueUrl);
     } catch (PurgeQueueInProgressException e) {
       logger.warn("Throttled by AWS trying to purge queue, try doing it manually.");
     }
@@ -104,8 +102,8 @@ class SnsCamelTest {
             SnsConfig.class,
             ImmutableMap.of("topicName", topicName, "queueName", queueName));
 
-    Map<String, String> metaData = setupTestInfrastructure(queueName, topicName);
-    String queueUrl = metaData.get("queueUrl");
+    SnsMetadata metaData = setupTestInfrastructure(queueName, topicName);
+    String queueUrl = metaData.queueUrl;
     waitAndClearSetupTraces(queueUrl, queueName);
 
     camelApp.start();
@@ -114,35 +112,31 @@ class SnsCamelTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.ListQueues")),
+                span -> AwsSpanAssertions.sqs(span, "SQS.ListQueues").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sns(span, 0, "SNS.ListTopics", null)),
+                span -> AwsSpanAssertions.sns(span, "SNS.ListTopics").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> CamelSpanAssertions.direct(span, "input"),
-                span -> CamelSpanAssertions.snsPublish(span, 1, topicName, trace.getSpan(0)),
-                span -> AwsSpanAssertions.sns(span, 2, "SNS.Publish", trace.getSpan(1)),
+                span -> CamelSpanAssertions.snsPublish(span, topicName).hasParent(trace.getSpan(0)),
+                span -> AwsSpanAssertions.sns(span, "SNS.Publish").hasParent(trace.getSpan(1)),
                 span ->
                     AwsSpanAssertions.sqs(
-                        span,
-                        3,
-                        "SQS.ReceiveMessage",
-                        queueUrl,
-                        null,
-                        SpanKind.CONSUMER,
-                        trace.getSpan(2)),
-                span -> CamelSpanAssertions.sqsConsume(span, 4, queueName, trace.getSpan(2))),
+                            span, "SQS.ReceiveMessage", queueUrl, null, SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(2)),
+                span ->
+                    CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(2))),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.ReceiveMessage", queueUrl)),
+                span -> AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl).hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.DeleteMessage", queueUrl)),
+                span -> AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl).hasNoParent()),
         // camel polling
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.ReceiveMessage", queueUrl)));
+                span -> AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl).hasNoParent()));
 
     try {
       awsConnector.purgeQueue(queueUrl);
@@ -156,27 +150,31 @@ class SnsCamelTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.CreateQueue", queueUrl, queueName)),
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.CreateQueue", queueUrl, queueName)
+                        .hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.GetQueueAttributes", queueUrl)),
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.GetQueueAttributes", queueUrl).hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.SetQueueAttributes", queueUrl)),
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.SetQueueAttributes", queueUrl).hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sns(span, 0, "SNS.CreateTopic", null)),
+                span -> AwsSpanAssertions.sns(span, "SNS.CreateTopic").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sns(span, 0, "SNS.Subscribe", null)),
+                span -> AwsSpanAssertions.sns(span, "SNS.Subscribe").hasNoParent()),
         // test message
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, 0, "SQS.ReceiveMessage", queueUrl)));
+                span -> AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl).hasNoParent()));
     testing.clearData();
   }
 
-  Map<String, String> setupTestInfrastructure(String queueName, String topicName) {
+  SnsMetadata setupTestInfrastructure(String queueName, String topicName) {
     // setup infra
     String queueUrl = awsConnector.createQueue(queueName);
     String queueArn = awsConnector.getQueueArn(queueUrl);
@@ -186,9 +184,16 @@ class SnsCamelTest {
     // consume test message from AWS
     awsConnector.receiveMessage(queueUrl);
 
-    Map<String, String> metaData = new HashMap<>();
-    metaData.put("queueUrl", queueUrl);
-    metaData.put("topicArn", topicArn);
-    return metaData;
+    return new SnsMetadata(queueUrl, topicArn);
+  }
+
+  private static final class SnsMetadata {
+    private final String queueUrl;
+    private final String topicArn;
+
+    public SnsMetadata(String queueUrl, String topicArn) {
+      this.queueUrl = queueUrl;
+      this.topicArn = topicArn;
+    }
   }
 }

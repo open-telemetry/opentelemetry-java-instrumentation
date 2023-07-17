@@ -14,51 +14,29 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 class AwsSpanAssertions {
 
   private AwsSpanAssertions() {}
 
-  static void sqs(SpanDataAssert span, int index, String spanName) {
-    sqs(span, index, spanName, null, null, CLIENT, null);
+  static SpanDataAssert sqs(SpanDataAssert span, String spanName) {
+    return sqs(span, spanName, null, null, CLIENT);
   }
 
-  static void sqs(SpanDataAssert span, int index, String spanName, String queueUrl) {
-    sqs(span, index, spanName, queueUrl, null, CLIENT, null);
+  static SpanDataAssert sqs(SpanDataAssert span, String spanName, String queueUrl) {
+    return sqs(span, spanName, queueUrl, null, CLIENT);
   }
 
-  static void sqs(
-      SpanDataAssert span, int index, String spanName, String queueUrl, String queueName) {
-    sqs(span, index, spanName, queueUrl, queueName, CLIENT, null);
+  static SpanDataAssert sqs(
+      SpanDataAssert span, String spanName, String queueUrl, String queueName) {
+    return sqs(span, spanName, queueUrl, queueName, CLIENT);
   }
 
-  public static void sqs(
-      SpanDataAssert span,
-      int index,
-      String spanName,
-      String queueUrl,
-      String queueName,
-      SpanKind spanKind) {
-    sqs(span, index, spanName, queueUrl, queueName, spanKind, null);
-  }
+  static SpanDataAssert sqs(
+      SpanDataAssert span, String spanName, String queueUrl, String queueName, SpanKind spanKind) {
 
-  static void sqs(
-      SpanDataAssert span,
-      int index,
-      String spanName,
-      String queueUrl,
-      String queueName,
-      SpanKind spanKind,
-      SpanData parentSpan) {
-    if (index == 0) {
-      span.hasNoParent();
-    } else {
-      span.hasParent(parentSpan);
-    }
-
-    span.hasName(spanName)
+    return span.hasName(spanName)
         .hasKind(spanKind)
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
@@ -91,12 +69,7 @@ class AwsSpanAssertions {
                     val.satisfiesAnyOf(
                         v -> assertThat(v).isNull(),
                         v -> assertThat(v).isInstanceOf(String.class))),
-            satisfies(
-                SemanticAttributes.HTTP_URL,
-                val ->
-                    val.satisfiesAnyOf(
-                        v -> assertThat(v).isNull(),
-                        v -> assertThat(v).isInstanceOf(String.class))),
+            satisfies(SemanticAttributes.HTTP_URL, val -> val.isInstanceOf(String.class)),
             satisfies(
                 stringKey("net.peer.name"),
                 stringAssert -> stringAssert.isInstanceOf(String.class)),
@@ -115,19 +88,8 @@ class AwsSpanAssertions {
             equalTo(stringKey("rpc.service"), "AmazonSQS"));
   }
 
-  static void s3(
-      SpanDataAssert span,
-      int index,
-      String spanName,
-      String bucketName,
-      String method,
-      SpanData parentSpan) {
-    if (index == 0) {
-      span.hasNoParent();
-    } else {
-      span.hasParent(parentSpan);
-    }
-    span.hasName(spanName)
+  static SpanDataAssert s3(SpanDataAssert span, String spanName, String bucketName, String method) {
+    return span.hasName(spanName)
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             satisfies(stringKey("aws.endpoint"), val -> val.isInstanceOf(String.class)),
@@ -153,13 +115,8 @@ class AwsSpanAssertions {
                         v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
   }
 
-  static void sns(SpanDataAssert span, int index, String spanName, SpanData parentSpan) {
-    if (index == 0) {
-      span.hasNoParent();
-    } else {
-      span.hasParent(parentSpan);
-    }
-    span.hasName(spanName)
+  static SpanDataAssert sns(SpanDataAssert span, String spanName) {
+    return span.hasName(spanName)
         .hasKind(CLIENT)
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
