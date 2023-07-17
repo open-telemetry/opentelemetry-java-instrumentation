@@ -33,14 +33,14 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
   public static final InstrumentationExtension testing =
       HttpClientInstrumentationExtension.forAgent();
 
-  private static final Long CONNECTION_TIMEOUT_MS = CONNECTION_TIMEOUT.toMillis();
-  private static final Long READ_TIMEOUT_MS = READ_TIMEOUT.toMillis();
+  private static final long CONNECTION_TIMEOUT_MS = CONNECTION_TIMEOUT.toMillis();
+  private static final long READ_TIMEOUT_MS = READ_TIMEOUT.toMillis();
 
   private static final AsyncHttpClient client =
       new AsyncHttpClient(
           new AsyncHttpClientConfig.Builder()
-              .setConnectTimeout(CONNECTION_TIMEOUT_MS.intValue())
-              .setReadTimeout(READ_TIMEOUT_MS.intValue())
+              .setConnectTimeout((int) CONNECTION_TIMEOUT_MS)
+              .setReadTimeout((int) READ_TIMEOUT_MS)
               .build());
 
   @Override
