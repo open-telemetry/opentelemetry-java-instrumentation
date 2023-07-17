@@ -28,14 +28,14 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
   public static final InstrumentationExtension testing =
       HttpClientInstrumentationExtension.forAgent();
 
-  private static final Long CONNECTION_TIMEOUT_MS = CONNECTION_TIMEOUT.toMillis();
+  private static final int CONNECTION_TIMEOUT_MS = (int) CONNECTION_TIMEOUT.toMillis();
 
   // request timeout is needed in addition to connect timeout on async-http-client versions 2.1.0+
   private static final AsyncHttpClient client =
       Dsl.asyncHttpClient(
           Dsl.config()
-              .setConnectTimeout(CONNECTION_TIMEOUT_MS.intValue())
-              .setRequestTimeout(CONNECTION_TIMEOUT_MS.intValue()));
+              .setConnectTimeout(CONNECTION_TIMEOUT_MS)
+              .setRequestTimeout(CONNECTION_TIMEOUT_MS));
 
   @Override
   public Request buildRequest(String method, URI uri, Map<String, String> headers) {
