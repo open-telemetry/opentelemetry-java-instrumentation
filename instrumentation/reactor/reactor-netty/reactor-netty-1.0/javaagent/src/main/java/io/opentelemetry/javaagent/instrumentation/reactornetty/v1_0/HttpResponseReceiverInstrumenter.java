@@ -54,7 +54,7 @@ public final class HttpResponseReceiverInstrumenter {
     return null;
   }
 
-  static final class CaptureParentContext
+  private static final class CaptureParentContext
       implements Function<Mono<? extends Connection>, Mono<? extends Connection>> {
 
     private final InstrumentationContexts instrumentationContexts;
@@ -79,7 +79,7 @@ public final class HttpResponseReceiverInstrumenter {
     }
   }
 
-  static final class StartOperation implements BiConsumer<HttpClientRequest, Connection> {
+  private static final class StartOperation implements BiConsumer<HttpClientRequest, Connection> {
 
     private final InstrumentationContexts instrumentationContexts;
 
@@ -100,7 +100,7 @@ public final class HttpResponseReceiverInstrumenter {
     }
   }
 
-  static final class EndOperationWithRequestError
+  private static final class EndOperationWithRequestError
       implements BiConsumer<HttpClientRequest, Throwable> {
 
     private final InstrumentationContexts instrumentationContexts;
@@ -127,7 +127,7 @@ public final class HttpResponseReceiverInstrumenter {
     }
   }
 
-  static final class EndOperationWithResponseError
+  private static final class EndOperationWithResponseError
       implements BiConsumer<HttpClientResponse, Throwable> {
 
     private final InstrumentationContexts instrumentationContexts;
@@ -142,7 +142,8 @@ public final class HttpResponseReceiverInstrumenter {
     }
   }
 
-  static final class EndOperationWithSuccess implements BiConsumer<HttpClientResponse, Connection> {
+  private static final class EndOperationWithSuccess
+      implements BiConsumer<HttpClientResponse, Connection> {
 
     private final InstrumentationContexts instrumentationContexts;
 

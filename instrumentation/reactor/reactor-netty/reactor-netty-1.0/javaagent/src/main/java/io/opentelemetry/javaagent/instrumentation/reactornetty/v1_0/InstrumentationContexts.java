@@ -19,7 +19,7 @@ import reactor.netty.http.client.HttpClientResponse;
 
 final class InstrumentationContexts {
 
-  static final Logger logger = Logger.getLogger(InstrumentationContexts.class.getName());
+  private static final Logger logger = Logger.getLogger(InstrumentationContexts.class.getName());
 
   private volatile Context parentContext;
   // on retries, reactor-netty starts the next resend attempt before it ends the previous one (i.e.
