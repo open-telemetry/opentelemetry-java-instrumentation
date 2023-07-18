@@ -13,8 +13,8 @@ Muzzle will prevent loading an instrumentation if it detects any mismatch or con
 
 Muzzle has two phases:
 
-* at compile time it collects references to the third-party symbols and used helper classes;
-* at runtime it compares those references to the actual API symbols on the classpath.
+- at compile time it collects references to the third-party symbols and used helper classes;
+- at runtime it compares those references to the actual API symbols on the classpath.
 
 ### Compile-time reference collection
 
@@ -73,19 +73,19 @@ it's not an optional feature.
 
 The gradle plugin defines two tasks:
 
-* `muzzle` task runs the runtime muzzle verification against different library versions:
+- `muzzle` task runs the runtime muzzle verification against different library versions:
 
-    ```sh
-    ./gradlew :instrumentation:google-http-client-1.19:javaagent:muzzle
-    ```
+  ```sh
+  ./gradlew :instrumentation:google-http-client-1.19:javaagent:muzzle
+  ```
 
-    If a new, incompatible version of the instrumented library is published it fails the build.
+  If a new, incompatible version of the instrumented library is published it fails the build.
 
-* `printMuzzleReferences` task prints all API references in a given module:
+- `printMuzzleReferences` task prints all API references in a given module:
 
-    ```sh
-    ./gradlew :instrumentation:google-http-client-1.19:javaagent:printMuzzleReferences
-    ```
+  ```sh
+  ./gradlew :instrumentation:google-http-client-1.19:javaagent:printMuzzleReferences
+  ```
 
 The muzzle plugin needs to be configured in the module's `.gradle` file.
 Example:
@@ -117,14 +117,14 @@ muzzle {
 }
 ```
 
-* Using either `pass` or `fail` directive allows to specify whether muzzle should treat the
+- Using either `pass` or `fail` directive allows to specify whether muzzle should treat the
   reference check failure as expected behavior;
-* `versions` is a version range, where `[]` is inclusive and `()` is exclusive. It is not needed to
+- `versions` is a version range, where `[]` is inclusive and `()` is exclusive. It is not needed to
   specify the exact version to start/end, e.g. `[1.0.0,4)` would usually behave in the same way as
   `[1.0.0,4.0.0-Alpha)`;
-* `assertInverse` is basically a shortcut for adding an opposite directive for all library versions
+- `assertInverse` is basically a shortcut for adding an opposite directive for all library versions
   that are not included in the specified `versions` range;
-* `extraDependency` allows putting additional libs on the classpath just for the compile-time check;
+- `extraDependency` allows putting additional libs on the classpath just for the compile-time check;
   this is usually used for jars that are not bundled with the instrumented lib but always present
   in the runtime anyway.
 

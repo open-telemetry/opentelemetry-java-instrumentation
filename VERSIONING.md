@@ -9,15 +9,15 @@ Artifacts in this repository follow the same compatibility requirements describe
 EXCEPT for the following incompatible changes which are allowed in stable artifacts in this
 repository:
 
-* Changes to the telemetry produced by instrumentation
+- Changes to the telemetry produced by instrumentation
   (there will be some guarantees about telemetry stability in the future, see discussions
   in <https://github.com/open-telemetry/opentelemetry-specification/issues/1301>)
-* Changes to configuration properties that contain the word `experimental`
-* Changes to configuration properties under the namespace `otel.javaagent.testing`
+- Changes to configuration properties that contain the word `experimental`
+- Changes to configuration properties under the namespace `otel.javaagent.testing`
 
 This means that:
 
-* Changes to configuration properties (other than those that contain the word `experimental`
+- Changes to configuration properties (other than those that contain the word `experimental`
   or are under the namespace `otel.javaagent.testing`) will be considered breaking changes
   (unless they only affect telemetry produced by instrumentation)
 
@@ -39,24 +39,24 @@ where versioning stability is important.
 Bumping the minimum supported library version for library instrumentation is generally acceptable
 if there's a good reason because:
 
-* Users of library instrumentation have to integrate the library instrumentation during build-time
+- Users of library instrumentation have to integrate the library instrumentation during build-time
   of their application, and so have the option to bump the library version if they are using an
   unsupported library version.
-* Users have the option of staying with the old version of library instrumentation, without being
+- Users have the option of staying with the old version of library instrumentation, without being
   pinned on an old version of the OpenTelemetry API and SDK.
-* Bumping the minimum library version changes the artifact name, so it is not technically a breaking
+- Bumping the minimum library version changes the artifact name, so it is not technically a breaking
   change.
 
 ### Javaagent instrumentation
 
 The situation is much trickier for javaagent instrumentation:
 
-* A common use case of the javaagent is applying instrumentation at deployment-time (including
+- A common use case of the javaagent is applying instrumentation at deployment-time (including
   to third-party applications), where bumping the library version is frequently not an option.
-* While users have the option of staying with the old version of javaagent, that pins them on
+- While users have the option of staying with the old version of javaagent, that pins them on
   an old version of the OpenTelemetry API and SDK, which is problematic for the OpenTelemetry
   ecosystem.
-* While bumping the minimum library version changes the instrumentation module name, it does not
+- While bumping the minimum library version changes the instrumentation module name, it does not
   change the "aggregated" javaagent artifact name which most users depend on, so could be considered
   a breaking change for some users (though this is not a breaking change that we currently make any
   guarantees about).
@@ -68,8 +68,8 @@ When there is functionality in a new library version that requires changes to th
 instrumentation which are incompatible with the current javaagent base library version, some options
 that do not require bumping the minimum supported library version include:
 
-* Access the new functionality via reflection. This is a good technique only for very small changes.
-* Create a new javaagent instrumentation module to support the new library version. This requires
+- Access the new functionality via reflection. This is a good technique only for very small changes.
+- Create a new javaagent instrumentation module to support the new library version. This requires
   configuring non-overlapping versions in the muzzle check and applying `assertInverse` to confirm
   that the two instrumentations are never be applied to the same library version (see
   [class loader matchers](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/writing-instrumentation-module.md#restrict-the-criteria-for-applying-the-instrumentation-by-extending-the-classloadermatcher-method)

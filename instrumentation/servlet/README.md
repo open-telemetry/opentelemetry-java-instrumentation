@@ -2,10 +2,10 @@
 
 ## Settings
 
-| System property | Type | Default | Description |
-|---|---|---|---|
-| `otel.instrumentation.servlet.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes. |
-| `otel.instrumentation.servlet.experimental.capture-request-parameters` | List | Empty | Request parameters to be captured (experimental). |
+| System property                                                        | Type    | Default | Description                                         |
+| ---------------------------------------------------------------------- | ------- | ------- | --------------------------------------------------- |
+| `otel.instrumentation.servlet.experimental-span-attributes`            | Boolean | `false` | Enable the capture of experimental span attributes. |
+| `otel.instrumentation.servlet.experimental.capture-request-parameters` | List    | Empty   | Request parameters to be captured (experimental).   |
 
 ### A word about version
 

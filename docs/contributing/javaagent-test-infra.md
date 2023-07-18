@@ -7,10 +7,10 @@ There are a few key components that make this possible, described below.
 
 ## gradle/instrumentation.gradle
 
-* shades the instrumentation
-* adds jvm args to the test configuration
-  * -javaagent:[agent for testing]
-  * -Dotel.javaagent.experimental.initializer.jar=[shaded instrumentation jar]
+- shades the instrumentation
+- adds jvm args to the test configuration
+  - -javaagent:[agent for testing]
+  - -Dotel.javaagent.experimental.initializer.jar=[shaded instrumentation jar]
 
 The `otel.javaagent.experimental.initializer.jar` property is used to load the shaded instrumentation jar into the
 `AgentClassLoader`, so that the javaagent jar doesn't need to be re-built each time.

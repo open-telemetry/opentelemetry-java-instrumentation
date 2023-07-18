@@ -360,8 +360,8 @@ instrumentation modules.
 
 Some examples of this include:
 
-* Application server instrumentations communicating with Servlet API instrumentations.
-* Different high-level Kafka consumer instrumentations suppressing the low-level `kafka-clients`
+- Application server instrumentations communicating with Servlet API instrumentations.
+- Different high-level Kafka consumer instrumentations suppressing the low-level `kafka-clients`
   instrumentation.
 
 Create a module named `bootstrap` and add a `build.gradle.kts` file with the following content:
