@@ -32,9 +32,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # tests may fail without freeing up more disk space on the runner
       - name: Free disk space
-        run: .github/scripts/gha-more-disk-space.sh
+        run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3
