@@ -1,6 +1,5 @@
 flib:
-  something:
-    12
+  something: 12
 
 section:
   two: 2
