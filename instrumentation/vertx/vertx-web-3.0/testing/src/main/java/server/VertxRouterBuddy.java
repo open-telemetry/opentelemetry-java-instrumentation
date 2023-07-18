@@ -15,15 +15,17 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest;
-import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
-public abstract class AbstractVertxWebServer extends AbstractVerticle {
+public final class VertxRouterBuddy {
   public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
 
-  public Router buildRouter() {
+  private VertxRouterBuddy() {}
+
+  public static Router buildRouter(Vertx vertx) {
     Router router = Router.router(vertx);
 
     //noinspection Convert2Lambda

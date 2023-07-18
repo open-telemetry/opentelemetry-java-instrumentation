@@ -27,7 +27,7 @@ abstract class AbstractVertxHttpServerTest extends HttpServerTest<Vertx> impleme
     CompletableFuture<Void> future = new CompletableFuture<>()
     server.deployVerticle(verticle().getName(),
       new DeploymentOptions()
-        .setConfig(new JsonObject().put(AbstractVertxWebServer.CONFIG_HTTP_SERVER_PORT, port))
+        .setConfig(new JsonObject().put(VertxRouterBuddy.CONFIG_HTTP_SERVER_PORT, port))
         .setInstances(3)) { res ->
       if (!res.succeeded()) {
         throw new IllegalStateException("Cannot deploy server Verticle", res.cause())
