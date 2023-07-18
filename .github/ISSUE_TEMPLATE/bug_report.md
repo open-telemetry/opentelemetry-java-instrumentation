@@ -23,7 +23,7 @@ A clear and concise description of what you saw instead.
 (e.g., `v0.9.0`, `393e4a2`, etc)
 
 **Environment**
-Compiler: (e.g., "AdoptOpenJDK 11.0.6")
+Compiler: (e.g., "Temurin 17.0.7")
 OS: (e.g., "Ubuntu 20.04")
 Runtime (if different from JDK above): (e.g., "Oracle JRE 8u251")
 OS (if different from OS compiled on): (e.g., "Windows Server 2019")
