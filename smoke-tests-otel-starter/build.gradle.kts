@@ -27,7 +27,8 @@ tasks {
   compileAotTestJava {
     with(options) {
       compilerArgs.add("-Xlint:-deprecation,-unchecked,none")
-      // To disable failure coming from Java compiler check during Spring AOT processing
+      // To disable warnings/failure coming from the Java compiler during the Spring AOT processing
+      // -deprecation,-unchecked and none are required (none is not enough)
     }
   }
 }
