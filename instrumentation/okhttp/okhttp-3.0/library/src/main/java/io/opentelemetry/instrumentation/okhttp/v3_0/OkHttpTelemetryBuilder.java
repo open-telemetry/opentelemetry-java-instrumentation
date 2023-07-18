@@ -28,6 +28,7 @@ public final class OkHttpTelemetryBuilder {
   private List<String> capturedRequestHeaders = emptyList();
   private List<String> capturedResponseHeaders = emptyList();
   @Nullable private Set<String> knownMethods = null;
+  private boolean emitExperimentalHttpClientMetrics = false;
 
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -86,6 +87,19 @@ public final class OkHttpTelemetryBuilder {
   }
 
   /**
+   * Configures the instrumentation to emit experimental HTTP client metrics.
+   *
+   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public OkHttpTelemetryBuilder setEmitExperimentalHttpClientMetrics(
+      boolean emitExperimentalHttpClientMetrics) {
+    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
+    return this;
+  }
+
+  /**
    * Returns a new {@link OkHttpTelemetry} with the settings of this {@link OkHttpTelemetryBuilder}.
    */
   public OkHttpTelemetry build() {
@@ -95,7 +109,8 @@ public final class OkHttpTelemetryBuilder {
             capturedRequestHeaders,
             capturedResponseHeaders,
             knownMethods,
-            additionalExtractors),
+            additionalExtractors,
+            emitExperimentalHttpClientMetrics),
         openTelemetry.getPropagators());
   }
 }

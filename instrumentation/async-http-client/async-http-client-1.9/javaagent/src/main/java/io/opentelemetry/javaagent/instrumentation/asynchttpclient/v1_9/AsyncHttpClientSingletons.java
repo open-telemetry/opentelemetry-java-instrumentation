@@ -9,7 +9,9 @@ import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -27,7 +29,7 @@ public final class AsyncHttpClientSingletons {
     AsyncHttpClientNetAttributesGetter netAttributesGetter =
         new AsyncHttpClientNetAttributesGetter();
 
-    INSTRUMENTER =
+    InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -42,8 +44,11 @@ public final class AsyncHttpClientSingletons {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
-            .addOperationMetrics(HttpClientMetrics.get())
-            .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
+            .addOperationMetrics(HttpClientMetrics.get());
+    if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
+      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+    }
+    INSTRUMENTER = builder.buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 
   public static Instrumenter<Request, Response> instrumenter() {

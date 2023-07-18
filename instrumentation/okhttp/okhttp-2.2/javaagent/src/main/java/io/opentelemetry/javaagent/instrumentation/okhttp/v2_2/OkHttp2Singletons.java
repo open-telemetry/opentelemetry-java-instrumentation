@@ -13,7 +13,9 @@ import com.squareup.okhttp.Response;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -32,7 +34,7 @@ public final class OkHttp2Singletons {
 
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
 
-    INSTRUMENTER =
+    InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
@@ -47,8 +49,11 @@ public final class OkHttp2Singletons {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
-            .addOperationMetrics(HttpClientMetrics.get())
-            .buildInstrumenter(alwaysClient());
+            .addOperationMetrics(HttpClientMetrics.get());
+    if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
+      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+    }
+    INSTRUMENTER = builder.buildInstrumenter(alwaysClient());
 
     TRACING_INTERCEPTOR = new TracingInterceptor(INSTRUMENTER, openTelemetry.getPropagators());
   }

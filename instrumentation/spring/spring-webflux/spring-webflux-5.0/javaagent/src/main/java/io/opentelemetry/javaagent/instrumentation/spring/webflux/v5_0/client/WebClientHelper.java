@@ -24,6 +24,7 @@ public final class WebClientHelper {
       new SpringWebfluxTelemetryClientBuilder(GlobalOpenTelemetry.get())
           .setCapturedClientRequestHeaders(CommonConfig.get().getClientRequestHeaders())
           .setCapturedClientResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+          .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
           .addClientAttributesExtractor(
               PeerServiceAttributesExtractor.create(
                   new WebClientNetAttributesGetter(), CommonConfig.get().getPeerServiceMapping()))
@@ -31,6 +32,8 @@ public final class WebClientHelper {
               InstrumentationConfig.get()
                   .getBoolean(
                       "otel.instrumentation.spring-webflux.experimental-span-attributes", false))
+          .setEmitExperimentalHttpClientMetrics(
+              CommonConfig.get().shouldEmitExperimentalHttpClientMetrics())
           .build();
 
   public static void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {

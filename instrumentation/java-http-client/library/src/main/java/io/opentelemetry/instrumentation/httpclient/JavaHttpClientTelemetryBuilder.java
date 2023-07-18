@@ -31,6 +31,7 @@ public final class JavaHttpClientTelemetryBuilder {
   private List<String> capturedRequestHeaders = emptyList();
   private List<String> capturedResponseHeaders = emptyList();
   @Nullable private Set<String> knownMethods = null;
+  private boolean emitExperimentalHttpClientMetrics = false;
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -88,6 +89,19 @@ public final class JavaHttpClientTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Configures the instrumentation to emit experimental HTTP client metrics.
+   *
+   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public JavaHttpClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
+      boolean emitExperimentalHttpClientMetrics) {
+    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
+    return this;
+  }
+
   public JavaHttpClientTelemetry build() {
     Instrumenter<HttpRequest, HttpResponse<?>> instrumenter =
         JavaHttpClientInstrumenterFactory.createInstrumenter(
@@ -95,7 +109,8 @@ public final class JavaHttpClientTelemetryBuilder {
             capturedRequestHeaders,
             capturedResponseHeaders,
             knownMethods,
-            additionalExtractors);
+            additionalExtractors,
+            emitExperimentalHttpClientMetrics);
 
     return new JavaHttpClientTelemetry(
         instrumenter, new HttpHeadersSetter(openTelemetry.getPropagators()));
