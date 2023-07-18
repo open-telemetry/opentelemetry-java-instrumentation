@@ -80,8 +80,7 @@ public abstract class InstrumentationExtension
     return testRunner.getExportedMetrics();
   }
 
-  /** Returns a list of metrics, filtered by instrumentation name */
-  public List<MetricData> instrumentationMetrics(String instrumentationName) {
+  private List<MetricData> instrumentationMetrics(String instrumentationName) {
     return metrics().stream()
         .filter(m -> m.getInstrumentationScopeInfo().getName().equals(instrumentationName))
         .collect(Collectors.toList());
