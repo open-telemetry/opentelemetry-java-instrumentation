@@ -27,6 +27,14 @@ jobs:
   spotless:
     runs-on: ubuntu-latest
     steps:
+      # spotless may fail without freeing up more disk space on the runner
+      - name: Free disk space
+        run: |
+          df -h
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          df -h
+
       - uses: actions/checkout@v3
 
       - name: Set up JDK for running Gradle
