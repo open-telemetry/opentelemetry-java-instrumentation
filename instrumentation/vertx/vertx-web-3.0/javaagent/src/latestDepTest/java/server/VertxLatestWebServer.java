@@ -6,20 +6,9 @@
 package server;
 
 import io.vertx.core.Promise;
-import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.Router;
 
 public class VertxLatestWebServer extends AbstractVertxWebServer {
-
-  @Override
-  public void end(HttpServerResponse response) {
-    response.end();
-  }
-
-  @Override
-  public void end(HttpServerResponse response, String message) {
-    response.end(message);
-  }
 
   @Override
   public void start(Promise<Void> startPromise) {

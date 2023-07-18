@@ -17,16 +17,11 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
-import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
 public abstract class AbstractVertxWebServer extends AbstractVerticle {
   public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
-
-  public abstract void end(HttpServerResponse response, String message);
-
-  public abstract void end(HttpServerResponse response);
 
   public Router buildRouter() {
     Router router = Router.router(vertx);
@@ -43,7 +38,7 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
                 HttpServerTest.controller(
                     SUCCESS,
                     () -> {
-                      end(ctx.response().setStatusCode(SUCCESS.getStatus()), SUCCESS.getBody());
+                      ctx.response().setStatusCode(SUCCESS.getStatus()).end(SUCCESS.getBody());
                       return null;
                     });
               }
@@ -56,7 +51,7 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
                     INDEXED_CHILD,
                     () -> {
                       INDEXED_CHILD.collectSpanAttributes(it -> ctx.request().getParam(it));
-                      end(ctx.response().setStatusCode(INDEXED_CHILD.getStatus()));
+                      ctx.response().setStatusCode(INDEXED_CHILD.getStatus()).end();
                       return null;
                     }));
     router
@@ -66,9 +61,9 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
                 HttpServerTest.controller(
                     QUERY_PARAM,
                     () -> {
-                      end(
-                          ctx.response().setStatusCode(QUERY_PARAM.getStatus()),
-                          ctx.request().query());
+                      ctx.response()
+                          .setStatusCode(QUERY_PARAM.getStatus())
+                          .end(ctx.request().query());
                       return null;
                     }));
     router
@@ -78,10 +73,10 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
                 HttpServerTest.controller(
                     REDIRECT,
                     () -> {
-                      end(
-                          ctx.response()
-                              .setStatusCode(REDIRECT.getStatus())
-                              .putHeader("location", REDIRECT.getBody()));
+                      ctx.response()
+                          .setStatusCode(REDIRECT.getStatus())
+                          .putHeader("location", REDIRECT.getBody())
+                          .end();
                       return null;
                     }));
     router
@@ -91,7 +86,7 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
                 HttpServerTest.controller(
                     ERROR,
                     () -> {
-                      end(ctx.response().setStatusCode(ERROR.getStatus()), ERROR.getBody());
+                      ctx.response().setStatusCode(ERROR.getStatus()).end(ERROR.getBody());
                       return null;
                     }));
     router
@@ -110,9 +105,9 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
                 HttpServerTest.controller(
                     PATH_PARAM,
                     () -> {
-                      end(
-                          ctx.response().setStatusCode(PATH_PARAM.getStatus()),
-                          ctx.request().getParam("id"));
+                      ctx.response()
+                          .setStatusCode(PATH_PARAM.getStatus())
+                          .end(ctx.request().getParam("id"));
                       return null;
                     }));
     router
@@ -122,12 +117,10 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
                 HttpServerTest.controller(
                     CAPTURE_HEADERS,
                     () -> {
-                      end(
-                          ctx.response()
-                              .setStatusCode(CAPTURE_HEADERS.getStatus())
-                              .putHeader(
-                                  "X-Test-Response", ctx.request().getHeader("X-Test-Request")),
-                          CAPTURE_HEADERS.getBody());
+                      ctx.response()
+                          .setStatusCode(CAPTURE_HEADERS.getStatus())
+                          .putHeader("X-Test-Response", ctx.request().getHeader("X-Test-Request"))
+                          .end(CAPTURE_HEADERS.getBody());
                       return null;
                     }));
 
