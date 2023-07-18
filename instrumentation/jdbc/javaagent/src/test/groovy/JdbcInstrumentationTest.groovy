@@ -606,7 +606,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
 
     where:
     datasource                               | init                                         | system  | user  | connectionString
-    new JdbcDataSource()                     | { ds -> ds.setURL(jdbcUrls.get("h2")) }      | "h2"    | ""    | "h2:mem:"
+    new JdbcDataSource()                     | { ds -> ds.setURL(jdbcUrls.get("h2")) }      | "h2"    | null  | "h2:mem:"
     new EmbeddedDataSource()                 | { ds -> ds.jdbcurl = jdbcUrls.get("derby") } | "derby" | "APP" | "derby:memory:"
     cpDatasources.get("hikari").get("h2")    | null                                         | "h2"    | null  | "h2:mem:"
     cpDatasources.get("hikari").get("derby") | null                                         | "derby" | "APP" | "derby:memory:"
