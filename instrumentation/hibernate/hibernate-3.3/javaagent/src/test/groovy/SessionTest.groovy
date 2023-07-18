@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.hibernate.LockMode
