@@ -13,11 +13,7 @@ jobs:
     steps:
       # analysis may fail without freeing up more disk space on the runner
       - name: Free disk space
-        run: |
-          df -h
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /usr/share/dotnet
-          df -h
+        run: .github/scripts/gha-more-disk-space.sh
 
       - uses: actions/checkout@v3
 

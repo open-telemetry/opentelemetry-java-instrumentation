@@ -172,11 +172,7 @@ jobs:
     steps:
       # tests may fail without freeing up more disk space on the runner
       - name: Free disk space
-        run: |
-          df -h
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /usr/share/dotnet
-          df -h
+        run: .github/scripts/gha-more-disk-space.sh
 
       - uses: actions/checkout@v3
 
@@ -303,11 +299,7 @@ jobs:
 
       # downloading the liberty image (a bit over 10gb) fails without freeing up more disk space on the runner
       - name: Free disk space
-        run: |
-          df -h
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /usr/share/dotnet
-          df -h
+        run: .github/scripts/gha-more-disk-space.sh
         if: matrix.os == 'ubuntu-latest'
 
       - uses: actions/checkout@v3
