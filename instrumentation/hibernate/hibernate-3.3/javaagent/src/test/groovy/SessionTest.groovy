@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.hibernate.LockMode
 import org.hibernate.MappingException
@@ -67,7 +69,7 @@ class SessionTest extends AbstractHibernateTest {
             }
           }
           span(2) {
-            name "SELECT db1.Value"
+            name "SELECT db1.io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
             kind CLIENT
             childOf span(1)
             attributes {
@@ -77,7 +79,7 @@ class SessionTest extends AbstractHibernateTest {
               "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
               "$SemanticAttributes.DB_STATEMENT" ~/^select /
               "$SemanticAttributes.DB_OPERATION" "SELECT"
-              "$SemanticAttributes.DB_SQL_TABLE" "Value"
+              "$SemanticAttributes.DB_SQL_TABLE" "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
             }
           }
           span(3) {
@@ -94,14 +96,14 @@ class SessionTest extends AbstractHibernateTest {
 
     where:
     testName  | methodName | resource | sessionImplementations                    | sessionMethodTest
-    "lock"    | "lock"     | "Value"  | [sessionBuilder]                          | { sesh, val ->
+    "lock"    | "lock"     | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | [sessionBuilder]                          | { sesh, val ->
       sesh.lock(val, LockMode.READ)
     }
-    "refresh" | "refresh"  | "Value"  | [sessionBuilder, statelessSessionBuilder] | { sesh, val ->
+    "refresh" | "refresh"  | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | [sessionBuilder, statelessSessionBuilder] | { sesh, val ->
       sesh.refresh(val)
     }
-    "get"     | "get"      | "Value"  | [sessionBuilder, statelessSessionBuilder] | { sesh, val ->
-      sesh.get("Value", val.getId())
+    "get"     | "get"      | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | [sessionBuilder, statelessSessionBuilder] | { sesh, val ->
+      sesh.get("io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value", val.getId())
     }
   }
 
@@ -163,7 +165,7 @@ class SessionTest extends AbstractHibernateTest {
             "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
             "$SemanticAttributes.DB_STATEMENT" String
             "$SemanticAttributes.DB_OPERATION" String
-            "$SemanticAttributes.DB_SQL_TABLE" "Value"
+            "$SemanticAttributes.DB_SQL_TABLE" "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           }
         }
       }
@@ -171,18 +173,18 @@ class SessionTest extends AbstractHibernateTest {
 
     where:
     testName               | methodName | resource | sessionMethodTest
-    "insert"               | "insert"   | "Value"  | { sesh, val ->
-      sesh.insert("Value", new Value("insert me"))
+    "insert"               | "insert"   | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | { sesh, val ->
+      sesh.insert("io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value", new Value("insert me"))
     }
-    "update"               | "update"   | "Value"  | { sesh, val ->
+    "update"               | "update"   | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | { sesh, val ->
       val.setName("New name")
       sesh.update(val)
     }
-    "update by entityName" | "update"   | "Value"  | { sesh, val ->
+    "update by entityName" | "update"   | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | { sesh, val ->
       val.setName("New name")
-      sesh.update("Value", val)
+      sesh.update("io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value", val)
     }
-    "delete"               | "delete"   | "Value"  | { sesh, val ->
+    "delete"               | "delete"   | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | { sesh, val ->
       sesh.delete(val)
     }
   }
@@ -228,7 +230,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(2) {
-          name "SELECT db1.Value"
+          name "SELECT db1.io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           kind CLIENT
           childOf span(1)
           attributes {
@@ -238,7 +240,7 @@ class SessionTest extends AbstractHibernateTest {
             "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
             "$SemanticAttributes.DB_STATEMENT" ~/^select /
             "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "Value"
+            "$SemanticAttributes.DB_SQL_TABLE" "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           }
         }
         span(3) {
@@ -259,7 +261,7 @@ class SessionTest extends AbstractHibernateTest {
             "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
             "$SemanticAttributes.DB_STATEMENT" String
             "$SemanticAttributes.DB_OPERATION" String
-            "$SemanticAttributes.DB_SQL_TABLE" "Value"
+            "$SemanticAttributes.DB_SQL_TABLE" "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           }
         }
       }
@@ -268,15 +270,15 @@ class SessionTest extends AbstractHibernateTest {
 
     where:
     testName                  | methodName  | resource | sessionMethodTest
-    "replicate"               | "replicate" | "Value"  | { sesh, val ->
+    "replicate"               | "replicate" | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | { sesh, val ->
       Value replicated = new Value(val.getName() + " replicated")
       replicated.setId(val.getId())
       sesh.replicate(replicated, ReplicationMode.OVERWRITE)
     }
-    "replicate by entityName" | "replicate" | "Value"  | { sesh, val ->
+    "replicate by entityName" | "replicate" | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | { sesh, val ->
       Value replicated = new Value(val.getName() + " replicated")
       replicated.setId(val.getId())
-      sesh.replicate("Value", replicated, ReplicationMode.OVERWRITE)
+      sesh.replicate("io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value", replicated, ReplicationMode.OVERWRITE)
     }
   }
 
@@ -393,7 +395,7 @@ class SessionTest extends AbstractHibernateTest {
             "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
             "$SemanticAttributes.DB_STATEMENT" String
             "$SemanticAttributes.DB_OPERATION" String
-            "$SemanticAttributes.DB_SQL_TABLE" "Value"
+            "$SemanticAttributes.DB_SQL_TABLE" "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           }
         }
       }
@@ -401,31 +403,31 @@ class SessionTest extends AbstractHibernateTest {
 
     where:
     testName                         | methodName     | resource | sessionMethodTest
-    "save"                           | "save"         | "Value"  | { sesh, val ->
+    "save"                           | "save"         | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | { sesh, val ->
       sesh.save(new Value("Another value"))
     }
-    "saveOrUpdate save"              | "saveOrUpdate" | "Value"  | { sesh, val ->
-      sesh.saveOrUpdate(new Value("Value"))
+    "saveOrUpdate save"              | "saveOrUpdate" | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | { sesh, val ->
+      sesh.saveOrUpdate(new Value("io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"))
     }
-    "saveOrUpdate update"            | "saveOrUpdate" | "Value"  | { sesh, val ->
+    "saveOrUpdate update"            | "saveOrUpdate" | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | { sesh, val ->
       val.setName("New name")
       sesh.saveOrUpdate(val)
     }
-    "merge"                          | "merge"        | "Value"  | { sesh, val ->
+    "merge"                          | "merge"        | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | { sesh, val ->
       sesh.merge(new Value("merge me in"))
     }
-    "persist"                        | "persist"      | "Value"  | { sesh, val ->
+    "persist"                        | "persist"      | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | { sesh, val ->
       sesh.persist(new Value("merge me in"))
     }
-    "update (Session)"               | "update"       | "Value"  | { sesh, val ->
+    "update (Session)"               | "update"       | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | { sesh, val ->
       val.setName("New name")
       sesh.update(val)
     }
-    "update by entityName (Session)" | "update"       | "Value"  | { sesh, val ->
+    "update by entityName (Session)" | "update"       | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | { sesh, val ->
       val.setName("New name")
-      sesh.update("Value", val)
+      sesh.update("io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value", val)
     }
-    "delete (Session)"               | "delete"       | "Value"  | { sesh, val ->
+    "delete (Session)"               | "delete"       | "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"  | { sesh, val ->
       sesh.delete(val)
     }
   }
@@ -474,7 +476,7 @@ class SessionTest extends AbstractHibernateTest {
             "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
             "$SemanticAttributes.DB_STATEMENT" String
             "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "Value"
+            "$SemanticAttributes.DB_SQL_TABLE" "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           }
         }
         span(3) {
@@ -490,9 +492,9 @@ class SessionTest extends AbstractHibernateTest {
 
     where:
     queryMethodName  | expectedSpanName | queryBuildMethod
-    "createQuery"    | "SELECT Value"   | { sess -> sess.createQuery("from Value") }
-    "getNamedQuery"  | "SELECT Value"   | { sess -> sess.getNamedQuery("TestNamedQuery") }
-    "createSQLQuery" | "SELECT Value"   | { sess -> sess.createSQLQuery("SELECT * FROM Value") }
+    "createQuery"    | "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"   | { sess -> sess.createQuery("from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value") }
+    "getNamedQuery"  | "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"   | { sess -> sess.getNamedQuery("TestNamedQuery") }
+    "createSQLQuery" | "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"   | { sess -> sess.createSQLQuery("SELECT * FROM io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value") }
   }
 
 
@@ -505,10 +507,10 @@ class SessionTest extends AbstractHibernateTest {
       def session2 = sessionFactory.openStatelessSession()
       def session3 = sessionFactory.openSession()
 
-      def value1 = new Value("Value 1")
+      def value1 = new Value("io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value 1")
       session1.save(value1)
-      session2.insert(new Value("Value 2"))
-      session3.save(new Value("Value 3"))
+      session2.insert(new Value("io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value 2"))
+      session3.save(new Value("io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value 3"))
       session1.delete(value1)
 
       session2.close()
@@ -529,7 +531,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          name "Session.save Value"
+          name "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           kind INTERNAL
           childOf span(0)
           attributes {
@@ -540,7 +542,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(2) {
-          name "Session.insert Value"
+          name "Session.insert io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           kind INTERNAL
           childOf span(0)
           attributes {
@@ -551,7 +553,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(3) {
-          name "Session.save Value"
+          name "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           kind INTERNAL
           childOf span(0)
           attributes {
@@ -562,7 +564,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(4) {
-          name "Session.delete Value"
+          name "Session.delete io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           kind INTERNAL
           childOf span(0)
           attributes {
@@ -578,7 +580,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(6) {
-          name "INSERT db1.Value"
+          name "INSERT db1.io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           kind CLIENT
           childOf span(5)
           attributes {
@@ -588,11 +590,11 @@ class SessionTest extends AbstractHibernateTest {
             "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
             "$SemanticAttributes.DB_STATEMENT" ~/^insert /
             "$SemanticAttributes.DB_OPERATION" "INSERT"
-            "$SemanticAttributes.DB_SQL_TABLE" "Value"
+            "$SemanticAttributes.DB_SQL_TABLE" "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           }
         }
         span(7) {
-          name "DELETE db1.Value"
+          name "DELETE db1.io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           kind CLIENT
           childOf span(5)
           attributes {
@@ -602,7 +604,7 @@ class SessionTest extends AbstractHibernateTest {
             "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
             "$SemanticAttributes.DB_STATEMENT" ~/^delete /
             "$SemanticAttributes.DB_OPERATION" "DELETE"
-            "$SemanticAttributes.DB_SQL_TABLE" "Value"
+            "$SemanticAttributes.DB_SQL_TABLE" "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           }
         }
       }

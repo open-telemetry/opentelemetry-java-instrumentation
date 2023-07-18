@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.hibernate.Criteria
 import org.hibernate.Session
@@ -12,7 +14,7 @@ import org.hibernate.criterion.Restrictions
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
-class CriteriaTest extends AbstractHibernateTest {
+class CriteriaTest2 extends AbstractHibernateTest {
 
   def "test criteria.#methodName"() {
     setup:
@@ -39,7 +41,7 @@ class CriteriaTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          name "Criteria.$methodName Value"
+          name "Criteria.$methodName io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           kind INTERNAL
           childOf span(0)
           attributes {
@@ -50,7 +52,7 @@ class CriteriaTest extends AbstractHibernateTest {
           }
         }
         span(2) {
-          name "SELECT db1.Value"
+          name "SELECT db1.io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           kind CLIENT
           childOf span(1)
           attributes {
@@ -60,7 +62,7 @@ class CriteriaTest extends AbstractHibernateTest {
             "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
             "$SemanticAttributes.DB_STATEMENT" ~/^select /
             "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "Value"
+            "$SemanticAttributes.DB_SQL_TABLE" "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           }
         }
         span(3) {

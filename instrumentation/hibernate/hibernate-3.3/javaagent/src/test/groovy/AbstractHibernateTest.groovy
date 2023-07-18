@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.AnnotationConfiguration

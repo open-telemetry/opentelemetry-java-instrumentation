@@ -66,7 +66,7 @@ class QueryTest extends AbstractHibernateTest {
             "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
             "$SemanticAttributes.DB_STATEMENT" String
             "$SemanticAttributes.DB_OPERATION" String
-            "$SemanticAttributes.DB_SQL_TABLE" "Value"
+            "$SemanticAttributes.DB_SQL_TABLE" "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           }
         }
         span(3) {
@@ -97,7 +97,7 @@ class QueryTest extends AbstractHibernateTest {
             }
           }
           span(2) {
-            name "SELECT db1.Value"
+            name "SELECT db1.io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
             kind CLIENT
             childOf span(1)
             attributes {
@@ -107,7 +107,7 @@ class QueryTest extends AbstractHibernateTest {
               "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
               "$SemanticAttributes.DB_STATEMENT" ~/^select /
               "$SemanticAttributes.DB_OPERATION" "SELECT"
-              "$SemanticAttributes.DB_SQL_TABLE" "Value"
+              "$SemanticAttributes.DB_SQL_TABLE" "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
             }
           }
         }
@@ -116,26 +116,26 @@ class QueryTest extends AbstractHibernateTest {
 
     where:
     queryMethodName       | expectedSpanName | requiresTransaction | queryInteraction
-    "Query.list"          | "SELECT Value"   | false               | { sess ->
-      Query q = sess.createQuery("from Value")
+    "Query.list"          | "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"   | false               | { sess ->
+      Query q = sess.createQuery("from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value")
       q.list()
     }
-    "Query.executeUpdate" | "UPDATE Value"   | true                | { sess ->
-      Query q = sess.createQuery("update Value set name = ?")
+    "Query.executeUpdate" | "UPDATE io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"   | true                | { sess ->
+      Query q = sess.createQuery("update io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value set name = ?")
       q.setParameter(0, "alyx")
       q.executeUpdate()
     }
-    "Query.uniqueResult"  | "SELECT Value"   | false               | { sess ->
-      Query q = sess.createQuery("from Value where id = ?")
+    "Query.uniqueResult"  | "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"   | false               | { sess ->
+      Query q = sess.createQuery("from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value where id = ?")
       q.setParameter(0, 1L)
       q.uniqueResult()
     }
-    "Query.iterate"       | "SELECT Value"   | false               | { sess ->
-      Query q = sess.createQuery("from Value")
+    "Query.iterate"       | "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"   | false               | { sess ->
+      Query q = sess.createQuery("from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value")
       q.iterate()
     }
-    "Query.scroll"        | "SELECT Value"   | false               | { sess ->
-      Query q = sess.createQuery("from Value")
+    "Query.scroll"        | "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"   | false               | { sess ->
+      Query q = sess.createQuery("from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value")
       q.scroll()
     }
   }
@@ -146,7 +146,7 @@ class QueryTest extends AbstractHibernateTest {
     runWithSpan("parent") {
       Session session = sessionFactory.openSession()
       session.beginTransaction()
-      Query q = session.createQuery("from Value")
+      Query q = session.createQuery("from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value")
       Iterator iterator = q.iterate()
       while (iterator.hasNext()) {
         iterator.next()
@@ -167,7 +167,7 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          name "SELECT Value"
+          name "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           kind INTERNAL
           childOf span(0)
           attributes {
@@ -178,7 +178,7 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(2) {
-          name "SELECT db1.Value"
+          name "SELECT db1.io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           kind CLIENT
           childOf span(1)
           attributes {
@@ -188,7 +188,7 @@ class QueryTest extends AbstractHibernateTest {
             "$SemanticAttributes.DB_CONNECTION_STRING" "h2:mem:"
             "$SemanticAttributes.DB_STATEMENT" ~/^select /
             "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "Value"
+            "$SemanticAttributes.DB_SQL_TABLE" "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
           }
         }
         span(3) {

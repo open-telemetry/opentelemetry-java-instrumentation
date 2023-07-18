@@ -398,7 +398,7 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 ##### Enabling/Disabling Features
 
-| Feature          | Property                                 | Default Value | ConditionalOnClass     |
+| Feature          | Property                                 | Default io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value | ConditionalOnClass     |
 |------------------|------------------------------------------|---------------|------------------------|
 | spring-web       | otel.springboot.httpclients.enabled      | `true`        | RestTemplate           |
 | spring-webmvc    | otel.springboot.httpclients.enabled      | `true`        | OncePerRequestFilter   |
@@ -413,7 +413,7 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 ##### Resource Properties
 
-| Feature  | Property                                         | Default Value          |
+| Feature  | Property                                         | Default io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value          |
 |----------|--------------------------------------------------|------------------------|
 | Resource | otel.springboot.resource.enabled                 | `true`                 |
 |          | otel.springboot.resource.attributes.service.name | `unknown_service:java` |
@@ -433,7 +433,7 @@ otel.springboot.resource.attributes.xyz=foo
 
 ##### Exporter Properties
 
-| Feature         | Property                      | Default Value                        |
+| Feature         | Property                      | Default io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value                        |
 |-----------------|-------------------------------|--------------------------------------|
 | Otlp Exporter   | otel.exporter.otlp.endpoint   | `localhost:4317`                     |
 |                 | otel.exporter.otlp.timeout    | `1s`                                 |
@@ -443,7 +443,7 @@ otel.springboot.resource.attributes.xyz=foo
 
 ##### Tracer Properties
 
-| Feature | Property                        | Default Value |
+| Feature | Property                        | Default io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value |
 |---------|---------------------------------|---------------|
 | Tracer  | otel.traces.sampler.probability | `1.0`         |
 
