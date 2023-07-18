@@ -31,6 +31,13 @@ tasks {
       // -deprecation,-unchecked and none are required (none is not enough)
     }
   }
+  compileAotJava {
+    with(options) {
+      compilerArgs.add("-Xlint:-deprecation,-unchecked,none")
+      // To disable warnings/failure coming from the Java compiler during the Spring AOT processing
+      // -deprecation,-unchecked and none are required (none is not enough)
+    }
+  }
 }
 
 // To be able to execute the tests as GraalVM native executables
