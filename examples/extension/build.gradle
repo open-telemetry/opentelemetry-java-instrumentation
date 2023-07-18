@@ -11,7 +11,7 @@ plugins {
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
   id "com.github.johnrengelman.shadow" version "8.1.1"
-  id "com.diffplug.spotless" version "6.19.0"
+  id "com.diffplug.spotless" version "6.20.0"
 
   id "io.opentelemetry.instrumentation.muzzle-generation" version "1.29.0-alpha-SNAPSHOT"
   id "io.opentelemetry.instrumentation.muzzle-check" version "1.29.0-alpha-SNAPSHOT"
