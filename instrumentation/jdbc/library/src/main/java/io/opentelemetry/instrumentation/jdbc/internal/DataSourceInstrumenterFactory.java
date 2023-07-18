@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
+import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import javax.sql.DataSource;
 
 /**
@@ -16,15 +17,16 @@ import javax.sql.DataSource;
  * any time.
  */
 public final class DataSourceInstrumenterFactory {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
-  private static final DataSourceCodeAttributesGetter codeAttributesGetter =
-      new DataSourceCodeAttributesGetter();
 
-  public static Instrumenter<DataSource, Void> createDataSourceInstrumenter(
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
+
+  public static Instrumenter<DataSource, DbInfo> createDataSourceInstrumenter(
       OpenTelemetry openTelemetry) {
-    return Instrumenter.<DataSource, Void>builder(
-            openTelemetry, INSTRUMENTATION_NAME, CodeSpanNameExtractor.create(codeAttributesGetter))
-        .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
+    DataSourceCodeAttributesGetter getter = DataSourceCodeAttributesGetter.INSTANCE;
+    return Instrumenter.<DataSource, DbInfo>builder(
+            openTelemetry, INSTRUMENTATION_NAME, CodeSpanNameExtractor.create(getter))
+        .addAttributesExtractor(CodeAttributesExtractor.create(getter))
+        .addAttributesExtractor(DataSourceDbAttributesExtractor.INSTANCE)
         .buildInstrumenter();
   }
 
