@@ -33,55 +33,64 @@ import org.slf4j.LoggerFactory;
 
 class AwsConnector {
   private static final Logger logger = LoggerFactory.getLogger(AwsConnector.class);
-  private AmazonSQSAsyncClient sqsClient;
-  private AmazonS3Client s3Client;
-  private AmazonSNSAsyncClient snsClient;
-  private SQSRestServer sqsRestServer;
+  private final AmazonSQSAsyncClient sqsClient;
+  private final AmazonS3Client s3Client;
+  private final AmazonSNSAsyncClient snsClient;
+  private final SQSRestServer sqsRestServer;
+
+  AwsConnector(
+      AmazonSQSAsyncClient sqsClient,
+      AmazonS3Client s3Client,
+      AmazonSNSAsyncClient snsClient,
+      SQSRestServer sqsRestServer) {
+    this.sqsRestServer = sqsRestServer;
+    this.sqsClient = sqsClient;
+    this.s3Client = s3Client;
+    this.snsClient = snsClient;
+  }
 
   static AwsConnector elasticMq() {
-    AwsConnector awsConnector = new AwsConnector();
     int sqsPort = PortUtils.findOpenPort();
-    awsConnector.sqsRestServer =
+    SQSRestServer sqsRestServer =
         SQSRestServerBuilder.withPort(sqsPort).withInterface("localhost").start();
 
     AWSStaticCredentialsProvider credentials =
         new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x"));
     AwsClientBuilder.EndpointConfiguration endpointConfiguration =
         new AwsClientBuilder.EndpointConfiguration("http://localhost:" + sqsPort, "elasticmq");
-    awsConnector.sqsClient =
+    AmazonSQSAsyncClient sqsClient =
         (AmazonSQSAsyncClient)
             AmazonSQSAsyncClient.asyncBuilder()
                 .withCredentials(credentials)
                 .withEndpointConfiguration(endpointConfiguration)
                 .build();
 
-    return awsConnector;
+    return new AwsConnector(sqsClient, null, null, sqsRestServer);
   }
 
   static AwsConnector liveAws() {
-    AwsConnector awsConnector = new AwsConnector();
 
-    awsConnector.sqsClient =
+    AmazonSQSAsyncClient sqsClient =
         (AmazonSQSAsyncClient)
             AmazonSQSAsyncClient.asyncBuilder().withRegion(Regions.US_EAST_1).build();
 
-    awsConnector.s3Client =
+    AmazonS3Client s3Client =
         (AmazonS3Client) AmazonS3Client.builder().withRegion(Regions.US_EAST_1).build();
 
-    awsConnector.snsClient =
+    AmazonSNSAsyncClient snsClient =
         (AmazonSNSAsyncClient)
             AmazonSNSAsyncClient.asyncBuilder().withRegion(Regions.US_EAST_1).build();
 
-    return awsConnector;
+    return new AwsConnector(sqsClient, s3Client, snsClient, null);
   }
 
   void createBucket(String bucketName) {
-    logger.info("Create bucket  " + bucketName);
+    logger.info("Create bucket {}", bucketName);
     s3Client.createBucket(bucketName);
   }
 
   void deleteBucket(String bucketName) {
-    logger.info("Delete bucket " + bucketName);
+    logger.info("Delete bucket {}", bucketName);
     ObjectListing objectListing = s3Client.listObjects(bucketName);
     for (S3ObjectSummary s3ObjectSummary : objectListing.getObjectSummaries()) {
       s3Client.deleteObject(bucketName, s3ObjectSummary.getKey());
@@ -90,7 +99,7 @@ class AwsConnector {
   }
 
   void enableS3ToSqsNotifications(String bucketName, String sqsQueueArn) {
-    logger.info("Enable notification for bucket " + bucketName + " to queue " + sqsQueueArn);
+    logger.info("Enable notification for bucket {} to queue {}", bucketName, sqsQueueArn);
     BucketNotificationConfiguration notificationConfiguration =
         new BucketNotificationConfiguration();
     notificationConfiguration.addConfiguration(
@@ -115,18 +124,18 @@ class AwsConnector {
   }
 
   void purgeQueue(String queueUrl) {
-    logger.info("Purge queue " + queueUrl);
+    logger.info("Purge queue {}", queueUrl);
     sqsClient.purgeQueue(new PurgeQueueRequest(queueUrl));
   }
 
   void setQueuePublishingPolicy(String queueUrl, String queueArn) {
-    logger.info("Set policy for queue " + queueArn);
+    logger.info("Set policy for queue {}", queueArn);
     sqsClient.setQueueAttributes(
         queueUrl, Collections.singletonMap("Policy", getSqsPolicy(queueArn)));
   }
 
   String createQueue(String queueName) {
-    logger.info("Create queue " + queueName);
+    logger.info("Create queue {}", queueName);
     return sqsClient.createQueue(queueName).getQueueUrl();
   }
 
@@ -136,7 +145,7 @@ class AwsConnector {
   }
 
   void receiveMessage(String queueUrl) {
-    logger.info("Receive message from queue " + queueUrl);
+    logger.info("Receive message from queue {}", queueUrl);
     sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withWaitTimeSeconds(20));
   }
 
@@ -151,7 +160,7 @@ class AwsConnector {
   }
 
   String createTopicAndSubscribeQueue(String topicName, String queueArn) {
-    logger.info("Create topic " + topicName + " and subscribe to queue " + queueArn);
+    logger.info("Create topic {} and subscribe to queue {}", topicName, queueArn);
     CreateTopicResult ctr = snsClient.createTopic(topicName);
     snsClient.subscribe(ctr.getTopicArn(), "sqs", queueArn);
     return ctr.getTopicArn();
