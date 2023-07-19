@@ -45,7 +45,7 @@ import javax.sql.DataSource;
 public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
 
   private final DataSource delegate;
-  private final Instrumenter<DataSource, Void> dataSourceInstrumenter;
+  private final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter;
   private final Instrumenter<DbRequest, Void> statementInstrumenter;
   private volatile DbInfo cachedDbInfo;
 
@@ -128,25 +128,29 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
     }
   }
 
-  private <T, E extends SQLException> T wrapCall(ThrowingSupplier<T, E> callable) throws E {
+  private Connection wrapCall(ThrowingSupplier<Connection, SQLException> getConnection)
+      throws SQLException {
     Context parentContext = Context.current();
 
-    if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
+    if (!Span.fromContext(parentContext).getSpanContext().isValid()
+        || !dataSourceInstrumenter.shouldStart(parentContext, delegate)) {
       // this instrumentation is already very noisy, and calls to getConnection outside of an
       // existing trace do not tend to be very interesting
-      return callable.call();
+      return getConnection.call();
     }
 
-    Context context = this.dataSourceInstrumenter.start(parentContext, delegate);
-    T result;
+    Context context = dataSourceInstrumenter.start(parentContext, delegate);
+    Connection connection = null;
+    Throwable error = null;
     try (Scope ignored = context.makeCurrent()) {
-      result = callable.call();
+      connection = getConnection.call();
+      return connection;
     } catch (Throwable t) {
-      this.dataSourceInstrumenter.end(context, delegate, null, t);
+      error = t;
       throw t;
+    } finally {
+      dataSourceInstrumenter.end(context, delegate, getDbInfo(connection), error);
     }
-    this.dataSourceInstrumenter.end(context, delegate, null, null);
-    return result;
   }
 
   private DbInfo getDbInfo(Connection connection) {
