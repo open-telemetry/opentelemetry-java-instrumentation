@@ -50,6 +50,8 @@ dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
 
+  annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
+
   testLibrary("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
     exclude("org.junit.vintage", "junit-vintage-engine")
   }
