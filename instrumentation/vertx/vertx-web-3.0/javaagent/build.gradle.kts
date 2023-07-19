@@ -33,6 +33,17 @@ testing {
       }
     }
 
+    val version4Test by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
+
+        implementation("io.vertx:vertx-web:4.0.0")
+        implementation("io.vertx:vertx-jdbc-client:4.0.0")
+        implementation("io.vertx:vertx-codegen:4.0.0")
+        implementation("io.vertx:vertx-docgen:3.5.1")
+      }
+    }
+
     val latestDepTest by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
