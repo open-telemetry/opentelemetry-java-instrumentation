@@ -101,9 +101,13 @@ class OtelSpringStarterSmokeTest {
 
     // Metric
     List<MetricData> exportedMetrics = METRIC_EXPORTER.getFinishedMetricItems();
-    assertThat(containsTestHistogramMetric(exportedMetrics))
+    assertThat(exportedMetrics)
         .as("Should contain " + OtelSpringStarterSmokeTestController.TEST_HISTOGRAM + " metric.")
-        .isTrue();
+        .anySatisfy(
+            metric -> {
+              String metricName = metric.getName();
+              assertThat(metricName).isEqualTo(OtelSpringStarterSmokeTestController.TEST_HISTOGRAM);
+            });
 
     // Log
     List<LogRecordData> logs = LOG_RECORD_EXPORTER.getFinishedLogRecordItems();
@@ -111,15 +115,5 @@ class OtelSpringStarterSmokeTest {
     assertThat(firstLog.getBody().asString())
         .as("Should instrument logs")
         .isEqualTo("Initializing Spring DispatcherServlet 'dispatcherServlet'");
-  }
-
-  private static boolean containsTestHistogramMetric(List<MetricData> exportedMetrics) {
-    for (MetricData exportedMetric : exportedMetrics) {
-      String metricName = exportedMetric.getName();
-      if (metricName.equals(OtelSpringStarterSmokeTestController.TEST_HISTOGRAM)) {
-        return true;
-      }
-    }
-    return false;
   }
 }
