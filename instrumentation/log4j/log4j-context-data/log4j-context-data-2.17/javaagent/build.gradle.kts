@@ -28,7 +28,7 @@ testing {
     val testDisableThreadLocals by registering(JvmTestSuite::class) {
       sources {
         groovy {
-          setSrcDirs(listOf("src/test/groovy")).exclude("AutoLog4jBaggageTest.groovy")
+          setSrcDirs(listOf("src/test/groovy"))
         }
       }
       dependencies {
