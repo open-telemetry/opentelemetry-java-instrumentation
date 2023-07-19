@@ -3,7 +3,7 @@
 Here is the list of metrics based on MBeans exposed by Wildfly.
 
 | Metric Name                                        | Type          | Attributes         | Description                                                             |
-|----------------------------------------------------|---------------|--------------------|-------------------------------------------------------------------------|
+| -------------------------------------------------- | ------------- | ------------------ | ----------------------------------------------------------------------- |
 | wildfly.network.io                                 | Counter       | direction, server  | Total number of bytes transferred                                       |
 | wildfly.request.errorCount                         | Counter       | server, listener   | The number of 500 responses that have been sent by this listener        |
 | wildfly.request.requestCount                       | Counter       | server, listener   | The number of requests this listener has served                         |

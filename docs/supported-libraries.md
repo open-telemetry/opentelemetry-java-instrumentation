@@ -3,22 +3,22 @@
 We automatically instrument and support a huge number of libraries, frameworks,
 and application servers... right out of the box!
 
-Don't see your favorite tool listed here?  Consider [filing an issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues),
+Don't see your favorite tool listed here? Consider [filing an issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues),
 or [contributing](../CONTRIBUTING.md).
 
 ## Contents
 
-* [Libraries / Frameworks](#libraries--frameworks)
-* [Application Servers](#application-servers)
-* [JVMs and Operating Systems](#jvms-and-operating-systems)
-* [Disabled instrumentations](#disabled-instrumentations)
+- [Libraries / Frameworks](#libraries--frameworks)
+- [Application Servers](#application-servers)
+- [JVMs and Operating Systems](#jvms-and-operating-systems)
+- [Disabled instrumentations](#disabled-instrumentations)
 
 ## Libraries / Frameworks
 
 These are the supported libraries and frameworks:
 
 | Library/Framework                                                                                                                           | Auto-instrumented versions    | Standalone Library Instrumentation [1]                                                                                                                                                                                                                                                                                                                                                  | Semantic Conventions                                                                   |
-|---------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | [Akka Actors](https://doc.akka.io/docs/akka/current/typed/index.html)                                                                       | 2.5+                          | N/A                                                                                                                                                                                                                                                                                                                                                                                     | Context propagation                                                                    |
 | [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)                                                                          | 10.0+                         | N/A                                                                                                                                                                                                                                                                                                                                                                                     | [HTTP Client Spans], [HTTP Client Metrics], [HTTP Server Spans], [HTTP Server Metrics] |
 | [Apache Axis2](https://axis.apache.org/axis2/java/core/)                                                                                    | 1.6+                          | N/A                                                                                                                                                                                                                                                                                                                                                                                     | Provides `http.route` [2], Controller Spans [3]                                        |
@@ -71,7 +71,7 @@ These are the supported libraries and frameworks:
 | [Java Executors](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Executor.html)                                              | Java 8+                       | N/A                                                                                                                                                                                                                                                                                                                                                                                     | Context propagation                                                                    |
 | [Java Http Client](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/package-summary.html)                     | Java 11+                      | [opentelemetry-java-http-client](../instrumentation/java-http-client/library)                                                                                                                                                                                                                                                                                                           | [HTTP Client Spans], [HTTP Client Metrics]                                             |
 | [java.util.logging](https://docs.oracle.com/javase/8/docs/api/java/util/logging/package-summary.html)                                       | Java 8+                       | N/A                                                                                                                                                                                                                                                                                                                                                                                     | none                                                                                   |
-| [Java Platform](https://docs.oracle.com/javase/8/docs/api/java/lang/management/ManagementFactory.html)                                      | Java 8+                       | [opentelemetry-runtime-telemetry-java8](../instrumentation/runtime-telemetry/runtime-telemetry-java8/library),[opentelemetry-runtime-telemetry-java17](../instrumentation/runtime-telemetry/runtime-telemetry-java17/library),<br>[opentelemetry-resources](../instrumentation/resources/library)                                                                                                   | [JVM Runtime Metrics]                                                                  |
+| [Java Platform](https://docs.oracle.com/javase/8/docs/api/java/lang/management/ManagementFactory.html)                                      | Java 8+                       | [opentelemetry-runtime-telemetry-java8](../instrumentation/runtime-telemetry/runtime-telemetry-java8/library),[opentelemetry-runtime-telemetry-java17](../instrumentation/runtime-telemetry/runtime-telemetry-java17/library),<br>[opentelemetry-resources](../instrumentation/resources/library)                                                                                       | [JVM Runtime Metrics]                                                                  |
 | [JAX-RS](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html)                                                    | 0.5+                          | N/A                                                                                                                                                                                                                                                                                                                                                                                     | Provides `http.route` [2], Controller Spans [3]                                        |
 | [JAX-RS Client](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/client/package-summary.html)                                      | 1.1+                          | N/A                                                                                                                                                                                                                                                                                                                                                                                     | [HTTP Client Spans], [HTTP Client Metrics]                                             |
 | [JAX-WS](https://jakarta.ee/specifications/xml-web-services/2.3/apidocs/javax/xml/ws/package-summary.html)                                  | 2.0+ (not including 3.x yet)  | N/A                                                                                                                                                                                                                                                                                                                                                                                     | Provides `http.route` [2], Controller Spans [3]                                        |
@@ -163,17 +163,17 @@ These are the supported libraries and frameworks:
 
 These are the application servers that the smoke tests are run against:
 
-| Application server                                                                        | Version                     | JVM               | OS                             |
-| ----------------------------------------------------------------------------------------- | --------------------------- | ----------------- | ------------------------------ |
-| [Jetty](https://www.eclipse.org/jetty/)                                                   | 9.4.x, 10.0.x, 11.0.x       | OpenJDK 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
-| [Payara](https://www.payara.fish/)                                                        | 5.0.x, 5.1.x                | OpenJDK 8, 11     | [`ubuntu-latest`], [`windows-latest`] |
-| [Tomcat](http://tomcat.apache.org/)                                                       | 7.0.x                       | OpenJDK 8         | [`ubuntu-latest`], [`windows-latest`] |
-| [Tomcat](http://tomcat.apache.org/)                                                       | 7.0.x, 8.5.x, 9.0.x, 10.0.x | OpenJDK 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
-| [TomEE](https://tomee.apache.org/)                                                        | 7.x, 8.x                    | OpenJDK 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
-| [Open Liberty](https://openliberty.io/)                                                   | 21.x, 22.x, 23.x            | OpenJDK 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
-| [Websphere Traditional](https://www.ibm.com/uk-en/cloud/websphere-application-server)     | 8.5.5.x, 9.0.x              | IBM JDK 8         | Red Hat Enterprise Linux 8.4   |
-| [WildFly](https://www.wildfly.org/)                                                       | 13.x                        | OpenJDK 8         | [`ubuntu-latest`], [`windows-latest`] |
-| [WildFly](https://www.wildfly.org/)                                                       | 17.x, 21.x, 25.x            | OpenJDK 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
+| Application server                                                                    | Version                     | JVM               | OS                                    |
+| ------------------------------------------------------------------------------------- | --------------------------- | ----------------- | ------------------------------------- |
+| [Jetty](https://www.eclipse.org/jetty/)                                               | 9.4.x, 10.0.x, 11.0.x       | OpenJDK 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
+| [Payara](https://www.payara.fish/)                                                    | 5.0.x, 5.1.x                | OpenJDK 8, 11     | [`ubuntu-latest`], [`windows-latest`] |
+| [Tomcat](http://tomcat.apache.org/)                                                   | 7.0.x                       | OpenJDK 8         | [`ubuntu-latest`], [`windows-latest`] |
+| [Tomcat](http://tomcat.apache.org/)                                                   | 7.0.x, 8.5.x, 9.0.x, 10.0.x | OpenJDK 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
+| [TomEE](https://tomee.apache.org/)                                                    | 7.x, 8.x                    | OpenJDK 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
+| [Open Liberty](https://openliberty.io/)                                               | 21.x, 22.x, 23.x            | OpenJDK 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
+| [Websphere Traditional](https://www.ibm.com/uk-en/cloud/websphere-application-server) | 8.5.5.x, 9.0.x              | IBM JDK 8         | Red Hat Enterprise Linux 8.4          |
+| [WildFly](https://www.wildfly.org/)                                                   | 13.x                        | OpenJDK 8         | [`ubuntu-latest`], [`windows-latest`] |
+| [WildFly](https://www.wildfly.org/)                                                   | 17.x, 21.x, 25.x            | OpenJDK 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
 
 [`ubuntu-latest`]: https://github.com/actions/runner-images#available-images
 [`windows-latest`]: https://github.com/actions/runner-images#available-images
@@ -182,10 +182,10 @@ These are the application servers that the smoke tests are run against:
 
 These are the JVMs and operating systems that the integration tests are run against:
 
-| JVM                                                                                        | Versions  | OS                             |
-| ------------------------------------------------------------------------------------------ | --------- | ------------------------------ |
-| [OpenJDK (Eclipse Temurin)](https://adoptium.net/)                                         | 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
-| [OpenJ9 (IBM Semeru Runtimes)](https://developer.ibm.com/languages/java/semeru-runtimes/)  | 8, 11, 17 | [`ubuntu-latest`] |
+| JVM                                                                                       | Versions  | OS                                    |
+| ----------------------------------------------------------------------------------------- | --------- | ------------------------------------- |
+| [OpenJDK (Eclipse Temurin)](https://adoptium.net/)                                        | 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
+| [OpenJ9 (IBM Semeru Runtimes)](https://developer.ibm.com/languages/java/semeru-runtimes/) | 8, 11, 17 | [`ubuntu-latest`]                     |
 
 ## Disabled instrumentations
 

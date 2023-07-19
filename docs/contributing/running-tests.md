@@ -63,7 +63,6 @@ Some tests can be executed as GraalVM native executables:
 ./gradlew nativeTest
 ```
 
-
 ## Docker disk space
 
 Some of the instrumentation tests (and all of the smoke tests) spin up docker containers via
