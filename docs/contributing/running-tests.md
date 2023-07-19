@@ -59,8 +59,7 @@ USE_LINUX_CONTAINERS=1 ./gradlew :smoke-tests:test -PsmokeTestSuite=payara
 
 Smoke tests for the [OpenTelemetry Spring starter](../../instrumentation/spring/starters/spring-boot-starter/README.md).
 
-You can execute the tests in a JVM (`./gradlew smoke-tests-otel-starter:test`) or as Spring native tests (`./gradlew smoke-tests-otel-starter:nativeTest
-`).
+You can execute the tests in a JVM (`./gradlew smoke-tests-otel-starter:test`) or as Spring native tests (`./gradlew smoke-tests-otel-starter:nativeTest`).
 
 ## GraalVM native test
 
