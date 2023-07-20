@@ -362,8 +362,6 @@ class TomcatServlet5TestForward extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, RequestDispatcherServlet.Forward)
-    addServlet(context, "/dispatch" + HTML_PRINT_WRITER_WITH_OTHER_HEAD_STYLE.path, RequestDispatcherServlet.Forward)
-    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD_STYLE.path, RequestDispatcherServlet.Forward)
   }
 }
 
@@ -408,8 +406,6 @@ class TomcatServlet5TestInclude extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, RequestDispatcherServlet.Include)
-    addServlet(context, "/dispatch" + HTML_PRINT_WRITER_WITH_OTHER_HEAD_STYLE.path, RequestDispatcherServlet.Include)
-    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD_STYLE.path, RequestDispatcherServlet.Include)
   }
 }
 
@@ -439,8 +435,6 @@ class TomcatServlet5TestDispatchImmediate extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, TestServlet5.DispatchImmediate)
-    addServlet(context, "/dispatch" + HTML_PRINT_WRITER_WITH_OTHER_HEAD_STYLE.path, TestServlet5.DispatchImmediate)
-    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD_STYLE.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }
 }
@@ -466,8 +460,6 @@ class TomcatServlet5TestDispatchAsync extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.path, TestServlet5.DispatchAsync)
-    addServlet(context, "/dispatch" + HTML_PRINT_WRITER_WITH_OTHER_HEAD_STYLE.path, TestServlet5.DispatchAsync)
-    addServlet(context, "/dispatch" + HTML_SERVLET_OUTPUT_STREAM_WITH_OTHER_HEAD_STYLE.path, TestServlet5.DispatchAsync)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }
 
