@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -98,8 +97,8 @@ public class OpenSearchRestTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("net.protocol.name"), "http"),
-                            equalTo(stringKey("net.protocol.version"), "1.1"),
+                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
                             equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
@@ -166,8 +165,8 @@ public class OpenSearchRestTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("net.protocol.name"), "http"),
-                            equalTo(stringKey("net.protocol.version"), "1.1"),
+                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
                             equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),

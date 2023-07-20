@@ -64,8 +64,8 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" { it == null || it == IP_TCP }
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
@@ -158,8 +158,8 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             childOf(span(0))
             attributes {
               "$SemanticAttributes.NET_TRANSPORT" { it == null || it == IP_TCP }
-              "net.protocol.name" "http"
-              "net.protocol.version" "1.1"
+              "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+              "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
               "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
               "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
               "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"

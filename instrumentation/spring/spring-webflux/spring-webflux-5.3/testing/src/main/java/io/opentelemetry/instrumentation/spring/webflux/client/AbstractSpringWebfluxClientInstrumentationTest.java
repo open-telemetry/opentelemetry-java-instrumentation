@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -74,8 +74,8 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(stringKey("net.protocol.name"));
-          attributes.remove(stringKey("net.protocol.version"));
+          attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
+          attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
           return attributes;
         });
 

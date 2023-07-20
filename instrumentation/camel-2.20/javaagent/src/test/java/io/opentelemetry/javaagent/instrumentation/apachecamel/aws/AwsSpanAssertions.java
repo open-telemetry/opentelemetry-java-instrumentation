@@ -79,8 +79,8 @@ class AwsSpanAssertions {
                     val.satisfiesAnyOf(
                         v -> assertThat(v).isNull(),
                         v -> assertThat(v).isInstanceOf(Number.class))),
-            equalTo(stringKey("net.protocol.name"), "http"),
-            equalTo(stringKey("net.protocol.version"), "1.1"),
+            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
             equalTo(stringKey("rpc.system"), "aws-api"),
             satisfies(
                 stringKey("rpc.method"),
@@ -100,8 +100,8 @@ class AwsSpanAssertions {
             equalTo(stringKey("http.method"), method),
             equalTo(longKey("http.status_code"), 200),
             satisfies(stringKey("http.url"), val -> val.isInstanceOf(String.class)),
-            equalTo(stringKey("net.protocol.name"), "http"),
-            equalTo(stringKey("net.protocol.version"), "1.1"),
+            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
             satisfies(stringKey("net.peer.name"), val -> val.isInstanceOf(String.class)),
             satisfies(
                 SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
@@ -127,8 +127,8 @@ class AwsSpanAssertions {
             equalTo(stringKey("http.method"), "POST"),
             equalTo(longKey("http.status_code"), 200),
             satisfies(stringKey("http.url"), val -> val.isInstanceOf(String.class)),
-            equalTo(stringKey("net.protocol.name"), "http"),
-            equalTo(stringKey("net.protocol.version"), "1.1"),
+            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
             satisfies(stringKey("net.peer.name"), val -> val.isInstanceOf(String.class)),
             satisfies(
                 stringKey("net.peer.port"),

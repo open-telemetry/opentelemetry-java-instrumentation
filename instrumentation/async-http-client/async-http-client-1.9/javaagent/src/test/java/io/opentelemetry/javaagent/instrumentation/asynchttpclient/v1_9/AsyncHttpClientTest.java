@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
-
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -20,6 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
@@ -93,8 +92,8 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
         endpoint -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(stringKey("net.protocol.name"));
-          attributes.remove(stringKey("net.protocol.version"));
+          attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
+          attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
           return attributes;
         });
   }
