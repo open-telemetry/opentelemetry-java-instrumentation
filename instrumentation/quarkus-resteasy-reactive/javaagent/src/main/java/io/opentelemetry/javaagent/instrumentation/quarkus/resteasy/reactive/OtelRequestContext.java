@@ -16,7 +16,7 @@ public final class OtelRequestContext {
     OtelRequestContext context = new OtelRequestContext();
     contextThreadLocal.set(context);
     ResteasyReactiveSpanName.INSTANCE.updateServerSpanName(
-        requestContext, HttpRouteSource.CONTROLLER);
+        requestContext, HttpRouteSource.NESTED_CONTROLLER);
     return context;
   }
 
