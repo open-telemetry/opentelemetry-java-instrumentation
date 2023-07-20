@@ -40,12 +40,12 @@ public class InjectionState {
     if (isHeadTagWritten()) {
       return false;
     }
-    if (inHeadTag(b) && headTagBytesSeen < HEAD_TAG_PREFIX_LENGTH) {
+    if (inHeadTag(b)) {
       headTagBytesSeen++;
-    } else if (headTagBytesSeen != HEAD_TAG_PREFIX_LENGTH) {
+    } else {
       headTagBytesSeen = 0;
     }
-    if (headTagBytesSeen == HEAD_TAG_PREFIX_LENGTH && b == '>') {
+    if (headTagBytesSeen > HEAD_TAG_PREFIX_LENGTH && b == '>') {
       setHeadTagWritten();
       return true;
     } else {
@@ -64,10 +64,13 @@ public class InjectionState {
       return true;
     } else if (headTagBytesSeen == 4 && b == 'd') {
       return true;
+    } else if (headTagBytesSeen == 5 && (b == '>' || Character.isWhitespace(b))) {
+      return true;
     } else {
-      return headTagBytesSeen == HEAD_TAG_PREFIX_LENGTH;
+      return headTagBytesSeen > 5;
     }
   }
+
 
   public SnippetInjectingResponseWrapper getWrapper() {
     return wrapper;
