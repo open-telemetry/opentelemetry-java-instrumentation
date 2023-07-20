@@ -71,7 +71,6 @@ public class InjectionState {
     }
   }
 
-
   public SnippetInjectingResponseWrapper getWrapper() {
     return wrapper;
   }
