@@ -66,8 +66,7 @@ public final class ReactorNettySingletons {
     if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
       builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
-    INSTRUMENTER =
-        builder.buildClientInstrumenter(HttpClientRequestHeadersSetter.INSTANCE);
+    INSTRUMENTER = builder.buildClientInstrumenter(HttpClientRequestHeadersSetter.INSTANCE);
 
     NettyClientInstrumenterFactory instrumenterFactory =
         new NettyClientInstrumenterFactory(
