@@ -21,8 +21,6 @@ import spock.lang.Subject
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey
-
 class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTrait {
   @Subject
   @Shared

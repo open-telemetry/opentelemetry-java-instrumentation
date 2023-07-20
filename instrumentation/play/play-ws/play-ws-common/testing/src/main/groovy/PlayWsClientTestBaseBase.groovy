@@ -21,8 +21,6 @@ import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClientConfig
 import play.shaded.ahc.org.asynchttpclient.RequestBuilderBase
 import spock.lang.Shared
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey
-
 abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST> implements AgentTestTrait {
   @Shared
   ActorSystem system
