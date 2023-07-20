@@ -11,4 +11,6 @@ class MeasurementRecorderUtil {
       Thread.currentThread().setContextClassLoader(prior);
     }
   }
+
+  private MeasurementRecorderUtil() {}
 }
