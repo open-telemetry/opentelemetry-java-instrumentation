@@ -67,4 +67,6 @@ public final class ClientInstrumenterFactory {
     // headers are injected elsewhere; ClientRequest is immutable
     return clientBuilder.buildInstrumenter(alwaysClient());
   }
+
+  private ClientInstrumenterFactory() {}
 }
