@@ -56,4 +56,6 @@ public final class JettyClientInstrumenterFactory {
 
     return builder.buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
+
+  private JettyClientInstrumenterFactory() {}
 }
