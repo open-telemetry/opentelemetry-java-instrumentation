@@ -32,7 +32,8 @@ final class DoubleMeasurementRecorder<T> implements Consumer<ObservableDoubleMea
   public void accept(ObservableDoubleMeasurement measurement) {
     T obj = objWeakRef.get();
     if (obj != null) {
-      measurement.record(metricFunction.applyAsDouble(obj), attributes);
+      MeasurementRecorderUtil.runInThreadContextClassLoader(metricFunction.getClass().getClassLoader(),
+          () -> measurement.record(metricFunction.applyAsDouble(obj), attributes));
     }
   }
 }

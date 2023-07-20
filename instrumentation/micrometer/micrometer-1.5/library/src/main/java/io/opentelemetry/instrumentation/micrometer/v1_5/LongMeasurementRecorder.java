@@ -32,7 +32,8 @@ final class LongMeasurementRecorder<T> implements Consumer<ObservableLongMeasure
   public void accept(ObservableLongMeasurement measurement) {
     T obj = objWeakRef.get();
     if (obj != null) {
-      measurement.record(metricFunction.applyAsLong(obj), attributes);
+      MeasurementRecorderUtil.runInThreadContextClassLoader(metricFunction.getClass().getClassLoader(),
+          () -> measurement.record(metricFunction.applyAsLong(obj), attributes));
     }
   }
 }

@@ -60,6 +60,59 @@ public abstract class AbstractGaugeTest {
   }
 
   @Test
+  void testGaugeDependingOnThreadContextClassLoader() {
+    // given
+    Gauge gauge =
+        Gauge.builder("testGauge", () -> {
+              assertThat(Thread.currentThread().getContextClassLoader())
+                  .isEqualTo(AbstractGaugeTest.class.getClassLoader());
+              return 42;
+            })
+            .description("This is a test gauge")
+            .tags("tag", "value")
+            .baseUnit("items")
+            .register(Metrics.globalRegistry);
+
+    // this will call forceFlush once
+    ClassLoader prior = Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader(null);
+    try {
+      testing().metrics();
+    } finally {
+      Thread.currentThread().setContextClassLoader(prior);
+    }
+
+    // remove the gauge, so it doesn't report again when waitAndAssertMetrics is called
+    Metrics.globalRegistry.remove(gauge);
+
+    // then
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "testGauge",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasDescription("This is a test gauge")
+                            .hasUnit("items")
+                            .hasDoubleGaugeSatisfying(
+                                doubleGauge ->
+                                    doubleGauge.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(42)
+                                                .hasAttributes(attributeEntry("tag", "value"))))));
+
+    // when
+    testing().clearData();
+
+    // then
+    testing()
+        .waitAndAssertMetrics(INSTRUMENTATION_NAME, "testGauge", AbstractIterableAssert::isEmpty);
+  }
+
+  @Test
   void gaugesWithSameNameAndDifferentTags() {
     // given
     Gauge.builder("testGaugeWithTags", () -> 12)
