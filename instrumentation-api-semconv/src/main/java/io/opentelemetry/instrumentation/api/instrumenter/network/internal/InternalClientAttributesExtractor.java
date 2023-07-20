@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.instrumenter.network.internal;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
@@ -20,41 +19,41 @@ import javax.annotation.Nullable;
 public final class InternalClientAttributesExtractor<REQUEST, RESPONSE> {
 
   private final ClientAttributesGetter<REQUEST, RESPONSE> getter;
-  private final FallbackNamePortGetter<REQUEST> fallbackNamePortGetter;
+  private final FallbackAddressPortExtractor<REQUEST> fallbackAddressPortExtractor;
   private final boolean emitStableUrlAttributes;
   private final boolean emitOldHttpAttributes;
 
   public InternalClientAttributesExtractor(
       ClientAttributesGetter<REQUEST, RESPONSE> getter,
-      FallbackNamePortGetter<REQUEST> fallbackNamePortGetter,
+      FallbackAddressPortExtractor<REQUEST> fallbackAddressPortExtractor,
       boolean emitStableUrlAttributes,
       boolean emitOldHttpAttributes) {
     this.getter = getter;
-    this.fallbackNamePortGetter = fallbackNamePortGetter;
+    this.fallbackAddressPortExtractor = fallbackAddressPortExtractor;
     this.emitStableUrlAttributes = emitStableUrlAttributes;
     this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
 
   public void onStart(AttributesBuilder attributes, REQUEST request) {
-    String clientAddress = extractClientAddress(request);
+    AddressAndPort clientAddressAndPort = extractClientAddressAndPort(request);
+
     if (emitStableUrlAttributes) {
-      internalSet(attributes, NetworkAttributes.CLIENT_ADDRESS, clientAddress);
-      Integer clientPort = extractClientPort(request);
-      if (clientPort != null && clientPort > 0) {
-        internalSet(attributes, NetworkAttributes.CLIENT_PORT, (long) clientPort);
+      internalSet(attributes, NetworkAttributes.CLIENT_ADDRESS, clientAddressAndPort.address);
+      if (clientAddressAndPort.port != null && clientAddressAndPort.port > 0) {
+        internalSet(attributes, NetworkAttributes.CLIENT_PORT, (long) clientAddressAndPort.port);
       }
     }
     if (emitOldHttpAttributes) {
-      internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientAddress);
+      internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientAddressAndPort.address);
     }
   }
 
   public void onEnd(AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
-    String clientAddress = extractClientAddress(request);
+    AddressAndPort clientAddressAndPort = extractClientAddressAndPort(request);
     String clientSocketAddress = getter.getClientSocketAddress(request, response);
     Integer clientSocketPort = getter.getClientSocketPort(request, response);
 
-    if (clientSocketAddress != null && !clientSocketAddress.equals(clientAddress)) {
+    if (clientSocketAddress != null && !clientSocketAddress.equals(clientAddressAndPort.address)) {
       if (emitStableUrlAttributes) {
         internalSet(attributes, NetworkAttributes.CLIENT_SOCKET_ADDRESS, clientSocketAddress);
       }
@@ -64,8 +63,7 @@ public final class InternalClientAttributesExtractor<REQUEST, RESPONSE> {
     }
     if (clientSocketPort != null && clientSocketPort > 0) {
       if (emitStableUrlAttributes) {
-        Integer clientPort = extractClientPort(request);
-        if (!clientSocketPort.equals(clientPort)) {
+        if (!clientSocketPort.equals(clientAddressAndPort.port)) {
           internalSet(attributes, NetworkAttributes.CLIENT_SOCKET_PORT, (long) clientSocketPort);
         }
       }
@@ -75,19 +73,13 @@ public final class InternalClientAttributesExtractor<REQUEST, RESPONSE> {
     }
   }
 
-  private String extractClientAddress(REQUEST request) {
-    String clientAddress = getter.getClientAddress(request);
-    if (clientAddress == null) {
-      clientAddress = fallbackNamePortGetter.name(request);
+  private AddressAndPort extractClientAddressAndPort(REQUEST request) {
+    AddressAndPort addressAndPort = new AddressAndPort();
+    addressAndPort.address = getter.getClientAddress(request);
+    addressAndPort.port = getter.getClientPort(request);
+    if (addressAndPort.address == null && addressAndPort.port == null) {
+      fallbackAddressPortExtractor.extract(addressAndPort, request);
     }
-    return clientAddress;
-  }
-
-  private Integer extractClientPort(REQUEST request) {
-    Integer clientPort = getter.getClientPort(request);
-    if (clientPort == null) {
-      clientPort = fallbackNamePortGetter.port(request);
-    }
-    return clientPort;
+    return addressAndPort;
   }
 }

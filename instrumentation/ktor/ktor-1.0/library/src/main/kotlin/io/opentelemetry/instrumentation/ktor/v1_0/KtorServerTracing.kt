@@ -75,6 +75,10 @@ class KtorServerTracing private constructor(
       httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders)
     }
 
+    fun setKnownMethods(knownMethods: Set<String>) {
+      httpAttributesExtractorBuilder.setKnownMethods(knownMethods)
+    }
+
     internal fun isOpenTelemetryInitialized(): Boolean = this::openTelemetry.isInitialized
   }
 

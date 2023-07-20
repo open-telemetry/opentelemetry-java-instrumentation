@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,6 +32,13 @@ final class MetricsView {
     view.add(SemanticAttributes.RPC_SERVICE);
     view.add(SemanticAttributes.RPC_METHOD);
     view.add(SemanticAttributes.RPC_GRPC_STATUS_CODE);
+    // stable http semconv
+    view.add(NetworkAttributes.NETWORK_TYPE);
+    view.add(NetworkAttributes.NETWORK_TRANSPORT);
+    view.add(NetworkAttributes.SERVER_ADDRESS);
+    view.add(NetworkAttributes.SERVER_PORT);
+    view.add(NetworkAttributes.SERVER_SOCKET_ADDRESS);
+    view.add(NetworkAttributes.SERVER_SOCKET_PORT);
     return view;
   }
 

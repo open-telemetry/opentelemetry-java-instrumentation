@@ -88,7 +88,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
       trace(0, 4) {
         // kafka-clients PRODUCER
         span(0) {
-          name STREAM_PENDING + " send"
+          name STREAM_PENDING + " publish"
           kind PRODUCER
           hasNoParent()
           attributes {
@@ -127,7 +127,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
 
         // kafka-clients PRODUCER
         span(2) {
-          name STREAM_PROCESSED + " send"
+          name STREAM_PROCESSED + " publish"
           kind PRODUCER
           childOf span(1)
           attributes {

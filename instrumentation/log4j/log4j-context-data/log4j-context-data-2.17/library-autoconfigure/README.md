@@ -42,6 +42,12 @@ will be added to the context when a log statement is made when a span is active:
 - `span_id`
 - `trace_flags`
 
+If the `otel.instrumentation.log4j-context-data.add-baggage` system property (or the
+`OTEL_INSTRUMENTATION_LOG4J_CONTEXT_DATA_ADD_BAGGAGE` environment variable) is set to `true`,
+key/value pairs in [baggage](https://opentelemetry.io/docs/concepts/signals/baggage/) will be added to the context too.
+
+- `baggage.<entry_name>`
+
 You can use these keys when defining an appender in your `log4j.xml` configuration, for example:
 
 ```xml

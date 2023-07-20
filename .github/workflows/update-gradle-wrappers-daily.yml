@@ -13,8 +13,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17.0.6
+
       - name: Update Gradle Wrapper
         uses: gradle-update/update-gradle-wrapper-action@v1
+        with:
+          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          github-token: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
 
   workflow-notification:
     needs:

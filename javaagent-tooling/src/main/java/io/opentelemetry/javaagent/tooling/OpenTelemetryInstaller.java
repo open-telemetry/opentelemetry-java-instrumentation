@@ -26,7 +26,7 @@ public final class OpenTelemetryInstaller {
 
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         AutoConfiguredOpenTelemetrySdk.builder()
-            .setResultAsGlobal(true)
+            .setResultAsGlobal()
             .setServiceClassLoader(extensionClassLoader)
             // disable the logs exporter by default for the time being
             // FIXME remove this in the 2.x branch

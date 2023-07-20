@@ -48,7 +48,7 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
 
   static producerSpan(TraceAssert trace, int index, String destinationName, boolean testHeaders = false) {
     trace.span(index) {
-      name destinationName + " send"
+      name destinationName + " publish"
       kind PRODUCER
       hasNoParent()
       attributes {

@@ -9,15 +9,18 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHtt
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.requestAttributeKey;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.responseAttributeKey;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -35,19 +38,29 @@ abstract class HttpCommonAttributesExtractor<
   final GETTER getter;
   private final List<String> capturedRequestHeaders;
   private final List<String> capturedResponseHeaders;
+  private final Set<String> knownMethods;
 
   HttpCommonAttributesExtractor(
-      GETTER getter, List<String> capturedRequestHeaders, List<String> capturedResponseHeaders) {
+      GETTER getter,
+      List<String> capturedRequestHeaders,
+      List<String> capturedResponseHeaders,
+      Set<String> knownMethods) {
     this.getter = getter;
     this.capturedRequestHeaders = lowercase(capturedRequestHeaders);
     this.capturedResponseHeaders = lowercase(capturedResponseHeaders);
+    this.knownMethods = new HashSet<>(knownMethods);
   }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     String method = getter.getHttpRequestMethod(request);
     if (SemconvStability.emitStableHttpSemconv()) {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+      if (knownMethods.contains(method)) {
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+      } else {
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      }
     }
     if (SemconvStability.emitOldHttpSemconv()) {
       internalSet(attributes, SemanticAttributes.HTTP_METHOD, method);
@@ -140,42 +153,34 @@ abstract class HttpCommonAttributesExtractor<
     }
   }
 
-  static final class HttpNetNamePortGetter<REQUEST> implements FallbackNamePortGetter<REQUEST> {
+  static final class HttpNetAddressPortExtractor<REQUEST>
+      implements FallbackAddressPortExtractor<REQUEST> {
 
     private final HttpCommonAttributesGetter<REQUEST, ?> getter;
 
-    HttpNetNamePortGetter(HttpCommonAttributesGetter<REQUEST, ?> getter) {
+    HttpNetAddressPortExtractor(HttpCommonAttributesGetter<REQUEST, ?> getter) {
       this.getter = getter;
     }
 
-    @Nullable
     @Override
-    public String name(REQUEST request) {
+    public void extract(AddressPortSink sink, REQUEST request) {
       String host = firstHeaderValue(getter.getHttpRequestHeader(request, "host"));
       if (host == null) {
-        return null;
+        return;
       }
-      int hostHeaderSeparator = host.indexOf(':');
-      return hostHeaderSeparator == -1 ? host : host.substring(0, hostHeaderSeparator);
-    }
 
-    @Nullable
-    @Override
-    public Integer port(REQUEST request) {
-      String host = firstHeaderValue(getter.getHttpRequestHeader(request, "host"));
-      if (host == null) {
-        return null;
-      }
       int hostHeaderSeparator = host.indexOf(':');
       if (hostHeaderSeparator == -1) {
-        return null;
+        sink.setAddress(host);
+        return;
       }
+
+      sink.setAddress(host.substring(0, hostHeaderSeparator));
       try {
-        return Integer.parseInt(host.substring(hostHeaderSeparator + 1));
+        sink.setPort(Integer.parseInt(host.substring(hostHeaderSeparator + 1)));
       } catch (NumberFormatException e) {
         logger.log(FINE, e.getMessage(), e);
       }
-      return null;
     }
   }
 }

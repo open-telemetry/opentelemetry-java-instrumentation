@@ -35,6 +35,7 @@ public final class GrizzlySingletons {
                 HttpServerAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(

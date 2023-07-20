@@ -11,6 +11,7 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
     excludeInstrumentationName("aws-sdk-2.2-sqs")
+    excludeInstrumentationName("aws-sdk-2.2-sns")
 
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
@@ -40,6 +41,22 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
+    excludeInstrumentationName("aws-sdk-2.2-sns")
+
+    // several software.amazon.awssdk artifacts are missing for this version
+    skip("2.17.200")
+  }
+
+  pass {
+    group.set("software.amazon.awssdk")
+    module.set("sns")
+    versions.set("[2.2.0,)")
+    // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
+    // client, which is not target of instrumentation anyways.
+    extraDependency("software.amazon.awssdk:protocol-core")
+
+    excludeInstrumentationName("aws-sdk-2.2-sqs")
+
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
   }
@@ -63,6 +80,8 @@ dependencies {
   testLibrary("software.amazon.awssdk:rds:2.2.0")
   testLibrary("software.amazon.awssdk:s3:2.2.0")
   testLibrary("software.amazon.awssdk:sqs:2.2.0")
+  testLibrary("software.amazon.awssdk:sns:2.2.0")
+  testLibrary("software.amazon.awssdk:ses:2.2.0")
 }
 
 tasks {
@@ -77,7 +96,6 @@ tasks {
   }
 
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     // TODO run tests both with and without experimental span attributes
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
   }

@@ -6,12 +6,13 @@
 package io.opentelemetry.instrumentation.ktor.v2_0.client
 
 import io.ktor.client.request.*
-import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.*
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor
@@ -25,6 +26,7 @@ class KtorClientTracingBuilder {
     KtorHttpClientAttributesGetter,
     KtorNetClientAttributesGetter,
   )
+  private var emitExperimentalHttpClientMetrics = false
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
     this.openTelemetry = openTelemetry
@@ -44,11 +46,26 @@ class KtorClientTracingBuilder {
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(headers)
   }
 
+  fun setKnownMethods(knownMethods: Set<String>) {
+    httpAttributesExtractorBuilder.setKnownMethods(knownMethods)
+  }
+
   fun addAttributesExtractors(vararg extractors: AttributesExtractor<in HttpRequestData, in HttpResponse>) =
     addAttributesExtractors(extractors.asList())
 
   fun addAttributesExtractors(extractors: Iterable<AttributesExtractor<in HttpRequestData, in HttpResponse>>) {
     additionalExtractors += extractors
+  }
+
+  /**
+   * Configures the instrumentation to emit experimental HTTP client metrics.
+   *
+   * @param emitExperimentalHttpClientMetrics `true` if the experimental HTTP client metrics are to be emitted.
+   */
+  fun setEmitExperimentalHttpClientMetrics(
+    emitExperimentalHttpClientMetrics: Boolean
+  ) {
+    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics
   }
 
   internal fun build(): KtorClientTracing {
@@ -60,12 +77,16 @@ class KtorClientTracingBuilder {
       INSTRUMENTATION_NAME,
       HttpSpanNameExtractor.create(KtorHttpClientAttributesGetter),
     )
-
-    val instrumenter = instrumenterBuilder
       .setSpanStatusExtractor(HttpSpanStatusExtractor.create(KtorHttpClientAttributesGetter))
       .addAttributesExtractor(httpAttributesExtractorBuilder.build())
       .addAttributesExtractors(additionalExtractors)
       .addOperationMetrics(HttpClientMetrics.get())
+
+    if (emitExperimentalHttpClientMetrics) {
+      instrumenterBuilder.addOperationMetrics(HttpClientExperimentalMetrics.get())
+    }
+
+    val instrumenter = instrumenterBuilder
       .buildInstrumenter(alwaysClient())
 
     return KtorClientTracing(

@@ -17,11 +17,11 @@ To add the extension to the instrumentation agent:
 1. Copy the jar file to a host that is running an application to which you've attached the OpenTelemetry Java instrumentation.
 2. Modify the startup command to add the full path to the extension file. For example:
 
-     ```bash
-     java -javaagent:path/to/opentelemetry-javaagent.jar \
-          -Dotel.javaagent.extensions=build/libs/opentelemetry-java-instrumentation-extension-demo-1.0-all.jar
-          -jar myapp.jar
-     ```
+   ```bash
+   java -javaagent:path/to/opentelemetry-javaagent.jar \
+        -Dotel.javaagent.extensions=build/libs/opentelemetry-java-instrumentation-extension-demo-1.0-all.jar
+        -jar myapp.jar
+   ```
 
 Note: to load multiple extensions, you can specify a comma-separated list of extension jars or directories (that
 contain extension jars) for the `otel.javaagent.extensions` value.
@@ -42,13 +42,13 @@ For more information, see the `extendedAgent` task in [build.gradle](build.gradl
 [DemoSpanExporter]: src/main/java/com/example/javaagent/DemoSpanExporter.java
 [DemoServlet3InstrumentationModule]: src/main/java/com/example/javaagent/instrumentation/DemoServlet3InstrumentationModule.java
 
-* Custom `AutoConfigurationCustomizer`: [DemoAutoConfigurationCustomizerProvider][DemoAutoConfigurationCustomizerProvider]
-* Custom `IdGenerator`: [DemoIdGenerator][DemoIdGenerator]
-* Custom `TextMapPropagator`: [DemoPropagator][DemoPropagator]
-* Custom `Sampler`: [DemoSampler][DemoSampler]
-* Custom `SpanProcessor`: [DemoSpanProcessor][DemoSpanProcessor]
-* Custom `SpanExporter`: [DemoSpanExporter][DemoSpanExporter]
-* Additional instrumentation: [DemoServlet3InstrumentationModule][DemoServlet3InstrumentationModule]
+- Custom `AutoConfigurationCustomizer`: [DemoAutoConfigurationCustomizerProvider][DemoAutoConfigurationCustomizerProvider]
+- Custom `IdGenerator`: [DemoIdGenerator][DemoIdGenerator]
+- Custom `TextMapPropagator`: [DemoPropagator][DemoPropagator]
+- Custom `Sampler`: [DemoSampler][DemoSampler]
+- Custom `SpanProcessor`: [DemoSpanProcessor][DemoSpanProcessor]
+- Custom `SpanExporter`: [DemoSpanExporter][DemoSpanExporter]
+- Additional instrumentation: [DemoServlet3InstrumentationModule][DemoServlet3InstrumentationModule]
 
 `ConfigurablePropagatorProvider` and `AutoConfigurationCustomizer` implementations and custom
 instrumentation (`InstrumentationModule`) need the correct SPI (through `@AutoService`) in

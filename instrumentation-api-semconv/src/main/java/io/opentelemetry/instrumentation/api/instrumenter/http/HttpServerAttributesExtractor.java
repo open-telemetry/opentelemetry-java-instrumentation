@@ -15,8 +15,8 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -78,12 +79,16 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
-      List<String> capturedResponseHeaders) {
+      List<String> capturedResponseHeaders,
+      Set<String> knownMethods,
+      boolean captureServerSocketAttributes) {
     this(
         httpAttributesGetter,
         netAttributesGetter,
         capturedRequestHeaders,
         capturedResponseHeaders,
+        knownMethods,
+        captureServerSocketAttributes,
         HttpRouteHolder::getRoute);
   }
 
@@ -93,10 +98,12 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders,
+      Set<String> knownMethods,
+      boolean captureServerSocketAttributes,
       Function<Context, String> httpRouteHolderGetter) {
-    super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
-    HttpNetNamePortGetter<REQUEST> namePortGetter =
-        new HttpNetNamePortGetter<>(httpAttributesGetter);
+    super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders, knownMethods);
+    HttpNetAddressPortExtractor<REQUEST> addressPortExtractor =
+        new HttpNetAddressPortExtractor<>(httpAttributesGetter);
     internalUrlExtractor =
         new InternalUrlAttributesExtractor<>(
             httpAttributesGetter,
@@ -105,7 +112,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
             SemconvStability.emitOldHttpSemconv());
     internalNetExtractor =
         new InternalNetServerAttributesExtractor<>(
-            netAttributesGetter, namePortGetter, SemconvStability.emitOldHttpSemconv());
+            netAttributesGetter, addressPortExtractor, SemconvStability.emitOldHttpSemconv());
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             netAttributesGetter,
@@ -116,14 +123,17 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
         new InternalServerAttributesExtractor<>(
             netAttributesGetter,
             this::shouldCaptureServerPort,
-            namePortGetter,
+            addressPortExtractor,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
-            InternalServerAttributesExtractor.Mode.HOST);
+            InternalServerAttributesExtractor.Mode.HOST,
+            // we're not capturing these by default, since they're opt-in
+            // we'll add a configuration flag if someone happens to request them
+            /* captureServerSocketAttributes= */ false);
     internalClientExtractor =
         new InternalClientAttributesExtractor<>(
             netAttributesGetter,
-            new ClientAddressGetter<>(httpAttributesGetter),
+            new ClientAddressAndPortExtractor<>(httpAttributesGetter),
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
     this.httpRouteHolderGetter = httpRouteHolderGetter;
@@ -204,41 +214,34 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     return SpanKey.HTTP_SERVER;
   }
 
-  private static final class ClientAddressGetter<REQUEST>
-      implements FallbackNamePortGetter<REQUEST> {
+  private static final class ClientAddressAndPortExtractor<REQUEST>
+      implements FallbackAddressPortExtractor<REQUEST> {
 
     private final HttpServerAttributesGetter<REQUEST, ?> getter;
 
-    private ClientAddressGetter(HttpServerAttributesGetter<REQUEST, ?> getter) {
+    private ClientAddressAndPortExtractor(HttpServerAttributesGetter<REQUEST, ?> getter) {
       this.getter = getter;
     }
 
-    @Nullable
     @Override
-    public String name(REQUEST request) {
+    public void extract(AddressPortSink sink, REQUEST request) {
       // try Forwarded
       String forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "forwarded"));
       if (forwarded != null) {
         forwarded = extractClientIpFromForwardedHeader(forwarded);
         if (forwarded != null) {
-          return forwarded;
+          sink.setAddress(forwarded);
+          return;
         }
       }
 
       // try X-Forwarded-For
       forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "x-forwarded-for"));
       if (forwarded != null) {
-        return extractClientIpFromForwardedForHeader(forwarded);
+        sink.setAddress(extractClientIpFromForwardedForHeader(forwarded));
       }
 
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public Integer port(REQUEST request) {
       // TODO: client.port will be implemented in a future PR
-      return null;
     }
   }
 }

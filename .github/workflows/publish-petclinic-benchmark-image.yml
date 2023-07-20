@@ -2,7 +2,7 @@ name: Publish PetClinic benchmark image
 on:
   push:
     paths:
-      - 'benchmark-overhead/Dockerfile-petclinic-base'
+      - "benchmark-overhead/Dockerfile-petclinic-base"
     branches:
       - main
   workflow_dispatch:

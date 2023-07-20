@@ -23,10 +23,12 @@ import java.util.concurrent.TimeUnit
 class PlayJavaWsClientTestBase extends PlayWsClientTestBaseBase<StandaloneWSRequest> {
   @Shared
   StandaloneWSClient wsClient
+  @Shared
+  StandaloneWSClient wsClientWithReadTimeout
 
   @Override
   StandaloneWSRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = wsClient.url(uri.toURL().toString()).setFollowRedirects(true)
+    def request = getClient(uri).url(uri.toURL().toString()).setFollowRedirects(true)
     headers.entrySet().each { entry -> request.addHeader(entry.getKey(), entry.getValue()) }
     return request.setMethod(method)
   }
@@ -43,22 +45,33 @@ class PlayJavaWsClientTestBase extends PlayWsClientTestBaseBase<StandaloneWSRequ
     }
   }
 
+  def getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return wsClientWithReadTimeout
+    }
+    return wsClient
+  }
+
   def setupSpec() {
     wsClient = new StandaloneAhcWSClient(asyncHttpClient, materializer)
+    wsClientWithReadTimeout = new StandaloneAhcWSClient(asyncHttpClientWithReadTimeout, materializer)
   }
 
   def cleanupSpec() {
     wsClient?.close()
+    wsClientWithReadTimeout?.close()
   }
 }
 
 class PlayJavaStreamedWsClientTestBase extends PlayWsClientTestBaseBase<StandaloneWSRequest> {
   @Shared
   StandaloneWSClient wsClient
+  @Shared
+  StandaloneWSClient wsClientWithReadTimeout
 
   @Override
   StandaloneWSRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = wsClient.url(uri.toURL().toString()).setFollowRedirects(true)
+    def request = getClient(uri).url(uri.toURL().toString()).setFollowRedirects(true)
     headers.entrySet().each { entry -> request.addHeader(entry.getKey(), entry.getValue()) }
     request.setMethod(method)
     return request
@@ -88,22 +101,33 @@ class PlayJavaStreamedWsClientTestBase extends PlayWsClientTestBaseBase<Standalo
       }
   }
 
+  def getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return wsClientWithReadTimeout
+    }
+    return wsClient
+  }
+
   def setupSpec() {
     wsClient = new StandaloneAhcWSClient(asyncHttpClient, materializer)
+    wsClientWithReadTimeout = new StandaloneAhcWSClient(asyncHttpClientWithReadTimeout, materializer)
   }
 
   def cleanupSpec() {
     wsClient?.close()
+    wsClientWithReadTimeout?.close()
   }
 }
 
 class PlayScalaWsClientTestBase extends PlayWsClientTestBaseBase<play.api.libs.ws.StandaloneWSRequest> {
   @Shared
   play.api.libs.ws.StandaloneWSClient wsClient
+  @Shared
+  play.api.libs.ws.StandaloneWSClient wsClientWithReadTimeout
 
   @Override
   play.api.libs.ws.StandaloneWSRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    return wsClient.url(uri.toURL().toString())
+    return getClient(uri).url(uri.toURL().toString())
       .withMethod(method)
       .withFollowRedirects(true)
       .withHttpHeaders(JavaConverters.mapAsScalaMap(headers).toSeq())
@@ -135,22 +159,33 @@ class PlayScalaWsClientTestBase extends PlayWsClientTestBaseBase<play.api.libs.w
     }, ExecutionContext.global())
   }
 
+  def getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return wsClientWithReadTimeout
+    }
+    return wsClient
+  }
+
   def setupSpec() {
     wsClient = new play.api.libs.ws.ahc.StandaloneAhcWSClient(asyncHttpClient, materializer)
+    wsClientWithReadTimeout = new play.api.libs.ws.ahc.StandaloneAhcWSClient(asyncHttpClientWithReadTimeout, materializer)
   }
 
   def cleanupSpec() {
     wsClient?.close()
+    wsClientWithReadTimeout?.close()
   }
 }
 
 class PlayScalaStreamedWsClientTestBase extends PlayWsClientTestBaseBase<play.api.libs.ws.StandaloneWSRequest> {
   @Shared
   play.api.libs.ws.StandaloneWSClient wsClient
+  @Shared
+  play.api.libs.ws.StandaloneWSClient wsClientWithReadTimeout
 
   @Override
   play.api.libs.ws.StandaloneWSRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    return wsClient.url(uri.toURL().toString())
+    return getClient(uri).url(uri.toURL().toString())
       .withMethod(method)
       .withFollowRedirects(true)
       .withHttpHeaders(JavaConverters.mapAsScalaMap(headers).toSeq())
@@ -193,11 +228,20 @@ class PlayScalaStreamedWsClientTestBase extends PlayWsClientTestBaseBase<play.ap
     }, ExecutionContext.global())
   }
 
+  def getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return wsClientWithReadTimeout
+    }
+    return wsClient
+  }
+
   def setupSpec() {
     wsClient = new play.api.libs.ws.ahc.StandaloneAhcWSClient(asyncHttpClient, materializer)
+    wsClientWithReadTimeout = new play.api.libs.ws.ahc.StandaloneAhcWSClient(asyncHttpClientWithReadTimeout, materializer)
   }
 
   def cleanupSpec() {
     wsClient?.close()
+    wsClientWithReadTimeout?.close()
   }
 }

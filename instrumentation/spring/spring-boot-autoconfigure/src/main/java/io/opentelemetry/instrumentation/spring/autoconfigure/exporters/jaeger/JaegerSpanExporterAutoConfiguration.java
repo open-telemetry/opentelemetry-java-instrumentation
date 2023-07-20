@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger;
 
-import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
-import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -17,22 +15,26 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Configures {@link JaegerGrpcSpanExporter} for tracing.
+ * Configures {@link io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter} for tracing.
  *
- * <p>Initializes {@link JaegerGrpcSpanExporter} bean if bean is missing.
+ * <p>Initializes {@link io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter} bean if bean is
+ * missing.
  */
 @Configuration
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @EnableConfigurationProperties(JaegerSpanExporterProperties.class)
 @ConditionalOnProperty(prefix = "otel.exporter.jaeger", name = "enabled", matchIfMissing = true)
-@ConditionalOnClass(JaegerGrpcSpanExporter.class)
+@ConditionalOnClass(io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter.class)
+@Deprecated
 public class JaegerSpanExporterAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  public JaegerGrpcSpanExporter otelJaegerSpanExporter(JaegerSpanExporterProperties properties) {
+  public io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter otelJaegerSpanExporter(
+      JaegerSpanExporterProperties properties) {
 
-    JaegerGrpcSpanExporterBuilder builder = JaegerGrpcSpanExporter.builder();
+    io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporterBuilder builder =
+        io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter.builder();
     if (properties.getEndpoint() != null) {
       builder.setEndpoint(properties.getEndpoint());
     }

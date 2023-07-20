@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkTransportFilter;
@@ -39,7 +39,7 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
   private NetClientAttributesExtractor(NetClientAttributesGetter<REQUEST, RESPONSE> getter) {
     internalExtractor =
         new InternalNetClientAttributesExtractor<>(
-            getter, FallbackNamePortGetter.noop(), SemconvStability.emitOldHttpSemconv());
+            getter, FallbackAddressPortExtractor.noop(), SemconvStability.emitOldHttpSemconv());
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,
@@ -50,10 +50,11 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
         new InternalServerAttributesExtractor<>(
             getter,
             (port, request) -> true,
-            FallbackNamePortGetter.noop(),
+            FallbackAddressPortExtractor.noop(),
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
-            InternalServerAttributesExtractor.Mode.PEER);
+            InternalServerAttributesExtractor.Mode.PEER,
+            /* captureServerSocketAttributes= */ true);
   }
 
   @Override

@@ -84,7 +84,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
 
     assertTraces(3) {
       traces.sort(orderByRootSpanName(
-        STREAM_PENDING + " send",
+        STREAM_PENDING + " publish",
         STREAM_PENDING + " receive",
         STREAM_PROCESSED + " receive"))
 
@@ -93,7 +93,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
       trace(0, 1) {
         // kafka-clients PRODUCER
         span(0) {
-          name STREAM_PENDING + " send"
+          name STREAM_PENDING + " publish"
           kind PRODUCER
           hasNoParent()
           attributes {
@@ -150,7 +150,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
         }
         // kafka-clients PRODUCER
         span(2) {
-          name STREAM_PROCESSED + " send"
+          name STREAM_PROCESSED + " publish"
           kind PRODUCER
           childOf span(1)
           attributes {

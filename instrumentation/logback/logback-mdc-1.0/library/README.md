@@ -57,7 +57,7 @@ The following demonstrates how you might configure the appender in your `logback
 ```
 
 > It's important to note you can also use other encoders in the `ConsoleAppender` like [logstash-logback-encoder](https://github.com/logfellow/logstash-logback-encoder).
-  This can be helpful when the `Span` is invalid and the `trace_id`, `span_id`, and `trace_flags` are all `null` and are hidden entirely from the logs.
+> This can be helpful when the `Span` is invalid and the `trace_id`, `span_id`, and `trace_flags` are all `null` and are hidden entirely from the logs.
 
 Logging events will automatically have context information from the span context injected. The
 following attributes are available for use:

@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import java.util.Set;
 import java.util.function.ToIntFunction;
 import javax.annotation.Nullable;
 
@@ -63,12 +64,14 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
-      List<String> capturedResponseHeaders) {
+      List<String> capturedResponseHeaders,
+      Set<String> knownMethods) {
     this(
         httpAttributesGetter,
         netAttributesGetter,
         capturedRequestHeaders,
         capturedResponseHeaders,
+        knownMethods,
         HttpClientResend::getAndIncrement);
   }
 
@@ -78,13 +81,14 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders,
+      Set<String> knownMethods,
       ToIntFunction<Context> resendCountIncrementer) {
-    super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
-    HttpNetNamePortGetter<REQUEST> namePortGetter =
-        new HttpNetNamePortGetter<>(httpAttributesGetter);
+    super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders, knownMethods);
+    HttpNetAddressPortExtractor<REQUEST> addressPortExtractor =
+        new HttpNetAddressPortExtractor<>(httpAttributesGetter);
     internalNetExtractor =
         new InternalNetClientAttributesExtractor<>(
-            netAttributesGetter, namePortGetter, SemconvStability.emitOldHttpSemconv());
+            netAttributesGetter, addressPortExtractor, SemconvStability.emitOldHttpSemconv());
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             netAttributesGetter,
@@ -95,10 +99,11 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
         new InternalServerAttributesExtractor<>(
             netAttributesGetter,
             this::shouldCaptureServerPort,
-            namePortGetter,
+            addressPortExtractor,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
-            InternalServerAttributesExtractor.Mode.PEER);
+            InternalServerAttributesExtractor.Mode.PEER,
+            /* captureServerSocketAttributes= */ true);
     this.resendCountIncrementer = resendCountIncrementer;
   }
 

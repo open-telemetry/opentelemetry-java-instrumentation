@@ -15,7 +15,6 @@ import io.micrometer.core.instrument.Timer;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.HistogramPointData;
-import io.opentelemetry.sdk.metrics.internal.aggregator.ExplicitBucketHistogramUtils;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.AbstractIterableAssert;
@@ -25,10 +24,7 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("PreferJavaTimeOverload")
 public abstract class AbstractTimerTest {
 
-  static final double[] DEFAULT_BUCKETS =
-      ExplicitBucketHistogramUtils.DEFAULT_HISTOGRAM_BUCKET_BOUNDARIES.stream()
-          .mapToDouble(d -> d)
-          .toArray();
+  static final double[] NO_BUCKETS = new double[0];
 
   protected abstract InstrumentationExtension testing();
 
@@ -63,7 +59,7 @@ public abstract class AbstractTimerTest {
                                                 .hasSum(42)
                                                 .hasCount(1)
                                                 .hasAttributes(attributeEntry("tag", "value"))
-                                                .hasBucketBoundaries(DEFAULT_BUCKETS)))));
+                                                .hasBucketBoundaries(NO_BUCKETS)))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,

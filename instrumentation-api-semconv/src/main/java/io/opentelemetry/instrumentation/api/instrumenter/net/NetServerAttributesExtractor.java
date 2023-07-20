@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
@@ -38,7 +38,7 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
   private NetServerAttributesExtractor(NetServerAttributesGetter<REQUEST, RESPONSE> getter) {
     internalExtractor =
         new InternalNetServerAttributesExtractor<>(
-            getter, FallbackNamePortGetter.noop(), SemconvStability.emitOldHttpSemconv());
+            getter, FallbackAddressPortExtractor.noop(), SemconvStability.emitOldHttpSemconv());
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,
@@ -49,14 +49,15 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
         new InternalServerAttributesExtractor<>(
             getter,
             (port, request) -> true,
-            FallbackNamePortGetter.noop(),
+            FallbackAddressPortExtractor.noop(),
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
-            InternalServerAttributesExtractor.Mode.HOST);
+            InternalServerAttributesExtractor.Mode.HOST,
+            /* captureServerSocketAttributes= */ true);
     internalClientExtractor =
         new InternalClientAttributesExtractor<>(
             getter,
-            FallbackNamePortGetter.noop(),
+            FallbackAddressPortExtractor.noop(),
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
   }

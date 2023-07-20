@@ -14,8 +14,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchEndpointDefinition;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestRequest;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.RestResponseListener;
 import net.bytebuddy.asm.Advice;
@@ -59,7 +61,14 @@ public class RestClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = currentContext();
-      otelRequest = ElasticsearchRestRequest.create(request.getMethod(), request.getEndpoint());
+      VirtualField<Request, ElasticsearchEndpointDefinition> virtualField =
+          VirtualField.find(Request.class, ElasticsearchEndpointDefinition.class);
+      otelRequest =
+          ElasticsearchRestRequest.create(
+              request.getMethod(),
+              request.getEndpoint(),
+              virtualField.get(request),
+              request.getEntity());
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
@@ -97,7 +106,15 @@ public class RestClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = currentContext();
-      otelRequest = ElasticsearchRestRequest.create(request.getMethod(), request.getEndpoint());
+      VirtualField<Request, ElasticsearchEndpointDefinition> virtualField =
+          VirtualField.find(Request.class, ElasticsearchEndpointDefinition.class);
+
+      otelRequest =
+          ElasticsearchRestRequest.create(
+              request.getMethod(),
+              request.getEndpoint(),
+              virtualField.get(request),
+              request.getEntity());
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }

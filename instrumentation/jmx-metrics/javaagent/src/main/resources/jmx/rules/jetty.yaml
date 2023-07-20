@@ -1,6 +1,5 @@
 ---
 rules:
-
   - bean: org.eclipse.jetty.server.session:context=*,type=sessionhandler,id=*
     unit: s
     prefix: jetty.session.
@@ -9,7 +8,7 @@ rules:
       resource: param(context)
     mapping:
       sessionsCreated:
-        unit: '{sessions}'
+        unit: "{sessions}"
         type: counter
         desc: The number of sessions established in total
       sessionTimeTotal:
@@ -24,7 +23,7 @@ rules:
 
   - bean: org.eclipse.jetty.util.thread:type=queuedthreadpool,id=*
     prefix: jetty.threads.
-    unit: '{threads}'
+    unit: "{threads}"
     type: updowncounter
     mapping:
       busyThreads:

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.quarkus.resteasy.reactive;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -31,10 +30,8 @@ public class InvocationHandlerInstrumentation implements TypeInstrumentation {
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) ResteasyReactiveRequestContext requestContext,
-        @Advice.Local("otelScope") Scope scope) {
-      ResteasyReactiveSpanName.INSTANCE.updateServerSpanName(requestContext);
+    public static void onEnter(@Advice.Argument(0) ResteasyReactiveRequestContext requestContext) {
+      OtelRequestContext.onInvoke(requestContext);
     }
   }
 }

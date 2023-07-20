@@ -3,7 +3,7 @@
 Here is the list of metrics based on MBeans exposed by Hadoop.
 
 | Metric Name                       | Type          | Attributes       | Description                                           |
-|-----------------------------------|---------------|------------------|-------------------------------------------------------|
+| --------------------------------- | ------------- | ---------------- | ----------------------------------------------------- |
 | hadoop.capacity.CapacityUsed      | UpDownCounter | node_name        | Current used capacity across all data nodes           |
 | hadoop.capacity.CapacityTotal     | UpDownCounter | node_name        | Current raw capacity of data nodes                    |
 | hadoop.block.BlocksTotal          | UpDownCounter | node_name        | Current number of allocated blocks in the system      |

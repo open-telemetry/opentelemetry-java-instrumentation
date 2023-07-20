@@ -9,32 +9,25 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import org.elasticsearch.client.Response;
 
 public final class ElasticsearchRestInstrumenterFactory {
 
+  private ElasticsearchRestInstrumenterFactory() {}
+
   public static Instrumenter<ElasticsearchRestRequest, Response> create(
       String instrumentationName) {
-    ElasticsearchRestAttributesGetter dbClientAttributesGetter =
-        new ElasticsearchRestAttributesGetter();
-    ElasticsearchRestNetResponseAttributesGetter netAttributesGetter =
-        new ElasticsearchRestNetResponseAttributesGetter();
+    ElasticsearchDbAttributesGetter dbClientAttributesGetter =
+        new ElasticsearchDbAttributesGetter();
+    ElasticsearchClientAttributeExtractor esClientAtrributesExtractor =
+        new ElasticsearchClientAttributeExtractor();
+    ElasticsearchSpanNameExtractor nameExtractor =
+        new ElasticsearchSpanNameExtractor(dbClientAttributesGetter);
 
     return Instrumenter.<ElasticsearchRestRequest, Response>builder(
-            GlobalOpenTelemetry.get(),
-            instrumentationName,
-            DbClientSpanNameExtractor.create(dbClientAttributesGetter))
+            GlobalOpenTelemetry.get(), instrumentationName, nameExtractor)
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
-        .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
-        .addAttributesExtractor(
-            PeerServiceAttributesExtractor.create(
-                netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+        .addAttributesExtractor(esClientAtrributesExtractor)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
-
-  private ElasticsearchRestInstrumenterFactory() {}
 }

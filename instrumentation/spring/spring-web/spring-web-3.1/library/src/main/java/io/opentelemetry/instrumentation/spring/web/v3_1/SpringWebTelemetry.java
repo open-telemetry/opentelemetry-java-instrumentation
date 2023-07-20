@@ -39,7 +39,7 @@ public final class SpringWebTelemetry {
    * RestTemplate#getInterceptors()}. For example:
    *
    * <pre>{@code
-   * restTemplate.getInterceptors().add(SpringWebTracing.create(openTelemetry).newInterceptor());
+   * restTemplate.getInterceptors().add(SpringWebTelemetry.create(openTelemetry).newInterceptor());
    * }</pre>
    */
   public ClientHttpRequestInterceptor newInterceptor() {

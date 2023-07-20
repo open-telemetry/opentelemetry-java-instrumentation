@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
-public class ElasticsearchRest5Test {
+class ElasticsearchRest5Test {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -92,8 +92,11 @@ public class ElasticsearchRest5Test {
                     .hasNoParent()
                     .hasAttributesSatisfyingExactly(
                         equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                        equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                        equalTo(SemanticAttributes.DB_STATEMENT, "GET _cluster/health"));
+                        equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                        equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
+                        equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
+                        equalTo(
+                            SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"));
               },
               span -> {
                 span.hasName("GET")
@@ -170,8 +173,11 @@ public class ElasticsearchRest5Test {
                     .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfyingExactly(
                         equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                        equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                        equalTo(SemanticAttributes.DB_STATEMENT, "GET _cluster/health"));
+                        equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                        equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
+                        equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
+                        equalTo(
+                            SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"));
               },
               span -> {
                 span.hasName("GET")

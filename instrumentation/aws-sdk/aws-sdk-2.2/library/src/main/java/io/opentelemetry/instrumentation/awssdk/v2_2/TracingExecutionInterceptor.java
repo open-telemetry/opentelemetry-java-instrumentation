@@ -121,21 +121,29 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       throw throwable;
     }
 
-    SdkRequest sqsModifiedRequest =
+    SdkRequest modifiedRequest =
         SqsAccess.modifyRequest(request, otelContext, useXrayPropagator, messagingPropagator);
-    if (sqsModifiedRequest != null) {
-      return sqsModifiedRequest;
+    if (modifiedRequest != null) {
+      return modifiedRequest;
+    }
+    modifiedRequest = SnsAccess.modifyRequest(request, otelContext, messagingPropagator);
+    if (modifiedRequest != null) {
+      return modifiedRequest;
     }
 
-    // Insert other special handling here, following the same pattern as SQS.
+    // Insert other special handling here, following the same pattern as SQS and SNS.
 
     return request;
   }
 
   @Override
-  public void afterMarshalling(
-      Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
-
+  public void beforeTransmission(
+      Context.BeforeTransmission context, ExecutionAttributes executionAttributes) {
+    // In beforeTransmission we get access to the finalized http request, including modifications
+    // performed by other interceptors and the message signature.
+    // It is unlikely that further modifications are performed by the http client performing the
+    // request given that this would require the signature to be regenerated.
+    //
     // Since we merge the HTTP attributes into an already started span instead of creating a
     // full child span, we have to do some dirty work here.
     //
@@ -226,8 +234,11 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void afterExecution(
       Context.AfterExecution context, ExecutionAttributes executionAttributes) {
 
-    // Other special handling could be shortcut-&&ed after this (false is returned if not handled).
-    SqsAccess.afterReceiveMessageExecution(context, executionAttributes, this);
+    if (executionAttributes.getAttribute(SDK_HTTP_REQUEST_ATTRIBUTE) != null) {
+      // Other special handling could be shortcut-&&ed after this (false is returned if not
+      // handled).
+      SqsAccess.afterReceiveMessageExecution(context, executionAttributes, this);
+    }
 
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     if (otelContext != null) {

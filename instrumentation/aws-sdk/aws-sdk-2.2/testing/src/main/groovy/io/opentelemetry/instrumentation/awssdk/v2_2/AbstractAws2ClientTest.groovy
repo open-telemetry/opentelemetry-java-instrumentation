@@ -28,6 +28,7 @@ import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
+import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest
@@ -51,13 +52,18 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
         "Cannot check Sqs.SendMessage here due to hard-coded MD5.")
   }
 
+  // Force localhost instead of relying on mock server because using ip is yet another corner case of the virtual
+  // bucket changes introduced by aws sdk v2.18.0. When using IP, there is no way to prefix the hostname with the
+  // bucket name as label.
+  def clientUri = URI.create("http://localhost:${server.httpPort()}")
+
   def "send #operation request with builder #builder.class.getName() mocked response"() {
     assumeSupportedConfig(service, operation)
 
     setup:
     configureSdkClient(builder)
     def client = builder
-      .endpointOverride(server.httpUri())
+      .endpointOverride(clientUri)
       .region(Region.AP_NORTHEAST_1)
       .credentialsProvider(CREDENTIALS_PROVIDER)
       .build()
@@ -79,9 +85,18 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
           kind operation != "SendMessage" ? CLIENT : PRODUCER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            if (service == "S3") {
+              // Starting with AWS SDK V2 2.18.0, the s3 sdk will prefix the hostname with the bucket name in case
+              // the bucket name is a valid DNS label, even in the case that we are using an endpoint override.
+              // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
+              // Our test assert both cases so that we don't need to know what version is being tested.
+              "$SemanticAttributes.NET_PEER_NAME" { it == "somebucket.localhost" || it == "localhost" }
+              "$SemanticAttributes.HTTP_URL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}/somebucket") }
+            } else {
+              "$SemanticAttributes.NET_PEER_NAME" "localhost"
+              "$SemanticAttributes.HTTP_URL" { it.startsWith("http://localhost:${server.httpPort()}") }
+            }
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
             "$SemanticAttributes.HTTP_METHOD" "$method"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" { it.startsWith("aws-sdk-java/") }
@@ -110,17 +125,17 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
     request.request().headers().get("traceparent") == null
 
     where:
-    service   | operation           | method | path                          | requestId                              | builder                 | call                                                                                             | body
-    "S3"      | "CreateBucket"      | "PUT"  | path("somebucket")            | "UNKNOWN"                              | S3Client.builder()      | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }              | ""
-    "S3"      | "GetObject"         | "GET"  | path("somebucket", "somekey") | "UNKNOWN"                              | S3Client.builder()      | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build()) }     | ""
-    "Kinesis" | "DeleteStream"      | "POST" | ""                            | "UNKNOWN"                              | KinesisClient.builder() | { c -> c.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build()) }          | ""
-    "Sqs"     | "CreateQueue"       | "POST" | ""                            | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsClient.builder()     | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }              | """
+    service   | operation           | method | requestId                              | builder                 | call                                                                                             | body
+    "S3"      | "CreateBucket"      | "PUT"  | "UNKNOWN"                              | S3Client.builder()      | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }              | ""
+    "S3"      | "GetObject"         | "GET"  | "UNKNOWN"                              | S3Client.builder()      | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build()) }     | ""
+    "Kinesis" | "DeleteStream"      | "POST" | "UNKNOWN"                              | KinesisClient.builder() | { c -> c.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build()) }          | ""
+    "Sqs"     | "CreateQueue"       | "POST" | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsClient.builder()     | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }              | """
         <CreateQueueResponse>
             <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>
             <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
         </CreateQueueResponse>
         """
-    "Sqs"     | "SendMessage"       | "POST" | ""                    | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsClient.builder()     | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) } | """
+    "Sqs"     | "SendMessage"       | "POST" | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsClient.builder()     | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) } | """
         <SendMessageResponse>
             <SendMessageResult>
                 <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
@@ -130,14 +145,14 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>
         </SendMessageResponse>
         """
-    "Ec2"     | "AllocateAddress"   | "POST" | ""                    | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2Client.builder()     | { c -> c.allocateAddress() }                                                                     | """
+    "Ec2"     | "AllocateAddress"   | "POST" | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2Client.builder()     | { c -> c.allocateAddress() }                                                                     | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
            <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
            <publicIp>192.0.2.1</publicIp>
            <domain>standard</domain>
         </AllocateAddressResponse>
         """
-    "Rds"     | "DeleteOptionGroup" | "POST" | ""                    | "0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99" | RdsClient.builder()     | { c -> c.deleteOptionGroup(DeleteOptionGroupRequest.builder().build()) }                         | """
+    "Rds"     | "DeleteOptionGroup" | "POST" | "0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99" | RdsClient.builder()     | { c -> c.deleteOptionGroup(DeleteOptionGroupRequest.builder().build()) }                         | """
         <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
           <ResponseMetadata><RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId></ResponseMetadata>
         </DeleteOptionGroupResponse>
@@ -149,7 +164,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
     setup:
     configureSdkClient(builder)
     def client = builder
-      .endpointOverride(server.httpUri())
+      .endpointOverride(clientUri)
       .region(Region.AP_NORTHEAST_1)
       .credentialsProvider(CREDENTIALS_PROVIDER)
       .build()
@@ -170,9 +185,18 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
           kind operation != "SendMessage" ? CLIENT : PRODUCER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            if (service == "S3") {
+              // Starting with AWS SDK V2 2.18.0, the s3 sdk will prefix the hostname with the bucket name in case
+              // the bucket name is a valid DNS label, even in the case that we are using an endpoint override.
+              // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
+              // Our test assert both cases so that we don't need to know what version is being tested.
+              "$SemanticAttributes.NET_PEER_NAME" { it == "somebucket.localhost" || it == "localhost" }
+              "$SemanticAttributes.HTTP_URL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}") }
+            } else {
+              "$SemanticAttributes.NET_PEER_NAME" "localhost"
+              "$SemanticAttributes.HTTP_URL" "http://localhost:${server.httpPort()}"
+            }
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
             "$SemanticAttributes.HTTP_METHOD" "$method"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" { it.startsWith("aws-sdk-java/") }
@@ -200,19 +224,30 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
     request.request().headers().get("X-Amzn-Trace-Id") != null
     request.request().headers().get("traceparent") == null
 
+    if (service == "Sns" && operation == "Publish") {
+      def content = request.request().content().toStringUtf8()
+      def containsId = content.contains("${traces[0][0].traceId}-${traces[0][0].spanId}")
+      def containsTp = content.contains("=traceparent")
+      if (isSqsAttributeInjectionEnabled()) {
+        assert containsId && containsTp
+      } else {
+        assert !containsId && !containsTp
+      }
+    }
+
     where:
-    service | operation           | method | path                          | requestId                              | builder                  | call                                                                                                                             | body
-    "S3"    | "CreateBucket"      | "PUT"  | path("somebucket")            | "UNKNOWN"                              | S3AsyncClient.builder()  | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }                                              | ""
-    "S3"    | "GetObject"         | "GET"  | path("somebucket", "somekey") | "UNKNOWN"                              | S3AsyncClient.builder()  | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build(), AsyncResponseTransformer.toBytes()) } | "1234567890"
+    service | operation           | method | requestId                              | builder                  | call                                                                                                                             | body
+    "S3"    | "CreateBucket"      | "PUT"  | "UNKNOWN"                              | S3AsyncClient.builder()  | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }                                              | ""
+    "S3"    | "GetObject"         | "GET"  | "UNKNOWN"                              | S3AsyncClient.builder()  | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build(), AsyncResponseTransformer.toBytes()) } | "1234567890"
     // Kinesis seems to expect an http2 response which is incompatible with our test server.
     // "Kinesis"  | "DeleteStream"      | "POST" | "/"                   | "UNKNOWN"                              | KinesisAsyncClient.builder()  | { c -> c.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build()) }                                          | ""
-    "Sqs"   | "CreateQueue"       | "POST" | ""                            | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsAsyncClient.builder() | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }                                              | """
+    "Sqs"   | "CreateQueue"       | "POST" | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsAsyncClient.builder() | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }                                              | """
         <CreateQueueResponse>
             <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>
             <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
         </CreateQueueResponse>
         """
-    "Sqs"   | "SendMessage"       | "POST" | ""                            | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsAsyncClient.builder() | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) }                                 | """
+    "Sqs"   | "SendMessage"       | "POST" | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsAsyncClient.builder() | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) }                                 | """
         <SendMessageResponse>
             <SendMessageResult>
                 <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
@@ -222,18 +257,28 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>
         </SendMessageResponse>
         """
-    "Ec2"   | "AllocateAddress"   | "POST" | ""                            | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2AsyncClient.builder() | { c -> c.allocateAddress() }                                                                                                     | """
+    "Ec2"   | "AllocateAddress"   | "POST" | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2AsyncClient.builder() | { c -> c.allocateAddress() }                                                                                                     | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
            <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
            <publicIp>192.0.2.1</publicIp>
            <domain>standard</domain>
         </AllocateAddressResponse>
         """
-    "Rds"   | "DeleteOptionGroup" | "POST" | ""                            | "0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99" | RdsAsyncClient.builder() | { c -> c.deleteOptionGroup(DeleteOptionGroupRequest.builder().build()) }                                                         | """
+    "Rds"   | "DeleteOptionGroup" | "POST" | "0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99" | RdsAsyncClient.builder() | { c -> c.deleteOptionGroup(DeleteOptionGroupRequest.builder().build()) }                                                         | """
         <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
           <ResponseMetadata><RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId></ResponseMetadata>
         </DeleteOptionGroupResponse>
         """
+    "Sns" | "Publish" | "POST" | "f187a3c1-376f-11df-8963-01868b7c937a" | SnsAsyncClient.builder() | { SnsAsyncClient c -> c.publish(r -> r.message("hello")) } | """
+      <PublishResponse xmlns="https://sns.amazonaws.com/doc/2010-03-31/">
+          <PublishResult>
+              <MessageId>94f20ce6-13c5-43a0-9a9e-ca52d816e90b</MessageId>
+          </PublishResult>
+          <ResponseMetadata>
+              <RequestId>f187a3c1-376f-11df-8963-01868b7c937a</RequestId>
+          </ResponseMetadata>
+      </PublishResponse> 
+      """
   }
 
   // TODO(anuraaga): Without AOP instrumentation of the HTTP client, we cannot model retries as
@@ -248,7 +293,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
       .overrideConfiguration(createOverrideConfigurationBuilder()
         .retryPolicy(RetryPolicy.builder().numRetries(1).build())
         .build())
-      .endpointOverride(server.httpUri())
+      .endpointOverride(clientUri)
       .region(Region.AP_NORTHEAST_1)
       .credentialsProvider(CREDENTIALS_PROVIDER)
       .httpClientBuilder(ApacheHttpClient.builder().socketTimeout(Duration.ofMillis(50)))
@@ -260,7 +305,6 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
     then:
     thrown SdkClientException
 
-    def path = path("somebucket", "somekey")
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
@@ -270,30 +314,23 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
           errorEvent SdkClientException, "Unable to execute HTTP request: Read timed out"
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            // Starting with AWS SDK V2 2.18.0, the s3 sdk will prefix the hostname with the bucket name in case
+            // the bucket name is a valid DNS label, even in the case that we are using an endpoint override.
+            // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
+            // Our test assert both cases so that we don't need to know what version is being tested.
+            "$SemanticAttributes.NET_PEER_NAME" { it == "somebucket.localhost" || it == "localhost" }
+            "$SemanticAttributes.HTTP_URL" { it == "http://somebucket.localhost:${server.httpPort()}/somekey" || it == "http://localhost:${server.httpPort()}/somebucket/somekey" }
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_URL" "${server.httpUri()}${path}"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "S3"
             "$SemanticAttributes.RPC_METHOD" "GetObject"
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "somebucket"
           }
         }
       }
     }
-  }
-
-  static String path(String bucket, String path = null) {
-    def result = ""
-    // since 2.18.0 bucket name is not present in request path
-    if (!Boolean.getBoolean("testLatestDeps") && !bucket.isEmpty()) {
-      result = "/" + bucket
-    }
-    if (path != null && !path.isEmpty()) {
-      result += "/" + path
-    }
-    return result
   }
 }

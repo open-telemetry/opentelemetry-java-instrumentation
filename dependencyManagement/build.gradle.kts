@@ -12,7 +12,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.27.0"
+val otelSdkVersion = "1.28.0"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -31,7 +31,7 @@ val groovyVersion = "4.0.13"
 
 val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.15.2",
-  "com.google.guava:guava-bom:32.1.0-jre",
+  "com.google.guava:guava-bom:32.1.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
@@ -96,7 +96,7 @@ val DEPENDENCIES = listOf(
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
-  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.27.0-alpha",
+  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.28.0-alpha",
   "io.opentelemetry.proto:opentelemetry-proto:0.20.0-alpha",
   "org.assertj:assertj-core:3.24.2",
   "org.awaitility:awaitility:4.2.0",
@@ -108,7 +108,7 @@ val DEPENDENCIES = listOf(
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.3",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
-  "org.springframework.boot:spring-boot-dependencies:2.7.5",
+  "org.springframework.boot:spring-boot-dependencies:2.7.13",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.6"
 )

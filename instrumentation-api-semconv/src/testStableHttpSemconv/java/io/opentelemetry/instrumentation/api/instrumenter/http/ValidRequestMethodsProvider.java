@@ -1,0 +1,20 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.api.instrumenter.http;
+
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+
+final class ValidRequestMethodsProvider implements ArgumentsProvider {
+
+  @Override
+  public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+    return HttpConstants.KNOWN_METHODS.stream().map(Arguments::of);
+  }
+}
