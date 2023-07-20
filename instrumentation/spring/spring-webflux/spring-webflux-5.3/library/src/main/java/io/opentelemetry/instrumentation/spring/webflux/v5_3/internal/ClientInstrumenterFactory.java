@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient;
 
@@ -19,45 +19,52 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.List;
 import java.util.function.Consumer;
-import okhttp3.Request;
-import okhttp3.Response;
+import org.springframework.web.reactive.function.client.ClientRequest;
+import org.springframework.web.reactive.function.client.ClientResponse;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class OkHttpInstrumenterFactory {
+// client builder is separate so that it can be used by javaagent instrumentation
+// which supports 5.0, without triggering the server instrumentation which depends on webflux 5.3
+public final class ClientInstrumenterFactory {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.okhttp-3.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.3";
 
-  public static Instrumenter<Request, Response> create(
+  public static Instrumenter<ClientRequest, ClientResponse> create(
       OpenTelemetry openTelemetry,
-      Consumer<HttpClientAttributesExtractorBuilder<Request, Response>> extractorConfigurer,
-      List<AttributesExtractor<Request, Response>> additionalAttributesExtractors,
+      Consumer<HttpClientAttributesExtractorBuilder<ClientRequest, ClientResponse>>
+          extractorConfigurer,
+      List<AttributesExtractor<ClientRequest, ClientResponse>> additionalExtractors,
+      boolean captureExperimentalSpanAttributes,
       boolean emitExperimentalHttpClientMetrics) {
 
-    OkHttpAttributesGetter httpAttributesGetter = OkHttpAttributesGetter.INSTANCE;
-    OkHttpNetAttributesGetter netAttributesGetter = OkHttpNetAttributesGetter.INSTANCE;
+    WebClientHttpAttributesGetter httpAttributesGetter = WebClientHttpAttributesGetter.INSTANCE;
 
-    HttpClientAttributesExtractorBuilder<Request, Response> extractorBuilder =
-        HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter);
+    HttpClientAttributesExtractorBuilder<ClientRequest, ClientResponse> extractorBuilder =
+        HttpClientAttributesExtractor.builder(
+            httpAttributesGetter, new WebClientNetAttributesGetter());
     extractorConfigurer.accept(extractorBuilder);
 
-    InstrumenterBuilder<Request, Response> builder =
-        Instrumenter.<Request, Response>builder(
+    InstrumenterBuilder<ClientRequest, ClientResponse> clientBuilder =
+        Instrumenter.<ClientRequest, ClientResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(extractorBuilder.build())
-            .addAttributesExtractors(additionalAttributesExtractors)
+            .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
+
+    if (captureExperimentalSpanAttributes) {
+      clientBuilder.addAttributesExtractor(new WebClientExperimentalAttributesExtractor());
+    }
     if (emitExperimentalHttpClientMetrics) {
-      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+      clientBuilder.addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
 
-    return builder.buildInstrumenter(alwaysClient());
+    // headers are injected elsewhere; ClientRequest is immutable
+    return clientBuilder.buildInstrumenter(alwaysClient());
   }
-
-  private OkHttpInstrumenterFactory() {}
 }

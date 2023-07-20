@@ -6,21 +6,21 @@
 package io.opentelemetry.instrumentation.netty.v4_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.server.NettyServerInstrumenterFactory;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import javax.annotation.Nullable;
+import java.util.function.Consumer;
 
 /** A builder of {@link NettyServerTelemetry}. */
 public final class NettyServerTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
-  private List<String> capturedRequestHeaders = Collections.emptyList();
-  private List<String> capturedResponseHeaders = Collections.emptyList();
-  @Nullable private Set<String> knownMethods = null;
+  private Consumer<HttpServerAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse>>
+      extractorConfigurer = builder -> {};
 
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -34,7 +34,9 @@ public final class NettyServerTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setCapturedRequestHeaders(
       List<String> capturedRequestHeaders) {
-    this.capturedRequestHeaders = capturedRequestHeaders;
+    extractorConfigurer =
+        extractorConfigurer.andThen(
+            builder -> builder.setCapturedRequestHeaders(capturedRequestHeaders));
     return this;
   }
 
@@ -46,7 +48,9 @@ public final class NettyServerTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setCapturedResponseHeaders(
       List<String> capturedResponseHeaders) {
-    this.capturedResponseHeaders = capturedResponseHeaders;
+    extractorConfigurer =
+        extractorConfigurer.andThen(
+            builder -> builder.setCapturedResponseHeaders(capturedResponseHeaders));
     return this;
   }
 
@@ -65,7 +69,8 @@ public final class NettyServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    this.knownMethods = knownMethods;
+    extractorConfigurer =
+        extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
     return this;
   }
 
@@ -73,10 +78,6 @@ public final class NettyServerTelemetryBuilder {
   public NettyServerTelemetry build() {
     return new NettyServerTelemetry(
         NettyServerInstrumenterFactory.create(
-            openTelemetry,
-            "io.opentelemetry.netty-4.1",
-            capturedRequestHeaders,
-            capturedResponseHeaders,
-            knownMethods));
+            openTelemetry, "io.opentelemetry.netty-4.1", extractorConfigurer));
   }
 }

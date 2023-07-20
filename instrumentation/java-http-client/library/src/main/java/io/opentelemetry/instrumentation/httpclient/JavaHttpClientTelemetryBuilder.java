@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.httpclient;
 
-import static java.util.Collections.emptyList;
-
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -19,7 +17,7 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import javax.annotation.Nullable;
+import java.util.function.Consumer;
 
 public final class JavaHttpClientTelemetryBuilder {
 
@@ -28,9 +26,8 @@ public final class JavaHttpClientTelemetryBuilder {
   private final List<AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>>>
       additionalExtractors = new ArrayList<>();
 
-  private List<String> capturedRequestHeaders = emptyList();
-  private List<String> capturedResponseHeaders = emptyList();
-  @Nullable private Set<String> knownMethods = null;
+  private Consumer<HttpClientAttributesExtractorBuilder<HttpRequest, HttpResponse<?>>>
+      extractorConfigurer = builder -> {};
   private boolean emitExperimentalHttpClientMetrics = false;
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -55,7 +52,8 @@ public final class JavaHttpClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    capturedRequestHeaders = requestHeaders;
+    extractorConfigurer =
+        extractorConfigurer.andThen(builder -> builder.setCapturedRequestHeaders(requestHeaders));
     return this;
   }
 
@@ -66,7 +64,8 @@ public final class JavaHttpClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
-    capturedResponseHeaders = responseHeaders;
+    extractorConfigurer =
+        extractorConfigurer.andThen(builder -> builder.setCapturedResponseHeaders(responseHeaders));
     return this;
   }
 
@@ -85,7 +84,8 @@ public final class JavaHttpClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    this.knownMethods = knownMethods;
+    extractorConfigurer =
+        extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
     return this;
   }
 
@@ -106,9 +106,7 @@ public final class JavaHttpClientTelemetryBuilder {
     Instrumenter<HttpRequest, HttpResponse<?>> instrumenter =
         JavaHttpClientInstrumenterFactory.createInstrumenter(
             openTelemetry,
-            capturedRequestHeaders,
-            capturedResponseHeaders,
-            knownMethods,
+            extractorConfigurer,
             additionalExtractors,
             emitExperimentalHttpClientMetrics);
 

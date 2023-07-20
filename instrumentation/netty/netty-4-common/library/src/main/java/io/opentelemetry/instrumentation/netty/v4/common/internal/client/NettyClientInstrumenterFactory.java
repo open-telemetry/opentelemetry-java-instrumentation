@@ -24,8 +24,7 @@ import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionReq
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import javax.annotation.Nullable;
+import java.util.function.Consumer;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -56,21 +55,16 @@ public final class NettyClientInstrumenterFactory {
   }
 
   public Instrumenter<HttpRequestAndChannel, HttpResponse> createHttpInstrumenter(
-      List<String> capturedRequestHeaders,
-      List<String> capturedResponseHeaders,
-      @Nullable Set<String> knownMethods,
+      Consumer<HttpClientAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse>>
+          extractorConfigurer,
       List<AttributesExtractor<HttpRequestAndChannel, HttpResponse>>
           additionalHttpAttributeExtractors) {
     NettyHttpClientAttributesGetter httpAttributesGetter = new NettyHttpClientAttributesGetter();
     NettyNetClientAttributesGetter netAttributesGetter = new NettyNetClientAttributesGetter();
 
     HttpClientAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse> extractorBuilder =
-        HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
-            .setCapturedRequestHeaders(capturedRequestHeaders)
-            .setCapturedResponseHeaders(capturedResponseHeaders);
-    if (knownMethods != null) {
-      extractorBuilder.setKnownMethods(knownMethods);
-    }
+        HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter);
+    extractorConfigurer.accept(extractorBuilder);
 
     InstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder =
         Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(

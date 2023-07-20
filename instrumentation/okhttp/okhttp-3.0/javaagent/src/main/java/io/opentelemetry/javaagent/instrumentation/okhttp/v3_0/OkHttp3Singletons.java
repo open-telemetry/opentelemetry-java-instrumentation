@@ -26,9 +26,11 @@ public final class OkHttp3Singletons {
   private static final Instrumenter<Request, Response> INSTRUMENTER =
       OkHttpInstrumenterFactory.create(
           GlobalOpenTelemetry.get(),
-          CommonConfig.get().getClientRequestHeaders(),
-          CommonConfig.get().getClientResponseHeaders(),
-          CommonConfig.get().getKnownHttpRequestMethods(),
+          builder ->
+              builder
+                  .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
+                  .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+                  .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
           emptyList(),
           CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
 
