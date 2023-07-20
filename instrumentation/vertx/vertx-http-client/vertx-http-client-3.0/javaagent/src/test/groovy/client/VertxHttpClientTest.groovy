@@ -21,8 +21,6 @@ import spock.lang.Shared
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey
-
 class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements AgentTestTrait {
 
   @Shared
