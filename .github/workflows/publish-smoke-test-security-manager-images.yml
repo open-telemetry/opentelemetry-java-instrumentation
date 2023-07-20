@@ -3,8 +3,8 @@ name: Publish Security Manager test app images for smoke tests
 on:
   push:
     paths:
-      - 'smoke-tests/images/security-manager/**'
-      - '.github/workflows/publish-smoke-test-security-manager-images.yml'
+      - "smoke-tests/images/security-manager/**"
+      - ".github/workflows/publish-smoke-test-security-manager-images.yml"
     branches:
       - main
   workflow_dispatch:

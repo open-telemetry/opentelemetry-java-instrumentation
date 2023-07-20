@@ -9,9 +9,11 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -34,6 +36,7 @@ public final class ApacheHttpClientTelemetryBuilder {
           HttpClientAttributesExtractor.builder(
               ApacheHttpClientHttpAttributesGetter.INSTANCE,
               new ApacheHttpClientNetAttributesGetter());
+  private boolean emitExperimentalHttpClientMetrics = false;
 
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -93,6 +96,19 @@ public final class ApacheHttpClientTelemetryBuilder {
   }
 
   /**
+   * Configures the instrumentation to emit experimental HTTP client metrics.
+   *
+   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public ApacheHttpClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
+      boolean emitExperimentalHttpClientMetrics) {
+    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
+    return this;
+  }
+
+  /**
    * Returns a new {@link ApacheHttpClientTelemetry} configured with this {@link
    * ApacheHttpClientTelemetryBuilder}.
    */
@@ -100,7 +116,7 @@ public final class ApacheHttpClientTelemetryBuilder {
     ApacheHttpClientHttpAttributesGetter httpAttributesGetter =
         ApacheHttpClientHttpAttributesGetter.INSTANCE;
 
-    Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter =
+    InstrumenterBuilder<ApacheHttpClientRequest, HttpResponse> builder =
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
@@ -108,7 +124,13 @@ public final class ApacheHttpClientTelemetryBuilder {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
-            .addOperationMetrics(HttpClientMetrics.get())
+            .addOperationMetrics(HttpClientMetrics.get());
+    if (emitExperimentalHttpClientMetrics) {
+      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+    }
+
+    Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter =
+        builder
             // We manually inject because we need to inject internal requests for redirects.
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
 

@@ -18,12 +18,16 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.MetricAssert;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.assertj.core.api.ListAssert;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -76,6 +80,12 @@ public abstract class InstrumentationExtension
     return testRunner.getExportedMetrics();
   }
 
+  private List<MetricData> instrumentationMetrics(String instrumentationName) {
+    return metrics().stream()
+        .filter(m -> m.getInstrumentationScopeInfo().getName().equals(instrumentationName))
+        .collect(Collectors.toList());
+  }
+
   /** Return a list of all captured logs. */
   public List<LogRecordData> logRecords() {
     return testRunner.getExportedLogRecords();
@@ -98,6 +108,22 @@ public abstract class InstrumentationExtension
                                         .getName()
                                         .equals(instrumentationName)
                                     && data.getName().equals(metricName))));
+  }
+
+  @SafeVarargs
+  public final void waitAndAssertMetrics(
+      String instrumentationName, Consumer<MetricAssert>... assertions) {
+    await()
+        .untilAsserted(
+            () -> {
+              Collection<MetricData> metrics = instrumentationMetrics(instrumentationName);
+              assertThat(metrics).isNotEmpty();
+              for (Consumer<MetricAssert> assertion : assertions) {
+                assertThat(metrics)
+                    .anySatisfy(
+                        metric -> assertion.accept(OpenTelemetryAssertions.assertThat(metric)));
+              }
+            });
   }
 
   /**

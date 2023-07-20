@@ -29,7 +29,8 @@ public final class OkHttp3Singletons {
           CommonConfig.get().getClientRequestHeaders(),
           CommonConfig.get().getClientResponseHeaders(),
           CommonConfig.get().getKnownHttpRequestMethods(),
-          emptyList());
+          emptyList(),
+          CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
 
   public static final Interceptor CONTEXT_INTERCEPTOR =
       chain -> {

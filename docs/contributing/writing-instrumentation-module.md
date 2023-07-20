@@ -190,11 +190,11 @@ This method describes what transformations should be applied to the
 matched type. The interface `TypeTransformer`, implemented internally by the agent,
 defines a set of available transformations that you can apply:
 
-* `applyAdviceToMethod(ElementMatcher<? super MethodDescription>, String)` lets you apply
+- `applyAdviceToMethod(ElementMatcher<? super MethodDescription>, String)` lets you apply
   an advice class (the second parameter) to all matching methods (the first parameter). We
   suggest to make the method matchers as strict as possible: the type instrumentation should
   only instrument the code that it targets.
-* `applyTransformer(AgentBuilder.Transformer)` lets you to inject an arbitrary ByteBuddy
+- `applyTransformer(AgentBuilder.Transformer)` lets you to inject an arbitrary ByteBuddy
   transformer. This is an advanced, low-level option that is not subjected to muzzle safety
   checks and helper class detection. Use it responsibly.
 
@@ -238,15 +238,15 @@ the instrumented library class files. You should not treat them as ordinary, pla
 
 Unfortunately many standard practices do not apply to advice classes:
 
-* If they're inner classes, they MUST be static.
-* They MUST only contain static methods.
-* They MUST NOT contain any state (fields) whatsoever, static constants included. Only the advice
+- If they're inner classes, they MUST be static.
+- They MUST only contain static methods.
+- They MUST NOT contain any state (fields) whatsoever, static constants included. Only the advice
   methods' content is copied to the instrumented code, constants are not.
-* Inner advice classes defined in an `InstrumentationModule` or a `TypeInstrumentation` MUST NOT use
+- Inner advice classes defined in an `InstrumentationModule` or a `TypeInstrumentation` MUST NOT use
   anything from the outer class (loggers, constants, etc).
-* Reusing code by extracting a common method and/or parent class won't work: create additional helper
+- Reusing code by extracting a common method and/or parent class won't work: create additional helper
   classes to store any reusable code instead.
-* They SHOULD NOT contain any methods other than `@Advice`-annotated method.
+- They SHOULD NOT contain any methods other than `@Advice`-annotated method.
 
 Consider the following example:
 

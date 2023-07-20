@@ -164,6 +164,7 @@ class HttpServerAttributesExtractorTest {
             singletonList("Custom-Request-Header"),
             singletonList("Custom-Response-Header"),
             HttpConstants.KNOWN_METHODS,
+            false,
             routeFromContext);
 
     AttributesBuilder startAttributes = Attributes.builder();

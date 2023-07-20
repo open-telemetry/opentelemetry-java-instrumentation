@@ -3,8 +3,8 @@ name: Publish gRPC images for smoke tests
 on:
   push:
     paths:
-      - 'smoke-tests/images/grpc/**'
-      - '.github/workflows/publish-smoke-test-grpc-images.yml'
+      - "smoke-tests/images/grpc/**"
+      - ".github/workflows/publish-smoke-test-grpc-images.yml"
     branches:
       - main
   workflow_dispatch:

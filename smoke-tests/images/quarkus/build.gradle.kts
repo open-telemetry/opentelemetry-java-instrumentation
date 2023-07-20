@@ -12,11 +12,11 @@ plugins {
   id("otel.java-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("io.quarkus") version "3.2.0.Final"
+  id("io.quarkus") version "3.2.1.Final"
 }
 
 dependencies {
-  implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.2.0.Final"))
+  implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.2.1.Final"))
   implementation("io.quarkus:quarkus-resteasy")
 }
 

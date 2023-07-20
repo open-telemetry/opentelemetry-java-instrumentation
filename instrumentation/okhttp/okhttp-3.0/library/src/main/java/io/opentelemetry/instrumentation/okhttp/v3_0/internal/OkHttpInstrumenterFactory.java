@@ -10,8 +10,10 @@ import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtracto
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -34,7 +36,8 @@ public final class OkHttpInstrumenterFactory {
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders,
       @Nullable Set<String> knownMethods,
-      List<AttributesExtractor<Request, Response>> additionalAttributesExtractors) {
+      List<AttributesExtractor<Request, Response>> additionalAttributesExtractors,
+      boolean emitExperimentalHttpClientMetrics) {
 
     OkHttpAttributesGetter httpAttributesGetter = OkHttpAttributesGetter.INSTANCE;
     OkHttpNetAttributesGetter netAttributesGetter = OkHttpNetAttributesGetter.INSTANCE;
@@ -47,13 +50,20 @@ public final class OkHttpInstrumenterFactory {
       extractorBuilder.setKnownMethods(knownMethods);
     }
 
-    return Instrumenter.<Request, Response>builder(
-            openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributesGetter))
-        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-        .addAttributesExtractor(extractorBuilder.build())
-        .addAttributesExtractors(additionalAttributesExtractors)
-        .addOperationMetrics(HttpClientMetrics.get())
-        .buildInstrumenter(alwaysClient());
+    InstrumenterBuilder<Request, Response> builder =
+        Instrumenter.<Request, Response>builder(
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(extractorBuilder.build())
+            .addAttributesExtractors(additionalAttributesExtractors)
+            .addOperationMetrics(HttpClientMetrics.get());
+    if (emitExperimentalHttpClientMetrics) {
+      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+    }
+
+    return builder.buildInstrumenter(alwaysClient());
   }
 
   private OkHttpInstrumenterFactory() {}

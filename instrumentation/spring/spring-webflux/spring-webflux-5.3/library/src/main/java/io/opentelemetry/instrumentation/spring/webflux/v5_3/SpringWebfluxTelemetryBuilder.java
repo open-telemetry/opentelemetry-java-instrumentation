@@ -151,6 +151,19 @@ public final class SpringWebfluxTelemetryBuilder {
   }
 
   /**
+   * Configures the instrumentation to emit experimental HTTP client metrics.
+   *
+   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public SpringWebfluxTelemetryBuilder setEmitExperimentalHttpClientMetrics(
+      boolean emitExperimentalHttpClientMetrics) {
+    clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
+    return this;
+  }
+
+  /**
    * Returns a new {@link SpringWebfluxTelemetry} with the settings of this {@link
    * SpringWebfluxTelemetryBuilder}.
    */
