@@ -20,6 +20,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:quarkus-resteasy-reactive:javaagent"))
+  testInstrumentation(project(":instrumentation:vertx:vertx-web-3.0:javaagent"))
 
   testImplementation(project(":instrumentation:quarkus-resteasy-reactive:common-testing"))
   testImplementation("io.quarkus:quarkus-junit5")
