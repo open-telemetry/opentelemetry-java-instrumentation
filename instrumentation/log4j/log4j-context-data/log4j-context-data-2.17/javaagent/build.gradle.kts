@@ -44,6 +44,27 @@ testing {
         }
       }
     }
+
+    val testAddBaggage by registering(JvmTestSuite::class) {
+      sources {
+        groovy {
+          setSrcDirs(listOf("src/testAddBaggage/groovy"))
+        }
+      }
+      dependencies {
+        implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
+            jvmArgs("-Dlog4j2.is.webapp=false")
+            jvmArgs("-Dlog4j2.enable.threadlocals=true")
+          }
+        }
+      }
+    }
   }
 }
 

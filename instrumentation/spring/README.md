@@ -1,4 +1,5 @@
 # OpenTelemetry Instrumentation: Spring and Spring Boot
+
 <!-- ReadMe is in progress -->
 <!-- TO DO: Add sections for starter guide -->
 
@@ -6,7 +7,7 @@ This package streamlines the manual instrumentation process of OpenTelemetry for
 
 The [first section](#manual-instrumentation-with-java-sdk) will walk you through span creation and propagation using the OpenTelemetry Java API and [Spring's RestTemplate Http Web Client](https://spring.io/guides/gs/consuming-rest/). This approach will use the "vanilla" OpenTelemetry API to make explicit tracing calls within an application's controller.
 
-The [second section](#manual-instrumentation-using-handlers-and-filters)  will build on the first. It will walk you through implementing spring-web handler and filter interfaces to create traces with minimal changes to existing application code. Using the OpenTelemetry API, this approach involves copy and pasting files and a significant amount of manual configurations.
+The [second section](#manual-instrumentation-using-handlers-and-filters) will build on the first. It will walk you through implementing spring-web handler and filter interfaces to create traces with minimal changes to existing application code. Using the OpenTelemetry API, this approach involves copy and pasting files and a significant amount of manual configurations.
 
 The [third section](#auto-instrumentation-using-spring-starters) with build on the first two sections. We will use spring auto-configurations and instrumentation tools packaged in OpenTelemetry [Spring Starters](starters) to streamline the set up of OpenTelemetry using Spring. With these tools you will be able to setup distributed tracing with little to no changes to existing configurations and easily customize traces with minor additions to application code.
 
@@ -14,18 +15,18 @@ In this guide we will be using a running example. In section one and two, we wil
 
 ## Settings
 
-| System property | Type | Default | Description |
-|---|---|---|---|
-| `otel.instrumentation.spring-integration.global-channel-interceptor-patterns` | List | `*` | An array of Spring channel name patterns that will be intercepted. See [Spring Integration docs](https://docs.spring.io/spring-integration/reference/html/channel.html#global-channel-configuration-interceptors) for more details. |
-| `otel.instrumentation.spring-integration.producer.enabled` | Boolean | `false` | Create producer spans when  messages are sent to an output channel. Enable when you're using a messaging library that doesn't have its own instrumentation for generating producer spans. Note that the detection of output channels only works for [Spring Cloud Stream](https://spring.io/projects/spring-cloud-stream) `DirectWithAttributesChannel`.  |
-| `otel.instrumentation.spring-webflux.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes for Spring WebFlux version 5.0. |
-| `otel.instrumentation.spring-webmvc.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes for Spring Web MVC 3.1. |
+| System property                                                               | Type    | Default | Description                                                                                                                                                                                                                                                                                                                                             |
+| ----------------------------------------------------------------------------- | ------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `otel.instrumentation.spring-integration.global-channel-interceptor-patterns` | List    | `*`     | An array of Spring channel name patterns that will be intercepted. See [Spring Integration docs](https://docs.spring.io/spring-integration/reference/html/channel.html#global-channel-configuration-interceptors) for more details.                                                                                                                     |
+| `otel.instrumentation.spring-integration.producer.enabled`                    | Boolean | `false` | Create producer spans when messages are sent to an output channel. Enable when you're using a messaging library that doesn't have its own instrumentation for generating producer spans. Note that the detection of output channels only works for [Spring Cloud Stream](https://spring.io/projects/spring-cloud-stream) `DirectWithAttributesChannel`. |
+| `otel.instrumentation.spring-webflux.experimental-span-attributes`            | Boolean | `false` | Enable the capture of experimental span attributes for Spring WebFlux version 5.0.                                                                                                                                                                                                                                                                      |
+| `otel.instrumentation.spring-webmvc.experimental-span-attributes`             | Boolean | `false` | Enable the capture of experimental span attributes for Spring Web MVC 3.1.                                                                                                                                                                                                                                                                              |
 
 ## Manual Instrumentation Guide
 
 ### Create two Spring Projects
 
-Using the [spring project initializer](https://start.spring.io/), we will create two spring projects.  Name one project `MainService` and the other `TimeService`. In this example `MainService` will be a client of `TimeService` and they will be dealing with time. Make sure to select maven, Spring Boot 2.3, Java, and add the spring-web dependency. After downloading the two projects include the OpenTelemetry dependencies and configuration listed below.
+Using the [spring project initializer](https://start.spring.io/), we will create two spring projects. Name one project `MainService` and the other `TimeService`. In this example `MainService` will be a client of `TimeService` and they will be dealing with time. Make sure to select maven, Spring Boot 2.3, Java, and add the spring-web dependency. After downloading the two projects include the OpenTelemetry dependencies and configuration listed below.
 
 ### Setup for Manual Instrumentation
 
@@ -333,7 +334,7 @@ public class TimeServiceController {
 
 ### Run MainService and TimeService
 
-***To view your distributed traces ensure either LogExporter or Jaeger is configured in the OtelConfig.java file***
+**_To view your distributed traces ensure either LogExporter or Jaeger is configured in the OtelConfig.java file_**
 
 To view traces on the Jaeger UI, deploy a Jaeger Exporter on localhost by running the command in terminal:
 
@@ -343,9 +344,9 @@ After running Jaeger locally, navigate to the url below. Make sure to refresh th
 
 `http://localhost:16686`
 
-Run MainService and TimeService from command line or using an IDE. The end point of interest for MainService is `http://localhost:8080/message` and  `http://localhost:8081/time` for TimeService. Entering `localhost:8080/message` in a browser should call MainService and then TimeService, creating a trace.
+Run MainService and TimeService from command line or using an IDE. The end point of interest for MainService is `http://localhost:8080/message` and `http://localhost:8081/time` for TimeService. Entering `localhost:8080/message` in a browser should call MainService and then TimeService, creating a trace.
 
-***Note: The default port for the Apache Tomcat is 8080. On localhost both MainService and TimeService services will attempt to run on this port raising an error. To avoid this add `server.port=8081` to the resources/application.properties file. Ensure the port specified corresponds to port referenced by MainServiceController.TIME_SERVICE_URL.***
+**_Note: The default port for the Apache Tomcat is 8080. On localhost both MainService and TimeService services will attempt to run on this port raising an error. To avoid this add `server.port=8081` to the resources/application.properties file. Ensure the port specified corresponds to port referenced by MainServiceController.TIME_SERVICE_URL._**
 
 Congrats, we just created a distributed service with OpenTelemetry!
 
@@ -636,7 +637,7 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-start
 
 ### Create two Spring Projects
 
-Using the [spring project initializer](https://start.spring.io/), we will create two spring projects.  Name one project `MainService` and the other `TimeService`. Make sure to select maven, Spring Boot 2.3, Java, and add the spring-web dependency. After downloading the two projects include the OpenTelemetry dependencies listed above.
+Using the [spring project initializer](https://start.spring.io/), we will create two spring projects. Name one project `MainService` and the other `TimeService`. Make sure to select maven, Spring Boot 2.3, Java, and add the spring-web dependency. After downloading the two projects include the OpenTelemetry dependencies listed above.
 
 ### Main Service Application
 
@@ -877,12 +878,12 @@ Add the following configurations to overwrite the default exporter values listed
 
 To generate a trace using the zipkin exporter follow the steps below:
 
- 1. Replace `opentelemetry-spring-boot-starter` with `opentelemetry-zipkin-spring-boot-starter` in your pom or gradle build file
- 2. Use the Zipkin [quick starter](https://zipkin.io/pages/quickstart) to download and run the zipkin executable jar
+1.  Replace `opentelemetry-spring-boot-starter` with `opentelemetry-zipkin-spring-boot-starter` in your pom or gradle build file
+2.  Use the Zipkin [quick starter](https://zipkin.io/pages/quickstart) to download and run the zipkin executable jar
     - Ensure the zipkin endpoint matches the default value listed in your application properties
- 3. Run `MainServiceApplication.java` and `TimeServiceApplication.java`
- 4. Use your favorite browser to send a request to `http://localhost:8080/message`
- 5. Navigate to `http://localhost:9411` to see your trace
+3.  Run `MainServiceApplication.java` and `TimeServiceApplication.java`
+4.  Use your favorite browser to send a request to `http://localhost:8080/message`
+5.  Navigate to `http://localhost:9411` to see your trace
 
 Shown below is the sample trace generated by `MainService` and `TimeService` using the opentelemetry-zipkin-spring-boot-starter.
 

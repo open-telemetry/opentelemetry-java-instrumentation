@@ -19,7 +19,8 @@ public final class NettyServerSingletons {
           GlobalOpenTelemetry.get(),
           "io.opentelemetry.netty-4.0",
           CommonConfig.get().getServerRequestHeaders(),
-          CommonConfig.get().getServerResponseHeaders());
+          CommonConfig.get().getServerResponseHeaders(),
+          CommonConfig.get().getKnownHttpRequestMethods());
 
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {
     return INSTRUMENTER;

@@ -7,7 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -23,7 +25,7 @@ public final class HttpUrlConnectionSingletons {
     HttpUrlHttpAttributesGetter httpAttributesGetter = new HttpUrlHttpAttributesGetter();
     HttpUrlNetAttributesGetter netAttributesGetter = new HttpUrlNetAttributesGetter();
 
-    INSTRUMENTER =
+    InstrumenterBuilder<HttpURLConnection, Integer> builder =
         Instrumenter.<HttpURLConnection, Integer>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.http-url-connection",
@@ -33,6 +35,7 @@ public final class HttpUrlConnectionSingletons {
                 HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
@@ -41,8 +44,11 @@ public final class HttpUrlConnectionSingletons {
             .addContextCustomizer(
                 (context, httpRequestPacket, startAttributes) ->
                     GetOutputStreamContext.init(context))
-            .addOperationMetrics(HttpClientMetrics.get())
-            .buildClientInstrumenter(RequestPropertySetter.INSTANCE);
+            .addOperationMetrics(HttpClientMetrics.get());
+    if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
+      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+    }
+    INSTRUMENTER = builder.buildClientInstrumenter(RequestPropertySetter.INSTANCE);
   }
 
   public static Instrumenter<HttpURLConnection, Integer> instrumenter() {

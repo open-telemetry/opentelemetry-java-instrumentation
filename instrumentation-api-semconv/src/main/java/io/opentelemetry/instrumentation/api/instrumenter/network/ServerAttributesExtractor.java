@@ -41,7 +41,8 @@ public final class ServerAttributesExtractor<REQUEST, RESPONSE>
             /* emitStableUrlAttributes= */ true,
             /* emitOldHttpAttributes= */ false,
             // this param does not matter when old semconv is off
-            InternalServerAttributesExtractor.Mode.HOST);
+            InternalServerAttributesExtractor.Mode.HOST,
+            /* captureServerSocketAttributes= */ true);
   }
 
   @Override

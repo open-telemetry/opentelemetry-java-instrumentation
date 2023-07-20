@@ -9,13 +9,16 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
@@ -35,6 +38,7 @@ public final class JettyClientInstrumenterBuilder {
       httpAttributesExtractorBuilder =
           HttpClientAttributesExtractor.builder(
               JettyClientHttpAttributesGetter.INSTANCE, new JettyHttpClientNetAttributesGetter());
+  private boolean emitExperimentalHttpClientMetrics = false;
 
   public JettyClientInstrumenterBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -59,17 +63,35 @@ public final class JettyClientInstrumenterBuilder {
     return this;
   }
 
+  @CanIgnoreReturnValue
+  public JettyClientInstrumenterBuilder setKnownMethods(Set<String> knownMethods) {
+    httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public JettyClientInstrumenterBuilder setEmitExperimentalHttpClientMetrics(
+      boolean emitExperimentalHttpClientMetrics) {
+    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
+    return this;
+  }
+
   public Instrumenter<Request, Response> build() {
     JettyClientHttpAttributesGetter httpAttributesGetter = JettyClientHttpAttributesGetter.INSTANCE;
 
-    return Instrumenter.<Request, Response>builder(
-            this.openTelemetry,
-            INSTRUMENTATION_NAME,
-            HttpSpanNameExtractor.create(httpAttributesGetter))
-        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-        .addAttributesExtractor(httpAttributesExtractorBuilder.build())
-        .addAttributesExtractors(additionalExtractors)
-        .addOperationMetrics(HttpClientMetrics.get())
-        .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
+    InstrumenterBuilder<Request, Response> builder =
+        Instrumenter.<Request, Response>builder(
+                this.openTelemetry,
+                INSTRUMENTATION_NAME,
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(httpAttributesExtractorBuilder.build())
+            .addAttributesExtractors(additionalExtractors)
+            .addOperationMetrics(HttpClientMetrics.get());
+    if (emitExperimentalHttpClientMetrics) {
+      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+    }
+
+    return builder.buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 }

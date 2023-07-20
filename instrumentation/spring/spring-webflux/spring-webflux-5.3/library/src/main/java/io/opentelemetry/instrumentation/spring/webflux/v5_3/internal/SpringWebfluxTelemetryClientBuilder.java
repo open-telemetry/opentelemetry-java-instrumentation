@@ -14,12 +14,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxTelemetry;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
@@ -41,6 +43,7 @@ public final class SpringWebfluxTelemetryClientBuilder {
               WebClientHttpAttributesGetter.INSTANCE, new WebClientNetAttributesGetter());
 
   private boolean captureExperimentalSpanAttributes = false;
+  private boolean emitExperimentalHttpClientMetrics = false;
 
   public SpringWebfluxTelemetryClientBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -93,6 +96,19 @@ public final class SpringWebfluxTelemetryClientBuilder {
     return this;
   }
 
+  @CanIgnoreReturnValue
+  public SpringWebfluxTelemetryClientBuilder setKnownMethods(Set<String> knownMethods) {
+    httpClientAttributesExtractorBuilder.setKnownMethods(knownMethods);
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public SpringWebfluxTelemetryClientBuilder setEmitExperimentalHttpClientMetrics(
+      boolean emitExperimentalHttpClientMetrics) {
+    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
+    return this;
+  }
+
   /**
    * Returns a new {@link SpringWebfluxTelemetry} with the settings of this {@link
    * SpringWebfluxTelemetryClientBuilder}.
@@ -113,6 +129,9 @@ public final class SpringWebfluxTelemetryClientBuilder {
 
     if (captureExperimentalSpanAttributes) {
       clientBuilder.addAttributesExtractor(new WebClientExperimentalAttributesExtractor());
+    }
+    if (emitExperimentalHttpClientMetrics) {
+      clientBuilder.addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
 
     // headers are injected elsewhere; ClientRequest is immutable

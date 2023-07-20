@@ -4,7 +4,7 @@ Here is the list of metrics based on MBeans exposed by Kafka broker. <br /><br /
 Broker metrics:
 
 | Metric Name                        | Type          | Attributes | Description                                                          |
-|------------------------------------|---------------|------------|----------------------------------------------------------------------|
+| ---------------------------------- | ------------- | ---------- | -------------------------------------------------------------------- |
 | kafka.message.count                | Counter       |            | The number of messages received by the broker                        |
 | kafka.request.count                | Counter       | type       | The number of requests received by the broker                        |
 | kafka.request.failed               | Counter       | type       | The number of requests to the broker resulting in a failure          |
@@ -22,11 +22,12 @@ Broker metrics:
 | kafka.controller.active.count      | UpDownCounter |            | The number of controllers active on the broker                       |
 | kafka.leaderElection.count         | Counter       |            | The leader election count                                            |
 | kafka.leaderElection.unclean.count | Counter       |            | Unclean leader election count - increasing indicates broker failures |
+
 <br />
 Log metrics:
 
 | Metric Name               | Type    | Attributes | Description                      |
-|---------------------------|---------|------------|----------------------------------|
+| ------------------------- | ------- | ---------- | -------------------------------- |
 | kafka.logs.flush.count    | Counter |            | Log flush count                  |
 | kafka.logs.flush.time.50p | Gauge   |            | Log flush time - 50th percentile |
 | kafka.logs.flush.time.99p | Gauge   |            | Log flush time - 99th percentile |
