@@ -38,6 +38,7 @@ public final class TomcatInstrumenterFactory {
             HttpServerAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
                 .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                 .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+                .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                 .build())
         .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
         .addContextCustomizer(

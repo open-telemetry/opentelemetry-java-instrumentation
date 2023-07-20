@@ -7,8 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -46,7 +48,7 @@ public final class ReactorNettySingletons {
     ReactorNettyNetClientAttributesGetter netAttributesGetter =
         new ReactorNettyNetClientAttributesGetter();
 
-    INSTRUMENTER =
+    InstrumenterBuilder<HttpClientConfig, HttpClientResponse> builder =
         Instrumenter.<HttpClientConfig, HttpClientResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -56,11 +58,17 @@ public final class ReactorNettySingletons {
                 HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
-            .addOperationMetrics(HttpClientMetrics.get())
+            .addOperationMetrics(HttpClientMetrics.get());
+    if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
+      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+    }
+    INSTRUMENTER =
+        builder
             // headers are injected in ResponseReceiverInstrumenter
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
 
@@ -70,7 +78,8 @@ public final class ReactorNettySingletons {
             INSTRUMENTATION_NAME,
             connectionTelemetryEnabled,
             false,
-            CommonConfig.get().getPeerServiceMapping());
+            CommonConfig.get().getPeerServiceMapping(),
+            CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
     CONNECTION_INSTRUMENTER = instrumenterFactory.createConnectionInstrumenter();
   }
 

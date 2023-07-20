@@ -13,6 +13,8 @@ muzzle {
 
 val camelversion = "2.20.1" // first version that the tests pass on
 
+description = "camel-2-20"
+
 dependencies {
   library("org.apache.camel:camel-core:$camelversion")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
@@ -46,7 +48,6 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.elasticmq:elasticmq-rest-sqs_2.12:1.0.0")
 
-  testImplementation("org.testcontainers:localstack")
   testImplementation("org.testcontainers:cassandra")
   testImplementation("org.testcontainers:testcontainers")
   testImplementation("org.testcontainers:junit-jupiter")

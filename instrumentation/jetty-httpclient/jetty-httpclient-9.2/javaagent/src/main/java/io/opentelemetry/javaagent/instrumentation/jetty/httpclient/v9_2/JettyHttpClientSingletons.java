@@ -24,6 +24,9 @@ public class JettyHttpClientSingletons {
                   CommonConfig.get().getPeerServiceMapping()))
           .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
           .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+          .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+          .setEmitExperimentalHttpClientMetrics(
+              CommonConfig.get().shouldEmitExperimentalHttpClientMetrics())
           .build();
 
   public static Instrumenter<Request, Response> instrumenter() {

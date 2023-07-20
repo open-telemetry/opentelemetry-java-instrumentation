@@ -52,7 +52,8 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
             FallbackAddressPortExtractor.noop(),
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
-            InternalServerAttributesExtractor.Mode.HOST);
+            InternalServerAttributesExtractor.Mode.HOST,
+            /* captureServerSocketAttributes= */ true);
     internalClientExtractor =
         new InternalClientAttributesExtractor<>(
             getter,

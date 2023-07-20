@@ -18,7 +18,7 @@ spotless {
     groovy {
       licenseHeaderFile(
         rootProject.file("buildscripts/spotless.license.java"),
-        "(package|import|class)"
+        "(package|import|(?:abstract )?class)"
       )
       endWithNewline()
     }

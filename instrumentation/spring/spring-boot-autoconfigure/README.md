@@ -181,7 +181,7 @@ OpenTelemetry WebClientFilter.
 
 #### Manual Instrumentation Support - @WithSpan
 
-This feature uses spring-aop to wrap methods annotated with `@WithSpan` in a span.  The arguments
+This feature uses spring-aop to wrap methods annotated with `@WithSpan` in a span. The arguments
 to the method can be captured as attributed on the created span by annotating the method
 parameters with `@SpanAttribute`.
 
@@ -262,51 +262,51 @@ The traces below were exported using Zipkin.
 ##### Spring Web - RestTemplate Client Span
 
 ```json
-   {
-      "traceId":"0371febbbfa76b2e285a08b53a055d17",
-      "parentId":"9b782243ad7df179",
-      "id":"43990118a8bdbdf5",
-      "kind":"CLIENT",
-      "name":"http get",
-      "timestamp":1596841405949825,
-      "duration":21288,
-      "localEndpoint":{
-         "serviceName":"sample_trace",
-         "ipv4":"XXX.XXX.X.XXX"
-      },
-      "tags":{
-         "http.method":"GET",
-         "http.status_code":"200",
-         "http.url":"/spring-web/sample/rest-template",
-         "net.peer.name":"localhost",
-         "net.peer.port":"8081"
-      }
-   }
+{
+  "traceId": "0371febbbfa76b2e285a08b53a055d17",
+  "parentId": "9b782243ad7df179",
+  "id": "43990118a8bdbdf5",
+  "kind": "CLIENT",
+  "name": "http get",
+  "timestamp": 1596841405949825,
+  "duration": 21288,
+  "localEndpoint": {
+    "serviceName": "sample_trace",
+    "ipv4": "XXX.XXX.X.XXX"
+  },
+  "tags": {
+    "http.method": "GET",
+    "http.status_code": "200",
+    "http.url": "/spring-web/sample/rest-template",
+    "net.peer.name": "localhost",
+    "net.peer.port": "8081"
+  }
+}
 ```
 
 ##### Spring Web-Flux - WebClient Span
 
 ```json
-   {
-      "traceId":"0371febbbfa76b2e285a08b53a055d17",
-      "parentId":"9b782243ad7df179",
-      "id":"1b14a2fc89d7a762",
-      "kind":"CLIENT",
-      "name":"http post",
-      "timestamp":1596841406109125,
-      "duration":25137,
-      "localEndpoint":{
-         "serviceName":"sample_trace",
-         "ipv4":"XXX.XXX.X.XXX"
-      },
-      "tags":{
-         "http.method":"POST",
-         "http.status_code":"200",
-         "http.url":"/spring-webflux/sample/web-client",
-         "net.peer.name":"localhost",
-         "net.peer.port":"8082"
-      }
-   }
+{
+  "traceId": "0371febbbfa76b2e285a08b53a055d17",
+  "parentId": "9b782243ad7df179",
+  "id": "1b14a2fc89d7a762",
+  "kind": "CLIENT",
+  "name": "http post",
+  "timestamp": 1596841406109125,
+  "duration": 25137,
+  "localEndpoint": {
+    "serviceName": "sample_trace",
+    "ipv4": "XXX.XXX.X.XXX"
+  },
+  "tags": {
+    "http.method": "POST",
+    "http.status_code": "200",
+    "http.url": "/spring-webflux/sample/web-client",
+    "net.peer.name": "localhost",
+    "net.peer.port": "8082"
+  }
+}
 ```
 
 ##### @WithSpan Instrumentation
@@ -414,7 +414,7 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 ##### Resource Properties
 
 | Feature  | Property                                         | Default Value          |
-|----------|--------------------------------------------------|------------------------|
+| -------- | ------------------------------------------------ | ---------------------- |
 | Resource | otel.springboot.resource.enabled                 | `true`                 |
 |          | otel.springboot.resource.attributes.service.name | `unknown_service:java` |
 |          | otel.springboot.resource.attributes              | `empty map`            |
@@ -434,7 +434,7 @@ otel.springboot.resource.attributes.xyz=foo
 ##### Exporter Properties
 
 | Feature         | Property                      | Default Value                        |
-|-----------------|-------------------------------|--------------------------------------|
+| --------------- | ----------------------------- | ------------------------------------ |
 | Otlp Exporter   | otel.exporter.otlp.endpoint   | `localhost:4317`                     |
 |                 | otel.exporter.otlp.timeout    | `1s`                                 |
 | Jaeger Exporter | otel.exporter.jaeger.endpoint | `localhost:14250`                    |
@@ -444,7 +444,7 @@ otel.springboot.resource.attributes.xyz=foo
 ##### Tracer Properties
 
 | Feature | Property                        | Default Value |
-|---------|---------------------------------|---------------|
+| ------- | ------------------------------- | ------------- |
 | Tracer  | otel.traces.sampler.probability | `1.0`         |
 
 ### Starter Guide

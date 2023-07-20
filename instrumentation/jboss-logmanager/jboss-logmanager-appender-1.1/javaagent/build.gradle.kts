@@ -22,6 +22,14 @@ dependencies {
   testImplementation("org.awaitility:awaitility")
 }
 
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_11)
+  }
+}
+
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
   jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=*")

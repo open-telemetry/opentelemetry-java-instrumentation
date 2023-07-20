@@ -5,31 +5,17 @@
 
 package io.opentelemetry.instrumentation.javaagent.runtimemetrics.java17;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
-import io.opentelemetry.instrumentation.testing.AgentTestRunner;
-import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.testing.assertj.MetricAssert;
-import java.util.Collection;
-import java.util.function.Consumer;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JfrRuntimeMetricsTest {
-  @SafeVarargs
-  private static void waitAndAssertMetrics(Consumer<MetricAssert>... assertions) {
-    await()
-        .untilAsserted(
-            () -> {
-              Collection<MetricData> metrics = AgentTestRunner.instance().getExportedMetrics();
-              assertThat(metrics).isNotEmpty();
-              for (Consumer<MetricAssert> assertion : assertions) {
-                assertThat(metrics).anySatisfy(metric -> assertion.accept(assertThat(metric)));
-              }
-            });
-  }
+
+  @RegisterExtension
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @BeforeAll
   static void setUp() {
@@ -45,7 +31,8 @@ class JfrRuntimeMetricsTest {
     // This should generate some events
     System.gc();
 
-    waitAndAssertMetrics(
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.runtime-telemetry-java17",
         metric -> metric.hasName("process.runtime.jvm.cpu.longlock"),
         metric -> metric.hasName("process.runtime.jvm.cpu.limit"),
         metric -> metric.hasName("process.runtime.jvm.cpu.context_switch"));

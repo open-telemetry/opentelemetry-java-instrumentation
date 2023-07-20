@@ -27,6 +27,7 @@ public final class RestletSingletons {
                   RestletHttpAttributesGetter.INSTANCE, new RestletNetAttributesGetter())
               .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
               .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+              .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
               .build(),
           Collections.emptyList());
 

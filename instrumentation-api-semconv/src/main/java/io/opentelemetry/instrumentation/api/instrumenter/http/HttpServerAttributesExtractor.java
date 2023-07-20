@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -78,12 +79,16 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
-      List<String> capturedResponseHeaders) {
+      List<String> capturedResponseHeaders,
+      Set<String> knownMethods,
+      boolean captureServerSocketAttributes) {
     this(
         httpAttributesGetter,
         netAttributesGetter,
         capturedRequestHeaders,
         capturedResponseHeaders,
+        knownMethods,
+        captureServerSocketAttributes,
         HttpRouteHolder::getRoute);
   }
 
@@ -93,8 +98,10 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders,
+      Set<String> knownMethods,
+      boolean captureServerSocketAttributes,
       Function<Context, String> httpRouteHolderGetter) {
-    super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
+    super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders, knownMethods);
     HttpNetAddressPortExtractor<REQUEST> addressPortExtractor =
         new HttpNetAddressPortExtractor<>(httpAttributesGetter);
     internalUrlExtractor =
@@ -119,7 +126,10 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
             addressPortExtractor,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
-            InternalServerAttributesExtractor.Mode.HOST);
+            InternalServerAttributesExtractor.Mode.HOST,
+            // we're not capturing these by default, since they're opt-in
+            // we'll add a configuration flag if someone happens to request them
+            /* captureServerSocketAttributes= */ false);
     internalClientExtractor =
         new InternalClientAttributesExtractor<>(
             netAttributesGetter,

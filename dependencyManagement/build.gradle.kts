@@ -96,7 +96,7 @@ val DEPENDENCIES = listOf(
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
-  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.27.0-alpha",
+  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.28.0-alpha",
   "io.opentelemetry.proto:opentelemetry-proto:0.20.0-alpha",
   "org.assertj:assertj-core:3.24.2",
   "org.awaitility:awaitility:4.2.0",
@@ -108,7 +108,7 @@ val DEPENDENCIES = listOf(
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.3",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
-  "org.springframework.boot:spring-boot-dependencies:2.7.5",
+  "org.springframework.boot:spring-boot-dependencies:2.7.13",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.6"
 )
