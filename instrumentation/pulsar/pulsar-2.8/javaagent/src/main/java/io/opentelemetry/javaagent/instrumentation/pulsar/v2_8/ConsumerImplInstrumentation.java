@@ -100,6 +100,9 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.Return Message<?> message,
         @Advice.Thrown Throwable throwable) {
       Context parent = Context.current();
+      // If `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` is false,
+      // the context will be null, should handle this case in
+      // `MessageListenerInstrumentation#MessageListenerWrapper#received`
       Context current = startAndEndConsumerReceive(parent, message, timer, consumer, throwable);
       if (current != null && throwable == null) {
         // ConsumerBase#internalReceive(long,TimeUnit) will be called before

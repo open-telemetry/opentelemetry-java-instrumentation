@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.consumerProcessInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.extractParentContext;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -72,6 +73,10 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
 
       Instrumenter<PulsarRequest, Void> instrumenter = consumerProcessInstrumenter();
       PulsarRequest request = PulsarRequest.create(message);
+      // Handle `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` is false.
+      if (parent == null) {
+        parent = extractParentContext(request);
+      }
       if (!instrumenter.shouldStart(parent, request)) {
         this.delegate.received(consumer, message);
         return;

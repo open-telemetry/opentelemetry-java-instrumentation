@@ -581,37 +581,35 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       def parent2 = findIndex("parent2", traces)
       def receive1 = findIndex(traces.get(parent1).get(0).spanContext, traces)
       def receive2 = findIndex(traces.get(parent2).get(0).spanContext, traces)
+      def linkedSpan1 = null
+      def linkedSpan2 = null
 
       trace(parent1, 2) {
-        def topic = topic1
         span(0) {
           name "parent1"
           kind INTERNAL
           hasNoParent()
         }
-        producerSpan(it, 1, span(0), topic, null, { it.startsWith(topicNamePrefix) }, String)
-        def linkedSpan = span(1)
-
-        trace(receive1, 2) {it0 ->
-          receiveSpan(it0, 0, null, topic, null, { it.startsWith(topicNamePrefix) }, String, linkedSpan)
-          processSpan(it0, 1, it0.span(0), topic, null, { it.startsWith(topicNamePrefix) }, String)
-        }
+        producerSpan(it, 1, span(0), topic1, null, { it.startsWith(topicNamePrefix) }, String)
+        linkedSpan1 = span(1)
+      }
+      trace(receive1, 2) {it0 ->
+        receiveSpan(it0, 0, null, topic1, null, { it.startsWith(topicNamePrefix) }, String, linkedSpan1)
+        processSpan(it0, 1, it0.span(0), topic1, null, { it.startsWith(topicNamePrefix) }, String)
       }
 
       trace(parent2, 2) {
-        def topic = topic2
         span(0) {
           name "parent2"
           kind INTERNAL
           hasNoParent()
         }
-        producerSpan(it, 1, span(0), topic, null, { it.startsWith(topicNamePrefix) }, String)
-        def linkedSpan = span(1)
-
-        trace(receive2, 2) {it0 ->
-          receiveSpan(it0, 0, null, topic, null, { it.startsWith(topicNamePrefix) }, String, linkedSpan)
-          processSpan(it0, 1, it0.span(0), topic, null, { it.startsWith(topicNamePrefix) }, String)
-        }
+        producerSpan(it, 1, span(0), topic2, null, { it.startsWith(topicNamePrefix) }, String)
+        linkedSpan2 = span(1)
+      }
+      trace(receive2, 2) {it0 ->
+        receiveSpan(it0, 0, null, topic2, null, { it.startsWith(topicNamePrefix) }, String, linkedSpan2)
+        processSpan(it0, 1, it0.span(0), topic2, null, { it.startsWith(topicNamePrefix) }, String)
       }
 
     }
