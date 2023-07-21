@@ -26,8 +26,6 @@ public class GoogleHttpClientSingletons {
   static {
     GoogleHttpClientHttpAttributesGetter httpAttributesGetter =
         new GoogleHttpClientHttpAttributesGetter();
-    GoogleHttpClientNetAttributesGetter netAttributesGetter =
-        new GoogleHttpClientNetAttributesGetter();
 
     InstrumenterBuilder<HttpRequest, HttpResponse> builder =
         Instrumenter.<HttpRequest, HttpResponse>builder(
@@ -36,14 +34,14 @@ public class GoogleHttpClientSingletons {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                HttpClientAttributesExtractor.builder(httpAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    httpAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addOperationMetrics(HttpClientMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
       builder.addOperationMetrics(HttpClientExperimentalMetrics.get());

@@ -25,8 +25,6 @@ public final class ApacheHttpAsyncClientSingletons {
   static {
     ApacheHttpAsyncClientHttpAttributesGetter httpAttributesGetter =
         new ApacheHttpAsyncClientHttpAttributesGetter();
-    ApacheHttpAsyncClientNetAttributesGetter netAttributesGetter =
-        new ApacheHttpAsyncClientNetAttributesGetter();
 
     InstrumenterBuilder<ApacheHttpClientRequest, HttpResponse> builder =
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
@@ -35,14 +33,14 @@ public final class ApacheHttpAsyncClientSingletons {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                HttpClientAttributesExtractor.builder(httpAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    httpAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addOperationMetrics(HttpClientMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
       builder.addOperationMetrics(HttpClientExperimentalMetrics.get());

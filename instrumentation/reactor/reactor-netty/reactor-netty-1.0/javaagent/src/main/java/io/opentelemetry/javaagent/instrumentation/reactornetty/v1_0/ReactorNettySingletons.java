@@ -44,8 +44,6 @@ public final class ReactorNettySingletons {
   static {
     ReactorNettyHttpClientAttributesGetter httpAttributesGetter =
         new ReactorNettyHttpClientAttributesGetter();
-    ReactorNettyNetClientAttributesGetter netAttributesGetter =
-        new ReactorNettyNetClientAttributesGetter();
 
     InstrumenterBuilder<HttpClientRequest, HttpClientResponse> builder =
         Instrumenter.<HttpClientRequest, HttpClientResponse>builder(
@@ -54,14 +52,14 @@ public final class ReactorNettySingletons {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                HttpClientAttributesExtractor.builder(httpAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    httpAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addOperationMetrics(HttpClientMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
       builder.addOperationMetrics(HttpClientExperimentalMetrics.get());

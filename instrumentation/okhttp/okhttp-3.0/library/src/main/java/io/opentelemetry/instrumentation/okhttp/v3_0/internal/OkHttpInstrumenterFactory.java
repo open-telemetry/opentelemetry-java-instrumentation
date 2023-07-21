@@ -37,10 +37,9 @@ public final class OkHttpInstrumenterFactory {
       boolean emitExperimentalHttpClientMetrics) {
 
     OkHttpAttributesGetter httpAttributesGetter = OkHttpAttributesGetter.INSTANCE;
-    OkHttpNetAttributesGetter netAttributesGetter = OkHttpNetAttributesGetter.INSTANCE;
 
     HttpClientAttributesExtractorBuilder<Request, Response> extractorBuilder =
-        HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter);
+        HttpClientAttributesExtractor.builder(httpAttributesGetter);
     extractorConfigurer.accept(extractorBuilder);
 
     InstrumenterBuilder<Request, Response> builder =

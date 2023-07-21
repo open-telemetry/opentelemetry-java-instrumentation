@@ -52,4 +52,15 @@ final class JaxRsClientHttpAttributesGetter
       ClientRequest httpRequest, ClientResponse httpResponse, String name) {
     return httpResponse.getHeaders().getOrDefault(name, emptyList());
   }
+
+  @Override
+  @Nullable
+  public String getServerAddress(ClientRequest request) {
+    return request.getURI().getHost();
+  }
+
+  @Override
+  public Integer getServerPort(ClientRequest request) {
+    return request.getURI().getPort();
+  }
 }

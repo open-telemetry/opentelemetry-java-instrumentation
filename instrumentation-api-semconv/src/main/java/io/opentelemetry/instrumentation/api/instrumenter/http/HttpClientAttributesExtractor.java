@@ -38,6 +38,19 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
   /** Creates the HTTP client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
+    return builder(httpAttributesGetter).build();
+  }
+
+  /**
+   * Creates the HTTP client attributes extractor with default configuration.
+   *
+   * @deprecated Make sure that your {@linkplain HttpClientAttributesGetter getter} implements all
+   *     the network-related methods and use {@link #create(HttpClientAttributesGetter)} instead.
+   *     This method will be removed in the 2.0 release.
+   */
+  @Deprecated
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
     return builder(httpAttributesGetter, netAttributesGetter).build();
@@ -47,6 +60,20 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
    * Returns a new {@link HttpClientAttributesExtractorBuilder} that can be used to configure the
    * HTTP client attributes extractor.
    */
+  public static <REQUEST, RESPONSE> HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
+    return new HttpClientAttributesExtractorBuilder<>(httpAttributesGetter, httpAttributesGetter);
+  }
+
+  /**
+   * Returns a new {@link HttpClientAttributesExtractorBuilder} that can be used to configure the
+   * HTTP client attributes extractor.
+   *
+   * @deprecated Make sure that your {@linkplain HttpClientAttributesGetter getter} implements all
+   *     the network-related methods and use {@link #builder(HttpClientAttributesGetter)} instead.
+   *     This method will be removed in the 2.0 release.
+   */
+  @Deprecated
   public static <REQUEST, RESPONSE> HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {

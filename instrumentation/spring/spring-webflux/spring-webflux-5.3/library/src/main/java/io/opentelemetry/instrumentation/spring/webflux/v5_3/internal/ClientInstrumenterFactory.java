@@ -43,8 +43,7 @@ public final class ClientInstrumenterFactory {
     WebClientHttpAttributesGetter httpAttributesGetter = WebClientHttpAttributesGetter.INSTANCE;
 
     HttpClientAttributesExtractorBuilder<ClientRequest, ClientResponse> extractorBuilder =
-        HttpClientAttributesExtractor.builder(
-            httpAttributesGetter, new WebClientNetAttributesGetter());
+        HttpClientAttributesExtractor.builder(httpAttributesGetter);
     extractorConfigurer.accept(extractorBuilder);
 
     InstrumenterBuilder<ClientRequest, ClientResponse> clientBuilder =

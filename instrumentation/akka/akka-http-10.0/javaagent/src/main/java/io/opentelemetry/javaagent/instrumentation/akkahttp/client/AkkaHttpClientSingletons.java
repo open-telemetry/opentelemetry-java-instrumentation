@@ -28,7 +28,6 @@ public class AkkaHttpClientSingletons {
   static {
     SETTER = new HttpHeaderSetter(GlobalOpenTelemetry.getPropagators());
     AkkaHttpClientAttributesGetter httpAttributesGetter = new AkkaHttpClientAttributesGetter();
-    AkkaHttpNetAttributesGetter netAttributesGetter = new AkkaHttpNetAttributesGetter();
     InstrumenterBuilder<HttpRequest, HttpResponse> builder =
         Instrumenter.<HttpRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
@@ -36,14 +35,14 @@ public class AkkaHttpClientSingletons {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                HttpClientAttributesExtractor.builder(httpAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    httpAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addOperationMetrics(HttpClientMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
       builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
