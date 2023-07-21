@@ -10,5 +10,5 @@ jobs:
   build:
     uses: ./.github/workflows/reusable-smoke-test-images.yml
     with:
-      project: ":smoke-tests:images:security-manager"
+      project: ":smoke-tests:agent:images:security-manager"
       cache-read-only: true

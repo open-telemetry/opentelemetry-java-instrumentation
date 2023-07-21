@@ -3,7 +3,7 @@ name: PR build Servlet images for smoke tests
 on:
   pull_request:
     paths:
-      - "smoke-tests/images/servlet/**"
+      - "smoke-tests/agent/images/servlet/**"
       - ".github/workflows/pr-smoke-test-servlet-images.yml"
 
 jobs:
@@ -46,8 +46,8 @@ jobs:
 
       - name: Build Linux docker images
         if: matrix.os != 'windows-latest'
-        run: ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        run: ./gradlew :smoke-tests:agent:images:servlet:buildLinuxTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
 
       - name: Build Windows docker images
         if: matrix.os == 'windows-latest'
-        run: ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        run: ./gradlew :smoke-tests:agent:images:servlet:buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}

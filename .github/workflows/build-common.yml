@@ -316,14 +316,14 @@ jobs:
           GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         # running suite "none" compiles everything needed by smoke tests without executing any tests
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        run: ./gradlew :smoke-tests:agent:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Test
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        run: ./gradlew :smoke-tests:agent:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Upload jvm crash dump files if any
         if: failure()

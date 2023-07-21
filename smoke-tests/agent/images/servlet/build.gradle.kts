@@ -141,7 +141,7 @@ fun configureImage(
   val platformSuffix = if (isWindows) "-windows" else ""
 
   val prepareTask = tasks.register<Copy>("${server}ImagePrepare-$version-jdk$jdk-$vm$platformSuffix") {
-    val warTask = project(":smoke-tests:images:servlet:$warProject").tasks.named<War>("war")
+    val warTask = project(":smoke-tests:agent:images:servlet:$warProject").tasks.named<War>("war")
     dependsOn(warTask)
     into(dockerWorkingDir)
     from("src/$dockerFileName")

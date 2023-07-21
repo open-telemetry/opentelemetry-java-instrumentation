@@ -74,7 +74,7 @@ tasks {
           var taskPath = task.project.path + ":" + task.name
           // smoke tests are run separately
           // :instrumentation:test runs all instrumentation tests
-          if (taskPath != ":smoke-tests:test" && taskPath != ":instrumentation:test") {
+          if (taskPath != ":smoke-tests:agent:test" && taskPath != ":smoke-tests:spring-starter:test" && taskPath != ":instrumentation:test") {
             writer.println(taskPath)
           }
         }

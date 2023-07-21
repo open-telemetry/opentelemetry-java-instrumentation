@@ -13,7 +13,7 @@ jobs:
   publish:
     uses: ./.github/workflows/reusable-smoke-test-images.yml
     with:
-      project: ":smoke-tests:images:security-manager"
+      project: ":smoke-tests:agent:images:security-manager"
       publish: true
 
   workflow-notification:

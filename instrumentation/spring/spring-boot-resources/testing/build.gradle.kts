@@ -8,5 +8,5 @@ dependencies {
   testImplementation("org.mockito:mockito-junit-jupiter")
   testImplementation(project(":instrumentation:spring:spring-boot-resources:library"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
-  testImplementation(project(path = ":smoke-tests:images:spring-boot", configuration = "springBootJar"))
+  testImplementation(project(path = ":smoke-tests:agent:images:spring-boot", configuration = "springBootJar"))
 }
