@@ -74,12 +74,19 @@ public final class DecoratorFunctions {
   @Nullable
   private static Context getChannelContext(
       ContextView contextView, PropagatedContext propagatedContext) {
+
+    InstrumentationContexts contexts =
+        contextView.getOrDefault(ReactorContextKeys.CONTEXTS_HOLDER_KEY, null);
+    if (contexts == null) {
+      return null;
+    }
+
     Context context = null;
     if (propagatedContext.useClientContext) {
-      context = contextView.getOrDefault(ReactorContextKeys.CLIENT_CONTEXT_KEY, null);
+      context = contexts.getClientContext();
     }
     if (context == null) {
-      context = contextView.getOrDefault(ReactorContextKeys.CLIENT_PARENT_CONTEXT_KEY, null);
+      context = contexts.getParentContext();
     }
     return context;
   }
