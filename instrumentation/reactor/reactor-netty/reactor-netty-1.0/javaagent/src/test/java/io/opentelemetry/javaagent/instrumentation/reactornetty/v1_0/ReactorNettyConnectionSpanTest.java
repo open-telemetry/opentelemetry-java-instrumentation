@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
@@ -100,8 +99,8 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_URL, uri),
                             equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, USER_AGENT),
-                            equalTo(stringKey("net.protocol.name"), "http"),
-                            equalTo(stringKey("net.protocol.version"), "1.1"),
+                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
                             equalTo(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 0),
                             satisfies(

@@ -13,7 +13,6 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -37,8 +36,8 @@ class TemporaryMetricsViewTest {
         Attributes.builder()
             .put(SemanticAttributes.HTTP_STATUS_CODE, 500)
             .put(SemanticAttributes.NET_TRANSPORT, IP_TCP)
-            .put(NetAttributes.NET_PROTOCOL_NAME, "http")
-            .put(NetAttributes.NET_PROTOCOL_VERSION, "1.1")
+            .put(SemanticAttributes.NET_PROTOCOL_NAME, "http")
+            .put(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1")
             .put(SemanticAttributes.NET_PEER_NAME, "somehost2")
             .put(SemanticAttributes.NET_PEER_PORT, 443)
             .put(SemanticAttributes.NET_SOCK_FAMILY, "inet")
@@ -51,8 +50,8 @@ class TemporaryMetricsViewTest {
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "GET"),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 500L),
-            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"),
+            entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
             entry(SemanticAttributes.NET_PEER_NAME, "somehost2"),
             entry(SemanticAttributes.NET_PEER_PORT, 443L),
             entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"));
@@ -106,8 +105,8 @@ class TemporaryMetricsViewTest {
             .put(SemanticAttributes.HTTP_TARGET, "/high/cardinality/12345?jsessionId=121454")
             .put(SemanticAttributes.HTTP_SCHEME, "https")
             .put(SemanticAttributes.NET_TRANSPORT, IP_TCP)
-            .put(NetAttributes.NET_PROTOCOL_NAME, "http")
-            .put(NetAttributes.NET_PROTOCOL_VERSION, "1.1")
+            .put(SemanticAttributes.NET_PROTOCOL_NAME, "http")
+            .put(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1")
             .put(SemanticAttributes.NET_HOST_NAME, "somehost")
             .put(SemanticAttributes.NET_HOST_PORT, 443)
             .put(SemanticAttributes.NET_SOCK_FAMILY, "inet")
@@ -130,8 +129,8 @@ class TemporaryMetricsViewTest {
             entry(SemanticAttributes.HTTP_METHOD, "GET"),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 500L),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
-            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"),
+            entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
             entry(SemanticAttributes.NET_HOST_NAME, "somehost"),
             entry(SemanticAttributes.NET_HOST_PORT, 443L),
             entry(SemanticAttributes.HTTP_ROUTE, "/somehost/high/{name}/{id}"));
@@ -188,8 +187,8 @@ class TemporaryMetricsViewTest {
             .put(SemanticAttributes.HTTP_TARGET, "/high/cardinality/12345?jsessionId=121454")
             .put(SemanticAttributes.HTTP_SCHEME, "https")
             .put(SemanticAttributes.NET_TRANSPORT, IP_TCP)
-            .put(NetAttributes.NET_PROTOCOL_NAME, "http")
-            .put(NetAttributes.NET_PROTOCOL_VERSION, "1.1")
+            .put(SemanticAttributes.NET_PROTOCOL_NAME, "http")
+            .put(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1")
             .put(SemanticAttributes.NET_HOST_NAME, "somehost")
             .put(SemanticAttributes.NET_HOST_PORT, 443)
             .put(SemanticAttributes.NET_SOCK_FAMILY, "inet")

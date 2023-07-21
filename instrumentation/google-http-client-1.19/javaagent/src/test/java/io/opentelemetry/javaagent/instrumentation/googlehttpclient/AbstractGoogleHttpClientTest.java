@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -122,8 +121,8 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(stringKey("net.protocol.name"));
-          attributes.remove(stringKey("net.protocol.version"));
+          attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
+          attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
           return attributes;
         });
   }

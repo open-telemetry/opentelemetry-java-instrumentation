@@ -107,8 +107,8 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"

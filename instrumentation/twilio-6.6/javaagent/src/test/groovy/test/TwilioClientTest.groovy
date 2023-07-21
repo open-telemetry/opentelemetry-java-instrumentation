@@ -248,8 +248,8 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(1)
           attributes {
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
@@ -315,8 +315,8 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           childOf span(1)
           status ERROR
           attributes {
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
@@ -328,8 +328,8 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(1)
           attributes {
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
@@ -402,8 +402,8 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           childOf span(1)
           status ERROR
           attributes {
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
@@ -415,8 +415,8 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(1)
           attributes {
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"

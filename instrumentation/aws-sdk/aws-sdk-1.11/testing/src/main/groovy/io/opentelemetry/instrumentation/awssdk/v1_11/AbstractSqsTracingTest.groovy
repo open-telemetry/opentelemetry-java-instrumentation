@@ -79,8 +79,8 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.url" "http://localhost:$sqsPort"
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
@@ -102,8 +102,8 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.url" "http://localhost:$sqsPort"
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
@@ -124,8 +124,8 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
@@ -151,8 +151,8 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.url" "http://localhost:$sqsPort"
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }

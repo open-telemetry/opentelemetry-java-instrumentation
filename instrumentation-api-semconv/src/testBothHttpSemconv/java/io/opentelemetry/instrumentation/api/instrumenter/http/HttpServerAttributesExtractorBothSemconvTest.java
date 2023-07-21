@@ -16,7 +16,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
@@ -186,8 +185,8 @@ class HttpServerAttributesExtractorBothSemconvTest {
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
+            entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0"),
             entry(NetworkAttributes.NETWORK_TRANSPORT, "udp"),
             entry(NetworkAttributes.NETWORK_TYPE, "ipv4"),
             entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),

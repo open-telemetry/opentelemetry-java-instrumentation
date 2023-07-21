@@ -132,6 +132,8 @@ hideFromDependabot(":smoke-tests:images:servlet:servlet-3.0")
 hideFromDependabot(":smoke-tests:images:servlet:servlet-5.0")
 hideFromDependabot(":smoke-tests:images:spring-boot")
 
+include(":smoke-tests-otel-starter")
+
 hideFromDependabot("instrumentation:akka:akka-actor-2.3:javaagent")
 hideFromDependabot(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
 hideFromDependabot(":instrumentation:akka:akka-http-10.0:javaagent")

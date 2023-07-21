@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -947,12 +946,12 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (attrs.get(SemanticAttributes.NET_TRANSPORT) != null) {
                 assertThat(attrs).containsEntry(SemanticAttributes.NET_TRANSPORT, IP_TCP);
               }
-              if (httpClientAttributes.contains(NetAttributes.NET_PROTOCOL_NAME)) {
-                assertThat(attrs).containsEntry(NetAttributes.NET_PROTOCOL_NAME, "http");
+              if (httpClientAttributes.contains(SemanticAttributes.NET_PROTOCOL_NAME)) {
+                assertThat(attrs).containsEntry(SemanticAttributes.NET_PROTOCOL_NAME, "http");
               }
-              if (httpClientAttributes.contains(NetAttributes.NET_PROTOCOL_VERSION)) {
+              if (httpClientAttributes.contains(SemanticAttributes.NET_PROTOCOL_VERSION)) {
                 // TODO(anuraaga): Support HTTP/2
-                assertThat(attrs).containsEntry(NetAttributes.NET_PROTOCOL_VERSION, "1.1");
+                assertThat(attrs).containsEntry(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1");
               }
               if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
                 assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
