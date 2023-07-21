@@ -29,6 +29,8 @@ configuration for this behavior.
 This instrumentation takes a collection of SQS messages.
 A span wraps the function call doHandle with appropriate span attributes and span links.
 Span links comes from each of the messages as if this were a batch of messages.
+If the span kind is server, then it will show up in the console as a separate node (segment).
+If the span kind is consumer, then it will show up as a subsegment.
 
 1. Setup SqsMessageHandler with your business logic. Pass in your OpenTelemetry, the name of the destination, and the span kind.
 2. Call the "handle" method on SqsMessageHandler and pass in your collection of messages.
