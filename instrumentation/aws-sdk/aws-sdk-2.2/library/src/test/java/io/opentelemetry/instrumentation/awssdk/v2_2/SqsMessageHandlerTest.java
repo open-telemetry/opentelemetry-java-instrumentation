@@ -14,56 +14,58 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
-import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.Message;
-import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
-import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 
-public class SqsMessageReceiverTest extends XrayTestInstrumenter {
+public class SqsMessageHandlerTest extends XrayTestInstrumenter {
+
   @Test
   public void simple() {
-    SqsClient sqsClient =
-        getClient(
-            ReceiveMessageResponse.builder()
-                .messages(
-                    Message.builder()
-                        .body("Hello")
-                        .attributesWithStrings(
-                            Collections.singletonMap(
-                                "AWSTraceHeader",
-                                "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"))
-                        .build())
-                .build());
+    AtomicInteger handleCalls = new AtomicInteger();
 
-    ReceiveMessageRequest request = ReceiveMessageRequest.builder().build();
+    SqsMessageHandler messageHandler =
+        new SqsMessageHandler(getOpenTelemetry(), "destination", SpanKindExtractor.alwaysServer()) {
+          @Override
+          protected Void doHandle(Collection<Message> request) {
+            handleCalls.incrementAndGet();
+            return null;
+          }
+        };
 
-    SqsMessageReceiver messageHandler =
-        new SqsMessageReceiver(getOpenTelemetry(), "destination", sqsClient);
+    List<Message> messages = new LinkedList<>();
+    messages.add(Message.builder()
+        .body("Hello")
+        .attributesWithStrings(
+            Collections.singletonMap(
+                "AWSTraceHeader",
+                "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"))
+        .build());
 
     Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
 
     try (Scope scope = parentSpan.makeCurrent()) {
-      ReceiveMessageResponse response = messageHandler.receive(request);
-
-      assertThat(response.messages().size()).isEqualTo(1);
-      assertThat(response.messages().get(0).body()).isEqualTo("Hello");
-      assertThat(response.messages().get(0).attributesAsStrings().get("AWSTraceHeader"))
-          .isEqualTo("Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1");
+      messageHandler.handle(messages);
     }
 
     parentSpan.end();
+
+    assertThat(handleCalls.get()).isEqualTo(1);
 
     waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("destination receive")
-                        .hasKind(SpanKind.CONSUMER)
+                    span.hasName("destination process")
+                        .hasKind(SpanKind.SERVER)
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -72,7 +74,7 @@ public class SqsMessageReceiverTest extends XrayTestInstrumenter {
                                     TraceFlags.getSampled(),
                                     TraceState.getDefault())))
                         .hasTotalRecordedLinks(1)
-                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "receive")
+                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
                         .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
                         .hasAttribute(SemanticAttributes.MESSAGING_DESTINATION_NAME, "destination")
                         .hasAttribute(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 5L)
@@ -83,54 +85,50 @@ public class SqsMessageReceiverTest extends XrayTestInstrumenter {
 
   @Test
   public void twoMessages() {
-    SqsClient sqsClient =
-        getClient(
-            ReceiveMessageResponse.builder()
-                .messages(
-                    Message.builder()
-                        .body("Hello")
-                        .attributesWithStrings(
-                            Collections.singletonMap(
-                                "AWSTraceHeader",
-                                "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"))
-                        .build(),
-                    Message.builder()
-                        .body("Hello World")
-                        .attributesWithStrings(
-                            Collections.singletonMap(
-                                "AWSTraceHeader",
-                                "Root=1-66555555-123456789012345678901234;Parent=6634567890123456;Sampled=0"))
-                        .build())
-                .build());
+    AtomicInteger handleCalls = new AtomicInteger();
 
-    ReceiveMessageRequest request = ReceiveMessageRequest.builder().build();
+    List<Message> messages = new LinkedList<Message>();
+    messages.add(Message.builder()
+      .body("Hello")
+      .attributesWithStrings(
+          Collections.singletonMap(
+              "AWSTraceHeader",
+              "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"))
+      .build());
+    messages.add(Message.builder()
+      .body("Hello World")
+      .attributesWithStrings(
+          Collections.singletonMap(
+              "AWSTraceHeader",
+              "Root=1-66555555-123456789012345678901234;Parent=6634567890123456;Sampled=0"))
+      .build());
 
-    SqsMessageReceiver messageHandler =
-        new SqsMessageReceiver(getOpenTelemetry(), "destination", sqsClient);
+    SqsMessageHandler messageHandler =
+        new SqsMessageHandler(getOpenTelemetry(), "destination", SpanKindExtractor.alwaysConsumer()) {
+
+          @Override
+          protected Void doHandle(Collection<Message> request) {
+            handleCalls.incrementAndGet();
+            return null;
+          }
+        };
 
     Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
 
     try (Scope scope = parentSpan.makeCurrent()) {
-      ReceiveMessageResponse response = messageHandler.receive(request);
-      assertThat(response.messages().size()).isEqualTo(2);
-
-      assertThat(response.messages().get(0).body()).isEqualTo("Hello");
-      assertThat(response.messages().get(0).attributesAsStrings().get("AWSTraceHeader"))
-          .isEqualTo("Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1");
-
-      assertThat(response.messages().get(1).body()).isEqualTo("Hello World");
-      assertThat(response.messages().get(1).attributesAsStrings().get("AWSTraceHeader"))
-          .isEqualTo("Root=1-66555555-123456789012345678901234;Parent=6634567890123456;Sampled=0");
+      messageHandler.handle(messages);
     }
 
     parentSpan.end();
+
+    assertThat(handleCalls.get()).isEqualTo(1);
 
     waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("destination receive")
+                    span.hasName("destination process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasLinks(
                             LinkData.create(
@@ -146,7 +144,7 @@ public class SqsMessageReceiverTest extends XrayTestInstrumenter {
                                     TraceFlags.getDefault(),
                                     TraceState.getDefault())))
                         .hasTotalRecordedLinks(2)
-                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "receive")
+                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
                         .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
                         .hasAttribute(SemanticAttributes.MESSAGING_DESTINATION_NAME, "destination")
                         .hasAttribute(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 16L)
@@ -157,67 +155,56 @@ public class SqsMessageReceiverTest extends XrayTestInstrumenter {
 
   @Test
   public void twoRuns() {
-    SqsClient sqsClient =
-        getClient(
-            ReceiveMessageResponse.builder()
-                .messages(
-                    Message.builder()
-                        .body("Hello")
-                        .attributesWithStrings(
-                            Collections.singletonMap(
-                                "AWSTraceHeader",
-                                "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=0"))
-                        .build())
-                .build(),
-            ReceiveMessageResponse.builder()
-                .messages(
-                    Message.builder()
-                        .body("SecondMessage")
-                        .attributesWithStrings(
-                            Collections.singletonMap(
-                                "AWSTraceHeader",
-                                "Root=1-77555555-123456789012345678901234;Parent=7734567890123456;Sampled=1"))
-                        .build())
-                .build());
+    AtomicInteger handleCalls = new AtomicInteger();
 
-    ReceiveMessageRequest request = ReceiveMessageRequest.builder().build();
+    List<Message> messages1 = new LinkedList<Message>();
+    messages1.add(Message.builder()
+      .body("Hello")
+      .attributesWithStrings(
+          Collections.singletonMap(
+              "AWSTraceHeader",
+              "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=0"))
+      .build());
 
-    SqsMessageReceiver messageHandler =
-        new SqsMessageReceiver(getOpenTelemetry(), "destination", sqsClient);
+    List<Message> messages2 = new LinkedList<Message>();
+    messages2.add(Message.builder()
+      .body("SecondMessage")
+      .attributesWithStrings(
+          Collections.singletonMap(
+              "AWSTraceHeader",
+              "Root=1-77555555-123456789012345678901234;Parent=7734567890123456;Sampled=1"))
+      .build());
+
+    SqsMessageHandler messageHandler =
+        new SqsMessageHandler(getOpenTelemetry(), "destination", SpanKindExtractor.alwaysServer()) {
+          @Override
+          protected Void doHandle(Collection<Message> request) {
+            handleCalls.incrementAndGet();
+            return null;
+          }
+        };
 
     Span parentSpan1 = getOpenTelemetry().getTracer("test").spanBuilder("test1").startSpan();
-
     try (Scope scope = parentSpan1.makeCurrent()) {
-      ReceiveMessageResponse response = messageHandler.receive(request);
-
-      assertThat(response.messages().size()).isEqualTo(1);
-      assertThat(response.messages().get(0).body()).isEqualTo("Hello");
-      assertThat(response.messages().get(0).attributesAsStrings().get("AWSTraceHeader"))
-          .isEqualTo("Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=0");
+      messageHandler.handle(messages1);
     }
-
     parentSpan1.end();
 
     Span parentSpan2 = getOpenTelemetry().getTracer("test").spanBuilder("test2").startSpan();
-
     try (Scope scope = parentSpan2.makeCurrent()) {
-      ReceiveMessageResponse response = messageHandler.receive(request);
-
-      assertThat(response.messages().size()).isEqualTo(1);
-      assertThat(response.messages().get(0).body()).isEqualTo("SecondMessage");
-      assertThat(response.messages().get(0).attributesAsStrings().get("AWSTraceHeader"))
-          .isEqualTo("Root=1-77555555-123456789012345678901234;Parent=7734567890123456;Sampled=1");
+      messageHandler.handle(messages2);
     }
-
     parentSpan2.end();
+
+    assertThat(handleCalls.get()).isEqualTo(2);
 
     waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test1").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("destination receive")
-                        .hasKind(SpanKind.CONSUMER)
+                    span.hasName("destination process")
+                        .hasKind(SpanKind.SERVER)
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -226,7 +213,7 @@ public class SqsMessageReceiverTest extends XrayTestInstrumenter {
                                     TraceFlags.getDefault(),
                                     TraceState.getDefault())))
                         .hasTotalRecordedLinks(1)
-                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "receive")
+                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
                         .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
                         .hasAttribute(SemanticAttributes.MESSAGING_DESTINATION_NAME, "destination")
                         .hasAttribute(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 5L)
@@ -237,8 +224,8 @@ public class SqsMessageReceiverTest extends XrayTestInstrumenter {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test2").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("destination receive")
-                        .hasKind(SpanKind.CONSUMER)
+                    span.hasName("destination process")
+                        .hasKind(SpanKind.SERVER)
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -247,7 +234,7 @@ public class SqsMessageReceiverTest extends XrayTestInstrumenter {
                                     TraceFlags.getSampled(),
                                     TraceState.getDefault())))
                         .hasTotalRecordedLinks(1)
-                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "receive")
+                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
                         .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
                         .hasAttribute(SemanticAttributes.MESSAGING_DESTINATION_NAME, "destination")
                         .hasAttribute(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 13L)
@@ -258,32 +245,35 @@ public class SqsMessageReceiverTest extends XrayTestInstrumenter {
 
   @Test
   public void noMessages() {
-    SqsClient sqsClient = getClient(ReceiveMessageResponse.builder().build());
+    AtomicInteger handleCalls = new AtomicInteger();
 
-    ReceiveMessageRequest request = ReceiveMessageRequest.builder().build();
+    SqsMessageHandler messageHandler =
+        new SqsMessageHandler(getOpenTelemetry(), "destination", SpanKindExtractor.alwaysServer()) {
 
-    SqsMessageReceiver messageHandler =
-        new SqsMessageReceiver(getOpenTelemetry(), "destination", sqsClient);
+          @Override
+          protected Void doHandle(Collection<Message> request) {
+            handleCalls.incrementAndGet();
+            return null;
+          }
+        };
 
     Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
-
     try (Scope scope = parentSpan.makeCurrent()) {
-      ReceiveMessageResponse response = messageHandler.receive(request);
-
-      assertThat(response.messages().size()).isEqualTo(0);
+      messageHandler.handle(new LinkedList<>());
     }
-
     parentSpan.end();
+
+    assertThat(handleCalls.get()).isEqualTo(1);
 
     waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("destination receive")
-                        .hasKind(SpanKind.CONSUMER)
+                    span.hasName("destination process")
+                        .hasKind(SpanKind.SERVER)
                         .hasTotalRecordedLinks(0)
-                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "receive")
+                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
                         .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
                         .hasAttribute(SemanticAttributes.MESSAGING_DESTINATION_NAME, "destination")
                         .hasAttribute(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 0L)
@@ -294,23 +284,25 @@ public class SqsMessageReceiverTest extends XrayTestInstrumenter {
 
   @Test
   public void malformedTraceId() {
-    SqsClient sqsClient =
-        getClient(
-            ReceiveMessageResponse.builder()
-                .messages(
-                    Message.builder()
-                        .body("Hello")
-                        .attributesWithStrings(
-                            Collections.singletonMap(
-                                "AWSTraceHeader",
-                                "Root=1-55555555-error;Parent=1234567890123456;Sampled=1"))
-                        .build())
-                .build());
+    AtomicInteger handleCalls = new AtomicInteger();
 
-    ReceiveMessageRequest request = ReceiveMessageRequest.builder().build();
+    List<Message> messages = new LinkedList<Message>();
+    messages.add(Message.builder()
+      .body("Hello")
+      .attributesWithStrings(
+          Collections.singletonMap(
+              "AWSTraceHeader",
+              "Root=1-55555555-error;Parent=1234567890123456;Sampled=1"))
+      .build());
 
-    SqsMessageReceiver messageHandler =
-        new SqsMessageReceiver(getOpenTelemetry(), "destination", sqsClient);
+    SqsMessageHandler messageHandler =
+        new SqsMessageHandler(getOpenTelemetry(), "destination", SpanKindExtractor.alwaysServer()) {
+          @Override
+          protected Void doHandle(Collection<Message> request) {
+            handleCalls.incrementAndGet();
+            return null;
+          }
+        };
 
     Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
 
@@ -318,34 +310,17 @@ public class SqsMessageReceiverTest extends XrayTestInstrumenter {
         RuntimeException.class,
         () -> {
           try (Scope scope = parentSpan.makeCurrent()) {
-            messageHandler.receive(request);
+            messageHandler.handle(messages);
           }
         });
 
     parentSpan.end();
 
+    assertThat(handleCalls.get()).isEqualTo(0);
+
     waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0)));
-  }
-
-  private SqsClient getClient(ReceiveMessageResponse... responses) {
-    return new SqsClient() {
-      int messageAt = 0;
-
-      @Override
-      public String serviceName() {
-        return "MyService";
-      }
-
-      @Override
-      public ReceiveMessageResponse receiveMessage(ReceiveMessageRequest request) {
-        return responses[messageAt++];
-      }
-
-      @Override
-      public void close() {}
-    };
   }
 }

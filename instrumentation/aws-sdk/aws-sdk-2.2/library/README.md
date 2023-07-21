@@ -25,22 +25,27 @@ propagating the trace through them. If this does not fulfill your use case, perh
 using the same SDK with a different non-AWS managed service, let us know so we can provide
 configuration for this behavior.
 
-## Using SqsMessageReceiver
+## Using SqsMessageHandler
+This instrumentation takes a collection of SQS messages.
+A span wraps the function call doHandle with appropriate span attributes and span links.
+Span links comes from each of the messages as if this were a batch of messages.
 
-This instrumentation takes a ReceiveMessageRequest and returns a ReceiveMessageResponse for SQS.
-A span is created for the call to SQS with appropriate attributes and span links.
-Span links comes from each of the response's messages as if this were a batch of messages.
-
-1. Setup SqsMessageReceiver so that it knows how to pull information from SQS.
-Pass in your OpenTelemetry, the name of the destination, and SqsClient.
-2. Call the receive method on SqsMessageReceiver and pass in the request.
-3. It will return the response and wrap the call in a span.
+1. Setup SqsMessageHandler with your business logic. Pass in your OpenTelemetry, the name of the destination, and the span kind.
+2. Call the "handle" method on SqsMessageHandler and pass in your collection of messages.
+3. Under the hood it will call the "doHandle" method.
 
 ```java
 OpenTelemetry openTelemetry;
-SqsClient sqsClient;
-ReceiveMessageRequest request;
+Collection<Message> messages;
 
-SqsMessageReceiver messageReceiver = new SqsMessageReceiver(openTelemetry, "destination", sqsClient);
-ReceiveMessageResponse response = messageReceiver.receive(request);
+SqsMessageHandler messageHandler =
+  new SqsMessageHandler(openTelemetry "destination", SpanKindExtractor.alwaysServer()) {
+    @Override
+    protected Void doHandle(Collection<Message> request) {
+        // My business logic
+        return null;
+    }
+};
+
+messageHandler.handle(messages);
 ```
