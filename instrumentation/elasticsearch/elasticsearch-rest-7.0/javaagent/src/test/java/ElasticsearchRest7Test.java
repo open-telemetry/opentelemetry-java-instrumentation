@@ -7,7 +7,6 @@ import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSp
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -97,8 +96,8 @@ class ElasticsearchRest7Test {
                             equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
                             equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(AttributeKey.stringKey("net.protocol.name"), "http"),
-                            equalTo(AttributeKey.stringKey("net.protocol.version"), "1.1"),
+                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
                             equalTo(
                                 SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
@@ -174,8 +173,8 @@ class ElasticsearchRest7Test {
                             equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
                             equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(AttributeKey.stringKey("net.protocol.name"), "http"),
-                            equalTo(AttributeKey.stringKey("net.protocol.version"), "1.1"),
+                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
                             equalTo(
                                 SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
