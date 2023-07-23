@@ -2,7 +2,6 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -43,7 +42,34 @@ class QueryTest extends AbstractHibernateTest {
     }
 
     testing.waitAndAssertTraces(
-        trace -> transactionAwareAssertions(parameters.requiresTransaction, trace, parameters.expectedSpanName));
+        trace -> {
+          if (parameters.requiresTransaction) {
+            // With Transaction
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent(),
+                span -> assertSessionSpan(span, trace.getSpan(0), parameters.expectedSpanName),
+                span -> assertClientSpan(span, trace.getSpan(1)),
+                span ->
+                    assertSpanWithSessionId(
+                        span,
+                        trace.getSpan(0),
+                        "Transaction.commit",
+                        trace
+                            .getSpan(1)
+                            .getAttributes()
+                            .get(AttributeKey.stringKey("hibernate.session_id"))));
+          } else {
+            // Without Transaction
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent2")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent(),
+                span -> assertSessionSpan(span, trace.getSpan(0), parameters.expectedSpanName),
+                span -> assertClientSpan(span, trace.getSpan(1), "SELECT"));
+          }
+        });
   }
 
   private static Stream<Arguments> provideArguments() {
@@ -109,33 +135,5 @@ class QueryTest extends AbstractHibernateTest {
       this.requiresTransaction = requiresTransaction;
       this.queryInteraction = queryInteraction;
     }
-  }
-
-  private static TraceAssert transactionAwareAssertions(boolean requiresTransaction, TraceAssert trace, String expectedSpanName) {
-    if (requiresTransaction) {
-      return  trace.hasSpansSatisfyingExactly(
-          span -> span.hasName("parent")
-              .hasKind(SpanKind.INTERNAL)
-              .hasNoParent(),
-          span -> assertSessionSpan(span, trace.getSpan(0), expectedSpanName),
-          span -> assertClientSpan(span, trace.getSpan(1)),
-          span ->
-              assertSpanWithSessionId(
-                  span,
-                  trace.getSpan(0),
-                  "Transaction.commit",
-                  trace
-                      .getSpan(1)
-                      .getAttributes()
-                      .get(AttributeKey.stringKey("hibernate.session_id"))));
-    }
-
-    // Without Transaction
-    return trace.hasSpansSatisfyingExactly(
-        span -> span.hasName("parent2")
-            .hasKind(SpanKind.INTERNAL)
-            .hasNoParent(),
-        span -> assertSessionSpan(span, trace.getSpan(0), expectedSpanName),
-        span -> assertClientSpan(span, trace.getSpan(1), "SELECT"));
   }
 }
