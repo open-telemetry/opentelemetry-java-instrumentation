@@ -1,7 +1,12 @@
-package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;/*
+/*
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
+package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3; /*
+                                                                    * Copyright The OpenTelemetry Authors
+                                                                    * SPDX-License-Identifier: Apache-2.0
+                                                                    */
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

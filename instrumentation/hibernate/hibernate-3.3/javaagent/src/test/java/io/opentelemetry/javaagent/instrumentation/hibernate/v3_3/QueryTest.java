@@ -1,16 +1,21 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
+
+import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Named.named;
 
 class QueryTest extends AbstractHibernateTest {
 
@@ -46,9 +51,7 @@ class QueryTest extends AbstractHibernateTest {
           if (parameters.requiresTransaction) {
             // With Transaction
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasNoParent(),
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span -> assertSessionSpan(span, trace.getSpan(0), parameters.expectedSpanName),
                 span -> assertClientSpan(span, trace.getSpan(1)),
                 span ->
@@ -63,9 +66,7 @@ class QueryTest extends AbstractHibernateTest {
           } else {
             // Without Transaction
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent2")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasNoParent(),
+                span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span -> assertSessionSpan(span, trace.getSpan(0), parameters.expectedSpanName),
                 span -> assertClientSpan(span, trace.getSpan(1), "SELECT"));
           }
@@ -74,52 +75,69 @@ class QueryTest extends AbstractHibernateTest {
 
   private static Stream<Arguments> provideArguments() {
     return Stream.of(
-        Arguments.of(named("Query.list", new Parameter(
-            "SELECT " + VALUE_CLASS,
-            false,
-            sess -> {
-              Query q =
-                  sess.createQuery(
-                      "from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value where id = ?");
-              q.setParameter(0, 1L);
-              q.uniqueResult();
-            })
-        )),
-        Arguments.of(named("Query.executeUpdate", new Parameter(
-            "UPDATE " + VALUE_CLASS,
-            true,
-            sess -> {
-              Query q = sess.createQuery("update io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value set name = ?");
-              q.setParameter(0, "alyx");
-              q.executeUpdate();
-            })
-        )),
-        Arguments.of(named("Query.uniqueResult", new Parameter(
-            "SELECT " + VALUE_CLASS,
-            false,
-            sess -> {
-              Query q = sess.createQuery("from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value where id = ?");
-              q.setParameter(0, 1L);
-              q.uniqueResult();
-            })
-        )),
-        Arguments.of(named("Query.iterate", new Parameter(
-            "SELECT " + VALUE_CLASS,
-            false,
-            sess -> {
-              Query q = sess.createQuery("from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value");
-              q.iterate();
-            })
-        )),
-        Arguments.of(named("Query.scroll", new Parameter(
-            "SELECT " + VALUE_CLASS,
-            false,
-            sess -> {
-              Query q = sess.createQuery("from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value");
-              q.scroll();
-            })
-        ))
-    );
+        Arguments.of(
+            named(
+                "Query.list",
+                new Parameter(
+                    "SELECT " + VALUE_CLASS,
+                    false,
+                    sess -> {
+                      Query q =
+                          sess.createQuery(
+                              "from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value where id = ?");
+                      q.setParameter(0, 1L);
+                      q.uniqueResult();
+                    }))),
+        Arguments.of(
+            named(
+                "Query.executeUpdate",
+                new Parameter(
+                    "UPDATE " + VALUE_CLASS,
+                    true,
+                    sess -> {
+                      Query q =
+                          sess.createQuery(
+                              "update io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value set name = ?");
+                      q.setParameter(0, "alyx");
+                      q.executeUpdate();
+                    }))),
+        Arguments.of(
+            named(
+                "Query.uniqueResult",
+                new Parameter(
+                    "SELECT " + VALUE_CLASS,
+                    false,
+                    sess -> {
+                      Query q =
+                          sess.createQuery(
+                              "from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value where id = ?");
+                      q.setParameter(0, 1L);
+                      q.uniqueResult();
+                    }))),
+        Arguments.of(
+            named(
+                "Query.iterate",
+                new Parameter(
+                    "SELECT " + VALUE_CLASS,
+                    false,
+                    sess -> {
+                      Query q =
+                          sess.createQuery(
+                              "from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value");
+                      q.iterate();
+                    }))),
+        Arguments.of(
+            named(
+                "Query.scroll",
+                new Parameter(
+                    "SELECT " + VALUE_CLASS,
+                    false,
+                    sess -> {
+                      Query q =
+                          sess.createQuery(
+                              "from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value");
+                      q.scroll();
+                    }))));
   }
 
   private static class Parameter {
@@ -128,9 +146,7 @@ class QueryTest extends AbstractHibernateTest {
     public final Consumer<Session> queryInteraction;
 
     public Parameter(
-        String expectedSpanName,
-        boolean requiresTransaction,
-        Consumer<Session> queryInteraction) {
+        String expectedSpanName, boolean requiresTransaction, Consumer<Session> queryInteraction) {
       this.expectedSpanName = expectedSpanName;
       this.requiresTransaction = requiresTransaction;
       this.queryInteraction = queryInteraction;
