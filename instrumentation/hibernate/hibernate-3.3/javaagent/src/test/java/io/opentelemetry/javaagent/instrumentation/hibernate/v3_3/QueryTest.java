@@ -79,7 +79,7 @@ class QueryTest extends AbstractHibernateTest {
             named(
                 "Query.list",
                 new Parameter(
-                    "SELECT " + VALUE_CLASS,
+                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
                     false,
                     sess -> {
                       Query q =
@@ -92,7 +92,7 @@ class QueryTest extends AbstractHibernateTest {
             named(
                 "Query.executeUpdate",
                 new Parameter(
-                    "UPDATE " + VALUE_CLASS,
+                    "UPDATE io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
                     true,
                     sess -> {
                       Query q =
@@ -105,7 +105,7 @@ class QueryTest extends AbstractHibernateTest {
             named(
                 "Query.uniqueResult",
                 new Parameter(
-                    "SELECT " + VALUE_CLASS,
+                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
                     false,
                     sess -> {
                       Query q =
@@ -118,7 +118,7 @@ class QueryTest extends AbstractHibernateTest {
             named(
                 "Query.iterate",
                 new Parameter(
-                    "SELECT " + VALUE_CLASS,
+                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
                     false,
                     sess -> {
                       Query q =
@@ -130,7 +130,7 @@ class QueryTest extends AbstractHibernateTest {
             named(
                 "Query.scroll",
                 new Parameter(
-                    "SELECT " + VALUE_CLASS,
+                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
                     false,
                     sess -> {
                       Query q =

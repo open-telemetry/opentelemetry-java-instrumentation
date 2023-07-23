@@ -28,9 +28,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 abstract class AbstractHibernateTest extends AgentInstrumentationSpecification {
 
-  static final String VALUE_CLASS =
-      "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value";
-
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
