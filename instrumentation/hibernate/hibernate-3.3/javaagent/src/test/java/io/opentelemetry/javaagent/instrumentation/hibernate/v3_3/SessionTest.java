@@ -584,9 +584,7 @@ public class SessionTest extends AbstractHibernateTest {
     public final String methodName;
     public final String resource;
     public final BiConsumer<Session, Value> sessionMethodTest;
-
     public final BiConsumer<StatelessSession, Value> statelessSessionMethodTest;
-
     public final Function<Session, Query> queryBuildMethod;
 
     public Parameter(

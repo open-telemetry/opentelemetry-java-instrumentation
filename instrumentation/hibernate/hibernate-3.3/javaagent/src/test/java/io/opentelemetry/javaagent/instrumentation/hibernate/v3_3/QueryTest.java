@@ -34,9 +34,8 @@ class QueryTest extends AbstractHibernateTest {
             session.getTransaction().commit();
             session.close();
           });
-    }
-    // Without Transaction
-    else {
+    } else {
+      // Without Transaction
       testing.runWithSpan(
           "parent2",
           () -> {
