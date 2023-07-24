@@ -16,9 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
-import java.util.List;
-import java.util.Set;
-import javax.annotation.Nullable;
+import java.util.function.Consumer;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -29,20 +27,16 @@ public final class NettyServerInstrumenterFactory {
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> create(
       OpenTelemetry openTelemetry,
       String instrumentationName,
-      List<String> capturedRequestHeaders,
-      List<String> capturedResponseHeaders,
-      @Nullable Set<String> knownMethods) {
+      Consumer<HttpServerAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse>>
+          extractorConfigurer) {
 
     NettyHttpServerAttributesGetter httpAttributesGetter = new NettyHttpServerAttributesGetter();
 
     HttpServerAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse> extractorBuilder =
         HttpServerAttributesExtractor.builder(
-                httpAttributesGetter, new NettyNetServerAttributesGetter())
-            .setCapturedRequestHeaders(capturedRequestHeaders)
-            .setCapturedResponseHeaders(capturedResponseHeaders);
-    if (knownMethods != null) {
-      extractorBuilder.setKnownMethods(knownMethods);
-    }
+            httpAttributesGetter, new NettyNetServerAttributesGetter());
+    extractorConfigurer.accept(extractorBuilder);
+
     return Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
             openTelemetry, instrumentationName, HttpSpanNameExtractor.create(httpAttributesGetter))
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))

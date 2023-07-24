@@ -16,16 +16,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /** A builder of {@link NettyClientTelemetry}. */
 public final class NettyClientTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
-  private List<String> capturedRequestHeaders = Collections.emptyList();
-  private List<String> capturedResponseHeaders = Collections.emptyList();
-  private Set<String> knownMethods = null;
   private final List<AttributesExtractor<HttpRequestAndChannel, HttpResponse>>
       additionalAttributesExtractors = new ArrayList<>();
+
+  private Consumer<HttpClientAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse>>
+      extractorConfigurer = builder -> {};
   private boolean emitExperimentalHttpClientMetrics = false;
 
   NettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -40,7 +41,9 @@ public final class NettyClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setCapturedRequestHeaders(
       List<String> capturedRequestHeaders) {
-    this.capturedRequestHeaders = capturedRequestHeaders;
+    extractorConfigurer =
+        extractorConfigurer.andThen(
+            builder -> builder.setCapturedRequestHeaders(capturedRequestHeaders));
     return this;
   }
 
@@ -52,7 +55,9 @@ public final class NettyClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setCapturedResponseHeaders(
       List<String> capturedResponseHeaders) {
-    this.capturedResponseHeaders = capturedResponseHeaders;
+    extractorConfigurer =
+        extractorConfigurer.andThen(
+            builder -> builder.setCapturedResponseHeaders(capturedResponseHeaders));
     return this;
   }
 
@@ -82,7 +87,8 @@ public final class NettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    this.knownMethods = knownMethods;
+    extractorConfigurer =
+        extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
     return this;
   }
 
@@ -109,10 +115,6 @@ public final class NettyClientTelemetryBuilder {
                 false,
                 Collections.emptyMap(),
                 emitExperimentalHttpClientMetrics)
-            .createHttpInstrumenter(
-                capturedRequestHeaders,
-                capturedResponseHeaders,
-                knownMethods,
-                additionalAttributesExtractors));
+            .createHttpInstrumenter(extractorConfigurer, additionalAttributesExtractors));
   }
 }

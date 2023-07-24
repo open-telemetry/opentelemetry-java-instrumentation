@@ -49,9 +49,11 @@ public final class NettyClientSingletons {
             CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
     INSTRUMENTER =
         factory.createHttpInstrumenter(
-            CommonConfig.get().getClientRequestHeaders(),
-            CommonConfig.get().getClientResponseHeaders(),
-            CommonConfig.get().getKnownHttpRequestMethods(),
+            builder ->
+                builder
+                    .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
+                    .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
             Collections.emptyList());
     CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter();
     SSL_INSTRUMENTER = factory.createSslInstrumenter();
