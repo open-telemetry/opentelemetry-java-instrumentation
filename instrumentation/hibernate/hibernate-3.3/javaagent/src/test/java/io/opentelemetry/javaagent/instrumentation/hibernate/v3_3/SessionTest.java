@@ -5,6 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_EVENT_NAME;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_TYPE;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -24,7 +30,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class SessionTest extends AbstractHibernateTest {
-
   @ParameterizedTest
   @MethodSource("provideArguments")
   void testHibernateAction(Parameter parameter) {
@@ -34,11 +39,7 @@ class SessionTest extends AbstractHibernateTest {
         () -> {
           Session session = sessionFactory.openSession();
           session.beginTransaction();
-          try {
-            parameter.sessionMethodTest.accept(session, prepopulated.get(0));
-          } catch (RuntimeException e) {
-            // We expected this, we should see the error field set on the span.
-          }
+          parameter.sessionMethodTest.accept(session, prepopulated.get(0));
           session.getTransaction().commit();
           session.close();
         });
@@ -56,11 +57,7 @@ class SessionTest extends AbstractHibernateTest {
         () -> {
           StatelessSession session = sessionFactory.openStatelessSession();
           session.beginTransaction();
-          try {
-            parameter.statelessSessionMethodTest.accept(session, prepopulated.get(0));
-          } catch (RuntimeException e) {
-            // We expected this, we should see the error field set on the span.
-          }
+          parameter.statelessSessionMethodTest.accept(session, prepopulated.get(0));
           session.getTransaction().commit();
           session.close();
         });
@@ -77,11 +74,7 @@ class SessionTest extends AbstractHibernateTest {
         () -> {
           StatelessSession session = sessionFactory.openStatelessSession();
           session.beginTransaction();
-          try {
-            parameter.statelessSessionMethodTest.accept(session, prepopulated.get(0));
-          } catch (RuntimeException e) {
-            // We expected this, we should see the error field set on the span.
-          }
+          parameter.statelessSessionMethodTest.accept(session, prepopulated.get(0));
           session.getTransaction().commit();
           session.close();
         });
@@ -115,11 +108,7 @@ class SessionTest extends AbstractHibernateTest {
         () -> {
           Session session = sessionFactory.openSession();
           session.beginTransaction();
-          try {
-            parameter.sessionMethodTest.accept(session, prepopulated.get(0));
-          } catch (RuntimeException e) {
-            // We expected this, we should see the error field set on the span.
-          }
+          parameter.sessionMethodTest.accept(session, prepopulated.get(0));
           session.getTransaction().commit();
           session.close();
         });
@@ -167,7 +156,18 @@ class SessionTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    assertSessionSpan(span, trace.getSpan(0), "Session.replicate java.lang.Long"),
+                    assertSessionSpan(span, trace.getSpan(0), "Session.replicate java.lang.Long")
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName(EXCEPTION_EVENT_NAME)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(EXCEPTION_TYPE, "org.hibernate.MappingException"),
+                                        equalTo(
+                                            EXCEPTION_MESSAGE, "Unknown entity: java.lang.Long"),
+                                        satisfies(
+                                            EXCEPTION_STACKTRACE,
+                                            val -> val.isInstanceOf(String.class)))),
                 span ->
                     assertSpanWithSessionId(
                         span,
@@ -187,11 +187,7 @@ class SessionTest extends AbstractHibernateTest {
         () -> {
           Session session = sessionFactory.openSession();
           session.beginTransaction();
-          try {
-            parameter.sessionMethodTest.accept(session, prepopulated.get(0));
-          } catch (RuntimeException e) {
-            // We expected this, we should see the error field set on the span.
-          }
+          parameter.sessionMethodTest.accept(session, prepopulated.get(0));
           session.getTransaction().commit();
           session.close();
         });
