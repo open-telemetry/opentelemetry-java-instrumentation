@@ -322,7 +322,6 @@ class InstrumenterTest {
                                 equalTo(AttributeKey.stringKey("resp3"), "resp3_value"),
                                 equalTo(AttributeKey.stringKey("thread.name"), Thread.currentThread().getName()),
                                 equalTo(AttributeKey.longKey("thread.id"), Thread.currentThread().getId()))));
-
   }
 
   @Test
