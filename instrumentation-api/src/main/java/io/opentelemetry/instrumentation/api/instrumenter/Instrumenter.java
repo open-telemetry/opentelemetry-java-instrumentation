@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -20,6 +21,9 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
+
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
 /**
  * The {@link Instrumenter} encapsulates the entire logic for gathering telemetry, from collecting
@@ -42,6 +46,12 @@ import javax.annotation.Nullable;
  * the Instrumenter API</a> page.
  */
 public class Instrumenter<REQUEST, RESPONSE> {
+
+  /** Current &quot;managed&quot; thread ID (as opposed to OS thread ID). */
+  private static final AttributeKey<Long> THREAD_ID = longKey("thread.id");
+
+  /** Current thread name. */
+  private static final AttributeKey<String> THREAD_NAME = stringKey("thread.name");
 
   /**
    * Returns a new {@link InstrumenterBuilder}.
@@ -187,6 +197,11 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
 
     boolean localRoot = LocalRootSpan.isLocalRoot(context);
+
+    // add thread.name and thread.id attributes to every span
+    Thread currentThread = Thread.currentThread();
+    spanBuilder.setAttribute(THREAD_NAME, currentThread.getName());
+    spanBuilder.setAttribute(THREAD_ID, currentThread.getId());
 
     spanBuilder.setAllAttributes(attributes);
     Span span = spanBuilder.setParent(context).startSpan();

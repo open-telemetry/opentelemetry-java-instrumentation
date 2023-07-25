@@ -212,7 +212,9 @@ class InstrumenterTest {
                                 equalTo(AttributeKey.stringKey("req3"), "req3_value"),
                                 equalTo(AttributeKey.stringKey("resp1"), "resp1_value"),
                                 equalTo(AttributeKey.stringKey("resp2"), "resp2_2_value"),
-                                equalTo(AttributeKey.stringKey("resp3"), "resp3_value"))));
+                                equalTo(AttributeKey.stringKey("resp3"), "resp3_value"),
+                                equalTo(AttributeKey.stringKey("thread.name"), Thread.currentThread().getName()),
+                                equalTo(AttributeKey.longKey("thread.id"), Thread.currentThread().getId()))));
   }
 
   @Test
@@ -317,7 +319,10 @@ class InstrumenterTest {
                                 equalTo(AttributeKey.stringKey("req3"), "req3_value"),
                                 equalTo(AttributeKey.stringKey("resp1"), "resp1_value"),
                                 equalTo(AttributeKey.stringKey("resp2"), "resp2_2_value"),
-                                equalTo(AttributeKey.stringKey("resp3"), "resp3_value"))));
+                                equalTo(AttributeKey.stringKey("resp3"), "resp3_value"),
+                                equalTo(AttributeKey.stringKey("thread.name"), Thread.currentThread().getName()),
+                                equalTo(AttributeKey.longKey("thread.id"), Thread.currentThread().getId()))));
+
   }
 
   @Test
