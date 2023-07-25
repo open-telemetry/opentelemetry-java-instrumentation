@@ -11,6 +11,7 @@ dependencies {
   library("software.amazon.awssdk:aws-core:2.20.0")
   library("software.amazon.awssdk:aws-json-protocol:2.2.0")
   library("software.amazon.awssdk:sqs:2.20.0")
+  library("com.amazonaws:aws-lambda-java-events:2.2.1")
 
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
 
