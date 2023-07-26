@@ -4,7 +4,7 @@
   version="2.0">
 
   <persistence-unit name="test-pu">
-    <class>Value</class>
+    <class>io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <properties>
       <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
