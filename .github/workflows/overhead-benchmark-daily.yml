@@ -16,6 +16,9 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
       - name: Copy results from gh-pages branch
         run: |
           rsync -avv gh-pages/benchmark-overhead/results/ benchmark-overhead/results/
