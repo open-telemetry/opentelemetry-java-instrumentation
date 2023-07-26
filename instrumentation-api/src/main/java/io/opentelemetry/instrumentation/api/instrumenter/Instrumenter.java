@@ -15,7 +15,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +46,12 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
  * the Instrumenter API</a> page.
  */
 public class Instrumenter<REQUEST, RESPONSE> {
+
+  /** Current &quot;managed&quot; thread ID (as opposed to OS thread ID). */
+  private static final AttributeKey<Long> THREAD_ID = longKey("thread.id");
+
+  /** Current thread name. */
+  private static final AttributeKey<String> THREAD_NAME = stringKey("thread.name");
 
   /**
    * Returns a new {@link InstrumenterBuilder}.
@@ -195,8 +200,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     // add thread.name and thread.id attributes to every span
     Thread currentThread = Thread.currentThread();
-    spanBuilder.setAttribute(SemanticAttributes.THREAD_NAME, currentThread.getName());
-    spanBuilder.setAttribute(SemanticAttributes.THREAD_ID, currentThread.getId());
+    spanBuilder.setAttribute(THREAD_NAME, currentThread.getName());
+    spanBuilder.setAttribute(THREAD_ID, currentThread.getId());
 
     spanBuilder.setAllAttributes(attributes);
     Span span = spanBuilder.setParent(context).startSpan();
