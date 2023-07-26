@@ -14,6 +14,7 @@ group = "io.opentelemetry.instrumentation"
 dependencies {
   api("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry:opentelemetry-extension-incubator")
+  implementation("io.opentelemetry:opentelemetry-semconv")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
