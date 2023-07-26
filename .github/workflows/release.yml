@@ -77,6 +77,9 @@ jobs:
           # tags are needed for the generate-release-contributors.sh script
           fetch-depth: 0
 
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
       - uses: actions/setup-java@v3
         with:
           distribution: temurin
