@@ -62,6 +62,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3
         with:
@@ -103,6 +106,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3
@@ -350,6 +356,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3
         with:
@@ -367,6 +376,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3
