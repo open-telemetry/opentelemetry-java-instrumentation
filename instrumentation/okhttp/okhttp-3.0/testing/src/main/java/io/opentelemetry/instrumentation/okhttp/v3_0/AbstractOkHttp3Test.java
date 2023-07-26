@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -131,8 +130,8 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
           if ("http://localhost:61/".equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())
               || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
-            attributes.remove(stringKey("net.protocol.name"));
-            attributes.remove(stringKey("net.protocol.version"));
+            attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
+            attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
           }
 
           return attributes;

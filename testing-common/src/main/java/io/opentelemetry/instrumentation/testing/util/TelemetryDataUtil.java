@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.testing.util;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -32,6 +33,13 @@ public final class TelemetryDataUtil {
   public static Comparator<List<SpanData>> orderByRootSpanName(String... names) {
     List<String> list = Arrays.asList(names);
     return Comparator.comparing(span -> list.indexOf(span.get(0).getName()));
+  }
+
+  public static <T extends Comparable<T>> Comparator<List<SpanData>> comparingRootSpanAttribute(
+      AttributeKey<T> key) {
+    return Comparator.comparing(
+        span -> span.get(0).getAttributes().get(key),
+        Comparator.nullsFirst(Comparator.naturalOrder()));
   }
 
   public static List<List<SpanData>> groupTraces(List<SpanData> spans) {

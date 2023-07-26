@@ -102,7 +102,8 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
             addressPortExtractor,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
-            InternalServerAttributesExtractor.Mode.PEER);
+            InternalServerAttributesExtractor.Mode.PEER,
+            /* captureServerSocketAttributes= */ true);
     this.resendCountIncrementer = resendCountIncrementer;
   }
 

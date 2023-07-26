@@ -53,7 +53,8 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
             FallbackAddressPortExtractor.noop(),
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
-            InternalServerAttributesExtractor.Mode.PEER);
+            InternalServerAttributesExtractor.Mode.PEER,
+            /* captureServerSocketAttributes= */ true);
   }
 
   @Override

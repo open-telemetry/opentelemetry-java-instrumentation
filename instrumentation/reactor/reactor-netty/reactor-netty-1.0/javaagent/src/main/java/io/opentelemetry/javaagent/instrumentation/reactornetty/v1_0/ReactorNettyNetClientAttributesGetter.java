@@ -11,16 +11,16 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 import reactor.netty.Connection;
-import reactor.netty.http.client.HttpClientConfig;
+import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
 final class ReactorNettyNetClientAttributesGetter
-    implements NetClientAttributesGetter<HttpClientConfig, HttpClientResponse> {
+    implements NetClientAttributesGetter<HttpClientRequest, HttpClientResponse> {
 
   @Nullable
   @Override
   public String getNetworkProtocolName(
-      HttpClientConfig request, @Nullable HttpClientResponse response) {
+      HttpClientRequest request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
     }
@@ -30,7 +30,7 @@ final class ReactorNettyNetClientAttributesGetter
   @Nullable
   @Override
   public String getNetworkProtocolVersion(
-      HttpClientConfig request, @Nullable HttpClientResponse response) {
+      HttpClientRequest request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
     }
@@ -40,20 +40,20 @@ final class ReactorNettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String getServerAddress(HttpClientConfig request) {
+  public String getServerAddress(HttpClientRequest request) {
     return getHost(request);
   }
 
   @Nullable
   @Override
-  public Integer getServerPort(HttpClientConfig request) {
+  public Integer getServerPort(HttpClientRequest request) {
     return getPort(request);
   }
 
   @Nullable
   @Override
   public InetSocketAddress getServerInetSocketAddress(
-      HttpClientConfig request, @Nullable HttpClientResponse response) {
+      HttpClientRequest request, @Nullable HttpClientResponse response) {
 
     // we're making use of the fact that HttpClientOperations is both a Connection and an
     // HttpClientResponse
@@ -68,30 +68,14 @@ final class ReactorNettyNetClientAttributesGetter
   }
 
   @Nullable
-  private static String getHost(HttpClientConfig request) {
-    String baseUrl = request.baseUrl();
-    String uri = request.uri();
-
-    if (baseUrl != null && !isAbsolute(uri)) {
-      return UrlParser.getHost(baseUrl);
-    } else {
-      return UrlParser.getHost(uri);
-    }
+  private static String getHost(HttpClientRequest request) {
+    String resourceUrl = request.resourceUrl();
+    return resourceUrl == null ? null : UrlParser.getHost(resourceUrl);
   }
 
   @Nullable
-  private static Integer getPort(HttpClientConfig request) {
-    String baseUrl = request.baseUrl();
-    String uri = request.uri();
-
-    if (baseUrl != null && !isAbsolute(uri)) {
-      return UrlParser.getPort(baseUrl);
-    } else {
-      return UrlParser.getPort(uri);
-    }
-  }
-
-  private static boolean isAbsolute(String uri) {
-    return uri != null && !uri.isEmpty() && !uri.startsWith("/");
+  private static Integer getPort(HttpClientRequest request) {
+    String resourceUrl = request.resourceUrl();
+    return resourceUrl == null ? null : UrlParser.getPort(resourceUrl);
   }
 }

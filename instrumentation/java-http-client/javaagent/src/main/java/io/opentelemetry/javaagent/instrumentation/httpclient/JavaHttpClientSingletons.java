@@ -30,9 +30,11 @@ public class JavaHttpClientSingletons {
     INSTRUMENTER =
         JavaHttpClientInstrumenterFactory.createInstrumenter(
             GlobalOpenTelemetry.get(),
-            CommonConfig.get().getClientRequestHeaders(),
-            CommonConfig.get().getClientResponseHeaders(),
-            CommonConfig.get().getKnownHttpRequestMethods(),
+            builder ->
+                builder
+                    .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
+                    .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
             singletonList(
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping())),

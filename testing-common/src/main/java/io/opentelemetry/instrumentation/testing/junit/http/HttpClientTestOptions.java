@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import java.net.URI;
@@ -26,8 +25,8 @@ public abstract class HttpClientTestOptions {
       Collections.unmodifiableSet(
           new HashSet<>(
               Arrays.asList(
-                  NetAttributes.NET_PROTOCOL_NAME,
-                  NetAttributes.NET_PROTOCOL_VERSION,
+                  SemanticAttributes.NET_PROTOCOL_NAME,
+                  SemanticAttributes.NET_PROTOCOL_VERSION,
                   SemanticAttributes.NET_PEER_NAME,
                   SemanticAttributes.NET_PEER_PORT,
                   SemanticAttributes.HTTP_URL,

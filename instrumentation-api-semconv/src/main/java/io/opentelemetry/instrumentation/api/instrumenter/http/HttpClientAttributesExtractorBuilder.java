@@ -11,6 +11,8 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -44,7 +46,7 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       List<String> requestHeaders) {
-    this.capturedRequestHeaders = requestHeaders;
+    this.capturedRequestHeaders = new ArrayList<>(requestHeaders);
     return this;
   }
 
@@ -63,7 +65,7 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       List<String> responseHeaders) {
-    this.capturedResponseHeaders = responseHeaders;
+    this.capturedResponseHeaders = new ArrayList<>(responseHeaders);
     return this;
   }
 
@@ -85,7 +87,7 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setKnownMethods(
       Set<String> knownMethods) {
-    this.knownMethods = knownMethods;
+    this.knownMethods = new HashSet<>(knownMethods);
     return this;
   }
 

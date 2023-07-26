@@ -11,6 +11,8 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -22,6 +24,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   List<String> capturedRequestHeaders = emptyList();
   List<String> capturedResponseHeaders = emptyList();
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
+  boolean captureServerSocketAttributes = false;
 
   HttpServerAttributesExtractorBuilder(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
@@ -44,7 +47,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       List<String> requestHeaders) {
-    this.capturedRequestHeaders = requestHeaders;
+    this.capturedRequestHeaders = new ArrayList<>(requestHeaders);
     return this;
   }
 
@@ -63,7 +66,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       List<String> responseHeaders) {
-    this.capturedResponseHeaders = responseHeaders;
+    this.capturedResponseHeaders = new ArrayList<>(responseHeaders);
     return this;
   }
 
@@ -85,7 +88,21 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> setKnownMethods(
       Set<String> knownMethods) {
-    this.knownMethods = knownMethods;
+    this.knownMethods = new HashSet<>(knownMethods);
+    return this;
+  }
+
+  /**
+   * Configures the extractor to capture the optional {@code server.socket.address} and {@code
+   * server.socket.port} attributes, which are not collected by default.
+   *
+   * @param captureServerSocketAttributes {@code true} if the extractor should collect the optional
+   *     {@code server.socket.address} and {@code server.socket.port} attributes.
+   */
+  @CanIgnoreReturnValue
+  public HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> setCaptureServerSocketAttributes(
+      boolean captureServerSocketAttributes) {
+    this.captureServerSocketAttributes = captureServerSocketAttributes;
     return this;
   }
 
@@ -99,6 +116,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
         netAttributesGetter,
         capturedRequestHeaders,
         capturedResponseHeaders,
-        knownMethods);
+        knownMethods,
+        captureServerSocketAttributes);
   }
 }

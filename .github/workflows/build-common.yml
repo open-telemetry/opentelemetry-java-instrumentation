@@ -27,15 +27,10 @@ jobs:
   spotless:
     runs-on: ubuntu-latest
     steps:
-      # spotless may fail without freeing up more disk space on the runner
-      - name: Free disk space
-        run: |
-          df -h
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /usr/share/dotnet
-          df -h
-
       - uses: actions/checkout@v3
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3
@@ -60,12 +55,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: gradle/wrapper-validation-action@v1.0.6
+      - uses: gradle/wrapper-validation-action@v1.1.0
 
   license-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3
@@ -108,6 +106,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3
@@ -170,15 +171,10 @@ jobs:
             vm: openj9
       fail-fast: false
     steps:
-      # tests may fail without freeing up more disk space on the runner
-      - name: Free disk space
-        run: |
-          df -h
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /usr/share/dotnet
-          df -h
-
       - uses: actions/checkout@v3
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
 
       - id: setup-test-java
         name: Set up JDK ${{ matrix.test-java-version }}-${{ matrix.vm }} for running tests
@@ -301,16 +297,10 @@ jobs:
         run: git config --system core.longpaths true
         if: matrix.os == 'windows-latest'
 
-      # downloading the liberty image (a bit over 10gb) fails without freeing up more disk space on the runner
-      - name: Free disk space
-        run: |
-          df -h
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /usr/share/dotnet
-          df -h
-        if: matrix.os == 'ubuntu-latest'
-
       - uses: actions/checkout@v3
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3
@@ -366,6 +356,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3
         with:
@@ -383,6 +376,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3

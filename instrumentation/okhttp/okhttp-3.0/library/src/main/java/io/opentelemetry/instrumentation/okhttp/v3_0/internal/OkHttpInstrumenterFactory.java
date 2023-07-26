@@ -18,8 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.List;
-import java.util.Set;
-import javax.annotation.Nullable;
+import java.util.function.Consumer;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -33,9 +32,7 @@ public final class OkHttpInstrumenterFactory {
 
   public static Instrumenter<Request, Response> create(
       OpenTelemetry openTelemetry,
-      List<String> capturedRequestHeaders,
-      List<String> capturedResponseHeaders,
-      @Nullable Set<String> knownMethods,
+      Consumer<HttpClientAttributesExtractorBuilder<Request, Response>> extractorConfigurer,
       List<AttributesExtractor<Request, Response>> additionalAttributesExtractors,
       boolean emitExperimentalHttpClientMetrics) {
 
@@ -43,12 +40,8 @@ public final class OkHttpInstrumenterFactory {
     OkHttpNetAttributesGetter netAttributesGetter = OkHttpNetAttributesGetter.INSTANCE;
 
     HttpClientAttributesExtractorBuilder<Request, Response> extractorBuilder =
-        HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
-            .setCapturedRequestHeaders(capturedRequestHeaders)
-            .setCapturedResponseHeaders(capturedResponseHeaders);
-    if (knownMethods != null) {
-      extractorBuilder.setKnownMethods(knownMethods);
-    }
+        HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter);
+    extractorConfigurer.accept(extractorBuilder);
 
     InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(

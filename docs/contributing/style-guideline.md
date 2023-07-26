@@ -59,23 +59,23 @@ We leverage static imports for many common types of operations. However, not all
 constants are necessarily good candidates for a static import. The following list is a very
 rough guideline of what are commonly accepted static imports:
 
-* Test assertions (JUnit and AssertJ)
-* Mocking/stubbing in tests (with Mockito)
-* Collections helpers (such as `singletonList()` and `Collectors.toList()`)
-* ByteBuddy `ElementMatchers` (for building instrumentation modules)
-* Immutable constants (where clearly named)
-* Singleton instances (especially where clearly named an hopefully immutable)
-* `tracer()` methods that expose tracer singleton instances
+- Test assertions (JUnit and AssertJ)
+- Mocking/stubbing in tests (with Mockito)
+- Collections helpers (such as `singletonList()` and `Collectors.toList()`)
+- ByteBuddy `ElementMatchers` (for building instrumentation modules)
+- Immutable constants (where clearly named)
+- Singleton instances (especially where clearly named an hopefully immutable)
+- `tracer()` methods that expose tracer singleton instances
 
 ## Ordering of class contents
 
 The following order is preferred:
 
-* Static fields (final before non-final)
-* Instance fields (final before non-final)
-* Constructors
-* Methods
-* Nested classes
+- Static fields (final before non-final)
+- Instance fields (final before non-final)
+- Constructors
+- Methods
+- Nested classes
 
 If methods call each other, it's nice if the calling method is ordered (somewhere) above
 the method that it calls. So, for one example, a private method would be ordered (somewhere) below

@@ -4,8 +4,8 @@
 
 These two things must seamlessly interoperate:
 
-* Instrumentation provided by the Java agent
-* Instrumentation provided by the user app, using any 1.0+ version of the OpenTelemetry API
+- Instrumentation provided by the Java agent
+- Instrumentation provided by the user app, using any 1.0+ version of the OpenTelemetry API
 
 ## Design
 

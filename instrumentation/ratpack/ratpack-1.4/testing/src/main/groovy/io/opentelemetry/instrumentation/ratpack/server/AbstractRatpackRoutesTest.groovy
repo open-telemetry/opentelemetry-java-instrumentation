@@ -96,8 +96,8 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" {it == null || it == IP_TCP }
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" { it == "localhost" || it == null }
             "$SemanticAttributes.NET_HOST_PORT" { it == app.bindPort || it == null }
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
