@@ -55,7 +55,7 @@ public final class HttpClientTestServer extends ServerExtension {
         .https(0)
         .tls(kmf)
         // not cleaning idle connections so eagerly helps minimize failures in HTTP client tests
-        .idleTimeout(Duration.ofSeconds(30))
+        .idleTimeout(Duration.ofSeconds(60))
         .service(
             "/success",
             (ctx, req) -> {
