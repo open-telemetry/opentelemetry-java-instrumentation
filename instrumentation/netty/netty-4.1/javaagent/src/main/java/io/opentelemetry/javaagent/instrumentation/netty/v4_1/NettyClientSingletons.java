@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyInstrumentationFlag.enabledOrErrorOnly;
+
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -43,8 +45,8 @@ public final class NettyClientSingletons {
         new NettyClientInstrumenterFactory(
             GlobalOpenTelemetry.get(),
             "io.opentelemetry.netty-4.1",
-            connectionTelemetryEnabled,
-            sslTelemetryEnabled,
+            enabledOrErrorOnly(connectionTelemetryEnabled),
+            enabledOrErrorOnly(sslTelemetryEnabled),
             CommonConfig.get().getPeerServiceMapping(),
             CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
     INSTRUMENTER =
