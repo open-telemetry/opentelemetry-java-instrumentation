@@ -5,13 +5,8 @@
 
 package io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8;
 
-import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.addPackageChecksum;
-import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.addPackageDescription;
-import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.addPackageNameAndVersion;
-import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.addPackagePath;
-import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.addPackageType;
-
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.events.EventEmitter;
@@ -46,6 +41,15 @@ final class JarAnalyzer implements ClassFileTransformer {
   private static final String WAR_EXTENSION = ".war";
   private static final String EVENT_DOMAIN_PACKAGE = "package";
   private static final String EVENT_NAME_INFO = "info";
+  static final AttributeKey<String> PACKAGE_NAME = AttributeKey.stringKey("package.name");
+  static final AttributeKey<String> PACKAGE_VERSION = AttributeKey.stringKey("package.version");
+  static final AttributeKey<String> PACKAGE_TYPE = AttributeKey.stringKey("package.type");
+  static final AttributeKey<String> PACKAGE_DESCRIPTION =
+      AttributeKey.stringKey("package.description");
+  static final AttributeKey<String> PACKAGE_CHECKSUM = AttributeKey.stringKey("package.checksum");
+  static final AttributeKey<String> PACKAGE_CHECKSUM_ALGORITHM =
+      AttributeKey.stringKey("package.checksum_algorithm");
+  static final AttributeKey<String> PACKAGE_PATH = AttributeKey.stringKey("package.path");
 
   private final Set<URI> seenUris = new HashSet<>();
   private final BlockingQueue<URL> toProcess = new LinkedBlockingDeque<>();
@@ -172,39 +176,22 @@ final class JarAnalyzer implements ClassFileTransformer {
    * content.
    */
   static void processUrl(EventEmitter eventEmitter, URL archiveUrl) {
+    JarDetails jarDetails;
+    try {
+      jarDetails = JarDetails.forUrl(archiveUrl);
+    } catch (Exception e) {
+      logger.log(Level.WARNING, "Error reading package for archive URL: {0}" + archiveUrl, e);
+      return;
+    }
     AttributesBuilder builder = Attributes.builder();
 
-    try {
-      addPackageType(builder, archiveUrl);
-    } catch (Exception e) {
-      logger.log(Level.WARNING, "Error adding package type for archive URL: {0}" + archiveUrl, e);
-    }
-
-    try {
-      addPackageChecksum(builder, archiveUrl);
-    } catch (Exception e) {
-      logger.log(Level.WARNING, "Error adding package checksum for archive URL: " + archiveUrl, e);
-    }
-
-    try {
-      addPackagePath(builder, archiveUrl);
-    } catch (Exception e) {
-      logger.log(Level.WARNING, "Error adding package path archive URL: " + archiveUrl, e);
-    }
-
-    try {
-      addPackageDescription(builder, archiveUrl);
-    } catch (Exception e) {
-      logger.log(
-          Level.WARNING, "Error adding package description for archive URL: " + archiveUrl, e);
-    }
-
-    try {
-      addPackageNameAndVersion(builder, archiveUrl);
-    } catch (Exception e) {
-      logger.log(
-          Level.WARNING, "Error adding package name and version for archive URL: " + archiveUrl, e);
-    }
+    builder.put(PACKAGE_PATH, jarDetails.packagePath());
+    builder.put(PACKAGE_TYPE, jarDetails.packageType());
+    builder.put(PACKAGE_NAME, jarDetails.packageName());
+    builder.put(PACKAGE_VERSION, jarDetails.version());
+    builder.put(PACKAGE_DESCRIPTION, jarDetails.packageDescription());
+    builder.put(PACKAGE_CHECKSUM, jarDetails.computeSha1());
+    builder.put(PACKAGE_CHECKSUM_ALGORITHM, "SHA1");
 
     eventEmitter.emit(EVENT_NAME_INFO, builder.build());
   }
