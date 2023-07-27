@@ -60,7 +60,7 @@ public final class ReactorNettySingletons {
                     .build())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    httpAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    httpAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
             .addOperationMetrics(HttpClientMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
       builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
@@ -75,7 +75,7 @@ public final class ReactorNettySingletons {
                 ? NettyConnectionInstrumentationFlag.ENABLED
                 : NettyConnectionInstrumentationFlag.DISABLED,
             NettyConnectionInstrumentationFlag.DISABLED,
-            CommonConfig.get().getPeerServiceMapping(),
+            CommonConfig.get().getPeerServiceResolver(),
             CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
     CONNECTION_INSTRUMENTER = instrumenterFactory.createConnectionInstrumenter();
   }

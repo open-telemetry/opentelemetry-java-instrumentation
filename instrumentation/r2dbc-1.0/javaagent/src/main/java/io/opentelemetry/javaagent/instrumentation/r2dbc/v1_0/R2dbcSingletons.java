@@ -18,7 +18,7 @@ public final class R2dbcSingletons {
           .setStatementSanitizationEnabled(CommonConfig.get().isStatementSanitizationEnabled())
           .addAttributeExtractor(
               PeerServiceAttributesExtractor.create(
-                  R2dbcNetAttributesGetter.INSTANCE, CommonConfig.get().getPeerServiceMapping()))
+                  R2dbcNetAttributesGetter.INSTANCE, CommonConfig.get().getPeerServiceResolver()))
           .build();
 
   public static R2dbcTelemetry telemetry() {

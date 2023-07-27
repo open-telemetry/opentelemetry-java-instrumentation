@@ -33,7 +33,7 @@ public final class WebClientHelper {
           singletonList(
               PeerServiceAttributesExtractor.create(
                   WebClientHttpAttributesGetter.INSTANCE,
-                  CommonConfig.get().getPeerServiceMapping())),
+                  CommonConfig.get().getPeerServiceResolver())),
           InstrumentationConfig.get()
               .getBoolean(
                   "otel.instrumentation.spring-webflux.experimental-span-attributes", false),

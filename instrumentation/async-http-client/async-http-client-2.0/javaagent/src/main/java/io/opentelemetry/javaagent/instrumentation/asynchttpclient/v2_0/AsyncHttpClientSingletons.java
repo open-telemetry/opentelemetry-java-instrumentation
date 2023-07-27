@@ -40,7 +40,7 @@ public final class AsyncHttpClientSingletons {
                     .build())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    httpAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    httpAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
             .addAttributesExtractor(new AsyncHttpClientAdditionalAttributesExtractor())
             .addOperationMetrics(HttpClientMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {

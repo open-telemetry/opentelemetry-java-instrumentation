@@ -46,7 +46,7 @@ public final class NettyClientSingletons {
                     .build())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    httpAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    httpAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
             .addOperationMetrics(HttpClientMetrics.get())
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context));
@@ -63,7 +63,7 @@ public final class NettyClientSingletons {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     NettyConnectHttpAttributesGetter.INSTANCE,
-                    CommonConfig.get().getPeerServiceMapping()))
+                    CommonConfig.get().getPeerServiceResolver()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

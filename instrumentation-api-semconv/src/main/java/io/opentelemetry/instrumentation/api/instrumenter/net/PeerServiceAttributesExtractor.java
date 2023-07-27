@@ -8,9 +8,13 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceResolver;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.Map;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -21,15 +25,17 @@ import javax.annotation.Nullable;
 public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
+  private static final Logger logger =
+      Logger.getLogger(PeerServiceAttributesExtractor.class.getName());
   private final ServerAttributesGetter<REQUEST, RESPONSE> attributesGetter;
-  private final Map<String, String> peerServiceMapping;
+  private final PeerServiceResolver peerServiceResolver;
 
   // visible for tests
   PeerServiceAttributesExtractor(
       ServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      Map<String, String> peerServiceMapping) {
+      PeerServiceResolver peerServiceResolver) {
     this.attributesGetter = attributesGetter;
-    this.peerServiceMapping = peerServiceMapping;
+    this.peerServiceResolver = peerServiceResolver;
   }
 
   /**
@@ -38,8 +44,8 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
    */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       ServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      Map<String, String> peerServiceMapping) {
-    return new PeerServiceAttributesExtractor<>(attributesGetter, peerServiceMapping);
+      PeerServiceResolver peerServiceResolver) {
+    return new PeerServiceAttributesExtractor<>(attributesGetter, peerServiceResolver);
   }
 
   @Override
@@ -53,16 +59,31 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
 
-    if (peerServiceMapping.isEmpty()) {
+    if (peerServiceResolver.isEmpty()) {
       // optimization for common case
       return;
     }
 
+    String path = null;
     String serverAddress = attributesGetter.getServerAddress(request);
-    String peerService = mapToPeerService(serverAddress);
+    Integer serverPort = attributesGetter.getServerPort(request);
+    if (attributesGetter instanceof HttpClientAttributesGetter<?, ?>) {
+      String urlFull =
+          ((HttpClientAttributesGetter<REQUEST, RESPONSE>) attributesGetter).getUrlFull(request);
+      if (urlFull != null) {
+        try {
+          URI uri = new URI(urlFull);
+          path = uri.getPath();
+        } catch (URISyntaxException use) {
+          logger.warning("Failed to parse URI from " + urlFull + " with : " + use.getMessage());
+        }
+      }
+    }
+    String peerService = mapToPeerService(serverAddress, serverPort, path);
     if (peerService == null) {
       String serverSocketDomain = attributesGetter.getServerSocketDomain(request, response);
-      peerService = mapToPeerService(serverSocketDomain);
+      Integer serverSocketPort = attributesGetter.getServerSocketPort(request, response);
+      peerService = mapToPeerService(serverSocketDomain, serverSocketPort, null);
     }
     if (peerService != null) {
       attributes.put(SemanticAttributes.PEER_SERVICE, peerService);
@@ -70,10 +91,11 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Nullable
-  private String mapToPeerService(@Nullable String endpoint) {
-    if (endpoint == null) {
+  private String mapToPeerService(
+      @Nullable String host, @Nullable Integer port, @Nullable String path) {
+    if (host == null) {
       return null;
     }
-    return peerServiceMapping.get(endpoint);
+    return peerServiceResolver.resolveService(host, port, path);
   }
 }

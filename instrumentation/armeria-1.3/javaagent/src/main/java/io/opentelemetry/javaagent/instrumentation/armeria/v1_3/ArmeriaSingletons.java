@@ -30,7 +30,7 @@ public final class ArmeriaSingletons {
             .addClientAttributeExtractor(
                 PeerServiceAttributesExtractor.create(
                     ArmeriaHttpClientAttributesGetter.INSTANCE,
-                    CommonConfig.get().getPeerServiceMapping()))
+                    CommonConfig.get().getPeerServiceResolver()))
             .setEmitExperimentalHttpClientMetrics(
                 CommonConfig.get().shouldEmitExperimentalHttpClientMetrics())
             .build();

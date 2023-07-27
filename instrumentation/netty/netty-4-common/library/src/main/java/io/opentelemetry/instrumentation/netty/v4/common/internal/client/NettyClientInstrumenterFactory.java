@@ -11,6 +11,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
@@ -23,7 +24,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttribut
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -36,7 +36,7 @@ public final class NettyClientInstrumenterFactory {
   private final String instrumentationName;
   private final NettyConnectionInstrumentationFlag connectionTelemetryState;
   private final NettyConnectionInstrumentationFlag sslTelemetryState;
-  private final Map<String, String> peerServiceMapping;
+  private final PeerServiceResolver peerServiceResolver;
   private final boolean emitExperimentalHttpClientMetrics;
 
   public NettyClientInstrumenterFactory(
@@ -44,13 +44,13 @@ public final class NettyClientInstrumenterFactory {
       String instrumentationName,
       NettyConnectionInstrumentationFlag connectionTelemetryState,
       NettyConnectionInstrumentationFlag sslTelemetryState,
-      Map<String, String> peerServiceMapping,
+      PeerServiceResolver peerServiceResolver,
       boolean emitExperimentalHttpClientMetrics) {
     this.openTelemetry = openTelemetry;
     this.instrumentationName = instrumentationName;
     this.connectionTelemetryState = connectionTelemetryState;
     this.sslTelemetryState = sslTelemetryState;
-    this.peerServiceMapping = peerServiceMapping;
+    this.peerServiceResolver = peerServiceResolver;
     this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
   }
 
@@ -73,7 +73,7 @@ public final class NettyClientInstrumenterFactory {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(extractorBuilder.build())
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(httpAttributesGetter, peerServiceMapping))
+                PeerServiceAttributesExtractor.create(httpAttributesGetter, peerServiceResolver))
             .addAttributesExtractors(additionalHttpAttributeExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
     if (emitExperimentalHttpClientMetrics) {
@@ -95,7 +95,7 @@ public final class NettyClientInstrumenterFactory {
                 openTelemetry, instrumentationName, NettyConnectionRequest::spanName)
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    NettyConnectHttpAttributesGetter.INSTANCE, peerServiceMapping))
+                    NettyConnectHttpAttributesGetter.INSTANCE, peerServiceResolver))
             .addAttributesExtractor(
                 HttpClientAttributesExtractor.create(NettyConnectHttpAttributesGetter.INSTANCE))
             .buildInstrumenter(
@@ -121,7 +121,7 @@ public final class NettyClientInstrumenterFactory {
                 openTelemetry, instrumentationName, NettySslRequest::spanName)
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(netAttributesGetter, peerServiceMapping))
+                PeerServiceAttributesExtractor.create(netAttributesGetter, peerServiceResolver))
             .buildInstrumenter(
                 sslTelemetryFullyEnabled
                     ? SpanKindExtractor.alwaysInternal()

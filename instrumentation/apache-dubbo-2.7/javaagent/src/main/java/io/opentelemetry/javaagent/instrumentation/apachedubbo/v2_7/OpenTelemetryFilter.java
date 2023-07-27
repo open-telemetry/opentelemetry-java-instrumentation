@@ -27,7 +27,7 @@ public class OpenTelemetryFilter implements Filter {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     new DubboNetClientAttributesGetter(),
-                    CommonConfig.get().getPeerServiceMapping()))
+                    CommonConfig.get().getPeerServiceResolver()))
             .build()
             .newFilter();
   }

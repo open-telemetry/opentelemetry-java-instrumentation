@@ -36,7 +36,7 @@ public class JavaHttpClientSingletons {
             singletonList(
                 PeerServiceAttributesExtractor.create(
                     JavaHttpClientAttributesGetter.INSTANCE,
-                    CommonConfig.get().getPeerServiceMapping())),
+                    CommonConfig.get().getPeerServiceResolver())),
             CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
   }
 

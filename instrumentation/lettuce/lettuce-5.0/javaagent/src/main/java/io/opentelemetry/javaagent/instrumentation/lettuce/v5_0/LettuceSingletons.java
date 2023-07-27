@@ -47,7 +47,7 @@ public final class LettuceSingletons {
             .addAttributesExtractor(NetClientAttributesExtractor.create(connectNetAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    connectNetAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    connectNetAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

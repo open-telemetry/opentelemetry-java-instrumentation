@@ -9,6 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
@@ -114,7 +115,7 @@ public final class NettyClientTelemetryBuilder {
                 "io.opentelemetry.netty-4.1",
                 NettyConnectionInstrumentationFlag.DISABLED,
                 NettyConnectionInstrumentationFlag.DISABLED,
-                Collections.emptyMap(),
+                PeerServiceResolver.create(Collections.emptyMap()),
                 emitExperimentalHttpClientMetrics)
             .createHttpInstrumenter(extractorConfigurer, additionalAttributesExtractors));
   }

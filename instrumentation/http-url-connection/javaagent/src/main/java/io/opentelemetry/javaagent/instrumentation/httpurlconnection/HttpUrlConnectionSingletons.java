@@ -38,7 +38,7 @@ public final class HttpUrlConnectionSingletons {
                     .build())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    httpAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    httpAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
             .addAttributesExtractor(HttpMethodAttributeExtractor.create())
             .addContextCustomizer(
                 (context, httpRequestPacket, startAttributes) ->
