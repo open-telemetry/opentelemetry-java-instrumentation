@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Warmup(iterations = 1, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 2, warmups = 1, jvmArgsPrepend = "-javaagent:E:\\Temp\\applicationinsights-agent-3.4.13.jar")
+//@Fork(value = 2, warmups = 1, jvmArgsPrepend = "")
 @Measurement(iterations = 1, time = 3, timeUnit = TimeUnit.SECONDS)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @BenchmarkMode(Mode.Throughput)
