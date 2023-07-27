@@ -7,7 +7,9 @@ plugins {
 }
 
 dependencies {
-  library("io.projectreactor:reactor-core:3.1.0.RELEASE")
+  implementation(project(mapOf("path" to ":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent")))
+    library("io.projectreactor:reactor-core:3.1.0.RELEASE")
+  jmh("io.projectreactor:reactor-core:3.1.0.RELEASE")
   implementation(project(":instrumentation-annotations-support"))
   testLibrary("io.projectreactor:reactor-test:3.1.0.RELEASE")
 
@@ -24,8 +26,6 @@ tasks {
             isEnabled.set(false)
         }
     }
-
-
 }
 
 
