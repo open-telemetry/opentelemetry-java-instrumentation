@@ -40,8 +40,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Warmup(iterations = 1, time = 1, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 2, warmups = 1, jvmArgsPrepend = "-javaagent:E:\\Temp\\applicationinsights-agent-3.4.13.jar")
-//@Fork(value = 2, warmups = 1, jvmArgsPrepend = "")
+//@Fork(value = 2, warmups = 1, jvmArgsPrepend = "-javaagent:E:\\Temp\\applicationinsights-agent-3.4.13.jar")
+@Fork(value = 2, warmups = 1)
 @Measurement(iterations = 1, time = 3, timeUnit = TimeUnit.SECONDS)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @BenchmarkMode(Mode.Throughput)
@@ -51,14 +51,14 @@ public class ContextPropagationOperatorBenchmark {
     private static final AtomicInteger counter = new AtomicInteger(0);
 
     @Benchmark
-    public void WithContextPropagation() {
+    public void WithValidation() {
         simulatedFastIOOperation(true);
     }
 
-    /*@Benchmark
-    public void WithoutContextPropagation() {
+    @Benchmark
+    public void WithoutValidation() {
         simulatedFastIOOperation(false);
-    }*/
+    }
 
     private static void simulatedFastIOOperation(boolean validateContextPropagation) {
         long sequenceNumber = counter.incrementAndGet();
