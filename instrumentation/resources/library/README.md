@@ -61,6 +61,16 @@ Implemented attributes:
 - `process.runtime.version`
 - `process.runtime.description`
 
+### Service Instance ID
+
+Implementation: `io.opentelemetry.instrumentation.resources.ServiceInstanceIdResource`
+
+Specification: <https://github.com/open-telemetry/opentelemetry-specification/tree/main/specification/resource/semantic_conventions#service-experimental>
+
+Implemented attributes:
+
+- `service.instance.id`
+
 ## Platforms
 
 This package currently does not run on Android. It has been verified on OpenJDK and should work on
