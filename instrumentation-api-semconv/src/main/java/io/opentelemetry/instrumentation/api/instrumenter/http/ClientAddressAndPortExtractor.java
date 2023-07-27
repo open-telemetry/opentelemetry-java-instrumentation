@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractClientIpFromForwardedForHeader;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractClientIpFromForwardedHeader;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpCommonAttributesExtractor.firstHeaderValue;
 
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 
@@ -22,9 +23,7 @@ final class ClientAddressAndPortExtractor<REQUEST>
   @Override
   public void extract(AddressPortSink sink, REQUEST request) {
     // try Forwarded
-    String forwarded =
-        HttpCommonAttributesExtractor.firstHeaderValue(
-            getter.getHttpRequestHeader(request, "forwarded"));
+    String forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "forwarded"));
     if (forwarded != null) {
       forwarded = extractClientIpFromForwardedHeader(forwarded);
       if (forwarded != null) {
@@ -34,9 +33,7 @@ final class ClientAddressAndPortExtractor<REQUEST>
     }
 
     // try X-Forwarded-For
-    forwarded =
-        HttpCommonAttributesExtractor.firstHeaderValue(
-            getter.getHttpRequestHeader(request, "x-forwarded-for"));
+    forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "x-forwarded-for"));
     if (forwarded != null) {
       sink.setAddress(extractClientIpFromForwardedForHeader(forwarded));
     }

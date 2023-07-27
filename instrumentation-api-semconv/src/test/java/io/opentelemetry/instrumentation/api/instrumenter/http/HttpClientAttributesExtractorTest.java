@@ -294,7 +294,11 @@ class HttpClientAttributesExtractorTest {
 
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(arguments(80, "http://github.com"), arguments(443, "https://github.com"));
+      return Stream.of(
+          arguments(80, "http://github.com"),
+          arguments(80, "HTTP://GITHUB.COM"),
+          arguments(443, "https://github.com"),
+          arguments(443, "HTTPS://GITHUB.COM"));
     }
   }
 

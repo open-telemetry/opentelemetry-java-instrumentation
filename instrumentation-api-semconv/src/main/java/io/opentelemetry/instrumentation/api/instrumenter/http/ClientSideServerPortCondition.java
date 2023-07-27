@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import java.util.Locale;
 import java.util.function.BiPredicate;
 
 final class ClientSideServerPortCondition<REQUEST> implements BiPredicate<Integer, REQUEST> {
@@ -21,6 +22,7 @@ final class ClientSideServerPortCondition<REQUEST> implements BiPredicate<Intege
     if (url == null) {
       return true;
     }
+    url = url.toLowerCase(Locale.ROOT);
     // according to spec: extract if not default (80 for http scheme, 443 for https).
     if ((url.startsWith("http://") && port == 80) || (url.startsWith("https://") && port == 443)) {
       return false;
