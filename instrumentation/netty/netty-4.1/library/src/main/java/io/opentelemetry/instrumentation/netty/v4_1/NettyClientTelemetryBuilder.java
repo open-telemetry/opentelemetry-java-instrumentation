@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyInstrumentationFlag;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumentationFlag;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -112,8 +112,8 @@ public final class NettyClientTelemetryBuilder {
         new NettyClientInstrumenterFactory(
                 openTelemetry,
                 "io.opentelemetry.netty-4.1",
-                NettyInstrumentationFlag.DISABLED,
-                NettyInstrumentationFlag.DISABLED,
+                NettyConnectionInstrumentationFlag.DISABLED,
+                NettyConnectionInstrumentationFlag.DISABLED,
                 Collections.emptyMap(),
                 emitExperimentalHttpClientMetrics)
             .createHttpInstrumenter(extractorConfigurer, additionalAttributesExtractors));

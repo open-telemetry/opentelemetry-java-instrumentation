@@ -15,8 +15,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumentationFlag;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumenter;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyInstrumentationFlag;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
@@ -72,9 +72,9 @@ public final class ReactorNettySingletons {
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
             connectionTelemetryEnabled
-                ? NettyInstrumentationFlag.ENABLED
-                : NettyInstrumentationFlag.DISABLED,
-            NettyInstrumentationFlag.DISABLED,
+                ? NettyConnectionInstrumentationFlag.ENABLED
+                : NettyConnectionInstrumentationFlag.DISABLED,
+            NettyConnectionInstrumentationFlag.DISABLED,
             CommonConfig.get().getPeerServiceMapping(),
             CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
     CONNECTION_INSTRUMENTER = instrumenterFactory.createConnectionInstrumenter();

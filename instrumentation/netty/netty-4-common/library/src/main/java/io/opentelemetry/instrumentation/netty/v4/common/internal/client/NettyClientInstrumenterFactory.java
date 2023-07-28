@@ -34,16 +34,16 @@ public final class NettyClientInstrumenterFactory {
 
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
-  private final NettyInstrumentationFlag connectionTelemetryState;
-  private final NettyInstrumentationFlag sslTelemetryState;
+  private final NettyConnectionInstrumentationFlag connectionTelemetryState;
+  private final NettyConnectionInstrumentationFlag sslTelemetryState;
   private final Map<String, String> peerServiceMapping;
   private final boolean emitExperimentalHttpClientMetrics;
 
   public NettyClientInstrumenterFactory(
       OpenTelemetry openTelemetry,
       String instrumentationName,
-      NettyInstrumentationFlag connectionTelemetryState,
-      NettyInstrumentationFlag sslTelemetryState,
+      NettyConnectionInstrumentationFlag connectionTelemetryState,
+      NettyConnectionInstrumentationFlag sslTelemetryState,
       Map<String, String> peerServiceMapping,
       boolean emitExperimentalHttpClientMetrics) {
     this.openTelemetry = openTelemetry;
@@ -83,12 +83,12 @@ public final class NettyClientInstrumenterFactory {
   }
 
   public NettyConnectionInstrumenter createConnectionInstrumenter() {
-    if (connectionTelemetryState == NettyInstrumentationFlag.DISABLED) {
+    if (connectionTelemetryState == NettyConnectionInstrumentationFlag.DISABLED) {
       return NoopConnectionInstrumenter.INSTANCE;
     }
 
     boolean connectionTelemetryFullyEnabled =
-        connectionTelemetryState == NettyInstrumentationFlag.ENABLED;
+        connectionTelemetryState == NettyConnectionInstrumentationFlag.ENABLED;
 
     Instrumenter<NettyConnectionRequest, Channel> instrumenter =
         Instrumenter.<NettyConnectionRequest, Channel>builder(
@@ -109,11 +109,12 @@ public final class NettyClientInstrumenterFactory {
   }
 
   public NettySslInstrumenter createSslInstrumenter() {
-    if (sslTelemetryState == NettyInstrumentationFlag.DISABLED) {
+    if (sslTelemetryState == NettyConnectionInstrumentationFlag.DISABLED) {
       return NoopSslInstrumenter.INSTANCE;
     }
 
-    boolean sslTelemetryFullyEnabled = sslTelemetryState == NettyInstrumentationFlag.ENABLED;
+    boolean sslTelemetryFullyEnabled =
+        sslTelemetryState == NettyConnectionInstrumentationFlag.ENABLED;
     NettySslNetAttributesGetter netAttributesGetter = new NettySslNetAttributesGetter();
     Instrumenter<NettySslRequest, Void> instrumenter =
         Instrumenter.<NettySslRequest, Void>builder(
