@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractProtoFromForwardedHeader;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractProtoFromForwardedProtoHeader;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpCommonAttributesExtractor.firstHeaderValue;
 
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import java.util.Locale;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 final class AlternateUrlSchemeProvider<REQUEST> implements Function<REQUEST, String> {
 
@@ -49,5 +49,45 @@ final class AlternateUrlSchemeProvider<REQUEST> implements Function<REQUEST, Str
     }
 
     return null;
+  }
+
+  /** Extract proto (aka scheme) from "Forwarded" http header. */
+  @Nullable
+  private static String extractProtoFromForwardedHeader(String forwarded) {
+    int start = forwarded.toLowerCase(Locale.ROOT).indexOf("proto=");
+    if (start < 0) {
+      return null;
+    }
+    start += 6; // start is now the index after proto=
+    if (start >= forwarded.length() - 1) { // the value after for= must not be empty
+      return null;
+    }
+    return extractProto(forwarded, start);
+  }
+
+  /** Extract proto (aka scheme) from "X-Forwarded-Proto" http header. */
+  @Nullable
+  private static String extractProtoFromForwardedProtoHeader(String forwardedProto) {
+    return extractProto(forwardedProto, 0);
+  }
+
+  @Nullable
+  private static String extractProto(String forwarded, int start) {
+    if (forwarded.length() == start) {
+      return null;
+    }
+    if (forwarded.charAt(start) == '"') {
+      return extractProto(forwarded, start + 1);
+    }
+    for (int i = start; i < forwarded.length(); i++) {
+      char c = forwarded.charAt(i);
+      if (c == ',' || c == ';' || c == '"') {
+        if (i == start) { // empty string
+          return null;
+        }
+        return forwarded.substring(start, i);
+      }
+    }
+    return forwarded.substring(start);
   }
 }

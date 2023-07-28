@@ -19,7 +19,7 @@ final class ClientSideServerPortCondition<REQUEST> implements BiPredicate<Intege
   @Override
   public boolean test(Integer port, REQUEST request) {
     String url = getter.getUrlFull(request);
-    if (url == null) {
+    if (url == null || port == null) {
       return true;
     }
     url = url.toLowerCase(Locale.ROOT);

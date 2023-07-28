@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpCommonAttributesExtractor.firstHeaderValue;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
@@ -22,9 +23,7 @@ final class HttpAddressPortExtractor<REQUEST> implements FallbackAddressPortExtr
 
   @Override
   public void extract(AddressPortSink sink, REQUEST request) {
-    String host =
-        HttpCommonAttributesExtractor.firstHeaderValue(
-            getter.getHttpRequestHeader(request, "host"));
+    String host = firstHeaderValue(getter.getHttpRequestHeader(request, "host"));
     if (host == null) {
       return;
     }
