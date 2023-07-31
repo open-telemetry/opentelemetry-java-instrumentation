@@ -10,9 +10,5 @@ dependencies {
 
   api("org.eclipse.jetty:jetty-client:$jettyVers_base9")
 
-  implementation("org.junit.jupiter:junit-jupiter-api")
-
-  implementation("org.apache.groovy:groovy")
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("org.spockframework:spock-core")
 }
