@@ -41,4 +41,27 @@ final class ApacheHttpClientHttpAttributesGetter
       ApacheHttpClientRequest request, HttpResponse response, String name) {
     return headersToList(response.getHeaders(name));
   }
+
+  @Override
+  public String getNetworkProtocolName(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+    return request.getProtocolName();
+  }
+
+  @Override
+  public String getNetworkProtocolVersion(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+    return request.getProtocolVersion();
+  }
+
+  @Override
+  @Nullable
+  public String getServerAddress(ApacheHttpClientRequest request) {
+    return request.getServerAddress();
+  }
+
+  @Override
+  public Integer getServerPort(ApacheHttpClientRequest request) {
+    return request.getServerPort();
+  }
 }

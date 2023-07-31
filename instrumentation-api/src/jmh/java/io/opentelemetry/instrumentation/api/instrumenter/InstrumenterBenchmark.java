@@ -10,7 +10,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
@@ -40,8 +39,7 @@ public class InstrumenterBenchmark {
               "benchmark",
               HttpSpanNameExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
           .addAttributesExtractor(
-              HttpClientAttributesExtractor.create(
-                  ConstantHttpAttributesGetter.INSTANCE, new ConstantNetAttributesGetter()))
+              HttpClientAttributesExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
           .buildInstrumenter();
 
   @Benchmark
@@ -58,6 +56,9 @@ public class InstrumenterBenchmark {
 
   enum ConstantHttpAttributesGetter implements HttpClientAttributesGetter<Void, Void> {
     INSTANCE;
+
+    private static final InetSocketAddress PEER_ADDRESS =
+        InetSocketAddress.createUnresolved("localhost", 8080);
 
     @Override
     public String getUrlFull(Void unused) {
@@ -86,20 +87,12 @@ public class InstrumenterBenchmark {
     public List<String> getHttpResponseHeader(Void unused, Void unused2, String name) {
       return Collections.emptyList();
     }
-  }
 
-  static class ConstantNetAttributesGetter implements NetClientAttributesGetter<Void, Void> {
-
-    private static final InetSocketAddress PEER_ADDRESS =
-        InetSocketAddress.createUnresolved("localhost", 8080);
-
-    @Nullable
     @Override
     public String getNetworkProtocolName(Void unused, @Nullable Void unused2) {
       return "http";
     }
 
-    @Nullable
     @Override
     public String getNetworkProtocolVersion(Void unused, @Nullable Void unused2) {
       return "2.0";
@@ -117,7 +110,6 @@ public class InstrumenterBenchmark {
       return null;
     }
 
-    @Nullable
     @Override
     public InetSocketAddress getServerInetSocketAddress(Void request, @Nullable Void response) {
       return PEER_ADDRESS;

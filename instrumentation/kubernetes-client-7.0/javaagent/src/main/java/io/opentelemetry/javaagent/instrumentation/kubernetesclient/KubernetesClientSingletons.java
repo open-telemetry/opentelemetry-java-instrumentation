@@ -29,7 +29,6 @@ public class KubernetesClientSingletons {
 
   static {
     KubernetesHttpAttributesGetter httpAttributesGetter = new KubernetesHttpAttributesGetter();
-    KubernetesNetAttributesGetter netAttributesGetter = new KubernetesNetAttributesGetter();
 
     InstrumenterBuilder<Request, ApiResponse<?>> instrumenterBuilder =
         Instrumenter.<Request, ApiResponse<?>>builder(
@@ -38,7 +37,7 @@ public class KubernetesClientSingletons {
                 request -> KubernetesRequestDigest.parse(request).toString())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                HttpClientAttributesExtractor.builder(httpAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())

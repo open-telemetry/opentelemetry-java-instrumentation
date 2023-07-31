@@ -25,7 +25,6 @@ public class JaxRsClientSingletons {
 
   static {
     JaxRsClientHttpAttributesGetter httpAttributesGetter = new JaxRsClientHttpAttributesGetter();
-    JaxRsClientNetAttributesGetter netAttributesGetter = new JaxRsClientNetAttributesGetter();
 
     InstrumenterBuilder<ClientRequest, ClientResponse> builder =
         Instrumenter.<ClientRequest, ClientResponse>builder(
@@ -34,14 +33,14 @@ public class JaxRsClientSingletons {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                HttpClientAttributesExtractor.builder(httpAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    httpAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addOperationMetrics(HttpClientMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
       builder.addOperationMetrics(HttpClientExperimentalMetrics.get());

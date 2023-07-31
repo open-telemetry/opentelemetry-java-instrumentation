@@ -22,10 +22,7 @@ class KtorClientTracingBuilder {
 
   private var openTelemetry: OpenTelemetry? = null
   private val additionalExtractors = mutableListOf<AttributesExtractor<in HttpRequestData, in HttpResponse>>()
-  private val httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(
-    KtorHttpClientAttributesGetter,
-    KtorNetClientAttributesGetter,
-  )
+  private val httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(KtorHttpClientAttributesGetter)
   private var emitExperimentalHttpClientMetrics = false
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {

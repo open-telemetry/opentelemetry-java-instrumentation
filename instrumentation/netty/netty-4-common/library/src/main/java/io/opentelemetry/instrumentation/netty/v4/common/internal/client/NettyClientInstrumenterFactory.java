@@ -60,10 +60,9 @@ public final class NettyClientInstrumenterFactory {
       List<AttributesExtractor<HttpRequestAndChannel, HttpResponse>>
           additionalHttpAttributeExtractors) {
     NettyHttpClientAttributesGetter httpAttributesGetter = new NettyHttpClientAttributesGetter();
-    NettyNetClientAttributesGetter netAttributesGetter = new NettyNetClientAttributesGetter();
 
     HttpClientAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse> extractorBuilder =
-        HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter);
+        HttpClientAttributesExtractor.builder(httpAttributesGetter);
     extractorConfigurer.accept(extractorBuilder);
 
     InstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder =
@@ -74,7 +73,7 @@ public final class NettyClientInstrumenterFactory {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(extractorBuilder.build())
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(netAttributesGetter, peerServiceMapping))
+                PeerServiceAttributesExtractor.create(httpAttributesGetter, peerServiceMapping))
             .addAttributesExtractors(additionalHttpAttributeExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
     if (emitExperimentalHttpClientMetrics) {
@@ -84,22 +83,25 @@ public final class NettyClientInstrumenterFactory {
   }
 
   public NettyConnectionInstrumenter createConnectionInstrumenter() {
-    NettyConnectNetAttributesGetter netAttributesGetter = new NettyConnectNetAttributesGetter();
-
     InstrumenterBuilder<NettyConnectionRequest, Channel> instrumenterBuilder =
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 openTelemetry, instrumentationName, NettyConnectionRequest::spanName)
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(netAttributesGetter, peerServiceMapping));
+                PeerServiceAttributesExtractor.create(
+                    NettyConnectHttpAttributesGetter.INSTANCE, peerServiceMapping));
 
     if (connectionTelemetryEnabled) {
+      // TODO: this will most likely be no longer true with the new semconv, since the connection
+      // phase happens *before* the actual HTTP request is sent over the wire
+      // TODO (mateusz): refactor this after reactor-netty is fully converted to low-level HTTP
+      // instrumentation
       // when the connection telemetry is enabled, we do not want these CONNECT spans to be
       // suppressed by higher-level HTTP spans - this would happen in the reactor-netty
       // instrumentation
       // the solution for this is to deliberately avoid using the HTTP extractor and use the plain
       // net attributes extractor instead
       instrumenterBuilder.addAttributesExtractor(
-          NetClientAttributesExtractor.create(netAttributesGetter));
+          NetClientAttributesExtractor.create(NettyConnectHttpAttributesGetter.INSTANCE));
     } else {
       // when the connection telemetry is not enabled, netty creates CONNECT spans whenever a
       // connection error occurs - because there is no HTTP span in that scenario, if raw netty
@@ -109,8 +111,7 @@ public final class NettyClientInstrumenterFactory {
       // for that to happen, the CONNECT span will "pretend" to be a full HTTP span when connection
       // telemetry is off
       instrumenterBuilder.addAttributesExtractor(
-          HttpClientAttributesExtractor.create(
-              NettyConnectHttpAttributesGetter.INSTANCE, netAttributesGetter));
+          HttpClientAttributesExtractor.create(NettyConnectHttpAttributesGetter.INSTANCE));
     }
 
     Instrumenter<NettyConnectionRequest, Channel> instrumenter =

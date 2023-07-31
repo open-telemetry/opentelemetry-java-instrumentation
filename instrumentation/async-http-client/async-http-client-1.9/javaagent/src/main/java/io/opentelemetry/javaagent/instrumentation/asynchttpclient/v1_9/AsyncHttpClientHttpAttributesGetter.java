@@ -40,4 +40,14 @@ final class AsyncHttpClientHttpAttributesGetter
   public List<String> getHttpResponseHeader(Request request, Response response, String name) {
     return response.getHeaders().getOrDefault(name, Collections.emptyList());
   }
+
+  @Override
+  public String getServerAddress(Request request) {
+    return request.getUri().getHost();
+  }
+
+  @Override
+  public Integer getServerPort(Request request) {
+    return request.getUri().getPort();
+  }
 }

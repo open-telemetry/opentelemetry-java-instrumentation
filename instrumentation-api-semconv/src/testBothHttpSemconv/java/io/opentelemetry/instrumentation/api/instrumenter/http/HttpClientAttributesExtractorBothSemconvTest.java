@@ -16,7 +16,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -60,10 +59,6 @@ class HttpClientAttributesExtractorBothSemconvTest {
       String value = response.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
     }
-  }
-
-  static class TestNetClientAttributesGetter
-      implements NetClientAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Nullable
     @Override
@@ -130,8 +125,7 @@ class HttpClientAttributesExtractorBothSemconvTest {
     ToIntFunction<Context> resendCountFromContext = context -> 2;
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.builder(
-                new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
+        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter())
             .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
             .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
             .setResendCountIncrementer(resendCountFromContext)
