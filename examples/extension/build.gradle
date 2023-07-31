@@ -96,7 +96,7 @@ dependencies {
   Only dependencies added to `implementation` configuration will be picked up by Shadow plugin
   and added to the resulting jar for our extension's distribution.
    */
-  implementation 'org.apache.commons:commons-lang3:3.12.0'
+  implementation 'org.apache.commons:commons-lang3:3.13.0'
 
   //All dependencies below are only for tests
   testImplementation("org.testcontainers:testcontainers:1.18.3")
