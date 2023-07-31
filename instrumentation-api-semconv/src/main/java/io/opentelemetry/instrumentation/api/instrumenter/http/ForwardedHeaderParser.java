@@ -10,26 +10,6 @@ import javax.annotation.Nullable;
 
 final class ForwardedHeaderParser {
 
-  /** Extract proto (aka scheme) from "Forwarded" http header. */
-  @Nullable
-  static String extractProtoFromForwardedHeader(String forwarded) {
-    int start = forwarded.toLowerCase(Locale.ROOT).indexOf("proto=");
-    if (start < 0) {
-      return null;
-    }
-    start += 6; // start is now the index after proto=
-    if (start >= forwarded.length() - 1) { // the value after for= must not be empty
-      return null;
-    }
-    return extractProto(forwarded, start);
-  }
-
-  /** Extract proto (aka scheme) from "X-Forwarded-Proto" http header. */
-  @Nullable
-  static String extractProtoFromForwardedProtoHeader(String forwardedProto) {
-    return extractProto(forwardedProto, 0);
-  }
-
   /** Extract client IP address from "Forwarded" http header. */
   @Nullable
   static String extractClientIpFromForwardedHeader(String forwarded) {
@@ -48,26 +28,6 @@ final class ForwardedHeaderParser {
   @Nullable
   static String extractClientIpFromForwardedForHeader(String forwardedFor) {
     return extractIpAddress(forwardedFor, 0);
-  }
-
-  @Nullable
-  private static String extractProto(String forwarded, int start) {
-    if (forwarded.length() == start) {
-      return null;
-    }
-    if (forwarded.charAt(start) == '"') {
-      return extractProto(forwarded, start + 1);
-    }
-    for (int i = start; i < forwarded.length(); i++) {
-      char c = forwarded.charAt(i);
-      if (c == ',' || c == ';' || c == '"') {
-        if (i == start) { // empty string
-          return null;
-        }
-        return forwarded.substring(start, i);
-      }
-    }
-    return forwarded.substring(start);
   }
 
   // from https://www.rfc-editor.org/rfc/rfc7239

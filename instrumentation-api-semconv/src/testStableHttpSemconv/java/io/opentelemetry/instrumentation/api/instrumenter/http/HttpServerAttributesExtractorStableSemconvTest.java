@@ -179,15 +179,13 @@ class HttpServerAttributesExtractorStableSemconvTest {
 
     Function<Context, String> routeFromContext = ctx -> "/repositories/{repoId}";
 
-    HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        new HttpServerAttributesExtractor<>(
-            new TestHttpServerAttributesGetter(),
-            new TestNetServerAttributesGetter(),
-            singletonList("Custom-Request-Header"),
-            singletonList("Custom-Response-Header"),
-            HttpConstants.KNOWN_METHODS,
-            false,
-            routeFromContext);
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.builder(
+                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
+            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
+            .setHttpRouteGetter(routeFromContext)
+            .build();
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);

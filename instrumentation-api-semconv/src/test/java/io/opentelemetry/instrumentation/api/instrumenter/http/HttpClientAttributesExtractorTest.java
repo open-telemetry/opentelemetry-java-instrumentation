@@ -18,7 +18,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -136,13 +135,12 @@ class HttpClientAttributesExtractorTest {
     ToIntFunction<Context> resendCountFromContext = context -> 2;
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        new HttpClientAttributesExtractor<>(
-            new TestHttpClientAttributesGetter(),
-            new TestNetClientAttributesGetter(),
-            singletonList("Custom-Request-Header"),
-            singletonList("Custom-Response-Header"),
-            HttpConstants.KNOWN_METHODS,
-            resendCountFromContext);
+        HttpClientAttributesExtractor.builder(
+                new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
+            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
+            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
+            .setResendCountIncrementer(resendCountFromContext)
+            .build();
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -296,7 +294,11 @@ class HttpClientAttributesExtractorTest {
 
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(arguments(80, "http://github.com"), arguments(443, "https://github.com"));
+      return Stream.of(
+          arguments(80, "http://github.com"),
+          arguments(80, "HTTP://GITHUB.COM"),
+          arguments(443, "https://github.com"),
+          arguments(443, "HTTPS://GITHUB.COM"));
     }
   }
 
@@ -306,14 +308,11 @@ class HttpClientAttributesExtractorTest {
 
     ToIntFunction<Context> resendCountFromContext = context -> 0;
 
-    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        new HttpClientAttributesExtractor<>(
-            new TestHttpClientAttributesGetter(),
-            new TestNetClientAttributesGetter(),
-            emptyList(),
-            emptyList(),
-            HttpConstants.KNOWN_METHODS,
-            resendCountFromContext);
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.builder(
+                new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
+            .setResendCountIncrementer(resendCountFromContext)
+            .build();
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
