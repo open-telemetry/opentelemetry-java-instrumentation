@@ -54,8 +54,9 @@ final class FailedRequestWithUrlMaker {
 
       // use the baseUrl if it was configured
       String baseUrl = config.baseUrl();
-      if (baseUrl != null) {
-        if (baseUrl.endsWith("/") && uri.startsWith("/")) {
+      // baseUrl is an actual scheme+host+port base url, and not just "/"
+      if (baseUrl != null && baseUrl.length() > 1) {
+        if (baseUrl.endsWith("/")) {
           baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
         }
         return baseUrl + uri;
@@ -67,9 +68,7 @@ final class FailedRequestWithUrlMaker {
         InetSocketAddress inetHostAddress = (InetSocketAddress) hostAddress;
         return (config.isSecure() ? "https://" : "http://")
             + inetHostAddress.getHostString()
-            + ":"
-            + inetHostAddress.getPort()
-            + (uri.startsWith("/") ? "" : "/")
+            + computePortPart(inetHostAddress.getPort())
             + uri;
       }
 
@@ -78,6 +77,12 @@ final class FailedRequestWithUrlMaker {
 
     private static boolean isAbsolute(String uri) {
       return uri != null && !uri.isEmpty() && !uri.startsWith("/");
+    }
+
+    private String computePortPart(int port) {
+      boolean defaultPortValue =
+          (config.isSecure() && port == 443) || (!config.isSecure() && port == 80);
+      return defaultPortValue ? "" : (":" + port);
     }
   }
 
