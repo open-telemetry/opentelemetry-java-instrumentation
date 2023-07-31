@@ -65,7 +65,7 @@ In order to function, `OpenTelemetryAppender` needs access to an `OpenTelemetry`
 be set programmatically during application startup as follows:
 
 ```java
-import io.opentelemetry.instrumentation.logback.OpenTelemetryAppender;
+import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 
 public class Application {
