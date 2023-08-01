@@ -58,9 +58,13 @@ public final class HttpServerMetrics implements OperationListener {
             .setUnit("{requests}")
             .setDescription("The number of concurrent HTTP requests that are currently in-flight")
             .build();
+    String durationInstrumentName =
+        HttpMetricsUtil.emitNewSemconvMetrics
+            ? "http.server.request.duration"
+            : "http.server.duration";
     duration =
         createDurationHistogram(
-            meter, "http.server.duration", "The duration of the inbound HTTP request");
+            meter, durationInstrumentName, "The duration of the inbound HTTP request");
     requestSize =
         meter
             .histogramBuilder("http.server.request.size")

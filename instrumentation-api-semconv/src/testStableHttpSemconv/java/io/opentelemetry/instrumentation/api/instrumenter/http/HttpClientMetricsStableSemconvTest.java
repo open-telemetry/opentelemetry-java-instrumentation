@@ -82,7 +82,7 @@ class HttpClientMetricsStableSemconvTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("http.client.duration")
+                    .hasName("http.client.request.duration")
                     .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
@@ -114,7 +114,7 @@ class HttpClientMetricsStableSemconvTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("http.client.duration")
+                    .hasName("http.client.request.duration")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
