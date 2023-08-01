@@ -80,4 +80,63 @@ enum SpringWebMvcHttpAttributesGetter
   public String getUrlQuery(HttpServletRequest request) {
     return request.getQueryString();
   }
+
+  @Nullable
+  @Override
+  public String getNetworkProtocolName(
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
+    String protocol = request.getProtocol();
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkProtocolVersion(
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
+    String protocol = request.getProtocol();
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(HttpServletRequest request) {
+    return request.getServerName();
+  }
+
+  @Override
+  public Integer getServerPort(HttpServletRequest request) {
+    return request.getServerPort();
+  }
+
+  @Override
+  @Nullable
+  public String getClientSocketAddress(
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
+    return request.getRemoteAddr();
+  }
+
+  @Override
+  public Integer getClientSocketPort(
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
+    return request.getRemotePort();
+  }
+
+  @Nullable
+  @Override
+  public String getServerSocketAddress(
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
+    return request.getLocalAddr();
+  }
+
+  @Override
+  public Integer getServerSocketPort(
+      HttpServletRequest request, @Nullable HttpServletResponse respo) {
+    return request.getLocalPort();
+  }
 }

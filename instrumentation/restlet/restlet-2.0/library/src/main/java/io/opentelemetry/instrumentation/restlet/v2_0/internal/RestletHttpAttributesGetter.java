@@ -69,4 +69,45 @@ public enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
     }
     return Arrays.asList(headers.getValuesArray(name, true));
   }
+
+  @Nullable
+  @Override
+  public String getNetworkProtocolName(Request request, @Nullable Response response) {
+    return request.getProtocol().getSchemeName();
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
+    return request.getProtocol().getVersion();
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(Request request) {
+    return ServerCallAccess.getHostDomain(request);
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(Request request) {
+    return ServerCallAccess.getServerPort(request);
+  }
+
+  @Override
+  @Nullable
+  public String getClientSocketAddress(Request request, @Nullable Response response) {
+    return request.getClientInfo().getAddress();
+  }
+
+  @Override
+  public Integer getClientSocketPort(Request request, @Nullable Response response) {
+    return request.getClientInfo().getPort();
+  }
+
+  @Nullable
+  @Override
+  public String getServerSocketAddress(Request request, @Nullable Response response) {
+    return ServerCallAccess.getServerAddress(request);
+  }
 }

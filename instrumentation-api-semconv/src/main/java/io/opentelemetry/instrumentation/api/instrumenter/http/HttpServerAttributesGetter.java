@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.url.UrlAttributesGetter;
 import javax.annotation.Nullable;
 
@@ -16,7 +20,12 @@ import javax.annotation.Nullable;
  * various HTTP server attributes in a type-generic way.
  */
 public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
-    extends HttpCommonAttributesGetter<REQUEST, RESPONSE>, UrlAttributesGetter<REQUEST> {
+    extends HttpCommonAttributesGetter<REQUEST, RESPONSE>,
+        UrlAttributesGetter<REQUEST>,
+        NetServerAttributesGetter<REQUEST, RESPONSE>,
+        NetworkAttributesGetter<REQUEST, RESPONSE>,
+        ServerAttributesGetter<REQUEST, RESPONSE>,
+        ClientAttributesGetter<REQUEST, RESPONSE> {
 
   /** {@inheritDoc} */
   @Nullable

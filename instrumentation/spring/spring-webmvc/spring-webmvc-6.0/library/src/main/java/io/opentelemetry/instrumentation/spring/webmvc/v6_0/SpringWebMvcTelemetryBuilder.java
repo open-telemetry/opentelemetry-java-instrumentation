@@ -34,8 +34,7 @@ public final class SpringWebMvcTelemetryBuilder {
       additionalExtractors = new ArrayList<>();
   private final HttpServerAttributesExtractorBuilder<HttpServletRequest, HttpServletResponse>
       httpAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(
-              SpringWebMvcHttpAttributesGetter.INSTANCE, SpringWebMvcNetAttributesGetter.INSTANCE);
+          HttpServerAttributesExtractor.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
 
   @Nullable
   private Function<

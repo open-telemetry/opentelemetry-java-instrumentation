@@ -26,7 +26,6 @@ public final class TomcatInstrumenterFactory {
   public static <REQUEST, RESPONSE> Instrumenter<Request, Response> create(
       String instrumentationName, ServletAccessor<REQUEST, RESPONSE> accessor) {
     TomcatHttpAttributesGetter httpAttributesGetter = new TomcatHttpAttributesGetter();
-    TomcatNetAttributesGetter netAttributesGetter = new TomcatNetAttributesGetter();
 
     return Instrumenter.<Request, Response>builder(
             GlobalOpenTelemetry.get(),
@@ -35,7 +34,7 @@ public final class TomcatInstrumenterFactory {
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
         .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor))
         .addAttributesExtractor(
-            HttpServerAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+            HttpServerAttributesExtractor.builder(httpAttributesGetter)
                 .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                 .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                 .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
