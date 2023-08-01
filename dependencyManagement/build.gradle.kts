@@ -100,7 +100,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.proto:opentelemetry-proto:1.0.0-alpha",
   "org.assertj:assertj-core:3.24.2",
   "org.awaitility:awaitility:4.2.0",
-  "com.google.code.findbugs:annotations:3.0.1u2",
+  "com.google.code.findbugs:annotations:3.0.1",
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
