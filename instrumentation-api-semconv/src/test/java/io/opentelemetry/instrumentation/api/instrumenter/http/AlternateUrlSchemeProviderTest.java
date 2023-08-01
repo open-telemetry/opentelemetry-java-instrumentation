@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doReturn;
 
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -36,14 +36,14 @@ class AlternateUrlSchemeProviderTest {
 
   @Test
   void noHeaders() {
-    when(getter.getHttpRequestHeader(eq(REQUEST), any())).thenReturn(emptyList());
+    doReturn(emptyList()).when(getter).getHttpRequestHeader(eq(REQUEST), any());
     assertThat(underTest.apply(REQUEST)).isNull();
   }
 
   @ParameterizedTest
   @ArgumentsSource(ForwardedHeaderValues.class)
   void parseForwardedHeader(String headerValue, String expectedScheme) {
-    when(getter.getHttpRequestHeader(REQUEST, "forwarded")).thenReturn(singletonList(headerValue));
+    doReturn(singletonList(headerValue)).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
     assertThat(underTest.apply(REQUEST)).isEqualTo(expectedScheme);
   }
 
@@ -71,9 +71,10 @@ class AlternateUrlSchemeProviderTest {
   @ParameterizedTest
   @ArgumentsSource(ForwardedProtoHeaderValues.class)
   void parseForwardedProtoHeader(String headerValue, String expectedScheme) {
-    when(getter.getHttpRequestHeader(REQUEST, "forwarded")).thenReturn(emptyList());
-    when(getter.getHttpRequestHeader(REQUEST, "x-forwarded-proto"))
-        .thenReturn(singletonList(headerValue));
+    doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
+    doReturn(singletonList(headerValue))
+        .when(getter)
+        .getHttpRequestHeader(REQUEST, "x-forwarded-proto");
     assertThat(underTest.apply(REQUEST)).isEqualTo(expectedScheme);
   }
 
