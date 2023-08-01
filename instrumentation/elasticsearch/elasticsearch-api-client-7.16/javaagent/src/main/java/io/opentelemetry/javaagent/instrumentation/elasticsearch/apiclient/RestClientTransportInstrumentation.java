@@ -12,9 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import co.elastic.clients.transport.Endpoint;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchEndpointDefinition;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;

@@ -3,19 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.instrumentation.elasticsearch.rest.v7_0;
+
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpHost;
-import org.assertj.core.api.AbstractLongAssert;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
@@ -30,7 +30,7 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 class ElasticsearchRest7Test {
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   static ElasticsearchContainer elasticsearch;
 
@@ -58,6 +58,7 @@ class ElasticsearchRest7Test {
                         .setConnectTimeout(Integer.MAX_VALUE)
                         .setSocketTimeout(Integer.MAX_VALUE))
             .build();
+    client = ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry()).wrap(client);
 
     objectMapper = new ObjectMapper();
   }
@@ -87,23 +88,7 @@ class ElasticsearchRest7Test {
                             equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
                             equalTo(
                                 SemanticAttributes.HTTP_URL,
-                                httpHost.toURI() + "/_cluster/health")),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(
-                                SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
-                            satisfies(
-                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                                AbstractLongAssert::isPositive))));
+                                httpHost.toURI() + "/_cluster/health"))));
   }
 
   @Test
@@ -165,22 +150,6 @@ class ElasticsearchRest7Test {
                             equalTo(
                                 SemanticAttributes.HTTP_URL,
                                 httpHost.toURI() + "/_cluster/health")),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(
-                                SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
-                            satisfies(
-                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                                AbstractLongAssert::isPositive)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)

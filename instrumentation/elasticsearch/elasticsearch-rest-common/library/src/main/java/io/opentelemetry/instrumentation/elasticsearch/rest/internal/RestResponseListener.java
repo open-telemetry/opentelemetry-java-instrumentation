@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
+package io.opentelemetry.instrumentation.elasticsearch.rest.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -11,6 +11,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class RestResponseListener implements ResponseListener {
 
   private final ResponseListener listener;

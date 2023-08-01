@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
+package io.opentelemetry.instrumentation.elasticsearch.rest.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
@@ -20,6 +20,10 @@ import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.Response;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class ElasticsearchClientAttributeExtractor
     implements AttributesExtractor<ElasticsearchRestRequest, Response> {
 
