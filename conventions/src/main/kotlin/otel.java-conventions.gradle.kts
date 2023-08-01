@@ -140,7 +140,7 @@ dependencies {
   compileOnly("com.google.errorprone:error_prone_annotations")
 
   codenarc("org.codenarc:CodeNarc:2.2.0")
-  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.9"))
+  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.18"))
 }
 
 testing {
