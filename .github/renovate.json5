@@ -79,6 +79,12 @@
       "matchPackageNames": ["net.sf.jt400:jt400"],
       "matchCurrentVersion": "6.1",
       "enabled": false
+    },
+    {
+      // pinned version for compatibility
+      "matchPackageNames": ["io.opentelemetry:opentelemetry-bom"],
+      "matchCurrentVersion": "1.0.0",
+      "enabled": false
     }
   ]
 }
