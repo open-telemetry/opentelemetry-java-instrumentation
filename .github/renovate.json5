@@ -10,6 +10,10 @@
       "groupName": "logback packages"
     },
     {
+      "matchPackagePrefixes": ["com.google.guava:"],
+      "groupName": "guava packages"
+    },
+    {
       "matchPackagePrefixes": ["com.gradle.enterprise"],
       "groupName": "gradle enterprise packages"
     },
@@ -74,6 +78,26 @@
       // using old version of this obscure artifact to test instrumentation of Java 1.1 bytecode
       "matchPackageNames": ["net.sf.jt400:jt400"],
       "matchCurrentVersion": "6.1",
+      "enabled": false
+    },
+    {
+      // pinned version for compatibility
+      "matchPackageNames": ["io.opentelemetry:opentelemetry-bom"],
+      "matchCurrentVersion": "1.0.0",
+      "enabled": false
+    },
+    {
+      // intentionally using logback 1.3 in dependency management (for Java 8 support)
+      "matchFileNames": ["dependencyManagement/build.gradle.kts"],
+      "matchPackagePrefixes": ["ch.qos.logback:"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
+    },
+    {
+      // pinned version to Jetty 8 (Servlet 3.0) for compatibility
+      "matchFileNames": ["examples/distro/instrumentation/servlet-3/build.gradle"],
+      "matchPackagePrefixes": ["org.eclipse.jetty:"],
+      "matchUpdateTypes": ["major"],
       "enabled": false
     }
   ]
