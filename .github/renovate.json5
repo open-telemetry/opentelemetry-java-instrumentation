@@ -85,6 +85,13 @@
       "matchPackageNames": ["io.opentelemetry:opentelemetry-bom"],
       "matchCurrentVersion": "1.0.0",
       "enabled": false
+    },
+    {
+      // intentionally using logback 1.3 in dependency management (for Java 8 support)
+      "matchFileNames": ["dependencyManagement/build.gradle.kts"],
+      "matchPackagePrefixes": ["ch.qos.logback:"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
     }
   ]
 }
