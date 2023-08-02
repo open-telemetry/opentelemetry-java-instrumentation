@@ -92,6 +92,13 @@
       "matchPackagePrefixes": ["ch.qos.logback:"],
       "matchUpdateTypes": ["major", "minor"],
       "enabled": false
+    },
+    {
+      // pinned version to Jetty 8 (Servlet 3.0) for compatibility
+      "matchFileNames": ["examples/distro/instrumentation/servlet-3/build.gradle"],
+      "matchPackagePrefixes": ["org.eclipse.jetty:"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ]
 }
