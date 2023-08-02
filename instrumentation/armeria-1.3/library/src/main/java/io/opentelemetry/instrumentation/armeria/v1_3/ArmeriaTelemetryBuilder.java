@@ -52,8 +52,7 @@ public final class ArmeriaTelemetryBuilder {
           HttpClientAttributesExtractor.builder(ArmeriaHttpClientAttributesGetter.INSTANCE);
   private final HttpServerAttributesExtractorBuilder<RequestContext, RequestLog>
       httpServerAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(
-              ArmeriaHttpServerAttributesGetter.INSTANCE, new ArmeriaNetServerAttributesGetter());
+          HttpServerAttributesExtractor.builder(ArmeriaHttpServerAttributesGetter.INSTANCE);
 
   private Function<
           SpanStatusExtractor<RequestContext, RequestLog>,

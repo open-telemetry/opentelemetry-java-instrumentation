@@ -53,4 +53,60 @@ public class LibertyDispatcherHttpAttributesGetter
   public String getUrlQuery(LibertyRequest request) {
     return request.getQueryString();
   }
+
+  @Nullable
+  @Override
+  public String getNetworkProtocolName(
+      LibertyRequest request, @Nullable LibertyResponse libertyResponse) {
+    String protocol = request.getProtocol();
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkProtocolVersion(
+      LibertyRequest request, @Nullable LibertyResponse libertyResponse) {
+    String protocol = request.getProtocol();
+    if (protocol != null && protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(LibertyRequest request) {
+    return request.request().getURLHost();
+  }
+
+  @Override
+  public Integer getServerPort(LibertyRequest request) {
+    return request.request().getURLPort();
+  }
+
+  @Override
+  @Nullable
+  public String getClientSocketAddress(LibertyRequest request, @Nullable LibertyResponse response) {
+    return request.getClientSocketAddress();
+  }
+
+  @Override
+  public Integer getClientSocketPort(LibertyRequest request, @Nullable LibertyResponse response) {
+    return request.getClientSocketPort();
+  }
+
+  @Nullable
+  @Override
+  public String getServerSocketAddress(LibertyRequest request, @Nullable LibertyResponse response) {
+    return request.getServerSocketAddress();
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerSocketPort(LibertyRequest request, @Nullable LibertyResponse response) {
+    return request.getServerSocketPort();
+  }
 }

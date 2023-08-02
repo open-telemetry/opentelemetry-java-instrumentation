@@ -16,7 +16,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -78,10 +77,6 @@ class HttpServerAttributesExtractorBothSemconvTest {
       String values = (String) response.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
     }
-  }
-
-  static class TestNetServerAttributesGetter
-      implements NetServerAttributesGetter<Map<String, Object>, Map<String, Object>> {
 
     @Nullable
     @Override
@@ -151,8 +146,7 @@ class HttpServerAttributesExtractorBothSemconvTest {
     Function<Context, String> routeFromContext = ctx -> "/repositories/{repoId}";
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.builder(
-                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
             .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
             .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
             .setHttpRouteGetter(routeFromContext)

@@ -17,7 +17,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -83,10 +82,6 @@ class HttpServerAttributesExtractorTest {
       String values = (String) response.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
     }
-  }
-
-  static class TestNetServerAttributesGetter
-      implements NetServerAttributesGetter<Map<String, Object>, Map<String, Object>> {
 
     @Nullable
     @Override
@@ -156,8 +151,7 @@ class HttpServerAttributesExtractorTest {
     Function<Context, String> routeFromContext = ctx -> "/repositories/{repoId}";
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.builder(
-                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
             .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
             .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
             .setHttpRouteGetter(routeFromContext)
@@ -199,8 +193,7 @@ class HttpServerAttributesExtractorTest {
     request.put("header.x-forwarded-for", "1.1.1.1");
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.builder(
-                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
             .setCapturedResponseHeaders(emptyList())
             .build();
@@ -221,8 +214,7 @@ class HttpServerAttributesExtractorTest {
     request.put("header.x-forwarded-proto", "https");
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.builder(
-                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
             .setCapturedResponseHeaders(emptyList())
             .build();
@@ -241,8 +233,7 @@ class HttpServerAttributesExtractorTest {
     request.put("header.host", "thehost:777");
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.builder(
-                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
             .setCapturedResponseHeaders(emptyList())
             .build();
@@ -263,8 +254,7 @@ class HttpServerAttributesExtractorTest {
     request.put("hostPort", 777);
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.builder(
-                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
             .setCapturedResponseHeaders(emptyList())
             .build();
@@ -285,8 +275,7 @@ class HttpServerAttributesExtractorTest {
     request.put("hostPort", hostPort);
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.builder(
-                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
             .setCapturedResponseHeaders(emptyList())
             .build();
@@ -313,8 +302,7 @@ class HttpServerAttributesExtractorTest {
     request.put("query", query);
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.create(
-            new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
