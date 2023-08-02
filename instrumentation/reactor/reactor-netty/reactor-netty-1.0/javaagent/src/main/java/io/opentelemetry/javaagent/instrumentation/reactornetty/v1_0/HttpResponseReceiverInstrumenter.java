@@ -16,6 +16,7 @@ import javax.annotation.Nullable;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.http.client.HttpClientConfig;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
@@ -31,13 +32,14 @@ public final class HttpResponseReceiverInstrumenter {
     // implements ResponseReceiver
     if (receiver instanceof HttpClient) {
       HttpClient client = (HttpClient) receiver;
+      HttpClientConfig config = client.configuration();
 
       InstrumentationContexts instrumentationContexts = new InstrumentationContexts();
 
       HttpClient modified =
           client
               .mapConnect(new CaptureParentContext(instrumentationContexts))
-              .doOnRequestError(new EndOperationWithRequestError(instrumentationContexts))
+              .doOnRequestError(new EndOperationWithRequestError(config, instrumentationContexts))
               .doOnRequest(new StartOperation(instrumentationContexts))
               .doOnResponseError(new EndOperationWithResponseError(instrumentationContexts))
               .doAfterResponseSuccess(new EndOperationWithSuccess(instrumentationContexts))
@@ -103,9 +105,12 @@ public final class HttpResponseReceiverInstrumenter {
   private static final class EndOperationWithRequestError
       implements BiConsumer<HttpClientRequest, Throwable> {
 
+    private final HttpClientConfig config;
     private final InstrumentationContexts instrumentationContexts;
 
-    EndOperationWithRequestError(InstrumentationContexts instrumentationContexts) {
+    EndOperationWithRequestError(
+        HttpClientConfig config, InstrumentationContexts instrumentationContexts) {
+      this.config = config;
       this.instrumentationContexts = instrumentationContexts;
     }
 
@@ -114,15 +119,10 @@ public final class HttpResponseReceiverInstrumenter {
       instrumentationContexts.endClientSpan(null, error);
 
       if (HttpClientResend.get(instrumentationContexts.getParentContext()) == 0) {
-        // TODO: emit connection error span
-
-        // FIXME: this branch requires lots of changes around the NettyConnectionInstrumenter
-        // currently it also creates that connection error span (when the connection telemetry is
-        // turned off), but without HTTP semantics - it does not have access to any HTTP information
-        // after all
-        // it should be possible to completely disable it, and just start and end the span here
-        // this requires lots of refactoring and pretty uninteresting changes in the netty code, so
-        // I'll do that in a separate PR - for better readability
+        // request is an instance of FailedHttpClientRequest, which does not implement a correct
+        // resourceUrl() method -- we have to work around that
+        request = FailedRequestWithUrlMaker.create(config, request);
+        instrumentationContexts.startAndEndConnectionErrorSpan(request, error);
       }
     }
   }

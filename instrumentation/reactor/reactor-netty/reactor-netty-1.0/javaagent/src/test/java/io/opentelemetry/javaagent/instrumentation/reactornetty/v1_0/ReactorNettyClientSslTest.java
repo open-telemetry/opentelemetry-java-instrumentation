@@ -81,7 +81,6 @@ class ReactorNettyClientSslTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasException(thrown),
-                /* FIXME: this span will be brought back in the next PR, when connection error spans are reintroduced
                 span ->
                     span.hasName("GET")
                         .hasKind(CLIENT)
@@ -95,7 +94,6 @@ class ReactorNettyClientSslTest {
                             equalTo(SemanticAttributes.HTTP_URL, uri),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort())),
-                 */
                 span ->
                     span.hasName("RESOLVE")
                         .hasKind(INTERNAL)

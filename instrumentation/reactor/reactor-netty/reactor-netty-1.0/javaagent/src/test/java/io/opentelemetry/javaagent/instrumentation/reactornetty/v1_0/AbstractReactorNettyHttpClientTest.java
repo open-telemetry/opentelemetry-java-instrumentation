@@ -10,7 +10,6 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.handler.codec.http.HttpMethod;
@@ -124,29 +123,19 @@ abstract class AbstractReactorNettyHttpClientTest
           return exception;
         });
 
-    // TODO: see the comment in HttpResponseReceiverInstrumenter.EndOperationWithRequestError
-    optionsBuilder.setExpectedClientSpanNameMapper(
-        AbstractReactorNettyHttpClientTest::getExpectedClientSpanName);
     optionsBuilder.setHttpAttributes(this::getHttpAttributes);
   }
 
-  private static String getExpectedClientSpanName(URI uri, String method) {
-    // unopened port or non routable address
-    if ("http://localhost:61/".equals(uri.toString())
-        || "https://192.0.2.1/".equals(uri.toString())) {
-      return "CONNECT";
-    }
-    return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
-  }
-
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
+    Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+
     // unopened port or non routable address
     if ("http://localhost:61/".equals(uri.toString())
         || "https://192.0.2.1/".equals(uri.toString())) {
-      return emptySet();
+      attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
+      attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
     }
 
-    Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     if (uri.toString().contains("/read-timeout")) {
       attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
       attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
