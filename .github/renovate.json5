@@ -22,6 +22,11 @@
       "groupName": "jetty packages"
     },
     {
+      // OpenTelemetry SDK updates are handled by auto-update-otel-sdk.yml
+      "matchPackagePrefixes": ["io.opentelemetry:"],
+      "enabled": false
+    },
+    {
       // junit-pioneer 2+ requires Java 11+
       "matchPackageNames": ["org.junit-pioneer:junit-pioneer"],
       "matchUpdateTypes": ["major"],
