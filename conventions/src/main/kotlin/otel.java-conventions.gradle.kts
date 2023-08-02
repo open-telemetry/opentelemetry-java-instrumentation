@@ -358,7 +358,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "8.45.1"
+  toolVersion = "10.12.2"
   maxWarnings = 0
 }
 
@@ -410,5 +410,15 @@ configurations.configureEach {
     // Excluding the bom as well helps ensure if we miss a substitution, we get a resolution failure instead of using the
     // wrong version.
     exclude("io.opentelemetry.instrumentation", "opentelemetry-instrumentation-bom-alpha")
+  }
+}
+
+dependencies {
+  modules {
+    // checkstyle uses the very old google-collections which causes Java 9 module conflict with
+    // guava which is also on the classpath
+    module("com.google.collections:google-collections") {
+      replacedBy("com.google.guava:guava", "google-collections is now part of Guava")
+    }
   }
 }
