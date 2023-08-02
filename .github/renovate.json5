@@ -36,7 +36,7 @@
     {
       // intentionally using Spring Boot 2 in this smoke tests
       "matchFileNames": ["smoke-tests/images/spring-boot/build.gradle.kts"],
-      "matchPackageNames": ["org.springframework.boot"],
+      "matchPackageNames": ["org.springframework.boot", "org.springframework.boot:spring-boot-dependencies"],
       "matchUpdateTypes": ["major"],
       "enabled": false,
     },
@@ -103,6 +103,13 @@
       "matchFileNames": ["dependencyManagement/build.gradle.kts"],
       "matchPackagePrefixes": ["ch.qos.logback:"],
       "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
+    },
+    {
+      // intentionally using Spring Boot 2 in dependency management (for Java 8 support)
+      "matchFileNames": ["dependencyManagement/build.gradle.kts"],
+      "matchPackagePrefixes": ["org.springframework.boot:spring-boot-dependencies"],
+      "matchUpdateTypes": ["major"],
       "enabled": false
     },
     {
