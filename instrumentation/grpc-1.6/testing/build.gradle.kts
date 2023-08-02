@@ -23,7 +23,6 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-api")
 }
 
-
 tasks {
   compileJava {
     with(options) {
