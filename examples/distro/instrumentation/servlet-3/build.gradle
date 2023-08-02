@@ -17,7 +17,7 @@ muzzle {
 
 dependencies {
   compileOnly project(":bootstrap")
-  compileOnly "javax.servlet:javax.servlet-api:3.0.1"
+  compileOnly "javax.servlet:javax.servlet-api:3.1.0"
 
   testInstrumentation "io.opentelemetry.javaagent.instrumentation:opentelemetry-javaagent-servlet-common:${versions.opentelemetryJavaagentAlpha}"
   testInstrumentation "io.opentelemetry.javaagent.instrumentation:opentelemetry-javaagent-servlet-2.2:${versions.opentelemetryJavaagentAlpha}"
@@ -28,7 +28,7 @@ dependencies {
   }
 
   testImplementation "com.squareup.okhttp3:okhttp:4.11.0"
-  testImplementation "javax.servlet:javax.servlet-api:3.0.1"
+  testImplementation "javax.servlet:javax.servlet-api:3.1.0"
   testImplementation "org.eclipse.jetty:jetty-server:8.2.0.v20160908"
   testImplementation "org.eclipse.jetty:jetty-servlet:8.2.0.v20160908"
 }
