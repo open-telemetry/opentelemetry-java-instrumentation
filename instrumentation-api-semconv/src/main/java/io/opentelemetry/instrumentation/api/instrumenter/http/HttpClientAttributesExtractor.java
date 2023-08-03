@@ -19,8 +19,6 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.List;
-import java.util.Set;
 import java.util.function.ToIntFunction;
 import javax.annotation.Nullable;
 
@@ -40,6 +38,19 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
   /** Creates the HTTP client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
+    return builder(httpAttributesGetter).build();
+  }
+
+  /**
+   * Creates the HTTP client attributes extractor with default configuration.
+   *
+   * @deprecated Make sure that your {@linkplain HttpClientAttributesGetter getter} implements all
+   *     the network-related methods and use {@link #create(HttpClientAttributesGetter)} instead.
+   *     This method will be removed in the 2.0 release.
+   */
+  @Deprecated
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
     return builder(httpAttributesGetter, netAttributesGetter).build();
@@ -49,6 +60,20 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
    * Returns a new {@link HttpClientAttributesExtractorBuilder} that can be used to configure the
    * HTTP client attributes extractor.
    */
+  public static <REQUEST, RESPONSE> HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
+    return new HttpClientAttributesExtractorBuilder<>(httpAttributesGetter, httpAttributesGetter);
+  }
+
+  /**
+   * Returns a new {@link HttpClientAttributesExtractorBuilder} that can be used to configure the
+   * HTTP client attributes extractor.
+   *
+   * @deprecated Make sure that your {@linkplain HttpClientAttributesGetter getter} implements all
+   *     the network-related methods and use {@link #builder(HttpClientAttributesGetter)} instead.
+   *     This method will be removed in the 2.0 release.
+   */
+  @Deprecated
   public static <REQUEST, RESPONSE> HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
@@ -60,51 +85,16 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   private final InternalServerAttributesExtractor<REQUEST, RESPONSE> internalServerExtractor;
   private final ToIntFunction<Context> resendCountIncrementer;
 
-  HttpClientAttributesExtractor(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
-      List<String> capturedRequestHeaders,
-      List<String> capturedResponseHeaders,
-      Set<String> knownMethods) {
-    this(
-        httpAttributesGetter,
-        netAttributesGetter,
-        capturedRequestHeaders,
-        capturedResponseHeaders,
-        knownMethods,
-        HttpClientResend::getAndIncrement);
-  }
-
-  // visible for tests
-  HttpClientAttributesExtractor(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
-      List<String> capturedRequestHeaders,
-      List<String> capturedResponseHeaders,
-      Set<String> knownMethods,
-      ToIntFunction<Context> resendCountIncrementer) {
-    super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders, knownMethods);
-    HttpNetAddressPortExtractor<REQUEST> addressPortExtractor =
-        new HttpNetAddressPortExtractor<>(httpAttributesGetter);
-    internalNetExtractor =
-        new InternalNetClientAttributesExtractor<>(
-            netAttributesGetter, addressPortExtractor, SemconvStability.emitOldHttpSemconv());
-    internalNetworkExtractor =
-        new InternalNetworkAttributesExtractor<>(
-            netAttributesGetter,
-            HttpNetworkTransportFilter.INSTANCE,
-            SemconvStability.emitStableHttpSemconv(),
-            SemconvStability.emitOldHttpSemconv());
-    internalServerExtractor =
-        new InternalServerAttributesExtractor<>(
-            netAttributesGetter,
-            this::shouldCaptureServerPort,
-            addressPortExtractor,
-            SemconvStability.emitStableHttpSemconv(),
-            SemconvStability.emitOldHttpSemconv(),
-            InternalServerAttributesExtractor.Mode.PEER,
-            /* captureServerSocketAttributes= */ true);
-    this.resendCountIncrementer = resendCountIncrementer;
+  HttpClientAttributesExtractor(HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder) {
+    super(
+        builder.httpAttributesGetter,
+        builder.capturedRequestHeaders,
+        builder.capturedResponseHeaders,
+        builder.knownMethods);
+    internalNetExtractor = builder.buildNetExtractor();
+    internalNetworkExtractor = builder.buildNetworkExtractor();
+    internalServerExtractor = builder.buildServerExtractor();
+    resendCountIncrementer = builder.resendCountIncrementer;
   }
 
   @Override
@@ -120,18 +110,6 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     if (SemconvStability.emitOldHttpSemconv()) {
       internalSet(attributes, SemanticAttributes.HTTP_URL, fullUrl);
     }
-  }
-
-  private boolean shouldCaptureServerPort(int port, REQUEST request) {
-    String url = getter.getUrlFull(request);
-    if (url == null) {
-      return true;
-    }
-    // according to spec: extract if not default (80 for http scheme, 443 for https).
-    if ((url.startsWith("http://") && port == 80) || (url.startsWith("https://") && port == 443)) {
-      return false;
-    }
-    return true;
   }
 
   @Override

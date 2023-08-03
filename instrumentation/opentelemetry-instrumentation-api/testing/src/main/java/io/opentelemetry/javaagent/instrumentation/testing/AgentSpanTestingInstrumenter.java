@@ -30,8 +30,7 @@ public final class AgentSpanTestingInstrumenter {
   private static final Instrumenter<String, Void> HTTP_SERVER_INSTRUMENTER =
       Instrumenter.<String, Void>builder(GlobalOpenTelemetry.get(), "test", request -> request)
           .addAttributesExtractor(
-              HttpServerAttributesExtractor.create(
-                  MockHttpServerAttributesGetter.INSTANCE, MockNetServerAttributesGetter.INSTANCE))
+              HttpServerAttributesExtractor.create(MockHttpServerAttributesGetter.INSTANCE))
           .addContextCustomizer(HttpRouteHolder.create(MockHttpServerAttributesGetter.INSTANCE))
           .addContextCustomizer(
               (context, request, startAttributes) -> context.with(REQUEST_CONTEXT_KEY, request))

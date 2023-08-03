@@ -31,7 +31,7 @@ val groovyVersion = "4.0.13"
 
 val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.15.2",
-  "com.google.guava:guava-bom:32.1.1-jre",
+  "com.google.guava:guava-bom:32.1.2-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
@@ -42,10 +42,10 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.10.2"
-val errorProneVersion = "2.19.1"
+val errorProneVersion = "2.21.0"
 val byteBuddyVersion = "1.14.5"
 val asmVersion = "9.5"
-val jmhVersion = "1.36"
+val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.7"
 
@@ -84,7 +84,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.2",
-  "com.uber.nullaway:nullaway:0.10.11",
+  "com.uber.nullaway:nullaway:0.10.12",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
   "commons-codec:commons-codec:1.16.0",

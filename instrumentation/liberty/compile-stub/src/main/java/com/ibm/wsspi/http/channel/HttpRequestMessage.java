@@ -9,6 +9,7 @@ import com.ibm.wsspi.genericbnf.HeaderField;
 import java.util.List;
 
 // https://github.com/OpenLiberty/open-liberty/blob/master/dev/com.ibm.ws.transport.http/src/com/ibm/wsspi/http/channel/HttpRequestMessage.java
+@SuppressWarnings("MemberName")
 public interface HttpRequestMessage {
 
   String getMethod();

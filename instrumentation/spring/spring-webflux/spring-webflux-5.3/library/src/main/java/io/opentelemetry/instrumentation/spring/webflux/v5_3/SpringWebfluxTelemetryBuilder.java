@@ -39,8 +39,7 @@ public final class SpringWebfluxTelemetryBuilder {
 
   private final HttpServerAttributesExtractorBuilder<ServerWebExchange, ServerWebExchange>
       httpServerAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(
-              WebfluxServerHttpAttributesGetter.INSTANCE, new WebfluxServerNetAttributesGetter());
+          HttpServerAttributesExtractor.builder(WebfluxServerHttpAttributesGetter.INSTANCE);
   private Consumer<HttpClientAttributesExtractorBuilder<ClientRequest, ClientResponse>>
       clientExtractorConfigurer = builder -> {};
   private boolean captureExperimentalSpanAttributes;

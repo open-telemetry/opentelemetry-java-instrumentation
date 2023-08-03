@@ -13,7 +13,11 @@ import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
-enum WebClientHttpAttributesGetter
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public enum WebClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ClientRequest, ClientResponse> {
   INSTANCE;
 
@@ -43,5 +47,16 @@ enum WebClientHttpAttributesGetter
   public List<String> getHttpResponseHeader(
       ClientRequest request, ClientResponse response, String name) {
     return response.headers().header(name);
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(ClientRequest request) {
+    return request.url().getHost();
+  }
+
+  @Override
+  public Integer getServerPort(ClientRequest request) {
+    return request.url().getPort();
   }
 }

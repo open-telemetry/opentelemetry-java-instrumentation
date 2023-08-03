@@ -42,4 +42,14 @@ class KubernetesHttpAttributesGetter
       Request request, ApiResponse<?> apiResponse, String name) {
     return apiResponse.getHeaders().getOrDefault(name, emptyList());
   }
+
+  @Override
+  public String getServerAddress(Request request) {
+    return request.url().host();
+  }
+
+  @Override
+  public Integer getServerPort(Request request) {
+    return request.url().port();
+  }
 }

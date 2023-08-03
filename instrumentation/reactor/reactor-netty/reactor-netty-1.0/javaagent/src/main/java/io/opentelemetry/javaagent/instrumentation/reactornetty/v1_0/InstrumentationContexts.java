@@ -9,26 +9,26 @@ import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.React
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientResend;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.LinkedBlockingQueue;
 import javax.annotation.Nullable;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
 final class InstrumentationContexts {
 
-  private static final Logger logger = Logger.getLogger(InstrumentationContexts.class.getName());
-
   private volatile Context parentContext;
+  private volatile Timer timer;
   // on retries, reactor-netty starts the next resend attempt before it ends the previous one (i.e.
-  // it calls the callback functions in that order); thus for a short moment there can be 2
+  // it calls the callback functions in that order); thus for a short moment there can be multiple
   // coexisting HTTP client spans
-  private final Queue<RequestAndContext> clientContexts = new ArrayBlockingQueue<>(2, true);
+  private final Queue<RequestAndContext> clientContexts = new LinkedBlockingQueue<>();
 
   void initialize(Context parentContext) {
     this.parentContext = HttpClientResend.initialize(parentContext);
+    timer = Timer.start();
   }
 
   Context getParentContext() {
@@ -47,13 +47,7 @@ final class InstrumentationContexts {
     Context context = null;
     if (instrumenter().shouldStart(parentContext, request)) {
       context = instrumenter().start(parentContext, request);
-      if (!clientContexts.offer(new RequestAndContext(request, context))) {
-        // should not ever happen in reality
-        String message =
-            "Could not instrument HTTP client request; not enough space in the request queue";
-        logger.log(Level.FINE, message);
-        instrumenter().end(context, request, null, new IllegalStateException(message));
-      }
+      clientContexts.offer(new RequestAndContext(request, context));
     }
     return context;
   }
@@ -62,6 +56,15 @@ final class InstrumentationContexts {
     RequestAndContext requestAndContext = clientContexts.poll();
     if (requestAndContext != null) {
       instrumenter().end(requestAndContext.context, requestAndContext.request, response, error);
+    }
+  }
+
+  void startAndEndConnectionErrorSpan(HttpClientRequest request, Throwable error) {
+    Context parentContext = this.parentContext;
+    if (instrumenter().shouldStart(parentContext, request)) {
+      Timer timer = this.timer;
+      InstrumenterUtil.startAndEnd(
+          instrumenter(), parentContext, request, null, error, timer.startTime(), timer.now());
     }
   }
 

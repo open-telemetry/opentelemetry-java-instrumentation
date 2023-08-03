@@ -37,8 +37,7 @@ public final class JettyClientInstrumenterFactory {
     JettyClientHttpAttributesGetter httpAttributesGetter = JettyClientHttpAttributesGetter.INSTANCE;
 
     HttpClientAttributesExtractorBuilder<Request, Response> httpAttributesExtractorBuilder =
-        HttpClientAttributesExtractor.builder(
-            httpAttributesGetter, new JettyHttpClientNetAttributesGetter());
+        HttpClientAttributesExtractor.builder(httpAttributesGetter);
     extractorConfigurer.accept(httpAttributesExtractorBuilder);
 
     InstrumenterBuilder<Request, Response> builder =

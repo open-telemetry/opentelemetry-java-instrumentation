@@ -25,4 +25,16 @@ internal object KtorHttpClientAttributesGetter : HttpClientAttributesGetter<Http
 
   override fun getHttpResponseHeader(request: HttpRequestData, response: HttpResponse, name: String) =
     response.headers.getAll(name).orEmpty()
+
+  override fun getNetworkProtocolName(request: HttpRequestData?, response: HttpResponse?): String? =
+    response?.version?.name
+
+  override fun getNetworkProtocolVersion(request: HttpRequestData?, response: HttpResponse?): String? {
+    val version = response?.version ?: return null
+    return "${version.major}.${version.minor}"
+  }
+
+  override fun getServerAddress(request: HttpRequestData) = request.url.host
+
+  override fun getServerPort(request: HttpRequestData) = request.url.port
 }

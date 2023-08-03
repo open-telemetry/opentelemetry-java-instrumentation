@@ -33,9 +33,7 @@ public final class ApacheHttpClientTelemetryBuilder {
       additionalExtractors = new ArrayList<>();
   private final HttpClientAttributesExtractorBuilder<ApacheHttpClientRequest, HttpResponse>
       httpAttributesExtractorBuilder =
-          HttpClientAttributesExtractor.builder(
-              ApacheHttpClientHttpAttributesGetter.INSTANCE,
-              new ApacheHttpClientNetAttributesGetter());
+          HttpClientAttributesExtractor.builder(ApacheHttpClientHttpAttributesGetter.INSTANCE);
   private boolean emitExperimentalHttpClientMetrics = false;
 
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
