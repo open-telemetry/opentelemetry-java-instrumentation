@@ -1,6 +1,5 @@
 pluginManagement {
   plugins {
-    id("com.bmuschko.docker-remote-api") version "9.3.2"
     id("com.github.ben-manes.versions") version "0.47.0"
     id("com.github.jk1.dependency-license-report") version "2.5"
     id("com.google.cloud.tools.jib") version "3.3.2"
@@ -17,6 +16,12 @@ plugins {
   id("com.gradle.enterprise") version "3.14.1"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "1.11.1"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.6.0"
+  // this can't live in pluginManagement currently due to
+  // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
+  // in particular, these commands are failing (reproducible locally):
+  // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
+  // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
+  id("com.bmuschko.docker-remote-api") version "9.3.2" apply false
 }
 
 dependencyResolutionManagement {
