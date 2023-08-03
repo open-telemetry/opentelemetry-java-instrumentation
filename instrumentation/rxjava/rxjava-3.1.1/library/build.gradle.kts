@@ -2,6 +2,9 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.rxjava.v3_1_1")
+
 dependencies {
   library("io.reactivex.rxjava3:rxjava:3.1.1")
   implementation(project(":instrumentation-annotations-support"))

@@ -2,6 +2,9 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.spring.web.v3_1")
+
 dependencies {
   compileOnly("org.springframework:spring-web:3.1.0.RELEASE")
 

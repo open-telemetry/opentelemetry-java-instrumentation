@@ -2,6 +2,9 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.logback.mdc.v1_0")
+
 testing {
   suites {
     val addBaggageTest by registering(JvmTestSuite::class) {

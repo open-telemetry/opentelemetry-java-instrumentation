@@ -2,6 +2,9 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.kafkaclients.v2_6")
+
 dependencies {
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common:library"))
   library("org.apache.kafka:kafka-clients:2.6.0")

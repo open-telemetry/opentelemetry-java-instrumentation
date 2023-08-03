@@ -2,6 +2,9 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.spring.autoconfigure")
+
 // Name the Spring Boot modules in accordance with https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.developing-auto-configuration.custom-starter
 base.archivesName.set("opentelemetry-spring-boot")
 group = "io.opentelemetry.instrumentation"

@@ -2,6 +2,9 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.awssdk.v1_11.autoconfigure")
+
 base.archivesName.set("${base.archivesName.get()}-autoconfigure")
 
 dependencies {

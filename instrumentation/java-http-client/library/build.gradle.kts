@@ -3,6 +3,9 @@ plugins {
   id("otel.nullaway-conventions")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.httpclient")
+
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }

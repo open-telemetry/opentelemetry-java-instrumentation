@@ -3,6 +3,9 @@ plugins {
   id("org.graalvm.buildtools.native")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.logback.appender.v1_0")
+
 dependencies {
   compileOnly(project(":muzzle"))
 

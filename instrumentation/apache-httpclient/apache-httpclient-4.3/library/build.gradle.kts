@@ -4,6 +4,9 @@ plugins {
   id("otel.animalsniffer-conventions")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.apachehttpclient.v4_3")
+
 dependencies {
   library("org.apache.httpcomponents:httpclient:4.3")
 

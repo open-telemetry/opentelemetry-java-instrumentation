@@ -3,6 +3,9 @@ plugins {
   id("otel.nullaway-conventions")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.viburdbcp.v11_0")
+
 dependencies {
   library("org.vibur:vibur-dbcp:11.0")
 

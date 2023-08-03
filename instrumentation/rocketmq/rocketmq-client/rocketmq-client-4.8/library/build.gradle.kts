@@ -2,6 +2,9 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.rocketmqclient.v4_8")
+
 dependencies {
   library("org.apache.rocketmq:rocketmq-client:4.8.0")
 

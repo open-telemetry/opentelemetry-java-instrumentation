@@ -3,6 +3,9 @@ plugins {
   id("otel.animalsniffer-conventions")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.grpc.v1_6")
+
 val grpcVersion = "1.6.0"
 
 dependencies {

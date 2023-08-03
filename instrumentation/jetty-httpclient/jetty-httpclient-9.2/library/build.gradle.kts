@@ -2,6 +2,9 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.jetty.httpclient.v9_2")
+
 // Jetty client 9.2 is the best starting point, HttpClient.send() is stable there
 val jettyVers_base9 = "9.2.0.v20140526"
 

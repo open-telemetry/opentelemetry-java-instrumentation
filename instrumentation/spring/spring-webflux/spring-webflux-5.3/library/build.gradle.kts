@@ -2,6 +2,9 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.spring.webflux.v5_3")
+
 dependencies {
   library("org.springframework:spring-webflux:5.3.0")
 

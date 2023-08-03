@@ -3,6 +3,9 @@ plugins {
   id("otel.nullaway-conventions")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.mongo.v3_1")
+
 dependencies {
   library("org.mongodb:mongo-java-driver:3.1.0")
 

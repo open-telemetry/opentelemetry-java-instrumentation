@@ -3,6 +3,9 @@ plugins {
   id("otel.nullaway-conventions")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.armeria.v1_3")
+
 dependencies {
   library("com.linecorp.armeria:armeria:1.3.0")
 

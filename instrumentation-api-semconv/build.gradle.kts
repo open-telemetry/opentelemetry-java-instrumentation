@@ -10,6 +10,9 @@ plugins {
 
 group = "io.opentelemetry.instrumentation"
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.api.semconv")
+
 dependencies {
   api("io.opentelemetry:opentelemetry-semconv")
   api(project(":instrumentation-api"))

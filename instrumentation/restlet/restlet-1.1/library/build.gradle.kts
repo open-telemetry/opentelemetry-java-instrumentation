@@ -2,6 +2,9 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.restlet.v1_1")
+
 repositories {
   mavenCentral()
   maven("https://maven.restlet.talend.com/")

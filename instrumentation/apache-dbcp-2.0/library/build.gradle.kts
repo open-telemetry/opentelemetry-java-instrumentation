@@ -3,6 +3,9 @@ plugins {
   id("otel.nullaway-conventions")
 }
 
+// module name
+val moduleName: String by extra("io.opentelemetry.instrumentation.apachedbcp.v2_0")
+
 dependencies {
   library("org.apache.commons:commons-dbcp2:2.0")
 
