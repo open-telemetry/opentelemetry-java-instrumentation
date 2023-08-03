@@ -35,7 +35,7 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
 
 Same settings as above for [`main`](#main).
 
-### `opentelemetrybot/**/**` and `gradlew-update-*`
+### `renovate/**/**`, `opentelemetrybot/**/**`, and `gradlew-update-*`
 
 Same settings as
 for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md#branch-protection-rule-dependabot)
