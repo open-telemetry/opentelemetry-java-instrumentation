@@ -64,6 +64,9 @@ class AwsSdkHttpAttributesGetter implements HttpClientAttributesGetter<Request<?
     if (protocolVersion == null) {
       return null;
     }
+    if (protocolVersion.getMinor() == 0) {
+      return Integer.toString(protocolVersion.getMajor());
+    }
     return protocolVersion.getMajor() + "." + protocolVersion.getMinor();
   }
 
