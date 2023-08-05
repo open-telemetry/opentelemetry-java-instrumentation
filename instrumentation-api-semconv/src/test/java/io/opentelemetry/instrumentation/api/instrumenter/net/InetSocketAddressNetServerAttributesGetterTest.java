@@ -59,6 +59,7 @@ class InetSocketAddressNetServerAttributesGetterTest {
   }
 
   @Test
+  @SuppressWarnings("AddressSelection")
   void fullAddress() {
     // given
     Addresses request =
