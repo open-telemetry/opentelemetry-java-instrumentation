@@ -25,6 +25,7 @@ public final class PortUtils {
     return portAllocator.getPort();
   }
 
+  @SuppressWarnings("AddressSelection")
   private static boolean isPortOpen(int port) {
     try (Socket socket = new Socket((String) null, port)) {
       return true;
