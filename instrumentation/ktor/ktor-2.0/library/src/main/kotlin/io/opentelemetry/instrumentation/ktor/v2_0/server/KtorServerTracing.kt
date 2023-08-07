@@ -173,10 +173,7 @@ class KtorServerTracing private constructor(
       }
 
       pipeline.environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
-        val context = call.attributes.getOrNull(contextKey)
-        if (context != null) {
-          HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.SERVLET, { _, arg -> arg.route.parent.toString() }, call)
-        }
+        HttpRouteHolder.updateHttpRoute(Context.current(), HttpRouteSource.SERVLET, { _, arg -> arg.route.parent.toString() }, call)
       }
 
       return feature
