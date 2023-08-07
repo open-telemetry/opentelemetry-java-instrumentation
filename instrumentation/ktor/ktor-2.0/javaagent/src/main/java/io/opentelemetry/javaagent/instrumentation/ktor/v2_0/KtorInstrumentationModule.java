@@ -26,8 +26,6 @@ public class KtorInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new ServerInstrumentation(),
-        new HttpClientInstrumentation());
+    return asList(new ServerInstrumentation(), new HttpClientInstrumentation());
   }
 }
