@@ -20,8 +20,7 @@ final class DoubleMeasurementRecorder<T> implements Consumer<ObservableDoubleMea
   private final WeakReference<T> objWeakRef;
   private final ToDoubleFunction<T> metricFunction;
   private final Attributes attributes;
-  @Nullable
-  private final ClassLoader contextClassLoader;
+  @Nullable private final ClassLoader contextClassLoader;
 
   DoubleMeasurementRecorder(
       @Nullable T obj, ToDoubleFunction<T> metricFunction, Attributes attributes) {
@@ -35,7 +34,8 @@ final class DoubleMeasurementRecorder<T> implements Consumer<ObservableDoubleMea
   public void accept(ObservableDoubleMeasurement measurement) {
     T obj = objWeakRef.get();
     if (obj != null) {
-      MeasurementRecorderUtil.runInThreadContextClassLoader(contextClassLoader,
+      MeasurementRecorderUtil.runInThreadContextClassLoader(
+          contextClassLoader,
           () -> measurement.record(metricFunction.applyAsDouble(obj), attributes));
     }
   }

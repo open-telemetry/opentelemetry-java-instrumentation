@@ -13,6 +13,8 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.ref.WeakReference;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -62,19 +64,30 @@ public abstract class AbstractGaugeTest {
   @Test
   void testGaugeDependingOnThreadContextClassLoader() {
     // given
-    Gauge gauge =
-        Gauge.builder("testGauge", () -> {
-              assertThat(Thread.currentThread().getContextClassLoader())
-                  .isEqualTo(AbstractGaugeTest.class.getClassLoader());
-              return 42;
-            })
-            .description("This is a test gauge")
-            .tags("tag", "value")
-            .baseUnit("items")
-            .register(Metrics.globalRegistry);
+    ClassLoader dummy = new URLClassLoader(new URL[0]);
+    ClassLoader prior = Thread.currentThread().getContextClassLoader();
+    Gauge gauge;
+    try {
+      Thread.currentThread().setContextClassLoader(dummy);
+      gauge =
+          Gauge.builder(
+                  "testGauge",
+                  () -> {
+                    // will throw an exception before value is reported if assertion fails
+                    // then we assert below that value was reported
+                    assertThat(Thread.currentThread().getContextClassLoader()).isEqualTo(dummy);
+                    return 42;
+                  })
+              .description("This is a test gauge")
+              .tags("tag", "value")
+              .baseUnit("items")
+              .register(Metrics.globalRegistry);
+    } finally {
+      Thread.currentThread().setContextClassLoader(prior);
+    }
 
     // this will call forceFlush once
-    ClassLoader prior = Thread.currentThread().getContextClassLoader();
+    prior = Thread.currentThread().getContextClassLoader();
     Thread.currentThread().setContextClassLoader(null);
     try {
       testing().metrics();

@@ -12,6 +12,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attri
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Metrics;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,14 +32,30 @@ public abstract class AbstractFunctionCounterTest {
   final AtomicLong anotherNum = new AtomicLong(13);
 
   @Test
-  void testFunctionCounter() throws InterruptedException {
+  void testFunctionCounter() {
     // given
-    FunctionCounter counter =
-        FunctionCounter.builder("testFunctionCounter", num, AtomicLong::get)
-            .description("This is a test function counter")
-            .tags("tag", "value")
-            .baseUnit("items")
-            .register(Metrics.globalRegistry);
+    ClassLoader dummy = new URLClassLoader(new URL[0]);
+    ClassLoader prior = Thread.currentThread().getContextClassLoader();
+    FunctionCounter counter;
+    try {
+      Thread.currentThread().setContextClassLoader(dummy);
+      counter =
+          FunctionCounter.builder(
+                  "testFunctionCounter",
+                  num,
+                  num -> {
+                    // will throw an exception before value is reported if assertion fails
+                    // then we assert below that value was reported
+                    assertThat(Thread.currentThread().getContextClassLoader()).isEqualTo(dummy);
+                    return num.get();
+                  })
+              .description("This is a test function counter")
+              .tags("tag", "value")
+              .baseUnit("items")
+              .register(Metrics.globalRegistry);
+    } finally {
+      Thread.currentThread().setContextClassLoader(prior);
+    }
 
     // then
     testing()
