@@ -58,6 +58,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       builder.setOpenTelemetry(openTelemetry);
       builder.setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders());
       builder.setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders());
+      builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods());
 
       return kotlin.Unit.INSTANCE;
     }
