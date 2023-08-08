@@ -35,10 +35,11 @@ jobs:
       - name: display changes
         run: git diff
 
+      - name: Use CLA approved github bot
+        run: .github/scripts/use-cla-approved-github-bot.sh
+
       - name: create pr with repo changes
         run: |
-          git config user.name ${{ github.actor }}
-          git config user.email ${{ github.actor }}@users.noreply.github.com
           git add index.yml
           if git diff-index --quiet --cached HEAD ; then
             echo "index.yml already current"
@@ -46,6 +47,10 @@ jobs:
           fi
           git commit -m "Updated index.yml"
           git push --set-upstream origin cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }}
-          gh pr create -B cloudfoundry -H cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }} --title 'Release updates for Cloudfoundry Repo' --body '[Created by Github action]'
+          gh pr create --base cloudfoundry \
+            --head cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }} \
+            --title 'Release updates for Cloudfoundry Repo' \
+            --body '[Created by Github action]'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          GITHUB_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
