@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.appender.v1_1;
 
 import static java.util.Collections.emptyList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -99,6 +100,7 @@ public final class LoggingEventMapper {
 
     builder.setContext(Context.current());
 
+    builder.setTimestamp(record.getMillis(), MILLISECONDS);
     builder.emit();
   }
 
