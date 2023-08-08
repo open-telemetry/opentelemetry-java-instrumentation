@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.eclipse.jetty")
     module.set("jetty-server")
-    versions.set("[11,)")
+    versions.set("[11, 12)")
   }
 }
 
@@ -19,7 +19,9 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
 
+  // jetty-servlet does not exist in jetty 12, so we don't need to explicitly pin it to 11.+
   testLibrary("org.eclipse.jetty:jetty-servlet:11.0.0")
+  latestDepTestLibrary("org.eclipse.jetty:jetty-server:11.+")
 }
 
 otelJava {
