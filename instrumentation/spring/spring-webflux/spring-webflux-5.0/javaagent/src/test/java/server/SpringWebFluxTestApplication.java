@@ -83,7 +83,8 @@ public class SpringWebFluxTestApplication {
               } catch (InterruptedException e) {
                 throw new IllegalStateException(e);
               }
-              return ServerResponse.ok().body(BodyInserters.fromObject("ok"));
+              return Mono.delay(Duration.ofMillis(100))
+                  .then(ServerResponse.ok().body(BodyInserters.fromObject("ok")));
             });
   }
 

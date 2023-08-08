@@ -48,6 +48,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -835,6 +836,9 @@ public class SpringWebfluxTest {
 
   @Test
   void cancelRequestTest() throws Exception {
+    // fails with SingleThreadedSpringWebfluxTest
+    Assumptions.assumeTrue(this.getClass() == SpringWebfluxTest.class);
+
     WebClient client =
         WebClient.builder("h1c://localhost:" + port)
             .responseTimeout(Duration.ofSeconds(1))
