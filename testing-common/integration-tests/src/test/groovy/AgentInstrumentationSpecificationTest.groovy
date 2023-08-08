@@ -20,9 +20,12 @@ class AgentInstrumentationSpecificationTest extends AgentInstrumentationSpecific
   def "classpath setup"() {
     setup:
     final List<String> bootstrapClassesIncorrectlyLoaded = []
+    final List<String> bootstrapClassesAttempted = []
+    final List<String> bootstrapClassesLoaded = []
     for (ClassPath.ClassInfo info : getTestClasspath().getAllClasses()) {
       for (int i = 0; i < Constants.BOOTSTRAP_PACKAGE_PREFIXES.size(); ++i) {
         if (info.getName().startsWith(Constants.BOOTSTRAP_PACKAGE_PREFIXES[i])) {
+          bootstrapClassesAttempted.add(info.getName())
           Class<?> bootstrapClass = Class.forName(info.getName())
           def loader
           try {
@@ -32,7 +35,10 @@ class AgentInstrumentationSpecificationTest extends AgentInstrumentationSpecific
             // java.lang.NoClassDefFoundError: [Ljavax/lang/model/element/Modifier;
             break
           }
-          if (loader != BOOTSTRAP_CLASSLOADER) {
+          if (loader == BOOTSTRAP_CLASSLOADER) {
+            bootstrapClassesLoaded.add(bootstrapClass)
+          }
+          else {
             bootstrapClassesIncorrectlyLoaded.add(bootstrapClass)
           }
           break
@@ -42,6 +48,8 @@ class AgentInstrumentationSpecificationTest extends AgentInstrumentationSpecific
 
     expect:
     bootstrapClassesIncorrectlyLoaded == []
+    !bootstrapClassesAttempted.isEmpty()
+    !bootstrapClassesLoaded.isEmpty()
   }
 
   def "waiting for child spans times out"() {
