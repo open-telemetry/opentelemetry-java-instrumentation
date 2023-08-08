@@ -71,6 +71,7 @@ public final class KafkaSingletons {
 
   @SuppressWarnings("unchecked")
   public static void enhanceConfig(Map<? super String, Object> config) {
+    // skip enhancing configuration when metrics are disabled or when we have already enhanced it
     if (!METRICS_ENABLED
         || config.get(OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME)
             != null) {
