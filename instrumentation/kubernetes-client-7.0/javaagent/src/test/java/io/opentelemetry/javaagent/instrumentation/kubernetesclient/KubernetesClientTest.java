@@ -18,7 +18,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
@@ -123,15 +122,13 @@ class KubernetesClientTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            assertion -> assertApiException(apiException, assertion)),
+                        .hasException(apiException),
                 span ->
                     span.hasName("get pods/proxy")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            assertion -> assertApiException(apiException, assertion))
+                        .hasException(apiException)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 SemanticAttributes.HTTP_URL,
@@ -253,8 +250,7 @@ class KubernetesClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            assertion -> assertApiException(exceptionReference.get(), assertion))
+                        .hasException(exceptionReference.get())
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 SemanticAttributes.HTTP_URL,
@@ -275,15 +271,6 @@ class KubernetesClientTest {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
-  }
-
-  private static void assertApiException(ApiException apiException, EventDataAssert assertion) {
-    assertion
-        .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
-        .hasAttributesSatisfyingExactly(
-            equalTo(SemanticAttributes.EXCEPTION_TYPE, apiException.getClass().getCanonicalName()),
-            equalTo(SemanticAttributes.EXCEPTION_MESSAGE, apiException.getMessage()),
-            satisfies(SemanticAttributes.EXCEPTION_STACKTRACE, AbstractAssert::isNotNull));
   }
 
   private static class ApiCallbackTemplate implements ApiCallback<String> {
