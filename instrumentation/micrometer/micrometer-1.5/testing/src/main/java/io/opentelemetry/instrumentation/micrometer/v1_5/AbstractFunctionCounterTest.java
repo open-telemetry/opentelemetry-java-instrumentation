@@ -32,7 +32,46 @@ public abstract class AbstractFunctionCounterTest {
   final AtomicLong anotherNum = new AtomicLong(13);
 
   @Test
-  void testFunctionCounter() {
+  void testFunctionCounter() throws InterruptedException {
+    // given
+    FunctionCounter counter =
+        FunctionCounter.builder("testFunctionCounter", num, AtomicLong::get)
+            .description("This is a test function counter")
+            .tags("tag", "value")
+            .baseUnit("items")
+            .register(Metrics.globalRegistry);
+
+    // then
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "testFunctionCounter",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasDescription("This is a test function counter")
+                            .hasUnit("items")
+                            .hasDoubleSumSatisfying(
+                                sum ->
+                                    sum.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(12)
+                                                .hasAttributes(attributeEntry("tag", "value"))))));
+
+    // when
+    Metrics.globalRegistry.remove(counter);
+    testing().clearData();
+
+    // then
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME, "testFunctionCounter", AbstractIterableAssert::isEmpty);
+  }
+
+  @Test
+  void testFunctionCounterDependingOnThreadContextClassLoader() {
     // given
     ClassLoader dummy = new URLClassLoader(new URL[0]);
     ClassLoader prior = Thread.currentThread().getContextClassLoader();
