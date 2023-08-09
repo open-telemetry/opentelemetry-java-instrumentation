@@ -12,7 +12,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-final class GrpcNetServerAttributesGetter
+final class GrpcNetworkServerAttributesGetter
     implements ServerAttributesGetter<GrpcRequest, Status>,
         ClientAttributesGetter<GrpcRequest, Status> {
 

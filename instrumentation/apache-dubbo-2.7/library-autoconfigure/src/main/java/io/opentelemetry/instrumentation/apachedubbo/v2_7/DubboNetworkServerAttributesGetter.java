@@ -11,7 +11,7 @@ import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.Result;
 
-final class DubboNetServerAttributesGetter
+final class DubboNetworkServerAttributesGetter
     implements ServerAttributesGetter<DubboRequest, Result>,
         ClientAttributesGetter<DubboRequest, Result> {
 

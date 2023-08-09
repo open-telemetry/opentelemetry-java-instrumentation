@@ -63,7 +63,8 @@ public final class DubboTelemetryBuilder {
     SpanNameExtractor<DubboRequest> spanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesGetter);
     DubboNetClientAttributesGetter netClientAttributesGetter = new DubboNetClientAttributesGetter();
-    DubboNetServerAttributesGetter netServerAttributesGetter = new DubboNetServerAttributesGetter();
+    DubboNetworkServerAttributesGetter netServerAttributesGetter =
+        new DubboNetworkServerAttributesGetter();
 
     InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>builder(
