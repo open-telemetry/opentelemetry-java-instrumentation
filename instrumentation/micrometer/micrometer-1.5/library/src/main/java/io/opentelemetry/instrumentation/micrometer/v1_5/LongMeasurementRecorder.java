@@ -20,19 +20,23 @@ final class LongMeasurementRecorder<T> implements Consumer<ObservableLongMeasure
   private final WeakReference<T> objWeakRef;
   private final ToLongFunction<T> metricFunction;
   private final Attributes attributes;
+  private final WeakReference<ClassLoader> contextClassLoader;
 
   LongMeasurementRecorder(
       @Nullable T obj, ToLongFunction<T> metricFunction, Attributes attributes) {
     this.objWeakRef = new WeakReference<>(obj);
     this.metricFunction = metricFunction;
     this.attributes = attributes;
+    contextClassLoader = new WeakReference<>(Thread.currentThread().getContextClassLoader());
   }
 
   @Override
   public void accept(ObservableLongMeasurement measurement) {
     T obj = objWeakRef.get();
     if (obj != null) {
-      measurement.record(metricFunction.applyAsLong(obj), attributes);
+      MeasurementRecorderUtil.runInThreadContextClassLoader(
+          contextClassLoader.get(),
+          () -> measurement.record(metricFunction.applyAsLong(obj), attributes));
     }
   }
 }
