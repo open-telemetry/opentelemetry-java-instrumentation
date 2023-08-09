@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7.internal;
 
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.Result;
@@ -15,8 +15,8 @@ import org.apache.dubbo.rpc.Result;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class DubboNetClientAttributesGetter
-    implements NetClientAttributesGetter<DubboRequest, Result> {
+public final class DubboClientNetworkAttributesGetter
+    implements ServerAttributesGetter<DubboRequest, Result> {
 
   @Nullable
   @Override

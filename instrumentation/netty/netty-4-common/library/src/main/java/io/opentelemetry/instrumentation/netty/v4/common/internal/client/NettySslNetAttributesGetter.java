@@ -9,13 +9,14 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_UDP;
 
 import io.netty.channel.socket.DatagramChannel;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.ChannelUtil;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
+@SuppressWarnings("deprecation") // have to use the deprecated Net*AttributesGetter for now
 final class NettySslNetAttributesGetter
-    implements NetClientAttributesGetter<NettySslRequest, Void> {
+    implements io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter<
+        NettySslRequest, Void> {
 
   @Override
   public String getTransport(NettySslRequest request, @Nullable Void unused) {

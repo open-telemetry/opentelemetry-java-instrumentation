@@ -6,9 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import com.lambdaworks.redis.RedisURI;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 
-final class LettuceConnectNetAttributesGetter implements NetClientAttributesGetter<RedisURI, Void> {
+final class LettuceConnectNetworkAttributesGetter
+    implements ServerAttributesGetter<RedisURI, Void> {
 
   @Override
   public String getServerAddress(RedisURI redisUri) {

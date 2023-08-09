@@ -13,14 +13,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerMetrics;
-import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetClientAttributesGetter;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcClientNetworkAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -175,14 +174,15 @@ public final class GrpcTelemetryBuilder {
                     .setSpanStatusExtractor(new GrpcSpanStatusExtractor())
                     .addAttributesExtractors(additionalExtractors));
 
-    GrpcNetClientAttributesGetter netClientAttributesGetter = new GrpcNetClientAttributesGetter();
+    GrpcClientNetworkAttributesGetter netClientAttributesGetter =
+        new GrpcClientNetworkAttributesGetter();
     GrpcNetworkServerAttributesGetter netServerAttributesGetter =
         new GrpcNetworkServerAttributesGetter();
     GrpcRpcAttributesGetter rpcAttributesGetter = GrpcRpcAttributesGetter.INSTANCE;
 
     clientInstrumenterBuilder
         .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
-        .addAttributesExtractor(NetClientAttributesExtractor.create(netClientAttributesGetter))
+        .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
         .addAttributesExtractor(
             new GrpcAttributesExtractor(

@@ -19,6 +19,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // testing deprecated class
 class NetClientAttributesExtractorStableSemconvTest {
 
   static class TestNetClientAttributesGetter

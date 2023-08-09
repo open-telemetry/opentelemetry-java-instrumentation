@@ -10,7 +10,6 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
@@ -26,7 +25,12 @@ import java.util.function.ToIntFunction;
 public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter;
-  final NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter;
+
+  @SuppressWarnings("deprecation") // using the net extractor for the old->stable semconv story
+  final io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter<
+          REQUEST, RESPONSE>
+      netAttributesGetter;
+
   final HttpAddressPortExtractor<REQUEST> addressPortExtractor;
   List<String> capturedRequestHeaders = emptyList();
   List<String> capturedResponseHeaders = emptyList();
@@ -35,7 +39,10 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   HttpClientAttributesExtractorBuilder(
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
+      @SuppressWarnings("deprecation") // using the net extractor for the old->stable semconv story
+          io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter<
+                  REQUEST, RESPONSE>
+              netAttributesGetter) {
     this.httpAttributesGetter = httpAttributesGetter;
     this.netAttributesGetter = netAttributesGetter;
     addressPortExtractor = new HttpAddressPortExtractor<>(httpAttributesGetter);

@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 
-final class JedisNetAttributesGetter implements NetClientAttributesGetter<JedisRequest, Void> {
+final class JedisNetworkAttributesGetter implements ServerAttributesGetter<JedisRequest, Void> {
 
   @Override
   public String getServerAddress(JedisRequest request) {
