@@ -38,19 +38,19 @@ class HttpServerAttributesExtractorBothSemconvTest {
 
     @Override
     public String getUrlScheme(Map<String, Object> request) {
-      return (String) request.get("scheme");
+      return (String) request.get("urlScheme");
     }
 
     @Nullable
     @Override
     public String getUrlPath(Map<String, Object> request) {
-      return (String) request.get("path");
+      return (String) request.get("urlPath");
     }
 
     @Nullable
     @Override
     public String getUrlQuery(Map<String, Object> request) {
-      return (String) request.get("query");
+      return (String) request.get("urlQuery");
     }
 
     @Override
@@ -82,14 +82,14 @@ class HttpServerAttributesExtractorBothSemconvTest {
     @Override
     public String getNetworkTransport(
         Map<String, Object> request, @Nullable Map<String, Object> response) {
-      return (String) request.get("transport");
+      return (String) request.get("networkTransport");
     }
 
     @Nullable
     @Override
     public String getNetworkType(
         Map<String, Object> request, @Nullable Map<String, Object> response) {
-      return (String) request.get("type");
+      return (String) request.get("networkType");
     }
 
     @Nullable
@@ -109,13 +109,13 @@ class HttpServerAttributesExtractorBothSemconvTest {
     @Nullable
     @Override
     public String getServerAddress(Map<String, Object> request) {
-      return (String) request.get("hostName");
+      return (String) request.get("serverAddress");
     }
 
     @Nullable
     @Override
     public Integer getServerPort(Map<String, Object> request) {
-      return (Integer) request.get("hostPort");
+      return (Integer) request.get("serverPort");
     }
   }
 
@@ -123,18 +123,18 @@ class HttpServerAttributesExtractorBothSemconvTest {
   void normal() {
     Map<String, Object> request = new HashMap<>();
     request.put("method", "POST");
-    request.put("url", "http://github.com");
-    request.put("path", "/repositories/1");
-    request.put("query", "details=true");
-    request.put("scheme", "http");
+    request.put("urlFull", "http://github.com");
+    request.put("urlPath", "/repositories/1");
+    request.put("urlQuery", "details=true");
+    request.put("urlScheme", "http");
     request.put("header.content-length", "10");
     request.put("route", "/repositories/{id}");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.host", "github.com");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
-    request.put("transport", "udp");
-    request.put("type", "ipv4");
+    request.put("networkTransport", "udp");
+    request.put("networkType", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "2.0");
 
