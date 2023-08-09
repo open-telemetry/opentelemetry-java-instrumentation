@@ -32,7 +32,7 @@ public abstract class AbstractFunctionCounterTest {
   final AtomicLong anotherNum = new AtomicLong(13);
 
   @Test
-  void testFunctionCounter() throws InterruptedException {
+  void testFunctionCounter() {
     // given
     FunctionCounter counter =
         FunctionCounter.builder("testFunctionCounter", num, AtomicLong::get)

@@ -86,18 +86,6 @@ public abstract class AbstractGaugeTest {
       Thread.currentThread().setContextClassLoader(prior);
     }
 
-    // this will call forceFlush once
-    prior = Thread.currentThread().getContextClassLoader();
-    Thread.currentThread().setContextClassLoader(null);
-    try {
-      testing().metrics();
-    } finally {
-      Thread.currentThread().setContextClassLoader(prior);
-    }
-
-    // remove the gauge, so it doesn't report again when waitAndAssertMetrics is called
-    Metrics.globalRegistry.remove(gauge);
-
     // then
     testing()
         .waitAndAssertMetrics(
@@ -118,6 +106,7 @@ public abstract class AbstractGaugeTest {
                                                 .hasAttributes(attributeEntry("tag", "value"))))));
 
     // when
+    Metrics.globalRegistry.remove(gauge);
     testing().clearData();
 
     // then
