@@ -24,7 +24,6 @@ public final class UndertowSingletons {
 
   static {
     UndertowHttpAttributesGetter httpAttributesGetter = new UndertowHttpAttributesGetter();
-    UndertowNetAttributesGetter netAttributesGetter = new UndertowNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<HttpServerExchange, HttpServerExchange>builder(
@@ -33,9 +32,10 @@ public final class UndertowSingletons {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                HttpServerAttributesExtractor.builder(httpAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
             .addContextCustomizer(

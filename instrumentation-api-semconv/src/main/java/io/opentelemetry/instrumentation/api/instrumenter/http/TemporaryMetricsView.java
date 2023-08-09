@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -32,15 +31,13 @@ final class TemporaryMetricsView {
     Set<AttributeKey> view = new HashSet<>();
     view.add(SemanticAttributes.HTTP_METHOD);
     view.add(SemanticAttributes.HTTP_STATUS_CODE); // Optional
-    view.add(NetAttributes.NET_PROTOCOL_NAME); // Optional
-    view.add(NetAttributes.NET_PROTOCOL_VERSION); // Optional
+    view.add(SemanticAttributes.NET_PROTOCOL_NAME); // Optional
+    view.add(SemanticAttributes.NET_PROTOCOL_VERSION); // Optional
     // stable semconv
     view.add(HttpAttributes.HTTP_REQUEST_METHOD);
     view.add(HttpAttributes.HTTP_RESPONSE_STATUS_CODE);
     view.add(NetworkAttributes.NETWORK_PROTOCOL_NAME);
     view.add(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
-    view.add(NetworkAttributes.SERVER_ADDRESS);
-    view.add(NetworkAttributes.SERVER_PORT);
     return view;
   }
 
@@ -54,6 +51,8 @@ final class TemporaryMetricsView {
     view.add(SemanticAttributes.NET_SOCK_PEER_ADDR);
     // stable semconv
     view.add(NetworkAttributes.SERVER_SOCKET_ADDRESS);
+    view.add(NetworkAttributes.SERVER_ADDRESS);
+    view.add(NetworkAttributes.SERVER_PORT);
     return view;
   }
 
@@ -83,8 +82,6 @@ final class TemporaryMetricsView {
     view.add(SemanticAttributes.NET_HOST_PORT);
     // stable semconv
     view.add(HttpAttributes.HTTP_REQUEST_METHOD);
-    view.add(NetworkAttributes.SERVER_ADDRESS);
-    view.add(NetworkAttributes.SERVER_PORT);
     view.add(UrlAttributes.URL_SCHEME);
     return view;
   }

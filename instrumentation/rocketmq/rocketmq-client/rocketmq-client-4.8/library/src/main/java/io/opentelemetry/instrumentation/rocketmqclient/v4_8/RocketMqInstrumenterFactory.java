@@ -35,7 +35,7 @@ class RocketMqInstrumenterFactory {
       boolean propagationEnabled) {
 
     RocketMqProducerAttributeGetter getter = RocketMqProducerAttributeGetter.INSTANCE;
-    MessageOperation operation = MessageOperation.SEND;
+    MessageOperation operation = MessageOperation.PUBLISH;
 
     InstrumenterBuilder<SendMessageContext, Void> instrumenterBuilder =
         Instrumenter.<SendMessageContext, Void>builder(

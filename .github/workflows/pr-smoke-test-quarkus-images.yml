@@ -3,8 +3,8 @@ name: PR build Quarkus images for smoke tests
 on:
   pull_request:
     paths:
-      - 'smoke-tests/images/quarkus/**'
-      - '.github/workflows/pr-smoke-test-quarkus-images.yml'
+      - "smoke-tests/images/quarkus/**"
+      - ".github/workflows/pr-smoke-test-quarkus-images.yml"
 
 jobs:
   build:

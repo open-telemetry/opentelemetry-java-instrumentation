@@ -13,6 +13,7 @@ import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NavigableSet;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
@@ -27,22 +28,23 @@ final class HistogramAdviceUtil {
       DoubleHistogramBuilder builder,
       DistributionStatisticConfig config,
       @Nullable TimeUnit timeUnit) {
-    double[] buckets = config.getServiceLevelObjectiveBoundaries();
-    if (buckets == null || !(builder instanceof ExtendedDoubleHistogramBuilder)) {
+    if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
       return;
     }
+    NavigableSet<Double> buckets = config.getHistogramBuckets(false);
     ExtendedDoubleHistogramBuilder extendedBuilder = (ExtendedDoubleHistogramBuilder) builder;
     extendedBuilder.setAdvice(
         advice -> advice.setExplicitBucketBoundaries(computeBuckets(buckets, timeUnit)));
   }
 
-  private static List<Double> computeBuckets(double[] buckets, @Nullable TimeUnit timeUnit) {
-    if (buckets.length == 0) {
+  private static List<Double> computeBuckets(
+      NavigableSet<Double> buckets, @Nullable TimeUnit timeUnit) {
+    if (buckets.isEmpty()) {
       return emptyList();
     }
     // micrometer Timers always specify buckets in nanoseconds, we need to convert them to base unit
     double timeUnitMultiplier = timeUnit == null ? 1.0 : TimeUtils.nanosToUnit(1, timeUnit);
-    List<Double> result = new ArrayList<>(buckets.length);
+    List<Double> result = new ArrayList<>(buckets.size());
     for (double b : buckets) {
       result.add(b * timeUnitMultiplier);
     }

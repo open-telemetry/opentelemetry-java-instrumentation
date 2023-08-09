@@ -129,9 +129,9 @@ class SpringTemplateTest extends AgentInstrumentationSpecification {
     assertTraces(4) {
       traces.sort(orderByRootSpanName(
         "$destinationName receive",
-        "$destinationName send",
+        "$destinationName publish",
         "(temporary) receive",
-        "(temporary) send"))
+        "(temporary) publish"))
 
       trace(0, 1) {
         consumerSpan(it, 0, destinationName, msgId.get(), null, "receive")

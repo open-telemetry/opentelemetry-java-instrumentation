@@ -32,10 +32,10 @@ final class NettyServerSingletons {
                 HttpSpanNameExtractor.create(httpServerAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpServerAttributesGetter))
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.builder(
-                        httpServerAttributesGetter, new NettyNetServerAttributesGetter())
+                HttpServerAttributesExtractor.builder(httpServerAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(

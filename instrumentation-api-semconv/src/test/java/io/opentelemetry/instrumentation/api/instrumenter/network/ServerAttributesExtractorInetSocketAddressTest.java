@@ -45,6 +45,7 @@ class ServerAttributesExtractorInetSocketAddressTest {
   }
 
   @Test
+  @SuppressWarnings("AddressSelection")
   void fullAddress() {
     InetSocketAddress address = new InetSocketAddress("api.github.com", 456);
     assertThat(address.getAddress().getHostAddress()).isNotNull();

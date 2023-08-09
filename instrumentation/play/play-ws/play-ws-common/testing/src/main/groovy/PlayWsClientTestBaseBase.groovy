@@ -21,14 +21,15 @@ import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClientConfig
 import play.shaded.ahc.org.asynchttpclient.RequestBuilderBase
 import spock.lang.Shared
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey
-
 abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST> implements AgentTestTrait {
   @Shared
   ActorSystem system
 
   @Shared
   AsyncHttpClient asyncHttpClient
+
+  @Shared
+  AsyncHttpClient asyncHttpClientWithReadTimeout
 
   @Shared
   ActorMaterializer materializer
@@ -44,21 +45,30 @@ abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST>
     // failure ahc will try the next address which isn't necessary for this test.
     RequestBuilderBase.DEFAULT_NAME_RESOLVER = new CustomNameResolver(ImmediateEventExecutor.INSTANCE)
 
-    AsyncHttpClientConfig asyncHttpClientConfig =
-      new DefaultAsyncHttpClientConfig.Builder()
-        .setMaxRequestRetry(0)
-        .setShutdownQuietPeriod(0)
-        .setShutdownTimeout(0)
-        .setMaxRedirects(3)
-        .setConnectTimeout(CONNECT_TIMEOUT_MS)
-        .setReadTimeout(READ_TIMEOUT_MS)
-        .build()
+    asyncHttpClient = createClient(false)
+    asyncHttpClientWithReadTimeout = createClient(true)
+  }
 
-    asyncHttpClient = new DefaultAsyncHttpClient(asyncHttpClientConfig)
+  def createClient(boolean readTimeout) {
+    DefaultAsyncHttpClientConfig.Builder builder = new DefaultAsyncHttpClientConfig.Builder()
+      .setMaxRequestRetry(0)
+      .setShutdownQuietPeriod(0)
+      .setShutdownTimeout(0)
+      .setMaxRedirects(3)
+      .setConnectTimeout(CONNECT_TIMEOUT_MS)
+
+    if (readTimeout) {
+      builder.setReadTimeout(READ_TIMEOUT_MS)
+    }
+
+    AsyncHttpClientConfig asyncHttpClientConfig =builder.build()
+    return new DefaultAsyncHttpClient(asyncHttpClientConfig)
   }
 
   def cleanupSpec() {
     system?.terminate()
+    asyncHttpClient?.close()
+    asyncHttpClientWithReadTimeout?.close()
   }
 
   @Override
@@ -75,8 +85,8 @@ abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST>
   @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
-    attributes.remove(stringKey("net.protocol.name"))
-    attributes.remove(stringKey("net.protocol.version"))
+    attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME)
+    attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION)
     if (uri.toString().endsWith("/circular-redirect")) {
       attributes.remove(SemanticAttributes.NET_PEER_NAME)
       attributes.remove(SemanticAttributes.NET_PEER_PORT)

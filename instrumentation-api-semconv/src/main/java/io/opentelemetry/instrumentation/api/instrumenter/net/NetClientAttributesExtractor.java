@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkTransportFilter;
@@ -19,8 +19,7 @@ import javax.annotation.Nullable;
 /**
  * Extractor of <a
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-network-connection-attributes">Network
- * attributes</a>. It is common to have access to {@link java.net.InetSocketAddress}, in which case
- * it is more convenient to use {@link InetSocketAddressNetClientAttributesGetter}.
+ * attributes</a>.
  *
  * <p>This class delegates to a type-specific {@link NetClientAttributesGetter} for individual
  * attribute extraction from request/response objects.
@@ -40,7 +39,7 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
   private NetClientAttributesExtractor(NetClientAttributesGetter<REQUEST, RESPONSE> getter) {
     internalExtractor =
         new InternalNetClientAttributesExtractor<>(
-            getter, FallbackNamePortGetter.noop(), SemconvStability.emitOldHttpSemconv());
+            getter, FallbackAddressPortExtractor.noop(), SemconvStability.emitOldHttpSemconv());
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,
@@ -51,10 +50,11 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
         new InternalServerAttributesExtractor<>(
             getter,
             (port, request) -> true,
-            FallbackNamePortGetter.noop(),
+            FallbackAddressPortExtractor.noop(),
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
-            InternalServerAttributesExtractor.Mode.PEER);
+            InternalServerAttributesExtractor.Mode.PEER,
+            /* captureServerSocketAttributes= */ true);
   }
 
   @Override

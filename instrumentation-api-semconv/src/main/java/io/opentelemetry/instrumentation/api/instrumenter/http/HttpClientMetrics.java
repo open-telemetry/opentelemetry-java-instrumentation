@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpRequestBodySize;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpResponseBodySize;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createDurationHistogram;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.nanosToUnit;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyClientDurationAndSizeView;
@@ -15,7 +13,6 @@ import static java.util.logging.Level.FINE;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -31,7 +28,7 @@ import java.util.logging.Logger;
 public final class HttpClientMetrics implements OperationListener {
 
   private static final ContextKey<State> HTTP_CLIENT_REQUEST_METRICS_STATE =
-      ContextKey.named("http-client-request-metrics-state");
+      ContextKey.named("http-client-metrics-state");
 
   private static final Logger logger = Logger.getLogger(HttpClientMetrics.class.getName());
 
@@ -45,27 +42,15 @@ public final class HttpClientMetrics implements OperationListener {
   }
 
   private final DoubleHistogram duration;
-  private final LongHistogram requestSize;
-  private final LongHistogram responseSize;
 
   private HttpClientMetrics(Meter meter) {
+    String durationInstrumentName =
+        HttpMetricsUtil.emitNewSemconvMetrics
+            ? "http.client.request.duration"
+            : "http.client.duration";
     duration =
         createDurationHistogram(
-            meter, "http.client.duration", "The duration of the outbound HTTP request");
-    requestSize =
-        meter
-            .histogramBuilder("http.client.request.size")
-            .setUnit("By")
-            .setDescription("The size of HTTP request messages")
-            .ofLongs()
-            .build();
-    responseSize =
-        meter
-            .histogramBuilder("http.client.response.size")
-            .setUnit("By")
-            .setDescription("The size of HTTP response messages")
-            .ofLongs()
-            .build();
+            meter, durationInstrumentName, "The duration of the outbound HTTP request");
   }
 
   @Override
@@ -90,16 +75,6 @@ public final class HttpClientMetrics implements OperationListener {
         applyClientDurationAndSizeView(state.startAttributes(), endAttributes);
     duration.record(
         nanosToUnit(endNanos - state.startTimeNanos()), durationAndSizeAttributes, context);
-
-    Long requestBodySize = getHttpRequestBodySize(endAttributes, state.startAttributes());
-    if (requestBodySize != null) {
-      requestSize.record(requestBodySize, durationAndSizeAttributes, context);
-    }
-
-    Long responseBodySize = getHttpResponseBodySize(endAttributes, state.startAttributes());
-    if (responseBodySize != null) {
-      responseSize.record(responseBodySize, durationAndSizeAttributes, context);
-    }
   }
 
   @AutoValue

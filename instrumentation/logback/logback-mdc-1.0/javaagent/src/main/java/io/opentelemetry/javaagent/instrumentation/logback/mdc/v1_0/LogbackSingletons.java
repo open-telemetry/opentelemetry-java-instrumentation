@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0;
 
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
 public final class LogbackSingletons {
   private static final boolean ADD_BAGGAGE =
-      ConfigPropertiesUtil.getBoolean("otel.instrumentation.logback-mdc.add-baggage", false);
+      InstrumentationConfig.get().getBoolean("otel.instrumentation.logback-mdc.add-baggage", false);
 
   public static boolean addBaggage() {
     return ADD_BAGGAGE;

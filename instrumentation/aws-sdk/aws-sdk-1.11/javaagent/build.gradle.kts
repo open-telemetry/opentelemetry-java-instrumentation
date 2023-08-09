@@ -15,6 +15,22 @@ muzzle {
     module.set("aws-java-sdk-core")
     versions.set("[1.10.33,)")
     assertInverse.set(true)
+
+    excludeInstrumentationName("aws-sdk-1.11-sqs")
+  }
+
+  fail {
+    group.set("com.amazonaws")
+    module.set("aws-java-sdk-core")
+    versions.set("[1.10.33,)")
+
+    excludeInstrumentationName("aws-sdk-1.11-core")
+  }
+
+  pass {
+    group.set("com.amazonaws")
+    module.set("aws-java-sdk-sqs")
+    versions.set("[1.10.33,)")
   }
 }
 
@@ -65,6 +81,9 @@ testing {
         implementation("com.amazonaws:aws-java-sdk-kinesis:1.11.0")
         implementation("com.amazonaws:aws-java-sdk-dynamodb:1.11.0")
         implementation("com.amazonaws:aws-java-sdk-sns:1.11.0")
+
+        // needed by S3
+        implementation("javax.xml.bind:jaxb-api:2.3.1")
       }
     }
 

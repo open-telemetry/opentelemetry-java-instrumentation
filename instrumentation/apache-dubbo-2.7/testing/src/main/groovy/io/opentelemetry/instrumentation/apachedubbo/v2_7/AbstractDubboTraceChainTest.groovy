@@ -140,6 +140,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.RPC_METHOD" "\$invoke"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == null || it instanceof String}
           }
         }
         span(2) {
@@ -152,6 +153,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.RPC_METHOD" "hello"
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" String
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_PORT" Long
             "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
           }
         }
@@ -165,9 +167,9 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.RPC_METHOD" "\$invoke"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" Long
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == null || String }
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" { it == null || Long }
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" { it == null || String }
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == null || it instanceof String }
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" { it == null || it instanceof Long }
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" { it == null || it instanceof String }
           }
         }
         span(4) {
@@ -180,6 +182,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.RPC_METHOD" "hello"
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" String
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_PORT" Long
             "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
           }
         }
@@ -253,6 +256,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.RPC_METHOD" "\$invoke"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == null || it instanceof String}
           }
         }
         span(2) {
@@ -265,6 +269,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.RPC_METHOD" "hello"
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" String
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_PORT" Long
             "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
           }
         }

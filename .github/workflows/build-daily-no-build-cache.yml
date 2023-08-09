@@ -1,4 +1,4 @@
-name: Build (daily, --no-build-cache)
+name: Build (daily --no-build-cache)
 
 on:
   schedule:

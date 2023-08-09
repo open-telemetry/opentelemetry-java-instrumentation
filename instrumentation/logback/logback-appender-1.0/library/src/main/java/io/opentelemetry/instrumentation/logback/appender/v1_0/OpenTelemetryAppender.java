@@ -7,13 +7,16 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static java.util.Collections.emptyList;
 
+import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.slf4j.ILoggerFactory;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
@@ -24,9 +27,32 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureKeyValuePairAttributes = false;
   private List<String> captureMdcAttributes = emptyList();
 
+  private OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
 
   public OpenTelemetryAppender() {}
+
+  /**
+   * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
+   * the {@link LoggerContext}.
+   */
+  public static void install(OpenTelemetry openTelemetry) {
+    ILoggerFactory loggerFactorySpi = LoggerFactory.getILoggerFactory();
+    if (!(loggerFactorySpi instanceof LoggerContext)) {
+      return;
+    }
+    LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
+    for (ch.qos.logback.classic.Logger logger : loggerContext.getLoggerList()) {
+      logger
+          .iteratorForAppenders()
+          .forEachRemaining(
+              appender -> {
+                if (appender instanceof OpenTelemetryAppender) {
+                  ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetry);
+                }
+              });
+    }
+  }
 
   @Override
   public void start() {
@@ -37,12 +63,15 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             captureCodeAttributes,
             captureMarkerAttribute,
             captureKeyValuePairAttributes);
+    if (openTelemetry == null) {
+      openTelemetry = OpenTelemetry.noop();
+    }
     super.start();
   }
 
   @Override
   protected void append(ILoggingEvent event) {
-    mapper.emit(GlobalOpenTelemetry.get().getLogsBridge(), event);
+    mapper.emit(openTelemetry.getLogsBridge(), event);
   }
 
   /**
@@ -91,6 +120,14 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     } else {
       captureMdcAttributes = emptyList();
     }
+  }
+
+  /**
+   * Configures the {@link OpenTelemetry} used to append logs. This MUST be called for the appender
+   * to function. See {@link #install(OpenTelemetry)} for simple installation option.
+   */
+  public void setOpenTelemetry(OpenTelemetry openTelemetry) {
+    this.openTelemetry = openTelemetry;
   }
 
   // copied from SDK's DefaultConfigProperties

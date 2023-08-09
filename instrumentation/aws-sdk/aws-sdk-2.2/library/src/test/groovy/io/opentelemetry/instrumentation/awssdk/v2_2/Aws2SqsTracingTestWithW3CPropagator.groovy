@@ -15,9 +15,19 @@ class Aws2SqsTracingTestWithW3CPropagator extends AbstractAws2SqsTracingTest imp
       .addExecutionInterceptor(
         AwsSdkTelemetry.builder(getOpenTelemetry())
           .setCaptureExperimentalSpanAttributes(true)
-          .setUseConfiguredPropagatorForMessaging(true) // Difference to main test
-          .setUseXrayPropagator(false) // Disable to confirm messaging propagator actually works
+          .setUseConfiguredPropagatorForMessaging(isSqsAttributeInjectionEnabled()) // Difference to main test
+          .setUseXrayPropagator(isXrayInjectionEnabled()) // Disable to confirm messaging propagator actually works
           .build()
           .newExecutionInterceptor())
+  }
+
+  @Override
+  boolean isSqsAttributeInjectionEnabled() {
+    true
+  }
+
+  @Override
+  boolean isXrayInjectionEnabled() {
+    false
   }
 }

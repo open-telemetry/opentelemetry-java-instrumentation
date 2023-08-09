@@ -15,16 +15,10 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.ClientType;
-import software.amazon.awssdk.core.SdkPojo;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.interceptor.Context;
@@ -34,7 +28,6 @@ import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
-import software.amazon.awssdk.utils.builder.SdkBuilder;
 
 /** AWS request execution interceptor. */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
@@ -55,6 +48,20 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter;
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
+
+  Instrumenter<ExecutionAttributes, SdkHttpResponse> getConsumerInstrumenter() {
+    return consumerInstrumenter;
+  }
+
+  @Nullable
+  TextMapPropagator getMessagingPropagator() {
+    return messagingPropagator;
+  }
+
+  boolean shouldUseXrayPropagator() {
+    return useXrayPropagator;
+  }
+
   @Nullable private final TextMapPropagator messagingPropagator;
   private final boolean useXrayPropagator;
   private final FieldMapper fieldMapper;
@@ -114,91 +121,29 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       throw throwable;
     }
 
-    if (SqsReceiveMessageRequestAccess.isInstance(request)) {
-      return modifySqsReceiveMessageRequest(request);
-    } else if (messagingPropagator != null) {
-      if (SqsSendMessageRequestAccess.isInstance(request)) {
-        return injectIntoSqsSendMessageRequest(request, otelContext);
-      }
-      // TODO: Support SendMessageBatchRequest (and thus SendMessageBatchRequestEntry)
+    SdkRequest modifiedRequest =
+        SqsAccess.modifyRequest(request, otelContext, useXrayPropagator, messagingPropagator);
+    if (modifiedRequest != null) {
+      return modifiedRequest;
     }
+    modifiedRequest = SnsAccess.modifyRequest(request, otelContext, messagingPropagator);
+    if (modifiedRequest != null) {
+      return modifiedRequest;
+    }
+
+    // Insert other special handling here, following the same pattern as SQS and SNS.
+
     return request;
   }
 
-  private SdkRequest injectIntoSqsSendMessageRequest(
-      SdkRequest request, io.opentelemetry.context.Context otelContext) {
-    Map<String, SdkPojo> messageAttributes =
-        new HashMap<>(SqsSendMessageRequestAccess.messageAttributes(request));
-    messagingPropagator.inject(
-        otelContext,
-        messageAttributes,
-        (carrier, k, v) -> {
-          @SuppressWarnings("rawtypes")
-          SdkBuilder builder = SqsMessageAttributeValueAccess.builder();
-          if (builder == null) {
-            return;
-          }
-          builder = SqsMessageAttributeValueAccess.stringValue(builder, v);
-          if (builder == null) {
-            return;
-          }
-          builder = SqsMessageAttributeValueAccess.dataType(builder, "String");
-          if (builder == null) {
-            return;
-          }
-          carrier.put(k, (SdkPojo) builder.build());
-        });
-    if (messageAttributes.size() > 10) { // Too many attributes, we don't want to break the call.
-      return request;
-    }
-    SdkRequest.Builder builder = request.toBuilder();
-    SqsSendMessageRequestAccess.messageAttributes(builder, messageAttributes);
-    return builder.build();
-  }
-
-  private SdkRequest modifySqsReceiveMessageRequest(SdkRequest request) {
-    boolean hasXrayAttribute = true;
-    List<String> existingAttributeNames = null;
-    if (useXrayPropagator) {
-      existingAttributeNames = SqsReceiveMessageRequestAccess.getAttributeNames(request);
-      hasXrayAttribute =
-          existingAttributeNames.contains(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
-    }
-
-    boolean hasMessageAttribute = true;
-    List<String> existingMessageAttributeNames = null;
-    if (messagingPropagator != null) {
-      existingMessageAttributeNames =
-          SqsReceiveMessageRequestAccess.getMessageAttributeNames(request);
-      hasMessageAttribute = existingMessageAttributeNames.containsAll(messagingPropagator.fields());
-    }
-
-    if (hasMessageAttribute && hasXrayAttribute) {
-      return request;
-    }
-
-    SdkRequest.Builder builder = request.toBuilder();
-    if (!hasXrayAttribute) {
-      List<String> attributeNames = new ArrayList<>(existingAttributeNames);
-      attributeNames.add(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
-      SqsReceiveMessageRequestAccess.attributeNamesWithStrings(builder, attributeNames);
-    }
-    if (messagingPropagator != null) {
-      List<String> messageAttributeNames = new ArrayList<>(existingMessageAttributeNames);
-      for (String field : messagingPropagator.fields()) {
-        if (!existingMessageAttributeNames.contains(field)) {
-          messageAttributeNames.add(field);
-        }
-      }
-      SqsReceiveMessageRequestAccess.messageAttributeNames(builder, messageAttributeNames);
-    }
-    return builder.build();
-  }
-
   @Override
-  public void afterMarshalling(
-      Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
-
+  public void beforeTransmission(
+      Context.BeforeTransmission context, ExecutionAttributes executionAttributes) {
+    // In beforeTransmission we get access to the finalized http request, including modifications
+    // performed by other interceptors and the message signature.
+    // It is unlikely that further modifications are performed by the http client performing the
+    // request given that this would require the signature to be regenerated.
+    //
     // Since we merge the HTTP attributes into an already started span instead of creating a
     // full child span, we have to do some dirty work here.
     //
@@ -288,8 +233,11 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterExecution(
       Context.AfterExecution context, ExecutionAttributes executionAttributes) {
-    if (SqsReceiveMessageRequestAccess.isInstance(context.request())) {
-      afterConsumerResponse(executionAttributes, context.response(), context.httpResponse());
+
+    if (executionAttributes.getAttribute(SDK_HTTP_REQUEST_ATTRIBUTE) != null) {
+      // Other special handling could be shortcut-&&ed after this (false is returned if not
+      // handled).
+      SqsAccess.afterReceiveMessageExecution(context, executionAttributes, this);
     }
 
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
@@ -308,41 +256,6 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       requestInstrumenter.end(otelContext, executionAttributes, httpResponse, null);
     }
     clearAttributes(executionAttributes);
-  }
-
-  /** Create and close CONSUMER span for each message consumed. */
-  private void afterConsumerResponse(
-      ExecutionAttributes executionAttributes, SdkResponse response, SdkHttpResponse httpResponse) {
-    List<Object> messages = getMessages(response);
-    for (Object message : messages) {
-      createConsumerSpan(message, executionAttributes, httpResponse);
-    }
-  }
-
-  private void createConsumerSpan(
-      Object message, ExecutionAttributes executionAttributes, SdkHttpResponse httpResponse) {
-
-    io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.root();
-
-    if (messagingPropagator != null) {
-      parentContext =
-          SqsParentContext.ofMessageAttributes(
-              SqsMessageAccess.getMessageAttributes(message), messagingPropagator);
-    }
-
-    if (useXrayPropagator && parentContext == io.opentelemetry.context.Context.root()) {
-      parentContext = SqsParentContext.ofSystemAttributes(SqsMessageAccess.getAttributes(message));
-    }
-    if (consumerInstrumenter.shouldStart(parentContext, executionAttributes)) {
-      io.opentelemetry.context.Context context =
-          consumerInstrumenter.start(parentContext, executionAttributes);
-
-      // TODO: Even if we keep HTTP attributes (see afterMarshalling), does it make sense here
-      //  per-message?
-      // TODO: Should we really create root spans if we can't extract anything, or should we attach
-      //  to the current context?
-      consumerInstrumenter.end(context, executionAttributes, httpResponse, null);
-    }
   }
 
   // Certain headers in the request like User-Agent are only available after execution.
@@ -393,11 +306,5 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
    */
   static io.opentelemetry.context.Context getContext(ExecutionAttributes attributes) {
     return attributes.getAttribute(CONTEXT_ATTRIBUTE);
-  }
-
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  static List<Object> getMessages(SdkResponse response) {
-    Optional<List> optional = response.getValueForField("Messages", List.class);
-    return optional.isPresent() ? optional.get() : Collections.emptyList();
   }
 }

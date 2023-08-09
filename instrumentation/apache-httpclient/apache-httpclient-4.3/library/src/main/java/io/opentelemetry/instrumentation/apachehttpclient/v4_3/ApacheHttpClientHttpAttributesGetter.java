@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 import static io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientRequest.headersToList;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
@@ -42,5 +43,36 @@ enum ApacheHttpClientHttpAttributesGetter
   public List<String> getHttpResponseHeader(
       ApacheHttpClientRequest request, HttpResponse response, String name) {
     return headersToList(response.getHeaders(name));
+  }
+
+  @Override
+  public String getNetworkProtocolName(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+    return request.getProtocolName();
+  }
+
+  @Override
+  public String getNetworkProtocolVersion(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+    return request.getProtocolVersion();
+  }
+
+  @Override
+  @Nullable
+  public String getServerAddress(ApacheHttpClientRequest request) {
+    return request.getServerAddress();
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(ApacheHttpClientRequest request) {
+    return request.getServerPort();
+  }
+
+  @Nullable
+  @Override
+  public InetSocketAddress getServerInetSocketAddress(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+    return request.getServerSocketAddress();
   }
 }

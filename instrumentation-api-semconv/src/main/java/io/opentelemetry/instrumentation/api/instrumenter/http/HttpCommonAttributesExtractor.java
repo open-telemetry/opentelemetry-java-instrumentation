@@ -9,16 +9,16 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHtt
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.requestAttributeKey;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.responseAttributeKey;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
-import static java.util.logging.Level.FINE;
+import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.HashSet;
 import java.util.List;
-import java.util.logging.Logger;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -30,24 +30,32 @@ abstract class HttpCommonAttributesExtractor<
         REQUEST, RESPONSE, GETTER extends HttpCommonAttributesGetter<REQUEST, RESPONSE>>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private static final Logger logger = Logger.getLogger(HttpCommonAttributesGetter.class.getName());
-
   final GETTER getter;
   private final List<String> capturedRequestHeaders;
   private final List<String> capturedResponseHeaders;
+  private final Set<String> knownMethods;
 
   HttpCommonAttributesExtractor(
-      GETTER getter, List<String> capturedRequestHeaders, List<String> capturedResponseHeaders) {
+      GETTER getter,
+      List<String> capturedRequestHeaders,
+      List<String> capturedResponseHeaders,
+      Set<String> knownMethods) {
     this.getter = getter;
     this.capturedRequestHeaders = lowercase(capturedRequestHeaders);
     this.capturedResponseHeaders = lowercase(capturedResponseHeaders);
+    this.knownMethods = new HashSet<>(knownMethods);
   }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     String method = getter.getHttpRequestMethod(request);
     if (SemconvStability.emitStableHttpSemconv()) {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+      if (knownMethods.contains(method)) {
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+      } else {
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      }
     }
     if (SemconvStability.emitOldHttpSemconv()) {
       internalSet(attributes, SemanticAttributes.HTTP_METHOD, method);
@@ -136,45 +144,6 @@ abstract class HttpCommonAttributesExtractor<
       return Long.parseLong(number);
     } catch (NumberFormatException e) {
       // not a number
-      return null;
-    }
-  }
-
-  static final class HttpNetNamePortGetter<REQUEST> implements FallbackNamePortGetter<REQUEST> {
-
-    private final HttpCommonAttributesGetter<REQUEST, ?> getter;
-
-    HttpNetNamePortGetter(HttpCommonAttributesGetter<REQUEST, ?> getter) {
-      this.getter = getter;
-    }
-
-    @Nullable
-    @Override
-    public String name(REQUEST request) {
-      String host = firstHeaderValue(getter.getHttpRequestHeader(request, "host"));
-      if (host == null) {
-        return null;
-      }
-      int hostHeaderSeparator = host.indexOf(':');
-      return hostHeaderSeparator == -1 ? host : host.substring(0, hostHeaderSeparator);
-    }
-
-    @Nullable
-    @Override
-    public Integer port(REQUEST request) {
-      String host = firstHeaderValue(getter.getHttpRequestHeader(request, "host"));
-      if (host == null) {
-        return null;
-      }
-      int hostHeaderSeparator = host.indexOf(':');
-      if (hostHeaderSeparator == -1) {
-        return null;
-      }
-      try {
-        return Integer.parseInt(host.substring(hostHeaderSeparator + 1));
-      } catch (NumberFormatException e) {
-        logger.log(FINE, e.getMessage(), e);
-      }
       return null;
     }
   }

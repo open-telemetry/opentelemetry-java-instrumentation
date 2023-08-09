@@ -18,16 +18,16 @@ exporters:
 service:
   pipelines:
     traces:
-      receivers: [ otlp ]
-      processors: [ batch ]
-      exporters: [ logging/logging_info ]
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging/logging_info]
     metrics:
-      receivers: [ otlp ]
-      processors: [ batch ]
-      exporters: [ logging/logging_info ]
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging/logging_info]
     logs:
-      receivers: [ otlp ]
-      processors: [ batch ]
-      exporters: [ logging/logging_info  ]
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging/logging_info]
 
-  extensions: [ health_check ]
+  extensions: [health_check]

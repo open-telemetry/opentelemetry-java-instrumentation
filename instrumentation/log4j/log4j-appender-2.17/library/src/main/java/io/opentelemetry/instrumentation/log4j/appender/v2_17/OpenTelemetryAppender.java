@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
@@ -20,13 +19,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Core;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
@@ -44,7 +46,29 @@ public class OpenTelemetryAppender extends AbstractAppender {
   static final String PLUGIN_NAME = "OpenTelemetry";
 
   private final LogEventMapper<ReadOnlyStringMap> mapper;
-  @Nullable private OpenTelemetry openTelemetry;
+  private OpenTelemetry openTelemetry;
+
+  /**
+   * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
+   * the {@link LoggerContext}.
+   */
+  public static void install(OpenTelemetry openTelemetry) {
+    org.apache.logging.log4j.spi.LoggerContext loggerContextSpi = LogManager.getContext(false);
+    if (!(loggerContextSpi instanceof LoggerContext)) {
+      return;
+    }
+    LoggerContext loggerContext = (LoggerContext) loggerContextSpi;
+    Configuration config = loggerContext.getConfiguration();
+    config
+        .getAppenders()
+        .values()
+        .forEach(
+            appender -> {
+              if (appender instanceof OpenTelemetryAppender) {
+                ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetry);
+              }
+            });
+  }
 
   @PluginBuilderFactory
   public static <B extends Builder<B>> B builder() {
@@ -97,6 +121,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       return asBuilder();
     }
 
+    /** Configures the {@link OpenTelemetry} used to append logs. */
     @CanIgnoreReturnValue
     public B setOpenTelemetry(OpenTelemetry openTelemetry) {
       this.openTelemetry = openTelemetry;
@@ -105,6 +130,10 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @Override
     public OpenTelemetryAppender build() {
+      OpenTelemetry openTelemetry = this.openTelemetry;
+      if (openTelemetry == null) {
+        openTelemetry = OpenTelemetry.noop();
+      }
       return new OpenTelemetryAppender(
           getName(),
           getLayout(),
@@ -152,12 +181,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
         .collect(Collectors.toList());
   }
 
+  /**
+   * Configures the {@link OpenTelemetry} used to append logs. This MUST be called for the appender
+   * to function. See {@link #install(OpenTelemetry)} for simple installation option.
+   */
   public void setOpenTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
-  }
-
-  private OpenTelemetry getOpenTelemetry() {
-    return openTelemetry == null ? GlobalOpenTelemetry.get() : openTelemetry;
   }
 
   @Override
@@ -168,7 +197,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
 
     LogRecordBuilder builder =
-        getOpenTelemetry()
+        this.openTelemetry
             .getLogsBridge()
             .loggerBuilder(instrumentationName)
             .build()

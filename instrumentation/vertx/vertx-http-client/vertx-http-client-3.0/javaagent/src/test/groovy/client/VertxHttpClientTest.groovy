@@ -19,8 +19,7 @@ import io.vertx.core.http.HttpMethod
 import spock.lang.Shared
 
 import java.util.concurrent.CompletableFuture
-
-import static io.opentelemetry.api.common.AttributeKey.stringKey
+import java.util.concurrent.TimeUnit
 
 class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements AgentTestTrait {
 
@@ -54,7 +53,7 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
   @Override
   int sendRequest(HttpClientRequest request, String method, URI uri, Map<String, String> headers) {
     // Vertx doesn't seem to provide any synchronous API so bridge through a callback
-    return sendRequest(request).get()
+    return sendRequest(request).get(30, TimeUnit.SECONDS)
   }
 
   @Override
@@ -88,8 +87,8 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
   @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
-    attributes.remove(stringKey("net.protocol.name"))
-    attributes.remove(stringKey("net.protocol.version"))
+    attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME)
+    attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION)
     attributes.remove(SemanticAttributes.NET_PEER_NAME)
     attributes.remove(SemanticAttributes.NET_PEER_PORT)
     return attributes

@@ -77,6 +77,9 @@ jobs:
           # tags are needed for the generate-release-contributors.sh script
           fetch-depth: 0
 
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
       - uses: actions/setup-java@v3
         with:
           distribution: temurin
@@ -219,11 +222,3 @@ jobs:
           gh pr create --title "$message" \
                        --body "$body" \
                        --base main
-
-  create-operator-pull-request:
-    needs: release
-    uses: ./.github/workflows/reusable-create-operator-pull-request.yml
-    with:
-      version: ${{ needs.release.outputs.version }}
-    secrets:
-      OPENTELEMETRYBOT_GITHUB_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}

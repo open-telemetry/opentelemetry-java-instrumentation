@@ -17,6 +17,9 @@ final class HttpAttributes {
 
   static final AttributeKey<String> HTTP_REQUEST_METHOD = stringKey("http.request.method");
 
+  static final AttributeKey<String> HTTP_REQUEST_METHOD_ORIGINAL =
+      stringKey("http.request.method_original");
+
   static final AttributeKey<Long> HTTP_REQUEST_BODY_SIZE = longKey("http.request.body.size");
 
   static final AttributeKey<Long> HTTP_RESPONSE_BODY_SIZE = longKey("http.response.body.size");

@@ -19,13 +19,14 @@ import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import javax.sql.DataSource;
 
 public final class JdbcSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
   private static final Instrumenter<DbRequest, Void> STATEMENT_INSTRUMENTER;
-  public static final Instrumenter<DataSource, Void> DATASOURCE_INSTRUMENTER =
+  public static final Instrumenter<DataSource, DbInfo> DATASOURCE_INSTRUMENTER =
       createDataSourceInstrumenter(GlobalOpenTelemetry.get());
 
   static {
@@ -56,7 +57,7 @@ public final class JdbcSingletons {
     return STATEMENT_INSTRUMENTER;
   }
 
-  public static Instrumenter<DataSource, Void> dataSourceInstrumenter() {
+  public static Instrumenter<DataSource, DbInfo> dataSourceInstrumenter() {
     return DATASOURCE_INSTRUMENTER;
   }
 

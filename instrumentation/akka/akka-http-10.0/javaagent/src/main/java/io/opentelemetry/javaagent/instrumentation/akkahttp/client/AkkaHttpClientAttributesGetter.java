@@ -41,4 +41,28 @@ class AkkaHttpClientAttributesGetter
       HttpRequest httpRequest, HttpResponse httpResponse, String name) {
     return AkkaHttpUtil.responseHeader(httpResponse, name);
   }
+
+  @Nullable
+  @Override
+  public String getNetworkProtocolName(
+      HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
+    return AkkaHttpUtil.protocolName(httpRequest);
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkProtocolVersion(
+      HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
+    return AkkaHttpUtil.protocolVersion(httpRequest);
+  }
+
+  @Override
+  public String getServerAddress(HttpRequest httpRequest) {
+    return httpRequest.uri().authority().host().address();
+  }
+
+  @Override
+  public Integer getServerPort(HttpRequest httpRequest) {
+    return httpRequest.uri().authority().port();
+  }
 }

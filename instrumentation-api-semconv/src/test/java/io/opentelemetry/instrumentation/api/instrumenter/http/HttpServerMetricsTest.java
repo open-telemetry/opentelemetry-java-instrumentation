@@ -16,7 +16,6 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.internal.aggregator.ExplicitBucketHistogramUtils;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
@@ -45,8 +44,8 @@ class HttpServerMetricsTest {
             .put("http.target", "/")
             .put("http.scheme", "https")
             .put("net.transport", IP_TCP)
-            .put(NetAttributes.NET_PROTOCOL_NAME, "http")
-            .put(NetAttributes.NET_PROTOCOL_VERSION, "2.0")
+            .put(SemanticAttributes.NET_PROTOCOL_NAME, "http")
+            .put(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0")
             .put("net.host.name", "localhost")
             .put("net.host.port", 1234)
             .put("net.sock.family", "inet")
@@ -165,8 +164,8 @@ class HttpServerMetricsTest {
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                                            equalTo(NetAttributes.NET_PROTOCOL_NAME, "http"),
-                                            equalTo(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
+                                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+                                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_HOST_PORT, 1234))
@@ -189,8 +188,8 @@ class HttpServerMetricsTest {
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                                            equalTo(NetAttributes.NET_PROTOCOL_NAME, "http"),
-                                            equalTo(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
+                                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+                                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_HOST_PORT, 1234))
@@ -212,8 +211,8 @@ class HttpServerMetricsTest {
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                                            equalTo(NetAttributes.NET_PROTOCOL_NAME, "http"),
-                                            equalTo(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
+                                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+                                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
                                             equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_HOST_PORT, 1234))

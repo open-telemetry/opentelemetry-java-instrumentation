@@ -19,21 +19,27 @@ event's MDC copy:
   (same as `Span.current().getSpanContext().getTraceFlags().asHex()`).
 
 Those three pieces of information can be included in log statements produced by the logging library
-by specifying them in the pattern/format.
+by specifying them in the pattern/format. This way any services or tools that parse the application
+logs can correlate traces/spans with log statements.
 
-Tip: for Spring Boot configuration which uses logback, you can add MDC to log lines by overriding only the `logging.pattern.level`:
+> Note: If the current `Span` is invalid, the OpenTelemetry appender will not inject any trace information.
+
+## Supported logging libraries
+
+> Note: There are also log appenders for exporting logs to OpenTelemetry, not to be confused with the MDC appenders.
+
+| Library | Auto-instrumented versions | Standalone Library Instrumentation                                                                                                               |
+| ------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Log4j 1 | 1.2+                       |                                                                                                                                                  |
+| Log4j 2 | 2.7+                       | [opentelemetry-log4j-context-data-2.17-autoconfigure](../instrumentation/log4j/log4j-context-data/log4j-context-data-2.17/library-autoconfigure) |
+| Logback | 1.0+                       | [opentelemetry-logback-mdc-1.0](../instrumentation/logback/logback-mdc-1.0/library)                                                              |
+
+## Frameworks
+
+### Spring Boot
+
+For Spring Boot configuration which uses logback, you can add MDC to log lines by overriding only the `logging.pattern.level`:
 
 ```properties
 logging.pattern.level = trace_id=%mdc{trace_id} span_id=%mdc{span_id} trace_flags=%mdc{trace_flags} %5p
 ```
-
-This way any services or tools that parse the application logs can correlate traces/spans with log
-statements.
-
-## Supported logging libraries
-
-| Library | Version |
-|---------|---------|
-| Log4j 1 | 1.2+    |
-| Log4j 2 | 2.7+    |
-| Logback | 1.0+    |

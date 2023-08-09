@@ -101,7 +101,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          name sharedTopic + " send"
+          name sharedTopic + " publish"
           kind PRODUCER
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
@@ -154,7 +154,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           kind INTERNAL
         }
         span(1) {
-          name sharedTopic + " send"
+          name sharedTopic + " publish"
           kind PRODUCER
           childOf span(0)
           attributes {
@@ -230,7 +230,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           kind INTERNAL
         }
         span(1) {
-          name sharedTopic + " send"
+          name sharedTopic + " publish"
           kind PRODUCER
           childOf span(0)
           attributes {
@@ -314,7 +314,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           kind INTERNAL
         }
         span(1) {
-          name sharedTopic + " send"
+          name sharedTopic + " publish"
           kind PRODUCER
           childOf span(0)
           attributes {

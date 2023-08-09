@@ -13,6 +13,8 @@ muzzle {
 
 val camelversion = "2.20.1" // first version that the tests pass on
 
+description = "camel-2-20"
+
 dependencies {
   library("org.apache.camel:camel-core:$camelversion")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
@@ -31,13 +33,13 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent"))
 
-  testLibrary("org.apache.camel:camel-spring-boot-starter:$camelversion")
-  testLibrary("org.apache.camel:camel-jetty-starter:$camelversion")
-  testLibrary("org.apache.camel:camel-http-starter:$camelversion")
-  testLibrary("org.apache.camel:camel-jaxb-starter:$camelversion")
-  testLibrary("org.apache.camel:camel-undertow:$camelversion")
-  testLibrary("org.apache.camel:camel-aws:$camelversion")
-  testLibrary("org.apache.camel:camel-cassandraql:$camelversion")
+  testImplementation("org.apache.camel:camel-spring-boot-starter:$camelversion")
+  testImplementation("org.apache.camel:camel-jetty-starter:$camelversion")
+  testImplementation("org.apache.camel:camel-http-starter:$camelversion")
+  testImplementation("org.apache.camel:camel-jaxb-starter:$camelversion")
+  testImplementation("org.apache.camel:camel-undertow:$camelversion")
+  testImplementation("org.apache.camel:camel-aws:$camelversion")
+  testImplementation("org.apache.camel:camel-cassandraql:$camelversion")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testImplementation("org.springframework.boot:spring-boot-starter:1.5.17.RELEASE")
@@ -46,8 +48,12 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.elasticmq:elasticmq-rest-sqs_2.12:1.0.0")
 
-  testImplementation("org.testcontainers:localstack")
   testImplementation("org.testcontainers:cassandra")
+  testImplementation("org.testcontainers:testcontainers")
+  testImplementation("org.testcontainers:junit-jupiter")
+  testImplementation("com.datastax.oss:java-driver-core:4.16.0") {
+    exclude(group = "io.dropwizard.metrics", module = "metrics-core")
+  }
 
   latestDepTestLibrary("org.apache.camel:camel-core:2.+") // documented limitation
   latestDepTestLibrary("org.apache.camel:camel-spring-boot-starter:2.+") // documented limitation

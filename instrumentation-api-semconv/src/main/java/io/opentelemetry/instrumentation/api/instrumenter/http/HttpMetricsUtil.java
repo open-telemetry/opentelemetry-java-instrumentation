@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 final class HttpMetricsUtil {
 
   // we'll use the old unit if the old semconv is in use
-  private static final boolean useSeconds =
+  static final boolean emitNewSemconvMetrics =
       SemconvStability.emitStableHttpSemconv() && !SemconvStability.emitOldHttpSemconv();
 
   static final List<Double> DURATION_SECONDS_BUCKETS =
@@ -33,9 +33,12 @@ final class HttpMetricsUtil {
 
   static DoubleHistogram createDurationHistogram(Meter meter, String name, String description) {
     DoubleHistogramBuilder durationBuilder =
-        meter.histogramBuilder(name).setUnit(useSeconds ? "s" : "ms").setDescription(description);
+        meter
+            .histogramBuilder(name)
+            .setUnit(emitNewSemconvMetrics ? "s" : "ms")
+            .setDescription(description);
     // don't set custom buckets if milliseconds are still used
-    if (useSeconds && durationBuilder instanceof ExtendedDoubleHistogramBuilder) {
+    if (emitNewSemconvMetrics && durationBuilder instanceof ExtendedDoubleHistogramBuilder) {
       ((ExtendedDoubleHistogramBuilder) durationBuilder)
           .setAdvice(advice -> advice.setExplicitBucketBoundaries(DURATION_SECONDS_BUCKETS));
     }
@@ -43,7 +46,7 @@ final class HttpMetricsUtil {
   }
 
   static double nanosToUnit(long durationNanos) {
-    return durationNanos / (useSeconds ? NANOS_PER_S : NANOS_PER_MS);
+    return durationNanos / (emitNewSemconvMetrics ? NANOS_PER_S : NANOS_PER_MS);
   }
 
   private HttpMetricsUtil() {}

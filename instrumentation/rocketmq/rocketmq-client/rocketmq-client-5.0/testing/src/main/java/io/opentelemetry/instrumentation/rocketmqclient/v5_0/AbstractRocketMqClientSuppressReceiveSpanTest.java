@@ -108,7 +108,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                         span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                         span ->
                             span.hasKind(SpanKind.PRODUCER)
-                                .hasName(topic + " send")
+                                .hasName(topic + " publish")
                                 .hasStatus(StatusData.unset())
                                 .hasParent(trace.getSpan(0))
                                 .hasAttributesSatisfyingExactly(

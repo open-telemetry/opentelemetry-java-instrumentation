@@ -31,31 +31,23 @@ public interface NetServerAttributesGetter<REQUEST, RESPONSE>
   }
 
   /**
-   * Returns the application protocol used.
+   * Returns the protocol <a
+   * href="https://man7.org/linux/man-pages/man7/address_families.7.html">address family</a> which
+   * is used for communication.
    *
-   * <p>Examples: `amqp`, `http`, `mqtt`.
+   * <p>Examples: `inet`, `inet6`.
    *
-   * @deprecated This method is deprecated and will be removed in the following release. Implement
-   *     {@link #getNetworkProtocolName(Object, Object)} instead.
+   * <p>By default, this method attempts to retrieve the address family using one of the {@link
+   * #getClientInetSocketAddress(Object, Object)} and {@link #getServerInetSocketAddress(Object,
+   * Object)} methods. If neither of these methods is implemented, it will simply return {@code
+   * null}. If the instrumented library does not expose {@link InetSocketAddress} in its API, you
+   * might want to implement this method instead of {@link #getClientInetSocketAddress(Object,
+   * Object)} and {@link #getServerInetSocketAddress(Object, Object)}.
    */
-  @Deprecated
   @Nullable
-  default String getProtocolName(REQUEST request) {
-    return null;
-  }
-
-  /**
-   * Returns the version of the application protocol used.
-   *
-   * <p>Examples: `3.1.1`.
-   *
-   * @deprecated This method is deprecated and will be removed in the following release. Implement
-   *     {@link #getNetworkProtocolVersion(Object, Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String getProtocolVersion(REQUEST request) {
-    return null;
+  default String getSockFamily(REQUEST request) {
+    return InetSocketAddressUtil.getSockFamily(
+        getClientInetSocketAddress(request, null), getServerInetSocketAddress(request, null));
   }
 
   /** {@inheritDoc} */
@@ -65,227 +57,5 @@ public interface NetServerAttributesGetter<REQUEST, RESPONSE>
     return InetSocketAddressUtil.getNetworkType(
         getClientInetSocketAddress(request, response),
         getServerInetSocketAddress(request, response));
-  }
-
-  /** {@inheritDoc} */
-  @Nullable
-  @Override
-  default String getNetworkProtocolName(REQUEST request, @Nullable RESPONSE response) {
-    return getProtocolName(request);
-  }
-
-  /** {@inheritDoc} */
-  @Nullable
-  @Override
-  default String getNetworkProtocolVersion(REQUEST request, @Nullable RESPONSE response) {
-    return getProtocolVersion(request);
-  }
-
-  /**
-   * Returns the logical host name.
-   *
-   * @deprecated This method is deprecated and will be removed in the following release. Implement
-   *     {@link #getServerAddress(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String getHostName(REQUEST request) {
-    return null;
-  }
-
-  /**
-   * Returns the logical host port.
-   *
-   * @deprecated This method is deprecated and will be removed in the following release. Implement
-   *     {@link #getServerPort(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default Integer getHostPort(REQUEST request) {
-    return null;
-  }
-
-  /** {@inheritDoc} */
-  @Nullable
-  @Override
-  default String getServerAddress(REQUEST request) {
-    return getHostName(request);
-  }
-
-  /** {@inheritDoc} */
-  @Nullable
-  @Override
-  default Integer getServerPort(REQUEST request) {
-    return getHostPort(request);
-  }
-
-  /**
-   * Returns the protocol <a
-   * href="https://man7.org/linux/man-pages/man7/address_families.7.html">address family</a> which
-   * is used for communication.
-   *
-   * <p>Examples: `inet`, `inet6`.
-   *
-   * <p>By default, this method attempts to retrieve the address family using one of the {@link
-   * #getPeerSocketAddress(Object)} and {@link #getHostSocketAddress(Object)} methods. If neither of
-   * these methods is implemented, it will simply return {@code null}. If the instrumented library
-   * does not expose {@link InetSocketAddress} in its API, you might want to implement this method
-   * instead of {@link #getPeerSocketAddress(Object)} and {@link #getHostSocketAddress(Object)}.
-   */
-  @Nullable
-  default String getSockFamily(REQUEST request) {
-    return InetSocketAddressUtil.getSockFamily(
-        getClientInetSocketAddress(request, null), getServerInetSocketAddress(request, null));
-  }
-
-  /**
-   * Returns an {@link InetSocketAddress} object representing the peer socket address.
-   *
-   * <p>Implementing this method is equivalent to implementing all three of {@link
-   * #getSockFamily(Object)}, {@link #getSockPeerAddr(Object)} and {@link #getSockPeerPort(Object)}.
-   *
-   * @deprecated This method is deprecated and will be removed in the following release. Implement
-   *     {@link #getClientInetSocketAddress(Object, Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default InetSocketAddress getPeerSocketAddress(REQUEST request) {
-    return null;
-  }
-
-  /** {@inheritDoc} */
-  @Nullable
-  @Override
-  default InetSocketAddress getClientInetSocketAddress(
-      REQUEST request, @Nullable RESPONSE response) {
-    return getPeerSocketAddress(request);
-  }
-
-  /**
-   * Returns the remote socket peer address: IPv4 or IPv6 for internet protocols, path for local
-   * communication, etc.
-   *
-   * <p>Examples: `127.0.0.1`, `/tmp/mysql.sock`.
-   *
-   * <p>By default, this method attempts to retrieve the peer address using the {@link
-   * #getPeerSocketAddress(Object)} method. If this method is not implemented, it will simply return
-   * {@code null}. If the instrumented library does not expose {@link InetSocketAddress} in its API,
-   * you might want to implement this method instead of {@link #getPeerSocketAddress(Object)}.
-   *
-   * @deprecated This method is deprecated and will be removed in the following release. Implement
-   *     {@link #getClientSocketAddress(Object, Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String getSockPeerAddr(REQUEST request) {
-    return InetSocketAddressUtil.getIpAddress(getClientInetSocketAddress(request, null));
-  }
-
-  /**
-   * Returns the remote socket peer port.
-   *
-   * <p>Examples: `16456`.
-   *
-   * <p>By default, this method attempts to retrieve the peer port using the {@link
-   * #getPeerSocketAddress(Object)} method. If this method is not implemented, it will simply return
-   * {@code null}. If the instrumented library does not expose {@link InetSocketAddress} in its API,
-   * you might want to implement this method instead of {@link #getPeerSocketAddress(Object)}.
-   *
-   * @deprecated This method is deprecated and will be removed in the following release. Implement
-   *     {@link #getClientSocketPort(Object, Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default Integer getSockPeerPort(REQUEST request) {
-    return InetSocketAddressUtil.getPort(getClientInetSocketAddress(request, null));
-  }
-
-  /** {@inheritDoc} */
-  @Nullable
-  @Override
-  default String getClientSocketAddress(REQUEST request, @Nullable RESPONSE response) {
-    return getSockPeerAddr(request);
-  }
-
-  /** {@inheritDoc} */
-  @Nullable
-  @Override
-  default Integer getClientSocketPort(REQUEST request, @Nullable RESPONSE response) {
-    return getSockPeerPort(request);
-  }
-
-  /**
-   * Returns an {@link InetSocketAddress} object representing the host socket address.
-   *
-   * <p>Implementing this method is equivalent to implementing all three of {@link
-   * #getSockFamily(Object)}, {@link #getSockHostAddr(Object)} and {@link #getSockHostPort(Object)}.
-   *
-   * @deprecated This method is deprecated and will be removed in the following release. Implement
-   *     {@link #getServerInetSocketAddress(Object, Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default InetSocketAddress getHostSocketAddress(REQUEST request) {
-    return null;
-  }
-
-  /** {@inheritDoc} */
-  @Nullable
-  @Override
-  default InetSocketAddress getServerInetSocketAddress(
-      REQUEST request, @Nullable RESPONSE response) {
-    return getHostSocketAddress(request);
-  }
-
-  /**
-   * Returns the local socket address. Useful in case of a multi-IP host.
-   *
-   * <p>Examples: `192.168.0.1`.
-   *
-   * <p>By default, this method attempts to retrieve the host address using the {@link
-   * #getHostSocketAddress(Object)} method. If this method is not implemented, it will simply return
-   * {@code null}. If the instrumented library does not expose {@link InetSocketAddress} in its API,
-   * you might want to implement this method instead of {@link #getHostSocketAddress(Object)}.
-   *
-   * @deprecated This method is deprecated and will be removed in the following release. Implement
-   *     {@link #getServerSocketAddress(Object, Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String getSockHostAddr(REQUEST request) {
-    return InetSocketAddressUtil.getIpAddress(getServerInetSocketAddress(request, null));
-  }
-
-  /**
-   * Returns the local socket port number.
-   *
-   * <p>Examples: `35555`.
-   *
-   * <p>By default, this method attempts to retrieve the host port using the {@link
-   * #getHostSocketAddress(Object)} method. If this method is not implemented, it will simply return
-   * {@code null}. If the instrumented library does not expose {@link InetSocketAddress} in its API,
-   * you might want to implement this method instead of {@link #getHostSocketAddress(Object)}.
-   *
-   * @deprecated This method is deprecated and will be removed in the following release. Implement
-   *     {@link #getServerSocketPort(Object, Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default Integer getSockHostPort(REQUEST request) {
-    return InetSocketAddressUtil.getPort(getServerInetSocketAddress(request, null));
-  }
-
-  /** {@inheritDoc} */
-  @Nullable
-  @Override
-  default String getServerSocketAddress(REQUEST request, @Nullable RESPONSE response) {
-    return getSockHostAddr(request);
-  }
-
-  /** {@inheritDoc} */
-  @Nullable
-  @Override
-  default Integer getServerSocketPort(REQUEST request, @Nullable RESPONSE response) {
-    return getSockHostPort(request);
   }
 }

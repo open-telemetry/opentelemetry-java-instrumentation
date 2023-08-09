@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8.base;
 
 import static java.util.Collections.emptyMap;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import java.io.File;
@@ -15,6 +16,7 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -147,13 +149,23 @@ public final class IntegrationTestBase {
         Class<?> mqAdmin = Class.forName("org.apache.rocketmq.test.util.MQAdminTestUtils");
         Method createTopic =
             mqAdmin.getMethod(
-                "createTopic", String.class, String.class, String.class, int.class, Map.class);
-        createTopic.invoke(null, nsAddr, clusterName, topic, 20, emptyMap());
-      } catch (ClassNotFoundException
-          | InvocationTargetException
-          | NoSuchMethodException
-          | IllegalAccessException ex) {
-        throw new LinkageError("Could not initialize topic", ex);
+                "createTopic",
+                String.class,
+                String.class,
+                String.class,
+                int.class,
+                Map.class,
+                int.class);
+        await()
+            .atMost(Duration.ofSeconds(30))
+            .ignoreException(InvocationTargetException.class)
+            .until(
+                () -> {
+                  createTopic.invoke(null, nsAddr, clusterName, topic, 20, emptyMap(), 3);
+                  return true;
+                });
+      } catch (ClassNotFoundException | NoSuchMethodException ex) {
+        throw new IllegalStateException("Could not initialize topic", ex);
       }
     }
   }

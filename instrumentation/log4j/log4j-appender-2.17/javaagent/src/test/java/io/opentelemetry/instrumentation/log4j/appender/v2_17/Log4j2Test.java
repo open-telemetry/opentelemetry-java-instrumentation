@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
@@ -16,6 +17,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.time.Instant;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -68,6 +70,8 @@ class Log4j2Test {
       String expectedSeverityText)
       throws InterruptedException {
 
+    Instant start = Instant.now();
+
     // when
     if (withParent) {
       testing.runWithSpan(
@@ -88,6 +92,11 @@ class Log4j2Test {
           .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
           .hasSeverity(expectedSeverity)
           .hasSeverityText(expectedSeverityText);
+
+      assertThat(log.getTimestampEpochNanos())
+          .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
+          .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
+
       if (logException) {
         assertThat(log)
             .hasAttributesSatisfyingExactly(

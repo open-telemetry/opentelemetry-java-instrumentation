@@ -66,19 +66,17 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public void setHeader(String name, String value) {
-    // checking content-type is just an optimization to avoid unnecessary parsing
-    if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
-      try {
-        contentLength = Long.parseLong(value);
-      } catch (NumberFormatException ex) {
-        logger.log(FINE, "NumberFormatException", ex);
-      }
-    }
+    handleHeader(name, value);
     super.setHeader(name, value);
   }
 
   @Override
   public void addHeader(String name, String value) {
+    handleHeader(name, value);
+    super.addHeader(name, value);
+  }
+
+  private void handleHeader(String name, String value) {
     // checking content-type is just an optimization to avoid unnecessary parsing
     if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
       try {
@@ -87,7 +85,6 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
         logger.log(FINE, "Failed to parse the Content-Length header", ex);
       }
     }
-    super.addHeader(name, value);
   }
 
   @Override

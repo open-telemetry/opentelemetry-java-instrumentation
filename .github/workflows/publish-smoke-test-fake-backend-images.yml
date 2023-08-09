@@ -3,8 +3,8 @@ name: Publish fake backend images for smoke tests
 on:
   push:
     paths:
-      - 'smoke-tests/images/fake-backend/**'
-      - '.github/workflows/publish-smoke-test-fake-backend-images.yml'
+      - "smoke-tests/images/fake-backend/**"
+      - ".github/workflows/publish-smoke-test-fake-backend-images.yml"
     branches:
       - main
   workflow_dispatch:
@@ -14,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3
@@ -80,4 +83,3 @@ jobs:
           needs.publishLinux.result == 'success' &&
           needs.publishWindows.result == 'success'
         }}
-

@@ -7,10 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 public final class ReactorContextKeys {
 
-  public static final String CLIENT_PARENT_CONTEXT_KEY =
-      ReactorContextKeys.class.getName() + ".client-parent-context";
-  public static final String CLIENT_CONTEXT_KEY =
-      ReactorContextKeys.class.getName() + ".client-context";
+  public static final String CONTEXTS_HOLDER_KEY =
+      ReactorContextKeys.class.getName() + ".contexts-holder";
 
   private ReactorContextKeys() {}
 }

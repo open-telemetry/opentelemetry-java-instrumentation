@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -43,9 +42,10 @@ public class Slf4j2Test {
             .setResource(resource)
             .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
             .build();
+    OpenTelemetrySdk openTelemetrySdk =
+        OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build();
 
-    GlobalOpenTelemetry.resetForTest();
-    GlobalOpenTelemetry.set(OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build());
+    OpenTelemetryAppender.install(openTelemetrySdk);
   }
 
   @BeforeEach

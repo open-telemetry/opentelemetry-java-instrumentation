@@ -20,7 +20,7 @@ enum PrometheusModeNamingConvention implements NamingConvention {
     if (type == Meter.Type.COUNTER
         || type == Meter.Type.DISTRIBUTION_SUMMARY
         || type == Meter.Type.GAUGE) {
-      if (baseUnit != null && !name.endsWith("." + baseUnit)) {
+      if (baseUnit != null && !baseUnit.equals("") && !name.endsWith("." + baseUnit)) {
         name = name + "." + baseUnit;
       }
     }

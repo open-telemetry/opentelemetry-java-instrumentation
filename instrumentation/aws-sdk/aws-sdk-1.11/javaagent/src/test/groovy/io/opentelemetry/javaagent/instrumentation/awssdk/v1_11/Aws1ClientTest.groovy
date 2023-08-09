@@ -6,8 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11
 
 import com.amazonaws.AmazonWebServiceClient
+import com.amazonaws.ClientConfiguration
 import com.amazonaws.Request
 import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.auth.NoOpSigner
+import com.amazonaws.auth.SignerFactory
 import com.amazonaws.handlers.RequestHandler2
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3Client
@@ -109,5 +112,21 @@ class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
         }
       }
     }
+  }
+
+  def "calling generatePresignedUrl does not leak context"() {
+    setup:
+    SignerFactory.registerSigner("noop", NoOpSigner)
+    def client = AmazonS3ClientBuilder.standard()
+      .withRegion(Regions.US_EAST_1)
+      .withClientConfiguration(new ClientConfiguration().withSignerOverride("noop"))
+      .build()
+
+    when:
+    client.generatePresignedUrl("someBucket", "someKey", new Date())
+
+    then:
+    // expecting no active span after call to generatePresignedUrl
+    !Span.current().getSpanContext().isValid()
   }
 }

@@ -18,11 +18,12 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -34,107 +35,120 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class HttpServerAttributesExtractorStableSemconvTest {
 
   static class TestHttpServerAttributesGetter
-      implements HttpServerAttributesGetter<Map<String, Object>, Map<String, Object>> {
+      implements HttpServerAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Override
-    public String getHttpRequestMethod(Map<String, Object> request) {
-      return (String) request.get("method");
+    public String getHttpRequestMethod(Map<String, String> request) {
+      return request.get("method");
     }
 
     @Override
-    public String getUrlScheme(Map<String, Object> request) {
-      return (String) request.get("scheme");
-    }
-
-    @Nullable
-    @Override
-    public String getUrlPath(Map<String, Object> request) {
-      return (String) request.get("path");
+    public String getUrlScheme(Map<String, String> request) {
+      return request.get("scheme");
     }
 
     @Nullable
     @Override
-    public String getUrlQuery(Map<String, Object> request) {
-      return (String) request.get("query");
+    public String getUrlPath(Map<String, String> request) {
+      return request.get("path");
+    }
+
+    @Nullable
+    @Override
+    public String getUrlQuery(Map<String, String> request) {
+      return request.get("query");
     }
 
     @Override
-    public String getHttpRoute(Map<String, Object> request) {
-      return (String) request.get("route");
+    public String getHttpRoute(Map<String, String> request) {
+      return request.get("route");
     }
 
     @Override
-    public List<String> getHttpRequestHeader(Map<String, Object> request, String name) {
-      String values = (String) request.get("header." + name);
+    public List<String> getHttpRequestHeader(Map<String, String> request, String name) {
+      String values = request.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
     }
 
     @Override
     public Integer getHttpResponseStatusCode(
-        Map<String, Object> request, Map<String, Object> response, @Nullable Throwable error) {
-      String value = (String) response.get("statusCode");
+        Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
+      String value = response.get("statusCode");
       return value == null ? null : Integer.parseInt(value);
     }
 
     @Override
     public List<String> getHttpResponseHeader(
-        Map<String, Object> request, Map<String, Object> response, String name) {
-      String values = (String) response.get("header." + name);
+        Map<String, String> request, Map<String, String> response, String name) {
+      String values = response.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
     }
-  }
-
-  static class TestNetServerAttributesGetter
-      implements NetServerAttributesGetter<Map<String, Object>, Map<String, Object>> {
 
     @Nullable
     @Override
     public String getNetworkTransport(
-        Map<String, Object> request, @Nullable Map<String, Object> response) {
-      return (String) request.get("transport");
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("transport");
     }
 
     @Nullable
     @Override
     public String getNetworkType(
-        Map<String, Object> request, @Nullable Map<String, Object> response) {
-      return (String) request.get("type");
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("type");
     }
 
     @Nullable
     @Override
     public String getNetworkProtocolName(
-        Map<String, Object> request, Map<String, Object> response) {
-      return (String) request.get("protocolName");
+        Map<String, String> request, Map<String, String> response) {
+      return request.get("protocolName");
     }
 
     @Nullable
     @Override
     public String getNetworkProtocolVersion(
-        Map<String, Object> request, Map<String, Object> response) {
-      return (String) request.get("protocolVersion");
+        Map<String, String> request, Map<String, String> response) {
+      return request.get("protocolVersion");
     }
 
     @Nullable
     @Override
-    public String getServerAddress(Map<String, Object> request) {
-      return (String) request.get("hostName");
+    public String getServerAddress(Map<String, String> request) {
+      return request.get("hostName");
     }
 
     @Nullable
     @Override
-    public Integer getServerPort(Map<String, Object> request) {
-      return (Integer) request.get("hostPort");
+    public Integer getServerPort(Map<String, String> request) {
+      String value = request.get("hostPort");
+      return value == null ? null : Integer.parseInt(value);
+    }
+
+    @Nullable
+    @Override
+    public String getServerSocketAddress(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("serverSocketAddress");
+    }
+
+    @Nullable
+    @Override
+    public Integer getServerSocketPort(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      String value = request.get("serverSocketPort");
+      return value == null ? null : Integer.parseInt(value);
     }
   }
 
   @Test
   void normal() {
-    Map<String, Object> request = new HashMap<>();
+    Map<String, String> request = new HashMap<>();
     request.put("method", "POST");
     request.put("url", "http://github.com");
     request.put("path", "/repositories/1");
@@ -150,21 +164,22 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("type", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "2.0");
+    request.put("serverSocketAddress", "1.2.3.4");
+    request.put("serverSocketPort", "42");
 
-    Map<String, Object> response = new HashMap<>();
+    Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
     response.put("header.content-length", "20");
     response.put("header.custom-response-header", "654,321");
 
     Function<Context, String> routeFromContext = ctx -> "/repositories/{repoId}";
 
-    HttpServerAttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        new HttpServerAttributesExtractor<>(
-            new TestHttpServerAttributesGetter(),
-            new TestNetServerAttributesGetter(),
-            singletonList("Custom-Request-Header"),
-            singletonList("Custom-Response-Header"),
-            routeFromContext);
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
+            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
+            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
+            .setHttpRouteGetter(routeFromContext)
+            .build();
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -212,9 +227,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("transport", observedTransport);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(
-            new HttpClientAttributesExtractorStableSemconvTest.TestHttpClientAttributesGetter(),
-            new HttpClientAttributesExtractorStableSemconvTest.TestNetClientAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -242,5 +255,99 @@ class HttpServerAttributesExtractorStableSemconvTest {
           arguments("http", "3.0", "tcp", "tcp"),
           arguments("http", "42", "tcp", "tcp"));
     }
+  }
+
+  @ParameterizedTest
+  @ArgumentsSource(ValidRequestMethodsProvider.class)
+  void shouldExtractKnownMethods(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, requestMethod)
+        .doesNotContainKey(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"get", "Get"})
+  void shouldTreatMethodsAsCaseSensitive(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"PURGE", "not a method really"})
+  void shouldUseOtherForUnknownMethods(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"only", "custom", "methods", "allowed"})
+  void shouldExtractKnownMethods_override(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
+            .setKnownMethods(new HashSet<>(asList("only", "custom", "methods", "allowed")))
+            .build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, requestMethod)
+        .doesNotContainKey(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
+  }
+
+  @ParameterizedTest
+  @ArgumentsSource(ValidRequestMethodsProvider.class)
+  void shouldUseOtherForUnknownMethods_override(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
+            .setKnownMethods(new HashSet<>(asList("only", "custom", "methods", "allowed")))
+            .build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 }

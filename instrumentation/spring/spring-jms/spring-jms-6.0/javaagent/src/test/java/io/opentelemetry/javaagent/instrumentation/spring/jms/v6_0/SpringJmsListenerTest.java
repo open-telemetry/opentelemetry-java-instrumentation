@@ -107,7 +107,7 @@ class SpringJmsListenerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span ->
-                    span.hasName("spring-jms-listener send")
+                    span.hasName("spring-jms-listener publish")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -187,7 +187,7 @@ class SpringJmsListenerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span ->
-                    span.hasName("spring-jms-listener send")
+                    span.hasName("spring-jms-listener publish")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

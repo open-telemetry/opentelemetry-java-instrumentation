@@ -56,3 +56,48 @@ The following demonstrates how you might configure the appender in your `log4j.x
 
 In this example Log4j2 log events will be sent to both the console appender and
 the `OpenTelemetryAppender`.
+
+In order to function, `OpenTelemetryAppender` needs access to an `OpenTelemetry` instance. This must
+be set programmatically during application startup as follows:
+
+```java
+import io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppender;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+
+public class Application {
+
+  public static void main(String[] args) {
+    OpenTelemetrySdk openTelemetrySdk = // Configure OpenTelemetrySdk
+
+    // Find OpenTelemetryAppender in log4j configuration and install openTelemetrySdk
+    OpenTelemetryAppender.install(openTelemetrySdk);
+
+    // ... proceed with application
+  }
+}
+```
+
+#### Settings for the Log4j Appender
+
+Setting can be configured as XML attributes, for example:
+
+```xml
+<Appenders>
+  <OpenTelemetry name="OpenTelemetryAppender"
+      captureMapMessageAttributes="true"
+      captureMarkerAttribute="true"
+      captureContextDataAttributes="*"
+  />
+</Appenders>
+```
+
+The available settings are:
+
+| XML Attribute                   | Type    | Default | Description                                                                                                           |
+| ------------------------------- | ------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
+| `captureExperimentalAttributes` | Boolean | `false` | Enable the capture of experimental span attributes `thread.name` and `thread.id`.                                     |
+| `captureMapMessageAttributes`   | Boolean | `false` | Enable the capture of `MapMessage` attributes.                                                                        |
+| `captureMarkerAttribute;`       | Boolean | `false` | Enable the capture of Log4j markers as attributes.                                                                    |
+| `captureContextDataAttributes`  | String  |         | Comma separated list of context data attributes to capture. Use the wildcard character `*` to capture all attributes. |
+
+[source code attributes]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#source-code-attributes

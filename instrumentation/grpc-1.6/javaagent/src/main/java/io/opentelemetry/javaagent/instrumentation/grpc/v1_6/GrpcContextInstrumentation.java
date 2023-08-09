@@ -36,14 +36,20 @@ public class GrpcContextInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ContextBridgeAdvice {
 
-    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
-    public static Object onEnter() {
-      return null;
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    public static Context.Storage onEnter() {
+      return GrpcSingletons.getStorage();
     }
 
     @Advice.OnMethodExit
-    public static void onExit(@Advice.Return(readOnly = false) Context.Storage storage) {
-      storage = GrpcSingletons.STORAGE;
+    public static void onExit(
+        @Advice.Return(readOnly = false) Context.Storage storage,
+        @Advice.Enter Context.Storage ourStorage) {
+      if (ourStorage != null) {
+        storage = ourStorage;
+      } else {
+        storage = GrpcSingletons.setStorage(storage);
+      }
     }
   }
 }

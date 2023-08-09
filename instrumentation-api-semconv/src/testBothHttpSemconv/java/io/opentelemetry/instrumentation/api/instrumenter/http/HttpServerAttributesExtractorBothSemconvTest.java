@@ -15,8 +15,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -78,10 +77,6 @@ class HttpServerAttributesExtractorBothSemconvTest {
       String values = (String) response.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
     }
-  }
-
-  static class TestNetServerAttributesGetter
-      implements NetServerAttributesGetter<Map<String, Object>, Map<String, Object>> {
 
     @Nullable
     @Override
@@ -150,13 +145,12 @@ class HttpServerAttributesExtractorBothSemconvTest {
 
     Function<Context, String> routeFromContext = ctx -> "/repositories/{repoId}";
 
-    HttpServerAttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        new HttpServerAttributesExtractor<>(
-            new TestHttpServerAttributesGetter(),
-            new TestNetServerAttributesGetter(),
-            singletonList("Custom-Request-Header"),
-            singletonList("Custom-Response-Header"),
-            routeFromContext);
+    AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
+            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
+            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
+            .setHttpRouteGetter(routeFromContext)
+            .build();
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -183,8 +177,8 @@ class HttpServerAttributesExtractorBothSemconvTest {
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
+            entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0"),
             entry(NetworkAttributes.NETWORK_TRANSPORT, "udp"),
             entry(NetworkAttributes.NETWORK_TYPE, "ipv4"),
             entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.network;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import javax.annotation.Nullable;
 
@@ -36,7 +36,7 @@ public final class ClientAttributesExtractor<REQUEST, RESPONSE>
     internalExtractor =
         new InternalClientAttributesExtractor<>(
             getter,
-            FallbackNamePortGetter.noop(),
+            FallbackAddressPortExtractor.noop(),
             /* emitStableUrlAttributes= */ true,
             /* emitOldHttpAttributes= */ false);
   }

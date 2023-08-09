@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.azurecore.v1_36;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
-import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
@@ -30,6 +30,11 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule {
     helperResourceBuilder.register(
         "META-INF/services/com.azure.core.util.tracing.TracerProvider",
         "azure-core-1.36/META-INF/services/com.azure.core.util.tracing.TracerProvider");
+    // some azure sdks (e.g. EventHubs) are still looking up Tracer via service loader
+    // and not yet using the new TracerProvider
+    helperResourceBuilder.register(
+        "META-INF/services/com.azure.core.util.tracing.Tracer",
+        "azure-core-1.36/META-INF/services/com.azure.core.util.tracing.Tracer");
   }
 
   @Override
@@ -47,7 +52,8 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule {
   public static class EmptyTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
-      return named("com.azure.core.util.tracing.TracerProvider");
+      return namedOneOf(
+          "com.azure.core.util.tracing.TracerProvider", "com.azure.core.util.tracing.Tracer");
     }
 
     @Override

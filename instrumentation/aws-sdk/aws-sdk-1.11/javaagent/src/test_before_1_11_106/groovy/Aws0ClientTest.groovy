@@ -11,6 +11,8 @@ import com.amazonaws.auth.AWSCredentialsProviderChain
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider
 import com.amazonaws.auth.InstanceProfileCredentialsProvider
+import com.amazonaws.auth.NoOpSigner
+import com.amazonaws.auth.SignerFactory
 import com.amazonaws.auth.SystemPropertiesCredentialsProvider
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.handlers.RequestHandler2
@@ -108,8 +110,8 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_METHOD" "$method"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
@@ -234,8 +236,8 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
   def "timeout and retry errors not captured"() {
     setup:
     // One retry so two requests.
-    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
-    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
+    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(5000)))
+    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(5000)))
     AmazonS3Client client = new AmazonS3Client(new ClientConfiguration()
       .withRequestTimeout(50 /* ms */)
       .withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(1)))
@@ -271,5 +273,19 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
         }
       }
     }
+  }
+
+  def "calling generatePresignedUrl does not leak context"() {
+    setup:
+    SignerFactory.registerSigner("noop", NoOpSigner)
+    def client = new AmazonS3Client(new ClientConfiguration().withSignerOverride("noop"))
+      .withEndpoint("${server.httpUri()}")
+
+    when:
+    client.generatePresignedUrl("someBucket", "someKey", new Date())
+
+    then:
+    // expecting no active span after call to generatePresignedUrl
+    !Span.current().getSpanContext().isValid()
   }
 }

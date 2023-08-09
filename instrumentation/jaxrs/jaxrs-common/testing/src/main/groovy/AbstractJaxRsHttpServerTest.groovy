@@ -279,8 +279,8 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         spanId spanID
       }
       attributes {
-        "net.protocol.name" "http"
-        "net.protocol.version" "1.1"
+        "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+        "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
         "$SemanticAttributes.NET_HOST_NAME" fullUrl.host
         "$SemanticAttributes.NET_HOST_PORT" fullUrl.port
         "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"

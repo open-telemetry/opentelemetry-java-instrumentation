@@ -118,7 +118,7 @@ For API Gateway (HTTP) requests instrumented by using one of following methods:
 
 - extending `TracingRequestStreamHandler` or `TracingRequestHandler`
 - wrapping with `TracingRequestStreamWrapper` or `TracingRequestApiGatewayWrapper`
-traces can be propagated with supported HTTP headers (see <https://github.com/open-telemetry/opentelemetry-java/tree/main/extensions/trace-propagators>).
+  traces can be propagated with supported HTTP headers (see <https://github.com/open-telemetry/opentelemetry-java/tree/main/extensions/trace-propagators>).
 
 In order to enable requested propagation for a handler, configure it on the SDK you build.
 

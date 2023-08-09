@@ -33,7 +33,7 @@ public class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
   static class LogHandler extends Handler {
     public List<ExtLogRecord> logRecords;
 
-    LogHandler(LinkedList<ExtLogRecord> logRecords) {
+    LogHandler(List<ExtLogRecord> logRecords) {
       this.logRecords = logRecords;
     }
 
