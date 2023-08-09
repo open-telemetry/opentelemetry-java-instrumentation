@@ -124,6 +124,22 @@ class SnippetPrintWriterTest {
     assertThat(response.getStringContent()).isEqualTo(expectedHtml);
   }
 
+  @Test
+  void testInjectToTextHtmlWithOtherHeadStyle() throws IOException {
+    String snippet = "\n  <script type=\"text/javascript\"> Test </script>";
+    String html = readFileAsString("beforeSnippetInjectionWithOtherHeadStyle.html");
+
+    InMemoryHttpServletResponse response = createInMemoryHttpServletResponse("text/html");
+    Servlet3SnippetInjectingResponseWrapper responseWrapper =
+        new Servlet3SnippetInjectingResponseWrapper(response, snippet);
+
+    responseWrapper.getWriter().write(html);
+    responseWrapper.getWriter().flush();
+
+    String expectedHtml = readFileAsString("afterSnippetInjectionWithOtherHeadStyle.html");
+    assertThat(response.getStringContent()).isEqualTo(expectedHtml);
+  }
+
   private static InMemoryHttpServletResponse createInMemoryHttpServletResponse(String contentType) {
     HttpServletResponse response = mock(HttpServletResponse.class);
     when(response.getContentType()).thenReturn(contentType);
