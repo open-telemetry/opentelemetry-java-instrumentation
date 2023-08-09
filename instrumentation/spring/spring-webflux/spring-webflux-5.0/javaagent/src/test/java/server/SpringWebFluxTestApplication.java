@@ -12,6 +12,8 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -31,6 +33,7 @@ import reactor.core.publisher.Mono;
 public class SpringWebFluxTestApplication {
 
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
+  private static final CountDownLatch slowRequestLatch = new CountDownLatch(1);
 
   @Bean
   RouterFunction<ServerResponse> echoRouterFunction(EchoHandler echoHandler) {
@@ -71,7 +74,22 @@ public class SpringWebFluxTestApplication {
                 greetingHandler.intResponse(
                     Mono.just(Integer.parseInt(request.pathVariable("id")))
                         .delayElement(Duration.ofMillis(100))
-                        .map(SpringWebFluxTestApplication::tracedMethod)));
+                        .map(SpringWebFluxTestApplication::tracedMethod)))
+        .andRoute(
+            GET("/slow"),
+            request -> {
+              try {
+                slowRequestLatch.await(10, TimeUnit.SECONDS);
+              } catch (InterruptedException e) {
+                throw new IllegalStateException(e);
+              }
+              return Mono.delay(Duration.ofMillis(100))
+                  .then(ServerResponse.ok().body(BodyInserters.fromObject("ok")));
+            });
+  }
+
+  public static void resumeSlowRequest() {
+    slowRequestLatch.countDown();
   }
 
   @Component

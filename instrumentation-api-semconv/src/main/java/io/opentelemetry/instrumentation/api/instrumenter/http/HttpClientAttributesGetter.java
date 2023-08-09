@@ -31,4 +31,14 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
    */
   @Nullable
   String getUrlFull(REQUEST request);
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  String getServerAddress(REQUEST request);
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  Integer getServerPort(REQUEST request);
 }

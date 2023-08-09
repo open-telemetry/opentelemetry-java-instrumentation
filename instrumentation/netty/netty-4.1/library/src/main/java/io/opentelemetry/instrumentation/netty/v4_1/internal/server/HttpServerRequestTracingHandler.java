@@ -72,6 +72,26 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     }
   }
 
+  @Override
+  public void channelInactive(ChannelHandlerContext ctx) {
+    // connection was closed, close all remaining requests
+    Attribute<Deque<Context>> contextAttr = ctx.channel().attr(AttributeKeys.SERVER_CONTEXT);
+    Deque<Context> contexts = contextAttr.get();
+    Attribute<Deque<HttpRequestAndChannel>> requestAttr = ctx.channel().attr(HTTP_SERVER_REQUEST);
+    Deque<HttpRequestAndChannel> requests = requestAttr.get();
+
+    if (contexts == null || requests == null) {
+      return;
+    }
+
+    while (!contexts.isEmpty() || !requests.isEmpty()) {
+      Context context = contexts.pollFirst();
+      HttpRequestAndChannel request = requests.pollFirst();
+
+      instrumenter.end(context, request, null, null);
+    }
+  }
+
   private static <T> Deque<T> getOrCreate(Channel channel, AttributeKey<Deque<T>> key) {
     Attribute<Deque<T>> attribute = channel.attr(key);
     Deque<T> deque = attribute.get();
