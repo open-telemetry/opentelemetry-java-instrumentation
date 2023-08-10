@@ -53,17 +53,17 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   private static final Method FIND_PACKAGE_METHOD = getFindPackageMethod();
 
   private final Map<String, ClassCopySource> additionalInjectedClasses;
-  private final ClassLoader agentCl;
+  private final ClassLoader agentOrExtensionCl;
   private final ClassLoader instrumentedCl;
 
   public InstrumentationModuleClassLoader(
       ClassLoader instrumentedCl,
-      ClassLoader agentCl,
+      ClassLoader agentOrExtensionCl,
       Map<String, ClassCopySource> injectedClasses) {
-    // agent-classloader is "main"-parent, but class (and .class-resources) lookup is overridden
-    super(agentCl);
+    // agent/extension-classloader is "main"-parent, but class lookup is overridden
+    super(agentOrExtensionCl);
     additionalInjectedClasses = injectedClasses;
-    this.agentCl = agentCl;
+    this.agentOrExtensionCl = agentOrExtensionCl;
     this.instrumentedCl = instrumentedCl;
   }
 
@@ -102,7 +102,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
         }
       }
       if (result == null) {
-        result = tryLoad(agentCl, name);
+        result = tryLoad(agentOrExtensionCl, name);
       }
       if (result == null) {
         result = tryLoad(instrumentedCl, name);
@@ -136,7 +136,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       if (injected != null) {
         return injected.getUrl();
       }
-      URL fromAgentCl = agentCl.getResource(resourceName);
+      URL fromAgentCl = agentOrExtensionCl.getResource(resourceName);
       if (fromAgentCl != null) {
         return fromAgentCl;
       }
