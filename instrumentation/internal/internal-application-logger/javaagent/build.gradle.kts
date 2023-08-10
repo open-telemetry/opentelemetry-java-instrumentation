@@ -31,8 +31,7 @@ dependencies {
   }
 
   if (findProperty("testLatestDeps") as Boolean) {
-    // 1.4.9 breaks the Configurer interface, and Spring Boot hasn't caught up with that yet
-    testImplementation("ch.qos.logback:logback-classic:1.4.8")
+    testImplementation("ch.qos.logback:logback-classic:+")
   } else {
     testImplementation("ch.qos.logback:logback-classic") {
       version {
