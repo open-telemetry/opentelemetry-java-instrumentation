@@ -95,13 +95,15 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
                     span.hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            satisfies(SemanticAttributes.NET_PEER_PORT, port -> port.isPositive()),
-                            equalTo(SemanticAttributes.HTTP_URL, uri.toString()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 500),
+                            equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
                             satisfies(
-                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                getAttributeKey(SemanticAttributes.NET_PEER_PORT),
+                                port -> port.isPositive()),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), uri.toString()),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET"),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), 500),
+                            satisfies(
+                                getAttributeKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH),
                                 length -> length.isPositive())),
                 span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(0))));
   }

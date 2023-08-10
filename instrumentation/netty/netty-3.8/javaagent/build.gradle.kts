@@ -35,6 +35,21 @@ dependencies {
   latestDepTestLibrary("com.ning:async-http-client:1.9.+")
 }
 
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    filter {
+      includeTestsMatching("*ClientTest")
+    }
+    include("**/*ClientTest.*")
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}
+
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.
 if (!(findProperty("testLatestDeps") as Boolean)) {
   configurations.configureEach {

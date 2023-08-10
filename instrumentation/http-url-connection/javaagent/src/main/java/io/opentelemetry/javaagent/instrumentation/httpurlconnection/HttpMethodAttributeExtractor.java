@@ -9,6 +9,8 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.HttpURLConnection;
 import javax.annotation.Nullable;
@@ -40,7 +42,11 @@ public class HttpMethodAttributeExtractor<
     if (getOutputStreamContext.isOutputStreamMethodOfSunConnectionCalled()) {
       String requestMethod = connection.getRequestMethod();
       // The getOutputStream() has transformed "GET" into "POST"
-      attributes.put(SemanticAttributes.HTTP_METHOD, requestMethod);
+      attributes.put(
+          SemconvStability.emitStableHttpSemconv()
+              ? HttpAttributes.HTTP_REQUEST_METHOD
+              : SemanticAttributes.HTTP_METHOD,
+          requestMethod);
       Span span = Span.fromContext(context);
       span.updateName(requestMethod);
     }

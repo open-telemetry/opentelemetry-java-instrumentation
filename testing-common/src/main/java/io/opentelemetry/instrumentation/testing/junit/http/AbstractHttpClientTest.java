@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
-import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -19,6 +17,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -1067,7 +1066,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   }
 
   @SuppressWarnings("unchecked")
-  private static <T> AttributeKey<T> getAttributeKey(AttributeKey<T> oldKey) {
+  protected static <T> AttributeKey<T> getAttributeKey(AttributeKey<T> oldKey) {
     if (SemconvStability.emitStableHttpSemconv()) {
       if (SemanticAttributes.NET_PROTOCOL_NAME == oldKey) {
         return (AttributeKey<T>) NetworkAttributes.NETWORK_PROTOCOL_NAME;
@@ -1084,13 +1083,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
       } else if (SemanticAttributes.HTTP_URL == oldKey) {
         return (AttributeKey<T>) UrlAttributes.URL_FULL;
       } else if (SemanticAttributes.HTTP_METHOD == oldKey) {
-        return (AttributeKey<T>) stringKey("http.request.method");
+        return (AttributeKey<T>) HttpAttributes.HTTP_REQUEST_METHOD;
       } else if (SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH == oldKey) {
-        return (AttributeKey<T>) longKey("http.request.body.size");
+        return (AttributeKey<T>) HttpAttributes.HTTP_REQUEST_BODY_SIZE;
       } else if (SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH == oldKey) {
-        return (AttributeKey<T>) longKey("http.response.body.size");
+        return (AttributeKey<T>) HttpAttributes.HTTP_RESPONSE_BODY_SIZE;
       } else if (SemanticAttributes.HTTP_STATUS_CODE == oldKey) {
-        return (AttributeKey<T>) longKey("http.response.status_code");
+        return (AttributeKey<T>) HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
       }
     }
     return oldKey;
