@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
  *   <li>Finally, the instrumented application classloader is checked for the class
  * </ul>
  *
- * In addition, this classloader ensures that the lookup of corresponding .class resources follow
+ * <p>In addition, this classloader ensures that the lookup of corresponding .class resources follow
  * the same delegation strategy, so that bytecode inspection tools work correctly.
  */
 public class InstrumentationModuleClassLoader extends ClassLoader {

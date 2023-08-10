@@ -119,52 +119,52 @@ public class InstrumentationModuleClassLoaderTest {
       Map<String, ClassCopySource> toInject = new HashMap<>();
       toInject.put(C.class.getName(), ClassCopySource.create(C.class.getName(), moduleSourceCl));
 
-      InstrumentationModuleClassLoader moduleCL =
+      InstrumentationModuleClassLoader moduleCl =
           new InstrumentationModuleClassLoader(appCl, agentCl, toInject);
 
       // Verify precedence for classloading
-      Class<?> clA = moduleCL.loadClass(A.class.getName());
+      Class<?> clA = moduleCl.loadClass(A.class.getName());
       assertThat(getMarkerValue(clA)).isEqualTo("app-cl");
       assertThat(clA.getClassLoader()).isSameAs(appCl);
 
-      Class<?> clB = moduleCL.loadClass(B.class.getName());
+      Class<?> clB = moduleCl.loadClass(B.class.getName());
       assertThat(getMarkerValue(clB)).isEqualTo("agent-cl");
       assertThat(clB.getClassLoader()).isSameAs(agentCl);
 
-      Class<?> clC = moduleCL.loadClass(C.class.getName());
+      Class<?> clC = moduleCl.loadClass(C.class.getName());
       assertThat(getMarkerValue(clC)).isEqualTo("module-cl");
       assertThat(clC.getClassLoader())
-          .isSameAs(moduleCL); // class must be copied, therefore moduleCL
+          .isSameAs(moduleCl); // class must be copied, therefore moduleCL
 
-      assertThatThrownBy(() -> moduleCL.loadClass(D.class.getName()))
+      assertThatThrownBy(() -> moduleCl.loadClass(D.class.getName()))
           .isInstanceOf(ClassNotFoundException.class);
 
       // Verify precedence for looking up .class resources
-      URL resourceA = moduleCL.getResource(getClassFile(A.class));
+      URL resourceA = moduleCl.getResource(getClassFile(A.class));
       assertThat(resourceA.toString()).startsWith("jar:file:" + appJar);
-      assertThat(Collections.list(moduleCL.getResources(getClassFile(A.class))))
+      assertThat(Collections.list(moduleCl.getResources(getClassFile(A.class))))
           .containsExactly(resourceA);
-      assertThat(moduleCL.getResourceAsStream(getClassFile(A.class)))
+      assertThat(moduleCl.getResourceAsStream(getClassFile(A.class)))
           .hasBinaryContent(appClasses.get(A.class.getName()));
 
-      URL resourceB = moduleCL.getResource(getClassFile(B.class));
+      URL resourceB = moduleCl.getResource(getClassFile(B.class));
       assertThat(resourceB.toString()).startsWith("jar:file:" + agentJar);
-      assertThat(Collections.list(moduleCL.getResources(getClassFile(B.class))))
+      assertThat(Collections.list(moduleCl.getResources(getClassFile(B.class))))
           .containsExactly(resourceB);
-      assertThat(moduleCL.getResourceAsStream(getClassFile(B.class)))
+      assertThat(moduleCl.getResourceAsStream(getClassFile(B.class)))
           .hasBinaryContent(agentClasses.get(B.class.getName()));
 
-      URL resourceC = moduleCL.getResource(getClassFile(C.class));
+      URL resourceC = moduleCl.getResource(getClassFile(C.class));
       assertThat(resourceC.toString()).startsWith("jar:file:" + moduleJar);
-      assertThat(Collections.list(moduleCL.getResources(getClassFile(C.class))))
+      assertThat(Collections.list(moduleCl.getResources(getClassFile(C.class))))
           .containsExactly(resourceC);
-      assertThat(moduleCL.getResourceAsStream(getClassFile(C.class)))
+      assertThat(moduleCl.getResourceAsStream(getClassFile(C.class)))
           .hasBinaryContent(moduleClasses.get(C.class.getName()));
-      assertThat(moduleCL.getResource("/" + getClassFile(C.class))).isEqualTo(resourceC);
+      assertThat(moduleCl.getResource("/" + getClassFile(C.class))).isEqualTo(resourceC);
 
-      assertThat(moduleCL.getResource(D.class.getName())).isNull();
-      assertThat(moduleCL.getResourceAsStream(D.class.getName())).isNull();
-      assertThat(Collections.list(moduleCL.getResources(D.class.getName()))).isEmpty();
+      assertThat(moduleCl.getResource(D.class.getName())).isNull();
+      assertThat(moduleCl.getResourceAsStream(D.class.getName())).isNull();
+      assertThat(Collections.list(moduleCl.getResources(D.class.getName()))).isEmpty();
 
       // And finally verify that our resource handling does what it is supposed to do:
       // Provide the correct bytecode sources when looking up bytecode with bytebuddy (or similar
