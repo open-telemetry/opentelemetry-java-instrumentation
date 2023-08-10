@@ -27,5 +27,4 @@ and then closed automatically if there is no response from the author within 30 
 This is something that fits the scope of the project,
 but that the maintainers aren't planning to take on themselves.
 
-Note: issues with this label are automatically marked stale if there is no activity for 365 days,
-and then closed automatically if there is no response from the author within 365 days after that.
+Note: issues with this label are automatically closed if there is no activity for 365 days.
