@@ -101,7 +101,7 @@ public abstract class InstrumentationModule implements Ordered {
   }
 
   /**
-   * Instrumentation modules that override this to true (recommended) will use the inline=false
+   * Instrumentation modules that override this to true (recommended) must use the inline=false
    * Invoke Dynamic style of Byte Buddy advices which calls out to helper classes in their own
    * classloader, thus enabling better isolation, best practice code development, avoids shading and
    * enables standard debugging techniques. The non-inlining of advice will be enforced by muzzle
