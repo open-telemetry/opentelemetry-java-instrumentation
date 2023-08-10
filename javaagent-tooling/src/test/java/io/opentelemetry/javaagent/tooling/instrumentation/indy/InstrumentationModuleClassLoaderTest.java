@@ -1,5 +1,15 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.dummies.Bar;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.dummies.Foo;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.invoke.MethodHandle;
@@ -15,16 +25,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.dummies.Bar;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.dummies.Foo;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.implementation.FixedValue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SuppressWarnings("ClassNamedLikeTypeParameter")
 public class InstrumentationModuleClassLoaderTest {
@@ -35,10 +40,12 @@ public class InstrumentationModuleClassLoaderTest {
     toInject.put(Foo.class.getName(), ClassCopySource.create(Foo.class));
     toInject.put(Bar.class.getName(), ClassCopySource.create(Bar.class));
 
-    ClassLoader dummyParent = new URLClassLoader(new URL[]{}, null);
+    ClassLoader dummyParent = new URLClassLoader(new URL[] {}, null);
 
-    InstrumentationModuleClassLoader m1 = new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject);
-    InstrumentationModuleClassLoader m2 = new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject);
+    InstrumentationModuleClassLoader m1 =
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject);
+    InstrumentationModuleClassLoader m2 =
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject);
 
     // MethodHandles.publicLookup() always succeeds on the first invocation
     lookupAndInvokeFoo(m1);
@@ -47,15 +54,19 @@ public class InstrumentationModuleClassLoaderTest {
     lookupAndInvokeFoo(m2);
   }
 
-  private static void lookupAndInvokeFoo(InstrumentationModuleClassLoader classLoader) throws Throwable {
+  private static void lookupAndInvokeFoo(InstrumentationModuleClassLoader classLoader)
+      throws Throwable {
     Class<?> fooClass = classLoader.loadClass(Foo.class.getName());
     MethodHandles.Lookup lookup;
     // using public lookup fails with LinkageError on second invocation - is this a (known) JVM bug?
     // The failure only occurs on certain JVM versions, e.g. Java 8 and 11
-    //lookup = MethodHandles.publicLookup();
+    // lookup = MethodHandles.publicLookup();
     lookup = classLoader.getLookup();
-    MethodHandle methodHandle = lookup
-        .findStatic(fooClass, "foo", MethodType.methodType(String.class, classLoader.loadClass(Bar.class.getName())));
+    MethodHandle methodHandle =
+        lookup.findStatic(
+            fooClass,
+            "foo",
+            MethodType.methodType(String.class, classLoader.loadClass(Bar.class.getName())));
     assertThat(methodHandle.invoke((Bar) null)).isEqualTo("foo");
   }
 
@@ -66,8 +77,9 @@ public class InstrumentationModuleClassLoaderTest {
     toInject.put(B.class.getName(), ClassCopySource.create(B.class));
     String packageName = A.class.getName().substring(0, A.class.getName().lastIndexOf('.'));
 
-    ClassLoader dummyParent = new URLClassLoader(new URL[]{}, null);
-    InstrumentationModuleClassLoader m1 = new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject);
+    ClassLoader dummyParent = new URLClassLoader(new URL[] {}, null);
+    InstrumentationModuleClassLoader m1 =
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject);
 
     Class<?> injected = Class.forName(A.class.getName(), true, m1);
     // inject two classes from the same package to trigger errors if we try to redefine the package
@@ -82,13 +94,13 @@ public class InstrumentationModuleClassLoaderTest {
     assertThat(classPackage).isSameAs(classPackage);
   }
 
-
   @Test
   public void checkClassLookupPrecedence(@TempDir Path tempDir) throws Exception {
 
     Map<String, byte[]> appClasses = copyClassesWithMarker("app-cl", A.class, B.class, C.class);
     Map<String, byte[]> agentClasses = copyClassesWithMarker("agent-cl", B.class, C.class);
-    Map<String, byte[]> moduleClasses = copyClassesWithMarker("module-cl", A.class, B.class, C.class, D.class);
+    Map<String, byte[]> moduleClasses =
+        copyClassesWithMarker("module-cl", A.class, B.class, C.class, D.class);
 
     Path appJar = tempDir.resolve("dummy-app.jar");
     createJar(appClasses, appJar);
@@ -99,17 +111,18 @@ public class InstrumentationModuleClassLoaderTest {
     Path moduleJar = tempDir.resolve("instrumentation-module.jar");
     createJar(moduleClasses, moduleJar);
 
-    URLClassLoader appCl = new URLClassLoader(new URL[]{appJar.toUri().toURL()}, null);
-    URLClassLoader agentCl = new URLClassLoader(new URL[]{agentJar.toUri().toURL()}, null);
-    URLClassLoader moduleSourceCl = new URLClassLoader(new URL[]{moduleJar.toUri().toURL()}, null);
+    URLClassLoader appCl = new URLClassLoader(new URL[] {appJar.toUri().toURL()}, null);
+    URLClassLoader agentCl = new URLClassLoader(new URL[] {agentJar.toUri().toURL()}, null);
+    URLClassLoader moduleSourceCl = new URLClassLoader(new URL[] {moduleJar.toUri().toURL()}, null);
 
     try {
       Map<String, ClassCopySource> toInject = new HashMap<>();
       toInject.put(C.class.getName(), ClassCopySource.create(C.class.getName(), moduleSourceCl));
 
-      InstrumentationModuleClassLoader moduleCL = new InstrumentationModuleClassLoader(appCl, agentCl, toInject);
+      InstrumentationModuleClassLoader moduleCL =
+          new InstrumentationModuleClassLoader(appCl, agentCl, toInject);
 
-      //Verify precedence for classloading
+      // Verify precedence for classloading
       Class<?> clA = moduleCL.loadClass(A.class.getName());
       assertThat(getMarkerValue(clA)).isEqualTo("app-cl");
       assertThat(clA.getClassLoader()).isSameAs(appCl);
@@ -120,27 +133,29 @@ public class InstrumentationModuleClassLoaderTest {
 
       Class<?> clC = moduleCL.loadClass(C.class.getName());
       assertThat(getMarkerValue(clC)).isEqualTo("module-cl");
-      assertThat(clC.getClassLoader()).isSameAs(moduleCL); //class must be copied, therefore moduleCL
+      assertThat(clC.getClassLoader())
+          .isSameAs(moduleCL); // class must be copied, therefore moduleCL
 
-      assertThatThrownBy(() -> moduleCL.loadClass(D.class.getName())).isInstanceOf(ClassNotFoundException.class);
+      assertThatThrownBy(() -> moduleCL.loadClass(D.class.getName()))
+          .isInstanceOf(ClassNotFoundException.class);
 
-      //Verify precedence for looking up .class resources
+      // Verify precedence for looking up .class resources
       URL resourceA = moduleCL.getResource(getClassFile(A.class));
-      assertThat(resourceA.toString()).startsWith("jar:file:"+appJar);
+      assertThat(resourceA.toString()).startsWith("jar:file:" + appJar);
       assertThat(Collections.list(moduleCL.getResources(getClassFile(A.class))))
           .containsExactly(resourceA);
       assertThat(moduleCL.getResourceAsStream(getClassFile(A.class)))
           .hasBinaryContent(appClasses.get(A.class.getName()));
 
       URL resourceB = moduleCL.getResource(getClassFile(B.class));
-      assertThat(resourceB.toString()).startsWith("jar:file:"+agentJar);
+      assertThat(resourceB.toString()).startsWith("jar:file:" + agentJar);
       assertThat(Collections.list(moduleCL.getResources(getClassFile(B.class))))
           .containsExactly(resourceB);
       assertThat(moduleCL.getResourceAsStream(getClassFile(B.class)))
           .hasBinaryContent(agentClasses.get(B.class.getName()));
 
       URL resourceC = moduleCL.getResource(getClassFile(C.class));
-      assertThat(resourceC.toString()).startsWith("jar:file:"+moduleJar);
+      assertThat(resourceC.toString()).startsWith("jar:file:" + moduleJar);
       assertThat(Collections.list(moduleCL.getResources(getClassFile(C.class))))
           .containsExactly(resourceC);
       assertThat(moduleCL.getResourceAsStream(getClassFile(C.class)))
@@ -152,7 +167,8 @@ public class InstrumentationModuleClassLoaderTest {
       assertThat(Collections.list(moduleCL.getResources(D.class.getName()))).isEmpty();
 
       // And finally verify that our resource handling does what it is supposed to do:
-      // Provide the correct bytecode sources when looking up bytecode with bytebuddy (or similar tools)
+      // Provide the correct bytecode sources when looking up bytecode with bytebuddy (or similar
+      // tools)
 
       assertThat(ClassFileLocator.ForClassLoader.read(clA))
           .isEqualTo(appClasses.get(A.class.getName()));
@@ -169,18 +185,17 @@ public class InstrumentationModuleClassLoaderTest {
   }
 
   private static String getClassFile(Class<?> cl) {
-    return cl.getName().replace('.', '/') +".class";
+    return cl.getName().replace('.', '/') + ".class";
   }
 
   private static Map<String, byte[]> copyClassesWithMarker(String marker, Class<?>... toCopy) {
 
     Map<String, byte[]> classes = new HashMap<>();
-    for(Class<?> clazz : toCopy) {
+    for (Class<?> clazz : toCopy) {
       classes.put(clazz.getName(), copyClassWithMarker(clazz, marker));
     }
     return classes;
   }
-
 
   private static byte[] copyClassWithMarker(Class<?> original, String markerValue) {
     return new ByteBuddy()
@@ -200,24 +215,25 @@ public class InstrumentationModuleClassLoaderTest {
   }
 
   private static void createJar(Map<String, byte[]> classNameToBytecode, Path jarFilePath) {
-    try(OutputStream fileOut = Files.newOutputStream(jarFilePath)) {
-      try(JarOutputStream jarOut = new JarOutputStream(fileOut)) {
-        for(String clName : classNameToBytecode.keySet()) {
-          String classFile = clName.replace('.', '/') +".class";
+    try (OutputStream fileOut = Files.newOutputStream(jarFilePath)) {
+      try (JarOutputStream jarOut = new JarOutputStream(fileOut)) {
+        for (String clName : classNameToBytecode.keySet()) {
+          String classFile = clName.replace('.', '/') + ".class";
           jarOut.putNextEntry(new JarEntry(classFile));
           jarOut.write(classNameToBytecode.get(clName));
           jarOut.closeEntry();
         }
       }
-    }catch (IOException e) {
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
-
   public static class A {}
-  public static class B {}
-  public static class C {}
-  public static class D {}
 
+  public static class B {}
+
+  public static class C {}
+
+  public static class D {}
 }
