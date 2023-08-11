@@ -17,6 +17,8 @@ class QueryParameterKeyCache {
   private static final ConcurrentMap<String, AttributeKey<List<String>>> cache =
       new ConcurrentHashMap<>();
 
+  private QueryParameterKeyCache() {}
+
   static AttributeKey<List<String>> get(String headerName) {
     // TODO: Limit cache size to prevent cache bloating attacks
     return cache.computeIfAbsent(headerName, QueryParameterKeyCache::createKey);
