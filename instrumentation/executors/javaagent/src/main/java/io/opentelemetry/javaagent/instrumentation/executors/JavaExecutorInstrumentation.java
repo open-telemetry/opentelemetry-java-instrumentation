@@ -16,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingRunnable;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -80,12 +81,16 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     public static PropagatedContext enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
-      if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        VirtualField<Runnable, PropagatedContext> virtualField =
-            VirtualField.find(Runnable.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
+      if (!ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
+        return null;
       }
-      return null;
+      if (ContextPropagatingRunnable.shouldDecorateRunnable(task)) {
+        task = ContextPropagatingRunnable.propagateContext(task, context);
+        return null;
+      }
+      VirtualField<Runnable, PropagatedContext> virtualField =
+          VirtualField.find(Runnable.class, PropagatedContext.class);
+      return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
