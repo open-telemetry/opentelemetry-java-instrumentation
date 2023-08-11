@@ -953,6 +953,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                   && attrs.get(SemanticAttributes.NET_TRANSPORT) != null) {
                 assertThat(attrs).containsEntry(SemanticAttributes.NET_TRANSPORT, IP_TCP);
               }
+              if (SemconvStability.emitStableHttpSemconv()
+                  && attrs.get(NetworkAttributes.NETWORK_TYPE) != null) {
+                assertThat(attrs).containsEntry(NetworkAttributes.NETWORK_TYPE, "ipv4");
+              }
               AttributeKey<String> netProtocolKey =
                   getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME);
               if (httpClientAttributes.contains(netProtocolKey)) {
