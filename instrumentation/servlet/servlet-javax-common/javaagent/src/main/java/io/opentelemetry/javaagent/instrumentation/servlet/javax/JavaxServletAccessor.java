@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -94,6 +95,12 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
       HttpServletRequest httpServletRequest, String name) {
     String[] values = httpServletRequest.getParameterValues(name);
     return values == null ? Collections.emptyList() : Arrays.asList(values);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public Map<String, String[]> getQueryParamsMap(HttpServletRequest request) {
+    return (Map<String, String[]>) request.getParameterMap();
   }
 
   @Override

@@ -5,8 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
+import io.opentelemetry.api.common.AttributeKey;
 import java.security.Principal;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * This interface is used to access methods of ServletContext, HttpServletRequest and
@@ -54,6 +58,17 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
   Iterable<String> getRequestHeaderNames(REQUEST request);
 
   List<String> getRequestParameterValues(REQUEST request, String name);
+
+  default void forAllQueryParams(
+      REQUEST request, BiConsumer<AttributeKey<List<String>>, List<String>> consumer) {
+    Map<String, String[]> parameterMap = getQueryParamsMap(request);
+    for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+      AttributeKey<List<String>> key = AttributeKey.stringArrayKey(entry.getKey());
+      consumer.accept(key, Arrays.asList(entry.getValue()));
+    }
+  }
+
+  Map<String, String[]> getQueryParamsMap(REQUEST request);
 
   String getRequestServletPath(REQUEST request);
 

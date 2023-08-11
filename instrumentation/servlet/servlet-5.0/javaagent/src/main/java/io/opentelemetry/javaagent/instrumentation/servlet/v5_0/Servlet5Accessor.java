@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 
 public class Servlet5Accessor
     implements ServletAccessor<HttpServletRequest, HttpServletResponse>,
@@ -119,6 +120,11 @@ public class Servlet5Accessor
       HttpServletRequest httpServletRequest, String name) {
     String[] values = httpServletRequest.getParameterValues(name);
     return values == null ? Collections.emptyList() : Arrays.asList(values);
+  }
+
+  @Override
+  public Map<String, String[]> getQueryParamsMap(HttpServletRequest request) {
+    return request.getParameterMap();
   }
 
   @Override

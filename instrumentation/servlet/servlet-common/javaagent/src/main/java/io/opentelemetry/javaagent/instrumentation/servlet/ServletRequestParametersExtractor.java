@@ -40,8 +40,16 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     return !CAPTURE_REQUEST_PARAMETERS.isEmpty();
   }
 
+  private static boolean captureAll() {
+    return CAPTURE_REQUEST_PARAMETERS.size() == 1 && CAPTURE_REQUEST_PARAMETERS.get(0).equals("*");
+  }
+
   public void setAttributes(
       REQUEST request, BiConsumer<AttributeKey<List<String>>, List<String>> consumer) {
+    if (captureAll()) {
+      accessor.forAllQueryParams(request, consumer);
+      return;
+    }
     for (String name : CAPTURE_REQUEST_PARAMETERS) {
       List<String> values = accessor.getRequestParameterValues(request, name);
       if (!values.isEmpty()) {
