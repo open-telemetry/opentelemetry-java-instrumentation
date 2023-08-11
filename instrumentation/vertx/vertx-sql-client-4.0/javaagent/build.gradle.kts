@@ -12,12 +12,11 @@ muzzle {
 }
 
 dependencies {
-  library("io.vertx:vertx-sql-client:4.1.0")
-  compileOnly("io.vertx:vertx-codegen:4.1.0")
+  library("io.vertx:vertx-sql-client:4.0.0")
+  compileOnly("io.vertx:vertx-codegen:4.0.0")
 
-  testLibrary("io.vertx:vertx-pg-client:4.1.0")
-  testLibrary("io.vertx:vertx-codegen:4.1.0")
-  testLibrary("io.vertx:vertx-opentelemetry:4.1.0")
+  testLibrary("io.vertx:vertx-pg-client:4.0.0")
+  testLibrary("io.vertx:vertx-codegen:4.0.0")
 }
 
 tasks.withType<Test>().configureEach {
