@@ -14,7 +14,6 @@ import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -152,7 +151,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       URL resource = getResource(resourceName);
       List<URL> result =
           resource != null ? Collections.singletonList(resource) : Collections.emptyList();
-      return new EnumeratorFromIterator<>(result.iterator());
+      return Collections.enumeration(result);
     }
     return super.getResources(resourceName);
   }
@@ -228,25 +227,6 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       } catch (NoSuchMethodException ex) {
         throw new IllegalStateException("expected method to always exist!", ex);
       }
-    }
-  }
-
-  private static class EnumeratorFromIterator<T> implements Enumeration<T> {
-
-    private final Iterator<T> iterator;
-
-    private EnumeratorFromIterator(Iterator<T> iterator) {
-      this.iterator = iterator;
-    }
-
-    @Override
-    public boolean hasMoreElements() {
-      return iterator.hasNext();
-    }
-
-    @Override
-    public T nextElement() {
-      return iterator.next();
     }
   }
 }
