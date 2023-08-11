@@ -91,7 +91,7 @@ public class InstrumentationModuleClassLoaderTest {
 
     assertThat(classPackage).isNotNull();
     assertThat(clPackage).isNotNull();
-    assertThat(classPackage).isSameAs(classPackage);
+    assertThat(classPackage).isSameAs(clPackage);
   }
 
   @Test
