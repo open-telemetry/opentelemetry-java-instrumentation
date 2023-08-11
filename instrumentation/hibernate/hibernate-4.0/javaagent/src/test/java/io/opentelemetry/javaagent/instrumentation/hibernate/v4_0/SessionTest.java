@@ -17,6 +17,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -95,23 +96,57 @@ class SessionTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session."
-                            + parameter.methodName
-                            + " io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value"),
-                span -> assertClientSpan(span, trace.getSpan(1)),
+                    span.hasName(
+                            "Session."
+                                + parameter.methodName
+                                + " io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
                 span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))),
-                span -> assertClientSpan(span, trace.getSpan(3))));
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
+                            equalTo(SemanticAttributes.DB_NAME, "db1"),
+                            equalTo(SemanticAttributes.DB_USER, "sa"),
+                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            satisfies(
+                                SemanticAttributes.DB_STATEMENT,
+                                val -> val.isInstanceOf(String.class)),
+                            satisfies(
+                                SemanticAttributes.DB_OPERATION,
+                                val -> val.isInstanceOf(String.class)),
+                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
+                span ->
+                    span.hasName("Transaction.commit")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(AttributeKey.stringKey("hibernate.session_id")))),
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(3))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
+                            equalTo(SemanticAttributes.DB_NAME, "db1"),
+                            equalTo(SemanticAttributes.DB_USER, "sa"),
+                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            satisfies(
+                                SemanticAttributes.DB_STATEMENT,
+                                val -> val.isInstanceOf(String.class)),
+                            satisfies(
+                                SemanticAttributes.DB_OPERATION,
+                                val -> val.isInstanceOf(String.class)),
+                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value"))));
   }
 
   @Test
@@ -160,14 +195,16 @@ class SessionTest extends AbstractHibernateTest {
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class)))),
                 span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id")))));
+                    span.hasName("Transaction.commit")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(AttributeKey.stringKey("hibernate.session_id"))))));
   }
 
   @ParameterizedTest
@@ -189,22 +226,42 @@ class SessionTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session."
-                            + parameter.methodName
-                            + " io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value"),
+                    span.hasName(
+                            "Session."
+                                + parameter.methodName
+                                + " io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
                 span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))),
-                span -> assertClientSpan(span, trace.getSpan(2))));
+                    span.hasName("Transaction.commit")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(AttributeKey.stringKey("hibernate.session_id")))),
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
+                            equalTo(SemanticAttributes.DB_NAME, "db1"),
+                            equalTo(SemanticAttributes.DB_USER, "sa"),
+                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            satisfies(
+                                SemanticAttributes.DB_STATEMENT,
+                                val -> val.isInstanceOf(String.class)),
+                            satisfies(
+                                SemanticAttributes.DB_OPERATION,
+                                val -> val.isInstanceOf(String.class)),
+                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value"))));
   }
 
   @ParameterizedTest
@@ -226,17 +283,40 @@ class SessionTest extends AbstractHibernateTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertSessionSpan(span, trace.getSpan(0), "SELECT Value"),
-                span -> assertClientSpan(span, trace.getSpan(1)),
                 span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id")))));
+                    span.hasName("SELECT Value")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
+                            equalTo(SemanticAttributes.DB_NAME, "db1"),
+                            equalTo(SemanticAttributes.DB_USER, "sa"),
+                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            satisfies(
+                                SemanticAttributes.DB_STATEMENT,
+                                val -> val.isInstanceOf(String.class)),
+                            satisfies(
+                                SemanticAttributes.DB_OPERATION,
+                                val -> val.isInstanceOf(String.class)),
+                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
+                span ->
+                    span.hasName("Transaction.commit")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(AttributeKey.stringKey("hibernate.session_id"))))));
   }
 
   @Test
@@ -267,37 +347,94 @@ class SessionTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("overlapping Sessions"),
                 span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value"),
+                    span.hasName(
+                            "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
                 span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session.insert io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value"),
-                span -> assertClientSpan(span, trace.getSpan(2), "INSERT"),
+                    span.hasName(
+                            "Session.insert io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
                 span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value"),
+                    span.hasName("INSERT db1.Value")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
+                            equalTo(SemanticAttributes.DB_NAME, "db1"),
+                            equalTo(SemanticAttributes.DB_USER, "sa"),
+                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            satisfies(
+                                SemanticAttributes.DB_STATEMENT,
+                                stringAssert -> stringAssert.startsWith("insert")),
+                            equalTo(SemanticAttributes.DB_OPERATION, "INSERT"),
+                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
                 span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session.delete io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value"),
+                    span.hasName(
+                            "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
                 span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))),
-                span -> assertClientSpan(span, trace.getSpan(6), "INSERT"),
-                span -> assertClientSpan(span, trace.getSpan(6), "DELETE")));
+                    span.hasName(
+                            "Session.delete io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
+                span ->
+                    span.hasName("Transaction.commit")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(AttributeKey.stringKey("hibernate.session_id")))),
+                span ->
+                    span.hasName("INSERT db1.Value")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(6))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
+                            equalTo(SemanticAttributes.DB_NAME, "db1"),
+                            equalTo(SemanticAttributes.DB_USER, "sa"),
+                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            satisfies(
+                                SemanticAttributes.DB_STATEMENT,
+                                stringAssert -> stringAssert.startsWith("insert")),
+                            equalTo(SemanticAttributes.DB_OPERATION, "INSERT"),
+                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
+                span ->
+                    span.hasName("DELETE db1.Value")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(6))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
+                            equalTo(SemanticAttributes.DB_NAME, "db1"),
+                            equalTo(SemanticAttributes.DB_USER, "sa"),
+                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            satisfies(
+                                SemanticAttributes.DB_STATEMENT,
+                                stringAssert -> stringAssert.startsWith("delete")),
+                            equalTo(SemanticAttributes.DB_OPERATION, "DELETE"),
+                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value"))));
   }
 
   private static Stream<Arguments> provideArgumentsHibernateAction() {
@@ -675,16 +812,37 @@ class SessionTest extends AbstractHibernateTest {
   static void sessionAssertion(TraceAssert trace, String methodName, String resource) {
     trace.hasSpansSatisfyingExactly(
         span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-        span -> assertSessionSpan(span, trace.getSpan(0), "Session." + methodName + " " + resource),
-        span -> assertClientSpan(span, trace.getSpan(1)),
         span ->
-            assertSpanWithSessionId(
-                span,
-                trace.getSpan(0),
-                "Transaction.commit",
-                trace
-                    .getSpan(1)
-                    .getAttributes()
-                    .get(AttributeKey.stringKey("hibernate.session_id"))));
+            span.hasName("Session." + methodName + " " + resource)
+                .hasKind(SpanKind.INTERNAL)
+                .hasParent(trace.getSpan(0))
+                .hasAttributesSatisfyingExactly(
+                    satisfies(
+                        AttributeKey.stringKey("hibernate.session_id"),
+                        val -> val.isInstanceOf(String.class))),
+        span ->
+            span.hasKind(SpanKind.CLIENT)
+                .hasParent(trace.getSpan(1))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
+                    equalTo(SemanticAttributes.DB_NAME, "db1"),
+                    equalTo(SemanticAttributes.DB_USER, "sa"),
+                    equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                    satisfies(
+                        SemanticAttributes.DB_STATEMENT, val -> val.isInstanceOf(String.class)),
+                    satisfies(
+                        SemanticAttributes.DB_OPERATION, val -> val.isInstanceOf(String.class)),
+                    equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
+        span ->
+            span.hasName("Transaction.commit")
+                .hasKind(SpanKind.INTERNAL)
+                .hasParent(trace.getSpan(0))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        AttributeKey.stringKey("hibernate.session_id"),
+                        trace
+                            .getSpan(1)
+                            .getAttributes()
+                            .get(AttributeKey.stringKey("hibernate.session_id")))));
   }
 }

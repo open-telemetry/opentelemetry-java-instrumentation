@@ -15,7 +15,7 @@ import spring.jpa.PersistenceConfig
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
-class SpringJpaTest2 extends AgentInstrumentationSpecification {
+class SpringJpaTest extends AgentInstrumentationSpecification {
 
   @Shared
   def context = new AnnotationConfigApplicationContext(PersistenceConfig)

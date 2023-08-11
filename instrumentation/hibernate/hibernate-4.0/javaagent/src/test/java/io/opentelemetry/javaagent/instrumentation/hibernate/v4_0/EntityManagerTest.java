@@ -121,17 +121,24 @@ class EntityManagerTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    assertSessionSpan(
-                        span, trace.getSpan(0), "Session." + action + " " + parameter.resource),
+                    span.hasName("Session." + action + " " + parameter.resource)
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
                 span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))),
+                    span.hasName("Transaction.commit")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(AttributeKey.stringKey("hibernate.session_id")))),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(2))
@@ -152,8 +159,13 @@ class EntityManagerTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    assertSessionSpan(
-                        span, trace.getSpan(0), "Session." + action + " " + parameter.resource),
+                    span.hasName("Session." + action + " " + parameter.resource)
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
@@ -170,14 +182,16 @@ class EntityManagerTest extends AbstractHibernateTest {
                                 val -> val.isInstanceOf(String.class)),
                             equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
                 span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))));
+                    span.hasName("Transaction.commit")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(AttributeKey.stringKey("hibernate.session_id")))));
           }
         });
   }
@@ -201,7 +215,14 @@ class EntityManagerTest extends AbstractHibernateTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertSessionSpan(span, trace.getSpan(0), "SELECT Value"),
+                span ->
+                    span.hasName("SELECT Value")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
@@ -218,14 +239,16 @@ class EntityManagerTest extends AbstractHibernateTest {
                                 val -> val.isInstanceOf(String.class)),
                             equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
                 span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id")))));
+                    span.hasName("Transaction.commit")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(AttributeKey.stringKey("hibernate.session_id"))))));
   }
 
   private static Stream<Arguments> provideArgumentsQueryState() {

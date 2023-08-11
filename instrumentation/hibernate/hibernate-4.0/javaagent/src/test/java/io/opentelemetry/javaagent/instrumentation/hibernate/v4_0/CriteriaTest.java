@@ -5,8 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.hibernate.Criteria;
@@ -43,22 +47,41 @@ class CriteriaTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Criteria."
-                            + methodName
-                            + " io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value"),
-                span -> assertClientSpan(span, trace.getSpan(1), "SELECT"),
+                    span.hasName(
+                            "Criteria."
+                                + methodName
+                                + " io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
                 span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id")))));
+                    span.hasName("SELECT db1.Value")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
+                            equalTo(SemanticAttributes.DB_NAME, "db1"),
+                            equalTo(SemanticAttributes.DB_USER, "sa"),
+                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            satisfies(
+                                SemanticAttributes.DB_STATEMENT,
+                                stringAssert -> stringAssert.startsWith("select")),
+                            equalTo(SemanticAttributes.DB_OPERATION, "SELECT"),
+                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
+                span ->
+                    span.hasName("Transaction.commit")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(AttributeKey.stringKey("hibernate.session_id"))))));
   }
 
   private static Stream<Arguments> provideArguments() {
