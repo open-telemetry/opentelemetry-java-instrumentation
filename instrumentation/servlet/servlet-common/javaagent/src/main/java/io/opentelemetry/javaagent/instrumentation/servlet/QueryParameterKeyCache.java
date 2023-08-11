@@ -19,9 +19,9 @@ class QueryParameterKeyCache {
 
   private QueryParameterKeyCache() {}
 
-  static AttributeKey<List<String>> get(String headerName) {
+  static AttributeKey<List<String>> get(String parameterName) {
     // TODO: Limit cache size to prevent cache bloating attacks
-    return cache.computeIfAbsent(headerName, QueryParameterKeyCache::createKey);
+    return cache.computeIfAbsent(parameterName, QueryParameterKeyCache::createKey);
   }
 
   private static AttributeKey<List<String>> createKey(String parameterName) {
