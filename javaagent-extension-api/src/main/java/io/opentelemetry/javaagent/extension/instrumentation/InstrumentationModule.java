@@ -101,6 +101,9 @@ public abstract class InstrumentationModule implements Ordered {
   }
 
   /**
+   * Note this is an experimental feature until phase 1 of <a
+   * href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8999">
+   * implementing the invokedynamic based instrumentation mechanism</a> is complete.
    * Instrumentation modules that override this to true (recommended) must use the inline=false
    * Invoke Dynamic style of Byte Buddy advices which calls out to helper classes in their own
    * classloader, thus enabling better isolation, best practice code development, avoids shading and
