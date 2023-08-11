@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
@@ -16,7 +17,9 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -501,6 +504,38 @@ class KotlinCoroutinesInstrumentationTest {
     runBlocking {
       annotated1()
     }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          {
+            it.hasName("a1")
+              .hasNoParent()
+              .hasAttributesSatisfyingExactly(
+                equalTo(SemanticAttributes.CODE_NAMESPACE, this.javaClass.name),
+                equalTo(SemanticAttributes.CODE_FUNCTION, "annotated1")
+              )
+          },
+          {
+            it.hasName("KotlinCoroutinesInstrumentationTest.annotated2")
+              .hasParent(trace.getSpan(0))
+              .hasAttributesSatisfyingExactly(
+                equalTo(SemanticAttributes.CODE_NAMESPACE, this.javaClass.name),
+                equalTo(SemanticAttributes.CODE_FUNCTION, "annotated2"),
+                equalTo(AttributeKey.longKey("byteValue"), 1),
+                equalTo(AttributeKey.longKey("intValue"), 4),
+                equalTo(AttributeKey.longKey("longValue"), 5),
+                equalTo(AttributeKey.longKey("shortValue"), 6),
+                equalTo(AttributeKey.doubleKey("doubleValue"), 2.0),
+                equalTo(AttributeKey.doubleKey("floatValue"), 3.0),
+                equalTo(AttributeKey.booleanKey("booleanValue"), true),
+                equalTo(AttributeKey.stringKey("charValue"), "a"),
+                equalTo(AttributeKey.stringKey("stringValue"), "test")
+              )
+          }
+        )
+      }
+    )
   }
 
   @WithSpan(value = "a1", kind = SpanKind.CLIENT)

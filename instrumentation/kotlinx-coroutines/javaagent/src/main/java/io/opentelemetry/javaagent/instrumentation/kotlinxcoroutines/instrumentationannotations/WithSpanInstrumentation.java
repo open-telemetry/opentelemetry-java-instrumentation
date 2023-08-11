@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations;
 
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.KotlinCoroutineUtil.isKotlinSuspendMethod;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
@@ -20,9 +20,8 @@ import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationExcludedMethods;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.List;
 import kotlin.coroutines.Continuation;
 import net.bytebuddy.asm.Advice;
@@ -32,7 +31,6 @@ import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.MethodList;
-import net.bytebuddy.description.method.ParameterList;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -54,31 +52,20 @@ import org.objectweb.asm.tree.VarInsnNode;
 import org.objectweb.asm.util.CheckClassAdapter;
 
 class WithSpanInstrumentation implements TypeInstrumentation {
+  // whether to check the transformed bytecode with asm CheckClassAdapter
   private static final boolean CHECK_CLASS =
       InstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.kotlinx-coroutines.check-class", false);
+          .getBoolean(
+              "otel.instrumentation.kotlinx-coroutines.check-class",
+              InstrumentationConfig.get().getBoolean("otel.javaagent.debug", false));
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   // this matcher matches all methods that should be excluded from transformation
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
-  private final ElementMatcher<MethodDescription> isKotlinSuspendMethod;
 
   WithSpanInstrumentation() {
     annotatedMethodMatcher =
         isAnnotatedWith(named("application.io.opentelemetry.instrumentation.annotations.WithSpan"));
-    // kotlin suspend methods return Object take kotlin.coroutines.Continuation as last argument
-    isKotlinSuspendMethod =
-        returns(Object.class)
-            .and(
-                target -> {
-                  ParameterList<?> parameterList = target.getParameters();
-                  if (!parameterList.isEmpty()) {
-                    String lastParameter =
-                        parameterList.get(parameterList.size() - 1).getType().asErasure().getName();
-                    return "kotlin.coroutines.Continuation".equals(lastParameter);
-                  }
-                  return false;
-                });
     excludedMethodsMatcher = AnnotationExcludedMethods.configureExcludedMethods();
   }
 
@@ -88,7 +75,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
         .and(
             declaresMethod(
                 annotatedMethodMatcher
-                    .and(isKotlinSuspendMethod)
+                    .and(isKotlinSuspendMethod())
                     .and(not(excludedMethodsMatcher))));
   }
 
@@ -184,11 +171,11 @@ class WithSpanInstrumentation implements TypeInstrumentation {
           public void visitEnd() {
             super.visitEnd();
 
+            MethodVisitor mv = target;
             if (hasWithSpanAnnotation(this)) {
-              instrument(target, this, className);
-            } else {
-              this.accept(target);
+              mv = instrument(mv, this, className);
             }
+            this.accept(mv);
           }
         };
       }
@@ -225,15 +212,16 @@ class WithSpanInstrumentation implements TypeInstrumentation {
       }
     }
 
-    private static void instrument(MethodVisitor target, MethodNode source, String className) {
-      // collect method arguments with @SpanAttribute annotation
+    private static List<Parameter> collectAnnotatedParameters(MethodNode source) {
       List<Parameter> annotatedParameters = new ArrayList<>();
       if (source.visibleParameterAnnotations != null) {
         int slot = 1; // this is in slot 0
         Type[] parameterTypes = Type.getArgumentTypes(source.desc);
         for (int i = 0; i < parameterTypes.length; i++) {
           Type type = parameterTypes[i];
-          if (source.visibleParameterAnnotations.length <= i) {
+          // if current parameter index is equal or larger than the count of annotated parameters
+          // we have already checked all the parameters with annotations
+          if (i >= source.visibleParameterAnnotations.length) {
             break;
           }
           boolean hasSpanAttributeAnnotation = false;
@@ -273,6 +261,14 @@ class WithSpanInstrumentation implements TypeInstrumentation {
         }
       }
 
+      return annotatedParameters;
+    }
+
+    private static MethodVisitor instrument(
+        MethodVisitor target, MethodNode source, String className) {
+      // collect method arguments with @SpanAttribute annotation
+      List<Parameter> annotatedParameters = collectAnnotatedParameters(source);
+
       String methodName = source.name;
       MethodNode methodNode =
           new MethodNode(
@@ -287,6 +283,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
             int ourContinuationLocal;
             int contextLocal;
             int scopeLocal;
+            int lastLocal;
 
             final Label start = new Label();
             final Label handler = new Label();
@@ -302,6 +299,8 @@ class WithSpanInstrumentation implements TypeInstrumentation {
               ourContinuationLocal = newLocal(Type.getType(Continuation.class));
               contextLocal = newLocal(Type.getType(Context.class));
               scopeLocal = newLocal(Type.getType(Scope.class));
+              // set lastLocal to the last local we added
+              lastLocal = scopeLocal;
 
               visitLabel(start);
             }
@@ -501,17 +500,15 @@ class WithSpanInstrumentation implements TypeInstrumentation {
                     methodNode.instructions.get(0), temp.instructions);
               }
 
-              // insert exception handler code, this exception handler will run catch Throwable
+              // insert exception handler code, this exception handler will catch Throwable
               {
                 MethodNode temp = new MethodNode();
-                // scopeLocal was the last local we added before the start of try block
-                int numLocals = scopeLocal + 1;
+                // lastLocal is the last local we added before the start of try block
+                int numLocals = lastLocal + 1;
                 Object[] locals = new Object[numLocals];
                 // in this handler we are using only the locals we added, we don't care about method
                 // arguments and this, so we don't list them in the stack frame
-                for (int i = 0; i < locals.length - 2; i++) {
-                  locals[i] = Opcodes.TOP;
-                }
+                Arrays.fill(locals, Opcodes.TOP);
                 locals[requestLocal] = Type.getInternalName(MethodRequest.class);
                 locals[ourContinuationLocal] = Type.getInternalName(Continuation.class);
                 locals[contextLocal] = Type.getInternalName(Context.class);
@@ -583,136 +580,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
             }
           };
 
-      source.accept(generatorAdapter);
-    }
-  }
-
-  /**
-   * Converts compressed frames (F_FULL, F_SAME etc.) into expanded frames (F_NEW). Using this
-   * visitor should give the same result as using ClassReader.EXPAND_FRAMES.
-   */
-  private static class ExpandFramesClassVisitor extends ClassVisitor {
-    private String className;
-
-    ExpandFramesClassVisitor(ClassVisitor classVisitor) {
-      super(Opcodes.ASM9, classVisitor);
-    }
-
-    @Override
-    public void visit(
-        int version,
-        int access,
-        String name,
-        String signature,
-        String superName,
-        String[] interfaces) {
-      super.visit(version, access, name, signature, superName, interfaces);
-      className = name;
-    }
-
-    @Override
-    public MethodVisitor visitMethod(
-        int access, String name, String descriptor, String signature, String[] exceptions) {
-      MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-      return new ExpandFramesMethodVisitor(mv, className, access, descriptor);
-    }
-  }
-
-  private static class ExpandFramesMethodVisitor extends MethodVisitor {
-    final List<Object> currentLocals = new ArrayList<>();
-    final List<Object> currentStack = new ArrayList<>();
-
-    ExpandFramesMethodVisitor(MethodVisitor mv, String className, int access, String descriptor) {
-      super(Opcodes.ASM9, mv);
-      if (!Modifier.isStatic(access)) {
-        currentLocals.add(className);
-      }
-      for (Type type : Type.getArgumentTypes(descriptor)) {
-        switch (type.getSort()) {
-          case Type.BOOLEAN:
-          case Type.BYTE:
-          case Type.CHAR:
-          case Type.INT:
-          case Type.SHORT:
-            currentLocals.add(Opcodes.INTEGER);
-            break;
-          case Type.DOUBLE:
-            currentLocals.add(Opcodes.DOUBLE);
-            break;
-          case Type.FLOAT:
-            currentLocals.add(Opcodes.FLOAT);
-            break;
-          case Type.LONG:
-            currentLocals.add(Opcodes.LONG);
-            break;
-          case Type.ARRAY:
-          case Type.OBJECT:
-            currentLocals.add(type.getInternalName());
-            break;
-          default:
-            throw new IllegalStateException("Unexpected type " + type.getSort() + " " + type);
-        }
-      }
-    }
-
-    private static void copy(Object[] array, int count, List<Object> list) {
-      list.clear();
-      for (int i = 0; i < count; i++) {
-        list.add(array[i]);
-      }
-    }
-
-    @Override
-    public void visitFrame(int type, int numLocal, Object[] local, int numStack, Object[] stack) {
-      switch (type) {
-          // An expanded frame.
-        case Opcodes.F_NEW:
-          // A compressed frame with complete frame data.
-        case Opcodes.F_FULL:
-          copy(local, numLocal, currentLocals);
-          copy(stack, numStack, currentStack);
-          break;
-          // A compressed frame with exactly the same locals as the previous frame and with an empty
-          // stack.
-        case Opcodes.F_SAME:
-          currentStack.clear();
-          break;
-          // A compressed frame with exactly the same locals as the previous frame and with a single
-          // value on the stack.
-        case Opcodes.F_SAME1:
-          currentStack.clear();
-          currentStack.add(stack[0]);
-          break;
-          // A compressed frame where locals are the same as the locals in the previous frame,
-          // except that additional 1-3 locals are defined, and with an empty stack.
-        case Opcodes.F_APPEND:
-          currentStack.clear();
-          for (int i = 0; i < numLocal; i++) {
-            currentLocals.add(local[i]);
-          }
-          break;
-          // A compressed frame where locals are the same as the locals in the previous frame,
-          // except that the last 1-3 locals are absent and with an empty stack.
-        case Opcodes.F_CHOP:
-          currentStack.clear();
-          for (Iterator<Object> iterator =
-                  currentLocals.listIterator(currentLocals.size() - numLocal);
-              iterator.hasNext(); ) {
-            iterator.next();
-            iterator.remove();
-          }
-          break;
-        default:
-          throw new IllegalStateException("Unexpected frame type " + type);
-      }
-
-      // visit expanded frame
-      super.visitFrame(
-          Opcodes.F_NEW,
-          currentLocals.size(),
-          currentLocals.toArray(),
-          currentStack.size(),
-          currentStack.toArray());
+      return generatorAdapter;
     }
   }
 }

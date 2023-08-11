@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationannotations;
 
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationSingletons.instrumenterWithAttributes;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.KotlinCoroutineUtil.isKotlinSuspendMethod;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.whereAny;
 
 import io.opentelemetry.context.Context;
@@ -26,7 +26,6 @@ import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.description.method.ParameterList;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -47,22 +46,9 @@ class WithSpanInstrumentation implements TypeInstrumentation {
                 isAnnotatedWith(
                     named(
                         "application.io.opentelemetry.instrumentation.annotations.SpanAttribute"))));
-    // kotlin suspend methods take kotlin.coroutines.Continuation as last argument
-    ElementMatcher<MethodDescription> isKotlinSuspendMethod =
-        returns(Object.class)
-            .and(
-                target -> {
-                  ParameterList<?> parameterList = target.getParameters();
-                  if (!parameterList.isEmpty()) {
-                    String lastParameter =
-                        parameterList.get(parameterList.size() - 1).getType().asErasure().getName();
-                    return "kotlin.coroutines.Continuation".equals(lastParameter);
-                  }
-                  return false;
-                });
     // exclude all kotlin suspend methods, these are handle in kotlinx-coroutines instrumentation
     excludedMethodsMatcher =
-        AnnotationExcludedMethods.configureExcludedMethods().or(isKotlinSuspendMethod);
+        AnnotationExcludedMethods.configureExcludedMethods().or(isKotlinSuspendMethod());
   }
 
   @Override
