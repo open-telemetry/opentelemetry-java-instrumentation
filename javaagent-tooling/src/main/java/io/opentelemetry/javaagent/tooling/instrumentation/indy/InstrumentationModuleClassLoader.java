@@ -14,7 +14,6 @@ import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -40,21 +39,16 @@ import javax.annotation.Nullable;
  */
 public class InstrumentationModuleClassLoader extends ClassLoader {
 
-  private static final Map<String, ClassCopySource> ALWAYS_INJECTED_CLASSES;
-
-  static {
-    Map<String, ClassCopySource> alwaysInjected = new HashMap<>();
-    alwaysInjected.put(
-        LookupExposer.class.getName(), ClassCopySource.create(LookupExposer.class).cached());
-    ALWAYS_INJECTED_CLASSES = Collections.unmodifiableMap(alwaysInjected);
-  }
-
+  private static final Map<String, ClassCopySource> ALWAYS_INJECTED_CLASSES =
+      Collections.singletonMap(
+          LookupExposer.class.getName(), ClassCopySource.create(LookupExposer.class).cached());
   private static final ProtectionDomain PROTECTION_DOMAIN = getProtectionDomain();
   private static final Method FIND_PACKAGE_METHOD = getFindPackageMethod();
 
   private final Map<String, ClassCopySource> additionalInjectedClasses;
   private final ClassLoader agentOrExtensionCl;
   private final ClassLoader instrumentedCl;
+  private volatile MethodHandles.Lookup cachedLookup;
 
   public InstrumentationModuleClassLoader(
       ClassLoader instrumentedCl,
@@ -73,13 +67,17 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
    * @return a lookup capable of accessing public types in this classloader
    */
   public MethodHandles.Lookup getLookup() {
-    // Load the injected copy of LookupExposer and invoke it
-    try {
-      Class<?> lookupExposer = loadClass(LookupExposer.class.getName());
-      return (MethodHandles.Lookup) lookupExposer.getMethod("getLookup").invoke(null);
-    } catch (Exception e) {
-      throw new IllegalStateException(e);
+    if (cachedLookup == null) {
+      // Load the injected copy of LookupExposer and invoke it
+      try {
+        // we don't mind the race condition causing the initialization to run multiple times here
+        Class<?> lookupExposer = loadClass(LookupExposer.class.getName());
+        cachedLookup = (MethodHandles.Lookup) lookupExposer.getMethod("getLookup").invoke(null);
+      } catch (Exception e) {
+        throw new IllegalStateException(e);
+      }
     }
+    return cachedLookup;
   }
 
   @Override
@@ -175,15 +173,17 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
 
   @Nullable
   private ClassCopySource getInjectedClass(String name) {
-    if (ALWAYS_INJECTED_CLASSES.containsKey(name)) {
-      return ALWAYS_INJECTED_CLASSES.get(name);
+    ClassCopySource alwaysInjected = ALWAYS_INJECTED_CLASSES.get(name);
+    if (alwaysInjected != null) {
+      return alwaysInjected;
     }
     return additionalInjectedClasses.get(name);
   }
 
   private Class<?> defineClassWithPackage(String name, byte[] bytecode) {
-    if (name.contains(".")) {
-      String packageName = name.substring(0, name.lastIndexOf('.'));
+    int lastDotIndex = name.lastIndexOf('.');
+    if (lastDotIndex != -1) {
+      String packageName = name.substring(0, lastDotIndex);
       if (findPackage(packageName) == null) {
         definePackage(packageName, null, null, null, null, null, null, null);
       }
