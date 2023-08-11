@@ -63,7 +63,7 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
       REQUEST request, BiConsumer<AttributeKey<List<String>>, List<String>> consumer) {
     Map<String, String[]> parameterMap = getQueryParamsMap(request);
     for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-      AttributeKey<List<String>> key = AttributeKey.stringArrayKey(entry.getKey());
+      AttributeKey<List<String>> key = QueryParameterKeyCache.get(entry.getKey());
       consumer.accept(key, Arrays.asList(entry.getValue()));
     }
   }

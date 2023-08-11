@@ -13,9 +13,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
@@ -26,9 +23,6 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
       InstrumentationConfig.get()
           .getList(
               "otel.instrumentation.servlet.experimental.capture-request-parameters", emptyList());
-
-  private static final ConcurrentMap<String, AttributeKey<List<String>>> parameterKeysCache =
-      new ConcurrentHashMap<>();
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 
@@ -53,7 +47,7 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     for (String name : CAPTURE_REQUEST_PARAMETERS) {
       List<String> values = accessor.getRequestParameterValues(request, name);
       if (!values.isEmpty()) {
-        consumer.accept(parameterAttributeKey(name), values);
+        consumer.accept(QueryParameterKeyCache.get(name), values);
       }
     }
   }
@@ -75,17 +69,5 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     // them before request encoding has been set
     REQUEST request = requestContext.request();
     setAttributes(request, attributes::put);
-  }
-
-  private static AttributeKey<List<String>> parameterAttributeKey(String headerName) {
-    return parameterKeysCache.computeIfAbsent(headerName, n -> createKey(n));
-  }
-
-  private static AttributeKey<List<String>> createKey(String parameterName) {
-    // normalize parameter name similarly as is done with header names when header values are
-    // captured as span attributes
-    parameterName = parameterName.toLowerCase(Locale.ROOT);
-    String key = "servlet.request.parameter." + parameterName.replace('-', '_');
-    return AttributeKey.stringArrayKey(key);
   }
 }
