@@ -183,11 +183,25 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     int lastDotIndex = name.lastIndexOf('.');
     if (lastDotIndex != -1) {
       String packageName = name.substring(0, lastDotIndex);
-      if (findPackage(packageName) == null) {
-        definePackage(packageName, null, null, null, null, null, null, null);
-      }
+      safeDefinePackage(packageName);
     }
     return defineClass(name, bytecode, 0, bytecode.length, PROTECTION_DOMAIN);
+  }
+
+  private void safeDefinePackage(String packageName) {
+    if (findPackage(packageName) == null) {
+      try {
+        definePackage(packageName, null, null, null, null, null, null, null);
+      } catch (IllegalArgumentException e) {
+        // Can happen if a parent classloader attempts to define the same package at the same time
+        // in Java 8
+        if (findPackage(packageName) == null) {
+          // package still doesn't exist, the IllegalArgumentException must be for a different
+          // reason than a race condition
+          throw e;
+        }
+      }
+    }
   }
 
   /**
