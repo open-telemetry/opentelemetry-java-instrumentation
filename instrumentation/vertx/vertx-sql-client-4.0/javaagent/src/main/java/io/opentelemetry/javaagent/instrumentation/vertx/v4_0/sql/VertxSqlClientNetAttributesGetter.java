@@ -14,12 +14,6 @@ public enum VertxSqlClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String getTransport(VertxSqlClientRequest request, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getServerAddress(VertxSqlClientRequest request) {
     return request.getHost();
   }

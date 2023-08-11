@@ -10,6 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkTransportFilter;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 
 /**
@@ -32,13 +33,12 @@ public final class NetworkAttributesExtractor<REQUEST, RESPONSE>
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalExtractor;
 
   NetworkAttributesExtractor(NetworkAttributesGetter<REQUEST, RESPONSE> getter) {
-    // the NetworkAttributesExtractor will always emit new semconv
     internalExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,
             NetworkTransportFilter.alwaysTrue(),
-            /* emitStableUrlAttributes= */ true,
-            /* emitOldHttpAttributes= */ false);
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv());
   }
 
   @Override

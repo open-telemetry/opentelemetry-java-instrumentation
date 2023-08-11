@@ -10,11 +10,6 @@ import javax.annotation.Nullable;
 
 public final class PulsarNetClientAttributesGetter
     implements NetClientAttributesGetter<BasePulsarRequest, Void> {
-  @Nullable
-  @Override
-  public String getTransport(BasePulsarRequest request, @Nullable Void unused) {
-    return null;
-  }
 
   @Nullable
   @Override
