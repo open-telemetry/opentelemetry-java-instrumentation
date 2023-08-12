@@ -44,9 +44,13 @@ public final class HttpClientMetrics implements OperationListener {
   private final DoubleHistogram duration;
 
   private HttpClientMetrics(Meter meter) {
+    String durationInstrumentName =
+        HttpMetricsUtil.emitNewSemconvMetrics
+            ? "http.client.request.duration"
+            : "http.client.duration";
     duration =
         createDurationHistogram(
-            meter, "http.client.duration", "The duration of the outbound HTTP request");
+            meter, durationInstrumentName, "The duration of the outbound HTTP request");
   }
 
   @Override

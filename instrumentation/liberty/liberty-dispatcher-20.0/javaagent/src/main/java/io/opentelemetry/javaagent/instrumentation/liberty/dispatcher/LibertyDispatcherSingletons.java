@@ -22,8 +22,6 @@ public final class LibertyDispatcherSingletons {
   static {
     LibertyDispatcherHttpAttributesGetter httpAttributesGetter =
         new LibertyDispatcherHttpAttributesGetter();
-    LibertyDispatcherNetAttributesGetter netAttributesGetter =
-        new LibertyDispatcherNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<LibertyRequest, LibertyResponse>builder(
@@ -32,7 +30,7 @@ public final class LibertyDispatcherSingletons {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                HttpServerAttributesExtractor.builder(httpAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())

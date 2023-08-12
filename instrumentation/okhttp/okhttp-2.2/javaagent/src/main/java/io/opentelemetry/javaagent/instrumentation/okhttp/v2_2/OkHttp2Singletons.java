@@ -30,7 +30,6 @@ public final class OkHttp2Singletons {
 
   static {
     OkHttp2HttpAttributesGetter httpAttributesGetter = new OkHttp2HttpAttributesGetter();
-    OkHttp2NetAttributesGetter netAttributesGetter = new OkHttp2NetAttributesGetter();
 
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
 
@@ -41,14 +40,14 @@ public final class OkHttp2Singletons {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                HttpClientAttributesExtractor.builder(httpAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    httpAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addOperationMetrics(HttpClientMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
       builder.addOperationMetrics(HttpClientExperimentalMetrics.get());

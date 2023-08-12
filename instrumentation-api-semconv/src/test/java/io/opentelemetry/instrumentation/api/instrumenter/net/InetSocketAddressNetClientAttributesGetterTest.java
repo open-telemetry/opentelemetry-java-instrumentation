@@ -56,6 +56,7 @@ class InetSocketAddressNetClientAttributesGetterTest {
   }
 
   @Test
+  @SuppressWarnings("AddressSelection")
   void fullAddress() {
     // given
     InetSocketAddress address = new InetSocketAddress("api.github.com", 456);

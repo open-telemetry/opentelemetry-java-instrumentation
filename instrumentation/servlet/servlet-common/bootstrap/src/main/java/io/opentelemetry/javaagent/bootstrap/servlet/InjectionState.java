@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.bootstrap.servlet;
 // this is shared by both ServletOutputStream and PrintWriter injection
 public class InjectionState {
   private static final int HEAD_TAG_WRITTEN_FAKE_VALUE = -1;
-  private static final int HEAD_TAG_LENGTH = "<head>".length();
+  private static final int HEAD_TAG_PREFIX_LENGTH = "<head".length();
   private final SnippetInjectingResponseWrapper wrapper;
   private int headTagBytesSeen = 0;
 
@@ -45,7 +45,7 @@ public class InjectionState {
     } else {
       headTagBytesSeen = 0;
     }
-    if (headTagBytesSeen == HEAD_TAG_LENGTH) {
+    if (headTagBytesSeen > HEAD_TAG_PREFIX_LENGTH && b == '>') {
       setHeadTagWritten();
       return true;
     } else {
@@ -64,10 +64,11 @@ public class InjectionState {
       return true;
     } else if (headTagBytesSeen == 4 && b == 'd') {
       return true;
-    } else if (headTagBytesSeen == 5 && b == '>') {
+    } else if (headTagBytesSeen == 5 && (b == '>' || Character.isWhitespace(b))) {
       return true;
+    } else {
+      return headTagBytesSeen > 5;
     }
-    return false;
   }
 
   public SnippetInjectingResponseWrapper getWrapper() {

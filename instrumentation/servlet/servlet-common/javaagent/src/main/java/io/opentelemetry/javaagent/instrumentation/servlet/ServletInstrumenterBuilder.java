@@ -47,8 +47,6 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
       HttpServerAttributesGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
           httpAttributesGetter) {
 
-    ServletNetAttributesGetter<REQUEST, RESPONSE> netAttributesGetter =
-        new ServletNetAttributesGetter<>(accessor);
     ServletErrorCauseExtractor<REQUEST, RESPONSE> errorCauseExtractor =
         new ServletErrorCauseExtractor<>(accessor);
     AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
@@ -60,7 +58,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .setErrorCauseExtractor(errorCauseExtractor)
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                HttpServerAttributesExtractor.builder(httpAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())

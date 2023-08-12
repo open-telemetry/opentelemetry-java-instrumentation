@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
 /**
@@ -15,7 +18,10 @@ import javax.annotation.Nullable;
  * various HTTP client attributes in a type-generic way.
  */
 public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
-    extends HttpCommonAttributesGetter<REQUEST, RESPONSE> {
+    extends HttpCommonAttributesGetter<REQUEST, RESPONSE>,
+        NetClientAttributesGetter<REQUEST, RESPONSE>,
+        NetworkAttributesGetter<REQUEST, RESPONSE>,
+        ServerAttributesGetter<REQUEST, RESPONSE> {
 
   /**
    * Returns the absolute URL describing a network resource according to <a
@@ -25,4 +31,14 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
    */
   @Nullable
   String getUrlFull(REQUEST request);
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  String getServerAddress(REQUEST request);
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  Integer getServerPort(REQUEST request);
 }

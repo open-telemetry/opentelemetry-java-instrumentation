@@ -33,8 +33,7 @@ public final class NettyServerInstrumenterFactory {
     NettyHttpServerAttributesGetter httpAttributesGetter = new NettyHttpServerAttributesGetter();
 
     HttpServerAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse> extractorBuilder =
-        HttpServerAttributesExtractor.builder(
-            httpAttributesGetter, new NettyNetServerAttributesGetter());
+        HttpServerAttributesExtractor.builder(httpAttributesGetter);
     extractorConfigurer.accept(extractorBuilder);
 
     return Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(

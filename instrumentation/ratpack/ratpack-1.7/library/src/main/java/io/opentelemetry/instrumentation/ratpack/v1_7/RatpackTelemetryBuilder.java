@@ -17,8 +17,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackNetClientAttributesGetter;
-import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackNetServerAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -38,12 +36,10 @@ public final class RatpackTelemetryBuilder {
       new ArrayList<>();
   private final HttpClientAttributesExtractorBuilder<RequestSpec, HttpResponse>
       httpClientAttributesExtractorBuilder =
-          HttpClientAttributesExtractor.builder(
-              RatpackHttpClientAttributesGetter.INSTANCE, new RatpackNetClientAttributesGetter());
+          HttpClientAttributesExtractor.builder(RatpackHttpClientAttributesGetter.INSTANCE);
   private final HttpServerAttributesExtractorBuilder<Request, Response>
       httpServerAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(
-              RatpackHttpAttributesGetter.INSTANCE, new RatpackNetServerAttributesGetter());
+          HttpServerAttributesExtractor.builder(RatpackHttpAttributesGetter.INSTANCE);
 
   private final List<AttributesExtractor<? super RequestSpec, ? super HttpResponse>>
       additionalHttpClientExtractors = new ArrayList<>();

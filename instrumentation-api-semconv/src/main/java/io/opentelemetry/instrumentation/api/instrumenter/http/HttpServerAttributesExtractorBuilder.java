@@ -8,29 +8,46 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 /** A builder of {@link HttpServerAttributesExtractor}. */
 public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter;
-  final NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter;
+
+  @SuppressWarnings("deprecation") // using the net extractor for the old->stable semconv story
+  final io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
+          REQUEST, RESPONSE>
+      netAttributesGetter;
+
+  final HttpAddressPortExtractor<REQUEST> addressPortExtractor;
   List<String> capturedRequestHeaders = emptyList();
   List<String> capturedResponseHeaders = emptyList();
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
-  boolean captureServerSocketAttributes = false;
+  Function<Context, String> httpRouteGetter = HttpRouteHolder::getRoute;
 
   HttpServerAttributesExtractorBuilder(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
+      @SuppressWarnings("deprecation") // using the net extractor for the old->stable semconv story
+          io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
+                  REQUEST, RESPONSE>
+              netAttributesGetter) {
     this.httpAttributesGetter = httpAttributesGetter;
     this.netAttributesGetter = netAttributesGetter;
+    addressPortExtractor = new HttpAddressPortExtractor<>(httpAttributesGetter);
   }
 
   /**
@@ -92,17 +109,11 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  /**
-   * Configures the extractor to capture the optional {@code server.socket.address} and {@code
-   * server.socket.port} attributes, which are not collected by default.
-   *
-   * @param captureServerSocketAttributes {@code true} if the extractor should collect the optional
-   *     {@code server.socket.address} and {@code server.socket.port} attributes.
-   */
+  // visible for tests
   @CanIgnoreReturnValue
-  public HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> setCaptureServerSocketAttributes(
-      boolean captureServerSocketAttributes) {
-    this.captureServerSocketAttributes = captureServerSocketAttributes;
+  HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> setHttpRouteGetter(
+      Function<Context, String> httpRouteGetter) {
+    this.httpRouteGetter = httpRouteGetter;
     return this;
   }
 
@@ -111,12 +122,46 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * HttpServerAttributesExtractorBuilder}.
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
-    return new HttpServerAttributesExtractor<>(
+    return new HttpServerAttributesExtractor<>(this);
+  }
+
+  InternalUrlAttributesExtractor<REQUEST> buildUrlExtractor() {
+    return new InternalUrlAttributesExtractor<>(
         httpAttributesGetter,
+        new AlternateUrlSchemeProvider<>(httpAttributesGetter),
+        SemconvStability.emitStableHttpSemconv(),
+        SemconvStability.emitOldHttpSemconv());
+  }
+
+  InternalNetServerAttributesExtractor<REQUEST, RESPONSE> buildNetExtractor() {
+    return new InternalNetServerAttributesExtractor<>(
+        netAttributesGetter, addressPortExtractor, SemconvStability.emitOldHttpSemconv());
+  }
+
+  InternalNetworkAttributesExtractor<REQUEST, RESPONSE> buildNetworkExtractor() {
+    return new InternalNetworkAttributesExtractor<>(
         netAttributesGetter,
-        capturedRequestHeaders,
-        capturedResponseHeaders,
-        knownMethods,
-        captureServerSocketAttributes);
+        HttpNetworkTransportFilter.INSTANCE,
+        SemconvStability.emitStableHttpSemconv(),
+        SemconvStability.emitOldHttpSemconv());
+  }
+
+  InternalServerAttributesExtractor<REQUEST, RESPONSE> buildServerExtractor() {
+    return new InternalServerAttributesExtractor<>(
+        netAttributesGetter,
+        new ServerSideServerPortCondition<>(httpAttributesGetter),
+        addressPortExtractor,
+        SemconvStability.emitStableHttpSemconv(),
+        SemconvStability.emitOldHttpSemconv(),
+        InternalServerAttributesExtractor.Mode.HOST,
+        /* captureServerSocketAttributes= */ false);
+  }
+
+  InternalClientAttributesExtractor<REQUEST, RESPONSE> buildClientExtractor() {
+    return new InternalClientAttributesExtractor<>(
+        netAttributesGetter,
+        new ClientAddressAndPortExtractor<>(httpAttributesGetter),
+        SemconvStability.emitStableHttpSemconv(),
+        SemconvStability.emitOldHttpSemconv());
   }
 }

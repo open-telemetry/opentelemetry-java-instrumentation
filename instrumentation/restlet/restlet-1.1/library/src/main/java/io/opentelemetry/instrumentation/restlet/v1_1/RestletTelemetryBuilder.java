@@ -31,8 +31,7 @@ public final class RestletTelemetryBuilder {
       new ArrayList<>();
   private final HttpServerAttributesExtractorBuilder<Request, Response>
       httpAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(
-              RestletHttpAttributesGetter.INSTANCE, new RestletNetAttributesGetter());
+          HttpServerAttributesExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
 
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;

@@ -41,4 +41,15 @@ final class GoogleHttpClientHttpAttributesGetter
       HttpRequest httpRequest, HttpResponse httpResponse, String name) {
     return httpResponse.getHeaders().getHeaderStringValues(name);
   }
+
+  @Override
+  @Nullable
+  public String getServerAddress(HttpRequest request) {
+    return request.getUrl().getHost();
+  }
+
+  @Override
+  public Integer getServerPort(HttpRequest request) {
+    return request.getUrl().getPort();
+  }
 }

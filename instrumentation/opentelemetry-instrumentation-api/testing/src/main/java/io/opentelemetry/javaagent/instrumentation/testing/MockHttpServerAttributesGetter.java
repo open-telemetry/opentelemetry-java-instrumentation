@@ -54,4 +54,16 @@ enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String
   public String getUrlQuery(String s) {
     return null;
   }
+
+  @Nullable
+  @Override
+  public String getServerAddress(String s) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(String s) {
+    return null;
+  }
 }

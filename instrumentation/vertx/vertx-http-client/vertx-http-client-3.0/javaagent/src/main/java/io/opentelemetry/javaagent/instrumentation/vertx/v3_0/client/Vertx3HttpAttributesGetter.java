@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.client.AbstractVertxHttpAttributesGetter;
 import io.vertx.core.http.HttpClientRequest;
+import javax.annotation.Nullable;
 
 final class Vertx3HttpAttributesGetter extends AbstractVertxHttpAttributesGetter {
 
@@ -21,9 +22,31 @@ final class Vertx3HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
     // where relative is expected.
     if (!isAbsolute(uri)) {
       VertxRequestInfo requestInfo = requestInfoField.get(request);
-      uri = absoluteUri(requestInfo, uri);
+      if (requestInfo != null) {
+        uri = absoluteUri(requestInfo, uri);
+      }
     }
     return uri;
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(HttpClientRequest request) {
+    VertxRequestInfo requestInfo = requestInfoField.get(request);
+    if (requestInfo == null) {
+      return null;
+    }
+    return requestInfo.getHost();
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(HttpClientRequest request) {
+    VertxRequestInfo requestInfo = requestInfoField.get(request);
+    if (requestInfo == null) {
+      return null;
+    }
+    return requestInfo.getPort();
   }
 
   private static boolean isAbsolute(String uri) {

@@ -23,7 +23,6 @@ public final class GrizzlySingletons {
 
   static {
     GrizzlyHttpAttributesGetter httpAttributesGetter = new GrizzlyHttpAttributesGetter();
-    GrizzlyNetAttributesGetter netAttributesGetter = new GrizzlyNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<HttpRequestPacket, HttpResponsePacket>builder(
@@ -32,7 +31,7 @@ public final class GrizzlySingletons {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                HttpServerAttributesExtractor.builder(httpAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())

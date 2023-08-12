@@ -39,8 +39,7 @@ public final class JavaHttpClientInstrumenterFactory {
 
     HttpClientAttributesExtractorBuilder<HttpRequest, HttpResponse<?>>
         httpAttributesExtractorBuilder =
-            HttpClientAttributesExtractor.builder(
-                httpAttributesGetter, new JavaHttpClientNetAttributesGetter());
+            HttpClientAttributesExtractor.builder(httpAttributesGetter);
     extractorConfigurer.accept(httpAttributesExtractorBuilder);
 
     InstrumenterBuilder<HttpRequest, HttpResponse<?>> builder =

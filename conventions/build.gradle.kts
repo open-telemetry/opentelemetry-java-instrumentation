@@ -55,11 +55,11 @@ dependencies {
 
   // When updating, update above in plugins too
   implementation("com.diffplug.spotless:spotless-plugin-gradle:6.20.0")
-  implementation("com.google.guava:guava:32.1.1-jre")
+  implementation("com.google.guava:guava:32.1.2-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("com.github.johnrengelman:shadow:8.1.1")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.enterprise:com.gradle.enterprise.gradle.plugin:3.14")
+  implementation("com.gradle.enterprise:com.gradle.enterprise.gradle.plugin:3.14.1")
   implementation("org.owasp:dependency-check-gradle:8.3.1")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.1")
   // When updating, also update dependencyManagement/build.gradle.kts
@@ -68,7 +68,7 @@ dependencies {
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.1")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:3.1.0")
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:1.6.0")
-  implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.1")
+  implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.2")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.0"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")

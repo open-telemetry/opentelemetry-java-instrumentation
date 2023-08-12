@@ -9,6 +9,7 @@ import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter
+import io.opentelemetry.instrumentation.ktor.isIpAddress
 
 internal enum class KtorHttpServerAttributesGetter :
   HttpServerAttributesGetter<ApplicationRequest, ApplicationResponse> {
@@ -40,5 +41,27 @@ internal enum class KtorHttpServerAttributesGetter :
 
   override fun getUrlQuery(request: ApplicationRequest): String {
     return request.queryString()
+  }
+
+  override fun getNetworkProtocolName(request: ApplicationRequest, response: ApplicationResponse?): String? =
+    if (request.httpVersion.startsWith("HTTP/")) "http" else null
+
+  override fun getNetworkProtocolVersion(request: ApplicationRequest, response: ApplicationResponse?): String? =
+    if (request.httpVersion.startsWith("HTTP/")) request.httpVersion.substring("HTTP/".length) else null
+
+  override fun getServerAddress(request: ApplicationRequest): String {
+    return request.local.host
+  }
+
+  override fun getServerPort(request: ApplicationRequest): Int {
+    return request.local.port
+  }
+
+  override fun getClientSocketAddress(request: ApplicationRequest, response: ApplicationResponse?): String? {
+    val remote = request.local.remoteHost
+    if ("unknown" != remote && isIpAddress(remote)) {
+      return remote
+    }
+    return null
   }
 }

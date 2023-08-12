@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.HashMap;
+import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -31,16 +31,16 @@ class InterceptorsTest extends KafkaClientBaseTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
-  public HashMap<String, Object> producerProps() {
-    HashMap<String, Object> props = super.producerProps();
+  public Map<String, Object> producerProps() {
+    Map<String, Object> props = super.producerProps();
     props.put(
         ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
     return props;
   }
 
   @Override
-  public HashMap<String, Object> consumerProps() {
-    HashMap<String, Object> props = super.consumerProps();
+  public Map<String, Object> consumerProps() {
+    Map<String, Object> props = super.consumerProps();
     props.put(
         ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
     return props;

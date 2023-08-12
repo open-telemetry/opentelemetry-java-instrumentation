@@ -146,7 +146,7 @@ class HttpServerMetricsStableSemconvTest {
                                                     .hasSpanId(spanContext1.getSpanId())))),
             metric ->
                 assertThat(metric)
-                    .hasName("http.server.duration")
+                    .hasName("http.server.request.duration")
                     .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
@@ -235,7 +235,7 @@ class HttpServerMetricsStableSemconvTest {
                                                     .hasSpanId(spanContext2.getSpanId())))),
             metric ->
                 assertThat(metric)
-                    .hasName("http.server.duration")
+                    .hasName("http.server.request.duration")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -306,7 +306,7 @@ class HttpServerMetricsStableSemconvTest {
         .anySatisfy(
             metric ->
                 assertThat(metric)
-                    .hasName("http.server.duration")
+                    .hasName("http.server.request.duration")
                     .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->

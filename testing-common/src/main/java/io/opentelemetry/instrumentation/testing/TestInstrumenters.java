@@ -22,7 +22,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
@@ -50,9 +49,7 @@ final class TestInstrumenters {
         Instrumenter.<String, Void>builder(
                 openTelemetry, "test", HttpSpanNameExtractor.create(HttpServerGetter.INSTANCE))
             // cover both semconv and span-kind strategies
-            .addAttributesExtractor(
-                HttpServerAttributesExtractor.create(
-                    HttpServerGetter.INSTANCE, NetServerGetter.INSTANCE))
+            .addAttributesExtractor(HttpServerAttributesExtractor.create(HttpServerGetter.INSTANCE))
             .addAttributesExtractor(new SpanKeyAttributesExtractor(SpanKey.KIND_SERVER))
             .addContextCustomizer(HttpRouteHolder.create(HttpServerGetter.INSTANCE))
             .buildInstrumenter(SpanKindExtractor.alwaysServer());
@@ -180,10 +177,6 @@ final class TestInstrumenters {
     public String getUrlQuery(String s) {
       return null;
     }
-  }
-
-  private enum NetServerGetter implements NetServerAttributesGetter<String, Void> {
-    INSTANCE;
 
     @Nullable
     @Override

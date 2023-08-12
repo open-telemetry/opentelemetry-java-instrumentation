@@ -26,10 +26,8 @@ final class AwsSdkInstrumenterFactory {
       new AwsSdkExperimentalAttributesExtractor();
 
   static final AwsSdkHttpAttributesGetter httpAttributesGetter = new AwsSdkHttpAttributesGetter();
-  private static final AwsSdkNetAttributesGetter netAttributesGetter =
-      new AwsSdkNetAttributesGetter();
   static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse> httpAttributesExtractor =
-      HttpClientAttributesExtractor.create(httpAttributesGetter, netAttributesGetter);
+      HttpClientAttributesExtractor.create(httpAttributesGetter);
 
   private static final AwsSdkSpanKindExtractor spanKindExtractor = new AwsSdkSpanKindExtractor();
 

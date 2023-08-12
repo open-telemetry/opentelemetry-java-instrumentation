@@ -16,10 +16,8 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +33,7 @@ class HttpClientAttributesExtractorBothSemconvTest {
 
     @Override
     public String getUrlFull(Map<String, String> request) {
-      return request.get("url");
+      return request.get("urlFull");
     }
 
     @Override
@@ -61,23 +59,19 @@ class HttpClientAttributesExtractorBothSemconvTest {
       String value = response.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
     }
-  }
-
-  static class TestNetClientAttributesGetter
-      implements NetClientAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Nullable
     @Override
     public String getNetworkTransport(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("transport");
+      return request.get("networkTransport");
     }
 
     @Nullable
     @Override
     public String getNetworkType(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("type");
+      return request.get("networkType");
     }
 
     @Nullable
@@ -97,13 +91,13 @@ class HttpClientAttributesExtractorBothSemconvTest {
     @Nullable
     @Override
     public String getServerAddress(Map<String, String> request) {
-      return request.get("peerName");
+      return request.get("serverAddress");
     }
 
     @Nullable
     @Override
     public Integer getServerPort(Map<String, String> request) {
-      String statusCode = request.get("peerPort");
+      String statusCode = request.get("serverPort");
       return statusCode == null ? null : Integer.parseInt(statusCode);
     }
   }
@@ -112,16 +106,16 @@ class HttpClientAttributesExtractorBothSemconvTest {
   void normal() {
     Map<String, String> request = new HashMap<>();
     request.put("method", "POST");
-    request.put("url", "http://github.com");
+    request.put("urlFull", "http://github.com");
     request.put("header.content-length", "10");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.custom-request-header", "123,456");
-    request.put("transport", "udp");
-    request.put("type", "ipv4");
+    request.put("networkTransport", "udp");
+    request.put("networkType", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "1.1");
-    request.put("peerName", "github.com");
-    request.put("peerPort", "123");
+    request.put("serverAddress", "github.com");
+    request.put("serverPort", "123");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
@@ -131,13 +125,11 @@ class HttpClientAttributesExtractorBothSemconvTest {
     ToIntFunction<Context> resendCountFromContext = context -> 2;
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        new HttpClientAttributesExtractor<>(
-            new TestHttpClientAttributesGetter(),
-            new TestNetClientAttributesGetter(),
-            singletonList("Custom-Request-Header"),
-            singletonList("Custom-Response-Header"),
-            HttpConstants.KNOWN_METHODS,
-            resendCountFromContext);
+        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter())
+            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
+            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
+            .setResendCountIncrementer(resendCountFromContext)
+            .build();
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);

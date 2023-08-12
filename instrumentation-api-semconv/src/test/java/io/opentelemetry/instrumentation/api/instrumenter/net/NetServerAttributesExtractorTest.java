@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // testing deprecated class
 class NetServerAttributesExtractorTest {
 
   static class TestNetServerAttributesGetter

@@ -15,11 +15,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition;
+import io.opentelemetry.instrumentation.elasticsearch.rest.internal.ElasticsearchRestRequest;
+import io.opentelemetry.instrumentation.elasticsearch.rest.internal.RestResponseListener;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchEndpointDefinition;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestRequest;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.RestResponseListener;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -67,6 +67,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
           ElasticsearchRestRequest.create(
               request.getMethod(),
               request.getEndpoint(),
+              // set by elasticsearch-api-client instrumentation
               virtualField.get(request),
               request.getEntity());
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
@@ -113,6 +114,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
           ElasticsearchRestRequest.create(
               request.getMethod(),
               request.getEndpoint(),
+              // set by elasticsearch-api-client instrumentation
               virtualField.get(request),
               request.getEntity());
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {

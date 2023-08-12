@@ -14,13 +14,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetClientAttributesGetter;
-import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -149,6 +149,7 @@ public final class GrpcTelemetryBuilder {
   }
 
   /** Returns a new {@link GrpcTelemetry} with the settings of this {@link GrpcTelemetryBuilder}. */
+  @SuppressWarnings("deprecation") // using createForServerSide() for the old->stable semconv story
   public GrpcTelemetry build() {
     SpanNameExtractor<GrpcRequest> originalSpanNameExtractor = new GrpcSpanNameExtractor();
 
@@ -175,6 +176,8 @@ public final class GrpcTelemetryBuilder {
                     .addAttributesExtractors(additionalExtractors));
 
     GrpcNetClientAttributesGetter netClientAttributesGetter = new GrpcNetClientAttributesGetter();
+    GrpcNetworkServerAttributesGetter netServerAttributesGetter =
+        new GrpcNetworkServerAttributesGetter();
     GrpcRpcAttributesGetter rpcAttributesGetter = GrpcRpcAttributesGetter.INSTANCE;
 
     clientInstrumenterBuilder
@@ -188,7 +191,8 @@ public final class GrpcTelemetryBuilder {
     serverInstrumenterBuilder
         .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(
-            NetServerAttributesExtractor.create(new GrpcNetServerAttributesGetter()))
+            ServerAttributesExtractor.createForServerSide(netServerAttributesGetter))
+        .addAttributesExtractor(ClientAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(
             new GrpcAttributesExtractor(
                 GrpcRpcAttributesGetter.INSTANCE, capturedServerRequestMetadata))

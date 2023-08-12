@@ -23,7 +23,6 @@ public final class HttpUrlConnectionSingletons {
 
   static {
     HttpUrlHttpAttributesGetter httpAttributesGetter = new HttpUrlHttpAttributesGetter();
-    HttpUrlNetAttributesGetter netAttributesGetter = new HttpUrlNetAttributesGetter();
 
     InstrumenterBuilder<HttpURLConnection, Integer> builder =
         Instrumenter.<HttpURLConnection, Integer>builder(
@@ -32,14 +31,14 @@ public final class HttpUrlConnectionSingletons {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                HttpClientAttributesExtractor.builder(httpAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    httpAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addAttributesExtractor(HttpMethodAttributeExtractor.create())
             .addContextCustomizer(
                 (context, httpRequestPacket, startAttributes) ->

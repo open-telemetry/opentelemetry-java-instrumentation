@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.playws;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 import play.shaded.ahc.org.asynchttpclient.Request;
@@ -38,5 +39,26 @@ final class PlayWsClientHttpAttributesGetter
   @Override
   public List<String> getHttpResponseHeader(Request request, Response response, String name) {
     return response.getHeaders().getAll(name);
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(Request request) {
+    return request.getUri().getHost();
+  }
+
+  @Override
+  public Integer getServerPort(Request request) {
+    return request.getUri().getPort();
+  }
+
+  @Override
+  @Nullable
+  public InetSocketAddress getServerInetSocketAddress(
+      Request request, @Nullable Response response) {
+    if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
+      return (InetSocketAddress) response.getRemoteAddress();
+    }
+    return null;
   }
 }

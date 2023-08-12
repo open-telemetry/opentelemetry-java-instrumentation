@@ -96,4 +96,15 @@ enum SpringWebHttpAttributesGetter
       HttpRequest httpRequest, ClientHttpResponse clientHttpResponse, String name) {
     return clientHttpResponse.getHeaders().getOrDefault(name, emptyList());
   }
+
+  @Override
+  @Nullable
+  public String getServerAddress(HttpRequest httpRequest) {
+    return httpRequest.getURI().getHost();
+  }
+
+  @Override
+  public Integer getServerPort(HttpRequest httpRequest) {
+    return httpRequest.getURI().getPort();
+  }
 }

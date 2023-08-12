@@ -127,6 +127,25 @@ class SnippetServletOutputStreamTest {
     assertThat(out.getBytes()).isEqualTo(expectedSecondPart.getBytes(UTF_8));
   }
 
+  @Test
+  void testInjectionWithOtherHeadStyle() throws IOException {
+    String snippet = "\n  <script type=\"text/javascript\"> Test </script>";
+    byte[] html = readFileAsBytes("beforeSnippetInjectionWithOtherHeadStyle.html");
+
+    InjectionState obj = createInjectionStateForTesting(snippet, UTF_8);
+    InMemoryServletOutputStream out = new InMemoryServletOutputStream();
+
+    Supplier<String> stringSupplier = snippet::toString;
+    OutputStreamSnippetInjectionHelper helper =
+        new OutputStreamSnippetInjectionHelper(stringSupplier);
+    boolean injected = helper.handleWrite(obj, out, html, 0, html.length);
+    assertThat(obj.getHeadTagBytesSeen()).isEqualTo(-1);
+    assertThat(injected).isEqualTo(true);
+
+    byte[] expectedHtml = readFileAsBytes("afterSnippetInjectionWithOtherHeadStyle.html");
+    assertThat(out.getBytes()).isEqualTo(expectedHtml);
+  }
+
   private static InjectionState createInjectionStateForTesting(String snippet, Charset charset) {
     HttpServletResponse response = mock(HttpServletResponse.class);
     when(response.isCommitted()).thenReturn(false);

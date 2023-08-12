@@ -37,10 +37,7 @@ class KtorServerTracing private constructor(
 
     internal val additionalExtractors = mutableListOf<AttributesExtractor<in ApplicationRequest, in ApplicationResponse>>()
 
-    internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(
-      KtorHttpServerAttributesGetter.INSTANCE,
-      KtorNetServerAttributesGetter()
-    )
+    internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE)
 
     internal var statusExtractor:
       (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse> = { a -> a }
@@ -176,10 +173,7 @@ class KtorServerTracing private constructor(
       }
 
       pipeline.environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
-        val context = call.attributes.getOrNull(contextKey)
-        if (context != null) {
-          HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.SERVLET, { _, arg -> arg.route.parent.toString() }, call)
-        }
+        HttpRouteHolder.updateHttpRoute(Context.current(), HttpRouteSource.SERVLET, { _, arg -> arg.route.parent.toString() }, call)
       }
 
       return feature

@@ -20,8 +20,7 @@ final class AwsSdkInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-1.11";
 
   private static final AttributesExtractor<Request<?>, Response<?>> httpAttributesExtractor =
-      HttpClientAttributesExtractor.create(
-          new AwsSdkHttpAttributesGetter(), new AwsSdkNetAttributesGetter());
+      HttpClientAttributesExtractor.create(new AwsSdkHttpAttributesGetter());
   private static final AttributesExtractor<Request<?>, Response<?>> rpcAttributesExtractor =
       RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =

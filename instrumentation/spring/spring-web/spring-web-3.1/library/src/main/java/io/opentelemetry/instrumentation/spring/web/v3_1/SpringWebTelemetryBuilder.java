@@ -34,8 +34,7 @@ public final class SpringWebTelemetryBuilder {
       new ArrayList<>();
   private final HttpClientAttributesExtractorBuilder<HttpRequest, ClientHttpResponse>
       httpAttributesExtractorBuilder =
-          HttpClientAttributesExtractor.builder(
-              SpringWebHttpAttributesGetter.INSTANCE, new SpringWebNetAttributesGetter());
+          HttpClientAttributesExtractor.builder(SpringWebHttpAttributesGetter.INSTANCE);
   private boolean emitExperimentalHttpClientMetrics = false;
 
   @Nullable

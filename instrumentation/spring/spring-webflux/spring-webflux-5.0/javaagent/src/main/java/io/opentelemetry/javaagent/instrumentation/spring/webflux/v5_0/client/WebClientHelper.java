@@ -11,7 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.ClientInstrumenterFactory;
-import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientNetAttributesGetter;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientTracingFilter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
@@ -32,7 +32,8 @@ public final class WebClientHelper {
                   .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
           singletonList(
               PeerServiceAttributesExtractor.create(
-                  new WebClientNetAttributesGetter(), CommonConfig.get().getPeerServiceMapping())),
+                  WebClientHttpAttributesGetter.INSTANCE,
+                  CommonConfig.get().getPeerServiceMapping())),
           InstrumentationConfig.get()
               .getBoolean(
                   "otel.instrumentation.spring-webflux.experimental-span-attributes", false),

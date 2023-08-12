@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHttpAttributesGetter;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletInstrumenterFactory;
-import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletNetAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -28,8 +27,7 @@ public final class RestletTelemetryBuilder {
       new ArrayList<>();
   private final HttpServerAttributesExtractorBuilder<Request, Response>
       httpAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(
-              RestletHttpAttributesGetter.INSTANCE, new RestletNetAttributesGetter());
+          HttpServerAttributesExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
 
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
