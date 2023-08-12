@@ -51,7 +51,7 @@ abstract class HttpCommonAttributesExtractor<
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     String method = getter.getHttpRequestMethod(request);
     if (SemconvStability.emitStableHttpSemconv()) {
-      if (knownMethods.contains(method)) {
+      if (method == null || knownMethods.contains(method)) {
         internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
       } else {
         internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
