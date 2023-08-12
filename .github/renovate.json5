@@ -14,6 +14,10 @@
       "groupName": "guava packages"
     },
     {
+      "matchPackageNames": ["io.quarkus", "io.quarkus.platform:quarkus-bom"],
+      "groupName": "quarkus packages"
+    },
+    {
       "matchPackagePrefixes": ["com.gradle.enterprise"],
       "groupName": "gradle enterprise packages"
     },
