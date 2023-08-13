@@ -13,11 +13,11 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.service.ServiceRegistryBuilder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // buildSessionFactory, createCriteria(Class), and Query
 abstract class AbstractHibernateTest extends AgentInstrumentationSpecification {
 
   @RegisterExtension
@@ -28,10 +28,7 @@ abstract class AbstractHibernateTest extends AgentInstrumentationSpecification {
 
   @BeforeAll
   static void setUp() {
-    Configuration configuration = new Configuration().configure();
-    ServiceRegistryBuilder registry = new ServiceRegistryBuilder();
-    registry.applySettings(configuration.getProperties());
-    sessionFactory = configuration.buildSessionFactory(registry.buildServiceRegistry());
+    sessionFactory = new Configuration().configure().buildSessionFactory();
 
     // Pre-populate the DB, so delete/update can be tested.
     Session writer = sessionFactory.openSession();
