@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.junit.jupiter.api.Named.named;
 
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Iterator;
 import java.util.function.Consumer;
@@ -41,17 +42,17 @@ class QueryTest extends AbstractHibernateTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
                     span.hasName("UPDATE Value")
-                        .hasKind(SpanKind.INTERNAL)
+                        .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             satisfies(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
-                    span.hasKind(SpanKind.CLIENT)
+                    span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
@@ -67,15 +68,15 @@ class QueryTest extends AbstractHibernateTest {
                             equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
                 span ->
                     span.hasName("Transaction.commit")
-                        .hasKind(SpanKind.INTERNAL)
+                        .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 trace
                                     .getSpan(1)
                                     .getAttributes()
-                                    .get(AttributeKey.stringKey("hibernate.session_id"))))));
+                                    .get(stringKey("hibernate.session_id"))))));
   }
 
   @ParameterizedTest
@@ -93,18 +94,18 @@ class QueryTest extends AbstractHibernateTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
                     span.hasName(parameter.expectedSpanName)
-                        .hasKind(SpanKind.INTERNAL)
+                        .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             satisfies(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT db1.Value")
-                        .hasKind(SpanKind.CLIENT)
+                        .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
@@ -137,18 +138,18 @@ class QueryTest extends AbstractHibernateTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
                     span.hasName("SELECT Value")
-                        .hasKind(SpanKind.INTERNAL)
+                        .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             satisfies(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT db1.Value")
-                        .hasKind(SpanKind.CLIENT)
+                        .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
@@ -161,15 +162,15 @@ class QueryTest extends AbstractHibernateTest {
                             equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
                 span ->
                     span.hasName("Transaction.commit")
-                        .hasKind(SpanKind.INTERNAL)
+                        .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 trace
                                     .getSpan(1)
                                     .getAttributes()
-                                    .get(AttributeKey.stringKey("hibernate.session_id"))))));
+                                    .get(stringKey("hibernate.session_id"))))));
   }
 
   private static Stream<Arguments> providesArgumentsSingleCall() {

@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -45,21 +46,21 @@ class CriteriaTest extends AbstractHibernateTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
                     span.hasName(
                             "Criteria."
                                 + methodName
                                 + " io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
-                        .hasKind(SpanKind.INTERNAL)
+                        .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             satisfies(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT db1.Value")
-                        .hasKind(SpanKind.CLIENT)
+                        .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
@@ -73,15 +74,15 @@ class CriteriaTest extends AbstractHibernateTest {
                             equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
                 span ->
                     span.hasName("Transaction.commit")
-                        .hasKind(SpanKind.INTERNAL)
+                        .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 trace
                                     .getSpan(1)
                                     .getAttributes()
-                                    .get(AttributeKey.stringKey("hibernate.session_id"))))));
+                                    .get(stringKey("hibernate.session_id"))))));
   }
 
   private static Stream<Arguments> provideArguments() {
