@@ -17,7 +17,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // buildSessionFactory, createCriteria(Class), and Query
+@SuppressWarnings("deprecation") // buildSessionFactory
 abstract class AbstractHibernateTest extends AgentInstrumentationSpecification {
 
   @RegisterExtension

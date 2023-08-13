@@ -16,7 +16,6 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Iterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,9 +31,10 @@ class QueryTest extends AbstractHibernateTest {
         () -> {
           Session session = sessionFactory.openSession();
           session.beginTransaction();
-          Query q = session.createQuery("update Value set name = :name");
-          q.setParameter("name", "alyx");
-          q.executeUpdate();
+          session
+              .createQuery("update Value set name = :name")
+              .setParameter("name", "alyx")
+              .executeUpdate();
           session.getTransaction().commit();
           session.close();
         });
@@ -125,9 +125,8 @@ class QueryTest extends AbstractHibernateTest {
         () -> {
           Session session = sessionFactory.openSession();
           session.beginTransaction();
-          Query query = session.createQuery("from Value");
           @SuppressWarnings("unchecked")
-          Iterator<Value> iterator = query.iterate();
+          Iterator<Value> iterator = session.createQuery("from Value").iterate();
           while (iterator.hasNext()) {
             iterator.next();
           }
@@ -178,40 +177,24 @@ class QueryTest extends AbstractHibernateTest {
         Arguments.of(
             named(
                 "query/list",
-                new Parameter(
-                    "SELECT Value",
-                    sess -> {
-                      Query q = sess.createQuery("from Value");
-                      q.list();
-                    }))),
+                new Parameter("SELECT Value", sess -> sess.createQuery("from Value").list()))),
         Arguments.of(
             named(
                 "query/uniqueResult",
                 new Parameter(
                     "SELECT Value",
-                    sess -> {
-                      Query q = sess.createQuery("from Value where id = :id");
-                      q.setParameter("id", 1L);
-                      q.uniqueResult();
-                    }))),
+                    sess ->
+                        sess.createQuery("from Value where id = :id")
+                            .setParameter("id", 1L)
+                            .uniqueResult()))),
         Arguments.of(
             named(
                 "iterate",
-                new Parameter(
-                    "SELECT Value",
-                    sess -> {
-                      Query q = sess.createQuery("from Value");
-                      q.iterate();
-                    }))),
+                new Parameter("SELECT Value", sess -> sess.createQuery("from Value").iterate()))),
         Arguments.of(
             named(
                 "query/scroll",
-                new Parameter(
-                    "SELECT Value",
-                    sess -> {
-                      Query q = sess.createQuery("from Value");
-                      q.scroll();
-                    }))));
+                new Parameter("SELECT Value", sess -> sess.createQuery("from Value").scroll()))));
   }
 
   private static class Parameter {

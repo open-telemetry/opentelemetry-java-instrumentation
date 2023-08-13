@@ -274,8 +274,7 @@ class SessionTest extends AbstractHibernateTest {
         () -> {
           Session session = sessionFactory.openSession();
           session.beginTransaction();
-          Query query = queryBuilder.apply(session);
-          query.list();
+          queryBuilder.apply(session).list();
           session.getTransaction().commit();
           session.close();
         });

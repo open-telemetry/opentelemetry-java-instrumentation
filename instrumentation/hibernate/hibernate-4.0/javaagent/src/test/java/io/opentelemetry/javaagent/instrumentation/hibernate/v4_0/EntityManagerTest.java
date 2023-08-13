@@ -206,8 +206,7 @@ class EntityManagerTest extends AbstractHibernateTest {
           EntityManager entityManager = entityManagerFactory.createEntityManager();
           EntityTransaction entityTransaction = entityManager.getTransaction();
           entityTransaction.begin();
-          Query query = queryBuildMethod.apply(entityManager);
-          query.getResultList();
+          queryBuildMethod.apply(entityManager).getResultList();
           entityTransaction.commit();
           entityManager.close();
         });
