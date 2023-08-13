@@ -27,3 +27,13 @@ dependencies {
   library("org.apache.httpcomponents:httpclient:4.0")
   testCompileOnly("net.jcip:jcip-annotations:1.0")
 }
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}
