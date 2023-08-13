@@ -20,11 +20,10 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
@@ -267,14 +266,14 @@ class SessionTest extends AbstractHibernateTest {
 
   @ParameterizedTest
   @MethodSource("provideArgumentsStateQuery")
-  void testAttachesStateToQueryCreated(Function<Session, Query> queryBuilder) {
+  void testAttachesStateToQueryCreated(Consumer<Session> queryBuilder) {
 
     testing.runWithSpan(
         "parent",
         () -> {
           Session session = sessionFactory.openSession();
           session.beginTransaction();
-          queryBuilder.apply(session).list();
+          queryBuilder.accept(session);
           session.getTransaction().commit();
           session.close();
         });
@@ -636,16 +635,17 @@ class SessionTest extends AbstractHibernateTest {
         Arguments.of(
             named(
                 "createQuery",
-                (Function<Session, Query>) session -> session.createQuery("from Value"))),
-        Arguments.of(
-            named(
-                "getNamedQuery",
-                (Function<Session, Query>) session -> session.getNamedQuery("TestNamedQuery"))),
-        Arguments.of(
-            named(
-                "createSQLQuery",
-                (Function<Session, Query>)
-                    session -> session.createSQLQuery("SELECT * FROM Value"))));
+                ((Consumer<Session>) session -> session.createQuery("from Value").list())),
+            Arguments.of(
+                named(
+                    "getNamedQuery",
+                    ((Consumer<Session>)
+                        session -> session.getNamedQuery("TestNamedQuery").list())),
+                Arguments.of(
+                    named(
+                        "createSQLQuery",
+                        (Consumer<Session>)
+                            session -> session.createSQLQuery("SELECT * FROM Value").list())))));
   }
 
   private static Stream<Arguments> provideArgumentsHibernateCommitAction() {
