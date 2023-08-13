@@ -182,7 +182,7 @@ class SpringJpaTest {
                                 val ->
                                     val.matches(
                                         Pattern.compile(
-                                            "insert into Customer (.*) values (.* ?, ?)"))),
+                                            "insert into Customer \\(.*\\) values \\(.* ?, \\?\\)"))),
                             equalTo(SemanticAttributes.DB_OPERATION, "INSERT"),
                             equalTo(SemanticAttributes.DB_SQL_TABLE, "Customer")));
           }
@@ -361,7 +361,7 @@ class SpringJpaTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("Session get spring.jpa.Customer")
+                    span.hasName("Session.find spring.jpa.Customer")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -392,7 +392,35 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             satisfies(
                                 stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))));
+                                val -> val.isInstanceOf(String.class))),
+                span ->
+                    span.hasName("Session.delete spring.jpa.Customer")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
+                span ->
+                    span.hasName("Transaction.commit")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
+                span ->
+                    span.hasName("DELETE test.Customer")
+                        .hasKind(CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "hsqldb"),
+                            equalTo(SemanticAttributes.DB_NAME, "test"),
+                            equalTo(SemanticAttributes.DB_USER, "sa"),
+                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
+                            equalTo(
+                                SemanticAttributes.DB_STATEMENT, "delete from Customer where id=?"),
+                            equalTo(SemanticAttributes.DB_OPERATION, "DELETE"),
+                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Customer")));
           }
         });
   }
