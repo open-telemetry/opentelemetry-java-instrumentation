@@ -56,7 +56,7 @@ final class InstrumentationContexts {
     RequestAndContext requestAndContext = clientContexts.poll();
     try {
       if (response != null && response.status().code() != 200) {
-        Thread.sleep(1_000);
+        Thread.sleep(1000);
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
