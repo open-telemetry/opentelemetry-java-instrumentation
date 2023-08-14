@@ -12,7 +12,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -704,7 +703,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                 .containsEntry(
                     SemanticAttributes.HTTP_TARGET,
                     endpoint.resolvePath(address).getPath()
-                        + (endpoint == QUERY_PARAM ? "?" + endpoint.body : ""));
+                        + (endpoint.getQuery() != null ? "?" + endpoint.getQuery() : ""));
           }
 
           if (attrs.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH) != null) {
