@@ -32,7 +32,10 @@ class SpringJpaTest {
 
   @Test
   void testCrud() {
-    boolean isHibernate4 = Version.getVersionString().startsWith("4.");
+    String version = Version.getVersionString();
+    boolean isHibernate4 = version.startsWith("4.");
+    boolean isLatestDep = version.startsWith("5.0");
+
     Customer customer = new Customer("Bob", "Anonymous");
     customer.setId(null);
 
@@ -358,10 +361,17 @@ class SpringJpaTest {
                             equalTo(SemanticAttributes.DB_SQL_TABLE, "Customer")));
 
           } else {
+            String findAction;
+            if (isLatestDep) {
+              findAction = "get";
+            } else {
+              findAction = "find";
+            }
+
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("Session.find spring.jpa.Customer")
+                    span.hasName("Session." + findAction + " spring.jpa.Customer")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

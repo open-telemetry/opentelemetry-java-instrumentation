@@ -102,9 +102,11 @@ class EntityManagerTest extends AbstractHibernateTest {
       entity = prepopulated.get(0);
     }
 
-    boolean isHibernate4 = Version.getVersionString().startsWith("4.");
+    String version = Version.getVersionString();
+    boolean isHibernate4 = version.startsWith("4.");
+    boolean isLatestDep = version.startsWith("5.0");
     String action;
-    if (isHibernate4 && "find".equals(parameter.methodName)) {
+    if ((isHibernate4 || isLatestDep) && "find".equals(parameter.methodName)) {
       action = "get";
     } else {
       action = parameter.methodName;
