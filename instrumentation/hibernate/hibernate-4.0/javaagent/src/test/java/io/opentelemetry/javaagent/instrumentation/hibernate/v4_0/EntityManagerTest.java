@@ -22,6 +22,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import org.hibernate.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -101,8 +102,9 @@ class EntityManagerTest extends AbstractHibernateTest {
       entity = prepopulated.get(0);
     }
 
+    boolean isHibernate4 = Version.getVersionString().startsWith("4.");
     String action;
-    if ("find".equals(parameter.methodName)) {
+    if (isHibernate4 && "find".equals(parameter.methodName)) {
       action = "get";
     } else {
       action = parameter.methodName;
@@ -251,23 +253,6 @@ class EntityManagerTest extends AbstractHibernateTest {
                                     .get(stringKey("hibernate.session_id"))))));
   }
 
-  private static Stream<Arguments> provideArgumentsQueryState() {
-    return Stream.of(
-        Arguments.of(
-            named(
-                "createQuery",
-                (Function<EntityManager, Query>) em -> em.createQuery("from Value"))),
-        Arguments.of(
-            named(
-                "getNamedQuery",
-                (Function<EntityManager, Query>) em -> em.createNamedQuery("TestNamedQuery"))),
-        Arguments.of(
-            named(
-                "createSQLQuery",
-                (Function<EntityManager, Query>)
-                    em -> em.createNativeQuery("SELECT * FROM Value"))));
-  }
-
   private static Stream<Arguments> provideArgumentsHibernateActionParameters() {
     return Stream.of(
         Arguments.of(
@@ -299,15 +284,6 @@ class EntityManagerTest extends AbstractHibernateTest {
                     (em, v) -> em.find(Value.class, v.getId())))),
         Arguments.of(
             named(
-                "get",
-                new Parameter(
-                    "get",
-                    "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value",
-                    false,
-                    false,
-                    (em, v) -> em.find(Value.class, v.getId())))),
-        Arguments.of(
-            named(
                 "merge",
                 new Parameter(
                     "merge",
@@ -327,6 +303,23 @@ class EntityManagerTest extends AbstractHibernateTest {
                     true,
                     true,
                     EntityManager::remove))));
+  }
+
+  private static Stream<Arguments> provideArgumentsQueryState() {
+    return Stream.of(
+        Arguments.of(
+            named(
+                "createQuery",
+                (Function<EntityManager, Query>) em -> em.createQuery("from Value"))),
+        Arguments.of(
+            named(
+                "getNamedQuery",
+                (Function<EntityManager, Query>) em -> em.createNamedQuery("TestNamedQuery"))),
+        Arguments.of(
+            named(
+                "createSQLQuery",
+                (Function<EntityManager, Query>)
+                    em -> em.createNativeQuery("SELECT * FROM Value"))));
   }
 
   private static class Parameter {
