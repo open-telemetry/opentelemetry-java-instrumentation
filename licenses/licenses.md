@@ -54,7 +54,7 @@ _2023-08-13 17:05:48 PDT_
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [okhttp-4.11.0.jar/okhttp3/internal/publicsuffix/NOTICE](okhttp-4.11.0.jar/okhttp3/internal/publicsuffix/NOTICE)
 
-**9** **Group:** `com.squareup.okio` **Name:** `okio-jvm` **Version:** `3.2.0`
+**9** **Group:** `com.squareup.okio` **Name:** `okio-jvm` **Version:** `3.5.0`
 > - **POM Project URL**: [https://github.com/square/okio/](https://github.com/square/okio/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
@@ -273,4 +273,4 @@ _2023-08-13 17:05:48 PDT_
 
 ## Unknown
 
-**55** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.2.0`
+**55** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.5.0`
