@@ -82,14 +82,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     addServlet(context, HTML_SERVLET_OUTPUT_STREAM.path, servlet)
   }
 
-  protected ServerEndpoint lastRequest
-
-  @Override
-  AggregatedHttpRequest request(ServerEndpoint uri, String method) {
-    lastRequest = uri
-    super.request(uri, method)
-  }
-
   @Override
   String expectedHttpRoute(ServerEndpoint endpoint) {
     switch (endpoint) {

@@ -81,6 +81,10 @@ public class ServerEndpoint {
   }
 
   public ServerEndpoint(String name, String uri, int status, String body) {
+    this(name, uri, status, body, true);
+  }
+
+  public ServerEndpoint(String name, String uri, int status, String body, boolean registerPath) {
     this.name = name;
     this.uriObj = URI.create(uri);
     this.path = uriObj.getPath();
@@ -88,7 +92,9 @@ public class ServerEndpoint {
     this.fragment = uriObj.getFragment();
     this.status = status;
     this.body = body;
-    PATH_MAP.put(this.getPath(), this);
+    if (registerPath) {
+      PATH_MAP.put(this.getPath(), this);
+    }
   }
 
   public String getPath() {
