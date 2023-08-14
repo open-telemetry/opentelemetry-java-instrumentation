@@ -15,6 +15,6 @@ public class KotlinCoroutinesIgnoredTypesConfigurer implements IgnoredTypesConfi
 
   @Override
   public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
-    builder.ignoreTaskClass("kotlin.coroutines.jvm.internal.CompletedContinuation");
+    builder.allowClass("kotlin.coroutines.jvm.internal.CompletedContinuation");
   }
 }
