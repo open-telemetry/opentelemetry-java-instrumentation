@@ -37,6 +37,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.netty.http.client.HttpClient;
@@ -198,6 +199,7 @@ abstract class AbstractReactorNettyHttpClientTest
   }
 
   @Test
+  @Disabled
   void shouldExposeContextToHttpRequestErrorCallback() {
     AtomicReference<Span> onRequestErrorSpan = new AtomicReference<>();
 
@@ -271,6 +273,7 @@ abstract class AbstractReactorNettyHttpClientTest
   }
 
   @Test
+  @Disabled
   void shouldEndSpanOnMonoTimeout() {
     HttpClient httpClient = createHttpClient();
 

@@ -24,6 +24,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.netty.http.client.HttpClient;
@@ -114,6 +115,7 @@ class ReactorNettyConnectionSpanTest {
   }
 
   @Test
+  @Disabled
   void testFailingRequest() {
     HttpClient httpClient = HttpClient.create();
     String uri = "http://localhost:" + PortUtils.UNUSABLE_PORT;

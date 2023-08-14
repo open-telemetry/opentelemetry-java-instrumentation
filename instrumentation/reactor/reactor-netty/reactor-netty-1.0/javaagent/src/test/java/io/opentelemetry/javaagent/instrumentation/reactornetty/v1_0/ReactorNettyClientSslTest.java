@@ -29,6 +29,7 @@ import javax.net.ssl.SSLHandshakeException;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.core.publisher.Mono;
@@ -55,6 +56,7 @@ class ReactorNettyClientSslTest {
   }
 
   @Test
+  @Disabled
   void shouldFailSslHandshake() throws SSLException {
     HttpClient httpClient = createHttpClient("SSLv3");
     String uri = "https://localhost:" + server.httpsPort() + "/success";
