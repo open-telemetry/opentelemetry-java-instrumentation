@@ -271,8 +271,6 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("com.fasterxml.jackson.databind.util.internal.PrivateMaxEntriesMap$AddTask");
 
     // kotlin, note we do not ignore kotlinx because we instrument coroutines code
-    builder
-        .ignoreClass("kotlin.")
-        .allowClass("kotlin.coroutines.jvm.internal.CompletedContinuation");
+    builder.ignoreClass("kotlin.");
   }
 }
