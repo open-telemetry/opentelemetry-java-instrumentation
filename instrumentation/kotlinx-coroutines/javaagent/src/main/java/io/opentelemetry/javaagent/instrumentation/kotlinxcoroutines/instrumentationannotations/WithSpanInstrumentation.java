@@ -20,7 +20,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationExcludedMethods;
-import java.util.ArrayList;
+import io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations.SpanAttributeUtil.Parameter;
 import java.util.Arrays;
 import java.util.List;
 import kotlin.coroutines.Continuation;
@@ -47,7 +47,6 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.ParameterNode;
 import org.objectweb.asm.tree.VarInsnNode;
 import org.objectweb.asm.util.CheckClassAdapter;
 
@@ -161,8 +160,8 @@ class WithSpanInstrumentation implements TypeInstrumentation {
       // java.lang.Object
       Type[] argumentTypes = Type.getArgumentTypes(descriptor);
       if (argumentTypes.length > 0
-          && "kotlin.coroutines.Continuation"
-              .equals(argumentTypes[argumentTypes.length - 1].getClassName())
+          && "kotlin/coroutines/Continuation"
+              .equals(argumentTypes[argumentTypes.length - 1].getInternalName())
           && "java/lang/Object".equals(Type.getReturnType(descriptor).getInternalName())) {
         // store method in MethodNode, so we could test whether it has the WithSpan annotation and
         // depending on that either instrument it or leave it as it is
@@ -200,74 +199,10 @@ class WithSpanInstrumentation implements TypeInstrumentation {
           "Lapplication/io/opentelemetry/instrumentation/annotations/WithSpan;");
     }
 
-    private static class Parameter {
-      final int var;
-      final String name;
-      final Type type;
-
-      Parameter(int var, String name, Type type) {
-        this.var = var;
-        this.name = name;
-        this.type = type;
-      }
-    }
-
-    private static List<Parameter> collectAnnotatedParameters(MethodNode source) {
-      List<Parameter> annotatedParameters = new ArrayList<>();
-      if (source.visibleParameterAnnotations != null) {
-        int slot = 1; // this is in slot 0
-        Type[] parameterTypes = Type.getArgumentTypes(source.desc);
-        for (int i = 0; i < parameterTypes.length; i++) {
-          Type type = parameterTypes[i];
-          // if current parameter index is equal or larger than the count of annotated parameters
-          // we have already checked all the parameters with annotations
-          if (i >= source.visibleParameterAnnotations.length) {
-            break;
-          }
-          boolean hasSpanAttributeAnnotation = false;
-          ParameterNode parameterNode =
-              source.parameters != null && source.parameters.size() > i
-                  ? source.parameters.get(i)
-                  : null;
-          String name = parameterNode != null ? parameterNode.name : null;
-          List<AnnotationNode> parameterAnnotations = source.visibleParameterAnnotations[i];
-          if (parameterAnnotations != null) {
-            for (AnnotationNode annotationNode : parameterAnnotations) {
-              if ("Lapplication/io/opentelemetry/instrumentation/annotations/SpanAttribute;"
-                  .equals(annotationNode.desc)) {
-                // check whether SpanAttribute annotation has a value, if it has use that as
-                // parameter name
-                if (annotationNode.values != null && !annotationNode.values.isEmpty()) {
-                  List<Object> values = annotationNode.values;
-                  for (int j = 0; j < values.size(); j += 2) {
-                    String attributeName = (String) values.get(j);
-                    Object attributeValue = values.get(j + 1);
-                    if ("value".equals(attributeName) && attributeValue instanceof String) {
-                      name = (String) attributeValue;
-                      break;
-                    }
-                  }
-                }
-
-                hasSpanAttributeAnnotation = true;
-                break;
-              }
-            }
-          }
-          if (hasSpanAttributeAnnotation && name != null) {
-            annotatedParameters.add(new Parameter(slot, name, type));
-          }
-          slot += type.getSize();
-        }
-      }
-
-      return annotatedParameters;
-    }
-
     private static MethodVisitor instrument(
         MethodVisitor target, MethodNode source, String className) {
       // collect method arguments with @SpanAttribute annotation
-      List<Parameter> annotatedParameters = collectAnnotatedParameters(source);
+      List<Parameter> annotatedParameters = SpanAttributeUtil.collectAnnotatedParameters(source);
 
       String methodName = source.name;
       MethodNode methodNode =
