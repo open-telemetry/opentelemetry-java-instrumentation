@@ -55,8 +55,8 @@ final class InstrumentationContexts {
   void endClientSpan(@Nullable HttpClientResponse response, @Nullable Throwable error) {
     RequestAndContext requestAndContext = clientContexts.poll();
     try {
-      if (response.status().code() != 200) {
-        Thread.sleep(100);
+      if (response != null && response.status().code() != 200) {
+        Thread.sleep(1_000);
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
