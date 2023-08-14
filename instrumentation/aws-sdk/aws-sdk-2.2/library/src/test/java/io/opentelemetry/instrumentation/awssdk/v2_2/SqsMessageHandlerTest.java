@@ -29,14 +29,15 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 public class SqsMessageHandlerTest extends XrayTestInstrumenter {
   private static class SqsMessageHandlerImpl extends SqsMessageHandler<Message> {
     public final AtomicInteger handleCalls = new AtomicInteger();
 
     public SqsMessageHandlerImpl(OpenTelemetry openTelemetry,
-        String destination, SpanKindExtractor<Collection<Message>> spanKindExtractor) {
-      super(openTelemetry, destination, spanKindExtractor);
+        String destination) {
+      super(openTelemetry, destination);
     }
 
     @Override
@@ -49,8 +50,8 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
     public final AtomicInteger handleCalls = new AtomicInteger();
 
     public LambdaSqsMessageHandlerImpl(OpenTelemetry openTelemetry,
-        String destination, SpanKindExtractor<Collection<SQSEvent.SQSMessage>> spanKindExtractor) {
-      super(openTelemetry, destination, spanKindExtractor);
+        String destination) {
+      super(openTelemetry, destination);
     }
 
     @Override
@@ -63,8 +64,9 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
   public void simple() {
     SqsMessageHandlerImpl messageHandler = new SqsMessageHandlerImpl(
         getOpenTelemetry(),
-        "destination",
-        SpanKindExtractor.alwaysServer());
+        "destination");
+
+    messageHandler.setSpanNameExtactor(e-> "MySpan");
 
     List<Message> messages = new LinkedList<>();
     messages.add(Message.builder()
@@ -90,8 +92,60 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
+                    span.hasName("MySpan")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasLinks(
+                            LinkData.create(
+                                SpanContext.createFromRemoteParent(
+                                    "55555555123456789012345678901234",
+                                    "1234567890123456",
+                                    TraceFlags.getSampled(),
+                                    TraceState.getDefault())))
+                        .hasTotalRecordedLinks(1)
+                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
+                        .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
+                        .hasAttribute(SemanticAttributes.MESSAGING_DESTINATION_NAME, "destination")
+                        .hasAttribute(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 5L)
+                        .hasTotalAttributeCount(4)
+                        .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
+                        .hasTraceId(parentSpan.getSpanContext().getTraceId())));
+  }
+
+  @Test
+  public void simpleUseMessageAttribute() {
+    SqsMessageHandlerImpl messageHandler = new SqsMessageHandlerImpl(
+        getOpenTelemetry(),
+        "destination");
+
+    List<Message> messages = new LinkedList<>();
+    messages.add(Message.builder()
+        .body("Hello")
+            .messageAttributes(Collections.singletonMap("X-Amzn-Trace-Id",
+                MessageAttributeValue.builder().dataType("String")
+                    .stringValue("Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1")
+                    .build()))
+        .build());
+
+    Span parentSpan = getOpenTelemetry()
+        .getTracer("test")
+        .spanBuilder("test")
+        .startSpan();
+
+    try (Scope scope = parentSpan.makeCurrent()) {
+      messageHandler.handle(messages);
+    }
+
+    parentSpan.end();
+
+    assertThat(messageHandler.handleCalls.get()).isEqualTo(1);
+
+    waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
+                span ->
                     span.hasName("destination process")
-                        .hasKind(SpanKind.SERVER)
+                        .hasKind(SpanKind.CONSUMER)
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -113,8 +167,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
   public void lambdaSimple() {
     LambdaSqsMessageHandlerImpl messageHandler = new LambdaSqsMessageHandlerImpl(
         getOpenTelemetry(),
-        "destination",
-        SpanKindExtractor.alwaysServer());
+        "destination");
 
     List<SQSEvent.SQSMessage> messages = new LinkedList<>();
     SQSEvent.SQSMessage message = newMessage();
@@ -140,7 +193,58 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
                     span.hasName("destination process")
-                        .hasKind(SpanKind.SERVER)
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasLinks(
+                            LinkData.create(
+                                SpanContext.createFromRemoteParent(
+                                    "99555555123456789012345678901234",
+                                    "9934567890123456",
+                                    TraceFlags.getSampled(),
+                                    TraceState.getDefault())))
+                        .hasTotalRecordedLinks(1)
+                        .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
+                        .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
+                        .hasAttribute(SemanticAttributes.MESSAGING_DESTINATION_NAME, "destination")
+                        .hasAttribute(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 5L)
+                        .hasTotalAttributeCount(4)
+                        .hasParentSpanId(parentSpan.getSpanContext().getSpanId())
+                        .hasTraceId(parentSpan.getSpanContext().getTraceId())));
+  }
+
+  @Test
+  public void lambdaSimpleUseMessageAttribute() {
+    LambdaSqsMessageHandlerImpl messageHandler = new LambdaSqsMessageHandlerImpl(
+        getOpenTelemetry(),
+        "destination");
+
+    List<SQSEvent.SQSMessage> messages = new LinkedList<>();
+    SQSEvent.SQSMessage message = newMessage();
+    message.setBody("Hello");
+    Map<String, SQSEvent.MessageAttribute> attributes = new TreeMap<>();
+    SQSEvent.MessageAttribute value = new SQSEvent.MessageAttribute();
+    value.setDataType("String");
+    value.setStringValue("Root=1-99555555-123456789012345678901234;Parent=9934567890123456;Sampled=1");
+    attributes.put("X-Amzn-Trace-Id", value);
+    message.setMessageAttributes(attributes);
+    messages.add(message);
+
+    Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
+
+    try (Scope scope = parentSpan.makeCurrent()) {
+      messageHandler.handle(messages);
+    }
+
+    parentSpan.end();
+
+    assertThat(messageHandler.handleCalls.get()).isEqualTo(1);
+
+    waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
+                span ->
+                    span.hasName("destination process")
+                        .hasKind(SpanKind.CONSUMER)
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -177,8 +281,9 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
 
     LambdaSqsMessageHandlerImpl messageHandler = new LambdaSqsMessageHandlerImpl(
         getOpenTelemetry(),
-        "destination",
-        SpanKindExtractor.alwaysConsumer());
+        "destination");
+
+    messageHandler.setSpanKindExtractor(SpanKindExtractor.alwaysServer());
 
     Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
 
@@ -196,7 +301,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
                     span.hasName("destination process")
-                        .hasKind(SpanKind.CONSUMER)
+                        .hasKind(SpanKind.SERVER)
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -240,8 +345,9 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
 
     SqsMessageHandlerImpl messageHandler = new SqsMessageHandlerImpl(
         getOpenTelemetry(),
-        "destination",
-        SpanKindExtractor.alwaysConsumer());
+        "destination");
+
+    messageHandler.setSpanKindExtractor(SpanKindExtractor.alwaysConsumer());
 
     Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
 
@@ -305,8 +411,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
 
     SqsMessageHandlerImpl messageHandler = new SqsMessageHandlerImpl(
         getOpenTelemetry(),
-        "destination",
-        SpanKindExtractor.alwaysServer());
+        "destination");
 
     Span parentSpan1 = getOpenTelemetry().getTracer("test").spanBuilder("test1").startSpan();
     try (Scope scope = parentSpan1.makeCurrent()) {
@@ -328,7 +433,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
                 span -> span.hasName("test1").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
                     span.hasName("destination process")
-                        .hasKind(SpanKind.SERVER)
+                        .hasKind(SpanKind.CONSUMER)
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -349,7 +454,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
                 span -> span.hasName("test2").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
                     span.hasName("destination process")
-                        .hasKind(SpanKind.SERVER)
+                        .hasKind(SpanKind.CONSUMER)
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -387,8 +492,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
 
     LambdaSqsMessageHandlerImpl messageHandler = new LambdaSqsMessageHandlerImpl(
         getOpenTelemetry(),
-        "destination",
-        SpanKindExtractor.alwaysServer());
+        "destination");
 
     Span parentSpan1 = getOpenTelemetry().getTracer("test").spanBuilder("test1").startSpan();
     try (Scope scope = parentSpan1.makeCurrent()) {
@@ -410,7 +514,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
                 span -> span.hasName("test1").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
                     span.hasName("destination process")
-                        .hasKind(SpanKind.SERVER)
+                        .hasKind(SpanKind.CONSUMER)
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -431,7 +535,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
                 span -> span.hasName("test2").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
                     span.hasName("destination process")
-                        .hasKind(SpanKind.SERVER)
+                        .hasKind(SpanKind.CONSUMER)
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -453,8 +557,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
   public void lambdaNoMessages() {
     LambdaSqsMessageHandlerImpl messageHandler = new LambdaSqsMessageHandlerImpl(
         getOpenTelemetry(),
-        "destination",
-        SpanKindExtractor.alwaysServer());
+        "destination");
 
     Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
     try (Scope scope = parentSpan.makeCurrent()) {
@@ -470,7 +573,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
                     span.hasName("destination process")
-                        .hasKind(SpanKind.SERVER)
+                        .hasKind(SpanKind.CONSUMER)
                         .hasTotalRecordedLinks(0)
                         .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
                         .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
@@ -485,8 +588,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
   public void noMessages() {
     SqsMessageHandlerImpl messageHandler = new SqsMessageHandlerImpl(
         getOpenTelemetry(),
-        "destination",
-        SpanKindExtractor.alwaysServer());
+        "destination");
 
     Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
     try (Scope scope = parentSpan.makeCurrent()) {
@@ -502,7 +604,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
                     span.hasName("destination process")
-                        .hasKind(SpanKind.SERVER)
+                        .hasKind(SpanKind.CONSUMER)
                         .hasTotalRecordedLinks(0)
                         .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
                         .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
@@ -526,8 +628,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
 
     SqsMessageHandlerImpl messageHandler = new SqsMessageHandlerImpl(
         getOpenTelemetry(),
-        "destination",
-        SpanKindExtractor.alwaysServer());
+        "destination");
 
     Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
 
@@ -561,8 +662,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
 
     LambdaSqsMessageHandlerImpl messageHandler = new LambdaSqsMessageHandlerImpl(
         getOpenTelemetry(),
-        "destination",
-        SpanKindExtractor.alwaysServer());
+        "destination");
 
     Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
 

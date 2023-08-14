@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
@@ -17,6 +19,7 @@ import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.export.MetricReader;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
+import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricExporter;
@@ -55,10 +58,14 @@ public class XrayTestInstrumenter {
             .setInterval(Duration.ofNanos(Long.MAX_VALUE))
             .build();
 
+    Resource resource = Resource.getDefault().merge(Resource.create(
+        Attributes.of(SERVICE_NAME, "MyServiceName")));
+
     openTelemetry =
         OpenTelemetrySdk.builder()
             .setTracerProvider(
                 SdkTracerProvider.builder()
+                    .setResource(resource)
                     .addSpanProcessor(new FlushTrackingSpanProcessor())
                     .addSpanProcessor(SimpleSpanProcessor.create(testSpanExporter))
                     .build())

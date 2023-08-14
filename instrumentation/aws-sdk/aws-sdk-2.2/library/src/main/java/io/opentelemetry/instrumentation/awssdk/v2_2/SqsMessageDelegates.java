@@ -34,13 +34,13 @@ public class SqsMessageDelegates {
         TextMapPropagator messagingPropagator = openTelemetry.getPropagators()
             .getTextMapPropagator();
 
-        Map<String, SdkPojo> messageAtributes = SqsMessageAccess.getMessageAttributes(message);
-
-        Context context =
-            SqsParentContext.ofMessageAttributes(messageAtributes, messagingPropagator);
+        Context context = SqsParentContext.ofSystemAttributes(SqsMessageAccess.getAttributes(message));
 
         if (context == Context.root()) {
-          context = SqsParentContext.ofSystemAttributes(SqsMessageAccess.getAttributes(message));
+          Map<String, SdkPojo> messageAtributes = SqsMessageAccess.getMessageAttributes(message);
+
+          context =
+              SqsParentContext.ofMessageAttributes(messageAtributes, messagingPropagator);
         }
 
         return Span.fromContext(context).getSpanContext();
@@ -59,7 +59,23 @@ public class SqsMessageDelegates {
 
           @Override
           public SpanContext getUpstreamContext(OpenTelemetry openTelemetry, SQSEvent.SQSMessage message) {
-            String parentHeader = message.getAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
+            String parentHeader = null;
+
+            if (message.getAttributes() != null) {
+              parentHeader = message.getAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
+            }
+
+            if (parentHeader == null &&
+                message.getMessageAttributes() != null)
+            {
+              // We need to do a case-insensitive search
+              for (Map.Entry<String, SQSEvent.MessageAttribute> entry: message.getMessageAttributes().entrySet()) {
+                if (entry.getKey().equalsIgnoreCase(AWS_TRACE_HEADER_PROPAGATOR_KEY)) {
+                  parentHeader = entry.getValue().getStringValue();
+                  break;
+                }
+              }
+            }
 
             if (parentHeader != null) {
               Context xrayContext =
@@ -68,6 +84,7 @@ public class SqsMessageDelegates {
                           Context.root(),
                           Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
                           MapGetter.INSTANCE);
+
               return Span.fromContext(xrayContext).getSpanContext();
             }
 

@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.messagehandler.MessageHandler;
 import java.util.Collection;
 import javax.annotation.Nullable;
@@ -23,26 +22,31 @@ import javax.annotation.Nullable;
 public abstract class SqsMessageHandler<MessageType> extends MessageHandler<MessageType> {
   private final OpenTelemetry openTelemetry;
   private final String destination;
-  private final SpanKindExtractor<Collection<MessageType>> spanKindExtractor;
+  private SpanKindExtractor<Collection<MessageType>> spanKindExtractor;
+  private SpanNameExtractor<Collection<MessageType>> spanNameExtractor;
 
-  public SqsMessageHandler(OpenTelemetry openTelemetry, String destination, SpanKindExtractor<Collection<MessageType>> spanKindExtractor) {
+  public SqsMessageHandler(OpenTelemetry openTelemetry, String destination) {
     this.openTelemetry = openTelemetry;
     this.destination = destination;
-    this.spanKindExtractor = spanKindExtractor;
+    this.spanKindExtractor = SpanKindExtractor.alwaysConsumer();
+    spanNameExtractor = e -> destination + " process";
+  }
+
+  public void setSpanNameExtactor(SpanNameExtractor<Collection<MessageType>> spanNameExtractor) {
+    this.spanNameExtractor = spanNameExtractor;
   }
 
   @Override
   protected Instrumenter<Collection<MessageType>, Void> getMessageInstrumenter() {
     return Instrumenter.<Collection<MessageType>, Void>builder(
-            openTelemetry, "io.opentelemetry.aws-sdk-2.2", getSpanNameExtractor())
-        .addAttributesExtractor(getAttributesExtractor())
+            openTelemetry, "io.opentelemetry.aws-sdk-2.2", spanNameExtractor)
+        .addAttributesExtractor(getMessageOperationAttributeExtractor())
         .addSpanLinksExtractor(getSpanLinksExtractor())
         .buildInstrumenter(spanKindExtractor);
   }
 
-  protected SpanNameExtractor<Collection<MessageType>> getSpanNameExtractor() {
-    return MessagingSpanNameExtractor.create(
-        getMessageingAttributesGetter(), MessageOperation.PROCESS);
+  public void setSpanKindExtractor(SpanKindExtractor<Collection<MessageType>> spanKindExtractor) {
+    this.spanKindExtractor = spanKindExtractor;
   }
 
   protected MessagingAttributesGetter<Collection<MessageType>, Void>
@@ -106,18 +110,18 @@ public abstract class SqsMessageHandler<MessageType> extends MessageHandler<Mess
     };
   }
 
-  protected AttributesExtractor<Collection<MessageType>, Void> getAttributesExtractor() {
+  protected AttributesExtractor<Collection<MessageType>, Void> getMessageOperationAttributeExtractor() {
     return MessagingAttributesExtractor.create(
         getMessageingAttributesGetter(), MessageOperation.PROCESS);
   }
 
-  @SuppressWarnings("unchecked")
+  //@SuppressWarnings("unchecked")
   protected SpanLinksExtractor<Collection<MessageType>> getSpanLinksExtractor() {
     return (spanLinks, parentContext, request) -> {
       for (MessageType message : request) {
         SpanContext messageSpanCtx = SqsMessageDelegates.get(message).getUpstreamContext(openTelemetry, message);
 
-        if (messageSpanCtx.isValid()) {
+        if (messageSpanCtx!= null && messageSpanCtx.isValid()) {
           spanLinks.addLink(messageSpanCtx);
         }
       }
