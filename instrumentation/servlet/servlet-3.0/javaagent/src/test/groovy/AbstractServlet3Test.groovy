@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder
-import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 
 import javax.servlet.Servlet
 
