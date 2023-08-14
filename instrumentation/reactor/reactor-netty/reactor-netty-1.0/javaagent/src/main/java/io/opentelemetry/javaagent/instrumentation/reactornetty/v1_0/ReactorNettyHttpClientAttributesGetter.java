@@ -63,6 +63,9 @@ final class ReactorNettyHttpClientAttributesGetter
       return null;
     }
     HttpVersion version = response.version();
+    if (version.minorVersion() == 0) {
+      return Integer.toString(version.majorVersion());
+    }
     return version.majorVersion() + "." + version.minorVersion();
   }
 

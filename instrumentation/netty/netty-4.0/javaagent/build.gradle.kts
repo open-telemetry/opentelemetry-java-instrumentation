@@ -46,6 +46,15 @@ tasks {
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
 
+  val testStableSemconv by registering(Test::class) {
+    filter {
+      includeTestsMatching("*ClientTest")
+    }
+    include("**/*ClientTest.*")
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
   test {
     filter {
       excludeTestsMatching("Netty40ConnectionSpanTest")
@@ -55,6 +64,7 @@ tasks {
 
   check {
     dependsOn(testConnectionSpan)
+    dependsOn(testStableSemconv)
   }
 }
 

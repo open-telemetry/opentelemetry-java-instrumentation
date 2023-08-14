@@ -61,6 +61,9 @@ final class AsyncHttpClientHttpAttributesGetter
     if (httpVersion == null) {
       return null;
     }
+    if (httpVersion.minorVersion() == 0) {
+      return Integer.toString(httpVersion.majorVersion());
+    }
     return httpVersion.majorVersion() + "." + httpVersion.minorVersion();
   }
 

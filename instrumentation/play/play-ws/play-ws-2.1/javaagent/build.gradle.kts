@@ -45,6 +45,16 @@ dependencies {
   latestDepTestLibrary("com.typesafe.play:play-ahc-ws-standalone_2.13:+")
 }
 
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}
+
 if (findProperty("testLatestDeps") as Boolean) {
   configurations {
     // play-ws artifact name is different for regular and latest tests
