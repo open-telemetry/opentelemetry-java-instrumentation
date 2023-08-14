@@ -28,8 +28,8 @@ import javax.annotation.Nullable;
  * <ul>
  *   <li>First, injected classes are considered (usually the helper classes from the
  *       InstrumentationModule)
- *   <li>Next, the classloader looks in the agent or extension classloader, depending on where
- *       the InstrumentationModule comes from
+ *   <li>Next, the classloader looks in the agent or extension classloader, depending on where the
+ *       InstrumentationModule comes from
  *   <li>Finally, the instrumented application classloader is checked for the class
  * </ul>
  *
