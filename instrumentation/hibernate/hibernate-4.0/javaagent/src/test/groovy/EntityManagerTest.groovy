@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -143,23 +144,23 @@ class EntityManagerTest extends AbstractHibernateTest {
 
     where:
     testName  | methodName   | resource | attach | flushOnCommit | sessionMethodTest
-    "lock"    | "lock"       | "Value"  | true   | false         | { em, val ->
+    "lock"    | "lock"       | "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value"  | true   | false         | { em, val ->
       em.lock(val, LockModeType.PESSIMISTIC_READ)
     }
-    "refresh" | "refresh"    | "Value"  | true   | false         | { em, val ->
+    "refresh" | "refresh"    | "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value"  | true   | false         | { em, val ->
       em.refresh(val)
     }
-    "find"    | "(get|find)" | "Value"  | false  | false         | { em, val ->
+    "find"    | "(get|find)" | "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value"  | false  | false         | { em, val ->
       em.find(Value, val.getId())
     }
-    "persist" | "persist"    | "Value"  | false  | true          | { em, val ->
+    "persist" | "persist"    | "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value"  | false  | true          | { em, val ->
       em.persist(new Value("insert me"))
     }
-    "merge"   | "merge"      | "Value"  | true   | true          | { em, val ->
+    "merge"   | "merge"      | "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value"  | true   | true          | { em, val ->
       val.setName("New name")
       em.merge(val)
     }
-    "remove"  | "delete"     | "Value"  | true   | true          | { em, val ->
+    "remove"  | "delete"     | "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value"  | true   | true          | { em, val ->
       em.remove(val)
     }
   }
