@@ -54,7 +54,8 @@ final class InstrumentationContexts {
 
   // we are synchronizing here to ensure that spans are ended in the oder they are read from the
   // queue
-  synchronized void endClientSpan(@Nullable HttpClientResponse response, @Nullable Throwable error) {
+  synchronized void endClientSpan(
+      @Nullable HttpClientResponse response, @Nullable Throwable error) {
     RequestAndContext requestAndContext = clientContexts.poll();
     if (requestAndContext != null) {
       instrumenter().end(requestAndContext.context, requestAndContext.request, response, error);
