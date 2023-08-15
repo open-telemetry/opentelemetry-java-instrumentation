@@ -119,6 +119,9 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
     // Circular redirects don't throw an exception with Google Http Client
     optionsBuilder.disableTestCircularRedirects();
 
+    // can only use supported method
+    optionsBuilder.disableTestNonStandardHttpMethod();
+
     optionsBuilder.setHttpAttributes(
         uri -> {
           Set<AttributeKey<?>> attributes =

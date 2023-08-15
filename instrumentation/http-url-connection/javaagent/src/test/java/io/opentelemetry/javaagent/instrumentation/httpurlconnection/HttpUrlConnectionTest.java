@@ -82,6 +82,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     // HttpURLConnection can't be reused
     optionsBuilder.disableTestReusedRequest();
     optionsBuilder.disableTestCallback();
+    optionsBuilder.disableTestNonStandardHttpMethod();
   }
 
   @ParameterizedTest
