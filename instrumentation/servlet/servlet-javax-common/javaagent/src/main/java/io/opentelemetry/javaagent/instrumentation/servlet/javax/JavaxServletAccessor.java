@@ -10,6 +10,7 @@ import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.ServletException;
@@ -100,7 +101,14 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   @Override
   @SuppressWarnings("unchecked")
   public Map<String, String[]> getQueryParamsMap(HttpServletRequest request) {
-    return (Map<String, String[]>) request.getParameterMap();
+    Map<String, String[]> result = new HashMap<>();
+    Enumeration<String> names = request.getParameterNames();
+    while (names.hasMoreElements()) {
+      String name = names.nextElement();
+      String[] values = request.getParameterValues(name);
+      result.put(name, values);
+    }
+    return result;
   }
 
   @Override
