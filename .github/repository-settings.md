@@ -35,6 +35,11 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
 
 Same settings as above for [`main`](#main).
 
+### `cloudfoundry`
+
+Same settings as above for [`main`](#main),
+except for the `required-status-check` required status check.
+
 ### `renovate/**/**`, `opentelemetrybot/**/**`, and `gradlew-update-*`
 
 Same settings as
