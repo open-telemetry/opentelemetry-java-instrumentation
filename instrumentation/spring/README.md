@@ -696,10 +696,6 @@ server.port=8081
 
 ## Default configurations
 #otel.traces.sampler.probability=1
-#otel.springboot.web.enabled=true
-#otel.springboot.httpclients.enabled=true
-#otel.springboot.aspects.enabled=true
-
 ```
 
 Check out [OpenTelemetry Spring Boot AutoConfigure](spring-boot-autoconfigure/README.md) to learn more.
