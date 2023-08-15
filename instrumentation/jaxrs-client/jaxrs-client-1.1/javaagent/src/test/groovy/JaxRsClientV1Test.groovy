@@ -17,19 +17,40 @@ import spock.lang.Shared
 class JaxRsClientV1Test extends HttpClientTest<WebResource.Builder> implements AgentTestTrait {
 
   @Shared
-  Client client = Client.create()
+  Client client = buildClient(false)
 
-  def setupSpec() {
+  @Shared
+  Client clientWithReadTimeout = buildClient(true)
+
+  def buildClient(boolean readTimeout) {
+    def client = Client.create()
     client.setConnectTimeout(CONNECT_TIMEOUT_MS)
-    client.setReadTimeout(READ_TIMEOUT_MS)
+    if (readTimeout) {
+      client.setReadTimeout(READ_TIMEOUT_MS)
+    }
     // Add filters to ensure spans aren't duplicated.
     client.addFilter(new LoggingFilter())
     client.addFilter(new GZIPContentEncodingFilter())
+
+    return client
+  }
+
+  Client getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return clientWithReadTimeout
+    }
+    return client
+  }
+
+  @Override
+  def cleanupSpec() {
+    client?.destroy()
+    clientWithReadTimeout?.destroy()
   }
 
   @Override
   WebResource.Builder buildRequest(String method, URI uri, Map<String, String> headers) {
-    def resource = client.resource(uri).requestBuilder
+    def resource = getClient(uri).resource(uri).requestBuilder
     headers.each { resource.header(it.key, it.value) }
     return resource
   }

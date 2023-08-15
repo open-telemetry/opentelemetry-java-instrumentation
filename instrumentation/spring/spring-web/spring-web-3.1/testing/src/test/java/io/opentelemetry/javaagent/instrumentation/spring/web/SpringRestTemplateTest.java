@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Map;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -29,14 +28,23 @@ public class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<St
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  static RestTemplate restTemplate;
+  static RestTemplate restTemplate = buildClient(false);
+  static RestTemplate restTemplateWithReadTimeout = buildClient(true);
 
-  @BeforeAll
-  static void setUp() {
+  private static RestTemplate buildClient(boolean readTimeout) {
     SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
     factory.setConnectTimeout((int) CONNECTION_TIMEOUT.toMillis());
-    factory.setReadTimeout((int) READ_TIMEOUT.toMillis());
-    restTemplate = new RestTemplate(factory);
+    if (readTimeout) {
+      factory.setReadTimeout((int) READ_TIMEOUT.toMillis());
+    }
+    return new RestTemplate(factory);
+  }
+
+  private static RestTemplate getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return restTemplateWithReadTimeout;
+    }
+    return restTemplate;
   }
 
   @Override
@@ -51,7 +59,7 @@ public class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<St
       HttpEntity<String> request, String method, URI uri, Map<String, String> headers)
       throws Exception {
     try {
-      return restTemplate
+      return getClient(uri)
           .exchange(uri, HttpMethod.valueOf(method), request, String.class)
           .getStatusCode()
           .value();
