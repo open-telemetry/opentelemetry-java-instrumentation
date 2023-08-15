@@ -6,21 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 class QueryParameterKeyCache {
 
   public static final String KEY_PREFIX = "servlet.request.parameter.";
-  private static final ConcurrentMap<String, AttributeKey<List<String>>> cache =
-      new ConcurrentHashMap<>();
+  private static final Cache<String, AttributeKey<List<String>>> cache = Cache.bounded(500);
 
   private QueryParameterKeyCache() {}
 
   static AttributeKey<List<String>> get(String parameterName) {
-    // TODO: Limit cache size to prevent cache bloating attacks
     return cache.computeIfAbsent(parameterName, QueryParameterKeyCache::createKey);
   }
 
