@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.hystrix;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
@@ -37,44 +40,47 @@ class HystrixObservableTest {
   @SuppressWarnings("RxReturnValueIgnored")
   void testCommands(Parameter parameter) {
 
-    String result;
-    try {
-      result =
-          testing.runWithSpan(
-              "parent",
-              () -> {
-                HystrixObservableCommand<String> val =
-                    new HystrixObservableCommand<String>(setter()) {
-                      private String tracedMethod() {
-                        testing.runWithSpan("tracedMethod", () -> {});
-                        return "Hello!";
-                      }
+    String result =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              HystrixObservableCommand<String> val =
+                  new HystrixObservableCommand<String>(setter()) {
+                    private String tracedMethod() {
+                      testing.runWithSpan("tracedMethod", () -> {});
+                      return "Hello!";
+                    }
 
-                      @Override
-                      protected Observable<String> construct() {
-                        Observable<String> obs =
-                            Observable.defer(
-                                () -> {
-                                  Observable.just(tracedMethod()).repeat(1);
-                                  return null;
-                                });
-                        if (parameter.observeOn != null) {
-                          obs = obs.observeOn(parameter.observeOn);
-                        }
-                        if (parameter.subscribeOn != null) {
-                          obs = obs.subscribeOn(parameter.subscribeOn);
-                        }
-                        return obs;
+                    @Override
+                    protected Observable<String> construct() {
+                      Observable<String> obs =
+                          Observable.defer(() -> Observable.just(tracedMethod()).repeat(1));
+                      if (parameter.observeOn != null) {
+                        obs = obs.observeOn(parameter.observeOn);
                       }
-                    };
-                return parameter.operation.apply(val);
-              });
-
-    } catch (RuntimeException e) {
-      throw new AssertionError(e);
-    }
+                      if (parameter.subscribeOn != null) {
+                        obs = obs.subscribeOn(parameter.subscribeOn);
+                      }
+                      return obs;
+                    }
+                  };
+              return parameter.operation.apply(val);
+            });
 
     assertThat(Objects.equals(result, "Hello!")).isTrue();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span ->
+                    span.hasName("ExampleGroup.HystrixObservableTest$1.execute")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("hystrix.command"), "HystrixObservableTest$1"),
+                            equalTo(stringKey("hystrix.group"), "ExampleGroup"),
+                            equalTo(booleanKey("hystrix.circuit_open"), false)),
+                span -> span.hasName("tracedMethod").hasParent(trace.getSpan(1))));
   }
 
   private static Stream<Arguments> provideCommandActionArguments() {

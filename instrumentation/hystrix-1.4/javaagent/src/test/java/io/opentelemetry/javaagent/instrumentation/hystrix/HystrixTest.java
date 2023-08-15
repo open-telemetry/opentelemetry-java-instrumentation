@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.hystrix;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_TYPE;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
 import com.netflix.hystrix.HystrixCommand;
@@ -51,7 +51,6 @@ class HystrixTest {
             testing.runWithSpan("tracedMethod", () -> {});
             return "Hello!";
           }
-          ;
         };
 
     String result = testing.runWithSpan("parent", () -> operation.apply(command));
