@@ -43,6 +43,7 @@ listOf(baseJavaagentLibs, javaagentLibs).forEach {
 
 val licenseReportDependencies by configurations.creating {
   extendsFrom(bootstrapLibs)
+  extendsFrom(baseJavaagentLibs)
 }
 
 dependencies {
@@ -83,13 +84,7 @@ dependencies {
   // concurrentlinkedhashmap-lru and weak-lock-free are copied in to the instrumentation-api module
   licenseReportDependencies("com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2")
   licenseReportDependencies("com.blogspot.mydailyjava:weak-lock-free:0.18")
-  // TODO ideally this would be :instrumentation instead of :javaagent-tooling
-  //  in case there are dependencies (accidentally) pulled in by instrumentation modules
-  //  but I couldn't get that to work
-  licenseReportDependencies(project(":javaagent-tooling"))
-  licenseReportDependencies(project(":javaagent-internal-logging-application"))
-  licenseReportDependencies(project(":javaagent-internal-logging-simple"))
-  licenseReportDependencies(project(":javaagent-extension-api"))
+  licenseReportDependencies(project(":javaagent-internal-logging-simple")) // need the non-shadow versions
 
   testCompileOnly(project(":javaagent-bootstrap"))
   testCompileOnly(project(":javaagent-extension-api"))

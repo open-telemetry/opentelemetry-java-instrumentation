@@ -21,7 +21,20 @@ dependencies {
 }
 
 tasks {
-  test {
+  val testStableSemconv by registering(Test::class) {
+    filter {
+      includeTestsMatching("ArmeriaHttpClientTest")
+    }
+    include("**/ArmeriaHttpClientTest.*")
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
+  withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }

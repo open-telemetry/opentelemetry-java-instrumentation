@@ -90,6 +90,9 @@ final class NettyHttpClientAttributesGetter
   public String getNetworkProtocolVersion(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     HttpVersion version = requestAndChannel.request().getProtocolVersion();
+    if (version.minorVersion() == 0) {
+      return Integer.toString(version.majorVersion());
+    }
     return version.majorVersion() + "." + version.minorVersion();
   }
 

@@ -73,7 +73,7 @@ public enum OkHttpAttributesGetter implements HttpClientAttributesGetter<Request
       case HTTP_1_1:
         return "1.1";
       case HTTP_2:
-        return "2.0";
+        return "2";
       case SPDY_3:
         return "3.1";
     }
