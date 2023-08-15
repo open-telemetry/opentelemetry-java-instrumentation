@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
@@ -23,11 +24,11 @@ import java.security.ProtectionDomain;
 public final class IndyTypeTransformerImpl implements TypeTransformer {
   private AgentBuilder.Identified.Extendable agentBuilder;
 
-  private final ClassLoader instrumentatioModuleClassloader;
+  private final InstrumentationModule instrumentationModule;
 
-  public IndyTypeTransformerImpl(AgentBuilder.Identified.Extendable agentBuilder, ClassLoader instrumentatioModuleClassloader) {
+  public IndyTypeTransformerImpl(AgentBuilder.Identified.Extendable agentBuilder, InstrumentationModule module) {
     this.agentBuilder = agentBuilder;
-    this.instrumentatioModuleClassloader = instrumentatioModuleClassloader;
+    this.instrumentationModule = module;
   }
 
   @Override
@@ -42,12 +43,12 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
         .with(new Advice.AssignReturned.Factory().withSuppressed(ClassCastException.class));
         //.bind(new SimpleMethodSignatureOffsetMappingFactory())
         //.bind(new AnnotationValueOffsetMappingFactory())
-    withCustomMapping = withCustomMapping.bootstrap(IndyBootstrap.getIndyBootstrapMethod());
+    withCustomMapping = withCustomMapping.bootstrap(IndyBootstrap.getIndyBootstrapMethod(), IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule));
     StackManipulation exceptionHandler = MethodInvocation.invoke(new MethodDescription.ForLoadedMethod(IndyBootstrap.getExceptionHandlerMethod()));
     agentBuilder = agentBuilder.transform(
         new AgentBuilder.Transformer.ForAdvice(withCustomMapping)
           .advice(methodMatcher, adviceClassName)
-          .include(ClassLoader.getSystemClassLoader(), instrumentatioModuleClassloader)
+          .include(ClassLoader.getSystemClassLoader(), instrumentationModule.getClass().getClassLoader())
           .withExceptionHandler(new Advice.ExceptionHandler.Simple(exceptionHandler))
     );
   }

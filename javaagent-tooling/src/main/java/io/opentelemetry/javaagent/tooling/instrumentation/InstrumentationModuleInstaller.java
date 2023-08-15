@@ -122,7 +122,7 @@ public final class InstrumentationModuleInstaller {
               .and(muzzleMatcher)
               .transform(new PatchBytecodeVersionTo51Transformer());
 
-      IndyTypeTransformerImpl typeTransformer = new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule.getClass().getClassLoader());
+      IndyTypeTransformerImpl typeTransformer = new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule);
       typeInstrumentation.transform(typeTransformer);
       extendableAgentBuilder = typeTransformer.getAgentBuilder();
       extendableAgentBuilder = extendableAgentBuilder.transform(new AgentBuilder.Transformer() {
