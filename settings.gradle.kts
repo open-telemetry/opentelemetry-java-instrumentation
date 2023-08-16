@@ -1,6 +1,5 @@
 pluginManagement {
   plugins {
-    id("com.github.ben-manes.versions") version "0.47.0"
     id("com.github.jk1.dependency-license-report") version "2.5"
     id("com.google.cloud.tools.jib") version "3.3.2"
     id("com.gradle.plugin-publish") version "1.2.0"
