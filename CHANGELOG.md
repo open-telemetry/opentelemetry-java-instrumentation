@@ -61,6 +61,8 @@
   ([#8736](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8736))
 - Update network.protocol.version `2.0` -> `2` and `3.0` -> `3`
   ([#9145](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9145))
+- @WithSpan support for kotlin coroutines
+  ([#8870](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8870))
 
 ### 🛠️ Bug fixes
 
