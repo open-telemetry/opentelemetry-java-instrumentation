@@ -27,7 +27,7 @@ jobs:
           ref: 'cloudfoundry'
 
       - name: create working branch
-        run: git checkout -b cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }}
+        run: git checkout -b opentelemetrybot/cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }}
 
       - run: sudo apt-get install jq python3-pip
       - run: pip install yq
@@ -48,9 +48,9 @@ jobs:
             exit 0
           fi
           git commit -m "Updated index.yml"
-          git push --set-upstream origin cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }}
+          git push --set-upstream origin opentelemetrybot/cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }}
           gh pr create --base cloudfoundry \
-            --head cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }} \
+            --head opentelemetrybot/cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }} \
             --title 'Release updates for Cloudfoundry Repo' \
             --body '[Created by Github action]'
         env:
