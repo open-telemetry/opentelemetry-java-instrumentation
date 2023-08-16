@@ -44,7 +44,7 @@ public final class InetSocketAddressUtil {
     }
     InetAddress remoteAddress = address.getAddress();
     if (remoteAddress instanceof Inet4Address) {
-      return "ipv6";
+      return "ipv4";
     } else if (remoteAddress instanceof Inet6Address) {
       return "ipv6";
     }
