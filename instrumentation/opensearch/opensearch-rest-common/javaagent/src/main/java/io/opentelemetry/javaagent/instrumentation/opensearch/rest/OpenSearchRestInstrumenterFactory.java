@@ -10,13 +10,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import org.opensearch.client.Response;
 
 public final class OpenSearchRestInstrumenterFactory {
 
+  @SuppressWarnings("deprecation") // have to use the deprecated Net*AttributesExtractor for now
   public static Instrumenter<OpenSearchRestRequest, Response> create(String instrumentationName) {
     OpenSearchRestAttributesGetter dbClientAttributesGetter = new OpenSearchRestAttributesGetter();
     OpenSearchRestNetResponseAttributesGetter netAttributesGetter =
@@ -27,7 +27,9 @@ public final class OpenSearchRestInstrumenterFactory {
             instrumentationName,
             DbClientSpanNameExtractor.create(dbClientAttributesGetter))
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
-        .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+        .addAttributesExtractor(
+            io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor
+                .create(netAttributesGetter))
         .addAttributesExtractor(
             PeerServiceAttributesExtractor.create(
                 netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))

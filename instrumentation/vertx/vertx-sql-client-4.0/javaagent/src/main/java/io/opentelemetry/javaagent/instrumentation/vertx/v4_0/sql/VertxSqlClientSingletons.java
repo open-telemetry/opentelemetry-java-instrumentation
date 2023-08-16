@@ -14,8 +14,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.vertx.sqlclient.SqlConnectOptions;
 import java.util.Map;
@@ -41,7 +41,7 @@ public final class VertxSqlClientSingletons {
                         CommonConfig.get().isStatementSanitizationEnabled())
                     .build())
             .addAttributesExtractor(
-                NetClientAttributesExtractor.create(VertxSqlClientNetAttributesGetter.INSTANCE))
+                ServerAttributesExtractor.create(VertxSqlClientNetAttributesGetter.INSTANCE))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     VertxSqlClientNetAttributesGetter.INSTANCE,

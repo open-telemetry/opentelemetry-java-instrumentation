@@ -5,24 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-final class JedisNetAttributesGetter implements NetClientAttributesGetter<JedisRequest, Void> {
-
-  @Nullable
-  @Override
-  public String getServerAddress(JedisRequest jedisRequest) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(JedisRequest jedisRequest) {
-    return null;
-  }
+final class JedisNetworkAttributesGetter implements ServerAttributesGetter<JedisRequest, Void> {
 
   @Override
   @Nullable

@@ -14,8 +14,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 
 public final class LettuceSingletons {
@@ -38,12 +38,13 @@ public final class LettuceSingletons {
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
 
-    LettuceConnectNetAttributesGetter netAttributesGetter = new LettuceConnectNetAttributesGetter();
+    LettuceConnectNetworkAttributesGetter netAttributesGetter =
+        new LettuceConnectNetworkAttributesGetter();
 
     CONNECT_INSTRUMENTER =
         Instrumenter.<RedisURI, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, redisUri -> "CONNECT")
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))

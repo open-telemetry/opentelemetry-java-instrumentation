@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
@@ -52,7 +51,9 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   @Deprecated
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
+      io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter<
+              REQUEST, RESPONSE>
+          netAttributesGetter) {
     return builder(httpAttributesGetter, netAttributesGetter).build();
   }
 
@@ -76,7 +77,9 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   @Deprecated
   public static <REQUEST, RESPONSE> HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
+      io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter<
+              REQUEST, RESPONSE>
+          netAttributesGetter) {
     return new HttpClientAttributesExtractorBuilder<>(httpAttributesGetter, netAttributesGetter);
   }
 

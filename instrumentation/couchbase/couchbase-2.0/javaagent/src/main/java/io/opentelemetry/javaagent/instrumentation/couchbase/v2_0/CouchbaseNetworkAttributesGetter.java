@@ -5,25 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-public class CouchbaseNetAttributesGetter
-    implements NetClientAttributesGetter<CouchbaseRequestInfo, Void> {
-
-  @Nullable
-  @Override
-  public String getServerAddress(CouchbaseRequestInfo couchbaseRequest) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(CouchbaseRequestInfo couchbaseRequest) {
-    return null;
-  }
+public class CouchbaseNetworkAttributesGetter
+    implements ServerAttributesGetter<CouchbaseRequestInfo, Void> {
 
   @Nullable
   @Override
