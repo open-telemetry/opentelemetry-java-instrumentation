@@ -73,7 +73,7 @@ public final class InstrumentationModuleInstaller {
     }
 
     if(instrumentationModule.isIndyModule()) {
-      return installIndyModule(instrumentationModule, parentAgentBuilder, config);
+      return installIndyModule(instrumentationModule, parentAgentBuilder);
     } else {
       return installInjectingModule(instrumentationModule, parentAgentBuilder, config);
     }
@@ -81,13 +81,14 @@ public final class InstrumentationModuleInstaller {
   }
 
   private AgentBuilder installIndyModule(InstrumentationModule instrumentationModule,
-      AgentBuilder parentAgentBuilder, ConfigProperties config) {
+      AgentBuilder parentAgentBuilder) {
 
     indyModuleRegistry.registerIndyModule(instrumentationModule);
 
     ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher =
         instrumentationModule.classLoaderMatcher();
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
+    //TODO (Jonas): Adapt MuzzleMatcher to use the same type lookup strategy as the InstrumentationModuleClassLoader
+    //MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
     VirtualFieldImplementationInstaller contextProvider =
         virtualFieldInstallerFactory.create(instrumentationModule);
 
@@ -119,7 +120,6 @@ public final class InstrumentationModuleInstaller {
               .and(
                   (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) ->
                       classLoader == null || NOT_DECORATOR_MATCHER.matches(typeDescription))
-              .and(muzzleMatcher)
               .transform(new PatchBytecodeVersionTo51Transformer());
 
       IndyTypeTransformerImpl typeTransformer = new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule);
