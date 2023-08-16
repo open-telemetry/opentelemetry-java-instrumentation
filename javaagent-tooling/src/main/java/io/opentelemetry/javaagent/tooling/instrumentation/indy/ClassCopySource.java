@@ -15,7 +15,9 @@ import net.bytebuddy.utility.StreamDrainer;
  * implementation is based on {@link net.bytebuddy.dynamic.ClassFileLocator.ForClassLoader}, with
  * the difference that it preserves the original classfile resource URL.
  */
-public abstract class ClassCopySource {
+abstract class ClassCopySource {
+
+  private ClassCopySource() {}
 
   /**
    * Provides a URL pointing to the specific classfile.

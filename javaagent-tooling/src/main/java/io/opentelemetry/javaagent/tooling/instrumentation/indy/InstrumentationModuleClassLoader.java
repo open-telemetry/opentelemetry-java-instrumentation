@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
  * <p>In addition, this classloader ensures that the lookup of corresponding .class resources follow
  * the same delegation strategy, so that bytecode inspection tools work correctly.
  */
-public class InstrumentationModuleClassLoader extends ClassLoader {
+class InstrumentationModuleClassLoader extends ClassLoader {
 
   private static final Map<String, ClassCopySource> ALWAYS_INJECTED_CLASSES =
       Collections.singletonMap(
