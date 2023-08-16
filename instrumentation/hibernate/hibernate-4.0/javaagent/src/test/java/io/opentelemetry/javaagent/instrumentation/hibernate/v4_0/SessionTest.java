@@ -14,15 +14,19 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEP
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_TYPE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.ThrowableAssert.catchThrowable;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
@@ -52,10 +56,7 @@ class SessionTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            "Session."
-                                + parameter.methodName
-                                + " io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
+                    span.hasName("Session." + parameter.methodName + " " + Value.class.getName())
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -105,10 +106,7 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "lock",
                     (Session session, Value val) ->
-                        session.lock(
-                            "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value",
-                            val,
-                            LockMode.READ),
+                        session.lock(Value.class.getName(), val, LockMode.READ),
                     null))),
         Arguments.of(
             named(
@@ -131,19 +129,14 @@ class SessionTest extends AbstractHibernateTest {
                 "refresh with entity name",
                 new Parameter(
                     "refresh",
-                    (Session session, Value val) ->
-                        session.refresh(
-                            "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value", val),
+                    (Session session, Value val) -> session.refresh(Value.class.getName(), val),
                     null))),
         Arguments.of(
             named(
                 "get with entity name",
                 new Parameter(
                     "get",
-                    (Session session, Value val) ->
-                        session.get(
-                            "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value",
-                            val.getId()),
+                    (Session session, Value val) -> session.get(Value.class.getName(), val.getId()),
                     null))),
         Arguments.of(
             named(
@@ -173,10 +166,7 @@ class SessionTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            "Session."
-                                + parameter.methodName
-                                + " io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
+                    span.hasName("Session." + parameter.methodName + " " + Value.class.getName())
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -221,9 +211,7 @@ class SessionTest extends AbstractHibernateTest {
                     "refresh",
                     null,
                     (StatelessSession session, Value val) ->
-                        session.refresh(
-                            "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value",
-                            val)))),
+                        session.refresh(Value.class.getName(), val)))),
         Arguments.of(
             named(
                 "get with entity name",
@@ -231,9 +219,7 @@ class SessionTest extends AbstractHibernateTest {
                     "get",
                     null,
                     (StatelessSession session, Value val) ->
-                        session.get(
-                            "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value",
-                            val.getId())))),
+                        session.get(Value.class.getName(), val.getId())))),
         Arguments.of(
             named(
                 "get with entity class",
@@ -257,9 +243,7 @@ class SessionTest extends AbstractHibernateTest {
                     "insert",
                     null,
                     (StatelessSession session, Value val) ->
-                        session.insert(
-                            "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value",
-                            new Value("insert me"))))),
+                        session.insert(Value.class.getName(), new Value("insert me"))))),
         Arguments.of(
             named(
                 "insert with null entity name",
@@ -286,8 +270,7 @@ class SessionTest extends AbstractHibernateTest {
                     null,
                     (StatelessSession session, Value val) -> {
                       val.setName("New name");
-                      session.update(
-                          "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value", val);
+                      session.update(Value.class.getName(), val);
                     }))),
         Arguments.of(
             named(
@@ -306,8 +289,7 @@ class SessionTest extends AbstractHibernateTest {
                     "delete",
                     null,
                     (StatelessSession session, Value val) -> {
-                      session.delete(
-                          "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value", val);
+                      session.delete(Value.class.getName(), val);
                       prepopulated.remove(val);
                     }))));
   }
@@ -330,10 +312,7 @@ class SessionTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            "Session."
-                                + parameter.methodName
-                                + " io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
+                    span.hasName("Session." + parameter.methodName + " " + Value.class.getName())
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -398,37 +377,39 @@ class SessionTest extends AbstractHibernateTest {
                     null))),
         Arguments.of(
             named(
-                "replicate",
+                "replicate by entity name",
                 new Parameter(
                     "replicate",
                     (Session session, Value val) -> {
                       Value replicated = new Value(val.getName() + " replicated");
                       replicated.setId(val.getId());
                       session.replicate(
-                          "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value",
-                          replicated,
-                          ReplicationMode.OVERWRITE);
+                          Value.class.getName(), replicated, ReplicationMode.OVERWRITE);
                     },
                     null))));
   }
 
   @Test
   void testHibernateFailedReplicate() {
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          Session session = sessionFactory.openSession();
-          session.beginTransaction();
+    Throwable mappingException =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              Session session = sessionFactory.openSession();
+              session.beginTransaction();
 
-          try {
-            session.replicate(123L /* Not a valid entity */, ReplicationMode.OVERWRITE);
-          } catch (RuntimeException e) {
-            // We expected this, we should see the error field set on the span.
-          }
+              Throwable exception =
+                  catchThrowable(
+                      () -> {
+                        session.replicate(123L /* Not a valid entity */, ReplicationMode.OVERWRITE);
+                      });
 
-          session.getTransaction().commit();
-          session.close();
-        });
+              session.getTransaction().commit();
+              session.close();
+              return exception;
+            });
+
+    assertThat(mappingException.getClass()).isEqualTo(MappingException.class);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -451,9 +432,9 @@ class SessionTest extends AbstractHibernateTest {
                                 event
                                     .hasName(EXCEPTION_EVENT_NAME)
                                     .hasAttributesSatisfyingExactly(
-                                        equalTo(EXCEPTION_TYPE, "org.hibernate.MappingException"),
                                         equalTo(
-                                            EXCEPTION_MESSAGE, "Unknown entity: java.lang.Long"),
+                                            EXCEPTION_TYPE, mappingException.getClass().getName()),
+                                        equalTo(EXCEPTION_MESSAGE, mappingException.getMessage()),
                                         satisfies(
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class)))),
@@ -489,10 +470,7 @@ class SessionTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            "Session."
-                                + parameter.methodName
-                                + " io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
+                    span.hasName("Session." + parameter.methodName + " " + Value.class.getName())
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -544,9 +522,7 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "save",
                     (Session session, Value val) -> {
-                      session.save(
-                          "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value",
-                          new Value("Another value"));
+                      session.save(Value.class.getName(), new Value("Another value"));
                     },
                     null))),
         Arguments.of(
@@ -564,9 +540,7 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "saveOrUpdate",
                     (Session session, Value val) -> {
-                      session.saveOrUpdate(
-                          "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value",
-                          new Value("Value"));
+                      session.saveOrUpdate(Value.class.getName(), new Value("Value"));
                     },
                     null))),
         Arguments.of(
@@ -576,8 +550,7 @@ class SessionTest extends AbstractHibernateTest {
                     "saveOrUpdate",
                     (Session session, Value val) -> {
                       val.setName("New name");
-                      session.saveOrUpdate(
-                          "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value", val);
+                      session.saveOrUpdate(Value.class.getName(), val);
                     },
                     null))),
         Arguments.of(
@@ -595,9 +568,7 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "merge",
                     (Session session, Value val) -> {
-                      session.merge(
-                          "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value",
-                          new Value("merge me in"));
+                      session.merge(Value.class.getName(), new Value("merge me in"));
                     },
                     null))),
         Arguments.of(
@@ -615,9 +586,7 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "persist",
                     (Session session, Value val) -> {
-                      session.persist(
-                          "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value",
-                          new Value("merge me in"));
+                      session.persist(Value.class.getName(), new Value("merge me in"));
                     },
                     null))),
         Arguments.of(
@@ -646,8 +615,7 @@ class SessionTest extends AbstractHibernateTest {
                     "update",
                     (Session session, Value val) -> {
                       val.setName("New name");
-                      session.update(
-                          "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value", val);
+                      session.update(Value.class.getName(), val);
                     },
                     null))),
         Arguments.of(
@@ -666,8 +634,7 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "delete",
                     (Session session, Value val) -> {
-                      session.delete(
-                          "io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value", val);
+                      session.delete(Value.class.getName(), val);
                       prepopulated.remove(val);
                     },
                     null))));
@@ -768,28 +735,36 @@ class SessionTest extends AbstractHibernateTest {
           session3.close();
         });
 
+    AtomicReference<String> sessionId1 = new AtomicReference<>();
+    AtomicReference<String> sessionId2 = new AtomicReference<>();
+    AtomicReference<String> sessionId3 = new AtomicReference<>();
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("overlapping Sessions"),
-                span ->
-                    span.hasName(
-                            "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            satisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
-                span ->
-                    span.hasName(
-                            "Session.insert io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            satisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                span -> {
+                  span.hasName("Session.save " + Value.class.getName())
+                      .hasKind(INTERNAL)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          satisfies(
+                              stringKey("hibernate.session_id"),
+                              val -> val.isInstanceOf(String.class)));
+                  sessionId1.set(
+                      trace.getSpan(1).getAttributes().get(stringKey("hibernate.session_id")));
+                },
+                span -> {
+                  span.hasName("Session.insert " + Value.class.getName())
+                      .hasKind(INTERNAL)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          satisfies(
+                              stringKey("hibernate.session_id"),
+                              val -> val.isInstanceOf(String.class)));
+                  sessionId2.set(
+                      trace.getSpan(2).getAttributes().get(stringKey("hibernate.session_id")));
+                },
                 span ->
                     span.hasName("INSERT db1.Value")
                         .hasKind(CLIENT)
@@ -804,18 +779,19 @@ class SessionTest extends AbstractHibernateTest {
                                 stringAssert -> stringAssert.startsWith("insert")),
                             equalTo(SemanticAttributes.DB_OPERATION, "INSERT"),
                             equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
+                span -> {
+                  span.hasName("Session.save " + Value.class.getName())
+                      .hasKind(INTERNAL)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          satisfies(
+                              stringKey("hibernate.session_id"),
+                              val -> val.isInstanceOf(String.class)));
+                  sessionId3.set(
+                      trace.getSpan(4).getAttributes().get(stringKey("hibernate.session_id")));
+                },
                 span ->
-                    span.hasName(
-                            "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            satisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
-                span ->
-                    span.hasName(
-                            "Session.delete io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value")
+                    span.hasName("Session.delete " + Value.class.getName())
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -861,6 +837,10 @@ class SessionTest extends AbstractHibernateTest {
                                 stringAssert -> stringAssert.startsWith("delete")),
                             equalTo(SemanticAttributes.DB_OPERATION, "DELETE"),
                             equalTo(SemanticAttributes.DB_SQL_TABLE, "Value"))));
+
+    assertThat(sessionId1.get()).isNotEqualTo(sessionId2.get());
+    assertThat(sessionId1.get()).isNotEqualTo(sessionId3.get());
+    assertThat(sessionId2.get()).isNotEqualTo(sessionId3.get());
   }
 
   private static class Parameter {

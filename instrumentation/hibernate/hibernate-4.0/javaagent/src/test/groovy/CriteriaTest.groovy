@@ -40,7 +40,7 @@ class CriteriaTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          name "Criteria.$methodName io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value"
+          name "Criteria.$methodName $Value.class.name"
           kind INTERNAL
           childOf span(0)
           attributes {

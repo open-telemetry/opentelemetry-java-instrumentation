@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
@@ -17,8 +16,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // buildSessionFactory
-abstract class AbstractHibernateTest extends AgentInstrumentationSpecification {
+abstract class AbstractHibernateTest {
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -27,6 +25,7 @@ abstract class AbstractHibernateTest extends AgentInstrumentationSpecification {
   protected static List<Value> prepopulated;
 
   @BeforeAll
+  @SuppressWarnings("deprecation") // buildSessionFactory
   static void setUp() {
     sessionFactory = new Configuration().configure().buildSessionFactory();
 
