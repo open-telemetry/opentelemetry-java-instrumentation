@@ -3,11 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awssdk.v2_2;
+package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
+import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -18,14 +16,17 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import org.junit.jupiter.api.Test;
+import java.lang.reflect.Constructor;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.junit.jupiter.api.Test;
-import software.amazon.awssdk.services.sqs.model.Message;
-import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SqsMessageHandlerTest extends XrayTestInstrumenter {
   private static class SqsMessageHandlerImpl extends SqsMessageHandler {
@@ -37,7 +38,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
     }
 
     @Override
-    protected void doHandle(Collection<Message> request) {
+    protected void doHandle(Collection<SQSEvent.SQSMessage> request) {
       handleCalls.getAndIncrement();
     }
   }
@@ -48,16 +49,13 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
         getOpenTelemetry(),
         "destination");
 
-    messageHandler.setSpanNameExtactor(e-> "MySpan");
-
-    List<Message> messages = new LinkedList<>();
-    messages.add(Message.builder()
-        .body("Hello")
-        .attributesWithStrings(
-            Collections.singletonMap(
-                "AWSTraceHeader",
-                "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"))
-        .build());
+    List<SQSEvent.SQSMessage> messages = new LinkedList<>();
+    SQSEvent.SQSMessage message = newMessage();
+    message.setBody("Hello");
+    Map<String, String> attributes = new TreeMap<>();
+    attributes.put("AWSTraceHeader", "Root=1-99555555-123456789012345678901234;Parent=9934567890123456;Sampled=1");
+    message.setAttributes(attributes);
+    messages.add(message);
 
     Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
 
@@ -74,13 +72,13 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("MySpan")
+                    span.hasName("destination process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
-                                    "55555555123456789012345678901234",
-                                    "1234567890123456",
+                                    "99555555123456789012345678901234",
+                                    "9934567890123456",
                                     TraceFlags.getSampled(),
                                     TraceState.getDefault())))
                         .hasTotalRecordedLinks(1)
@@ -99,16 +97,13 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
         getOpenTelemetry(),
         "destination");
 
-    messageHandler.setSpanNameExtactor(e-> "MySpan");
-
-    List<Message> messages = new LinkedList<>();
-    messages.add(Message.builder()
-        .body("Hello")
-        .attributesWithStrings(
-            Collections.singletonMap(
-                "AWSTraceHeader",
-                "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=0"))
-        .build());
+    List<SQSEvent.SQSMessage> messages = new LinkedList<>();
+    SQSEvent.SQSMessage message = newMessage();
+    message.setBody("Hello");
+    Map<String, String> attributes = new TreeMap<>();
+    attributes.put("AWSTraceHeader", "Root=1-99555555-123456789012345678901234;Parent=9934567890123456;Sampled=0");
+    message.setAttributes(attributes);
+    messages.add(message);
 
     Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
 
@@ -125,7 +120,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
-                    span.hasName("MySpan")
+                    span.hasName("destination process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasTotalRecordedLinks(0)
                         .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
@@ -143,19 +138,18 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
         getOpenTelemetry(),
         "destination");
 
-    List<Message> messages = new LinkedList<>();
-    messages.add(Message.builder()
-        .body("Hello")
-            .messageAttributes(Collections.singletonMap("X-Amzn-Trace-Id",
-                MessageAttributeValue.builder().dataType("String")
-                    .stringValue("Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1")
-                    .build()))
-        .build());
+    List<SQSEvent.SQSMessage> messages = new LinkedList<>();
+    SQSEvent.SQSMessage message = newMessage();
+    message.setBody("Hello");
+    Map<String, SQSEvent.MessageAttribute> attributes = new TreeMap<>();
+    SQSEvent.MessageAttribute value = new SQSEvent.MessageAttribute();
+    value.setDataType("String");
+    value.setStringValue("Root=1-99555555-123456789012345678901234;Parent=9934567890123456;Sampled=1");
+    attributes.put("X-Amzn-Trace-Id", value);
+    message.setMessageAttributes(attributes);
+    messages.add(message);
 
-    Span parentSpan = getOpenTelemetry()
-        .getTracer("test")
-        .spanBuilder("test")
-        .startSpan();
+    Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
 
     try (Scope scope = parentSpan.makeCurrent()) {
       messageHandler.handle(messages);
@@ -175,8 +169,8 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
-                                    "55555555123456789012345678901234",
-                                    "1234567890123456",
+                                    "99555555123456789012345678901234",
+                                    "9934567890123456",
                                     TraceFlags.getSampled(),
                                     TraceState.getDefault())))
                         .hasTotalRecordedLinks(1)
@@ -191,27 +185,26 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
 
   @Test
   public void twoMessages() {
-    List<Message> messages = new LinkedList<Message>();
-    messages.add(Message.builder()
-        .body("Hello")
-        .attributesWithStrings(
-            Collections.singletonMap(
-                "AWSTraceHeader",
-                "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"))
-        .build());
-    messages.add(Message.builder()
-        .body("Hello World")
-        .attributesWithStrings(
-            Collections.singletonMap(
-                "AWSTraceHeader",
-                "Root=1-66555555-123456789012345678901234;Parent=6634567890123456;Sampled=1"))
-        .build());
+    List<SQSEvent.SQSMessage> messages = new LinkedList<>();
+    SQSEvent.SQSMessage message = newMessage();
+    message.setBody("Hello");
+    Map<String, String> attributes = new TreeMap<>();
+    attributes.put("AWSTraceHeader", "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1");
+    message.setAttributes(attributes);
+    messages.add(message);
+
+    SQSEvent.SQSMessage message2 = newMessage();
+    message2.setBody("Hello World");
+    Map<String, String> attributes2 = new TreeMap<>();
+    attributes2.put("AWSTraceHeader", "Root=1-66555555-123456789012345678901234;Parent=6634567890123456;Sampled=1");
+    message2.setAttributes(attributes2);
+    messages.add(message2);
 
     SqsMessageHandlerImpl messageHandler = new SqsMessageHandlerImpl(
         getOpenTelemetry(),
         "destination");
 
-    messageHandler.setSpanKindExtractor(SpanKindExtractor.alwaysConsumer());
+    messageHandler.setSpanKindExtractor(SpanKindExtractor.alwaysServer());
 
     Span parentSpan = getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
 
@@ -229,7 +222,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0),
                 span ->
                     span.hasName("destination process")
-                        .hasKind(SpanKind.CONSUMER)
+                        .hasKind(SpanKind.SERVER)
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -255,23 +248,21 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
 
   @Test
   public void twoRuns() {
-    List<Message> messages1 = new LinkedList<Message>();
-    messages1.add(Message.builder()
-      .body("Hello")
-      .attributesWithStrings(
-          Collections.singletonMap(
-              "AWSTraceHeader",
-              "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1"))
-      .build());
+    List<SQSEvent.SQSMessage> messages1 = new LinkedList<>();
+    List<SQSEvent.SQSMessage> messages2 = new LinkedList<>();
+    SQSEvent.SQSMessage message = newMessage();
+    message.setBody("Hello");
+    Map<String, String> attributes = new TreeMap<>();
+    attributes.put("AWSTraceHeader", "Root=1-55555555-123456789012345678901234;Parent=1234567890123456;Sampled=1");
+    message.setAttributes(attributes);
+    messages1.add(message);
 
-    List<Message> messages2 = new LinkedList<Message>();
-    messages2.add(Message.builder()
-      .body("SecondMessage")
-      .attributesWithStrings(
-          Collections.singletonMap(
-              "AWSTraceHeader",
-              "Root=1-77555555-123456789012345678901234;Parent=7734567890123456;Sampled=1"))
-      .build());
+    SQSEvent.SQSMessage message2 = newMessage();
+    message2.setBody("SecondMessage");
+    Map<String, String> attributes2 = new TreeMap<>();
+    attributes2.put("AWSTraceHeader", "Root=1-77555555-123456789012345678901234;Parent=7734567890123456;Sampled=1");
+    message2.setAttributes(attributes2);
+    messages2.add(message2);
 
     SqsMessageHandlerImpl messageHandler = new SqsMessageHandlerImpl(
         getOpenTelemetry(),
@@ -369,14 +360,13 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
 
   @Test
   public void malformedTraceId() {
-    List<Message> messages = new LinkedList<Message>();
-    messages.add(Message.builder()
-      .body("Hello")
-      .attributesWithStrings(
-          Collections.singletonMap(
-              "AWSTraceHeader",
-              "Root=1-55555555-error;Parent=1234567890123456;Sampled=1"))
-      .build());
+    List<SQSEvent.SQSMessage> messages = new LinkedList<>();
+    SQSEvent.SQSMessage message = newMessage();
+    message.setBody("Hello");
+    Map<String, String> attributes = new TreeMap<>();
+    attributes.put("AWSTraceHeader", "Root=1-55555555-error;Parent=1234567890123456;Sampled=1");
+    message.setAttributes(attributes);
+    messages.add(message);
 
     SqsMessageHandlerImpl messageHandler = new SqsMessageHandlerImpl(
         getOpenTelemetry(),
@@ -400,5 +390,15 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasTotalAttributeCount(0).hasTotalRecordedLinks(0)));
+  }
+
+  private static SQSEvent.SQSMessage newMessage() {
+    try {
+      Constructor<SQSEvent.SQSMessage> ctor = SQSEvent.SQSMessage.class.getDeclaredConstructor();
+      ctor.setAccessible(true);
+      return ctor.newInstance();
+    } catch (Throwable t) {
+      throw new AssertionError(t);
+    }
   }
 }

@@ -34,6 +34,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   testImplementation("com.google.guava:guava")
 
+  implementation(project(":instrumentation:message-handler:message-handler-1.0:library"))
   testImplementation(project(":instrumentation:aws-lambda:aws-lambda-events-2.2:testing"))
   testImplementation("uk.org.webcompere:system-stubs-jupiter")
 }
