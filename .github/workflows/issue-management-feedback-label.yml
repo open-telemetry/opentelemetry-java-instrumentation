@@ -1,4 +1,4 @@
-name: Issue management - remove irrelevant labels
+name: Issue management - remove labels as needed
 
 on:
   issue_comment:
