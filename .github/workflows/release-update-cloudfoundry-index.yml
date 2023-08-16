@@ -18,6 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Use CLA approved github bot
+        run: .github/scripts/use-cla-approved-github-bot.sh
+
+      - uses: actions/checkout@v3
         with:
           ref: 'cloudfoundry'
 
@@ -34,9 +39,6 @@ jobs:
 
       - name: display changes
         run: git diff
-
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
 
       - name: create pr with repo changes
         run: |
