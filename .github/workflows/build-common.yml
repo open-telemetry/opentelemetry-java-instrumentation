@@ -102,6 +102,30 @@ jobs:
             exit 1
           fi
 
+  # this is needed because we don't auto-update dependencies in instrumentation/**
+  # and so we want to enforce that all "real" dependencies are dependency managed
+  extra-dependency-management-enforcement:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Dependency check
+        run: |
+          grep '^  implementation(".*:.*:[0-9].*")\|^  api(".*:.*:[0-9].*")' \
+               --include=\*.kts \
+               -r instrumentation \
+            | grep -v testing/build.gradle.kts \
+            | grep -v com.azure:azure-core-tracing-opentelemetry \
+            | grep -v com.couchbase.client:tracing-opentelemetry \
+            > dependencies.txt
+
+          if [ -s dependencies.txt ]; then
+            echo unmanaged dependencies found
+            echo
+            cat dependencies.txt
+            exit 1
+          fi
+
   build:
     runs-on: ubuntu-latest
     steps:
