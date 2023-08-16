@@ -4,6 +4,7 @@
  */
 
 import com.sun.jersey.api.client.Client
+import com.sun.jersey.api.client.ClientHandlerException
 import com.sun.jersey.api.client.ClientResponse
 import com.sun.jersey.api.client.WebResource
 import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter
@@ -58,7 +59,11 @@ class JaxRsClientV1Test extends HttpClientTest<WebResource.Builder> implements A
   @Override
   int sendRequest(WebResource.Builder resource, String method, URI uri, Map<String, String> headers) {
     def body = BODY_METHODS.contains(method) ? "" : null
-    return resource.method(method, ClientResponse, body).status
+    try {
+      return resource.method(method, ClientResponse, body).status
+    } catch (ClientHandlerException exception) {
+      throw exception.getCause()
+    }
   }
 
   @Override
