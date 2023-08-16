@@ -111,6 +111,7 @@ jobs:
 
       - name: Dependency check
         run: |
+          set +e
           grep '^  implementation(".*:.*:[0-9].*")\|^  api(".*:.*:[0-9].*")' \
                --include=\*.kts \
                -r instrumentation \
