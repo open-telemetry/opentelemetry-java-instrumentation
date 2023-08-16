@@ -49,6 +49,7 @@ tasks {
   withType(KotlinCompile::class).configureEach {
     kotlinOptions {
       jvmTarget = "1.8"
+      # generate metadata for Java 1.8 reflection on method parameters, used in @WithSpan tests
       javaParameters = true
     }
   }
