@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Named.named;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixObservableCommand;
+import com.netflix.hystrix.exception.HystrixRuntimeException;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -481,7 +482,7 @@ class HystrixObservableTest {
                           try {
                             throw returnValue;
                           } catch (Throwable e) {
-                            throw new IllegalArgumentException();
+                            throw (HystrixRuntimeException) e;
                           }
                         })))));
   }
