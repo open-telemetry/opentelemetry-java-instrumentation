@@ -78,6 +78,7 @@ public final class VertxSqlClientSingletons {
     return otelParentContext.makeCurrent();
   }
 
+  // this virutal field is also used in SqlClientBase instrumentation
   private static final VirtualField<SqlClientBase<?>, SqlConnectOptions> connectOptionsField =
       VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
 
