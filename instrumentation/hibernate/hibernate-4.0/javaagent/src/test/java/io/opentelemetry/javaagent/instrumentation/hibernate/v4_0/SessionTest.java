@@ -10,10 +10,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_EVENT_NAME;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.ThrowableAssert.catchThrowable;
 import static org.junit.jupiter.api.Named.named;
@@ -427,17 +423,7 @@ class SessionTest extends AbstractHibernateTest {
                                     .getSpan(1)
                                     .getAttributes()
                                     .get(stringKey("hibernate.session_id"))))
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName(EXCEPTION_EVENT_NAME)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            EXCEPTION_TYPE, mappingException.getClass().getName()),
-                                        equalTo(EXCEPTION_MESSAGE, mappingException.getMessage()),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class)))),
+                        .hasException(mappingException),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
