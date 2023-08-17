@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Named.named;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandProperties;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -39,32 +40,36 @@ class HystrixTest {
   @ParameterizedTest
   @MethodSource("provideCommandActionArguments")
   void testCommands(Function<HystrixCommand<String>, String> operation) {
+    class TestCommand extends HystrixCommand<String> {
+      protected TestCommand(Setter setter) {
+        super(setter);
+      }
 
-    HystrixCommand<String> command =
-        new HystrixCommand<String>(setter()) {
-          @Override
-          protected String run() throws Exception {
-            return tracedMethod();
-          }
+      @Override
+      protected String run() throws Exception {
+        return tracedMethod();
+      }
 
-          private String tracedMethod() {
-            testing.runWithSpan("tracedMethod", () -> {});
-            return "Hello!";
-          }
-        };
+      private String tracedMethod() {
+        testing.runWithSpan("tracedMethod", () -> {});
+        return "Hello!";
+      }
+    }
+
+    HystrixCommand<String> command = new TestCommand(setter());
 
     String result = testing.runWithSpan("parent", () -> operation.apply(command));
-    assertThat(Objects.equals(result, "Hello!")).isTrue();
+    assertThat(result).isEqualTo("Hello!");
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("ExampleGroup.HystrixTest$1.execute")
+                    span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "HystrixTest$1"),
+                            equalTo(stringKey("hystrix.command"), "TestCommand"),
                             equalTo(stringKey("hystrix.group"), "ExampleGroup"),
                             equalTo(booleanKey("hystrix.circuit_open"), false)),
                 span -> span.hasName("tracedMethod").hasParent(trace.getSpan(1))));
@@ -73,19 +78,23 @@ class HystrixTest {
   @ParameterizedTest
   @MethodSource("provideCommandActionArguments")
   void testCommandFallbacks(Function<HystrixCommand<String>, String> operation) {
+    class TestCommand extends HystrixCommand<String> {
+      protected TestCommand(Setter setter) {
+        super(setter);
+      }
 
-    HystrixCommand<String> command =
-        new HystrixCommand<String>(setter()) {
-          @Override
-          protected String run() throws Exception {
-            throw new IllegalArgumentException();
-          }
+      @Override
+      protected String run() throws Exception {
+        throw new IllegalArgumentException();
+      }
 
-          @Override
-          protected String getFallback() {
-            return "Fallback!";
-          }
-        };
+      @Override
+      protected String getFallback() {
+        return "Fallback!";
+      }
+    }
+
+    HystrixCommand<String> command = new TestCommand(setter());
 
     String result = testing.runWithSpan("parent", () -> operation.apply(command));
     assertThat(Objects.equals(result, "Fallback!")).isTrue();
@@ -93,9 +102,9 @@ class HystrixTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("ExampleGroup.HystrixTest$2.execute")
+                    span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
                         .hasEventsSatisfyingExactly(
@@ -109,14 +118,14 @@ class HystrixTest {
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "HystrixTest$2"),
+                            equalTo(stringKey("hystrix.command"), "TestCommand"),
                             equalTo(stringKey("hystrix.group"), "ExampleGroup"),
                             equalTo(booleanKey("hystrix.circuit_open"), false)),
                 span ->
-                    span.hasName("ExampleGroup.HystrixTest$2.fallback")
+                    span.hasName("ExampleGroup.TestCommand.fallback")
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "HystrixTest$2"),
+                            equalTo(stringKey("hystrix.command"), "TestCommand"),
                             equalTo(stringKey("hystrix.group"), "ExampleGroup"),
                             equalTo(booleanKey("hystrix.circuit_open"), false))));
   }

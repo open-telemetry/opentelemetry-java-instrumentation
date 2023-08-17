@@ -20,10 +20,10 @@ import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixObservableCommand;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Function;
@@ -46,44 +46,48 @@ class HystrixObservableTest {
   @MethodSource("provideCommandActionArguments")
   void testCommands(Parameter parameter) {
 
+    class TestCommand extends HystrixObservableCommand<String> {
+      protected TestCommand(Setter setter) {
+        super(setter);
+      }
+
+      private String tracedMethod() {
+        testing.runWithSpan("tracedMethod", () -> {});
+        return "Hello!";
+      }
+
+      @Override
+      protected Observable<String> construct() {
+        Observable<String> obs = Observable.defer(() -> Observable.just(tracedMethod()).repeat(1));
+        if (parameter.observeOn != null) {
+          obs = obs.observeOn(parameter.observeOn);
+        }
+        if (parameter.subscribeOn != null) {
+          obs = obs.subscribeOn(parameter.subscribeOn);
+        }
+        return obs;
+      }
+    }
+
     String result =
         testing.runWithSpan(
             "parent",
             () -> {
-              HystrixObservableCommand<String> val =
-                  new HystrixObservableCommand<String>(setter("ExampleGroup")) {
-                    private String tracedMethod() {
-                      testing.runWithSpan("tracedMethod", () -> {});
-                      return "Hello!";
-                    }
-
-                    @Override
-                    protected Observable<String> construct() {
-                      Observable<String> obs =
-                          Observable.defer(() -> Observable.just(tracedMethod()).repeat(1));
-                      if (parameter.observeOn != null) {
-                        obs = obs.observeOn(parameter.observeOn);
-                      }
-                      if (parameter.subscribeOn != null) {
-                        obs = obs.subscribeOn(parameter.subscribeOn);
-                      }
-                      return obs;
-                    }
-                  };
+              HystrixObservableCommand<String> val = new TestCommand(setter("ExampleGroup"));
               return parameter.operation.apply(val);
             });
 
-    assertThat(Objects.equals(result, "Hello!")).isTrue();
+    assertThat(result).isEqualTo("Hello!");
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("ExampleGroup.HystrixObservableTest$1.execute")
+                    span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "HystrixObservableTest$1"),
+                            equalTo(stringKey("hystrix.command"), "TestCommand"),
                             equalTo(stringKey("hystrix.group"), "ExampleGroup"),
                             equalTo(booleanKey("hystrix.circuit_open"), false)),
                 span -> span.hasName("tracedMethod").hasParent(trace.getSpan(1))));
@@ -243,50 +247,55 @@ class HystrixObservableTest {
   @MethodSource("provideCommandFallbackArguments")
   void testCommandFallbacks(Parameter parameter) {
 
+    class TestCommand extends HystrixObservableCommand<String> {
+      protected TestCommand(Setter setter) {
+        super(setter);
+      }
+
+      @Override
+      protected Observable<String> construct() {
+        Observable<String> err =
+            Observable.defer(() -> Observable.error(new IllegalArgumentException()))
+                .map(
+                    error -> {
+                      if (error instanceof Throwable) {
+                        return ((Throwable) error).getMessage();
+                      } else {
+                        throw new IllegalStateException("Expected Throwable result");
+                      }
+                    })
+                .repeat(1);
+        if (parameter.observeOn != null) {
+          err = err.observeOn(parameter.observeOn);
+        }
+        if (parameter.subscribeOn != null) {
+          err = err.subscribeOn(parameter.subscribeOn);
+        }
+        return err;
+      }
+
+      @Override
+      protected Observable<String> resumeWithFallback() {
+        return Observable.just("Fallback!").repeat(1);
+      }
+    }
+
     String result =
         testing.runWithSpan(
             "parent",
             () -> {
-              HystrixObservableCommand<String> val =
-                  new HystrixObservableCommand<String>(setter("ExampleGroup")) {
-                    @Override
-                    protected Observable<String> construct() {
-                      Observable<String> err =
-                          Observable.defer(() -> Observable.error(new IllegalArgumentException()))
-                              .map(
-                                  error -> {
-                                    if (error instanceof Throwable) {
-                                      return ((Throwable) error).getMessage();
-                                    } else {
-                                      throw new IllegalStateException("Expected Throwable result");
-                                    }
-                                  })
-                              .repeat(1);
-                      if (parameter.observeOn != null) {
-                        err = err.observeOn(parameter.observeOn);
-                      }
-                      if (parameter.subscribeOn != null) {
-                        err = err.subscribeOn(parameter.subscribeOn);
-                      }
-                      return err;
-                    }
-
-                    @Override
-                    protected Observable<String> resumeWithFallback() {
-                      return Observable.just("Fallback!").repeat(1);
-                    }
-                  };
+              HystrixObservableCommand<String> val = new TestCommand(setter("ExampleGroup"));
               return parameter.operation.apply(val);
             });
 
-    assertThat(Objects.equals(result, "Fallback!")).isTrue();
+    assertThat(result).isEqualTo("Fallback!");
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("ExampleGroup.HystrixObservableTest$2.execute")
+                    span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
                         .hasEventsSatisfyingExactly(
@@ -300,10 +309,10 @@ class HystrixObservableTest {
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class)))),
                 span ->
-                    span.hasName("ExampleGroup.HystrixObservableTest$2.fallback")
+                    span.hasName("ExampleGroup.TestCommand.fallback")
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "HystrixObservableTest$2"),
+                            equalTo(stringKey("hystrix.command"), "TestCommand"),
                             equalTo(stringKey("hystrix.group"), "ExampleGroup"),
                             equalTo(booleanKey("hystrix.circuit_open"), false))));
   }
@@ -345,6 +354,34 @@ class HystrixObservableTest {
   @MethodSource("provideCommandNoFallbackResultsInErrorArguments")
   void testNoFallbackResultsInErrorForAction(Parameter parameter) {
 
+    class TestCommand extends HystrixObservableCommand<String> {
+      protected TestCommand(Setter setter) {
+        super(setter);
+      }
+
+      @Override
+      protected Observable<String> construct() {
+        Observable<String> err =
+            Observable.defer(() -> Observable.error(new IllegalArgumentException()))
+                .map(
+                    error -> {
+                      if (error instanceof Throwable) {
+                        return ((Throwable) error).getMessage();
+                      } else {
+                        throw new IllegalStateException("Expected Throwable result");
+                      }
+                    })
+                .repeat(1);
+        if (parameter.observeOn != null) {
+          err = err.observeOn(parameter.observeOn);
+        }
+        if (parameter.subscribeOn != null) {
+          err = err.subscribeOn(parameter.subscribeOn);
+        }
+        return err;
+      }
+    }
+
     Throwable exception =
         catchException(
             () ->
@@ -352,31 +389,7 @@ class HystrixObservableTest {
                     "parent",
                     () -> {
                       HystrixObservableCommand<String> val =
-                          new HystrixObservableCommand<String>(setter("FailingGroup")) {
-                            @Override
-                            protected Observable<String> construct() {
-                              Observable<String> err =
-                                  Observable.defer(
-                                          () -> Observable.error(new IllegalArgumentException()))
-                                      .map(
-                                          error -> {
-                                            if (error instanceof Throwable) {
-                                              return ((Throwable) error).getMessage();
-                                            } else {
-                                              throw new IllegalStateException(
-                                                  "Expected Throwable result");
-                                            }
-                                          })
-                                      .repeat(1);
-                              if (parameter.observeOn != null) {
-                                err = err.observeOn(parameter.observeOn);
-                              }
-                              if (parameter.subscribeOn != null) {
-                                err = err.subscribeOn(parameter.subscribeOn);
-                              }
-                              return err;
-                            }
-                          };
+                          new TestCommand(setter("FailingGroup"));
                       return parameter.operation.apply(val);
                     }));
 
@@ -402,9 +415,9 @@ class HystrixObservableTest {
                                             "com.netflix.hystrix.exception.HystrixRuntimeException"),
                                         equalTo(
                                             EXCEPTION_MESSAGE,
-                                            "HystrixObservableTest$3 failed and no fallback available."))),
+                                            "TestCommand failed and no fallback available."))),
                 span ->
-                    span.hasName("FailingGroup.HystrixObservableTest$3.execute")
+                    span.hasName("FailingGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
                         .hasEventsSatisfyingExactly(
@@ -418,11 +431,11 @@ class HystrixObservableTest {
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "HystrixObservableTest$3"),
+                            equalTo(stringKey("hystrix.command"), "TestCommand"),
                             equalTo(stringKey("hystrix.group"), "FailingGroup"),
                             equalTo(booleanKey("hystrix.circuit_open"), false)),
                 span ->
-                    span.hasName("FailingGroup.HystrixObservableTest$3.fallback")
+                    span.hasName("FailingGroup.TestCommand.fallback")
                         .hasParent(trace.getSpan(1))
                         .hasEventsSatisfyingExactly(
                             event ->
@@ -437,7 +450,7 @@ class HystrixObservableTest {
                                             val -> val.isInstanceOf(String.class)),
                                         equalTo(EXCEPTION_MESSAGE, "No fallback available.")))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "HystrixObservableTest$3"),
+                            equalTo(stringKey("hystrix.command"), "TestCommand"),
                             equalTo(stringKey("hystrix.group"), "FailingGroup"),
                             equalTo(booleanKey("hystrix.circuit_open"), false))));
   }

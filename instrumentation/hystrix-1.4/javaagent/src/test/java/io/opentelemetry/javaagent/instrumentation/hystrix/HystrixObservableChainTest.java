@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixObservableCommand;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Objects;
@@ -30,39 +31,56 @@ class HystrixObservableChainTest {
   @SuppressWarnings("RxReturnValueIgnored")
   void testCommand() {
 
+    class TestCommand extends HystrixObservableCommand<String> {
+      protected TestCommand(Setter setter) {
+        super(setter);
+      }
+
+      private String tracedMethod() {
+        testing.runWithSpan("tracedMethod", () -> {});
+        return "Hello";
+      }
+
+      @Override
+      protected Observable<String> construct() {
+        return Observable.defer(() -> Observable.just(tracedMethod()))
+            .subscribeOn(Schedulers.immediate());
+      }
+    }
+
+    class AnotherTestCommand extends HystrixObservableCommand<String> {
+      private final String str;
+
+      protected AnotherTestCommand(Setter setter, String str) {
+        super(setter);
+        this.str = str;
+      }
+
+      private String anotherTracedMethod() {
+        testing.runWithSpan("anotherTracedMethod", () -> {});
+        return str + "!";
+      }
+
+      @Override
+      protected Observable<String> construct() {
+        return Observable.defer(() -> Observable.just(anotherTracedMethod()))
+            .subscribeOn(Schedulers.computation());
+      }
+    }
+
     String result =
         testing.runWithSpan(
             "parent",
             () ->
-                new HystrixObservableCommand<String>(setter("ExampleGroup")) {
-                  private String tracedMethod() {
-                    testing.runWithSpan("tracedMethod", () -> {});
-                    return "Hello";
-                  }
-
-                  @Override
-                  protected Observable<String> construct() {
-                    return Observable.defer(() -> Observable.just(tracedMethod()))
-                        .subscribeOn(Schedulers.immediate());
-                  }
-                }.toObservable()
+                new TestCommand(setter("ExampleGroup"))
+                    .toObservable()
                     .subscribeOn(Schedulers.io())
                     .map(String::toUpperCase)
                     .flatMap(
                         str ->
-                            new HystrixObservableCommand<String>(setter("OtherGroup")) {
-                              private String anotherTracedMethod() {
-                                testing.runWithSpan("anotherTracedMethod", () -> {});
-                                return str + "!";
-                              }
-
-                              @Override
-                              protected Observable<String> construct() {
-                                return Observable.defer(
-                                        () -> Observable.just(anotherTracedMethod()))
-                                    .subscribeOn(Schedulers.computation());
-                              }
-                            }.toObservable().subscribeOn(Schedulers.trampoline()))
+                            new AnotherTestCommand(setter("OtherGroup"), str)
+                                .toObservable()
+                                .subscribeOn(Schedulers.trampoline()))
                     .toBlocking()
                     .first());
 
@@ -71,20 +89,20 @@ class HystrixObservableChainTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("ExampleGroup.HystrixObservableChainTest$1.execute")
+                    span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "HystrixObservableChainTest$1"),
+                            equalTo(stringKey("hystrix.command"), "TestCommand"),
                             equalTo(stringKey("hystrix.group"), "ExampleGroup"),
                             equalTo(booleanKey("hystrix.circuit_open"), false)),
                 span -> span.hasName("tracedMethod").hasParent(trace.getSpan(1)),
                 span ->
-                    span.hasName("OtherGroup.HystrixObservableChainTest$2.execute")
+                    span.hasName("OtherGroup.AnotherTestCommand.execute")
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "HystrixObservableChainTest$2"),
+                            equalTo(stringKey("hystrix.command"), "AnotherTestCommand"),
                             equalTo(stringKey("hystrix.group"), "OtherGroup"),
                             equalTo(booleanKey("hystrix.circuit_open"), false)),
                 span -> span.hasName("anotherTracedMethod").hasParent(trace.getSpan(3))));
