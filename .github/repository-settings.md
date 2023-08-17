@@ -40,7 +40,7 @@ Same settings as above for [`main`](#main).
 Same settings as above for [`main`](#main),
 except for the `required-status-check` required status check.
 
-### `renovate/**/**`, `opentelemetrybot/**/**`, and `gradlew-update-*`
+### `renovate/**/**` and `opentelemetrybot/**/**`
 
 Same settings as
 for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md#branch-protection-rule-dependabot)
