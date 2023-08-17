@@ -48,27 +48,30 @@ class PatchBytecodeVersionTest {
     tempDir = temp;
     System.setProperty(BYTEBUDDY_DUMP, temp.toString());
 
-    AgentBuilder builder = new AgentBuilder.Default().disableClassFormatChanges()
-        .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-        .with(new AgentBuilder.Listener.Adapter() {
-          @Override
-          public void onError(
-              String typeName,
-              ClassLoader classLoader,
-              JavaModule module,
-              boolean loaded,
-              Throwable throwable) {
-            logger.error("Transformation error", throwable);
-          }
-        })
-        // commons lang 3
-        .type(named("org.apache.commons.lang3.StringUtils"))
-        .transform(new PatchByteCodeVersionTransformer())
-        .transform(transformerFor(isMethod().and(named("startsWith"))))
-        // servlet 2.5
-        .type(named("javax.servlet.GenericServlet"))
-        .transform(new PatchByteCodeVersionTransformer())
-        .transform(transformerFor(isMethod().and(named("init"))));
+    AgentBuilder builder =
+        new AgentBuilder.Default()
+            .disableClassFormatChanges()
+            .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+            .with(
+                new AgentBuilder.Listener.Adapter() {
+                  @Override
+                  public void onError(
+                      String typeName,
+                      ClassLoader classLoader,
+                      JavaModule module,
+                      boolean loaded,
+                      Throwable throwable) {
+                    logger.error("Transformation error", throwable);
+                  }
+                })
+            // commons lang 3
+            .type(named("org.apache.commons.lang3.StringUtils"))
+            .transform(new PatchByteCodeVersionTransformer())
+            .transform(transformerFor(isMethod().and(named("startsWith"))))
+            // servlet 2.5
+            .type(named("javax.servlet.GenericServlet"))
+            .transform(new PatchByteCodeVersionTransformer())
+            .transform(transformerFor(isMethod().and(named("init"))));
 
     ByteBuddyAgent.install();
     transformer = builder.installOn(ByteBuddyAgent.getInstrumentation());
@@ -77,15 +80,15 @@ class PatchBytecodeVersionTest {
   @AfterAll
   static void tearDown() {
     transformer.reset(
-        ByteBuddyAgent.getInstrumentation(),
-        AgentBuilder.RedefinitionStrategy.RETRANSFORMATION);
+        ByteBuddyAgent.getInstrumentation(), AgentBuilder.RedefinitionStrategy.RETRANSFORMATION);
 
     System.clearProperty(BYTEBUDDY_DUMP);
   }
 
   @Test
   void patchJava6() {
-    testVersionUpgrade(Opcodes.V1_6,
+    testVersionUpgrade(
+        Opcodes.V1_6,
         () -> StringUtils.startsWith("", ""),
         2,
         "org.apache.commons.lang3.StringUtils");
@@ -93,7 +96,8 @@ class PatchBytecodeVersionTest {
 
   @Test
   void patchJava5() {
-    testVersionUpgrade(Opcodes.V1_5,
+    testVersionUpgrade(
+        Opcodes.V1_5,
         () -> {
           try {
             new HttpServlet() {}.init();
@@ -105,9 +109,8 @@ class PatchBytecodeVersionTest {
         "javax.servlet.GenericServlet");
   }
 
-  private static void testVersionUpgrade(int originalVersion, Runnable task,
-      int expectedCountIncrement,
-      String className) {
+  private static void testVersionUpgrade(
+      int originalVersion, Runnable task, int expectedCountIncrement, String className) {
     if (originalVersion >= Opcodes.V1_7) {
       throw new IllegalArgumentException("must use pre-java7 bytecode");
     }
@@ -117,14 +120,17 @@ class PatchBytecodeVersionTest {
 
     task.run();
 
-    assertThat(PatchTestAdvice.invocationCount.get()).isEqualTo(
-        startCount + expectedCountIncrement);
+    assertThat(PatchTestAdvice.invocationCount.get())
+        .isEqualTo(startCount + expectedCountIncrement);
 
     Path instrumentedClass = null;
     Path instrumentedClassOriginal = null;
-    try (Stream<Path> files = Files.find(tempDir, 1,
-        (path, attr) -> Files.isRegularFile(path) && path.getFileName().toString().startsWith(
-            className))) {
+    try (Stream<Path> files =
+        Files.find(
+            tempDir,
+            1,
+            (path, attr) ->
+                Files.isRegularFile(path) && path.getFileName().toString().startsWith(className))) {
 
       for (Path path : files.collect(Collectors.toList())) {
         if (path.getFileName().toString().contains("-original")) {
@@ -162,14 +168,14 @@ class PatchBytecodeVersionTest {
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
-
   }
 
   private static AgentBuilder.Transformer.ForAdvice transformerFor(
       ElementMatcher.Junction<MethodDescription> methodMatcher) {
     return new AgentBuilder.Transformer.ForAdvice()
-        .with(new AgentBuilder.LocationStrategy.Simple(
-            ClassFileLocator.ForClassLoader.of(PatchTestAdvice.class.getClassLoader())))
+        .with(
+            new AgentBuilder.LocationStrategy.Simple(
+                ClassFileLocator.ForClassLoader.of(PatchTestAdvice.class.getClassLoader())))
         .advice(methodMatcher, PatchTestAdvice.class.getName());
   }
 }

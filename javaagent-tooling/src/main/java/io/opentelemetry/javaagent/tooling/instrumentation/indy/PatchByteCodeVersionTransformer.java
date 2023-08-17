@@ -26,8 +26,8 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
 
 /**
- * Patches the class file version to 51 (Java 7) in order to support injecting {@code INVOKEDYNAMIC} instructions via
- * {@link Advice.WithCustomMapping#bootstrap} which is important for indy plugins.
+ * Patches the class file version to 51 (Java 7) in order to support injecting {@code INVOKEDYNAMIC}
+ * instructions via {@link Advice.WithCustomMapping#bootstrap} which is important for indy plugins.
  */
 public class PatchByteCodeVersionTransformer implements AgentBuilder.Transformer {
 
@@ -37,59 +37,79 @@ public class PatchByteCodeVersionTransformer implements AgentBuilder.Transformer
   }
 
   @Override
-  public DynamicType.Builder<?> transform(DynamicType.Builder<?> builder,
-      TypeDescription typeDescription, ClassLoader classLoader, JavaModule javaModule,
+  public DynamicType.Builder<?> transform(
+      DynamicType.Builder<?> builder,
+      TypeDescription typeDescription,
+      ClassLoader classLoader,
+      JavaModule javaModule,
       ProtectionDomain protectionDomain) {
 
     if (isAtLeastJava7(typeDescription)) {
-      // we can avoid the expensive (and somewhat dangerous) stack frame re-computation if stack frames are already
-      // present in the bytecode, which also allows eagerly loading types that might be present in the method
+      // we can avoid the expensive (and somewhat dangerous) stack frame re-computation if stack
+      // frames are already
+      // present in the bytecode, which also allows eagerly loading types that might be present in
+      // the method
       // body, but not yet loaded by the JVM.
       return builder;
     }
-    return builder.visit(new AsmVisitorWrapper.AbstractBase() {
-      @Override
-      public ClassVisitor wrap(TypeDescription typeDescription, ClassVisitor classVisitor,
-          Implementation.Context context, TypePool typePool,
-          FieldList<FieldDescription.InDefinedShape> fieldList, MethodList<?> methodList,
-          int writerFlags, int readerFlags) {
-
-        return new ClassVisitor(Opcodes.ASM7, classVisitor) {
-          private boolean patchVersion;
-
+    return builder.visit(
+        new AsmVisitorWrapper.AbstractBase() {
           @Override
-          public void visit(int version, int access, String name, String signature,
-              String superName, String[] interfaces) {
-            if (ClassFileVersion.ofMinorMajor(version).isLessThan(ClassFileVersion.JAVA_V7)) {
-              patchVersion = true;
-              //
-              version = Opcodes.V1_7;
-            }
-            super.visit(version, access, name, signature, superName, interfaces);
+          public ClassVisitor wrap(
+              TypeDescription typeDescription,
+              ClassVisitor classVisitor,
+              Implementation.Context context,
+              TypePool typePool,
+              FieldList<FieldDescription.InDefinedShape> fieldList,
+              MethodList<?> methodList,
+              int writerFlags,
+              int readerFlags) {
+
+            return new ClassVisitor(Opcodes.ASM7, classVisitor) {
+              private boolean patchVersion;
+
+              @Override
+              public void visit(
+                  int version,
+                  int access,
+                  String name,
+                  String signature,
+                  String superName,
+                  String[] interfaces) {
+                if (ClassFileVersion.ofMinorMajor(version).isLessThan(ClassFileVersion.JAVA_V7)) {
+                  patchVersion = true;
+                  //
+                  version = Opcodes.V1_7;
+                }
+                super.visit(version, access, name, signature, superName, interfaces);
+              }
+
+              @Override
+              public MethodVisitor visitMethod(
+                  int access,
+                  String name,
+                  String descriptor,
+                  String signature,
+                  String[] exceptions) {
+
+                MethodVisitor methodVisitor =
+                    super.visitMethod(access, name, descriptor, signature, exceptions);
+                if (patchVersion) {
+                  return new JSRInlinerAdapter(
+                      methodVisitor, access, name, descriptor, signature, exceptions);
+                } else {
+                  return methodVisitor;
+                }
+              }
+            };
           }
 
           @Override
-          public MethodVisitor visitMethod(int access, String name, String descriptor,
-              String signature, String[] exceptions) {
-
-            MethodVisitor methodVisitor = super.visitMethod(access, name, descriptor, signature,
-                exceptions);
-            if (patchVersion) {
-              return new JSRInlinerAdapter(methodVisitor, access, name, descriptor, signature,
-                  exceptions);
-            } else {
-              return methodVisitor;
-            }
+          public int mergeWriter(int flags) {
+            // class files with version < Java 7 don't require a stack frame map
+            // as we're patching the version to at least 7, we have to compute the frames
+            return flags | COMPUTE_FRAMES;
           }
-        };
-      }
-
-      @Override
-      public int mergeWriter(int flags) {
-        // class files with version < Java 7 don't require a stack frame map
-        // as we're patching the version to at least 7, we have to compute the frames
-        return flags | COMPUTE_FRAMES;
-      }
-    });
+        });
   }
 }

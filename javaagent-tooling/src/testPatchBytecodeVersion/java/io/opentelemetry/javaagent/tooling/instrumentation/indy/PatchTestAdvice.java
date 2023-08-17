@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
-import net.bytebuddy.asm.Advice;
 import java.util.concurrent.atomic.AtomicInteger;
+import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
 public class PatchTestAdvice {
@@ -17,5 +17,4 @@ public class PatchTestAdvice {
   public static void onExit() {
     invocationCount.incrementAndGet();
   }
-
 }
