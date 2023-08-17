@@ -21,7 +21,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -97,7 +96,7 @@ class HystrixTest {
     HystrixCommand<String> command = new TestCommand(setter());
 
     String result = testing.runWithSpan("parent", () -> operation.apply(command));
-    assertThat(Objects.equals(result, "Fallback!")).isTrue();
+    assertThat(result).isEqualTo("Fallback!");
 
     testing.waitAndAssertTraces(
         trace ->

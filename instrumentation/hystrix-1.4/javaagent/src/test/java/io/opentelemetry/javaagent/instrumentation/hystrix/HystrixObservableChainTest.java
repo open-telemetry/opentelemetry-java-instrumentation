@@ -16,7 +16,6 @@ import com.netflix.hystrix.HystrixObservableCommand;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import rx.Observable;
@@ -84,7 +83,7 @@ class HystrixObservableChainTest {
                     .toBlocking()
                     .first());
 
-    assertThat(Objects.equals(result, "HELLO!")).isTrue();
+    assertThat(result).isEqualTo("HELLO!");
 
     testing.waitAndAssertTraces(
         trace ->
