@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Value
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.hibernate.Criteria
 import org.hibernate.Session
@@ -39,7 +40,7 @@ class CriteriaTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          name "Criteria.$methodName Value"
+          name "Criteria.$methodName $Value.name"
           kind INTERNAL
           childOf span(0)
           attributes {
