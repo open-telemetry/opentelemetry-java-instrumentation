@@ -96,7 +96,10 @@ class HystrixObservableChainTest {
                             equalTo(stringKey("hystrix.command"), "TestCommand"),
                             equalTo(stringKey("hystrix.group"), "ExampleGroup"),
                             equalTo(booleanKey("hystrix.circuit_open"), false)),
-                span -> span.hasName("tracedMethod").hasParent(trace.getSpan(1)),
+                span ->
+                    span.hasName("tracedMethod")
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName("OtherGroup.AnotherTestCommand.execute")
                         .hasParent(trace.getSpan(1))
@@ -104,7 +107,10 @@ class HystrixObservableChainTest {
                             equalTo(stringKey("hystrix.command"), "AnotherTestCommand"),
                             equalTo(stringKey("hystrix.group"), "OtherGroup"),
                             equalTo(booleanKey("hystrix.circuit_open"), false)),
-                span -> span.hasName("anotherTracedMethod").hasParent(trace.getSpan(3))));
+                span ->
+                    span.hasName("anotherTracedMethod")
+                        .hasParent(trace.getSpan(3))
+                        .hasAttributes(Attributes.empty())));
   }
 
   private static HystrixObservableCommand.Setter setter(String key) {

@@ -90,7 +90,10 @@ class HystrixObservableTest {
                             equalTo(stringKey("hystrix.command"), "TestCommand"),
                             equalTo(stringKey("hystrix.group"), "ExampleGroup"),
                             equalTo(booleanKey("hystrix.circuit_open"), false)),
-                span -> span.hasName("tracedMethod").hasParent(trace.getSpan(1))));
+                span ->
+                    span.hasName("tracedMethod")
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributes(Attributes.empty())));
   }
 
   private static Stream<Arguments> baseArguments() {
