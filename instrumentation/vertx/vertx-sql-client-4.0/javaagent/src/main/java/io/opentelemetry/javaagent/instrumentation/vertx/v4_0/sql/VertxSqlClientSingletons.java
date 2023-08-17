@@ -16,8 +16,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtr
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.vertx.core.Future;
 import io.vertx.sqlclient.SqlConnectOptions;
+import io.vertx.sqlclient.SqlConnection;
+import io.vertx.sqlclient.impl.SqlClientBase;
 import java.util.Map;
 
 public final class VertxSqlClientSingletons {
@@ -72,6 +76,21 @@ public final class VertxSqlClientSingletons {
     }
     instrumenter().end(otelContext, otelRequest, null, throwable);
     return otelParentContext.makeCurrent();
+  }
+
+  // this virtual field is also used in SqlClientBase instrumentation
+  private static final VirtualField<SqlClientBase<?>, SqlConnectOptions> connectOptionsField =
+      VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
+
+  public static Future<SqlConnection> attachConnectOptions(
+      Future<SqlConnection> future, SqlConnectOptions connectOptions) {
+    return future.map(
+        sqlConnection -> {
+          if (sqlConnection instanceof SqlClientBase) {
+            connectOptionsField.set((SqlClientBase<?>) sqlConnection, connectOptions);
+          }
+          return sqlConnection;
+        });
   }
 
   private VertxSqlClientSingletons() {}
