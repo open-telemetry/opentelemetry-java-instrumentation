@@ -2,6 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
