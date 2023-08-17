@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.bytebuddy;
+package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import net.bytebuddy.asm.Advice;
 import java.util.concurrent.atomic.AtomicInteger;
