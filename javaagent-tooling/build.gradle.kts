@@ -8,6 +8,12 @@ plugins {
 
 group = "io.opentelemetry.javaagent"
 
+// known libraries compiled with pre java7 bytecode (<51)
+// this kind of dependency MUST NOT be upgraded as the test expects an old bytecode version
+val oldJavaDependencies = arrayOf(
+    "org.apache.commons:commons-lang3:3.5", // java 6
+    "javax.servlet:servlet-api:2.5") // java 5
+
 dependencies {
   implementation(project(":javaagent-bootstrap"))
   implementation(project(":javaagent-extension-api"))
@@ -39,6 +45,7 @@ dependencies {
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
   api("net.bytebuddy:byte-buddy-dep")
+  implementation("org.ow2.asm:asm-tree")
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
@@ -51,6 +58,10 @@ dependencies {
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")
   testImplementation("org.junit-pioneer:junit-pioneer")
+
+  oldJavaDependencies.forEach {
+    testCompileOnly(it);
+  }
 }
 
 testing {
@@ -75,6 +86,22 @@ testing {
 
         // Used by byte-buddy but not brought in as a transitive dependency.
         compileOnly("com.google.code.findbugs:annotations")
+      }
+    }
+
+    val testPatchBytecodeVersion by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":javaagent-bootstrap"))
+        implementation(project(":javaagent-tooling"))
+        implementation("net.bytebuddy:byte-buddy-dep")
+
+        // Used by byte-buddy but not brought in as a transitive dependency.
+        compileOnly("com.google.code.findbugs:annotations")
+
+        oldJavaDependencies.forEach {
+          implementation(it);
+        }
+
       }
     }
   }
