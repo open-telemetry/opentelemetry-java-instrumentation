@@ -8,13 +8,9 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -25,8 +21,6 @@ import javax.annotation.Nullable;
 public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private static final Logger logger =
-      Logger.getLogger(PeerServiceAttributesExtractor.class.getName());
   private final ServerAttributesGetter<REQUEST, RESPONSE> attributesGetter;
   private final PeerServiceResolver peerServiceResolver;
 
@@ -64,21 +58,9 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       return;
     }
 
-    String path = null;
     String serverAddress = attributesGetter.getServerAddress(request);
     Integer serverPort = attributesGetter.getServerPort(request);
-    if (attributesGetter instanceof HttpClientAttributesGetter<?, ?>) {
-      String urlFull =
-          ((HttpClientAttributesGetter<REQUEST, RESPONSE>) attributesGetter).getUrlFull(request);
-      if (urlFull != null) {
-        try {
-          URI uri = new URI(urlFull);
-          path = uri.getPath();
-        } catch (URISyntaxException use) {
-          logger.warning("Failed to parse URI from " + urlFull + " with : " + use.getMessage());
-        }
-      }
-    }
+    String path = getUrlPath(attributesGetter);
     String peerService = mapToPeerService(serverAddress, serverPort, path);
     if (peerService == null) {
       String serverSocketDomain = attributesGetter.getServerSocketDomain(request, response);
@@ -97,5 +79,17 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       return null;
     }
     return peerServiceResolver.resolveService(host, port, path);
+  }
+
+  @Nullable
+  private String getUrlPath(ServerAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
+    if (attributesGetter instanceof HttpClientAttributesGetter<?, ?>) {
+      String urlFull =
+          ((HttpClientAttributesGetter<REQUEST, RESPONSE>) attributesGetter).getUrlFull(request);
+      if (urlFull != null) {
+        return UrlParser.getPath(urlFull);
+      }
+    }
+    return null;
   }
 }

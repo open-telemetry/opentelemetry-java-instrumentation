@@ -1,7 +1,2 @@
 Comparing source compatibility of  against 
-+++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.instrumenter.PeerServiceResolver  (not serializable)
-	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
-	+++  NEW SUPERCLASS: java.lang.Object
-	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.PeerServiceResolver create(java.util.Map<java.lang.String,java.lang.String>)
-	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) boolean isEmpty()
-	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.String resolveService(java.lang.String, java.lang.Integer, java.lang.String)
+No changes.

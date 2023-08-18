@@ -3,57 +3,43 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter;
+package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Comparator.nullsFirst;
 
 import java.io.Serializable;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 class PeerServiceResolverImpl implements PeerServiceResolver {
-
-  private static final Logger logger = Logger.getLogger(PeerServiceResolverImpl.class.getName());
-
-  private static final Map<String, Map<ServiceMatcher, String>> mapping = new ConcurrentHashMap<>();
 
   private static final Comparator<ServiceMatcher> matcherComparator =
       nullsFirst(
           comparing(ServiceMatcher::getPort, nullsFirst(naturalOrder()))
               .thenComparing(comparing(ServiceMatcher::getPath, nullsFirst(naturalOrder()))));
 
+  private final Map<String, Map<ServiceMatcher, String>> mapping = new HashMap<>();
+
   PeerServiceResolverImpl(Map<String, String> peerServiceMapping) {
     peerServiceMapping.forEach(
         (key, serviceName) -> {
-          try {
-            URI uri;
-            if (key.contains("://")) {
-              uri = new URI(key);
-            } else {
-              uri = new URI("http://" + key);
-            }
-            String host = uri.getHost();
-            Integer port = uri.getPort() == -1 ? null : uri.getPort();
-            Map<ServiceMatcher, String> matchers =
-                mapping.computeIfAbsent(host, x -> new ConcurrentHashMap<>());
-            matchers.putIfAbsent(new ServiceMatcher(port, uri.getPath()), serviceName);
-          } catch (URISyntaxException use) {
-            logger.warning(
-                "Failed to map "
-                    + key
-                    + " to service "
-                    + serviceName
-                    + " with : "
-                    + use.getMessage());
+          String url;
+          if (key.contains("://")) {
+            url = key;
+          } else {
+            url = "http://" + key;
           }
+          String host = UrlParser.getHost(url);
+          Integer port = UrlParser.getPort(url);
+          String path = UrlParser.getPath(url);
+          Map<ServiceMatcher, String> matchers =
+              mapping.computeIfAbsent(host, x -> new HashMap<>());
+          matchers.putIfAbsent(new ServiceMatcher(port, path), serviceName);
         });
   }
 
