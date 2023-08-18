@@ -27,6 +27,7 @@ class CriteriaTest extends AbstractHibernateTest {
 
   @ParameterizedTest
   @MethodSource("provideArguments")
+  @SuppressWarnings("deprecation") // createCriteria(Class) has been deprecated in v5
   void testCriteria(String methodName, Consumer<Criteria> interaction) {
 
     testing.runWithSpan(
