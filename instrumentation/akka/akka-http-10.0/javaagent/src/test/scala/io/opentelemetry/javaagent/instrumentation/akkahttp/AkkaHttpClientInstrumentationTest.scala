@@ -117,6 +117,7 @@ class AkkaHttpClientInstrumentationTest
       options: HttpClientTestOptions.Builder
   ): Unit = {
     options.disableTestRedirects()
+    options.disableTestNonStandardHttpMethod()
     // singleConnection test would require instrumentation to support requests made through pools
     // (newHostConnectionPool, superPool, etc), which is currently not supported.
     options.setSingleConnectionFactory(
