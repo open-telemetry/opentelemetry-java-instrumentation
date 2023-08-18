@@ -101,10 +101,7 @@ class HibernateReactiveTest {
                   session ->
                       session
                           .find(Value.class, 1L)
-                          .invoke(
-                              value -> {
-                                testing.runWithSpan("callback", () -> {});
-                              }))
+                          .invoke(value -> testing.runWithSpan("callback", () -> {})))
               .await()
               .atMost(Duration.ofSeconds(30));
         });
@@ -123,10 +120,7 @@ class HibernateReactiveTest {
                         session ->
                             session
                                 .find(Value.class, 1L)
-                                .thenAccept(
-                                    value -> {
-                                      testing.runWithSpan("callback", () -> {});
-                                    }))
+                                .thenAccept(value -> testing.runWithSpan("callback", () -> {})))
                     .toCompletableFuture())
         .get(30, TimeUnit.SECONDS);
 

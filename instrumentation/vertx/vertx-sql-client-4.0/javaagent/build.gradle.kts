@@ -17,6 +17,7 @@ dependencies {
 
   // for hibernateReactive2Test
   testInstrumentation(project(":instrumentation:hibernate:hibernate-6.0:javaagent"))
+  testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
   testLibrary("io.vertx:vertx-pg-client:4.0.0")
   testLibrary("io.vertx:vertx-codegen:4.0.0")
