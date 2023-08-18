@@ -1,9 +1,5 @@
-import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
-
 plugins {
   `java-platform`
-
-  id("com.github.ben-manes.versions")
 }
 
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
@@ -42,9 +38,9 @@ val DEPENDENCY_BOMS = listOf(
 )
 
 val autoServiceVersion = "1.1.1"
-val autoValueVersion = "1.10.2"
+val autoValueVersion = "1.10.3"
 val errorProneVersion = "2.21.1"
-val byteBuddyVersion = "1.14.5"
+val byteBuddyVersion = "1.14.6"
 val asmVersion = "9.5"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -65,6 +61,7 @@ val CORE_DEPENDENCIES = listOf(
   "net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}",
   "org.ow2.asm:asm:${asmVersion}",
   "org.ow2.asm:asm-tree:${asmVersion}",
+  "org.ow2.asm:asm-util:${asmVersion}",
   "org.openjdk.jmh:jmh-core:${jmhVersion}",
   "org.openjdk.jmh:jmh-generator-bytecode:${jmhVersion}",
   "org.mockito:mockito-core:${mockitoVersion}",
@@ -81,6 +78,7 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
+  "io.r2dbc:r2dbc-proxy:1.1.2.RELEASE",
   "ch.qos.logback:logback-classic:1.3.8", // 1.4+ requires Java 11+
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
@@ -134,25 +132,6 @@ dependencies {
       api(dependency)
       val split = dependency.split(':')
       dependencyVersions[split[0]] = split[2]
-    }
-  }
-}
-
-fun isNonStable(version: String): Boolean {
-  val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.uppercase().contains(it) }
-  val regex = "^[0-9,.v-]+(-r)?$".toRegex()
-  val isGuava = version.endsWith("-jre")
-  val isStable = stableKeyword || regex.matches(version) || isGuava
-  return isStable.not()
-}
-
-tasks {
-  named<DependencyUpdatesTask>("dependencyUpdates") {
-    revision = "release"
-    checkConstraints = true
-
-    rejectVersionIf {
-      isNonStable(candidate.version)
     }
   }
 }

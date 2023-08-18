@@ -14,7 +14,7 @@
       "groupName": "guava packages"
     },
     {
-      "matchPackageNames": ["io.quarkus", "io.quarkus.platform:quarkus-bom"],
+      "matchPackageNames": ["io.quarkus", "io.quarkus:quarkus-bom"],
       "groupName": "quarkus packages"
     },
     {

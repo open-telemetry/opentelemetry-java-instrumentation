@@ -20,6 +20,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
@@ -31,7 +32,6 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -120,6 +120,25 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
+  }
+
+  @Test
+  void requestWithNonStandardHttpMethod() throws Exception {
+    assumeTrue(SemconvStability.emitStableHttpSemconv() && options.getTestNonStandardHttpMethod());
+
+    URI uri = resolveAddress("/success");
+    String method = "TEST";
+    int responseCode = doRequest(method, uri);
+
+    assertThat(responseCode).isEqualTo(405);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertClientSpan(span, uri, HttpConstants._OTHER, responseCode, null)
+                        .hasNoParent()
+                        .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
   }
 
   @ParameterizedTest
@@ -592,25 +611,14 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     testing.waitAndAssertTraces(
         trace -> {
-          List<Consumer<SpanDataAssert>> spanAsserts =
-              Arrays.asList(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      assertClientSpan(span, uri, method, null, null)
-                          .hasParent(trace.getSpan(0))
-                          .hasException(clientError),
-                  span ->
-                      span.hasName("callback")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0)));
-          boolean jdk8 = Objects.equals(System.getProperty("java.specification.version"), "1.8");
-          if (jdk8) {
-            // on some netty based http clients order of `CONNECT` and `callback` spans isn't
-            // guaranteed when running on jdk8
-            trace.hasSpansSatisfyingExactlyInAnyOrder(spanAsserts);
-          } else {
-            trace.hasSpansSatisfyingExactly(spanAsserts);
-          }
+          trace.hasSpansSatisfyingExactlyInAnyOrder(
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span ->
+                  assertClientSpan(span, uri, method, null, null)
+                      .hasParent(trace.getSpan(0))
+                      .hasException(clientError),
+              span ->
+                  span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
         });
   }
 

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationannotations;
 
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationSingletons.instrumenterWithAttributes;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.KotlinCoroutineUtil.isKotlinSuspendMethod;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -29,7 +30,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class WithSpanInstrumentation implements TypeInstrumentation {
+class WithSpanInstrumentation implements TypeInstrumentation {
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   private final ElementMatcher.Junction<MethodDescription> annotatedParametersMatcher;
@@ -45,7 +46,9 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
                 isAnnotatedWith(
                     named(
                         "application.io.opentelemetry.instrumentation.annotations.SpanAttribute"))));
-    excludedMethodsMatcher = AnnotationExcludedMethods.configureExcludedMethods();
+    // exclude all kotlin suspend methods, these are handle in kotlinx-coroutines instrumentation
+    excludedMethodsMatcher =
+        AnnotationExcludedMethods.configureExcludedMethods().or(isKotlinSuspendMethod());
   }
 
   @Override

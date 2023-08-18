@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperat
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
@@ -71,7 +71,7 @@ public final class PulsarSingletons {
         .addAttributesExtractor(
             createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
         .addAttributesExtractor(
-            NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
+            ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
         .buildConsumerInstrumenter(MessageTextMapGetter.INSTANCE);
   }
 
@@ -86,7 +86,7 @@ public final class PulsarSingletons {
         .addAttributesExtractor(
             createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
         .addAttributesExtractor(
-            NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
+            ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
         .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
         .addSpanLinksExtractor(
             new PulsarBatchRequestSpanLinksExtractor(
@@ -119,7 +119,7 @@ public final class PulsarSingletons {
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(getter, MessageOperation.PUBLISH))
             .addAttributesExtractor(
-                NetClientAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
+                ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
 
     if (InstrumentationConfig.get()
         .getBoolean("otel.instrumentation.pulsar.experimental-span-attributes", false)) {

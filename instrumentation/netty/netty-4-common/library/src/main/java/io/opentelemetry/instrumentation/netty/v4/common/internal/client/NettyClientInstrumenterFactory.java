@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperime
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
@@ -108,6 +107,7 @@ public final class NettyClientInstrumenterFactory {
         : new NettyErrorOnlyConnectionInstrumenter(instrumenter);
   }
 
+  @SuppressWarnings("deprecation") // have to use the deprecated Net*AttributesExtractor for now
   public NettySslInstrumenter createSslInstrumenter() {
     if (sslTelemetryState == NettyConnectionInstrumentationFlag.DISABLED) {
       return NoopSslInstrumenter.INSTANCE;
@@ -119,7 +119,9 @@ public final class NettyClientInstrumenterFactory {
     Instrumenter<NettySslRequest, Void> instrumenter =
         Instrumenter.<NettySslRequest, Void>builder(
                 openTelemetry, instrumentationName, NettySslRequest::spanName)
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(
+                io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor
+                    .create(netAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(netAttributesGetter, peerServiceResolver))
             .buildInstrumenter(

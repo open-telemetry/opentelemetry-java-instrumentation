@@ -102,6 +102,31 @@ jobs:
             exit 1
           fi
 
+  # this is needed because we don't auto-update dependencies in instrumentation/**
+  # and so we want to enforce that all "real" dependencies are dependency managed
+  extra-dependency-management-enforcement:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Dependency check
+        run: |
+          set +e
+          grep '^  implementation(".*:.*:[0-9].*")\|^  api(".*:.*:[0-9].*")' \
+               --include=\*.kts \
+               -r instrumentation \
+            | grep -v testing/build.gradle.kts \
+            | grep -v com.azure:azure-core-tracing-opentelemetry \
+            | grep -v com.couchbase.client:tracing-opentelemetry \
+            > dependencies.txt
+
+          if [ -s dependencies.txt ]; then
+            echo unmanaged dependencies found
+            echo
+            cat dependencies.txt
+            exit 1
+          fi
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -115,10 +140,6 @@ jobs:
         with:
           distribution: temurin
           java-version: 17.0.6
-
-      - name: Increase gradle daemon heap size
-        run: |
-          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
       - name: Build
         uses: gradle/gradle-build-action@v2
@@ -202,10 +223,6 @@ jobs:
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-test-cache-pnpm-modules
-
-      - name: Increase gradle daemon heap size
-        run: |
-          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
       - name: Start deadlock detector
         run: .github/scripts/deadlock-detector.sh
