@@ -8,10 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.hystrix;
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 import static org.junit.jupiter.api.Named.named;
@@ -237,7 +233,6 @@ class HystrixObservableTest {
                           String returnValue;
                           try {
                             returnValue = queue.take();
-
                           } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                           }
@@ -292,16 +287,7 @@ class HystrixObservableTest {
                     span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            EXCEPTION_TYPE, "java.lang.IllegalArgumentException"),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class)))),
+                        .hasException(new IllegalArgumentException()),
                 span ->
                     span.hasName("ExampleGroup.TestCommand.fallback")
                         .hasParent(trace.getSpan(1))
@@ -378,7 +364,10 @@ class HystrixObservableTest {
                       return parameter.operation.apply(val);
                     }));
 
-    assertThat(exception).hasCauseInstanceOf(IllegalArgumentException.class);
+    assertThat(exception)
+        .isInstanceOf(HystrixRuntimeException.class)
+        .hasCauseInstanceOf(IllegalArgumentException.class);
+    HystrixRuntimeException hystrixRuntimeException = (HystrixRuntimeException) exception;
 
     testing.waitAndAssertTraces(
         trace ->
@@ -400,18 +389,7 @@ class HystrixObservableTest {
                 span ->
                     span.hasName("FailingGroup.TestCommand.fallback")
                         .hasParent(trace.getSpan(1))
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            EXCEPTION_TYPE,
-                                            "java.lang.UnsupportedOperationException"),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class)),
-                                        equalTo(EXCEPTION_MESSAGE, "No fallback available.")))
+                        .hasException(hystrixRuntimeException.getFallbackException())
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("hystrix.command"), "TestCommand"),
                             equalTo(stringKey("hystrix.group"), "FailingGroup"),
