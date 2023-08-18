@@ -258,16 +258,7 @@ class HystrixObservableTest {
       @Override
       protected Observable<String> construct() {
         Observable<String> err =
-            Observable.defer(() -> Observable.error(new IllegalArgumentException()))
-                .map(
-                    error -> {
-                      if (error instanceof Throwable) {
-                        return ((Throwable) error).getMessage();
-                      } else {
-                        throw new IllegalStateException("Expected Throwable result");
-                      }
-                    })
-                .repeat(1);
+            Observable.defer(() -> Observable.error(new IllegalArgumentException()));
         if (parameter.observeOn != null) {
           err = err.observeOn(parameter.observeOn);
         }
@@ -365,16 +356,7 @@ class HystrixObservableTest {
       @Override
       protected Observable<String> construct() {
         Observable<String> err =
-            Observable.defer(() -> Observable.error(new IllegalArgumentException()))
-                .map(
-                    error -> {
-                      if (error instanceof Throwable) {
-                        return ((Throwable) error).getMessage();
-                      } else {
-                        throw new IllegalStateException("Expected Throwable result");
-                      }
-                    })
-                .repeat(1);
+            Observable.defer(() -> Observable.error(new IllegalArgumentException()));
         if (parameter.observeOn != null) {
           err = err.observeOn(parameter.observeOn);
         }
@@ -405,34 +387,12 @@ class HystrixObservableTest {
                     span.hasName("parent")
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class)),
-                                        equalTo(
-                                            EXCEPTION_TYPE,
-                                            "com.netflix.hystrix.exception.HystrixRuntimeException"),
-                                        equalTo(
-                                            EXCEPTION_MESSAGE,
-                                            "TestCommand failed and no fallback available."))),
+                        .hasException(exception),
                 span ->
                     span.hasName("FailingGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            EXCEPTION_TYPE, "java.lang.IllegalArgumentException"),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class))))
+                        .hasException(exception.getCause())
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("hystrix.command"), "TestCommand"),
                             equalTo(stringKey("hystrix.group"), "FailingGroup"),
