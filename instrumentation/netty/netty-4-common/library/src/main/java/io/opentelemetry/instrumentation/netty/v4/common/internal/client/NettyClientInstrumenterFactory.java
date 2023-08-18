@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
@@ -72,7 +73,8 @@ public final class NettyClientInstrumenterFactory {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(extractorBuilder.build())
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(httpAttributesGetter, peerServiceResolver))
+                HttpClientPeerServiceAttributesExtractor.create(
+                    httpAttributesGetter, peerServiceResolver))
             .addAttributesExtractors(additionalHttpAttributeExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
     if (emitExperimentalHttpClientMetrics) {
@@ -93,7 +95,7 @@ public final class NettyClientInstrumenterFactory {
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 openTelemetry, instrumentationName, NettyConnectionRequest::spanName)
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(
+                HttpClientPeerServiceAttributesExtractor.create(
                     NettyConnectHttpAttributesGetter.INSTANCE, peerServiceResolver))
             .addAttributesExtractor(
                 HttpClientAttributesExtractor.create(NettyConnectHttpAttributesGetter.INSTANCE))

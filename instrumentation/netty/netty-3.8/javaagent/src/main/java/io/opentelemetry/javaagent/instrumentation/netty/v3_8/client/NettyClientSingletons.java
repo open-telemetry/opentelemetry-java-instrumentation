@@ -12,9 +12,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
@@ -45,7 +45,7 @@ public final class NettyClientSingletons {
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(
+                HttpClientPeerServiceAttributesExtractor.create(
                     httpAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
             .addOperationMetrics(HttpClientMetrics.get())
             .addContextCustomizer(
@@ -61,7 +61,7 @@ public final class NettyClientSingletons {
             .addAttributesExtractor(
                 HttpClientAttributesExtractor.create(NettyConnectHttpAttributesGetter.INSTANCE))
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(
+                HttpClientPeerServiceAttributesExtractor.create(
                     NettyConnectHttpAttributesGetter.INSTANCE,
                     CommonConfig.get().getPeerServiceResolver()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
