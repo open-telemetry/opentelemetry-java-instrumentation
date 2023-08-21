@@ -11,8 +11,9 @@ group = "io.opentelemetry.javaagent"
 // known libraries compiled with pre java7 bytecode (<51)
 // this kind of dependency MUST NOT be upgraded as the test expects an old bytecode version
 val oldJavaDependencies = arrayOf(
-    "org.apache.commons:commons-lang3:3.5", // java 6
-    "javax.servlet:servlet-api:2.5") // java 5
+  "org.apache.commons:commons-lang3:3.5", // java 6
+  "javax.servlet:servlet-api:2.5"
+) // java 5
 
 dependencies {
   implementation(project(":javaagent-bootstrap"))
@@ -99,9 +100,8 @@ testing {
         compileOnly("com.google.code.findbugs:annotations")
 
         oldJavaDependencies.forEach {
-          implementation(it);
+          implementation(it)
         }
-
       }
     }
   }
