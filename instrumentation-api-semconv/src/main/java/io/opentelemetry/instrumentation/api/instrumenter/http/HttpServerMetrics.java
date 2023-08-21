@@ -56,7 +56,7 @@ public final class HttpServerMetrics implements OperationListener {
         meter
             .upDownCounterBuilder("http.server.active_requests")
             .setUnit("{requests}")
-            .setDescription("The number of concurrent HTTP requests that are currently in-flight")
+            .setDescription("Measures the number of concurrent HTTP requests that are currently in-flight.")
             .build();
     String durationInstrumentName =
         HttpMetricsUtil.emitNewSemconvMetrics
@@ -64,19 +64,19 @@ public final class HttpServerMetrics implements OperationListener {
             : "http.server.duration";
     duration =
         createDurationHistogram(
-            meter, durationInstrumentName, "The duration of the inbound HTTP request");
+            meter, durationInstrumentName, "Measures the duration of inbound HTTP requests.");
     requestSize =
         meter
             .histogramBuilder("http.server.request.size")
             .setUnit("By")
-            .setDescription("The size of HTTP request messages")
+            .setDescription("Measures the size of HTTP request messages.")
             .ofLongs()
             .build();
     responseSize =
         meter
             .histogramBuilder("http.server.response.size")
             .setUnit("By")
-            .setDescription("The size of HTTP response messages")
+            .setDescription("Measures the size of HTTP response messages.")
             .ofLongs()
             .build();
   }

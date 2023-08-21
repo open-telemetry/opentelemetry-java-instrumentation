@@ -53,14 +53,14 @@ public final class HttpClientExperimentalMetrics implements OperationListener {
         meter
             .histogramBuilder("http.client.request.size")
             .setUnit("By")
-            .setDescription("The size of HTTP request messages")
+            .setDescription("Measures the size of HTTP request messages.")
             .ofLongs()
             .build();
     responseSize =
         meter
             .histogramBuilder("http.client.response.size")
             .setUnit("By")
-            .setDescription("The size of HTTP response messages")
+            .setDescription("Measures the size of HTTP response messages.")
             .ofLongs()
             .build();
   }
