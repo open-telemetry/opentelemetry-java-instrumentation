@@ -151,13 +151,13 @@ class InstrumentationModuleClassLoader extends ClassLoader {
   @Override
   public Enumeration<URL> getResources(String resourceName) throws IOException {
     String className = resourceToClassName(resourceName);
-    if (className != null) {
-      URL resource = getResource(resourceName);
-      List<URL> result =
-          resource != null ? Collections.singletonList(resource) : Collections.emptyList();
-      return Collections.enumeration(result);
+    if (className == null) {
+      return super.getResources(resourceName);
     }
-    return super.getResources(resourceName);
+    URL resource = getResource(resourceName);
+    List<URL> result =
+        resource != null ? Collections.singletonList(resource) : Collections.emptyList();
+    return Collections.enumeration(result);
   }
 
   @Nullable
