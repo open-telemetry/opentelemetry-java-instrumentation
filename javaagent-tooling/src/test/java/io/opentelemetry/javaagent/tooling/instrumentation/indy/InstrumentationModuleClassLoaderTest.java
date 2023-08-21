@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 @SuppressWarnings("ClassNamedLikeTypeParameter")
-public class InstrumentationModuleClassLoaderTest {
+class InstrumentationModuleClassLoaderTest {
 
   @Test
   void checkLookup() throws Throwable {
