@@ -220,7 +220,7 @@ class InstrumentationModuleClassLoader extends ClassLoader {
   @SuppressWarnings({"deprecation", "InvalidLink"})
   Package findPackage(String name) {
     try {
-      return (Package) FIND_PACKAGE_METHOD.invokeExact((ClassLoader) this, name);
+      return (Package) FIND_PACKAGE_METHOD.invoke(this, name);
     } catch (Throwable t) {
       throw new IllegalStateException(t);
     }
