@@ -36,7 +36,7 @@ class EntityManagerTest extends AbstractHibernateTest {
 
   @ParameterizedTest
   @MethodSource("provideArgumentsHibernateActionParameters")
-  public void testHibernateActions(Parameter parameter) {
+  void testHibernateActions(Parameter parameter) {
     EntityManager entityManager = entityManagerFactory.createEntityManager();
     EntityTransaction entityTransaction = entityManager.getTransaction();
     entityTransaction.begin();
@@ -77,7 +77,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasNoParent()
                         .hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("Session." + action + " " + parameter.resource)
+                    span.hasName("Session." + action + " " + Value.class.getName())
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -119,7 +119,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasNoParent()
                         .hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("Session." + action + " " + parameter.resource)
+                    span.hasName("Session." + action + " " + Value.class.getName())
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -162,46 +162,29 @@ class EntityManagerTest extends AbstractHibernateTest {
             named(
                 "lock",
                 new Parameter(
-                    "lock",
-                    Value.class.getName(),
-                    true,
-                    false,
-                    (em, v) -> em.lock(v, LockModeType.PESSIMISTIC_READ)))),
+                    "lock", true, false, (em, v) -> em.lock(v, LockModeType.PESSIMISTIC_READ)))),
         Arguments.of(
-            named(
-                "refresh",
-                new Parameter(
-                    "refresh", Value.class.getName(), true, false, EntityManager::refresh))),
+            named("refresh", new Parameter("refresh", true, false, EntityManager::refresh))),
         Arguments.of(
             named(
                 "find",
-                new Parameter(
-                    "find",
-                    Value.class.getName(),
-                    false,
-                    false,
-                    (em, v) -> em.find(Value.class, v.getId())))),
+                new Parameter("find", false, false, (em, v) -> em.find(Value.class, v.getId())))),
         Arguments.of(
             named(
                 "merge",
                 new Parameter(
                     "merge",
-                    Value.class.getName(),
                     true,
                     true,
                     (em, v) -> {
                       v.setName("New name");
                       em.merge(v);
                     }))),
-        Arguments.of(
-            named(
-                "remove",
-                new Parameter(
-                    "delete", Value.class.getName(), true, true, EntityManager::remove))));
+        Arguments.of(named("remove", new Parameter("delete", true, true, EntityManager::remove))));
   }
 
   @Test
-  public void testHibernatePersist() {
+  void testHibernatePersist() {
     EntityManager entityManager = entityManagerFactory.createEntityManager();
     EntityTransaction entityTransaction = entityManager.getTransaction();
     entityTransaction.begin();
@@ -273,7 +256,7 @@ class EntityManagerTest extends AbstractHibernateTest {
 
   @ParameterizedTest
   @MethodSource("provideArgumentsAttachesState")
-  public void testAttachesStateToQuery(Function<EntityManager, Query> queryBuildMethod) {
+  void testAttachesStateToQuery(Function<EntityManager, Query> queryBuildMethod) {
     testing.runWithSpan(
         "parent",
         () -> {
@@ -349,19 +332,16 @@ class EntityManagerTest extends AbstractHibernateTest {
 
   private static class Parameter {
     public final String methodName;
-    public final String resource;
     public final boolean attach;
     public final boolean flushOnCommit;
     public final BiConsumer<EntityManager, Value> sessionMethodTest;
 
     public Parameter(
         String methodName,
-        String resource,
         boolean attach,
         boolean flushOnCommit,
         BiConsumer<EntityManager, Value> sessionMethodTest) {
       this.methodName = methodName;
-      this.resource = resource;
       this.attach = attach;
       this.flushOnCommit = flushOnCommit;
       this.sessionMethodTest = sessionMethodTest;
