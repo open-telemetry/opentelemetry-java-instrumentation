@@ -61,7 +61,7 @@ dependencies {
   testImplementation("org.junit-pioneer:junit-pioneer")
 
   oldJavaDependencies.forEach {
-    testCompileOnly(it);
+    testCompileOnly(it)
   }
 }
 
