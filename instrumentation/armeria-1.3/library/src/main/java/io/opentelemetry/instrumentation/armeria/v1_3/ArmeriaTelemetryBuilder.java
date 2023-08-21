@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperime
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -41,6 +42,7 @@ public final class ArmeriaTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   @Nullable private String peerService;
   private boolean emitExperimentalHttpClientMetrics = false;
+  private boolean emitExperimentalHttpServerMetrics = false;
 
   private final List<AttributesExtractor<? super RequestContext, ? super RequestLog>>
       additionalExtractors = new ArrayList<>();
@@ -181,6 +183,19 @@ public final class ArmeriaTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Configures the instrumentation to emit experimental HTTP server metrics.
+   *
+   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public ArmeriaTelemetryBuilder setEmitExperimentalHttpServerMetrics(
+      boolean emitExperimentalHttpServerMetrics) {
+    this.emitExperimentalHttpServerMetrics = emitExperimentalHttpServerMetrics;
+    return this;
+  }
+
   public ArmeriaTelemetry build() {
     ArmeriaHttpClientAttributesGetter clientAttributesGetter =
         ArmeriaHttpClientAttributesGetter.INSTANCE;
@@ -222,6 +237,9 @@ public final class ArmeriaTelemetryBuilder {
     }
     if (emitExperimentalHttpClientMetrics) {
       clientInstrumenterBuilder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+    }
+    if (emitExperimentalHttpServerMetrics) {
+      serverInstrumenterBuilder.addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
 
     return new ArmeriaTelemetry(
