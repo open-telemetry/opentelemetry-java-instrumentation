@@ -197,8 +197,7 @@ class InstrumentationModuleClassLoader extends ClassLoader {
       try {
         definePackage(packageName, null, null, null, null, null, null, null);
       } catch (IllegalArgumentException e) {
-        // Can happen if a parent classloader attempts to define the same package at the same time
-        // in Java 8
+        // Can happen if two classes from the same package are loaded concurrently
         if (findPackage(packageName) == null) {
           // package still doesn't exist, the IllegalArgumentException must be for a different
           // reason than a race condition
