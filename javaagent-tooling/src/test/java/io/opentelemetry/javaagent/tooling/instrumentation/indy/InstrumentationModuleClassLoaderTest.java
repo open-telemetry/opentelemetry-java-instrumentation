@@ -35,7 +35,7 @@ import org.junit.jupiter.api.io.TempDir;
 public class InstrumentationModuleClassLoaderTest {
 
   @Test
-  public void checkLookup() throws Throwable {
+  void checkLookup() throws Throwable {
     Map<String, ClassCopySource> toInject = new HashMap<>();
     toInject.put(Foo.class.getName(), ClassCopySource.create(Foo.class));
     toInject.put(Bar.class.getName(), ClassCopySource.create(Bar.class));
@@ -71,7 +71,7 @@ public class InstrumentationModuleClassLoaderTest {
   }
 
   @Test
-  public void checkInjectedClassesHavePackage() throws Throwable {
+  void checkInjectedClassesHavePackage() throws Throwable {
     Map<String, ClassCopySource> toInject = new HashMap<>();
     toInject.put(A.class.getName(), ClassCopySource.create(A.class));
     toInject.put(B.class.getName(), ClassCopySource.create(B.class));
@@ -95,7 +95,7 @@ public class InstrumentationModuleClassLoaderTest {
   }
 
   @Test
-  public void checkClassLookupPrecedence(@TempDir Path tempDir) throws Exception {
+  void checkClassLookupPrecedence(@TempDir Path tempDir) throws Exception {
 
     Map<String, byte[]> appClasses = copyClassesWithMarker("app-cl", A.class, B.class, C.class);
     Map<String, byte[]> agentClasses = copyClassesWithMarker("agent-cl", B.class, C.class);

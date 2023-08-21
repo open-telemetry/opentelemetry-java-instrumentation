@@ -6,8 +6,9 @@
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodType;
 import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -38,11 +39,15 @@ import javax.annotation.Nullable;
  */
 class InstrumentationModuleClassLoader extends ClassLoader {
 
+  static {
+    ClassLoader.registerAsParallelCapable();
+  }
+
   private static final Map<String, ClassCopySource> ALWAYS_INJECTED_CLASSES =
       Collections.singletonMap(
           LookupExposer.class.getName(), ClassCopySource.create(LookupExposer.class).cached());
   private static final ProtectionDomain PROTECTION_DOMAIN = getProtectionDomain();
-  private static final Method FIND_PACKAGE_METHOD = getFindPackageMethod();
+  private static final MethodHandle FIND_PACKAGE_METHOD = getFindPackageMethod();
 
   private final Map<String, ClassCopySource> additionalInjectedClasses;
   private final ClassLoader agentOrExtensionCl;
@@ -127,21 +132,20 @@ class InstrumentationModuleClassLoader extends ClassLoader {
   @Override
   public URL getResource(String resourceName) {
     String className = resourceToClassName(resourceName);
-    if (className != null) {
-      // for classes use the same precedence as in loadClass
-      ClassCopySource injected = getInjectedClass(className);
-      if (injected != null) {
-        return injected.getUrl();
-      }
-      URL fromAgentCl = agentOrExtensionCl.getResource(resourceName);
-      if (fromAgentCl != null) {
-        return fromAgentCl;
-      }
-      return instrumentedCl.getResource(resourceName);
-    } else {
+    if (className == null) {
       // delegate to just the default parent (the agent classloader)
       return super.getResource(resourceName);
     }
+    // for classes use the same precedence as in loadClass
+    ClassCopySource injected = getInjectedClass(className);
+    if (injected != null) {
+      return injected.getUrl();
+    }
+    URL fromAgentCl = agentOrExtensionCl.getResource(resourceName);
+    if (fromAgentCl != null) {
+      return fromAgentCl;
+    }
+    return instrumentedCl.getResource(resourceName);
   }
 
   @Override
@@ -216,9 +220,9 @@ class InstrumentationModuleClassLoader extends ClassLoader {
   @SuppressWarnings({"deprecation", "InvalidLink"})
   Package findPackage(String name) {
     try {
-      return (Package) FIND_PACKAGE_METHOD.invoke(this, name);
-    } catch (Exception e) {
-      throw new IllegalStateException(e);
+      return (Package) FIND_PACKAGE_METHOD.invokeExact((ClassLoader) this, name);
+    } catch (Throwable t) {
+      throw new IllegalStateException(t);
     }
   }
 
@@ -231,16 +235,22 @@ class InstrumentationModuleClassLoader extends ClassLoader {
             ((Class<?>) InstrumentationModuleClassLoader.class)::getProtectionDomain);
   }
 
-  private static Method getFindPackageMethod() {
+  private static MethodHandle getFindPackageMethod() {
+    MethodType methodType = MethodType.methodType(Package.class, String.class);
+    MethodHandles.Lookup lookup = MethodHandles.lookup();
     try {
-      return ClassLoader.class.getMethod("getDefinedPackage", String.class);
-    } catch (NoSuchMethodException e) {
-      // Java 8 case
       try {
-        return ClassLoader.class.getDeclaredMethod("getPackage", String.class);
-      } catch (NoSuchMethodException ex) {
-        throw new IllegalStateException("expected method to always exist!", ex);
+        return lookup.findVirtual(ClassLoader.class, "getDefinedPackage", methodType);
+      } catch (NoSuchMethodException e) {
+        // Java 8 case
+        try {
+          return lookup.findVirtual(ClassLoader.class, "getPackage", methodType);
+        } catch (NoSuchMethodException ex) {
+          throw new IllegalStateException("expected method to always exist!", ex);
+        }
       }
+    } catch (IllegalAccessException e) {
+      throw new IllegalStateException("Method should be accessible from here", e);
     }
   }
 }
