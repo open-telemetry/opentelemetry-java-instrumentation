@@ -42,6 +42,7 @@ public class SqlClientBaseInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This SqlClientBase<?> sqlClientBase) {
       // copy connection options from ThreadLocal to VirtualField
+      // this virtual field is also set in VertxSqlClientSingletons.attachConnectOptions
       VirtualField<SqlClientBase<?>, SqlConnectOptions> virtualField =
           VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
       virtualField.set(sqlClientBase, getSqlConnectOptions());

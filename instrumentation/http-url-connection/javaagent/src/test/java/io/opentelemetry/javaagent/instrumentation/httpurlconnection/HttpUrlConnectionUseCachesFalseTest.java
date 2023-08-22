@@ -60,5 +60,6 @@ class HttpUrlConnectionUseCachesFalseTest extends AbstractHttpClientTest<HttpURL
     // HttpURLConnection can't be reused
     optionsBuilder.disableTestReusedRequest();
     optionsBuilder.disableTestCallback();
+    optionsBuilder.disableTestNonStandardHttpMethod();
   }
 }

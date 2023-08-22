@@ -50,5 +50,6 @@ class HttpUrlConnectionResponseCodeOnlyTest extends AbstractHttpClientTest<HttpU
     // HttpURLConnection can't be reused
     optionsBuilder.disableTestReusedRequest();
     optionsBuilder.disableTestCallback();
+    optionsBuilder.disableTestNonStandardHttpMethod();
   }
 }

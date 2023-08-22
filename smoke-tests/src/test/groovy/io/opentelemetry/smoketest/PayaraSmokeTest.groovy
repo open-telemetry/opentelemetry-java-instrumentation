@@ -15,7 +15,7 @@ abstract class PayaraSmokeTest extends AppServerTest {
 
   @Override
   protected Map<String, String> getExtraEnv() {
-    return ["HZ_PHONE_HOME_ENABLED": "false"]
+    return ["HZ_PHONE_HOME_ENABLED": "false", "OTEL_INSTRUMENTATION_PAYARA_DEBUG_ENABLED": "true"]
   }
 
   @Override
