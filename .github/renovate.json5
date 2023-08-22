@@ -26,6 +26,10 @@
       "groupName": "jetty packages"
     },
     {
+      "matchPackagePrefixes": ["com.linecorp.armeria:"],
+      "groupName": "armeria packages"
+    },
+    {
       // OpenTelemetry SDK updates are handled by auto-update-otel-sdk.yml
       "matchPackagePrefixes": ["io.opentelemetry:"],
       "enabled": false
