@@ -246,7 +246,7 @@ class InstrumentationModuleClassLoader extends ClassLoader {
       } catch (NoSuchMethodException ex) {
         throw new IllegalStateException("expected method to always exist!", ex);
       } catch (IllegalAccessException ex2) {
-        throw new IllegalStateException("Method should be accessible from here", e);
+        throw new IllegalStateException("Method should be accessible from here", ex2);
       }
     }
   }
