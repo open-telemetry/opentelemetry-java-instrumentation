@@ -238,18 +238,16 @@ class InstrumentationModuleClassLoader extends ClassLoader {
     MethodType methodType = MethodType.methodType(Package.class, String.class);
     MethodHandles.Lookup lookup = MethodHandles.lookup();
     try {
+      return lookup.findVirtual(ClassLoader.class, "getDefinedPackage", methodType);
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      // In Java 8 getDefinedPackage does not exist (HotSpot) or is not accessible (OpenJ9)
       try {
-        return lookup.findVirtual(ClassLoader.class, "getDefinedPackage", methodType);
-      } catch (NoSuchMethodException e) {
-        // Java 8 case
-        try {
-          return lookup.findVirtual(ClassLoader.class, "getPackage", methodType);
-        } catch (NoSuchMethodException ex) {
-          throw new IllegalStateException("expected method to always exist!", ex);
-        }
+        return lookup.findVirtual(ClassLoader.class, "getPackage", methodType);
+      } catch (NoSuchMethodException ex) {
+        throw new IllegalStateException("expected method to always exist!", ex);
+      } catch (IllegalAccessException ex2) {
+        throw new IllegalStateException("Method should be accessible from here", ex2);
       }
-    } catch (IllegalAccessException e) {
-      throw new IllegalStateException("Method should be accessible from here", e);
     }
   }
 }
