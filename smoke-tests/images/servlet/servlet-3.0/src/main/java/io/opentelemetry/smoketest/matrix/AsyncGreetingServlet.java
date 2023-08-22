@@ -6,9 +6,11 @@
 package io.opentelemetry.smoketest.matrix;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -18,9 +20,9 @@ import javax.servlet.http.HttpServletResponse;
 public class AsyncGreetingServlet extends HttpServlet {
   private static final long serialVersionUID = 1L;
 
+  private static final String LATCH_KEY = "LATCH_KEY";
   private static final BlockingQueue<AsyncContext> jobQueue = new LinkedBlockingQueue<>();
   private static final ExecutorService executor = Executors.newFixedThreadPool(2);
-  private static final GreetingServlet greetingServlet = new GreetingServlet();
 
   @Override
   public void init() {
@@ -50,23 +52,44 @@ public class AsyncGreetingServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
+    CountDownLatch latch = null;
     System.err.println("start async request");
     AsyncContext ac = req.startAsync(req, resp);
+    boolean isPayara =
+        "org.apache.catalina.connector.AsyncContextImpl".equals(ac.getClass().getName());
+    if (isPayara) {
+      latch = new CountDownLatch(1);
+      req.setAttribute(LATCH_KEY, latch);
+    }
     System.err.println("add async request to queue");
     jobQueue.add(ac);
     System.err.println("async request added to queue");
+    // Payara has a race condition between exiting from servlet and calling AsyncContext.dispatch
+    // from background thread which can result in dispatch not happening. To work around this we
+    // wait on payara for the dispatch call and only after that exit from servlet code.
+    if (isPayara) {
+      try {
+        latch.await(30, TimeUnit.SECONDS);
+        System.err.println("latch released");
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+    }
   }
 
   private static void handleRequest(AsyncContext ac) {
-    System.err.println("handle async request");
+    System.err.println("dispatch async request");
     try {
-      greetingServlet.doGet(
-          (HttpServletRequest) ac.getRequest(), (HttpServletResponse) ac.getResponse());
-      ac.complete();
-      System.err.println("async request handled");
+      ac.dispatch("/greeting");
+      System.err.println("async request dispatched");
     } catch (Throwable throwable) {
-      System.err.println("handling async request failed");
+      System.err.println("dispatching async request failed");
       throwable.printStackTrace();
+      throw throwable;
+    }
+    CountDownLatch latch = (CountDownLatch) ac.getRequest().getAttribute(LATCH_KEY);
+    if (latch != null) {
+      latch.countDown();
     }
   }
 }
