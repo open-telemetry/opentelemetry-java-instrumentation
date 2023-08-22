@@ -6,7 +6,6 @@
 package io.opentelemetry.smoketest.matrix;
 
 import jakarta.servlet.AsyncContext;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.concurrent.BlockingQueue;
@@ -15,11 +14,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 @SuppressWarnings("SystemOut")
-public class AsyncGreetingServlet extends HttpServlet {
+public class AsyncGreetingServlet extends GreetingServlet {
   private static final long serialVersionUID = 1L;
   private static final BlockingQueue<AsyncContext> jobQueue = new LinkedBlockingQueue<>();
   private static final ExecutorService executor = Executors.newFixedThreadPool(2);
-  private static final GreetingServlet greetingServlet = new GreetingServlet();
 
   @Override
   public void init() {
@@ -57,15 +55,14 @@ public class AsyncGreetingServlet extends HttpServlet {
   }
 
   private static void handleRequest(AsyncContext ac) {
-    System.err.println("handle async request");
+    System.err.println("dispatch async request");
     try {
-      greetingServlet.doGet(
-          (HttpServletRequest) ac.getRequest(), (HttpServletResponse) ac.getResponse());
-      ac.complete();
-      System.err.println("async request handled");
+      ac.dispatch("/greeting");
+      System.err.println("async request dispatched");
     } catch (Throwable throwable) {
-      System.err.println("handling async request failed");
+      System.err.println("dispatching async request failed");
       throwable.printStackTrace();
+      throw throwable;
     }
   }
 }
