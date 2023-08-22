@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package oldbytecode;
+package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import java.lang.reflect.Modifier;
 import net.bytebuddy.ByteBuddy;
@@ -23,7 +23,8 @@ public class OldBytecode {
   private OldBytecode() {}
 
   /**
-   * Generates and run a simple class with a {@link #toString()} implementation that targets
+   * Generates and run a simple class with a {@link #toString()} implementation as if it had been
+   * compiled on an older java compiler
    *
    * @param className class name
    * @param version bytecode version
