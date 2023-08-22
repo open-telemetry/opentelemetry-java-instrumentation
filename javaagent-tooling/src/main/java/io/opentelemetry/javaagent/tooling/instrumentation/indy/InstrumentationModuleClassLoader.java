@@ -10,7 +10,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.URL;
-import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.util.Collections;
@@ -85,6 +84,7 @@ class InstrumentationModuleClassLoader extends ClassLoader {
   }
 
   @Override
+  @SuppressWarnings("removal") // AccessController is deprecated for removal
   protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
     synchronized (getClassLoadingLock(name)) {
       Class<?> result = findLoadedClass(name);
@@ -98,7 +98,7 @@ class InstrumentationModuleClassLoader extends ClassLoader {
             result = defineClassWithPackage(name, bytecode);
           } else {
             result =
-                AccessController.doPrivileged(
+                java.security.AccessController.doPrivileged(
                     (PrivilegedAction<Class<?>>) () -> defineClassWithPackage(name, bytecode));
           }
         }
@@ -225,11 +225,12 @@ class InstrumentationModuleClassLoader extends ClassLoader {
     }
   }
 
+  @SuppressWarnings("removal") // AccessController is deprecated for removal
   private static ProtectionDomain getProtectionDomain() {
     if (System.getSecurityManager() == null) {
       return InstrumentationModuleClassLoader.class.getProtectionDomain();
     }
-    return AccessController.doPrivileged(
+    return java.security.AccessController.doPrivileged(
         (PrivilegedAction<ProtectionDomain>)
             ((Class<?>) InstrumentationModuleClassLoader.class)::getProtectionDomain);
   }
