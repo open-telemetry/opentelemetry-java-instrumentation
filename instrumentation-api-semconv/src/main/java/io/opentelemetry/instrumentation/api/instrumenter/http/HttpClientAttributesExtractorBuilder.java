@@ -35,7 +35,7 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   List<String> capturedRequestHeaders = emptyList();
   List<String> capturedResponseHeaders = emptyList();
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
-  ToIntFunction<Context> resendCountIncrementer = HttpClientResend::getAndIncrement;
+  ToIntFunction<Context> resendCountIncrementer = HttpClientResendCount::getAndIncrement;
 
   HttpClientAttributesExtractorBuilder(
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,

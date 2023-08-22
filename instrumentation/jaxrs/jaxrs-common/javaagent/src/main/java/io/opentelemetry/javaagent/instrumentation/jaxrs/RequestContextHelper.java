@@ -9,8 +9,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 
 public final class RequestContextHelper {
@@ -21,9 +21,9 @@ public final class RequestContextHelper {
     Span serverSpan = LocalRootSpan.fromContextOrNull(parentContext);
     Span currentSpan = Java8BytecodeBridge.spanFromContext(parentContext);
 
-    HttpRouteHolder.updateHttpRoute(
+    HttpServerRoute.update(
         parentContext,
-        HttpRouteSource.CONTROLLER,
+        HttpServerRouteSource.CONTROLLER,
         JaxrsServerSpanNaming.SERVER_SPAN_NAME,
         handlerData);
 

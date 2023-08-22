@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.undertow;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
@@ -37,7 +37,7 @@ public final class UndertowSingletons {
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
-            .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
+            .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
             .addContextCustomizer(
                 (context, request, attributes) -> {
                   // span is ended when counter reaches 0, we start from 2 which accounts for the

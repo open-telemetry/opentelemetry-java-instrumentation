@@ -19,8 +19,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -69,8 +69,8 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       // using the last portion of the nested path.
       // HttpRouteSource.NESTED_CONTROLLER has useFirst false, and it will make http.route updated
       // twice: 1st using the last portion of the nested path, 2nd time using the full nested path.
-      HttpRouteHolder.updateHttpRoute(
-          parentContext, HttpRouteSource.NESTED_CONTROLLER, httpRouteGetter(), exchange);
+      HttpServerRoute.update(
+          parentContext, HttpServerRouteSource.NESTED_CONTROLLER, httpRouteGetter(), exchange);
 
       if (handler == null) {
         return;

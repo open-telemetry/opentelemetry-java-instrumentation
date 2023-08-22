@@ -11,12 +11,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 /** A helper that keeps track of the count of the HTTP request resend attempts. */
-public final class HttpClientResend {
+public final class HttpClientResendCount {
 
-  private static final ContextKey<HttpClientResend> KEY =
+  private static final ContextKey<HttpClientResendCount> KEY =
       ContextKey.named("opentelemetry-http-client-resend-key");
-  private static final AtomicIntegerFieldUpdater<HttpClientResend> resendsUpdater =
-      AtomicIntegerFieldUpdater.newUpdater(HttpClientResend.class, "resends");
+  private static final AtomicIntegerFieldUpdater<HttpClientResendCount> resendsUpdater =
+      AtomicIntegerFieldUpdater.newUpdater(HttpClientResendCount.class, "resends");
 
   /**
    * Initializes the HTTP request resend counter.
@@ -29,16 +29,20 @@ public final class HttpClientResend {
     if (context.get(KEY) != null) {
       return context;
     }
-    return context.with(KEY, new HttpClientResend());
+    return context.with(KEY, new HttpClientResendCount());
   }
 
+  /**
+   * Returns the count of the already made attempts to send an HTTP request; 0 if this is the first
+   * send attempt.
+   */
   public static int get(Context context) {
-    HttpClientResend resend = context.get(KEY);
+    HttpClientResendCount resend = context.get(KEY);
     return resend == null ? 0 : resend.resends;
   }
 
   static int getAndIncrement(Context context) {
-    HttpClientResend resend = context.get(KEY);
+    HttpClientResendCount resend = context.get(KEY);
     if (resend == null) {
       return 0;
     }
@@ -48,5 +52,5 @@ public final class HttpClientResend {
   @SuppressWarnings("unused") // it actually is used by the resendsUpdater
   private volatile int resends = 0;
 
-  private HttpClientResend() {}
+  private HttpClientResendCount() {}
 }
