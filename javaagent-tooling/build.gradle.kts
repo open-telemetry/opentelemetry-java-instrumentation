@@ -8,13 +8,6 @@ plugins {
 
 group = "io.opentelemetry.javaagent"
 
-// known libraries compiled with pre java7 bytecode (<51)
-// this kind of dependency MUST NOT be upgraded as the test expects an old bytecode version
-val oldJavaDependencies = arrayOf(
-  "org.apache.commons:commons-lang3:3.5", // java 6
-  "javax.servlet:servlet-api:2.5"
-) // java 5
-
 dependencies {
   implementation(project(":javaagent-bootstrap"))
   implementation(project(":javaagent-extension-api"))
@@ -59,10 +52,6 @@ dependencies {
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")
   testImplementation("org.junit-pioneer:junit-pioneer")
-
-  oldJavaDependencies.forEach {
-    testCompileOnly(it)
-  }
 }
 
 testing {
@@ -98,10 +87,6 @@ testing {
 
         // Used by byte-buddy but not brought in as a transitive dependency.
         compileOnly("com.google.code.findbugs:annotations")
-
-        oldJavaDependencies.forEach {
-          implementation(it)
-        }
       }
     }
   }

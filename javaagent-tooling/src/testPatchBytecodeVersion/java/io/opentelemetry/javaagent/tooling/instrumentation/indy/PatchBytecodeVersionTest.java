@@ -6,16 +6,18 @@
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
+
+import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
@@ -23,18 +25,20 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
-import org.apache.commons.lang3.StringUtils;
+import oldbytecode.OldBytecode;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.objectweb.asm.Opcodes;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class PatchBytecodeVersionTest {
 
   private static final String BYTEBUDDY_DUMP = "net.bytebuddy.dump";
+  public static final String ORIGINAL_SUFFIX = "-original";
+  public static final String CLASSNAME_PREFIX = "oldbytecode_";
   private static ResettableClassFileTransformer transformer;
 
   private static final Logger logger = LoggerFactory.getLogger(PatchBytecodeVersionTest.class);
@@ -64,14 +68,9 @@ class PatchBytecodeVersionTest {
                     logger.error("Transformation error", throwable);
                   }
                 })
-            // commons lang 3
-            .type(named("org.apache.commons.lang3.StringUtils"))
+            .type(nameStartsWith(CLASSNAME_PREFIX))
             .transform(new PatchByteCodeVersionTransformer())
-            .transform(transformerFor(isMethod().and(named("startsWith"))))
-            // servlet 2.5
-            .type(named("javax.servlet.GenericServlet"))
-            .transform(new PatchByteCodeVersionTransformer())
-            .transform(transformerFor(isMethod().and(named("init"))));
+            .transform(transformerFor(isMethod().and(named("toString"))));
 
     ByteBuddyAgent.install();
     transformer = builder.installOn(ByteBuddyAgent.getInstrumentation());
@@ -85,60 +84,39 @@ class PatchBytecodeVersionTest {
     System.clearProperty(BYTEBUDDY_DUMP);
   }
 
-  @Test
-  void patchJava6() {
-    testVersionUpgrade(
-        Opcodes.V1_6,
-        () -> StringUtils.startsWith("", ""),
-        2,
-        "org.apache.commons.lang3.StringUtils");
-  }
+  @ParameterizedTest
+  @MethodSource("bytecodeVersions")
+  void upgradeBytecode(ClassFileVersion version) {
 
-  @Test
-  void patchJava5() {
-    testVersionUpgrade(
-        Opcodes.V1_5,
-        () -> {
-          try {
-            new HttpServlet() {}.init();
-          } catch (ServletException e) {
-            throw new RuntimeException(e);
-          }
-        },
-        1,
-        "javax.servlet.GenericServlet");
-  }
-
-  private static void testVersionUpgrade(
-      int originalVersion, Runnable task, int expectedCountIncrement, String className) {
-    if (originalVersion >= Opcodes.V1_7) {
-      throw new IllegalArgumentException("must use pre-java7 bytecode");
-    }
+    String className = CLASSNAME_PREFIX + version.getMinorMajorVersion();
 
     int startCount = PatchTestAdvice.invocationCount.get();
     assertThat(PatchTestAdvice.invocationCount.get()).isEqualTo(startCount);
 
-    task.run();
+    assertThat(OldBytecode.generateAndRun(className, version))
+        .isEqualTo("toString");
 
     assertThat(PatchTestAdvice.invocationCount.get())
-        .isEqualTo(startCount + expectedCountIncrement);
+        .isEqualTo(startCount + 1);
 
-    Path instrumentedClass = null;
-    Path instrumentedClassOriginal = null;
-    try (Stream<Path> files =
-        Files.find(
-            tempDir,
-            1,
-            (path, attr) ->
-                Files.isRegularFile(path) && path.getFileName().toString().startsWith(className))) {
+    Path instrumentedClass;
+    Path instrumentedClassOriginal;
 
-      for (Path path : files.collect(Collectors.toList())) {
-        if (path.getFileName().toString().contains("-original")) {
-          instrumentedClassOriginal = path;
-        } else {
-          instrumentedClass = path;
-        }
-      }
+    try (Stream<Path> files = Files.find(
+        tempDir,
+        1,
+        (path, attr) ->
+        {
+          String fileName = path.getFileName().toString();
+          return Files.isRegularFile(path)
+              && fileName.startsWith(className)
+              && fileName.contains(ORIGINAL_SUFFIX);
+        })) {
+
+      instrumentedClassOriginal = files.findFirst().orElseThrow(IllegalStateException::new);
+      String upgradedClassFileName = instrumentedClassOriginal.getFileName().toString()
+          .replace(ORIGINAL_SUFFIX, "");
+      instrumentedClass = instrumentedClassOriginal.resolveSibling(upgradedClassFileName);
 
     } catch (IOException e) {
       throw new IllegalStateException(e);
@@ -149,22 +127,32 @@ class PatchBytecodeVersionTest {
 
     assertThat(getBytecodeVersion(instrumentedClassOriginal))
         .describedAs(
-            "expected original bytecode for class '%s' should have been compiled for Java %d, see folder %s for bytecode dumps",
-            className, 7 - (Opcodes.V1_7 - originalVersion), tempDir)
-        .isEqualTo(originalVersion);
+            "expected original bytecode for class '%s' in '%s' should have been compiled for %s",
+            className, instrumentedClassOriginal.toAbsolutePath(), version)
+        .isEqualTo(version);
 
     assertThat(getBytecodeVersion(instrumentedClass))
         .describedAs(
-            "expected instrumented bytecode for class '%s' should have been upgraded to Java 7, see folder %s for bytecode dumps",
-            className, tempDir)
-        .isEqualTo(Opcodes.V1_7);
+            "expected instrumented bytecode for class '%s' in '%s' should have been upgraded to Java 7",
+            className, instrumentedClass.toAbsolutePath())
+        .isEqualTo(ClassFileVersion.JAVA_V7);
   }
 
-  private static int getBytecodeVersion(Path file) {
-    byte[] bytecode;
+  static List<ClassFileVersion> bytecodeVersions() {
+    return Arrays.asList(
+        ClassFileVersion.JAVA_V1,
+        ClassFileVersion.JAVA_V2,
+        ClassFileVersion.JAVA_V3,
+        ClassFileVersion.JAVA_V4,
+        ClassFileVersion.JAVA_V5,
+        ClassFileVersion.JAVA_V6
+        );
+  }
+
+  private static ClassFileVersion getBytecodeVersion(Path file) {
     try {
-      bytecode = Files.readAllBytes(file);
-      return bytecode[7];
+      byte[] bytecode = Files.readAllBytes(file);
+      return ClassFileVersion.ofMinorMajor((bytecode[5] << 16 ) | (bytecode[7] & 0xFF)  );
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
