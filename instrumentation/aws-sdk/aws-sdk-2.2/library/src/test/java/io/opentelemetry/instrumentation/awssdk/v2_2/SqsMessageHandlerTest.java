@@ -127,7 +127,13 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
                 span ->
                     span.hasName("MySpan")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasTotalRecordedLinks(0)
+                        .hasLinks(
+                            LinkData.create(
+                                SpanContext.createFromRemoteParent(
+                                    "55555555123456789012345678901234",
+                                    "1234567890123456",
+                                    TraceFlags.getDefault(),
+                                    TraceState.getDefault())))
                         .hasAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
                         .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")
                         .hasAttribute(SemanticAttributes.MESSAGING_DESTINATION_NAME, "destination")

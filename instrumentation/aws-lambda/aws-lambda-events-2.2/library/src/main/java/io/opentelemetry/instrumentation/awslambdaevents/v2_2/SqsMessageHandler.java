@@ -126,13 +126,12 @@ public abstract class SqsMessageHandler extends MessageHandler<SQSEvent.SQSMessa
         getMessageingAttributesGetter(), MessageOperation.PROCESS);
   }
 
-  //@SuppressWarnings("unchecked")
   protected SpanLinksExtractor<Collection<SQSEvent.SQSMessage>> getSpanLinksExtractor() {
     return (spanLinks, parentContext, request) -> {
       for (SQSEvent.SQSMessage message : request) {
         SpanContext messageSpanCtx = getUpstreamContext(openTelemetry, message);
 
-        if (messageSpanCtx!= null && messageSpanCtx.isValid() && messageSpanCtx.isSampled()) {
+        if (messageSpanCtx!= null && messageSpanCtx.isValid()) {
           spanLinks.addLink(messageSpanCtx);
         }
       }

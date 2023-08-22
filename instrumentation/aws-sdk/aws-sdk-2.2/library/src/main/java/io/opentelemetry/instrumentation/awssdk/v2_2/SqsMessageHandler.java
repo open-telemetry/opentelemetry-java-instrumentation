@@ -121,13 +121,12 @@ public abstract class SqsMessageHandler extends MessageHandler<Message> {
         getMessageingAttributesGetter(), MessageOperation.PROCESS);
   }
 
-  //@SuppressWarnings("unchecked")
   protected SpanLinksExtractor<Collection<Message>> getSpanLinksExtractor() {
     return (spanLinks, parentContext, request) -> {
       for (Message message : request) {
         SpanContext messageSpanCtx = getUpstreamContext(openTelemetry, message);
 
-        if (messageSpanCtx!= null && messageSpanCtx.isValid() && messageSpanCtx.isSampled()) {
+        if (messageSpanCtx!= null && messageSpanCtx.isValid()) {
           spanLinks.addLink(messageSpanCtx);
         }
       }
