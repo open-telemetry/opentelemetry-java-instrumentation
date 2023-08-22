@@ -16,7 +16,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
-
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -93,29 +92,27 @@ class PatchBytecodeVersionTest {
     int startCount = PatchTestAdvice.invocationCount.get();
     assertThat(PatchTestAdvice.invocationCount.get()).isEqualTo(startCount);
 
-    assertThat(OldBytecode.generateAndRun(className, version))
-        .isEqualTo("toString");
+    assertThat(OldBytecode.generateAndRun(className, version)).isEqualTo("toString");
 
-    assertThat(PatchTestAdvice.invocationCount.get())
-        .isEqualTo(startCount + 1);
+    assertThat(PatchTestAdvice.invocationCount.get()).isEqualTo(startCount + 1);
 
     Path instrumentedClass;
     Path instrumentedClassOriginal;
 
-    try (Stream<Path> files = Files.find(
-        tempDir,
-        1,
-        (path, attr) ->
-        {
-          String fileName = path.getFileName().toString();
-          return Files.isRegularFile(path)
-              && fileName.startsWith(className)
-              && fileName.contains(ORIGINAL_SUFFIX);
-        })) {
+    try (Stream<Path> files =
+        Files.find(
+            tempDir,
+            1,
+            (path, attr) -> {
+              String fileName = path.getFileName().toString();
+              return Files.isRegularFile(path)
+                  && fileName.startsWith(className)
+                  && fileName.contains(ORIGINAL_SUFFIX);
+            })) {
 
       instrumentedClassOriginal = files.findFirst().orElseThrow(IllegalStateException::new);
-      String upgradedClassFileName = instrumentedClassOriginal.getFileName().toString()
-          .replace(ORIGINAL_SUFFIX, "");
+      String upgradedClassFileName =
+          instrumentedClassOriginal.getFileName().toString().replace(ORIGINAL_SUFFIX, "");
       instrumentedClass = instrumentedClassOriginal.resolveSibling(upgradedClassFileName);
 
     } catch (IOException e) {
@@ -145,14 +142,13 @@ class PatchBytecodeVersionTest {
         ClassFileVersion.JAVA_V3,
         ClassFileVersion.JAVA_V4,
         ClassFileVersion.JAVA_V5,
-        ClassFileVersion.JAVA_V6
-        );
+        ClassFileVersion.JAVA_V6);
   }
 
   private static ClassFileVersion getBytecodeVersion(Path file) {
     try {
       byte[] bytecode = Files.readAllBytes(file);
-      return ClassFileVersion.ofMinorMajor((bytecode[5] << 16 ) | (bytecode[7] & 0xFF)  );
+      return ClassFileVersion.ofMinorMajor((bytecode[5] << 16) | (bytecode[7] & 0xFF));
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
