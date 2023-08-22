@@ -55,7 +55,8 @@ public class AsyncGreetingServlet extends HttpServlet {
     CountDownLatch latch = null;
     System.err.println("start async request");
     AsyncContext ac = req.startAsync(req, resp);
-    boolean isPayara = "org.apache.catalina.connector.AsyncContextImpl".equals(ac.getClass().getName());
+    boolean isPayara =
+        "org.apache.catalina.connector.AsyncContextImpl".equals(ac.getClass().getName());
     if (isPayara) {
       latch = new CountDownLatch(1);
       req.setAttribute(LATCH_KEY, latch);
