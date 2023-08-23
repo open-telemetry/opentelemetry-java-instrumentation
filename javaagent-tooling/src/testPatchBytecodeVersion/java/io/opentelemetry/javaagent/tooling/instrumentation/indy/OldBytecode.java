@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 import java.lang.reflect.Modifier;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.ClassFileVersion;
+import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.scaffold.InstrumentedType;
@@ -45,8 +46,12 @@ public class OldBytecode {
       String className, ClassFileVersion version) {
     return new ByteBuddy(version)
         .subclass(Object.class)
+        // required otherwise stack frames aren't computed when needed
+        .visit(
+            version.isAtLeast(ClassFileVersion.JAVA_V7)
+                ? new ComputeFramesAsmVisitorWrapper()
+                : AsmVisitorWrapper.NoOp.INSTANCE)
         .name(className)
-        .implement(Runnable.class)
         .defineMethod("toString", String.class, Modifier.PUBLIC)
         .intercept(new ToStringMethod())
         .make();

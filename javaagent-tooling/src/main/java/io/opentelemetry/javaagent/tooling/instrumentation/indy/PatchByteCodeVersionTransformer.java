@@ -64,7 +64,6 @@ public class PatchByteCodeVersionTransformer implements AgentBuilder.Transformer
               int readerFlags) {
 
             return new ClassVisitor(Opcodes.ASM7, classVisitor) {
-              private boolean patchVersion;
 
               @Override
               public void visit(
@@ -74,12 +73,8 @@ public class PatchByteCodeVersionTransformer implements AgentBuilder.Transformer
                   String signature,
                   String superName,
                   String[] interfaces) {
-                if (ClassFileVersion.ofMinorMajor(version).isLessThan(ClassFileVersion.JAVA_V7)) {
-                  patchVersion = true;
-                  //
-                  version = Opcodes.V1_7;
-                }
-                super.visit(version, access, name, signature, superName, interfaces);
+
+                super.visit(Opcodes.V1_7, access, name, signature, superName, interfaces);
               }
 
               @Override
@@ -92,12 +87,8 @@ public class PatchByteCodeVersionTransformer implements AgentBuilder.Transformer
 
                 MethodVisitor methodVisitor =
                     super.visitMethod(access, name, descriptor, signature, exceptions);
-                if (patchVersion) {
-                  return new JSRInlinerAdapter(
-                      methodVisitor, access, name, descriptor, signature, exceptions);
-                } else {
-                  return methodVisitor;
-                }
+                return new JSRInlinerAdapter(
+                    methodVisitor, access, name, descriptor, signature, exceptions);
               }
             };
           }

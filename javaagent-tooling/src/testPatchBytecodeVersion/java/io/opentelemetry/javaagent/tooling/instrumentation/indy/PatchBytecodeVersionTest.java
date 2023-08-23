@@ -127,11 +127,13 @@ class PatchBytecodeVersionTest {
             className, instrumentedClassOriginal.toAbsolutePath(), version)
         .isEqualTo(version);
 
-    assertThat(getBytecodeVersion(instrumentedClass))
-        .describedAs(
-            "expected instrumented bytecode for class '%s' in '%s' should have been upgraded to Java 7",
-            className, instrumentedClass.toAbsolutePath())
-        .isEqualTo(ClassFileVersion.JAVA_V7);
+    if (version.isLessThan(ClassFileVersion.JAVA_V7)) {
+      assertThat(getBytecodeVersion(instrumentedClass))
+          .describedAs(
+              "expected instrumented bytecode for class '%s' in '%s' should have been upgraded to Java 7",
+              className, instrumentedClass.toAbsolutePath())
+          .isEqualTo(ClassFileVersion.JAVA_V7);
+    }
   }
 
   static List<ClassFileVersion> bytecodeVersions() {
@@ -141,7 +143,10 @@ class PatchBytecodeVersionTest {
         ClassFileVersion.JAVA_V3,
         ClassFileVersion.JAVA_V4,
         ClassFileVersion.JAVA_V5,
-        ClassFileVersion.JAVA_V6);
+        ClassFileVersion.JAVA_V6,
+        // Java 7 and later should not be upgraded
+        ClassFileVersion.JAVA_V7,
+        ClassFileVersion.JAVA_V8);
   }
 
   private static ClassFileVersion getBytecodeVersion(Path file) {
