@@ -45,9 +45,8 @@ public class PatchByteCodeVersionTransformer implements AgentBuilder.Transformer
       ProtectionDomain protectionDomain) {
 
     if (isAtLeastJava7(typeDescription)) {
-      // we can avoid the expensive (and somewhat dangerous) stack frame re-computation if stack
-      // frames are already present in the bytecode, which also allows eagerly loading types that
-      // might be present in the method body, but not yet loaded by the JVM.
+      // we can avoid the expensive stack frame re-computation if stack frames are already present
+      // in the bytecode.
       return builder;
     }
     return builder.visit(
