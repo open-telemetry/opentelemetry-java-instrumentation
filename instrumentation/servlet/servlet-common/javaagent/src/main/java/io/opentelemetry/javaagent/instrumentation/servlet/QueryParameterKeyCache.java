@@ -12,7 +12,7 @@ import java.util.Locale;
 
 class QueryParameterKeyCache {
 
-  public static final String KEY_PREFIX = "servlet.request.parameter.";
+  private static final String KEY_PREFIX = "servlet.request.parameter.";
   private static final Cache<String, AttributeKey<List<String>>> cache = Cache.bounded(500);
 
   private QueryParameterKeyCache() {}
