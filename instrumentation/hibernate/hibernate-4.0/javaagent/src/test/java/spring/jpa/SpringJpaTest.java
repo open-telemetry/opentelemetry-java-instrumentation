@@ -88,15 +88,14 @@ class SpringJpaTest {
                                     .getSpan(1)
                                     .getAttributes()
                                     .get(stringKey("hibernate.session_id"))))));
-
     testing.clearData();
 
-    Customer saveCustomer1 = customer;
     testing.runWithSpan(
         "parent",
         () -> {
-          repo.save(saveCustomer1);
+          repo.save(customer);
         });
+
     assertThat(customer.getId()).isNotNull();
 
     testing.waitAndAssertTraces(
@@ -144,7 +143,6 @@ class SpringJpaTest {
                                     .getSpan(1)
                                     .getAttributes()
                                     .get(stringKey("hibernate.session_id")))));
-
           } else {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -203,16 +201,14 @@ class SpringJpaTest {
                             equalTo(SemanticAttributes.DB_SQL_TABLE, "Customer")));
           }
         });
-
     testing.clearData();
 
     customer.setFirstName("Bill");
 
-    Customer saveCustomer2 = customer;
     testing.runWithSpan(
         "parent",
         () -> {
-          repo.save(saveCustomer2);
+          repo.save(customer);
         });
 
     Long savedId = customer.getId();
@@ -275,13 +271,13 @@ class SpringJpaTest {
                                 "update Customer set firstName=?, lastName=? where id=?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "UPDATE"),
                             equalTo(SemanticAttributes.DB_SQL_TABLE, "Customer"))));
-
     testing.clearData();
 
-    customer = testing.runWithSpan("parent", () -> repo.findByLastName("Anonymous").get(0));
+    Customer foundCustomer =
+        testing.runWithSpan("parent", () -> repo.findByLastName("Anonymous").get(0));
 
-    assertThat(customer.getId()).isEqualTo(savedId);
-    assertThat(customer.getFirstName()).isEqualTo("Bill");
+    assertThat(foundCustomer.getId()).isEqualTo(savedId);
+    assertThat(foundCustomer.getFirstName()).isEqualTo("Bill");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -316,11 +312,9 @@ class SpringJpaTest {
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)(where ([^.]+).lastName=\\?)"))),
                             equalTo(SemanticAttributes.DB_OPERATION, "SELECT"),
                             equalTo(SemanticAttributes.DB_SQL_TABLE, "Customer"))));
-
     testing.clearData();
 
-    Customer deleteCustomer = customer;
-    testing.runWithSpan("parent", () -> repo.delete(deleteCustomer));
+    testing.runWithSpan("parent", () -> repo.delete(foundCustomer));
 
     testing.waitAndAssertTraces(
         trace -> {
