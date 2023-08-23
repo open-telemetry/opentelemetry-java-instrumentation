@@ -403,7 +403,7 @@ public class HelperInjector implements Transformer {
     }
   }
 
-  @SuppressWarnings({"deprecation", "removal"}) // AccessController is deprecated
+  @SuppressWarnings("removal") // AccessController is deprecated for removal
   private static <T> T execute(PrivilegedAction<T> action) {
     if (System.getSecurityManager() != null) {
       return java.security.AccessController.doPrivileged(action);
