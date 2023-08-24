@@ -22,12 +22,16 @@ import javax.annotation.Nullable;
 public class AwsLambdaFunctionInstrumenter {
 
   private final OpenTelemetry openTelemetry;
+  private final CarrierEnricher carrierEnricher;
   final Instrumenter<AwsLambdaRequest, Object> instrumenter;
 
   public AwsLambdaFunctionInstrumenter(
-      OpenTelemetry openTelemetry, Instrumenter<AwsLambdaRequest, Object> instrumenter) {
+      OpenTelemetry openTelemetry,
+      Instrumenter<AwsLambdaRequest, Object> instrumenter,
+      CarrierEnricher carrierEnricher) {
     this.openTelemetry = openTelemetry;
     this.instrumenter = instrumenter;
+    this.carrierEnricher = carrierEnricher;
   }
 
   public boolean shouldStart(Context parentContext, AwsLambdaRequest input) {
@@ -49,10 +53,14 @@ public class AwsLambdaFunctionInstrumenter {
   public Context extract(AwsLambdaRequest input) {
     ContextPropagationDebug.debugContextLeakIfEnabled();
 
+    // Update the carrier with any relevant keys before delegating extraction of the
+    // context to the context propagators
+    Map<String, String> carrier = carrierEnricher.enrichFrom(input.getHeaders());
+
     return openTelemetry
         .getPropagators()
         .getTextMapPropagator()
-        .extract(Context.root(), input.getHeaders(), MapGetter.INSTANCE);
+        .extract(Context.root(), carrier, MapGetter.INSTANCE);
   }
 
   private enum MapGetter implements TextMapGetter<Map<String, String>> {

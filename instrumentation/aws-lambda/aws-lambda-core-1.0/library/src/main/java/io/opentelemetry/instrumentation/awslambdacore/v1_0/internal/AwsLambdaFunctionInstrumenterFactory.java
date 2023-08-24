@@ -7,7 +7,9 @@ package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 
 /**
@@ -15,17 +17,30 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
  * any time.
  */
 public final class AwsLambdaFunctionInstrumenterFactory {
+  private static final Boolean SHOULD_LINK_XRAY_SPANS =
+      ConfigPropertiesUtil.getBoolean("otel.instrumentation.aws-lambda.link-xray-traces", false);
 
   public static AwsLambdaFunctionInstrumenter createInstrumenter(OpenTelemetry openTelemetry) {
-    return new AwsLambdaFunctionInstrumenter(
-        openTelemetry,
+    return createInstrumenter(openTelemetry, SHOULD_LINK_XRAY_SPANS);
+  }
+
+  public static AwsLambdaFunctionInstrumenter createInstrumenter(
+      OpenTelemetry openTelemetry, boolean linkXRaySpans) {
+    InstrumenterBuilder<AwsLambdaRequest, Object> otelInstrumenterBuilder =
         Instrumenter.builder(
                 openTelemetry,
                 "io.opentelemetry.aws-lambda-core-1.0",
                 AwsLambdaFunctionInstrumenterFactory::spanName)
-            .addSpanLinksExtractor(new AwsXrayEnvSpanLinksExtractor())
-            .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
-            .buildInstrumenter(SpanKindExtractor.alwaysServer()));
+            .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor());
+
+    if (linkXRaySpans) {
+      otelInstrumenterBuilder.addSpanLinksExtractor(new AwsXrayEnvSpanLinksExtractor());
+    }
+
+    return new AwsLambdaFunctionInstrumenter(
+        openTelemetry,
+        otelInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysServer()),
+        new AwsXrayEnvCarrierEnricher());
   }
 
   private static String spanName(AwsLambdaRequest input) {
