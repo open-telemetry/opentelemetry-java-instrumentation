@@ -9,3 +9,9 @@ dependencies {
 
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 }
+
+tasks {
+  test {
+    jvmArgs("-Dotel.instrumentation.runtime-telemetry.package-emitter.enabled=true")
+  }
+}

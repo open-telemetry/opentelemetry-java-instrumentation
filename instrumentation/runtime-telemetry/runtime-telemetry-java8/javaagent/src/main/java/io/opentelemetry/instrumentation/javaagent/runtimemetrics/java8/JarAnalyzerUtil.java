@@ -53,7 +53,8 @@ final class JarAnalyzerUtil {
     try {
       md = MessageDigest.getInstance("SHA1");
     } catch (NoSuchAlgorithmException e) {
-      throw new IllegalStateException("Unexpected error. Checksum algorithm SHA1 does not exist.", e);
+      throw new IllegalStateException(
+          "Unexpected error. Checksum algorithm SHA1 does not exist.", e);
     }
 
     try (InputStream is = new DigestInputStream(jarUrl.openStream(), md)) {
