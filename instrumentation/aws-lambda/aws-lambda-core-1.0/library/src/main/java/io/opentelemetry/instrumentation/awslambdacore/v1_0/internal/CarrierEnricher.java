@@ -16,8 +16,8 @@ public interface CarrierEnricher {
    * Creates a new carrier from the carrier passed as parameter and perform any necessary
    * enrichment.
    *
-   * @param carrier The carrier to enrich from. If null, is passed the enrichment operation will
-   *     still be tried.
+   * @param carrier The carrier to enrich from. If null is passed, the enrichment operation will
+   *     still be tried, resulting in a new carrier.
    * @return the new enriched carrier.
    */
   public Map<String, String> enrichFrom(Map<String, String> carrier);
