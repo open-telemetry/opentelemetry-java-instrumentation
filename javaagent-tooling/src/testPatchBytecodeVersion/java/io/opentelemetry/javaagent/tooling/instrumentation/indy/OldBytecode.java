@@ -74,6 +74,24 @@ public class OldBytecode {
         MethodVisitor methodVisitor,
         Context implementationContext,
         MethodDescription instrumentedMethod) {
+
+      // Bytecode archeology:
+      //
+      // JSR and RET bytecode instructions were used to create "subroutines". Those were used
+      // in try/catch blocks as an attempt to avoid some bytecode duplication, this was later
+      // replaced with inlining.
+      // Starting from Java 5, no java compiler is expected to issue bytecode containing them and
+      // the JVM bytecode validation will reject it.
+      //
+      // Java 7 bytecode introduced the concept of "stack map frames", which describe the types of
+      // the objects that are stored on the stack during method body execution.
+      //
+      // As a consequence, the code below allows to test the following combinations:
+      // - java 1 to java 4 bytecode with JSR/RET opcodes
+      // - java 5 and java 6 bytecode without stack map frames
+      // - java 7 and later bytecode with stack map frames, those are automatically added by the
+      //   ComputeFramesAsmVisitorWrapper.
+      //
       boolean useJsrRet =
           implementationContext.getClassFileVersion().isLessThan(ClassFileVersion.JAVA_V5);
 
