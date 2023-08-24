@@ -25,7 +25,7 @@ public final class AwsLambdaFunctionInstrumenterFactory {
   }
 
   public static AwsLambdaFunctionInstrumenter createInstrumenter(
-      OpenTelemetry openTelemetry, boolean linkXRaySpans) {
+      OpenTelemetry openTelemetry, boolean linkXraySpans) {
     InstrumenterBuilder<AwsLambdaRequest, Object> otelInstrumenterBuilder =
         Instrumenter.builder(
                 openTelemetry,
@@ -33,7 +33,7 @@ public final class AwsLambdaFunctionInstrumenterFactory {
                 AwsLambdaFunctionInstrumenterFactory::spanName)
             .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor());
 
-    if (linkXRaySpans) {
+    if (linkXraySpans) {
       otelInstrumenterBuilder.addSpanLinksExtractor(new AwsXrayEnvSpanLinksExtractor());
     }
 
