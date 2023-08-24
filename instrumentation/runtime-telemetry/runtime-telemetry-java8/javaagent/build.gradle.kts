@@ -4,6 +4,8 @@ plugins {
 
 dependencies {
   implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library"))
+  implementation("io.opentelemetry:opentelemetry-api-events")
+  implementation("com.google.guava:guava")
 
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 }
