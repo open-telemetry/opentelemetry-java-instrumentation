@@ -23,6 +23,7 @@ class JarAnalyzerTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
+  @SuppressWarnings("SystemOut") // TODO: delete before merging
   void jarAnalyzerEnabled() throws InterruptedException {
     Thread.sleep(5000);
 
@@ -32,9 +33,10 @@ class JarAnalyzerTest {
             .filter(
                 record -> {
                   Attributes attributes = record.getAttributes();
-                  return "jvm".equals(attributes.get(AttributeKey.stringKey("event.domain")))
+                  return "package".equals(attributes.get(AttributeKey.stringKey("event.domain")))
                       && "info".equals(attributes.get(AttributeKey.stringKey("event.name")));
                 })
+            // TODO: delete print before merging
             .peek(logRecord -> System.out.println(logRecord.getAttributes()))
             .collect(Collectors.toList());
     assertThat(events)

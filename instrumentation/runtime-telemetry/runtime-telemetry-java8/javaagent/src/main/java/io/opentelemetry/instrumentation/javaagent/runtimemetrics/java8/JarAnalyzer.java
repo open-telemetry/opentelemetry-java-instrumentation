@@ -40,8 +40,11 @@ import java.util.logging.Logger;
  */
 final class JarAnalyzer {
 
-  private static final Logger LOGGER = Logger.getLogger(JarAnalyzer.class.getName());
+  private static final Logger logger = Logger.getLogger(JarAnalyzer.class.getName());
+
   private static final JarAnalyzer INSTANCE = new JarAnalyzer();
+  private static final String EVENT_DOMAIN_PACKAGE = "package";
+  private static final String EVENT_NAME_INFO = "info";
 
   private final Set<URI> seenUris = new HashSet<>();
   private final BlockingQueue<URL> toProcess = new LinkedBlockingDeque<>();
@@ -92,7 +95,7 @@ final class JarAnalyzer {
         GlobalEventEmitterProvider.get()
             .eventEmitterBuilder(JmxRuntimeMetricsUtil.getInstrumentationName())
             .setInstrumentationVersion(JmxRuntimeMetricsUtil.getInstrumentationVersion())
-            .setEventDomain("jvm")
+            .setEventDomain(EVENT_DOMAIN_PACKAGE)
             .build();
     this.worker = new Worker(eventEmitter, toProcess, jarsPerSecond);
     Thread workerThread =
@@ -127,7 +130,7 @@ final class JarAnalyzer {
     try {
       locationUri = jarUrl.toURI();
     } catch (URISyntaxException e) {
-      LOGGER.log(Level.WARNING, "Unable to get URI for jar URL: " + jarUrl, e);
+      logger.log(Level.WARNING, "Unable to get URI for jar URL: " + jarUrl, e);
       return;
     }
 
@@ -135,11 +138,11 @@ final class JarAnalyzer {
       return;
     }
     if ("jrt".equals(jarUrl.getProtocol())) {
-      LOGGER.log(Level.FINEST, "Skipping processing jar for java runtime module: " + jarUrl);
+      logger.log(Level.FINEST, "Skipping processing jar for java runtime module: " + jarUrl);
       return;
     }
     if (!jarUrl.getFile().endsWith(JarAnalyzerUtil.JAR_EXTENSION)) {
-      LOGGER.log(Level.INFO, "Skipping processing jar with unrecognized code location: " + jarUrl);
+      logger.log(Level.INFO, "Skipping processing jar with unrecognized code location: " + jarUrl);
       return;
     }
 
@@ -178,7 +181,7 @@ final class JarAnalyzer {
         // TODO(jack-berg): add ability to optionally re-process urls periodically to re-emit events
         processUrl(jarUrl);
       }
-      LOGGER.warning("JarAnalyzer stopped");
+      logger.warning("JarAnalyzer stopped");
     }
 
     /**
@@ -193,29 +196,29 @@ final class JarAnalyzer {
       try {
         addPackageChecksum(builder, jarUrl);
       } catch (Exception e) {
-        LOGGER.log(Level.WARNING, "Error adding package checksum for jar URL: " + jarUrl, e);
+        logger.log(Level.WARNING, "Error adding package checksum for jar URL: " + jarUrl, e);
       }
 
       try {
         addPackagePath(builder, jarUrl);
       } catch (Exception e) {
-        LOGGER.log(Level.WARNING, "Error adding package path jar URL: " + jarUrl, e);
+        logger.log(Level.WARNING, "Error adding package path jar URL: " + jarUrl, e);
       }
 
       try {
         addPackageDescription(builder, jarUrl);
       } catch (Exception e) {
-        LOGGER.log(Level.WARNING, "Error adding package description for jar URL: " + jarUrl, e);
+        logger.log(Level.WARNING, "Error adding package description for jar URL: " + jarUrl, e);
       }
 
       try {
         addPackageNameAndVersion(builder, jarUrl);
       } catch (Exception e) {
-        LOGGER.log(
+        logger.log(
             Level.WARNING, "Error adding package name and version for jar URL: " + jarUrl, e);
       }
 
-      eventEmitter.emit("info", builder.build());
+      eventEmitter.emit(EVENT_NAME_INFO, builder.build());
     }
   }
 }
