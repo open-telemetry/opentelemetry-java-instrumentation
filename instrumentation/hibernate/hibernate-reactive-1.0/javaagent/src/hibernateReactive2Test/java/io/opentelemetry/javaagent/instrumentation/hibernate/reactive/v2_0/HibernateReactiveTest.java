@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_US
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_PEER_NAME;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_PEER_PORT;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -98,10 +99,15 @@ class HibernateReactiveTest {
         () -> {
           mutinySessionFactory
               .withSession(
-                  session ->
-                      session
-                          .find(Value.class, 1L)
-                          .invoke(value -> testing.runWithSpan("callback", () -> {})))
+                  session -> {
+                    if (!Span.current().getSpanContext().isValid()) {
+                      throw new IllegalStateException("missing parent span");
+                    }
+
+                    return session
+                        .find(Value.class, 1L)
+                        .invoke(value -> testing.runWithSpan("callback", () -> {}));
+                  })
               .await()
               .atMost(Duration.ofSeconds(30));
         });
@@ -117,10 +123,15 @@ class HibernateReactiveTest {
             () ->
                 stageSessionFactory
                     .withSession(
-                        session ->
-                            session
-                                .find(Value.class, 1L)
-                                .thenAccept(value -> testing.runWithSpan("callback", () -> {})))
+                        session -> {
+                          if (!Span.current().getSpanContext().isValid()) {
+                            throw new IllegalStateException("missing parent span");
+                          }
+
+                          return session
+                              .find(Value.class, 1L)
+                              .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                        })
                     .toCompletableFuture())
         .get(30, TimeUnit.SECONDS);
 
