@@ -559,6 +559,30 @@ class KotlinCoroutinesInstrumentationTest {
     delay(10)
   }
 
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/9312
+  @Test
+  fun `test class with default constructor argument`() {
+    runBlocking {
+      val classDefaultConstructorArguments = ClazzWithDefaultConstructorArguments()
+      classDefaultConstructorArguments.sayHello()
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          {
+            it.hasName("ClazzWithDefaultConstructorArguments.sayHello")
+              .hasNoParent()
+              .hasAttributesSatisfyingExactly(
+                equalTo(SemanticAttributes.CODE_NAMESPACE, ClazzWithDefaultConstructorArguments::class.qualifiedName),
+                equalTo(SemanticAttributes.CODE_FUNCTION, "sayHello")
+              )
+          }
+        )
+      }
+    )
+  }
+
   private fun tracedChild(opName: String) {
     tracer.spanBuilder(opName).startSpan().end()
   }
