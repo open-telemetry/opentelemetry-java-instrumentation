@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 /** Represents the source that provided the {@code http.route} attribute. */
 public enum HttpServerRouteSource {
   /**
-   * Represents the "filter" that may execute before the actual server handler. E.g. the Servlet API
+   * Represents a "filter" that may execute before the actual server handler. E.g. the Servlet API
    * {@code Filter} interface. Since multiple filters may match the same request, the one with the
    * longest (most detailed) route will be chosen.
    */
