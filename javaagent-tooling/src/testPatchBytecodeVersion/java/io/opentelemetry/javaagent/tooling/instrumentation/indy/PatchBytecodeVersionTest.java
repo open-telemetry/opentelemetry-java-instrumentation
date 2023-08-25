@@ -133,6 +133,10 @@ class PatchBytecodeVersionTest {
               "expected instrumented bytecode for class '%s' in '%s' should have been upgraded to Java 7",
               className, instrumentedClass.toAbsolutePath())
           .isEqualTo(ClassFileVersion.JAVA_V7);
+    } else {
+      assertThat(getBytecodeVersion(instrumentedClass))
+          .describedAs("original bytecode version shouldn't be altered")
+          .isEqualTo(version);
     }
   }
 
