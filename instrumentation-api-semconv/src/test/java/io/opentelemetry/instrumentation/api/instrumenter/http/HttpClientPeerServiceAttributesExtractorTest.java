@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter.net;
+package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Collections.singletonMap;
@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceResolver;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class HttpClientPeerServiceAttributesExtractorTest {
-  @Mock HttpClientAttributesGetter<String, String> netAttributesExtractor;
+  @Mock HttpClientAttributesGetter<String, String> httpAttributesExtractor;
 
   @Test
   void shouldNotSetAnyValueIfNetExtractorReturnsNulls() {
@@ -36,7 +37,8 @@ class HttpClientPeerServiceAttributesExtractorTest {
         PeerServiceResolver.create(singletonMap("1.2.3.4", "myService"));
 
     HttpClientPeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceResolver);
+        new HttpClientPeerServiceAttributesExtractor<>(
+            httpAttributesExtractor, peerServiceResolver);
 
     Context context = Context.root();
 
@@ -56,9 +58,10 @@ class HttpClientPeerServiceAttributesExtractorTest {
         PeerServiceResolver.create(singletonMap("example.com", "myService"));
 
     HttpClientPeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceResolver);
+        new HttpClientPeerServiceAttributesExtractor<>(
+            httpAttributesExtractor, peerServiceResolver);
 
-    when(netAttributesExtractor.getServerAddress(any())).thenReturn("example2.com");
+    when(httpAttributesExtractor.getServerAddress(any())).thenReturn("example2.com");
 
     Context context = Context.root();
 
@@ -83,9 +86,10 @@ class HttpClientPeerServiceAttributesExtractorTest {
     PeerServiceResolver peerServiceResolver = PeerServiceResolver.create(peerServiceMapping);
 
     HttpClientPeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceResolver);
+        new HttpClientPeerServiceAttributesExtractor<>(
+            httpAttributesExtractor, peerServiceResolver);
 
-    when(netAttributesExtractor.getServerAddress(any())).thenReturn("example.com");
+    when(httpAttributesExtractor.getServerAddress(any())).thenReturn("example.com");
 
     Context context = Context.root();
 
@@ -99,7 +103,7 @@ class HttpClientPeerServiceAttributesExtractorTest {
     assertThat(startAttributes.build()).isEmpty();
     assertThat(endAttributes.build())
         .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "myService"));
-    verify(netAttributesExtractor, never()).getServerSocketDomain(any(), any());
+    verify(httpAttributesExtractor, never()).getServerSocketDomain(any(), any());
   }
 
   @Test
@@ -112,9 +116,10 @@ class HttpClientPeerServiceAttributesExtractorTest {
     PeerServiceResolver peerServiceResolver = PeerServiceResolver.create(peerServiceMapping);
 
     HttpClientPeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceResolver);
+        new HttpClientPeerServiceAttributesExtractor<>(
+            httpAttributesExtractor, peerServiceResolver);
 
-    when(netAttributesExtractor.getServerSocketDomain(any(), any())).thenReturn("example.com");
+    when(httpAttributesExtractor.getServerSocketDomain(any(), any())).thenReturn("example.com");
 
     Context context = Context.root();
 

@@ -33,7 +33,7 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
 
   /**
    * Returns a new {@link PeerServiceAttributesExtractor} that will use the passed {@code
-   * netAttributesExtractor} instance to determine the value of the {@code peer.service} attribute.
+   * attributesGetter} instance to determine the value of the {@code peer.service} attribute.
    */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       ServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,

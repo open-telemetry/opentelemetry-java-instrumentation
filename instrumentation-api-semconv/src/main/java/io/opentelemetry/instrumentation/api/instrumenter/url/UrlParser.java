@@ -3,14 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter.net;
+package io.opentelemetry.instrumentation.api.instrumenter.url;
 
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
-class UrlParser {
+public class UrlParser {
 
   @Nullable
-  static String getHost(String url) {
+  public static String getHost(String url) {
 
     int startIndex = getHostStartIndex(url);
     if (startIndex == -1) {
@@ -26,7 +27,7 @@ class UrlParser {
   }
 
   @Nullable
-  static Integer getPort(String url) {
+  public static Integer getPort(String url) {
 
     int hostStartIndex = getHostStartIndex(url);
     if (hostStartIndex == -1) {
@@ -53,7 +54,7 @@ class UrlParser {
   }
 
   @Nullable
-  static String getPath(String url) {
+  public static String getPath(String url) {
 
     int hostStartIndex = getHostStartIndex(url);
     if (hostStartIndex == -1) {
@@ -65,22 +66,10 @@ class UrlParser {
       return null;
     }
 
-    if (hostEndIndexExclusive < url.length() && url.charAt(hostEndIndexExclusive) != ':') {
+    int pathStartIndex = url.indexOf('/', hostEndIndexExclusive);
+    if (pathStartIndex == -1) {
       return null;
     }
-
-    int portStartIndex = hostEndIndexExclusive + 1;
-
-    int portEndIndexExclusive = getPortEndIndexExclusive(url, portStartIndex);
-    if (portEndIndexExclusive == portStartIndex) {
-      return null;
-    }
-
-    if (portEndIndexExclusive < url.length() && url.charAt(portEndIndexExclusive) != '/') {
-      return null;
-    }
-
-    int pathStartIndex = portEndIndexExclusive;
 
     int pathEndIndexExclusive = getPathEndIndexExclusive(url, pathStartIndex);
     if (pathEndIndexExclusive == pathStartIndex) {
@@ -113,39 +102,29 @@ class UrlParser {
     // look for the end of the host:
     //   ':' ==> start of port, or
     //   '/', '?', '#' ==> start of path
-    int index;
-    int len = url.length();
-    for (index = startIndex; index < len; index++) {
-      char c = url.charAt(index);
-      if (c == ':' || c == '/' || c == '?' || c == '#') {
-        break;
-      }
-    }
-    return index;
+    return getEndIndexExclusive(
+        url, startIndex, c -> (c == ':' || c == '/' || c == '?' || c == '#'));
   }
 
   private static int getPortEndIndexExclusive(String url, int startIndex) {
     // look for the end of the port:
     //   '/', '?', '#' ==> start of path
-    int index;
-    int len = url.length();
-    for (index = startIndex; index < len; index++) {
-      char c = url.charAt(index);
-      if (c == '/' || c == '?' || c == '#') {
-        break;
-      }
-    }
-    return index;
+    return getEndIndexExclusive(url, startIndex, c -> (c == '/' || c == '?' || c == '#'));
   }
 
   private static int getPathEndIndexExclusive(String url, int startIndex) {
     // look for the end of the path:
     //   '?', '#' ==> end of path
+    return getEndIndexExclusive(url, startIndex, c -> (c == '?' || c == '#'));
+  }
+
+  private static int getEndIndexExclusive(
+      String url, int startIndex, Predicate<Character> predicate) {
     int index;
     int len = url.length();
     for (index = startIndex; index < len; index++) {
       char c = url.charAt(index);
-      if (c == '?' || c == '#') {
+      if (predicate.test(c)) {
         break;
       }
     }

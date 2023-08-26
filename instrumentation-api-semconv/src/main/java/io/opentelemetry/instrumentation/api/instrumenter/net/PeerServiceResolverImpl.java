@@ -9,11 +9,11 @@ import static java.util.Comparator.comparing;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Comparator.nullsFirst;
 
-import java.io.Serializable;
+import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.instrumenter.url.UrlParser;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import javax.annotation.Nullable;
 
 class PeerServiceResolverImpl implements PeerServiceResolver {
@@ -28,18 +28,13 @@ class PeerServiceResolverImpl implements PeerServiceResolver {
   PeerServiceResolverImpl(Map<String, String> peerServiceMapping) {
     peerServiceMapping.forEach(
         (key, serviceName) -> {
-          String url;
-          if (key.contains("://")) {
-            url = key;
-          } else {
-            url = "http://" + key;
-          }
+          String url = "https://" + key;
           String host = UrlParser.getHost(url);
           Integer port = UrlParser.getPort(url);
           String path = UrlParser.getPath(url);
           Map<ServiceMatcher, String> matchers =
               mapping.computeIfAbsent(host, x -> new HashMap<>());
-          matchers.putIfAbsent(new ServiceMatcher(port, path), serviceName);
+          matchers.putIfAbsent(ServiceMatcher.create(port, path), serviceName);
         });
   }
 
@@ -49,7 +44,8 @@ class PeerServiceResolverImpl implements PeerServiceResolver {
   }
 
   @Override
-  public String resolveService(String host, Integer port, String path) {
+  @Nullable
+  public String resolveService(String host, @Nullable Integer port, @Nullable String path) {
     Map<ServiceMatcher, String> matchers = mapping.get(host);
     if (matchers == null) {
       return null;
@@ -61,57 +57,34 @@ class PeerServiceResolverImpl implements PeerServiceResolver {
         .orElse(null);
   }
 
-  private static class ServiceMatcher implements Serializable {
+  @AutoValue
+  abstract static class ServiceMatcher {
 
-    private static final long serialVersionUID = 1L;
-    @Nullable private final Integer port;
-    @Nullable private final String path;
-
-    ServiceMatcher(Integer port, String path) {
-      this.port = port;
-      this.path = path;
+    static ServiceMatcher create(Integer port, String path) {
+      return new AutoValue_PeerServiceResolverImpl_ServiceMatcher(port, path);
     }
 
-    Integer getPort() {
-      return this.port;
-    }
+    @Nullable
+    abstract Integer getPort();
 
-    String getPath() {
-      return this.path;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (!(o instanceof ServiceMatcher)) {
-        return false;
-      }
-      ServiceMatcher that = (ServiceMatcher) o;
-      return Objects.equals(port, that.port) && Objects.equals(path, that.path);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(port, path);
-    }
+    @Nullable
+    abstract String getPath();
 
     public boolean matches(Integer port, String path) {
-      if (this.port != null) {
-        if (!this.port.equals(port)) {
+      if (this.getPort() != null) {
+        if (!this.getPort().equals(port)) {
           return false;
         }
       }
-      if (this.path != null && this.path.length() > 0) {
+      if (this.getPath() != null && this.getPath().length() > 0) {
         if (path == null) {
           return false;
         }
-        if (!path.startsWith(this.path)) {
+        if (!path.startsWith(this.getPath())) {
           return false;
         }
         if (port != null) {
-          return port.equals(this.port);
+          return port.equals(this.getPort());
         }
       }
       return true;

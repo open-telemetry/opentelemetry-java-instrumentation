@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceResolver;
+import io.opentelemetry.instrumentation.api.instrumenter.url.UrlParser;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
@@ -32,13 +33,14 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
   }
 
   /**
-   * Returns a new {@link PeerServiceAttributesExtractor} that will use the passed {@code
-   * netAttributesExtractor} instance to determine the value of the {@code peer.service} attribute.
+   * Returns a new {@link HttpClientPeerServiceAttributesExtractor} that will use the passed {@code
+   * attributesGetter} instance to determine the value of the {@code peer.service} attribute.
    */
-  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      PeerServiceResolver peerServiceResolver) {
-    return new PeerServiceAttributesExtractor<>(attributesGetter, peerServiceResolver);
+  public static <REQUEST, RESPONSE>
+      HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE> create(
+          HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+          PeerServiceResolver peerServiceResolver) {
+    return new HttpClientPeerServiceAttributesExtractor<>(attributesGetter, peerServiceResolver);
   }
 
   @Override
