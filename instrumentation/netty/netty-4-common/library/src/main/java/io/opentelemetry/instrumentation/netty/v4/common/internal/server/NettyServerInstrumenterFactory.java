@@ -8,10 +8,10 @@ package io.opentelemetry.instrumentation.netty.v4.common.internal.server;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
@@ -42,7 +42,7 @@ public final class NettyServerInstrumenterFactory {
         .addAttributesExtractor(extractorBuilder.build())
         .addOperationMetrics(HttpServerMetrics.get())
         .addContextCustomizer((context, request, attributes) -> NettyErrorHolder.init(context))
-        .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
+        .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
         .buildServerInstrumenter(HttpRequestHeadersGetter.INSTANCE);
   }
 

@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.wicket;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource.CONTROLLER;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -39,7 +39,7 @@ public class RequestHandlerExecutorInstrumentation implements TypeInstrumentatio
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onExit(@Advice.Argument(0) IRequestHandler handler) {
       if (handler instanceof IPageClassRequestHandler) {
-        HttpRouteHolder.updateHttpRoute(
+        HttpServerRoute.update(
             Java8BytecodeBridge.currentContext(),
             CONTROLLER,
             WicketServerSpanNaming.SERVER_SPAN_NAME,

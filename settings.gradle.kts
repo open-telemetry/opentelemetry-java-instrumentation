@@ -4,10 +4,11 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.3.2"
     id("com.gradle.plugin-publish") version "1.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
+    // at the moment 1.9.0 is the latest version supported by codeql
     id("org.jetbrains.kotlin.jvm") version "1.9.0"
     id("org.xbib.gradle.plugin.jflex") version "3.0.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
-    id("org.graalvm.buildtools.native") version "0.9.24"
+    id("org.graalvm.buildtools.native") version "0.9.25"
   }
 }
 
@@ -138,7 +139,7 @@ include(":smoke-tests:images:spring-boot")
 
 include(":smoke-tests-otel-starter")
 
-include("instrumentation:akka:akka-actor-2.3:javaagent")
+include(":instrumentation:akka:akka-actor-2.3:javaagent")
 include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
 include(":instrumentation:akka:akka-http-10.0:javaagent")
 include(":instrumentation:apache-dbcp-2.0:javaagent")
@@ -253,6 +254,7 @@ include(":instrumentation:hibernate:hibernate-6.0:javaagent")
 include(":instrumentation:hibernate:hibernate-6.0:spring-testing")
 include(":instrumentation:hibernate:hibernate-common:javaagent")
 include(":instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent")
+include(":instrumentation:hibernate:hibernate-reactive-1.0:javaagent")
 include(":instrumentation:hikaricp-3.0:javaagent")
 include(":instrumentation:hikaricp-3.0:library")
 include(":instrumentation:hikaricp-3.0:testing")

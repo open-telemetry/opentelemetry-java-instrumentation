@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.SpringWebfluxConfig;
 import org.springframework.web.reactive.HandlerMapping;
@@ -39,7 +39,7 @@ public final class WebfluxSingletons {
     return INSTRUMENTER;
   }
 
-  public static HttpRouteGetter<ServerWebExchange> httpRouteGetter() {
+  public static HttpServerRouteGetter<ServerWebExchange> httpRouteGetter() {
     return (context, exchange) -> {
       Object bestPatternObj = exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
       if (bestPatternObj == null) {

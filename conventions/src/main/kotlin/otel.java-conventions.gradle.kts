@@ -122,7 +122,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.96.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.97.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -140,7 +140,15 @@ dependencies {
   compileOnly("com.google.errorprone:error_prone_annotations")
 
   codenarc("org.codenarc:CodeNarc:3.3.0")
-  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.18"))
+  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.19"))
+
+  modules {
+    // checkstyle uses the very old google-collections which causes Java 9 module conflict with
+    // guava which is also on the classpath
+    module("com.google.collections:google-collections") {
+      replacedBy("com.google.guava:guava", "google-collections is now part of Guava")
+    }
+  }
 }
 
 testing {
@@ -410,15 +418,5 @@ configurations.configureEach {
     // Excluding the bom as well helps ensure if we miss a substitution, we get a resolution failure instead of using the
     // wrong version.
     exclude("io.opentelemetry.instrumentation", "opentelemetry-instrumentation-bom-alpha")
-  }
-}
-
-dependencies {
-  modules {
-    // checkstyle uses the very old google-collections which causes Java 9 module conflict with
-    // guava which is also on the classpath
-    module("com.google.collections:google-collections") {
-      replacedBy("com.google.guava:guava", "google-collections is now part of Guava")
-    }
   }
 }

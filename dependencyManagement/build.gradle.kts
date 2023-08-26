@@ -12,7 +12,7 @@ val otelSdkVersion = "1.29.0"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.13"
+val groovyVersion = "4.0.14"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -33,7 +33,7 @@ val DEPENDENCY_BOMS = listOf(
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
   "org.junit:junit-bom:5.10.0",
-  "org.testcontainers:testcontainers-bom:1.18.3",
+  "org.testcontainers:testcontainers-bom:1.19.0",
   "org.spockframework:spock-bom:2.4-M1-groovy-4.0"
 )
 
@@ -107,7 +107,7 @@ val DEPENDENCIES = listOf(
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.3",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
-  "org.springframework.boot:spring-boot-dependencies:2.7.14",
+  "org.springframework.boot:spring-boot-dependencies:2.7.15",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.6"
 )

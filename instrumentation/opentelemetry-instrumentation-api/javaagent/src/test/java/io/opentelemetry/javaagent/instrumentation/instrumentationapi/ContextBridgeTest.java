@@ -12,8 +12,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -80,8 +80,8 @@ class ContextBridgeTest {
     AgentSpanTesting.runWithHttpServerSpan(
         "server",
         () ->
-            HttpRouteHolder.updateHttpRoute(
-                Context.current(), HttpRouteSource.SERVLET, "/test/controller/:id"));
+            HttpServerRoute.update(
+                Context.current(), HttpServerRouteSource.SERVER, "/test/controller/:id"));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -100,8 +100,8 @@ class ContextBridgeTest {
     AgentSpanTesting.runWithHttpServerSpan(
         "server",
         () ->
-            HttpRouteHolder.updateHttpRoute(
-                Context.current(), HttpRouteSource.CONTROLLER, "/test/controller/:id"));
+            HttpServerRoute.update(
+                Context.current(), HttpServerRouteSource.CONTROLLER, "/test/controller/:id"));
 
     testing.waitAndAssertTraces(
         trace ->

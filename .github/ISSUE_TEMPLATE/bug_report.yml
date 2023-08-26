@@ -1,0 +1,50 @@
+name: Bug report
+description: Create a report to help us improve
+labels: ["bug", "needs triage"]
+body:
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: A recipe for reproducing the error. If possible, provide a link to a repository containing an executable repro scenario.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to see.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Actual behavior
+      description: A clear and concise description of what you saw instead.
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Javaagent or library instrumentation version
+      description: (e.g., `v0.9.0`, `393e4a2`, etc)
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Environment
+      description: |
+        Runtime environment information, including the runtime JDK distribution, OS, used library versions, javaagent configuration, etc.
+        Example:
+        > JDK: Temurin 17.0.7
+        > OS: Ubuntu 20.04
+        > Spring Boot 2.7.15, Hibernate 5.0.0, ...
+      value: |
+        **JDK**:
+        **OS**:
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.

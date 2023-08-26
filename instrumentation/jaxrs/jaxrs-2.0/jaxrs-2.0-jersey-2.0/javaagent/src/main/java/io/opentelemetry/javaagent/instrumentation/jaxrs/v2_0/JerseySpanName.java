@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsPathUtil.normalizePath;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.annotation.Nullable;
@@ -19,13 +19,13 @@ import javax.ws.rs.core.UriInfo;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 
-public class JerseySpanName implements HttpRouteGetter<Request> {
+public class JerseySpanName implements HttpServerRouteGetter<Request> {
 
   public static final JerseySpanName INSTANCE = new JerseySpanName();
 
   public void updateServerSpanName(Request request) {
     Context context = Context.current();
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.NESTED_CONTROLLER, this, request);
+    HttpServerRoute.update(context, HttpServerRouteSource.NESTED_CONTROLLER, this, request);
   }
 
   @Override

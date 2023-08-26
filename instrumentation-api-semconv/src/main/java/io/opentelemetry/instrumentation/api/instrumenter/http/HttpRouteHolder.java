@@ -5,13 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
 /**
@@ -22,7 +18,11 @@ import javax.annotation.Nullable;
  * later, after the instrumented operation starts. This class provides several static methods that
  * allow the instrumentation author to provide the matching HTTP route to the instrumentation when
  * it is discovered.
+ *
+ * @deprecated This class is deprecated and will be removed in the 2.0 release. Use {@link
+ *     HttpServerRoute} instead.
  */
+@Deprecated
 public final class HttpRouteHolder {
 
   /**
@@ -31,13 +31,7 @@ public final class HttpRouteHolder {
    */
   public static <REQUEST> ContextCustomizer<REQUEST> create(
       HttpServerAttributesGetter<REQUEST, ?> getter) {
-    return (context, request, startAttributes) -> {
-      if (HttpRouteState.fromContextOrNull(context) != null) {
-        return context;
-      }
-      String method = getter.getHttpRequestMethod(request);
-      return context.with(HttpRouteState.create(method, null, 0));
-    };
+    return HttpServerRoute.create(getter);
   }
 
   private HttpRouteHolder() {}
@@ -57,7 +51,7 @@ public final class HttpRouteHolder {
    */
   public static void updateHttpRoute(
       Context context, HttpRouteSource source, @Nullable String httpRoute) {
-    updateHttpRoute(context, source, ConstantAdapter.INSTANCE, httpRoute);
+    HttpServerRoute.update(context, source.toHttpServerRouteSource(), httpRoute);
   }
 
   /**
@@ -75,7 +69,7 @@ public final class HttpRouteHolder {
    */
   public static <T> void updateHttpRoute(
       Context context, HttpRouteSource source, HttpRouteGetter<T> httpRouteGetter, T arg1) {
-    updateHttpRoute(context, source, OneArgAdapter.getInstance(), arg1, httpRouteGetter);
+    HttpServerRoute.update(context, source.toHttpServerRouteSource(), httpRouteGetter, arg1);
   }
 
   /**
@@ -97,92 +91,6 @@ public final class HttpRouteHolder {
       HttpRouteBiGetter<T, U> httpRouteGetter,
       T arg1,
       U arg2) {
-    Span serverSpan = LocalRootSpan.fromContextOrNull(context);
-    // even if the server span is not sampled, we have to continue - we need to compute the
-    // http.route properly so that it can be captured by the server metrics
-    if (serverSpan == null) {
-      return;
-    }
-    HttpRouteState httpRouteState = HttpRouteState.fromContextOrNull(context);
-    if (httpRouteState == null) {
-      // TODO: remove this branch?
-      String httpRoute = httpRouteGetter.get(context, arg1, arg2);
-      if (httpRoute != null && !httpRoute.isEmpty()) {
-        // update just the attribute - without http.method we can't compute a proper span name here
-        serverSpan.setAttribute(SemanticAttributes.HTTP_ROUTE, httpRoute);
-      }
-      return;
-    }
-    // special case for servlet filters, even when we have a route from previous filter see whether
-    // the new route is better and if so use it instead
-    boolean onlyIfBetterRoute =
-        !source.useFirst && source.order == httpRouteState.getUpdatedBySourceOrder();
-    if (source.order > httpRouteState.getUpdatedBySourceOrder() || onlyIfBetterRoute) {
-      String route = httpRouteGetter.get(context, arg1, arg2);
-      if (route != null
-          && !route.isEmpty()
-          && (!onlyIfBetterRoute || isBetterRoute(httpRouteState, route))) {
-
-        // update just the span name - the attribute will be picked up by the
-        // HttpServerAttributesExtractor at the end of request processing
-        updateSpanName(serverSpan, httpRouteState, route);
-
-        httpRouteState.update(context, source.order, route);
-      }
-    }
-  }
-
-  // This is used when setting route from a servlet filter to pick the most descriptive (longest)
-  // route.
-  private static boolean isBetterRoute(HttpRouteState httpRouteState, String name) {
-    String route = httpRouteState.getRoute();
-    int routeLength = route == null ? 0 : route.length();
-    return name.length() > routeLength;
-  }
-
-  private static void updateSpanName(Span serverSpan, HttpRouteState httpRouteState, String route) {
-    String method = httpRouteState.getMethod();
-    // method should never really be null - but in case it for some reason is, we'll rely on the
-    // span name extractor behavior
-    if (method != null) {
-      serverSpan.updateName(method + " " + route);
-    }
-  }
-
-  /**
-   * Returns the {@code http.route} attribute value that's stored in the {@code context}, or null if
-   * it was not set before.
-   */
-  @Nullable
-  static String getRoute(Context context) {
-    HttpRouteState httpRouteState = HttpRouteState.fromContextOrNull(context);
-    return httpRouteState == null ? null : httpRouteState.getRoute();
-  }
-
-  private static final class OneArgAdapter<T> implements HttpRouteBiGetter<T, HttpRouteGetter<T>> {
-
-    private static final OneArgAdapter<Object> INSTANCE = new OneArgAdapter<>();
-
-    @SuppressWarnings("unchecked")
-    static <T> OneArgAdapter<T> getInstance() {
-      return (OneArgAdapter<T>) INSTANCE;
-    }
-
-    @Override
-    @Nullable
-    public String get(Context context, T arg, HttpRouteGetter<T> httpRouteGetter) {
-      return httpRouteGetter.get(context, arg);
-    }
-  }
-
-  private static final class ConstantAdapter implements HttpRouteGetter<String> {
-
-    private static final ConstantAdapter INSTANCE = new ConstantAdapter();
-
-    @Nullable
-    @Override
-    public String get(Context context, String route) {
-      return route;
-    }
+    HttpServerRoute.update(context, source.toHttpServerRouteSource(), httpRouteGetter, arg1, arg2);
   }
 }

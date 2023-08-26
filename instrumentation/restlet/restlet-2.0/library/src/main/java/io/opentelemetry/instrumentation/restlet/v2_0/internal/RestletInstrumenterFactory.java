@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.restlet.v2_0.internal;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.List;
@@ -37,7 +37,7 @@ public final class RestletInstrumenterFactory {
         .addAttributesExtractor(httpServerAttributesExtractor)
         .addAttributesExtractors(additionalExtractors)
         .addOperationMetrics(HttpServerMetrics.get())
-        .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
+        .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
         .buildServerInstrumenter(new RestletHeadersGetter());
   }
 

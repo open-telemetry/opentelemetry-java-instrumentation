@@ -11,10 +11,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.ClientInstrumenterFactory;
@@ -197,7 +197,7 @@ public final class SpringWebfluxTelemetryBuilder {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesGetter))
             .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
             .addAttributesExtractors(serverAdditionalExtractors)
-            .addContextCustomizer(HttpRouteHolder.create(serverAttributesGetter))
+            .addContextCustomizer(HttpServerRoute.create(serverAttributesGetter))
             .addOperationMetrics(HttpServerMetrics.get())
             .buildServerInstrumenter(WebfluxTextMapGetter.INSTANCE);
 

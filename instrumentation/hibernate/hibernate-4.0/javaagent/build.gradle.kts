@@ -42,9 +42,6 @@ testing {
     val version5Test by registering(JvmTestSuite::class) {
       dependencies {
         sources {
-          groovy {
-            setSrcDirs(listOf("src/test/groovy"))
-          }
           java {
             setSrcDirs(listOf("src/test/java"))
           }

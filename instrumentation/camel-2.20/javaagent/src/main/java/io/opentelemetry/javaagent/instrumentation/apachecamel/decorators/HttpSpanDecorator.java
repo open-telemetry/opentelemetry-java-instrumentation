@@ -25,8 +25,8 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.MalformedURLException;
@@ -122,9 +122,9 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     if (!shouldAppendHttpRoute(camelDirection)) {
       return;
     }
-    HttpRouteHolder.updateHttpRoute(
+    HttpServerRoute.update(
         context,
-        HttpRouteSource.CONTROLLER,
+        HttpServerRouteSource.CONTROLLER,
         (c, exchange, endpoint) -> getPath(exchange, endpoint),
         camelExchange,
         camelEndpoint);

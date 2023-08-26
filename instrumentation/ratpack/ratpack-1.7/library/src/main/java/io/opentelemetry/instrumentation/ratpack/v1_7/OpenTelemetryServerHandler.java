@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.ratpack.v1_7;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource.CONTROLLER;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import ratpack.error.ServerErrorHandler;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
@@ -39,7 +39,7 @@ public final class OpenTelemetryServerHandler implements Handler {
     context.onClose(
         outcome -> {
           // Route not available in beginning of request so handle it manually here.
-          HttpRouteHolder.updateHttpRoute(
+          HttpServerRoute.update(
               otelCtx, CONTROLLER, OpenTelemetryServerHandler::getRoute, context);
 
           Throwable error =

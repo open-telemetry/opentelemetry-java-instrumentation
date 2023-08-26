@@ -18,8 +18,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
@@ -105,9 +105,9 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
       Context parentContext = Java8BytecodeBridge.currentContext();
       handlerData = new Jaxrs2HandlerData(target.getClass(), method);
 
-      HttpRouteHolder.updateHttpRoute(
+      HttpServerRoute.update(
           parentContext,
-          HttpRouteSource.CONTROLLER,
+          HttpServerRouteSource.CONTROLLER,
           JaxrsServerSpanNaming.SERVER_SPAN_NAME,
           handlerData);
 

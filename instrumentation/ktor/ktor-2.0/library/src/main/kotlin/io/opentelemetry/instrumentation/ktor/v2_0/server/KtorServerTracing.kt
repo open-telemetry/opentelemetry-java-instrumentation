@@ -18,10 +18,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
@@ -121,7 +121,7 @@ class KtorServerTracing private constructor(
         setSpanStatusExtractor(configuration.statusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter)))
         addAttributesExtractor(configuration.httpAttributesExtractorBuilder.build())
         addOperationMetrics(HttpServerMetrics.get())
-        addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
+        addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
       }
 
       val instrumenter = InstrumenterUtil.buildUpstreamInstrumenter(
@@ -173,7 +173,7 @@ class KtorServerTracing private constructor(
       }
 
       pipeline.environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
-        HttpRouteHolder.updateHttpRoute(Context.current(), HttpRouteSource.SERVLET, { _, arg -> arg.route.parent.toString() }, call)
+        HttpServerRoute.update(Context.current(), HttpServerRouteSource.SERVER, { _, arg -> arg.route.parent.toString() }, call)
       }
 
       return feature
