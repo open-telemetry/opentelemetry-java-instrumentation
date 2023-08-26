@@ -39,7 +39,7 @@ final class TracingFilter extends Filter {
       scope = context.makeCurrent();
     }
 
-    HttpServerRoute.update(context, CONTROLLER, (ctx, s) -> s, path);
+    HttpServerRoute.update(context, CONTROLLER, path);
 
     Throwable statusThrowable = null;
     try {
