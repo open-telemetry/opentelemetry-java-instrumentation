@@ -6,23 +6,20 @@
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBiGetter;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.annotation.Nullable;
 
 /** Helper class for constructing span name for given servlet/filter mapping and request. */
-public class ServletSpanNameProvider<REQUEST>
-    implements HttpServerRouteBiGetter<MappingResolver, REQUEST> {
+public class ServletSpanNameProvider<REQUEST> {
   private final ServletAccessor<REQUEST, ?> servletAccessor;
 
   public ServletSpanNameProvider(ServletAccessor<REQUEST, ?> servletAccessor) {
     this.servletAccessor = servletAccessor;
   }
 
-  @Override
   @Nullable
-  public String get(Context context, MappingResolver mappingResolver, REQUEST request) {
+  public String get(Context context, REQUEST request, MappingResolver mappingResolver) {
     String servletPath = servletAccessor.getRequestServletPath(request);
     String pathInfo = servletAccessor.getRequestPathInfo(request);
     String mapping = mappingResolver.resolve(servletPath, pathInfo);

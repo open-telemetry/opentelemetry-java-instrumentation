@@ -8,7 +8,12 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 
-/** An interface for getting the {@code http.route} attribute. */
+/**
+ * An interface for getting the {@code http.route} attribute.
+ *
+ * @deprecated Use {@link HttpServerRouteGetter} with capturing lambda instead.
+ */
+@Deprecated
 @FunctionalInterface
 public interface HttpServerRouteBiGetter<T, U> {
 
