@@ -37,7 +37,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   List<String> capturedRequestHeaders = emptyList();
   List<String> capturedResponseHeaders = emptyList();
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
-  Function<Context, String> httpRouteGetter = HttpRouteHolder::getRoute;
+  Function<Context, String> httpRouteGetter = HttpServerRoute::get;
 
   HttpServerAttributesExtractorBuilder(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,

@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.vertx;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 import java.lang.reflect.InvocationTargetException;
@@ -29,8 +29,11 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
   @Override
   public void handle(RoutingContext context) {
     Context otelContext = Context.current();
-    HttpRouteHolder.updateHttpRoute(
-        otelContext, HttpRouteSource.CONTROLLER, RoutingContextHandlerWrapper::getRoute, context);
+    HttpServerRoute.update(
+        otelContext,
+        HttpServerRouteSource.CONTROLLER,
+        RoutingContextHandlerWrapper::getRoute,
+        context);
 
     try {
       handler.handle(context);

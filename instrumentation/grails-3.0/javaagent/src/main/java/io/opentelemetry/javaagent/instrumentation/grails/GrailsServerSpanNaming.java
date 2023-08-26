@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.grails;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import org.grails.web.mapping.mvc.GrailsControllerUrlMappingInfo;
 
 public class GrailsServerSpanNaming {
 
-  public static final HttpRouteGetter<GrailsControllerUrlMappingInfo> SERVER_SPAN_NAME =
+  public static final HttpServerRouteGetter<GrailsControllerUrlMappingInfo> SERVER_SPAN_NAME =
       (context, info) -> {
         String action =
             info.getActionName() != null

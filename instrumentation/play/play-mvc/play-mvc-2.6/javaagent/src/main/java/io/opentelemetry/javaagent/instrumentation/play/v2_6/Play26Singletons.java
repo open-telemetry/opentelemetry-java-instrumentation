@@ -9,8 +9,8 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
@@ -60,7 +60,7 @@ public final class Play26Singletons {
     }
 
     Span.fromContext(context).updateName(route);
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.CONTROLLER, route);
+    HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, route);
   }
 
   private static String getRoute(Request<?> request) {

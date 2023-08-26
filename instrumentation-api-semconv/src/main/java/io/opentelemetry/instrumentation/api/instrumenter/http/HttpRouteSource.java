@@ -5,7 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-/** Represents the source that provided the {@code http.route} attribute. */
+/**
+ * Represents the source that provided the {@code http.route} attribute.
+ *
+ * @deprecated This class is deprecated and will be removed in the 2.0 release. Use {@link
+ *     HttpServerRouteSource} instead.
+ */
+@Deprecated
 public enum HttpRouteSource {
   // for servlet filters we try to find the best name which isn't necessarily from the first
   // filter that is called
@@ -26,5 +32,19 @@ public enum HttpRouteSource {
   HttpRouteSource(int order, boolean useFirst) {
     this.order = order;
     this.useFirst = useFirst;
+  }
+
+  HttpServerRouteSource toHttpServerRouteSource() {
+    switch (this) {
+      case FILTER:
+        return HttpServerRouteSource.SERVER_FILTER;
+      case SERVLET:
+        return HttpServerRouteSource.SERVER;
+      case CONTROLLER:
+        return HttpServerRouteSource.CONTROLLER;
+      case NESTED_CONTROLLER:
+        return HttpServerRouteSource.NESTED_CONTROLLER;
+    }
+    throw new IllegalStateException("Unsupported value " + this);
   }
 }

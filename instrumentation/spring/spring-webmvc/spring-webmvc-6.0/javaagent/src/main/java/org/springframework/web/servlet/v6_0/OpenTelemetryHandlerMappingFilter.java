@@ -5,11 +5,11 @@
 
 package org.springframework.web.servlet.v6_0;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource.CONTROLLER;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.SpringWebMvcServerSpanNaming;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -33,7 +33,7 @@ import org.springframework.web.util.ServletRequestPathUtils;
 
 public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
 
-  private final HttpRouteGetter<HttpServletRequest> serverSpanName =
+  private final HttpServerRouteGetter<HttpServletRequest> serverSpanName =
       (context, request) -> {
         RequestPath previousValue = null;
         if (this.parseRequestPath) {
@@ -77,8 +77,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     } finally {
       if (handlerMappings != null) {
         Context context = Context.current();
-        HttpRouteHolder.updateHttpRoute(
-            context, CONTROLLER, serverSpanName, (HttpServletRequest) request);
+        HttpServerRoute.update(context, CONTROLLER, serverSpanName, (HttpServletRequest) request);
       }
     }
   }

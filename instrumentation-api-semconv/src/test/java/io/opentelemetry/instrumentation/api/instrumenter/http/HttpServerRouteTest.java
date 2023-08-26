@@ -22,7 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class HttpRouteHolderTest {
+class HttpServerRouteTest {
 
   @RegisterExtension static final OpenTelemetryExtension testing = OpenTelemetryExtension.create();
 
@@ -33,7 +33,7 @@ class HttpRouteHolderTest {
   void setUp() {
     instrumenter =
         Instrumenter.<String, Void>builder(testing.getOpenTelemetry(), "test", s -> s)
-            .addContextCustomizer(HttpRouteHolder.create(getter))
+            .addContextCustomizer(HttpServerRoute.create(getter))
             .buildInstrumenter();
   }
 
@@ -44,13 +44,13 @@ class HttpRouteHolderTest {
     parentSpan.end();
 
     Context context = instrumenter.start(Context.root().with(parentSpan), "test");
-    assertNull(HttpRouteHolder.getRoute(context));
+    assertNull(HttpServerRoute.get(context));
 
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.SERVLET, "/get/:id");
+    HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/get/:id");
 
     instrumenter.end(context, "test", null, null);
 
-    assertNull(HttpRouteHolder.getRoute(context));
+    assertNull(HttpServerRoute.get(context));
     assertThat(testing.getSpans())
         .satisfiesExactly(
             span -> assertThat(span).hasName("parent"), span -> assertThat(span).hasName("test"));
@@ -61,13 +61,13 @@ class HttpRouteHolderTest {
     when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpRouteHolder.getRoute(context));
+    assertNull(HttpServerRoute.get(context));
 
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.SERVLET, "/get/:id");
+    HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/get/:id");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/get/:id", HttpRouteHolder.getRoute(context));
+    assertEquals("/get/:id", HttpServerRoute.get(context));
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("GET /get/:id"));
   }
@@ -77,14 +77,14 @@ class HttpRouteHolderTest {
     when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpRouteHolder.getRoute(context));
+    assertNull(HttpServerRoute.get(context));
 
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.SERVLET, "/route1");
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.SERVLET, "/route2");
+    HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/route1");
+    HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/route2");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/route1", HttpRouteHolder.getRoute(context));
+    assertEquals("/route1", HttpServerRoute.get(context));
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("GET /route1"));
   }
@@ -94,14 +94,14 @@ class HttpRouteHolderTest {
     when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpRouteHolder.getRoute(context));
+    assertNull(HttpServerRoute.get(context));
 
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.CONTROLLER, "/route1");
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.SERVLET, "/route2");
+    HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, "/route1");
+    HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/route2");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/route1", HttpRouteHolder.getRoute(context));
+    assertEquals("/route1", HttpServerRoute.get(context));
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("GET /route1"));
   }
@@ -111,14 +111,14 @@ class HttpRouteHolderTest {
     when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpRouteHolder.getRoute(context));
+    assertNull(HttpServerRoute.get(context));
 
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.SERVLET, "/route1");
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.CONTROLLER, "/route2");
+    HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/route1");
+    HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, "/route2");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/route2", HttpRouteHolder.getRoute(context));
+    assertEquals("/route2", HttpServerRoute.get(context));
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("GET /route2"));
   }
@@ -128,14 +128,14 @@ class HttpRouteHolderTest {
     when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpRouteHolder.getRoute(context));
+    assertNull(HttpServerRoute.get(context));
 
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.FILTER, "/a/route");
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.FILTER, "/a/much/better/route");
+    HttpServerRoute.update(context, HttpServerRouteSource.SERVER_FILTER, "/a/route");
+    HttpServerRoute.update(context, HttpServerRouteSource.SERVER_FILTER, "/a/much/better/route");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/a/much/better/route", HttpRouteHolder.getRoute(context));
+    assertEquals("/a/much/better/route", HttpServerRoute.get(context));
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("GET /a/much/better/route"));
   }
@@ -145,14 +145,14 @@ class HttpRouteHolderTest {
     when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpRouteHolder.getRoute(context));
+    assertNull(HttpServerRoute.get(context));
 
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.FILTER, "/a/pretty/good/route");
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.FILTER, "/a");
+    HttpServerRoute.update(context, HttpServerRouteSource.SERVER_FILTER, "/a/pretty/good/route");
+    HttpServerRoute.update(context, HttpServerRouteSource.SERVER_FILTER, "/a");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/a/pretty/good/route", HttpRouteHolder.getRoute(context));
+    assertEquals("/a/pretty/good/route", HttpServerRoute.get(context));
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("GET /a/pretty/good/route"));
   }
@@ -162,13 +162,13 @@ class HttpRouteHolderTest {
     when(getter.getHttpRequestMethod("test")).thenReturn(null);
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpRouteHolder.getRoute(context));
+    assertNull(HttpServerRoute.get(context));
 
-    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.SERVLET, "/get/:id");
+    HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/get/:id");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/get/:id", HttpRouteHolder.getRoute(context));
+    assertEquals("/get/:id", HttpServerRoute.get(context));
     assertThat(testing.getSpans()).satisfiesExactly(span -> assertThat(span).hasName("test"));
   }
 }

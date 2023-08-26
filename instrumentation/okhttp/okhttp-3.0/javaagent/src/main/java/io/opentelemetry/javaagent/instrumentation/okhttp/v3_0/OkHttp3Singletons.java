@@ -11,7 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientResend;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientResendCount;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.ConnectionErrorSpanInterceptor;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpAttributesGetter;
@@ -40,7 +40,7 @@ public final class OkHttp3Singletons {
 
   public static final Interceptor CONTEXT_INTERCEPTOR =
       chain -> {
-        try (Scope ignored = HttpClientResend.initialize(Context.current()).makeCurrent()) {
+        try (Scope ignored = HttpClientResendCount.initialize(Context.current()).makeCurrent()) {
           return chain.proceed(chain.request());
         }
       };

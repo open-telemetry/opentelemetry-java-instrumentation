@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.quarkus.resteasy.reactive;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsPathUtil.normalizePath;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 import org.jboss.resteasy.reactive.server.mapping.RuntimeResource;
@@ -22,10 +22,10 @@ final class ResteasyReactiveSpanName {
 
   public static final ResteasyReactiveSpanName INSTANCE = new ResteasyReactiveSpanName();
 
-  void updateServerSpanName(ResteasyReactiveRequestContext requestContext, HttpRouteSource source) {
+  void updateServerSpanName(ResteasyReactiveRequestContext requestContext) {
     Context context = Context.current();
     String jaxRsName = calculateJaxRsName(requestContext);
-    HttpRouteHolder.updateHttpRoute(context, source, jaxRsName);
+    HttpServerRoute.update(context, HttpServerRouteSource.NESTED_CONTROLLER, jaxRsName);
     pathField.set(requestContext, jaxRsName);
   }
 
