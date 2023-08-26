@@ -41,16 +41,19 @@ class ExpandFramesClassVisitor extends ClassVisitor {
   public MethodVisitor visitMethod(
       int access, String name, String descriptor, String signature, String[] exceptions) {
     MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-    return new ExpandFramesMethodVisitor(mv, className, access, descriptor);
+    return new ExpandFramesMethodVisitor(mv, className, name, access, descriptor);
   }
 
   private static class ExpandFramesMethodVisitor extends MethodVisitor {
     final List<Object> currentLocals = new ArrayList<>();
     final List<Object> currentStack = new ArrayList<>();
 
-    ExpandFramesMethodVisitor(MethodVisitor mv, String className, int access, String descriptor) {
+    ExpandFramesMethodVisitor(
+        MethodVisitor mv, String className, String methodName, int access, String descriptor) {
       super(Opcodes.ASM9, mv);
-      if (!Modifier.isStatic(access)) {
+      if ("<init>".equals(methodName)) {
+        currentLocals.add(Opcodes.UNINITIALIZED_THIS);
+      } else if (!Modifier.isStatic(access)) {
         currentLocals.add(className);
       }
       for (Type type : Type.getArgumentTypes(descriptor)) {
