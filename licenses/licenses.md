@@ -1,7 +1,7 @@
 
 # javaagent
 ## Dependency License Report
-_2023-08-14 14:12:07 PDT_
+_2023-08-27 19:10:53 EEST_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -226,7 +226,7 @@ _2023-08-14 14:12:07 PDT_
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**48** **Group:** `org.snakeyaml` **Name:** `snakeyaml-engine` **Version:** `2.6`
+**48** **Group:** `org.snakeyaml` **Name:** `snakeyaml-engine` **Version:** `2.7`
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM Project URL**: [https://bitbucket.org/snakeyaml/snakeyaml-engine](https://bitbucket.org/snakeyaml/snakeyaml-engine)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
