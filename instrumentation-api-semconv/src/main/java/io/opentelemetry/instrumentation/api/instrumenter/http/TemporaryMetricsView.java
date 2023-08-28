@@ -21,89 +21,74 @@ import java.util.function.BiConsumer;
 @SuppressWarnings("rawtypes")
 final class TemporaryMetricsView {
 
-  private static final Set<AttributeKey> stableDurationAlwaysInclude =
-      buildStableDurationAlwaysInclude();
   private static final Set<AttributeKey> stableDurationClientView = buildStableDurationClientView();
   private static final Set<AttributeKey> stableDurationServerView = buildStableDurationServerView();
 
-  private static final Set<AttributeKey> oldDurationAlwaysInclude = buildOldDurationAlwaysInclude();
   private static final Set<AttributeKey> oldDurationClientView = buildOldDurationClientView();
   private static final Set<AttributeKey> oldDurationServerView = buildOldDurationServerView();
 
   private static final Set<AttributeKey> activeRequestsView = buildActiveRequestsView();
 
-  private static Set<AttributeKey> buildStableDurationAlwaysInclude() {
-    // the list of included metrics is from
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attributes
+  private static Set<AttributeKey> buildStableDurationClientView() {
+    // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpclientrequestduration
     Set<AttributeKey> view = new HashSet<>();
-    // stable semconv
     view.add(HttpAttributes.HTTP_REQUEST_METHOD);
     view.add(HttpAttributes.HTTP_RESPONSE_STATUS_CODE);
     view.add(NetworkAttributes.NETWORK_PROTOCOL_NAME);
     view.add(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
-    return view;
-  }
-
-  private static Set<AttributeKey> buildOldDurationAlwaysInclude() {
-    // the list of included metrics is from
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attributes
-    Set<AttributeKey> view = new HashSet<>();
-    view.add(SemanticAttributes.HTTP_METHOD);
-    view.add(SemanticAttributes.HTTP_STATUS_CODE); // Optional
-    view.add(SemanticAttributes.NET_PROTOCOL_NAME); // Optional
-    view.add(SemanticAttributes.NET_PROTOCOL_VERSION); // Optional
-    return view;
-  }
-
-  private static Set<AttributeKey> buildStableDurationClientView() {
-    // We pull identifying attributes according to:
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attribute-alternatives
-    Set<AttributeKey> view = new HashSet<>(stableDurationAlwaysInclude);
-    view.add(NetworkAttributes.SERVER_SOCKET_ADDRESS);
     view.add(NetworkAttributes.SERVER_ADDRESS);
     view.add(NetworkAttributes.SERVER_PORT);
+    view.add(NetworkAttributes.SERVER_SOCKET_ADDRESS);
     return view;
   }
 
   private static Set<AttributeKey> buildOldDurationClientView() {
-    // We pull identifying attributes according to:
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attribute-alternatives
-    Set<AttributeKey> view = new HashSet<>(oldDurationAlwaysInclude);
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/metrics/semantic_conventions/http-metrics.md#metric-httpclientduration
+    Set<AttributeKey> view = new HashSet<>();
+    view.add(SemanticAttributes.HTTP_METHOD);
+    view.add(SemanticAttributes.HTTP_STATUS_CODE);
     view.add(SemanticAttributes.NET_PEER_NAME);
     view.add(SemanticAttributes.NET_PEER_PORT);
+    view.add(SemanticAttributes.NET_PROTOCOL_NAME);
+    view.add(SemanticAttributes.NET_PROTOCOL_VERSION);
     view.add(SemanticAttributes.NET_SOCK_PEER_ADDR);
     return view;
   }
 
   private static Set<AttributeKey> buildStableDurationServerView() {
-    // We pull identifying attributes according to:
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attribute-alternatives
-    Set<AttributeKey> view = new HashSet<>(stableDurationAlwaysInclude);
-    view.add(UrlAttributes.URL_SCHEME);
+    // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserverrequestduration
+    Set<AttributeKey> view = new HashSet<>();
     view.add(SemanticAttributes.HTTP_ROUTE);
+    view.add(HttpAttributes.HTTP_REQUEST_METHOD);
+    view.add(HttpAttributes.HTTP_RESPONSE_STATUS_CODE);
+    view.add(NetworkAttributes.NETWORK_PROTOCOL_NAME);
+    view.add(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
+    view.add(UrlAttributes.URL_SCHEME);
     return view;
   }
 
   private static Set<AttributeKey> buildOldDurationServerView() {
-    // We pull identifying attributes according to:
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attribute-alternatives
-    Set<AttributeKey> view = new HashSet<>(oldDurationAlwaysInclude);
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/metrics/semantic_conventions/http-metrics.md#metric-httpserverduration
+    Set<AttributeKey> view = new HashSet<>();
     view.add(SemanticAttributes.HTTP_SCHEME);
+    view.add(SemanticAttributes.HTTP_ROUTE);
+    view.add(SemanticAttributes.HTTP_METHOD);
+    view.add(SemanticAttributes.HTTP_STATUS_CODE);
     view.add(SemanticAttributes.NET_HOST_NAME);
     view.add(SemanticAttributes.NET_HOST_PORT);
-    view.add(SemanticAttributes.HTTP_ROUTE);
+    view.add(SemanticAttributes.NET_PROTOCOL_NAME);
+    view.add(SemanticAttributes.NET_PROTOCOL_VERSION);
     return view;
   }
 
   private static Set<AttributeKey> buildActiveRequestsView() {
-    // the list of included metrics is from
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attributes
     Set<AttributeKey> view = new HashSet<>();
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/metrics/semantic_conventions/http-metrics.md#metric-httpserveractive_requests
     view.add(SemanticAttributes.HTTP_METHOD);
     view.add(SemanticAttributes.HTTP_SCHEME);
     view.add(SemanticAttributes.NET_HOST_NAME);
     view.add(SemanticAttributes.NET_HOST_PORT);
-    // stable semconv
+    // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserveractive_requests
     view.add(HttpAttributes.HTTP_REQUEST_METHOD);
     view.add(UrlAttributes.URL_SCHEME);
     return view;
