@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
-public abstract class SqsMessageHandler extends MessageHandler<SQSEvent.SQSMessage> {
+public abstract class SqsMessageHandler implements MessageHandler<SQSEvent.SQSMessage> {
   private static final String AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY = "AWSTraceHeader";
   static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 
@@ -48,7 +48,7 @@ public abstract class SqsMessageHandler extends MessageHandler<SQSEvent.SQSMessa
   }
 
   @Override
-  protected Instrumenter<Collection<SQSEvent.SQSMessage>, Void> getMessageInstrumenter() {
+  public Instrumenter<Collection<SQSEvent.SQSMessage>, Void> getMessageInstrumenter() {
     return Instrumenter.<Collection<SQSEvent.SQSMessage>, Void>builder(
             openTelemetry, "io.opentelemetry.aws-lambda-events-2.2", spanNameExtractor)
         .addAttributesExtractor(getMessageOperationAttributeExtractor())

@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-  compileOnly("io.opentelemetry:opentelemetry-sdk")
+  implementation("io.opentelemetry:opentelemetry-sdk")
 }

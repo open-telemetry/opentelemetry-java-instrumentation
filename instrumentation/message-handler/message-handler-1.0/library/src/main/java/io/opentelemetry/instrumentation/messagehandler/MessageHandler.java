@@ -10,13 +10,13 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Collection;
 
-public abstract class MessageHandler<INPUT> {
+public interface MessageHandler<INPUT> {
 
-  protected abstract Instrumenter<Collection<INPUT>, Void> getMessageInstrumenter();
+  Instrumenter<Collection<INPUT>, Void> getMessageInstrumenter();
 
-  protected abstract void doHandle(Collection<INPUT> request);
+  void doHandle(Collection<INPUT> request);
 
-  public void handle(Collection<INPUT> request) {
+  default void handle(Collection<INPUT> request) {
     Instrumenter<Collection<INPUT>, Void> instrumenter = getMessageInstrumenter();
     Throwable error = null;
 

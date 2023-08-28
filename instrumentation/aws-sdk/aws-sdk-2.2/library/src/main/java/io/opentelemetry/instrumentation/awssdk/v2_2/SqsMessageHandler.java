@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-public abstract class SqsMessageHandler extends MessageHandler<Message> {
+public abstract class SqsMessageHandler implements MessageHandler<Message> {
   private final OpenTelemetry openTelemetry;
   private final String destination;
   private SpanKindExtractor<Collection<Message>> spanKindExtractor;
@@ -43,7 +43,7 @@ public abstract class SqsMessageHandler extends MessageHandler<Message> {
   }
 
   @Override
-  protected Instrumenter<Collection<Message>, Void> getMessageInstrumenter() {
+  public Instrumenter<Collection<Message>, Void> getMessageInstrumenter() {
     return Instrumenter.<Collection<Message>, Void>builder(
             openTelemetry, "io.opentelemetry.aws-sdk-2.2", spanNameExtractor)
         .addAttributesExtractor(getMessageOperationAttributeExtractor())

@@ -37,7 +37,7 @@ public class SqsMessageHandlerTest extends XrayTestInstrumenter {
     }
 
     @Override
-    protected void doHandle(Collection<Message> request) {
+    public void doHandle(Collection<Message> request) {
       handleCalls.getAndIncrement();
     }
   }
