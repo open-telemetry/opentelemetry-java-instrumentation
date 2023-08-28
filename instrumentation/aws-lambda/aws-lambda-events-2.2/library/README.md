@@ -132,3 +132,27 @@ In order to enable requested propagation for a handler, configure it on the SDK 
 ```
 
 If using the wrappers, set the `OTEL_PROPAGATORS` environment variable as described [here](https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#propagator).
+
+## Using SqsMessageHandler
+This instrumentation takes a collection of SQS messages.
+A span wraps the function call doHandle with appropriate span attributes and span links.
+Span links are added for each of the messages as if this were a batch of messages.
+
+1. Setup SqsMessageHandler with your business logic. Pass in your OpenTelemetry and the name of the destination.
+2. Call the "handle" method on SqsMessageHandler and pass in your collection of messages.
+3. Under the hood it will call the "doHandle" method.
+
+```java
+OpenTelemetry openTelemetry;
+Collection<SQSEvent.SQSMessage> messages;
+
+SqsMessageHandler messageHandler =
+  new SqsMessageHandler(openTelemetry, "destination") {
+    @Override
+    protected void doHandle(Collection<SQSEvent.SQSMessage> messages) {
+        // My business logic
+    }
+};
+
+messageHandler.handle(messages);
+```

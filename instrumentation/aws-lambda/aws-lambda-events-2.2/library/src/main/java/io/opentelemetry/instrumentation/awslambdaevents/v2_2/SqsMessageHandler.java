@@ -73,7 +73,6 @@ public abstract class SqsMessageHandler extends MessageHandler<SQSEvent.SQSMessa
 
       @Nullable
       @Override
-      @SuppressWarnings({"deprecation"}) // Inheriting from interface
       public String getDestinationKind(Collection<SQSEvent.SQSMessage> v) {
         return null;
       }
