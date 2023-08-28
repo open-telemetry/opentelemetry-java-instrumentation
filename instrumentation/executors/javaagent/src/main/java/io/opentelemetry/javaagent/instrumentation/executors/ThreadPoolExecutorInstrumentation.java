@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -44,7 +45,8 @@ public class ThreadPoolExecutorInstrumentation implements TypeInstrumentation {
       // We can not safely wrap the Runnable if work queue might depend on the actual implementation
       // type of the Runnable. Allow wrapping only when using a BlockingQueue implementation from
       // the jdk.
-      if (workQueue.getClass().getClassLoader() != null) {
+      if (workQueue.getClass().getClassLoader() != null
+          || workQueue instanceof PriorityBlockingQueue) {
         ExecutorAdviceHelper.disableDecorateRunnable(executor);
       }
     }
