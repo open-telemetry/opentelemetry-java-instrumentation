@@ -14,7 +14,6 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 final class HttpMetricsUtil {
 
@@ -28,9 +27,6 @@ final class HttpMetricsUtil {
               0.0, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5,
               10.0));
 
-  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
-  private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
-
   static DoubleHistogram createDurationHistogram(Meter meter, String name, String description) {
     DoubleHistogramBuilder durationBuilder =
         meter
@@ -43,10 +39,6 @@ final class HttpMetricsUtil {
           .setAdvice(advice -> advice.setExplicitBucketBoundaries(DURATION_SECONDS_BUCKETS));
     }
     return durationBuilder.build();
-  }
-
-  static double nanosToUnit(long durationNanos) {
-    return durationNanos / (emitNewSemconvMetrics ? NANOS_PER_S : NANOS_PER_MS);
   }
 
   private HttpMetricsUtil() {}

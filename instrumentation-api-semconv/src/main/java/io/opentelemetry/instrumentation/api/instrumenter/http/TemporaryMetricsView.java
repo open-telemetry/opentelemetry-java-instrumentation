@@ -21,19 +21,20 @@ import java.util.function.BiConsumer;
 @SuppressWarnings("rawtypes")
 final class TemporaryMetricsView {
 
-  private static final Set<AttributeKey> durationAlwaysInclude = buildDurationAlwaysInclude();
-  private static final Set<AttributeKey> durationClientView = buildDurationClientView();
-  private static final Set<AttributeKey> durationServerView = buildDurationServerView();
+  private static final Set<AttributeKey> stableDurationAlwaysInclude = buildStableDurationAlwaysInclude();
+  private static final Set<AttributeKey> stableDurationClientView = buildStableDurationClientView();
+  private static final Set<AttributeKey> stableDurationServerView = buildStableDurationServerView();
+
+  private static final Set<AttributeKey> oldDurationAlwaysInclude = buildOldDurationAlwaysInclude();
+  private static final Set<AttributeKey> oldDurationClientView = buildOldDurationClientView();
+  private static final Set<AttributeKey> oldDurationServerView = buildOldDurationServerView();
+
   private static final Set<AttributeKey> activeRequestsView = buildActiveRequestsView();
 
-  private static Set<AttributeKey> buildDurationAlwaysInclude() {
+  private static Set<AttributeKey> buildStableDurationAlwaysInclude() {
     // the list of included metrics is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attributes
     Set<AttributeKey> view = new HashSet<>();
-    view.add(SemanticAttributes.HTTP_METHOD);
-    view.add(SemanticAttributes.HTTP_STATUS_CODE); // Optional
-    view.add(SemanticAttributes.NET_PROTOCOL_NAME); // Optional
-    view.add(SemanticAttributes.NET_PROTOCOL_VERSION); // Optional
     // stable semconv
     view.add(HttpAttributes.HTTP_REQUEST_METHOD);
     view.add(HttpAttributes.HTTP_RESPONSE_STATUS_CODE);
@@ -42,34 +43,54 @@ final class TemporaryMetricsView {
     return view;
   }
 
-  private static Set<AttributeKey> buildDurationClientView() {
+  private static Set<AttributeKey> buildOldDurationAlwaysInclude() {
+    // the list of included metrics is from
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attributes
+    Set<AttributeKey> view = new HashSet<>();
+    view.add(SemanticAttributes.HTTP_METHOD);
+    view.add(SemanticAttributes.HTTP_STATUS_CODE); // Optional
+    view.add(SemanticAttributes.NET_PROTOCOL_NAME); // Optional
+    view.add(SemanticAttributes.NET_PROTOCOL_VERSION); // Optional
+    return view;
+  }
+
+  private static Set<AttributeKey> buildStableDurationClientView() {
     // We pull identifying attributes according to:
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attribute-alternatives
-    // We only pull net.peer.name and net.peer.port because http.url has too high cardinality
-    Set<AttributeKey> view = new HashSet<>(durationAlwaysInclude);
-    view.add(SemanticAttributes.NET_PEER_NAME);
-    view.add(SemanticAttributes.NET_PEER_PORT);
-    view.add(SemanticAttributes.NET_SOCK_PEER_ADDR);
-    // stable semconv
+    Set<AttributeKey> view = new HashSet<>(stableDurationAlwaysInclude);
     view.add(NetworkAttributes.SERVER_SOCKET_ADDRESS);
     view.add(NetworkAttributes.SERVER_ADDRESS);
     view.add(NetworkAttributes.SERVER_PORT);
     return view;
   }
 
-  private static Set<AttributeKey> buildDurationServerView() {
+  private static Set<AttributeKey> buildOldDurationClientView() {
     // We pull identifying attributes according to:
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attribute-alternatives
-    // With the following caveat:
-    // - we always rely on http.route + http.host in this repository.
-    // - we prefer http.route (which is scrubbed) over http.target (which is not scrubbed).
-    Set<AttributeKey> view = new HashSet<>(durationAlwaysInclude);
+    Set<AttributeKey> view = new HashSet<>(oldDurationAlwaysInclude);
+    view.add(SemanticAttributes.NET_PEER_NAME);
+    view.add(SemanticAttributes.NET_PEER_PORT);
+    view.add(SemanticAttributes.NET_SOCK_PEER_ADDR);
+    return view;
+  }
+
+  private static Set<AttributeKey> buildStableDurationServerView() {
+    // We pull identifying attributes according to:
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attribute-alternatives
+    Set<AttributeKey> view = new HashSet<>(stableDurationAlwaysInclude);
+    view.add(UrlAttributes.URL_SCHEME);
+    view.add(SemanticAttributes.HTTP_ROUTE);
+    return view;
+  }
+
+  private static Set<AttributeKey> buildOldDurationServerView() {
+    // We pull identifying attributes according to:
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attribute-alternatives
+    Set<AttributeKey> view = new HashSet<>(oldDurationAlwaysInclude);
     view.add(SemanticAttributes.HTTP_SCHEME);
     view.add(SemanticAttributes.NET_HOST_NAME);
     view.add(SemanticAttributes.NET_HOST_PORT);
     view.add(SemanticAttributes.HTTP_ROUTE);
-    // stable semconv
-    view.add(UrlAttributes.URL_SCHEME);
     return view;
   }
 
@@ -87,19 +108,55 @@ final class TemporaryMetricsView {
     return view;
   }
 
-  static Attributes applyClientDurationAndSizeView(
+  static Attributes applyStableClientDurationView(
       Attributes startAttributes, Attributes endAttributes) {
     AttributesBuilder filtered = Attributes.builder();
-    applyView(filtered, startAttributes, durationClientView);
-    applyView(filtered, endAttributes, durationClientView);
+    applyView(filtered, startAttributes, stableDurationClientView);
+    applyView(filtered, endAttributes, stableDurationClientView);
     return filtered.build();
   }
 
-  static Attributes applyServerDurationAndSizeView(
+  static Attributes applyOldClientDurationView(
       Attributes startAttributes, Attributes endAttributes) {
     AttributesBuilder filtered = Attributes.builder();
-    applyView(filtered, startAttributes, durationServerView);
-    applyView(filtered, endAttributes, durationServerView);
+    applyView(filtered, startAttributes, oldDurationClientView);
+    applyView(filtered, endAttributes, oldDurationClientView);
+    return filtered.build();
+  }
+
+  static Attributes applyStableServerDurationView(
+      Attributes startAttributes, Attributes endAttributes) {
+    AttributesBuilder filtered = Attributes.builder();
+    applyView(filtered, startAttributes, stableDurationServerView);
+    applyView(filtered, endAttributes, stableDurationServerView);
+    return filtered.build();
+  }
+
+  static Attributes applyOldServerDurationView(
+      Attributes startAttributes, Attributes endAttributes) {
+    AttributesBuilder filtered = Attributes.builder();
+    applyView(filtered, startAttributes, oldDurationServerView);
+    applyView(filtered, endAttributes, oldDurationServerView);
+    return filtered.build();
+  }
+
+  static Attributes applyServerRequestSizeView(
+      Attributes startAttributes, Attributes endAttributes) {
+    AttributesBuilder filtered = Attributes.builder();
+    applyView(filtered, startAttributes, stableDurationServerView);
+    applyView(filtered, startAttributes, oldDurationServerView);
+    applyView(filtered, endAttributes, stableDurationServerView);
+    applyView(filtered, endAttributes, oldDurationServerView);
+    return filtered.build();
+  }
+
+  static Attributes applyClientRequestSizeView(
+      Attributes startAttributes, Attributes endAttributes) {
+    AttributesBuilder filtered = Attributes.builder();
+    applyView(filtered, startAttributes, stableDurationClientView);
+    applyView(filtered, startAttributes, oldDurationClientView);
+    applyView(filtered, endAttributes, stableDurationClientView);
+    applyView(filtered, endAttributes, oldDurationClientView);
     return filtered.build();
   }
 
