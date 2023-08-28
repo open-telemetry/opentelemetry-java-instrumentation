@@ -12,14 +12,9 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.List;
 
 final class HttpMetricsUtil {
-
-  // we'll use the old unit if the old semconv is in use
-  static final boolean emitNewSemconvMetrics =
-      SemconvStability.emitStableHttpSemconv() && !SemconvStability.emitOldHttpSemconv();
 
   static final List<Double> DURATION_SECONDS_BUCKETS =
       unmodifiableList(
@@ -27,14 +22,14 @@ final class HttpMetricsUtil {
               0.0, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5,
               10.0));
 
-  static DoubleHistogram createDurationHistogram(Meter meter, String name, String description) {
+  static DoubleHistogram createStableDurationHistogram(Meter meter, String name, String description) {
     DoubleHistogramBuilder durationBuilder =
         meter
             .histogramBuilder(name)
-            .setUnit(emitNewSemconvMetrics ? "s" : "ms")
+            .setUnit("s")
             .setDescription(description);
     // don't set custom buckets if milliseconds are still used
-    if (emitNewSemconvMetrics && durationBuilder instanceof ExtendedDoubleHistogramBuilder) {
+    if (durationBuilder instanceof ExtendedDoubleHistogramBuilder) {
       ((ExtendedDoubleHistogramBuilder) durationBuilder)
           .setAdvice(advice -> advice.setExplicitBucketBoundaries(DURATION_SECONDS_BUCKETS));
     }

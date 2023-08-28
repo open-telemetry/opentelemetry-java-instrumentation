@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createDurationHistogram;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createStableDurationHistogram;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyOldClientDurationView;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyStableClientDurationView;
 import static java.util.logging.Level.FINE;
@@ -53,15 +53,18 @@ public final class HttpClientMetrics implements OperationListener {
   private HttpClientMetrics(Meter meter) {
     if (SemconvStability.emitStableHttpSemconv()) {
       stableDuration =
-          createDurationHistogram(
+          createStableDurationHistogram(
               meter, "http.client.request.duration", "The duration of the outbound HTTP request");
     } else {
       stableDuration = null;
     }
     if (SemconvStability.emitOldHttpSemconv()) {
       oldDuration =
-          createDurationHistogram(
-              meter, "http.client.duration", "The duration of the outbound HTTP request");
+          meter
+              .histogramBuilder("http.client.duration")
+              .setUnit("ms")
+              .setDescription("The duration of the outbound HTTP request")
+              .build();
     } else {
       oldDuration = null;
     }

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpRequestBodySize;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpResponseBodySize;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createDurationHistogram;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createStableDurationHistogram;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyOldServerDurationView;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerRequestSizeView;
@@ -68,15 +68,18 @@ public final class HttpServerMetrics implements OperationListener {
             .build();
     if (SemconvStability.emitStableHttpSemconv()) {
       stableDuration =
-          createDurationHistogram(
+          createStableDurationHistogram(
               meter, "http.server.request.duration", "The duration of the inbound HTTP request");
     } else {
       stableDuration = null;
     }
     if (SemconvStability.emitOldHttpSemconv()) {
       oldDuration =
-          createDurationHistogram(
-              meter, "http.server.duration", "The duration of the inbound HTTP request");
+          meter
+              .histogramBuilder("http.server.duration")
+              .setUnit("ms")
+              .setDescription("The duration of the inbound HTTP request")
+              .build();
     } else {
       oldDuration = null;
     }
