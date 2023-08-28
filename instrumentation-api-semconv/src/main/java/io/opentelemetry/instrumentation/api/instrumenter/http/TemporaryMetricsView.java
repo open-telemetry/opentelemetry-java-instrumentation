@@ -21,7 +21,8 @@ import java.util.function.BiConsumer;
 @SuppressWarnings("rawtypes")
 final class TemporaryMetricsView {
 
-  private static final Set<AttributeKey> stableDurationAlwaysInclude = buildStableDurationAlwaysInclude();
+  private static final Set<AttributeKey> stableDurationAlwaysInclude =
+      buildStableDurationAlwaysInclude();
   private static final Set<AttributeKey> stableDurationClientView = buildStableDurationClientView();
   private static final Set<AttributeKey> stableDurationServerView = buildStableDurationServerView();
 
