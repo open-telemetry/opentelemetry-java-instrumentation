@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Migration notes
+
+- Experimental HTTP server metrics ahve been split out from `HttpServerMetrics` into a separate
+  class `HttpServerExperimentalMetrics`
+  ([#9259](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9259))
+
 ## Version 1.29.0 (2023-08-17)
 
 ### Migration notes
