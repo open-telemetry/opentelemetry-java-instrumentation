@@ -149,7 +149,7 @@ Collection<SQSEvent.SQSMessage> messages;
 SqsMessageHandler messageHandler =
   new SqsMessageHandler(openTelemetry, "destination") {
     @Override
-    protected void doHandle(Collection<SQSEvent.SQSMessage> messages) {
+    public void doHandle(Collection<SQSEvent.SQSMessage> messages) {
         // My business logic
     }
 };
