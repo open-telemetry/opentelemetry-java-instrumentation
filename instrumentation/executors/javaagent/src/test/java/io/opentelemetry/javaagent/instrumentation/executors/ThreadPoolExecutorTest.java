@@ -50,7 +50,6 @@ class ThreadPoolExecutorTest {
 
     @Override
     protected void beforeExecute(Thread t, Runnable r) {
-      System.out.println(r.getClass().getName());
       sameTaskBefore.set(r == expectedTask);
     }
 
