@@ -22,12 +22,10 @@ final class HttpMetricsUtil {
               0.0, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5,
               10.0));
 
-  static DoubleHistogram createStableDurationHistogram(Meter meter, String name, String description) {
+  static DoubleHistogram createStableDurationHistogram(
+      Meter meter, String name, String description) {
     DoubleHistogramBuilder durationBuilder =
-        meter
-            .histogramBuilder(name)
-            .setUnit("s")
-            .setDescription(description);
+        meter.histogramBuilder(name).setUnit("s").setDescription(description);
     // don't set custom buckets if milliseconds are still used
     if (durationBuilder instanceof ExtendedDoubleHistogramBuilder) {
       ((ExtendedDoubleHistogramBuilder) durationBuilder)
