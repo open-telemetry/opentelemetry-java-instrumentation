@@ -18,7 +18,9 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.vertx.core.Vertx;
 import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -117,23 +119,28 @@ class HibernateReactiveTest {
 
   @Test
   void testStage() throws Exception {
-    testing
-        .runWithSpan(
-            "parent",
-            () ->
-                stageSessionFactory
-                    .withSession(
-                        session -> {
-                          if (!Span.current().getSpanContext().isValid()) {
-                            throw new IllegalStateException("missing parent span");
-                          }
+    CountDownLatch latch = new CountDownLatch(1);
+    testing.runWithSpan(
+        "parent",
+        () ->
+            Vertx.vertx()
+                .getOrCreateContext()
+                .runOnContext(
+                    event ->
+                        stageSessionFactory
+                            .withSession(
+                                session -> {
+                                  if (!Span.current().getSpanContext().isValid()) {
+                                    throw new IllegalStateException("missing parent span");
+                                  }
 
-                          return session
-                              .find(Value.class, 1L)
-                              .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
-                        })
-                    .toCompletableFuture())
-        .get(30, TimeUnit.SECONDS);
+                                  return session
+                                      .find(Value.class, 1L)
+                                      .thenAccept(
+                                          value -> testing.runWithSpan("callback", () -> {}));
+                                })
+                            .thenAccept(unused -> latch.countDown())));
+    latch.await(30, TimeUnit.SECONDS);
 
     assertTrace();
   }
