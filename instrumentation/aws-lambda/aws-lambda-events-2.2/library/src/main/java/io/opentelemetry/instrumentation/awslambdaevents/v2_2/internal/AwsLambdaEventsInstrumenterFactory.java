@@ -10,21 +10,16 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFunctionAttributesExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFunctionInstrumenter;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsXrayEnvCarrierEnricher;
-import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsXrayEnvSpanLinksExtractor;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public final class AwsLambdaEventsInstrumenterFactory {
-
-  private static final Boolean SHOULD_LINK_XRAY_SPANS =
-      ConfigPropertiesUtil.getBoolean("otel.instrumentation.aws-lambda.link-xray-traces", false);
 
   public static AwsLambdaFunctionInstrumenter createInstrumenter(OpenTelemetry openTelemetry) {
     InstrumenterBuilder<AwsLambdaRequest, Object> otelInstrumenterBuilder =
@@ -34,10 +29,6 @@ public final class AwsLambdaEventsInstrumenterFactory {
                 AwsLambdaEventsInstrumenterFactory::spanName)
             .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
             .addAttributesExtractor(new ApiGatewayProxyAttributesExtractor());
-
-    if (SHOULD_LINK_XRAY_SPANS) {
-      otelInstrumenterBuilder.addSpanLinksExtractor(new AwsXrayEnvSpanLinksExtractor());
-    }
 
     return new AwsLambdaFunctionInstrumenter(
         openTelemetry,

@@ -14,9 +14,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junitpioneer.jupiter.SetEnvironmentVariable;
 
-@SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_AWS_LAMBDA_LINK_XRAY_TRACES", value = "true")
 public class AwsLambdaTest extends AbstractAwsLambdaTest {
 
   @RegisterExtension

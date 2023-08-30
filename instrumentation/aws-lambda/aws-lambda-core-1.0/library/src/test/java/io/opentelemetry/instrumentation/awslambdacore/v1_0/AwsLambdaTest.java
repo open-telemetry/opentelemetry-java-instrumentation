@@ -34,7 +34,7 @@ public class AwsLambdaTest extends AbstractAwsLambdaTest {
       super(
           openTelemetrySdk,
           DEFAULT_FLUSH_TIMEOUT,
-          AwsLambdaFunctionInstrumenterFactory.createInstrumenter(openTelemetrySdk, true));
+          AwsLambdaFunctionInstrumenterFactory.createInstrumenter(openTelemetrySdk));
     }
 
     @Override
