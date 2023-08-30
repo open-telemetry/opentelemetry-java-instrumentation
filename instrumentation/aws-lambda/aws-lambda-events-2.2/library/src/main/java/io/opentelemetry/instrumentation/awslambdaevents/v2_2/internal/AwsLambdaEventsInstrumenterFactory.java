@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFunctionAttributesExtractor;
@@ -21,16 +20,15 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFun
 public final class AwsLambdaEventsInstrumenterFactory {
 
   public static AwsLambdaFunctionInstrumenter createInstrumenter(OpenTelemetry openTelemetry) {
-    InstrumenterBuilder<AwsLambdaRequest, Object> otelInstrumenterBuilder =
+    return new AwsLambdaFunctionInstrumenter(
+        openTelemetry,
         Instrumenter.builder(
                 openTelemetry,
                 "io.opentelemetry.aws-lambda-events-2.2",
                 AwsLambdaEventsInstrumenterFactory::spanName)
             .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
-            .addAttributesExtractor(new ApiGatewayProxyAttributesExtractor());
-
-    return new AwsLambdaFunctionInstrumenter(
-        openTelemetry, otelInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysServer()));
+            .addAttributesExtractor(new ApiGatewayProxyAttributesExtractor())
+            .buildInstrumenter(SpanKindExtractor.alwaysServer()));
   }
 
   private static String spanName(AwsLambdaRequest input) {

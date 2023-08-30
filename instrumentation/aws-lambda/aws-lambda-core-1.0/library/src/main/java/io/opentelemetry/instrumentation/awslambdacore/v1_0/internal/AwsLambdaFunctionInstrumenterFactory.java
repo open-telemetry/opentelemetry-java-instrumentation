@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 
@@ -18,15 +17,14 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 public final class AwsLambdaFunctionInstrumenterFactory {
 
   public static AwsLambdaFunctionInstrumenter createInstrumenter(OpenTelemetry openTelemetry) {
-    InstrumenterBuilder<AwsLambdaRequest, Object> otelInstrumenterBuilder =
+    return new AwsLambdaFunctionInstrumenter(
+        openTelemetry,
         Instrumenter.builder(
                 openTelemetry,
                 "io.opentelemetry.aws-lambda-core-1.0",
                 AwsLambdaFunctionInstrumenterFactory::spanName)
-            .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor());
-
-    return new AwsLambdaFunctionInstrumenter(
-        openTelemetry, otelInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysServer()));
+            .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
+            .buildInstrumenter(SpanKindExtractor.alwaysServer()));
   }
 
   private static String spanName(AwsLambdaRequest input) {

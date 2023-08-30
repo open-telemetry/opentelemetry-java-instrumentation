@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFunctionInstrumenterFactory;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -31,10 +30,7 @@ public class AwsLambdaTest extends AbstractAwsLambdaTest {
   private static final class TestRequestHandler extends TracingRequestHandler<String, String> {
 
     TestRequestHandler(OpenTelemetrySdk openTelemetrySdk) {
-      super(
-          openTelemetrySdk,
-          DEFAULT_FLUSH_TIMEOUT,
-          AwsLambdaFunctionInstrumenterFactory.createInstrumenter(openTelemetrySdk));
+      super(openTelemetrySdk);
     }
 
     @Override
