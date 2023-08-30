@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpRequestBodySize;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpResponseBodySize;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerDurationAndSizeView;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerRequestSizeView;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.Attributes;
@@ -97,7 +97,7 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
     // request count (otherwise it will split the timeseries)
     activeRequests.add(-1, applyActiveRequestsView(startAttributes), context);
 
-    Attributes sizeAttributes = applyServerDurationAndSizeView(startAttributes, endAttributes);
+    Attributes sizeAttributes = applyServerRequestSizeView(startAttributes, endAttributes);
 
     Long requestBodySize = getHttpRequestBodySize(endAttributes, startAttributes);
     if (requestBodySize != null) {

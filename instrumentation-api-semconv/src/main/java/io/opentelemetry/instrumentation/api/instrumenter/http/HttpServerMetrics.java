@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createDurationHistogram;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.nanosToUnit;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerDurationAndSizeView;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createStableDurationHistogram;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyOldServerDurationView;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyStableServerDurationView;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
@@ -18,7 +18,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * {@link OperationListener} which keeps track of <a
@@ -26,6 +29,9 @@ import java.util.logging.Logger;
  * server metrics</a>.
  */
 public final class HttpServerMetrics implements OperationListener {
+
+  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
+  private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
 
   private static final ContextKey<State> HTTP_SERVER_METRICS_STATE =
       ContextKey.named("http-server-metrics-state");
@@ -41,16 +47,27 @@ public final class HttpServerMetrics implements OperationListener {
     return HttpServerMetrics::new;
   }
 
-  private final DoubleHistogram duration;
+  @Nullable private final DoubleHistogram stableDuration;
+  @Nullable private final DoubleHistogram oldDuration;
 
   private HttpServerMetrics(Meter meter) {
-    String durationInstrumentName =
-        HttpMetricsUtil.emitNewSemconvMetrics
-            ? "http.server.request.duration"
-            : "http.server.duration";
-    duration =
-        createDurationHistogram(
-            meter, durationInstrumentName, "The duration of the inbound HTTP request");
+    if (SemconvStability.emitStableHttpSemconv()) {
+      stableDuration =
+          createStableDurationHistogram(
+              meter, "http.server.request.duration", "The duration of the inbound HTTP request");
+    } else {
+      stableDuration = null;
+    }
+    if (SemconvStability.emitOldHttpSemconv()) {
+      oldDuration =
+          meter
+              .histogramBuilder("http.server.duration")
+              .setUnit("ms")
+              .setDescription("The duration of the inbound HTTP request")
+              .build();
+    } else {
+      oldDuration = null;
+    }
   }
 
   @Override
@@ -70,10 +87,20 @@ public final class HttpServerMetrics implements OperationListener {
           context);
       return;
     }
-    Attributes durationAndSizeAttributes =
-        applyServerDurationAndSizeView(state.startAttributes(), endAttributes);
-    duration.record(
-        nanosToUnit(endNanos - state.startTimeNanos()), durationAndSizeAttributes, context);
+
+    if (stableDuration != null) {
+      Attributes stableDurationAttributes =
+          applyStableServerDurationView(state.startAttributes(), endAttributes);
+      stableDuration.record(
+          (endNanos - state.startTimeNanos()) / NANOS_PER_S, stableDurationAttributes, context);
+    }
+
+    if (oldDuration != null) {
+      Attributes stableDurationAttributes =
+          applyOldServerDurationView(state.startAttributes(), endAttributes);
+      oldDuration.record(
+          (endNanos - state.startTimeNanos()) / NANOS_PER_MS, stableDurationAttributes, context);
+    }
   }
 
   @AutoValue
