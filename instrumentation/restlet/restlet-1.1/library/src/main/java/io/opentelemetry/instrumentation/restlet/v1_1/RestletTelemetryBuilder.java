@@ -9,8 +9,10 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -32,6 +34,8 @@ public final class RestletTelemetryBuilder {
   private final HttpServerAttributesExtractorBuilder<Request, Response>
       httpAttributesExtractorBuilder =
           HttpServerAttributesExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
+
+  private boolean emitExperimentalHttpServerMetrics = false;
 
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -90,13 +94,26 @@ public final class RestletTelemetryBuilder {
   }
 
   /**
+   * Configures the instrumentation to emit experimental HTTP server metrics.
+   *
+   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public RestletTelemetryBuilder setEmitExperimentalHttpServerMetrics(
+      boolean emitExperimentalHttpServerMetrics) {
+    this.emitExperimentalHttpServerMetrics = emitExperimentalHttpServerMetrics;
+    return this;
+  }
+
+  /**
    * Returns a new {@link RestletTelemetry} with the settings of this {@link
    * RestletTelemetryBuilder}.
    */
   public RestletTelemetry build() {
     RestletHttpAttributesGetter httpAttributesGetter = RestletHttpAttributesGetter.INSTANCE;
 
-    Instrumenter<Request, Response> instrumenter =
+    InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
@@ -104,10 +121,12 @@ public final class RestletTelemetryBuilder {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
-            .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
-            .buildServerInstrumenter(RestletHeadersGetter.INSTANCE);
+            .addOperationMetrics(HttpServerMetrics.get());
+    if (emitExperimentalHttpServerMetrics) {
+      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+    }
 
-    return new RestletTelemetry(instrumenter);
+    return new RestletTelemetry(builder.buildServerInstrumenter(RestletHeadersGetter.INSTANCE));
   }
 }

@@ -9,10 +9,11 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -40,10 +41,12 @@ public final class SpringWebfluxTelemetryBuilder {
   private final HttpServerAttributesExtractorBuilder<ServerWebExchange, ServerWebExchange>
       httpServerAttributesExtractorBuilder =
           HttpServerAttributesExtractor.builder(WebfluxServerHttpAttributesGetter.INSTANCE);
+
   private Consumer<HttpClientAttributesExtractorBuilder<ClientRequest, ClientResponse>>
       clientExtractorConfigurer = builder -> {};
-  private boolean captureExperimentalSpanAttributes;
-  private boolean emitExperimentalHttpClientMetrics;
+  private boolean captureExperimentalSpanAttributes = false;
+  private boolean emitExperimentalHttpClientMetrics = false;
+  private boolean emitExperimentalHttpServerMetrics = false;
 
   SpringWebfluxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -173,6 +176,19 @@ public final class SpringWebfluxTelemetryBuilder {
   }
 
   /**
+   * Configures the instrumentation to emit experimental HTTP server metrics.
+   *
+   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public SpringWebfluxTelemetryBuilder setEmitExperimentalHttpServerMetrics(
+      boolean emitExperimentalHttpServerMetrics) {
+    this.emitExperimentalHttpServerMetrics = emitExperimentalHttpServerMetrics;
+    return this;
+  }
+
+  /**
    * Returns a new {@link SpringWebfluxTelemetry} with the settings of this {@link
    * SpringWebfluxTelemetryBuilder}.
    */
@@ -186,22 +202,27 @@ public final class SpringWebfluxTelemetryBuilder {
             captureExperimentalSpanAttributes,
             emitExperimentalHttpClientMetrics);
 
-    WebfluxServerHttpAttributesGetter serverAttributesGetter =
-        WebfluxServerHttpAttributesGetter.INSTANCE;
-    SpanNameExtractor<ServerWebExchange> serverSpanNameExtractor =
-        HttpSpanNameExtractor.create(serverAttributesGetter);
-
     Instrumenter<ServerWebExchange, ServerWebExchange> serverInstrumenter =
-        Instrumenter.<ServerWebExchange, ServerWebExchange>builder(
-                openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor)
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(serverAttributesGetter))
-            .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
-            .addAttributesExtractors(serverAdditionalExtractors)
-            .addContextCustomizer(HttpServerRoute.create(serverAttributesGetter))
-            .addOperationMetrics(HttpServerMetrics.get())
-            .buildServerInstrumenter(WebfluxTextMapGetter.INSTANCE);
+        buildServerInstrumenter();
 
     return new SpringWebfluxTelemetry(
         clientInstrumenter, serverInstrumenter, openTelemetry.getPropagators());
+  }
+
+  private Instrumenter<ServerWebExchange, ServerWebExchange> buildServerInstrumenter() {
+    WebfluxServerHttpAttributesGetter getter = WebfluxServerHttpAttributesGetter.INSTANCE;
+
+    InstrumenterBuilder<ServerWebExchange, ServerWebExchange> builder =
+        Instrumenter.<ServerWebExchange, ServerWebExchange>builder(
+                openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(getter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(getter))
+            .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
+            .addAttributesExtractors(serverAdditionalExtractors)
+            .addContextCustomizer(HttpServerRoute.create(getter))
+            .addOperationMetrics(HttpServerMetrics.get());
+    if (emitExperimentalHttpServerMetrics) {
+      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+    }
+    return builder.buildServerInstrumenter(WebfluxTextMapGetter.INSTANCE);
   }
 }

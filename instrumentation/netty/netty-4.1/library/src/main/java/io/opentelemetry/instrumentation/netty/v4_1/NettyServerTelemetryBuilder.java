@@ -19,8 +19,10 @@ import java.util.function.Consumer;
 public final class NettyServerTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
+
   private Consumer<HttpServerAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse>>
       extractorConfigurer = builder -> {};
+  private boolean emitExperimentalHttpServerMetrics = false;
 
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -74,10 +76,26 @@ public final class NettyServerTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Configures the instrumentation to emit experimental HTTP server metrics.
+   *
+   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public NettyServerTelemetryBuilder setEmitExperimentalHttpServerMetrics(
+      boolean emitExperimentalHttpServerMetrics) {
+    this.emitExperimentalHttpServerMetrics = emitExperimentalHttpServerMetrics;
+    return this;
+  }
+
   /** Returns a new {@link NettyServerTelemetry} with the given configuration. */
   public NettyServerTelemetry build() {
     return new NettyServerTelemetry(
         NettyServerInstrumenterFactory.create(
-            openTelemetry, "io.opentelemetry.netty-4.1", extractorConfigurer));
+            openTelemetry,
+            "io.opentelemetry.netty-4.1",
+            extractorConfigurer,
+            emitExperimentalHttpServerMetrics));
   }
 }

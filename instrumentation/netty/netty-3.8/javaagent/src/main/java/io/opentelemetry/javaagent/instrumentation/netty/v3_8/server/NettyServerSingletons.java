@@ -7,7 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -25,7 +27,7 @@ final class NettyServerSingletons {
     NettyHttpServerAttributesGetter httpServerAttributesGetter =
         new NettyHttpServerAttributesGetter();
 
-    INSTRUMENTER =
+    InstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder =
         Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.netty-3.8",
@@ -37,7 +39,12 @@ final class NettyServerSingletons {
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
-            .addOperationMetrics(HttpServerMetrics.get())
+            .addOperationMetrics(HttpServerMetrics.get());
+    if (CommonConfig.get().shouldEmitExperimentalHttpServerMetrics()) {
+      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+    }
+    INSTRUMENTER =
+        builder
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
             .addContextCustomizer(HttpServerRoute.create(httpServerAttributesGetter))

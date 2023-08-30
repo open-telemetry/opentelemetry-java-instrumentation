@@ -24,7 +24,7 @@ import java.util.logging.Logger;
  * href="https://github.com/open-telemetry/semantic-conventions/blob/main/specification/metrics/semantic_conventions/http-metrics.md#http-client">non-stable
  * HTTP client metrics</a>: <a
  * href="https://github.com/open-telemetry/semantic-conventions/blob/main/specification/metrics/semantic_conventions/http-metrics.md#metric-httpclientrequestsize">the
- * request size </a> and the <a
+ * request size </a> and <a
  * href="https://github.com/open-telemetry/semantic-conventions/blob/main/specification/metrics/semantic_conventions/http-metrics.md#metric-httpclientresponsesize">
  * the response size</a>.
  */
