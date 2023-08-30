@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.Ja
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.addPackagePath;
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.addPackageType;
 
-import com.google.common.util.concurrent.RateLimiter;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -19,6 +18,7 @@ import io.opentelemetry.api.events.EventEmitter;
 import io.opentelemetry.api.events.GlobalEventEmitterProvider;
 import io.opentelemetry.instrumentation.api.internal.GuardedBy;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
+import io.opentelemetry.sdk.common.Clock;
 import io.opentelemetry.sdk.internal.DaemonThreadFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -36,13 +36,15 @@ import java.util.logging.Logger;
 
 /**
  * {@link JarAnalyzer} processes the {@link ProtectionDomain} of each class loaded and emits an
- * event with metadata about each distinct JAR location identified.
+ * event with metadata about each distinct archive location identified.
  */
 final class JarAnalyzer {
 
   private static final Logger logger = Logger.getLogger(JarAnalyzer.class.getName());
 
   private static final JarAnalyzer INSTANCE = new JarAnalyzer();
+  private static final String JAR_EXTENSION = ".jar";
+  private static final String WAR_EXTENSION = ".war";
   private static final String EVENT_DOMAIN_PACKAGE = "package";
   private static final String EVENT_NAME_INFO = "info";
 
@@ -79,7 +81,8 @@ final class JarAnalyzer {
   }
 
   /**
-   * Install {@link OpenTelemetry} and start processing jars if {@link #configure(int)} was called.
+   * Install {@link OpenTelemetry} and start processing archives if {@link #configure(int)} was
+   * called.
    *
    * @throws IllegalStateException if called multiple times
    */
@@ -105,8 +108,8 @@ final class JarAnalyzer {
   }
 
   /**
-   * Identify the JAR associated with the {@code protectionDomain} and queue it to be processed if
-   * its the first time we've seen it.
+   * Identify the archive (JAR or WAR) associated with the {@code protectionDomain} and queue it to
+   * be processed if its the first time we've seen it.
    *
    * <p>NOTE: does nothing if {@link #configure(int)} has not been called.
    */
@@ -122,103 +125,119 @@ final class JarAnalyzer {
     if (codeSource == null) {
       return;
     }
-    URL jarUrl = codeSource.getLocation();
-    if (jarUrl == null) {
+    URL archiveUrl = codeSource.getLocation();
+    if (archiveUrl == null) {
       return;
     }
     URI locationUri;
     try {
-      locationUri = jarUrl.toURI();
+      locationUri = archiveUrl.toURI();
     } catch (URISyntaxException e) {
-      logger.log(Level.WARNING, "Unable to get URI for jar URL: " + jarUrl, e);
+      logger.log(Level.WARNING, "Unable to get URI for code location URL: " + archiveUrl, e);
       return;
     }
 
     if (!seenUris.add(locationUri)) {
       return;
     }
-    if ("jrt".equals(jarUrl.getProtocol())) {
-      logger.log(Level.FINEST, "Skipping processing jar for java runtime module: " + jarUrl);
+    if ("jrt".equals(archiveUrl.getProtocol())) {
+      logger.log(Level.FINEST, "Skipping processing for java runtime module: " + archiveUrl);
       return;
     }
-    if (!jarUrl.getFile().endsWith(JarAnalyzerUtil.JAR_EXTENSION)) {
-      logger.log(Level.INFO, "Skipping processing jar with unrecognized code location: " + jarUrl);
+    String file = archiveUrl.getFile();
+    if (file.endsWith("/classes/") || file.endsWith("/jsp/")) {
+      logger.log(Level.FINEST, "Skipping processing non-archive code location: " + archiveUrl);
+      return;
+    }
+    if (!file.endsWith(JAR_EXTENSION) && !file.endsWith(WAR_EXTENSION)) {
+      logger.log(Level.INFO, "Skipping processing unrecognized code location: " + archiveUrl);
       return;
     }
 
-    toProcess.add(jarUrl);
+    // Only code locations with .jar and .war extension should make it here
+    toProcess.add(archiveUrl);
   }
 
   private static final class Worker implements Runnable {
 
     private final EventEmitter eventEmitter;
     private final BlockingQueue<URL> toProcess;
-    private final RateLimiter rateLimiter;
+    private final io.opentelemetry.sdk.internal.RateLimiter rateLimiter;
 
     private Worker(EventEmitter eventEmitter, BlockingQueue<URL> toProcess, int jarsPerSecond) {
       this.eventEmitter = eventEmitter;
       this.toProcess = toProcess;
-      this.rateLimiter = RateLimiter.create(jarsPerSecond);
+      this.rateLimiter =
+          new io.opentelemetry.sdk.internal.RateLimiter(
+              jarsPerSecond, jarsPerSecond, Clock.getDefault());
     }
 
     /**
-     * Continuously poll the {@link #toProcess} for JAR {@link URL}s, and process each wit {@link
-     * #processUrl(URL)}.
+     * Continuously poll the {@link #toProcess} for archive {@link URL}s, and process each wit
+     * {@link #processUrl(EventEmitter, URL)}.
      */
     @Override
     public void run() {
       while (!Thread.currentThread().isInterrupted()) {
-        URL jarUrl = null;
+        URL archiveUrl = null;
         try {
-          jarUrl = toProcess.poll(100, TimeUnit.MILLISECONDS);
+          if (!rateLimiter.trySpend(1.0)) {
+            Thread.sleep(100);
+            continue;
+          }
+          archiveUrl = toProcess.poll(100, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
         }
-        if (jarUrl == null) {
+        if (archiveUrl == null) {
           continue;
         }
-        rateLimiter.acquire();
         // TODO(jack-berg): add ability to optionally re-process urls periodically to re-emit events
-        processUrl(jarUrl);
+        processUrl(eventEmitter, archiveUrl);
       }
       logger.warning("JarAnalyzer stopped");
     }
+  }
 
-    /**
-     * Process the {@code jarUrl}, extracting metadata from it and emitting an event with the
-     * content.
-     */
-    private void processUrl(URL jarUrl) {
-      AttributesBuilder builder = Attributes.builder();
+  /**
+   * Process the {@code archiveUrl}, extracting metadata from it and emitting an event with the
+   * content.
+   */
+  static void processUrl(EventEmitter eventEmitter, URL archiveUrl) {
+    AttributesBuilder builder = Attributes.builder();
 
-      addPackageType(builder);
-
-      try {
-        addPackageChecksum(builder, jarUrl);
-      } catch (Exception e) {
-        logger.log(Level.WARNING, "Error adding package checksum for jar URL: " + jarUrl, e);
-      }
-
-      try {
-        addPackagePath(builder, jarUrl);
-      } catch (Exception e) {
-        logger.log(Level.WARNING, "Error adding package path jar URL: " + jarUrl, e);
-      }
-
-      try {
-        addPackageDescription(builder, jarUrl);
-      } catch (Exception e) {
-        logger.log(Level.WARNING, "Error adding package description for jar URL: " + jarUrl, e);
-      }
-
-      try {
-        addPackageNameAndVersion(builder, jarUrl);
-      } catch (Exception e) {
-        logger.log(
-            Level.WARNING, "Error adding package name and version for jar URL: " + jarUrl, e);
-      }
-
-      eventEmitter.emit(EVENT_NAME_INFO, builder.build());
+    try {
+      addPackageType(builder, archiveUrl);
+    } catch (Exception e) {
+      logger.log(Level.WARNING, "Error adding package type for archive URL: " + archiveUrl, e);
     }
+
+    try {
+      addPackageChecksum(builder, archiveUrl);
+    } catch (Exception e) {
+      logger.log(Level.WARNING, "Error adding package checksum for archive URL: " + archiveUrl, e);
+    }
+
+    try {
+      addPackagePath(builder, archiveUrl);
+    } catch (Exception e) {
+      logger.log(Level.WARNING, "Error adding package path archive URL: " + archiveUrl, e);
+    }
+
+    try {
+      addPackageDescription(builder, archiveUrl);
+    } catch (Exception e) {
+      logger.log(
+          Level.WARNING, "Error adding package description for archive URL: " + archiveUrl, e);
+    }
+
+    try {
+      addPackageNameAndVersion(builder, archiveUrl);
+    } catch (Exception e) {
+      logger.log(
+          Level.WARNING, "Error adding package name and version for archive URL: " + archiveUrl, e);
+    }
+
+    eventEmitter.emit(EVENT_NAME_INFO, builder.build());
   }
 }

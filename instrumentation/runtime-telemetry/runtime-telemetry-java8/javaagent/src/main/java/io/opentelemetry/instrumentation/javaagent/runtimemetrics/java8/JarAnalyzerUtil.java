@@ -21,34 +21,40 @@ import java.util.jar.Manifest;
 
 final class JarAnalyzerUtil {
 
-  static final String JAR_EXTENSION = ".jar";
-
-  private static final AttributeKey<String> PACKAGE_NAME = AttributeKey.stringKey("package.name");
-  private static final AttributeKey<String> PACKAGE_VERSION =
-      AttributeKey.stringKey("package.version");
-  private static final AttributeKey<String> PACKAGE_TYPE = AttributeKey.stringKey("package.type");
-  private static final AttributeKey<String> PACKAGE_DESCRIPTION =
+  static final AttributeKey<String> PACKAGE_NAME = AttributeKey.stringKey("package.name");
+  static final AttributeKey<String> PACKAGE_VERSION = AttributeKey.stringKey("package.version");
+  static final AttributeKey<String> PACKAGE_TYPE = AttributeKey.stringKey("package.type");
+  static final AttributeKey<String> PACKAGE_DESCRIPTION =
       AttributeKey.stringKey("package.description");
-  private static final AttributeKey<String> PACKAGE_CHECKSUM =
-      AttributeKey.stringKey("package.checksum");
-  private static final AttributeKey<String> PACKAGE_PATH = AttributeKey.stringKey("package.path");
+  static final AttributeKey<String> PACKAGE_CHECKSUM = AttributeKey.stringKey("package.checksum");
+  static final AttributeKey<String> PACKAGE_PATH = AttributeKey.stringKey("package.path");
 
-  /** Set the attributes {@link #PACKAGE_TYPE} to {@code jar}. */
-  static void addPackageType(AttributesBuilder builder) {
-    builder.put(PACKAGE_TYPE, "jar");
+  /**
+   * Set the attributes {@link #PACKAGE_TYPE} from the {@code archiveUrl}.
+   *
+   * <p>The {@link #PACKAGE_TYPE} is set extension of the archive, e.g. {@code jar}.
+   */
+  static void addPackageType(AttributesBuilder builder, URL archiveUrl) throws Exception {
+    String path = archiveUrl.getFile();
+    int extensionStart = path.lastIndexOf(".");
+    if (extensionStart > -1) {
+      builder.put(PACKAGE_TYPE, path.substring(extensionStart + 1));
+      return;
+    }
+    throw new Exception("Cannot extract archive type from URL: " + archiveUrl);
   }
 
   /**
-   * Set the attributes {@link #PACKAGE_CHECKSUM} from the {@code jarUrl}.
+   * Set the attributes {@link #PACKAGE_CHECKSUM} from the {@code archiveUrl}.
    *
-   * <p>The {@link #PACKAGE_CHECKSUM} is set to the SHA-1 checksum of the JAR, e.g. {@code
+   * <p>The {@link #PACKAGE_CHECKSUM} is set to the SHA-1 checksum of the archive, e.g. {@code
    * 30d16ec2aef6d8094c5e2dce1d95034ca8b6cb42}.
    */
-  static void addPackageChecksum(AttributesBuilder builder, URL jarUrl) throws IOException {
-    builder.put(PACKAGE_CHECKSUM, computeSha1(jarUrl));
+  static void addPackageChecksum(AttributesBuilder builder, URL archiveUrl) throws IOException {
+    builder.put(PACKAGE_CHECKSUM, computeSha1(archiveUrl));
   }
 
-  private static String computeSha1(URL jarUrl) throws IOException {
+  private static String computeSha1(URL archiveUrl) throws IOException {
     MessageDigest md;
     try {
       md = MessageDigest.getInstance("SHA1");
@@ -57,7 +63,7 @@ final class JarAnalyzerUtil {
           "Unexpected error. Checksum algorithm SHA1 does not exist.", e);
     }
 
-    try (InputStream is = new DigestInputStream(jarUrl.openStream(), md)) {
+    try (InputStream is = new DigestInputStream(archiveUrl.openStream(), md)) {
       byte[] buffer = new byte[1024 * 8];
       // read in the stream in chunks while updating the digest
       while (is.read(buffer) != -1) {}
@@ -75,37 +81,32 @@ final class JarAnalyzerUtil {
   }
 
   /**
-   * Set the attributes {@link #PACKAGE_PATH} from the {@code jarUrl}.
+   * Set the attributes {@link #PACKAGE_PATH} from the {@code archiveUrl}.
    *
-   * <p>The {@link #PACKAGE_PATH} is set to the jar file name, e.g. {@code
+   * <p>The {@link #PACKAGE_PATH} is set to the archive file name, e.g. {@code
    * jackson-datatype-jsr310-2.15.2.jar}.
    */
-  static void addPackagePath(AttributesBuilder builder, URL jarUrl) throws Exception {
-    builder.put(PACKAGE_PATH, jarFilename(jarUrl));
+  static void addPackagePath(AttributesBuilder builder, URL archiveUrl) throws Exception {
+    builder.put(PACKAGE_PATH, archiveFilename(archiveUrl));
   }
 
-  private static String jarFilename(URL jarUrl) throws Exception {
-    String path = jarUrl.getFile();
-    int end = path.lastIndexOf(JAR_EXTENSION);
-    if (end > 0) {
-      path = path.substring(0, end);
-      int start = path.lastIndexOf(File.separator);
-      if (start > -1) {
-        return path.substring(start + 1) + JAR_EXTENSION;
-      }
-      return path + JAR_EXTENSION;
+  private static String archiveFilename(URL archiveUrl) throws Exception {
+    String path = archiveUrl.getFile();
+    int start = path.lastIndexOf(File.separator);
+    if (start > -1) {
+      return path.substring(start + 1);
     }
-    throw new Exception("Cannot extract jar file name from jar URL: " + jarUrl);
+    throw new Exception("Cannot extract archive file name from archive URL: " + archiveUrl);
   }
 
   /**
-   * Set the attributes {@link #PACKAGE_DESCRIPTION} from the {@code jarUrl}.
+   * Set the attributes {@link #PACKAGE_DESCRIPTION} from the {@code archiveUrl}.
    *
    * <p>The {@link #PACKAGE_DESCRIPTION} is set to manifest "{Implementation-Title} by
    * {Implementation-Vendor}", e.g. {@code Jackson datatype: JSR310 by FasterXML}.
    */
-  static void addPackageDescription(AttributesBuilder builder, URL jarUrl) throws IOException {
-    try (InputStream inputStream = jarUrl.openStream();
+  static void addPackageDescription(AttributesBuilder builder, URL archiveUrl) throws IOException {
+    try (InputStream inputStream = archiveUrl.openStream();
         JarInputStream jarInputStream = new JarInputStream(inputStream)) {
       Manifest manifest = jarInputStream.getManifest();
       if (manifest == null) {
@@ -126,16 +127,18 @@ final class JarAnalyzerUtil {
   }
 
   /**
-   * Set the attributes {@link #PACKAGE_NAME} and {@link #PACKAGE_VERSION} from the {@code jarUrl}.
+   * Set the attributes {@link #PACKAGE_NAME} and {@link #PACKAGE_VERSION} from the {@code
+   * archiveUrl}.
    *
    * <p>The {@link #PACKAGE_NAME} is set to the POM "{groupId}:{artifactId}", e.g. {@code Jackson
    * datatype: JSR310 by FasterXML}.
    *
    * <p>The {@link #PACKAGE_VERSION} is set to the POM "{version}", e.g. {@code 2.15.2}.
    */
-  static void addPackageNameAndVersion(AttributesBuilder builder, URL jarUrl) throws IOException {
+  static void addPackageNameAndVersion(AttributesBuilder builder, URL archiveUrl)
+      throws IOException {
     Properties pom = null;
-    try (InputStream inputStream = jarUrl.openStream();
+    try (InputStream inputStream = archiveUrl.openStream();
         JarInputStream jarInputStream = new JarInputStream(inputStream)) {
       // Advance the jarInputStream to the pom.properties entry
       for (JarEntry entry = jarInputStream.getNextJarEntry();
