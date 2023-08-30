@@ -1,15 +1,20 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 import uk.org.webcompere.systemstubs.properties.SystemProperties;
-
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SystemStubsExtension.class)
 class AwsXrayEnvCarrierEnricherTest {
@@ -20,8 +25,10 @@ class AwsXrayEnvCarrierEnricherTest {
   private static final String XRAY_SYSTEM_PROPERTY = "com.amazonaws.xray.traceHeader";
   private static final String XRAY_PROPAGATING_KEY = "x-amzn-trace-id";
 
-  private static final String TEST_VALUE1 = "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=0";
-  private static final String TEST_VALUE2 = "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000789;Sampled=0";
+  private static final String TEST_VALUE1 =
+      "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=0";
+  private static final String TEST_VALUE2 =
+      "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000789;Sampled=0";
 
   private static final CarrierEnricher enricher = new AwsXrayEnvCarrierEnricher();
 
