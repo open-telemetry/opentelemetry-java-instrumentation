@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import java.util.List;
+import java.util.Set;
 import org.elasticsearch.client.Response;
 
 /**
@@ -25,11 +26,12 @@ public final class ElasticsearchRestInstrumenterFactory {
       OpenTelemetry opentelemetry,
       String instrumentationName,
       List<AttributesExtractor<ElasticsearchRestRequest, Response>> attributesExtractors,
+      Set<String> knownMethods,
       boolean captureSearchQuery) {
     ElasticsearchDbAttributesGetter dbClientAttributesGetter =
         new ElasticsearchDbAttributesGetter(captureSearchQuery);
     ElasticsearchClientAttributeExtractor esClientAtrributesExtractor =
-        new ElasticsearchClientAttributeExtractor();
+        new ElasticsearchClientAttributeExtractor(knownMethods);
     ElasticsearchSpanNameExtractor nameExtractor =
         new ElasticsearchSpanNameExtractor(dbClientAttributesGetter);
 
