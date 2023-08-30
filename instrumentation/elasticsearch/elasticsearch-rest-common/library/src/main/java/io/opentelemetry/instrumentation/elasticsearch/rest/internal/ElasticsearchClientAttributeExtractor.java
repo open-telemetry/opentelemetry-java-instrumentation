@@ -6,16 +6,20 @@
 package io.opentelemetry.instrumentation.elasticsearch.rest.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.HashSet;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.Response;
@@ -30,6 +34,12 @@ public class ElasticsearchClientAttributeExtractor
   private static final String PATH_PARTS_ATTRIBUTE_PREFIX = "db.elasticsearch.path_parts.";
 
   private static final Cache<String, AttributeKey<String>> pathPartKeysCache = Cache.bounded(64);
+
+  private final Set<String> knownMethods;
+
+  ElasticsearchClientAttributeExtractor(Set<String> knownMethods) {
+    this.knownMethods = new HashSet<>(knownMethods);
+  }
 
   private static void setServerAttributes(AttributesBuilder attributes, Response response) {
     HttpHost host = response.getHost();
@@ -79,7 +89,18 @@ public class ElasticsearchClientAttributeExtractor
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ElasticsearchRestRequest request) {
-    internalSet(attributes, SemanticAttributes.HTTP_METHOD, request.getMethod());
+    String method = request.getMethod();
+    if (SemconvStability.emitStableHttpSemconv()) {
+      if (method == null || knownMethods.contains(method)) {
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+      } else {
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      }
+    }
+    if (SemconvStability.emitOldHttpSemconv()) {
+      internalSet(attributes, SemanticAttributes.HTTP_METHOD, method);
+    }
     setPathPartsAttributes(attributes, request);
   }
 

@@ -34,6 +34,7 @@ public final class CommonConfig {
   private final Set<String> knownHttpRequestMethods;
   private final boolean statementSanitizationEnabled;
   private final boolean emitExperimentalHttpClientMetrics;
+  private final boolean emitExperimentalHttpServerMetrics;
 
   CommonConfig(InstrumentationConfig config) {
     peerServiceMapping =
@@ -69,6 +70,8 @@ public final class CommonConfig {
         config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
     emitExperimentalHttpClientMetrics =
         config.getBoolean("otel.instrumentation.http.client.emit-experimental-metrics", false);
+    emitExperimentalHttpServerMetrics =
+        config.getBoolean("otel.instrumentation.http.server.emit-experimental-metrics", false);
   }
 
   public Map<String, String> getPeerServiceMapping() {
@@ -101,5 +104,9 @@ public final class CommonConfig {
 
   public boolean shouldEmitExperimentalHttpClientMetrics() {
     return emitExperimentalHttpClientMetrics;
+  }
+
+  public boolean shouldEmitExperimentalHttpServerMetrics() {
+    return emitExperimentalHttpServerMetrics;
   }
 }

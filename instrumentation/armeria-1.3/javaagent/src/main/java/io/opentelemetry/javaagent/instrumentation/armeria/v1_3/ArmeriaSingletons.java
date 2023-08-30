@@ -33,6 +33,8 @@ public final class ArmeriaSingletons {
                     CommonConfig.get().getPeerServiceMapping()))
             .setEmitExperimentalHttpClientMetrics(
                 CommonConfig.get().shouldEmitExperimentalHttpClientMetrics())
+            .setEmitExperimentalHttpServerMetrics(
+                CommonConfig.get().shouldEmitExperimentalHttpServerMetrics())
             .build();
 
     CLIENT_DECORATOR = telemetry.newClientDecorator();

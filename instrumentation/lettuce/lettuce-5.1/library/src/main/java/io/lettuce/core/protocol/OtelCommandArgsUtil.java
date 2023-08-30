@@ -36,7 +36,7 @@ public final class OtelCommandArgsUtil {
   private static String getArgValue(StringCodec stringCodec, SingularArgument argument) {
     if (argument instanceof KeyArgument) {
       KeyArgument keyArg = (KeyArgument) argument;
-      return stringCodec.decodeValue(keyArg.codec.encodeValue(keyArg.key));
+      return stringCodec.decodeKey(keyArg.codec.encodeKey(keyArg.key));
     }
     if (argument instanceof ValueArgument) {
       ValueArgument valueArg = (ValueArgument) argument;

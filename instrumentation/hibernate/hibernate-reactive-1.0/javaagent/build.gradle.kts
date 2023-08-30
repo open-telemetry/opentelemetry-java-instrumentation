@@ -38,6 +38,7 @@ testing {
           implementation("org.hibernate.reactive:hibernate-reactive-core:1.0.0.Final")
           implementation("io.vertx:vertx-pg-client:4.1.5")
         }
+        compileOnly("io.vertx:vertx-codegen:4.1.5")
       }
     }
 

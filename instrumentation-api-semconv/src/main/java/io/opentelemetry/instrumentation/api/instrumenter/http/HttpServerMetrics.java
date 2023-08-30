@@ -5,20 +5,14 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpRequestBodySize;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpResponseBodySize;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createStableDurationHistogram;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyOldServerDurationView;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerRequestSizeView;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyStableServerDurationView;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.LongHistogram;
-import io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -39,8 +33,8 @@ public final class HttpServerMetrics implements OperationListener {
   private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
   private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
 
-  private static final ContextKey<State> HTTP_SERVER_REQUEST_METRICS_STATE =
-      ContextKey.named("http-server-request-metrics-state");
+  private static final ContextKey<State> HTTP_SERVER_METRICS_STATE =
+      ContextKey.named("http-server-metrics-state");
 
   private static final Logger logger = Logger.getLogger(HttpServerMetrics.class.getName());
 
@@ -53,19 +47,10 @@ public final class HttpServerMetrics implements OperationListener {
     return HttpServerMetrics::new;
   }
 
-  private final LongUpDownCounter activeRequests;
   @Nullable private final DoubleHistogram stableDuration;
   @Nullable private final DoubleHistogram oldDuration;
-  private final LongHistogram requestSize;
-  private final LongHistogram responseSize;
 
   private HttpServerMetrics(Meter meter) {
-    activeRequests =
-        meter
-            .upDownCounterBuilder("http.server.active_requests")
-            .setUnit("{requests}")
-            .setDescription("The number of concurrent HTTP requests that are currently in-flight")
-            .build();
     if (SemconvStability.emitStableHttpSemconv()) {
       stableDuration =
           createStableDurationHistogram(
@@ -83,34 +68,18 @@ public final class HttpServerMetrics implements OperationListener {
     } else {
       oldDuration = null;
     }
-    requestSize =
-        meter
-            .histogramBuilder("http.server.request.size")
-            .setUnit("By")
-            .setDescription("The size of HTTP request messages")
-            .ofLongs()
-            .build();
-    responseSize =
-        meter
-            .histogramBuilder("http.server.response.size")
-            .setUnit("By")
-            .setDescription("The size of HTTP response messages")
-            .ofLongs()
-            .build();
   }
 
   @Override
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-    activeRequests.add(1, applyActiveRequestsView(startAttributes), context);
-
     return context.with(
-        HTTP_SERVER_REQUEST_METRICS_STATE,
+        HTTP_SERVER_METRICS_STATE,
         new AutoValue_HttpServerMetrics_State(startAttributes, startNanos));
   }
 
   @Override
   public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-    State state = context.get(HTTP_SERVER_REQUEST_METRICS_STATE);
+    State state = context.get(HTTP_SERVER_METRICS_STATE);
     if (state == null) {
       logger.log(
           FINE,
@@ -118,9 +87,6 @@ public final class HttpServerMetrics implements OperationListener {
           context);
       return;
     }
-    // it's important to use exactly the same attributes that were used when incrementing the active
-    // request count (otherwise it will split the timeseries)
-    activeRequests.add(-1, applyActiveRequestsView(state.startAttributes()), context);
 
     if (stableDuration != null) {
       Attributes stableDurationAttributes =
@@ -134,18 +100,6 @@ public final class HttpServerMetrics implements OperationListener {
           applyOldServerDurationView(state.startAttributes(), endAttributes);
       oldDuration.record(
           (endNanos - state.startTimeNanos()) / NANOS_PER_MS, stableDurationAttributes, context);
-    }
-
-    Attributes sizeAttributes = applyServerRequestSizeView(state.startAttributes(), endAttributes);
-
-    Long requestBodySize = getHttpRequestBodySize(endAttributes, state.startAttributes());
-    if (requestBodySize != null) {
-      requestSize.record(requestBodySize, sizeAttributes, context);
-    }
-
-    Long responseBodySize = getHttpResponseBodySize(endAttributes, state.startAttributes());
-    if (responseBodySize != null) {
-      responseSize.record(responseBodySize, sizeAttributes, context);
     }
   }
 

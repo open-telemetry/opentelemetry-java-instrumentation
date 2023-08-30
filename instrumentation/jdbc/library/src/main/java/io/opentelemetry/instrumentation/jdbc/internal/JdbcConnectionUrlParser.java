@@ -863,11 +863,15 @@ public enum JdbcConnectionUrlParser {
     // Make this easier and ignore case.
     connectionUrl = connectionUrl.toLowerCase(Locale.ROOT);
 
-    if (!connectionUrl.startsWith("jdbc:")) {
+    String jdbcUrl;
+    if (connectionUrl.startsWith("jdbc:")) {
+      jdbcUrl = connectionUrl.substring("jdbc:".length());
+    } else if (connectionUrl.startsWith("jdbc-secretsmanager:")) {
+      jdbcUrl = connectionUrl.substring("jdbc-secretsmanager:".length());
+    } else {
       return DEFAULT;
     }
 
-    String jdbcUrl = connectionUrl.substring("jdbc:".length());
     int typeLoc = jdbcUrl.indexOf(':');
 
     if (typeLoc < 1) {

@@ -34,8 +34,7 @@ class ServerDecorator extends SimpleDecoratingHttpService {
 
     Context otelContext = Context.current();
 
-    HttpServerRoute.update(
-        otelContext, HttpServerRouteSource.SERVER, (context, name) -> name, matchedRoute);
+    HttpServerRoute.update(otelContext, HttpServerRouteSource.SERVER, matchedRoute);
 
     try {
       return unwrap().serve(ctx, req);

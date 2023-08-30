@@ -60,6 +60,7 @@ class ApplicationLoggerFactoryTest {
 
     verify(logStore, times(3)).currentSize();
     verify(logStore).flush(applicationLoggerBridge);
+    verify(logStore).setApplicationLoggerFactory(applicationLoggerBridge);
     verify(logStore).freeMemory();
 
     underTest.install(applicationLoggerBridge);
