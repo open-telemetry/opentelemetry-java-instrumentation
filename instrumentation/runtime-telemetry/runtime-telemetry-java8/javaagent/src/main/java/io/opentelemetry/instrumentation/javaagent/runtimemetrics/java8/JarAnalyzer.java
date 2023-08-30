@@ -145,7 +145,7 @@ final class JarAnalyzer {
       return;
     }
     String file = archiveUrl.getFile();
-    if (file.endsWith("/classes/") || file.endsWith("/jsp/")) {
+    if (file.endsWith("/")) {
       logger.log(Level.FINEST, "Skipping processing non-archive code location: " + archiveUrl);
       return;
     }
