@@ -30,7 +30,7 @@ class AwsXrayEnvCarrierEnricherTest {
   private static final String TEST_VALUE2 =
       "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000789;Sampled=0";
 
-  private static final CarrierEnricher enricher = new AwsXrayEnvCarrierEnricher();
+  private static final AwsXrayEnvCarrierEnricher enricher = new AwsXrayEnvCarrierEnricher();
 
   @Test
   void enrichFromEnvVar() {

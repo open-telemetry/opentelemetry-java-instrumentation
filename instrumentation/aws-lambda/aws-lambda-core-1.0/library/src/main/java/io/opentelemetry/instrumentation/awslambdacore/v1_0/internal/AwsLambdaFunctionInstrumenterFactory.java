@@ -26,9 +26,7 @@ public final class AwsLambdaFunctionInstrumenterFactory {
             .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor());
 
     return new AwsLambdaFunctionInstrumenter(
-        openTelemetry,
-        otelInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysServer()),
-        new AwsXrayEnvCarrierEnricher());
+        openTelemetry, otelInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysServer()));
   }
 
   private static String spanName(AwsLambdaRequest input) {

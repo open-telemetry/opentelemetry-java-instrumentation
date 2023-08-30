@@ -22,16 +22,13 @@ import javax.annotation.Nullable;
 public class AwsLambdaFunctionInstrumenter {
 
   private final OpenTelemetry openTelemetry;
-  private final CarrierEnricher carrierEnricher;
+  private final AwsXrayEnvCarrierEnricher carrierEnricher = new AwsXrayEnvCarrierEnricher();
   final Instrumenter<AwsLambdaRequest, Object> instrumenter;
 
   public AwsLambdaFunctionInstrumenter(
-      OpenTelemetry openTelemetry,
-      Instrumenter<AwsLambdaRequest, Object> instrumenter,
-      CarrierEnricher carrierEnricher) {
+      OpenTelemetry openTelemetry, Instrumenter<AwsLambdaRequest, Object> instrumenter) {
     this.openTelemetry = openTelemetry;
     this.instrumenter = instrumenter;
-    this.carrierEnricher = carrierEnricher;
   }
 
   public boolean shouldStart(Context parentContext, AwsLambdaRequest input) {
