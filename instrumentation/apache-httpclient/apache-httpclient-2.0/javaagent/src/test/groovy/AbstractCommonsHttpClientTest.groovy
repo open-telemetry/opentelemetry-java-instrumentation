@@ -94,6 +94,11 @@ abstract class AbstractCommonsHttpClientTest extends HttpClientTest<HttpMethod> 
   }
 
   @Override
+  boolean testNonStandardHttpMethod() {
+    false
+  }
+
+  @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     Set<AttributeKey<?>> extra = [
       SemanticAttributes.HTTP_SCHEME,

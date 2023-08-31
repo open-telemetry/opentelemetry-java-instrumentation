@@ -148,6 +148,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
       optionsBuilder.setTestCallbackWithParent(HttpClientTest.this.testCallbackWithParent())
       optionsBuilder.setTestCallbackWithImplicitParent(HttpClientTest.this.testCallbackWithImplicitParent())
       optionsBuilder.setTestErrorWithCallback(HttpClientTest.this.testErrorWithCallback())
+      optionsBuilder.setTestNonStandardHttpMethod(HttpClientTest.this.testNonStandardHttpMethod())
     }
   }
 
@@ -187,6 +188,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   def "request with non-standard http method"() {
     assumeTrue(SemconvStability.emitStableHttpSemconv())
+    assumeTrue(testNonStandardHttpMethod())
     expect:
     junitTest.requestWithNonStandardHttpMethod()
   }
@@ -449,6 +451,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   boolean testErrorWithCallback() {
     return true
+  }
+
+  boolean testNonStandardHttpMethod() {
+    true
   }
 
   Throwable clientSpanError(URI uri, Throwable exception) {
