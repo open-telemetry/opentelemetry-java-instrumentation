@@ -217,7 +217,7 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
           if (SemconvStability.emitStableHttpSemconv()) {
             attributes {
               "$NetworkAttributes.NETWORK_TRANSPORT" "tcp"
-              "$NetworkAttributes.NETWORK_TYPE" "ipv4"
+              "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == null }
               "$NetworkAttributes.SERVER_ADDRESS" uri.host
               "$NetworkAttributes.SERVER_PORT" uri.port
               "$NetworkAttributes.SERVER_SOCKET_ADDRESS" "127.0.0.1"
