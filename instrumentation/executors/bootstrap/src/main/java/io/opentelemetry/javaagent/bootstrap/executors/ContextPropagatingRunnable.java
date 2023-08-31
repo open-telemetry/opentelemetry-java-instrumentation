@@ -37,4 +37,8 @@ public final class ContextPropagatingRunnable implements Runnable {
       delegate.run();
     }
   }
+
+  public Runnable unwrap() {
+    return delegate;
+  }
 }
