@@ -78,6 +78,8 @@ class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
 
   @Override
   String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
     "io.opentelemetry.servlet-5.0"
   }
 

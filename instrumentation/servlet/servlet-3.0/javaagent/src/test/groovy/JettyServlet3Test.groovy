@@ -152,6 +152,8 @@ class JettyServlet3TestAsync extends JettyServlet3Test {
 
   @Override
   String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
     "io.opentelemetry.servlet-3.0"
   }
 }
@@ -165,6 +167,8 @@ class JettyServlet3TestFakeAsync extends JettyServlet3Test {
 
   @Override
   String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
     "io.opentelemetry.servlet-3.0"
   }
 }
@@ -245,6 +249,8 @@ class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {
 
   @Override
   String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
     "io.opentelemetry.servlet-3.0"
   }
 
@@ -279,6 +285,8 @@ class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
 
   @Override
   String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
     "io.opentelemetry.servlet-3.0"
   }
 
