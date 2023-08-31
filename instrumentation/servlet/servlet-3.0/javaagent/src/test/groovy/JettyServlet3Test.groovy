@@ -149,6 +149,11 @@ class JettyServlet3TestAsync extends JettyServlet3Test {
   boolean isAsyncTest() {
     true
   }
+
+  @Override
+  String getMetricsInstrumentationName() {
+    "io.opentelemetry.servlet-3.0"
+  }
 }
 
 class JettyServlet3TestFakeAsync extends JettyServlet3Test {
@@ -156,6 +161,11 @@ class JettyServlet3TestFakeAsync extends JettyServlet3Test {
   @Override
   Class<Servlet> servlet() {
     TestServlet3.FakeAsync
+  }
+
+  @Override
+  String getMetricsInstrumentationName() {
+    "io.opentelemetry.servlet-3.0"
   }
 }
 
@@ -234,6 +244,11 @@ class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {
   }
 
   @Override
+  String getMetricsInstrumentationName() {
+    "io.opentelemetry.servlet-3.0"
+  }
+
+  @Override
   protected void setupServlets(ServletContextHandler context) {
     super.setupServlets(context)
     addServlet(context, "/dispatch" + HTML_PRINT_WRITER.path, TestServlet3.DispatchImmediate)
@@ -260,6 +275,11 @@ class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
   @Override
   boolean isAsyncTest() {
     true
+  }
+
+  @Override
+  String getMetricsInstrumentationName() {
+    "io.opentelemetry.servlet-3.0"
   }
 
   @Override
