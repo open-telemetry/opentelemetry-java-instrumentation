@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.test.base
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanId
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -366,7 +367,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   protected String expectedClientSpanName(URI uri, String method) {
-    return method
+    return HttpConstants._OTHER == method ? "TEST" : method
   }
 
   Integer responseCodeOnRedirectError() {
