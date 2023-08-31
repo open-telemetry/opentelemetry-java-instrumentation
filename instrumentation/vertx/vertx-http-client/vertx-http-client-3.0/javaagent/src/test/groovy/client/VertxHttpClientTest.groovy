@@ -85,6 +85,11 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
   }
 
   @Override
+  boolean testNonStandardHttpMethod() {
+    false
+  }
+
+  @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
     attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME)
