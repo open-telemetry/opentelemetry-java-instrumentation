@@ -314,6 +314,11 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     junitTest.captureRequestParameters()
   }
 
+  def "http server metrics"() {
+    expect:
+    junitTest.httpServerMetrics()
+  }
+
   def "high concurrency test"() {
     expect:
     junitTest.highConcurrency()

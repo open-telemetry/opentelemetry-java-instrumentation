@@ -43,6 +43,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -115,11 +116,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     assertThat(responseCode).isEqualTo(200);
 
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -711,6 +711,43 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
+  }
+
+  @Test
+  void httpClientMetrics() throws Exception {
+    URI uri = resolveAddress("/success");
+    String method = "GET";
+    int responseCode = doRequest(method, uri);
+
+    assertThat(responseCode).isEqualTo(200);
+
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+          trace.hasSpansSatisfyingExactly(
+              span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+        });
+
+    String durationInstrumentName =
+        SemconvStability.emitStableHttpSemconv()
+            ? "http.client.request.duration"
+            : "http.client.duration";
+
+    testing.waitAndAssertMetrics(
+        instrumentationName.get(),
+        durationInstrumentName,
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("The duration of the outbound HTTP request")
+                        .hasUnit(SemconvStability.emitStableHttpSemconv() ? "s" : "ms")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point -> point.hasSumGreaterThan(0.0)))));
   }
 
   /**

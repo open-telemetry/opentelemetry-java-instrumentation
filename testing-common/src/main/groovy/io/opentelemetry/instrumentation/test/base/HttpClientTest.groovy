@@ -322,6 +322,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     junitTest.httpsRequest()
   }
 
+  def "http client metrics"() {
+    expect:
+    junitTest.httpClientMetrics()
+  }
+
   /**
    * This test fires a large number of concurrent requests.
    * Each request first hits a HTTP server and then makes another client request.

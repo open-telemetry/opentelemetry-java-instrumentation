@@ -26,6 +26,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -65,6 +66,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -319,6 +321,42 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     String spanId = assertResponseHasCustomizedHeaders(response, CAPTURE_PARAMETERS, null);
     assertTheTraces(1, null, null, spanId, "POST", CAPTURE_PARAMETERS, response);
+  }
+
+  @Test
+  void httpServerMetrics() {
+    String method = "GET";
+    AggregatedHttpRequest request = request(SUCCESS, method);
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
+
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+          trace.anySatisfy(spanData -> assertServerSpan(assertThat(spanData), method, SUCCESS));
+        });
+
+    String durationInstrumentName =
+        SemconvStability.emitStableHttpSemconv()
+            ? "http.server.request.duration"
+            : "http.server.duration";
+
+    testing.waitAndAssertMetrics(
+        instrumentationName.get(),
+        durationInstrumentName,
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("The duration of the inbound HTTP request")
+                        .hasUnit(SemconvStability.emitStableHttpSemconv() ? "s" : "ms")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point -> point.hasSumGreaterThan(0.0)))));
   }
 
   /**
