@@ -76,6 +76,11 @@ class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
     return "/tomcat-context"
   }
 
+  @Override
+  String getMetricsInstrumentationName() {
+    "io.opentelemetry.servlet-3.0"
+  }
+
   protected void setupServlets(Context context) {
     def servlet = servlet()
 

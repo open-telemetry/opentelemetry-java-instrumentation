@@ -152,6 +152,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     return true
   }
 
+  String getMetricsInstrumentationName() {
+    null
+  }
+
   /** A list of additional HTTP server span attributes extracted by the instrumentation per URI. */
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     [
@@ -211,6 +215,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       }
       options.sockPeerAddr = { endpoint ->
         HttpServerTest.this.sockPeerAddr(endpoint)
+      }
+      options.metricsInstrumentationName = {
+        HttpServerTest.this.getMetricsInstrumentationName()
       }
 
       options.testRedirect = testRedirect()

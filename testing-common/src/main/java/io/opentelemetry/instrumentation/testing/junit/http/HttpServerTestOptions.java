@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public final class HttpServerTestOptions {
@@ -34,6 +35,7 @@ public final class HttpServerTestOptions {
   Function<ServerEndpoint, String> sockPeerAddr = unused -> "127.0.0.1";
   String contextPath = "";
   Throwable expectedException = new Exception(EXCEPTION.body);
+  Supplier<String> metricsInstrumentationName = () -> null;
 
   Predicate<ServerEndpoint> hasHandlerSpan = unused -> false;
   Predicate<ServerEndpoint> hasResponseSpan = unused -> false;
@@ -92,6 +94,13 @@ public final class HttpServerTestOptions {
   @CanIgnoreReturnValue
   public HttpServerTestOptions setExpectedException(Throwable expectedException) {
     this.expectedException = expectedException;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setMetricsInstrumentationName(
+      Supplier<String> metricsInstrumentationName) {
+    this.metricsInstrumentationName = metricsInstrumentationName;
     return this;
   }
 

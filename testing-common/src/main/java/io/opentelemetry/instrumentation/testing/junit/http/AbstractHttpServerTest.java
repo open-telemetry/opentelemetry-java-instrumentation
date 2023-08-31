@@ -344,8 +344,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             ? "http.server.request.duration"
             : "http.server.duration";
 
+    String metricsInstrumentationName = options.metricsInstrumentationName.get();
+    if (metricsInstrumentationName == null) {
+      metricsInstrumentationName = instrumentationName.get();
+    }
     testing.waitAndAssertMetrics(
-        instrumentationName.get(),
+        metricsInstrumentationName,
         durationInstrumentName,
         metrics ->
             metrics.anySatisfy(
