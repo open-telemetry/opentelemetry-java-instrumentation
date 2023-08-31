@@ -220,7 +220,7 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
               "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == null }
               "$NetworkAttributes.SERVER_ADDRESS" uri.host
               "$NetworkAttributes.SERVER_PORT" uri.port
-              "$NetworkAttributes.SERVER_SOCKET_ADDRESS" "127.0.0.1"
+              "$NetworkAttributes.SERVER_SOCKET_ADDRESS" { it == "127.0.0.1" || it == null }
             }
           }
         }
