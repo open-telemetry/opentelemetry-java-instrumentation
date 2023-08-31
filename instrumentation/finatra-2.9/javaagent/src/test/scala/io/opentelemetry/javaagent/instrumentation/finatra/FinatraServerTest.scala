@@ -39,7 +39,7 @@ class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
     implicit val ec: ExecutionContext =
       ExecutionContext.fromExecutor(startupThread)
     Future {
-      testServer.main(Array("-admin.port=:0", "-http.port=:" + port))
+      testServer.nonExitingMain(Array("-admin.port=:0", "-http.port=:" + port))
     }
     testServer.awaitReady()
   }
