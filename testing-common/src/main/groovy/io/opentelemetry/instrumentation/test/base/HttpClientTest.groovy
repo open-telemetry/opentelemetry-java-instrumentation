@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.test.base
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanId
+import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
@@ -181,6 +182,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     where:
     path << ["/success", "/success?with=params"]
+  }
+
+  def "request with non-standard http method"() {
+    assumeTrue(SemconvStability.emitStableHttpSemconv())
+    expect:
+    junitTest.requestWithNonStandardHttpMethod()
   }
 
   def "basic #method request with parent"() {
