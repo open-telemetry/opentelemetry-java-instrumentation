@@ -55,7 +55,8 @@ public class UndertowHttpAttributesGetter
   @Nullable
   @Override
   public String getUrlQuery(HttpServerExchange exchange) {
-    return exchange.getQueryString();
+    String queryString = exchange.getQueryString();
+    return !"".equals(queryString) ? queryString : null;
   }
 
   @Nullable

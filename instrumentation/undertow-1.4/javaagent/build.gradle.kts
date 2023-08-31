@@ -20,3 +20,13 @@ dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
   bootstrap(project(":instrumentation:undertow-1.4:bootstrap"))
 }
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}

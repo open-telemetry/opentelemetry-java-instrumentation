@@ -44,11 +44,6 @@ dependencies {
 
 tasks {
   val testStableSemconv by registering(Test::class) {
-    filter {
-      includeTestsMatching("AkkaHttpClientInstrumentationTest")
-    }
-    include("**/AkkaHttpClientInstrumentationTest.*")
-
     jvmArgs("-Dotel.semconv-stability.opt-in=http")
   }
 

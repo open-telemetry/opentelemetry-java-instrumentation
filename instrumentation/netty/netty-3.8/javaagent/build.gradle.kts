@@ -37,11 +37,6 @@ dependencies {
 
 tasks {
   val testStableSemconv by registering(Test::class) {
-    filter {
-      includeTestsMatching("*ClientTest")
-    }
-    include("**/*ClientTest.*")
-
     jvmArgs("-Dotel.semconv-stability.opt-in=http")
   }
 
