@@ -56,6 +56,8 @@ public class UndertowHttpAttributesGetter
   @Override
   public String getUrlQuery(HttpServerExchange exchange) {
     String queryString = exchange.getQueryString();
+    // getQueryString returns empty string when query string is missing, we'll return null from
+    // here instead to void adding empty query string attribute to the span
     return !"".equals(queryString) ? queryString : null;
   }
 
