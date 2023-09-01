@@ -16,6 +16,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -26,6 +27,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -687,78 +690,113 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     span.hasAttributesSatisfying(
         attrs -> {
-          if (httpAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
-            assertThat(attrs)
-                .containsEntry(
-                    SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP);
+          if (SemconvStability.emitOldHttpSemconv()
+              && attrs.get(SemanticAttributes.NET_TRANSPORT) != null) {
+            assertThat(attrs).containsEntry(SemanticAttributes.NET_TRANSPORT, IP_TCP);
+          }
+          if (SemconvStability.emitStableHttpSemconv()
+              && attrs.get(NetworkAttributes.NETWORK_TRANSPORT) != null) {
+            assertThat(attrs).containsEntry(NetworkAttributes.NETWORK_TRANSPORT, "tcp");
+          }
+          if (SemconvStability.emitStableHttpSemconv()
+              && attrs.get(NetworkAttributes.NETWORK_TYPE) != null) {
+            assertThat(attrs).containsEntry(NetworkAttributes.NETWORK_TYPE, "ipv4");
           }
 
-          assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_NAME, "localhost");
+          assertThat(attrs)
+              .containsEntry(getAttributeKey(SemanticAttributes.NET_HOST_NAME), "localhost");
           // TODO: Move to test knob rather than always treating as optional
           // TODO: once httpAttributes test knob is used, verify default port values
-          if (attrs.get(SemanticAttributes.NET_HOST_PORT) != null) {
-            assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_PORT, port);
+          AttributeKey<Long> netHostPortKey = getAttributeKey(SemanticAttributes.NET_HOST_PORT);
+          if (attrs.get(netHostPortKey) != null) {
+            assertThat(attrs).containsEntry(netHostPortKey, port);
           }
-          if (attrs.get(SemanticAttributes.NET_SOCK_PEER_PORT) != null) {
+          AttributeKey<Long> netSockPeerPortKey =
+              getAttributeKey(SemanticAttributes.NET_SOCK_PEER_PORT);
+          if (attrs.get(netSockPeerPortKey) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
-                    SemanticAttributes.NET_SOCK_PEER_PORT,
+                    netSockPeerPortKey,
                     value ->
                         assertThat(value)
                             .isInstanceOf(Long.class)
                             .isNotEqualTo(Long.valueOf(port)));
           }
-          if (attrs.get(SemanticAttributes.NET_SOCK_PEER_ADDR) != null) {
+          AttributeKey<String> netSockPeerAddrKey =
+              getAttributeKey(SemanticAttributes.NET_SOCK_PEER_ADDR);
+          if (attrs.get(netSockPeerAddrKey) != null) {
             assertThat(attrs)
-                .containsEntry(
-                    SemanticAttributes.NET_SOCK_PEER_ADDR, options.sockPeerAddr.apply(endpoint));
+                .containsEntry(netSockPeerAddrKey, options.sockPeerAddr.apply(endpoint));
           }
-          if (attrs.get(SemanticAttributes.NET_SOCK_HOST_ADDR) != null) {
-            assertThat(attrs).containsEntry(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1");
+          AttributeKey<String> netSockHostAddrKey =
+              getAttributeKey(SemanticAttributes.NET_SOCK_PEER_ADDR);
+          if (attrs.get(netSockHostAddrKey) != null) {
+            assertThat(attrs).containsEntry(netSockHostAddrKey, "127.0.0.1");
           }
 
           assertThat(attrs)
               .hasEntrySatisfying(
-                  SemanticAttributes.HTTP_CLIENT_IP,
+                  getAttributeKey(SemanticAttributes.HTTP_CLIENT_IP),
                   entry ->
                       assertThat(entry)
                           .satisfiesAnyOf(
                               value -> assertThat(value).isNull(),
                               value -> assertThat(value).isEqualTo(TEST_CLIENT_IP)));
-          assertThat(attrs).containsEntry(SemanticAttributes.HTTP_METHOD, method);
-          assertThat(attrs).containsEntry(SemanticAttributes.HTTP_STATUS_CODE, endpoint.status);
-
-          if (attrs.get(SemanticAttributes.NET_PROTOCOL_NAME) != null) {
-            assertThat(attrs).containsEntry(SemanticAttributes.NET_PROTOCOL_NAME, "http");
-          }
-          if (attrs.get(SemanticAttributes.NET_PROTOCOL_VERSION) != null) {
+          if (SemconvStability.emitStableHttpSemconv()
+              && attrs.get(NetworkAttributes.CLIENT_PORT) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
-                    SemanticAttributes.NET_PROTOCOL_VERSION,
-                    entry -> assertThat(entry).isIn("1.1", "2.0"));
+                    NetworkAttributes.CLIENT_PORT, port -> assertThat(port).isGreaterThan(0));
+          }
+          assertThat(attrs).containsEntry(getAttributeKey(SemanticAttributes.HTTP_METHOD), method);
+          assertThat(attrs)
+              .containsEntry(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), endpoint.status);
+
+          AttributeKey<String> netProtocolKey =
+              getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME);
+          if (attrs.get(netProtocolKey) != null) {
+            assertThat(attrs).containsEntry(netProtocolKey, "http");
+          }
+          AttributeKey<String> netProtocolVersionKey =
+              getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION);
+          if (attrs.get(netProtocolVersionKey) != null) {
+            assertThat(attrs)
+                .hasEntrySatisfying(
+                    netProtocolVersionKey, entry -> assertThat(entry).isIn("1.1", "2.0"));
           }
           assertThat(attrs).containsEntry(SemanticAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT);
 
-          assertThat(attrs).containsEntry(SemanticAttributes.HTTP_SCHEME, "http");
+          assertThat(attrs).containsEntry(getAttributeKey(SemanticAttributes.HTTP_SCHEME), "http");
           if (endpoint != INDEXED_CHILD) {
-            assertThat(attrs)
-                .containsEntry(
-                    SemanticAttributes.HTTP_TARGET,
-                    endpoint.resolvePath(address).getPath()
-                        + (endpoint.getQuery() != null ? "?" + endpoint.getQuery() : ""));
+            if (SemconvStability.emitOldHttpSemconv()) {
+              assertThat(attrs)
+                  .containsEntry(
+                      SemanticAttributes.HTTP_TARGET,
+                      endpoint.resolvePath(address).getPath()
+                          + (endpoint.getQuery() != null ? "?" + endpoint.getQuery() : ""));
+            }
+            if (SemconvStability.emitStableHttpSemconv()) {
+              assertThat(attrs)
+                  .containsEntry(UrlAttributes.URL_PATH, endpoint.resolvePath(address).getPath());
+              if (endpoint.getQuery() != null) {
+                assertThat(attrs).containsEntry(UrlAttributes.URL_QUERY, endpoint.getQuery());
+              }
+            }
           }
 
-          if (attrs.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH) != null) {
+          AttributeKey<Long> httpRequestLengthKey =
+              getAttributeKey(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
+          if (attrs.get(httpRequestLengthKey) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
-                    SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
-                    entry -> assertThat(entry).isNotNegative());
+                    httpRequestLengthKey, entry -> assertThat(entry).isNotNegative());
           }
-          if (attrs.get(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH) != null) {
+          AttributeKey<Long> httpResponseLengthKey =
+              getAttributeKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
+          if (attrs.get(httpResponseLengthKey) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
-                    SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                    entry -> assertThat(entry).isNotNegative());
+                    httpResponseLengthKey, entry -> assertThat(entry).isNotNegative());
           }
           if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE) && expectedRoute != null) {
             assertThat(attrs).containsEntry(SemanticAttributes.HTTP_ROUTE, expectedRoute);
@@ -780,6 +818,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return span;
   }
 
+  protected static <T> AttributeKey<T> getAttributeKey(AttributeKey<T> oldKey) {
+    return SemconvStabilityUtil.getAttributeKey(oldKey);
+  }
+
   private String getString(String method, ServerEndpoint endpoint, String expectedRoute) {
     String name = options.expectedServerSpanNameMapper.apply(endpoint, method, expectedRoute);
     return name;
@@ -791,10 +833,17 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     String method = "GET";
     assertServerSpan(span, method, endpoint);
 
-    span.hasAttributesSatisfying(
-        equalTo(
-            SemanticAttributes.HTTP_TARGET,
-            endpoint.resolvePath(address).getPath() + "?id=" + requestId));
+    if (SemconvStability.emitOldHttpSemconv()) {
+      span.hasAttributesSatisfying(
+          equalTo(
+              SemanticAttributes.HTTP_TARGET,
+              endpoint.resolvePath(address).getPath() + "?id=" + requestId));
+    }
+    if (SemconvStability.emitStableHttpSemconv()) {
+      span.hasAttributesSatisfying(
+          equalTo(UrlAttributes.URL_PATH, endpoint.resolvePath(address).getPath()));
+      span.hasAttributesSatisfying(equalTo(UrlAttributes.URL_QUERY, "id=" + requestId));
+    }
 
     return span;
   }

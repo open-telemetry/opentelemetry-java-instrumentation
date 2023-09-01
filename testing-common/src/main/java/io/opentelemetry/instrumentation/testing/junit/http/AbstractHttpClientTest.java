@@ -19,7 +19,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -1118,34 +1117,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             });
   }
 
-  @SuppressWarnings("unchecked")
   protected static <T> AttributeKey<T> getAttributeKey(AttributeKey<T> oldKey) {
-    if (SemconvStability.emitStableHttpSemconv()) {
-      if (SemanticAttributes.NET_PROTOCOL_NAME == oldKey) {
-        return (AttributeKey<T>) NetworkAttributes.NETWORK_PROTOCOL_NAME;
-      } else if (SemanticAttributes.NET_PROTOCOL_VERSION == oldKey) {
-        return (AttributeKey<T>) NetworkAttributes.NETWORK_PROTOCOL_VERSION;
-      } else if (SemanticAttributes.NET_PEER_NAME == oldKey) {
-        return (AttributeKey<T>) NetworkAttributes.SERVER_ADDRESS;
-      } else if (SemanticAttributes.NET_PEER_PORT == oldKey) {
-        return (AttributeKey<T>) NetworkAttributes.SERVER_PORT;
-      } else if (SemanticAttributes.NET_SOCK_PEER_ADDR == oldKey) {
-        return (AttributeKey<T>) NetworkAttributes.CLIENT_SOCKET_ADDRESS;
-      } else if (SemanticAttributes.NET_SOCK_PEER_PORT == oldKey) {
-        return (AttributeKey<T>) NetworkAttributes.CLIENT_SOCKET_PORT;
-      } else if (SemanticAttributes.HTTP_URL == oldKey) {
-        return (AttributeKey<T>) UrlAttributes.URL_FULL;
-      } else if (SemanticAttributes.HTTP_METHOD == oldKey) {
-        return (AttributeKey<T>) HttpAttributes.HTTP_REQUEST_METHOD;
-      } else if (SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH == oldKey) {
-        return (AttributeKey<T>) HttpAttributes.HTTP_REQUEST_BODY_SIZE;
-      } else if (SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH == oldKey) {
-        return (AttributeKey<T>) HttpAttributes.HTTP_RESPONSE_BODY_SIZE;
-      } else if (SemanticAttributes.HTTP_STATUS_CODE == oldKey) {
-        return (AttributeKey<T>) HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
-      }
-    }
-    return oldKey;
+    return SemconvStabilityUtil.getAttributeKey(oldKey);
   }
 
   private static Set<AttributeKey<?>> getAttributeKeys(Set<AttributeKey<?>> oldKeys) {
