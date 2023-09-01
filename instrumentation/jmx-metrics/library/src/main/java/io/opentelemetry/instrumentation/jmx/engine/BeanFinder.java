@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +38,13 @@ class BeanFinder {
 
   void discoverBeans(MetricConfiguration conf) {
     this.conf = conf;
+
+    if (!conf.isEmpty()) {
+      // Issue 9336: Corner case: PlatformMBeanServer will remain unitialized until a direct
+      // reference to it is made. This call makes sure that the PlatformMBeanServer will be in
+      // the set of MBeanServers reported by MBeanServerFactory.
+      ManagementFactory.getPlatformMBeanServer();
+    }
 
     exec.schedule(
         new Runnable() {
