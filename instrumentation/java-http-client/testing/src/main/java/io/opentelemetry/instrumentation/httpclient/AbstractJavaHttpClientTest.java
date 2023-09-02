@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.httpclient;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.instrumentation.testing.junit.http.SemconvStabilityUtil;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
@@ -78,24 +78,27 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestCircularRedirects();
     // TODO nested client span is not created, but context is still injected
     //  which is not what the test expects
     optionsBuilder.disableTestWithClientParent();
 
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          // unopened port or non routable address; or timeout
-          if ("http://localhost:61/".equals(uri.toString())
-              || "https://192.0.2.1/".equals(uri.toString())
-              || uri.toString().contains("/read-timeout")) {
-            attributes.remove(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME));
-            attributes.remove(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION));
-          }
-          return attributes;
-        });
+    if (SemconvStability.emitOldHttpSemconv()) {
+      optionsBuilder.setHttpAttributes(
+          uri -> {
+            Set<AttributeKey<?>> attributes =
+                new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+            // unopened port or non routable address; or timeout
+            if ("http://localhost:61/".equals(uri.toString())
+                || "https://192.0.2.1/".equals(uri.toString())
+                || uri.toString().contains("/read-timeout")) {
+              attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
+              attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+            }
+            return attributes;
+          });
+    }
   }
 }

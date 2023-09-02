@@ -5,19 +5,14 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.instrumentation.testing.junit.http.SemconvStabilityUtil;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -338,14 +333,6 @@ public abstract class AbstractApacheHttpClientTest {
 
   static void configureTest(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.setUserAgent("apachehttpclient");
-    optionsBuilder.setHttpAttributes(
-        endpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.add(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.HTTP_SCHEME));
-          attributes.add(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.HTTP_TARGET));
-          return attributes;
-        });
   }
 
   static String fullPathFromUri(URI uri) {
