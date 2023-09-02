@@ -104,6 +104,7 @@ class HttpClientAttributesExtractorBothSemconvTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void normal() {
     Map<String, String> request = new HashMap<>();
     request.put("method", "POST");

@@ -154,7 +154,7 @@ class WrapperTest extends KafkaClientBaseTest {
                 equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(
                     SemanticAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("consumer")));
+                    stringAssert -> stringAssert.startsWith("consumer"))));
     if (testHeaders) {
       assertions.add(
           equalTo(
