@@ -55,7 +55,7 @@ testing {
       targets {
         all {
           testTask.configure {
-            systemProperty("hasConsumerGroupAndId", true)
+            systemProperty("hasConsumerGroup", true)
           }
         }
       }
@@ -72,7 +72,7 @@ tasks {
   }
 
   test {
-    systemProperty("hasConsumerGroupAndId", testLatestDeps)
+    systemProperty("hasConsumerGroup", testLatestDeps)
   }
 
   check {

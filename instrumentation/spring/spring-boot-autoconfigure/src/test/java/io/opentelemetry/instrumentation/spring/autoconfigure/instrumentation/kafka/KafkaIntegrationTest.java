@@ -29,6 +29,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.TopicBuilder;
+import org.springframework.kafka.core.KafkaOperations;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -81,9 +82,7 @@ class KafkaIntegrationTest {
     contextRunner.run(KafkaIntegrationTest::runShouldInstrumentProducerAndConsumer);
   }
 
-  // In kafka 2 ops.send is deprecated. We are using it to avoid reflection because kafka 3 also has
-  // ops.send, although with different return type.
-  @SuppressWarnings({"unchecked", "deprecation"})
+  @SuppressWarnings("unchecked")
   private static void runShouldInstrumentProducerAndConsumer(
       ConfigurableApplicationContext applicationContext) {
     KafkaTemplate<String, String> kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
@@ -93,7 +92,7 @@ class KafkaIntegrationTest {
         () -> {
           kafkaTemplate.executeInTransaction(
               ops -> {
-                ops.send("testTopic", "10", "testSpan");
+                send(ops, "testTopic", "10", "testSpan");
                 return 0;
               });
         });
@@ -110,7 +109,7 @@ class KafkaIntegrationTest {
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testTopic"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                SemanticAttributes.MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("producer")),
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
@@ -130,9 +129,10 @@ class KafkaIntegrationTest {
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                                 AbstractLongAssert::isNotNegative),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
-                                AbstractLongAssert::isNotNegative),
+                            // TODO (trask) does this have a replacement?
+                            // satisfies(
+                            //     SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                            //     AbstractLongAssert::isNotNegative),
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                                 AbstractLongAssert::isNotNegative),
@@ -140,13 +140,16 @@ class KafkaIntegrationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "testListener"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                stringAssert ->
-                                    stringAssert.startsWith("testListener - consumer"))),
+                                SemanticAttributes.MESSAGING_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("consumer"))),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+  }
+
+  @SuppressWarnings("deprecation")
+  private static void send(KafkaOperations<String, String> ops, String topic, String key, String data) {
+    // In kafka 2 ops.send is deprecated. We are using it to avoid reflection because kafka 3 also has
+    // ops.send, although with different return type.
+    ops.send(topic, key, data);
   }
 
   @Configuration

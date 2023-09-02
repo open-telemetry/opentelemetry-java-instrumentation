@@ -91,6 +91,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void pre(
       AttributesBuilder attributes,
       Exchange exchange,
@@ -176,13 +177,19 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void post(AttributesBuilder attributes, Exchange exchange, Endpoint endpoint) {
     super.post(attributes, exchange, endpoint);
 
     if (exchange.hasOut()) {
       Object responseCode = exchange.getOut().getHeader(Exchange.HTTP_RESPONSE_CODE);
       if (responseCode instanceof Integer) {
-        attributes.put(SemanticAttributes.HTTP_STATUS_CODE, (Integer) responseCode);
+        if (SemconvStability.emitStableHttpSemconv()) {
+          attributes.put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, (Integer) responseCode);
+        }
+        if (SemconvStability.emitOldHttpSemconv()) {
+          attributes.put(SemanticAttributes.HTTP_STATUS_CODE, (Integer) responseCode);
+        }
       }
     }
   }

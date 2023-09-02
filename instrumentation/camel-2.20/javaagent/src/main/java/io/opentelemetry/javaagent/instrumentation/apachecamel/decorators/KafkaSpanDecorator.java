@@ -66,8 +66,9 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
     if (partition != null) {
       if (camelDirection == CamelDirection.OUTBOUND) {
         attributes.put(SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION, partition);
-      } else {
-        attributes.put(SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION, partition);
+        // TODO (trask) does this have a replacement?
+        // } else {
+        // attributes.put(SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION, partition);
       }
     }
 
