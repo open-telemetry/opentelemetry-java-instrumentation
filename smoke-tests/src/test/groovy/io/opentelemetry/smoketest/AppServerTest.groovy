@@ -12,9 +12,9 @@ import spock.lang.Unroll
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OS_TYPE
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OsTypeValues.LINUX
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OsTypeValues.WINDOWS
+import static io.opentelemetry.semconv.ResourceAttributes.OS_TYPE
+import static io.opentelemetry.semconv.ResourceAttributes.OsTypeValues.LINUX
+import static io.opentelemetry.semconv.ResourceAttributes.OsTypeValues.WINDOWS
 import static org.junit.Assume.assumeFalse
 import static org.junit.Assume.assumeTrue
 
@@ -29,7 +29,7 @@ abstract class AppServerTest extends SmokeTest {
   def setupSpec() {
     (serverVersion, jdk) = getAppServer()
     isWindows = System.getProperty("os.name").toLowerCase().contains("windows") &&
-      "1" != System.getenv("USE_LINUX_CONTAINERS")
+        "1" != System.getenv("USE_LINUX_CONTAINERS")
 
     // ibm-semeru-runtimes doesn't publish windows images
     // adoptopenjdk is deprecated and doesn't publish Windows 2022 images
@@ -382,7 +382,7 @@ abstract class AppServerTest extends SmokeTest {
 
     responseBody.contains("<script>console.log(hi)</script>")
 
-    if (expectServerSpan()){
+    if (expectServerSpan()) {
       traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
       traces.countSpansByName('GET /app/jsp') == 1
     }
@@ -410,7 +410,7 @@ abstract class AppServerTest extends SmokeTest {
 
   protected List<List<Object>> getTestParams() {
     return [
-      [serverVersion, jdk, isWindows]
+        [serverVersion, jdk, isWindows]
     ]
   }
 }

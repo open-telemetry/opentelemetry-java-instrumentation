@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.CLOUD_ACCOUNT_ID;
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.CLOUD_RESOURCE_ID;
+import static io.opentelemetry.semconv.ResourceAttributes.CLOUD_ACCOUNT_ID;
+import static io.opentelemetry.semconv.ResourceAttributes.CLOUD_RESOURCE_ID;
 import static io.opentelemetry.semconv.SemanticAttributes.FAAS_INVOCATION_ID;
 
 import com.amazonaws.services.lambda.runtime.Context;
