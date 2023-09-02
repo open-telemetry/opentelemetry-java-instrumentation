@@ -146,8 +146,10 @@ class KafkaIntegrationTest {
   }
 
   @SuppressWarnings("deprecation")
-  private static void send(KafkaOperations<String, String> ops, String topic, String key, String data) {
-    // In kafka 2 ops.send is deprecated. We are using it to avoid reflection because kafka 3 also has
+  private static void send(
+      KafkaOperations<String, String> ops, String topic, String key, String data) {
+    // In kafka 2 ops.send is deprecated. We are using it to avoid reflection because kafka 3 also
+    // has
     // ops.send, although with different return type.
     ops.send(topic, key, data);
   }

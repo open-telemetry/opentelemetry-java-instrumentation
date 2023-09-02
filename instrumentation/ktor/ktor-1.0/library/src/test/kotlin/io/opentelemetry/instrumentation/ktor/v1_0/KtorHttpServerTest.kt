@@ -29,130 +29,130 @@ import java.util.concurrent.TimeUnit
 
 class KtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
 
-    companion object {
-        @JvmStatic
-        @RegisterExtension
-        val testing = HttpServerInstrumentationExtension.forLibrary()
-    }
+  companion object {
+    @JvmStatic
+    @RegisterExtension
+    val testing = HttpServerInstrumentationExtension.forLibrary()
+  }
 
-    override fun setupServer(): ApplicationEngine {
-        return embeddedServer(Netty, port = port) {
-            KtorTestUtil.installOpenTelemetry(this, testing.openTelemetry)
+  override fun setupServer(): ApplicationEngine {
+    return embeddedServer(Netty, port = port) {
+      KtorTestUtil.installOpenTelemetry(this, testing.openTelemetry)
 
-            routing {
-                get(ServerEndpoint.SUCCESS.path) {
-                    controller(ServerEndpoint.SUCCESS) {
-                        call.respondText(
-                            ServerEndpoint.SUCCESS.body,
-                            status = HttpStatusCode.fromValue(ServerEndpoint.SUCCESS.status)
-                        )
-                    }
-                }
-
-                get(ServerEndpoint.REDIRECT.path) {
-                    controller(ServerEndpoint.REDIRECT) {
-                        call.respondRedirect(ServerEndpoint.REDIRECT.body)
-                    }
-                }
-
-                get(ServerEndpoint.ERROR.path) {
-                    controller(ServerEndpoint.ERROR) {
-                        call.respondText(
-                            ServerEndpoint.ERROR.body,
-                            status = HttpStatusCode.fromValue(ServerEndpoint.ERROR.status)
-                        )
-                    }
-                }
-
-                get(ServerEndpoint.EXCEPTION.path) {
-                    controller(ServerEndpoint.EXCEPTION) {
-                        throw Exception(ServerEndpoint.EXCEPTION.body)
-                    }
-                }
-
-                get("/query") {
-                    controller(ServerEndpoint.QUERY_PARAM) {
-                        call.respondText(
-                            "some=${call.request.queryParameters["some"]}",
-                            status = HttpStatusCode.fromValue(ServerEndpoint.QUERY_PARAM.status)
-                        )
-                    }
-                }
-
-                get("/path/{id}/param") {
-                    controller(ServerEndpoint.PATH_PARAM) {
-                        call.respondText(
-                            call.parameters["id"]
-                                ?: "",
-                            status = HttpStatusCode.fromValue(ServerEndpoint.PATH_PARAM.status),
-                        )
-                    }
-                }
-
-                get("/child") {
-                    controller(ServerEndpoint.INDEXED_CHILD) {
-                        ServerEndpoint.INDEXED_CHILD.collectSpanAttributes { call.request.queryParameters[it] }
-                        call.respondText(
-                            ServerEndpoint.INDEXED_CHILD.body,
-                            status = HttpStatusCode.fromValue(ServerEndpoint.INDEXED_CHILD.status)
-                        )
-                    }
-                }
-
-                get("/captureHeaders") {
-                    controller(ServerEndpoint.CAPTURE_HEADERS) {
-                        call.response.header("X-Test-Response", call.request.header("X-Test-Request") ?: "")
-                        call.respondText(
-                            ServerEndpoint.CAPTURE_HEADERS.body,
-                            status = HttpStatusCode.fromValue(ServerEndpoint.CAPTURE_HEADERS.status)
-                        )
-                    }
-                }
-            }
-        }.start()
-    }
-
-    override fun stopServer(server: ApplicationEngine) {
-        server.stop(0, 10, TimeUnit.SECONDS)
-    }
-
-    // Copy in HttpServerTest.controller but make it a suspending function
-    private suspend fun controller(endpoint: ServerEndpoint, wrapped: suspend () -> Unit) {
-        assert(Span.current().spanContext.isValid, { "Controller should have a parent span. " })
-        if (endpoint == ServerEndpoint.NOT_FOUND) {
-            wrapped()
-        }
-        val span =
-            testing.openTelemetry.getTracer("test").spanBuilder("controller").setSpanKind(SpanKind.INTERNAL).startSpan()
-        try {
-            withContext(Context.current().with(span).asContextElement()) {
-                wrapped()
-            }
-            span.end()
-        } catch (e: Exception) {
-            span.setStatus(StatusCode.ERROR)
-            span.recordException(if (e is ExecutionException) e.cause ?: e else e)
-            span.end()
-            throw e
-        }
-    }
-
-    @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
-    override fun configure(options: HttpServerTestOptions) {
-        options.setTestPathParam(true)
-
-        options.setHttpAttributes {
-            HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES - SemanticAttributes.NET_PEER_PORT
+      routing {
+        get(ServerEndpoint.SUCCESS.path) {
+          controller(ServerEndpoint.SUCCESS) {
+            call.respondText(
+              ServerEndpoint.SUCCESS.body,
+              status = HttpStatusCode.fromValue(ServerEndpoint.SUCCESS.status)
+            )
+          }
         }
 
-        options.setExpectedHttpRoute {
-            when (it) {
-                ServerEndpoint.PATH_PARAM -> "/path/{id}/param"
-                else -> expectedHttpRoute(it)
-            }
+        get(ServerEndpoint.REDIRECT.path) {
+          controller(ServerEndpoint.REDIRECT) {
+            call.respondRedirect(ServerEndpoint.REDIRECT.body)
+          }
         }
-        // ktor does not have a controller lifecycle so the server span ends immediately when the
-        // response is sent, which is before the controller span finishes.
-        options.setVerifyServerSpanEndTime(false)
+
+        get(ServerEndpoint.ERROR.path) {
+          controller(ServerEndpoint.ERROR) {
+            call.respondText(
+              ServerEndpoint.ERROR.body,
+              status = HttpStatusCode.fromValue(ServerEndpoint.ERROR.status)
+            )
+          }
+        }
+
+        get(ServerEndpoint.EXCEPTION.path) {
+          controller(ServerEndpoint.EXCEPTION) {
+            throw Exception(ServerEndpoint.EXCEPTION.body)
+          }
+        }
+
+        get("/query") {
+          controller(ServerEndpoint.QUERY_PARAM) {
+            call.respondText(
+              "some=${call.request.queryParameters["some"]}",
+              status = HttpStatusCode.fromValue(ServerEndpoint.QUERY_PARAM.status)
+            )
+          }
+        }
+
+        get("/path/{id}/param") {
+          controller(ServerEndpoint.PATH_PARAM) {
+            call.respondText(
+              call.parameters["id"]
+                ?: "",
+              status = HttpStatusCode.fromValue(ServerEndpoint.PATH_PARAM.status),
+            )
+          }
+        }
+
+        get("/child") {
+          controller(ServerEndpoint.INDEXED_CHILD) {
+            ServerEndpoint.INDEXED_CHILD.collectSpanAttributes { call.request.queryParameters[it] }
+            call.respondText(
+              ServerEndpoint.INDEXED_CHILD.body,
+              status = HttpStatusCode.fromValue(ServerEndpoint.INDEXED_CHILD.status)
+            )
+          }
+        }
+
+        get("/captureHeaders") {
+          controller(ServerEndpoint.CAPTURE_HEADERS) {
+            call.response.header("X-Test-Response", call.request.header("X-Test-Request") ?: "")
+            call.respondText(
+              ServerEndpoint.CAPTURE_HEADERS.body,
+              status = HttpStatusCode.fromValue(ServerEndpoint.CAPTURE_HEADERS.status)
+            )
+          }
+        }
+      }
+    }.start()
+  }
+
+  override fun stopServer(server: ApplicationEngine) {
+    server.stop(0, 10, TimeUnit.SECONDS)
+  }
+
+  // Copy in HttpServerTest.controller but make it a suspending function
+  private suspend fun controller(endpoint: ServerEndpoint, wrapped: suspend () -> Unit) {
+    assert(Span.current().spanContext.isValid, { "Controller should have a parent span. " })
+    if (endpoint == ServerEndpoint.NOT_FOUND) {
+      wrapped()
     }
+    val span =
+      testing.openTelemetry.getTracer("test").spanBuilder("controller").setSpanKind(SpanKind.INTERNAL).startSpan()
+    try {
+      withContext(Context.current().with(span).asContextElement()) {
+        wrapped()
+      }
+      span.end()
+    } catch (e: Exception) {
+      span.setStatus(StatusCode.ERROR)
+      span.recordException(if (e is ExecutionException) e.cause ?: e else e)
+      span.end()
+      throw e
+    }
+  }
+
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
+  override fun configure(options: HttpServerTestOptions) {
+    options.setTestPathParam(true)
+
+    options.setHttpAttributes {
+      HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES - SemanticAttributes.NET_PEER_PORT
+    }
+
+    options.setExpectedHttpRoute {
+      when (it) {
+        ServerEndpoint.PATH_PARAM -> "/path/{id}/param"
+        else -> expectedHttpRoute(it)
+      }
+    }
+    // ktor does not have a controller lifecycle so the server span ends immediately when the
+    // response is sent, which is before the controller span finishes.
+    options.setVerifyServerSpanEndTime(false)
+  }
 }

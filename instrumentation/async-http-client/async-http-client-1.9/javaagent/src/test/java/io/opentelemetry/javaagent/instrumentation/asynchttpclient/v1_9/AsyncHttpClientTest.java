@@ -99,6 +99,6 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
             attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
             return attributes;
           });
-      }
+    }
   }
 }
