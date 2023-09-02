@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttribu
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.function.ToIntFunction;
 import javax.annotation.Nullable;
 
@@ -101,6 +101,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 

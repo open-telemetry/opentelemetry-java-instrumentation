@@ -27,7 +27,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.Map;
 import org.apache.camel.Endpoint;

@@ -22,7 +22,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttri
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

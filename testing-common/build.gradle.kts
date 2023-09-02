@@ -9,7 +9,10 @@ group = "io.opentelemetry.javaagent"
 sourceSets {
   main {
     val armeriaShadedDeps = project(":testing:armeria-shaded-for-testing")
-    output.dir(armeriaShadedDeps.file("build/extracted/shadow"), "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar")
+    output.dir(
+      armeriaShadedDeps.file("build/extracted/shadow"),
+      "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar"
+    )
   }
 }
 
@@ -34,9 +37,9 @@ dependencies {
   api("org.junit.jupiter:junit-jupiter-params")
 
   api("io.opentelemetry:opentelemetry-api")
-  api("io.opentelemetry:opentelemetry-semconv")
   api("io.opentelemetry:opentelemetry-sdk")
   api("io.opentelemetry:opentelemetry-sdk-testing")
+  api("io.opentelemetry.semconv:opentelemetry-semconv")
   api(project(":instrumentation-api"))
 
   api("org.assertj:assertj-core")

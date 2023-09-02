@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttribute
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
