@@ -6,7 +6,7 @@
 package springdata
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 
@@ -28,9 +28,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
 
   @Shared
   DocRepository repo = Proxy.newProxyInstance(
-    getClass().getClassLoader(),
-    [DocRepository] as Class[],
-    lazyProxyInvoker)
+      getClass().getClassLoader(),
+      [DocRepository] as Class[],
+      lazyProxyInvoker)
 
   static class LazyProxyInvoker implements InvocationHandler {
     def repo

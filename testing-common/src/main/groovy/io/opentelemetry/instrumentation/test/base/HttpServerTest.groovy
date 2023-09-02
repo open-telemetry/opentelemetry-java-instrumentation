@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
@@ -159,8 +159,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   /** A list of additional HTTP server span attributes extracted by the instrumentation per URI. */
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     [
-      SemanticAttributes.HTTP_ROUTE,
-      SemanticAttributes.NET_SOCK_PEER_PORT
+        SemanticAttributes.HTTP_ROUTE,
+        SemanticAttributes.NET_SOCK_PEER_PORT
     ] as Set
   }
 
@@ -236,13 +236,13 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     // the main trace assertion method to groovy to be able to call these assertions.
     @Override
     void assertTheTraces(
-      int size,
-      String traceId,
-      String parentId,
-      String spanId,
-      String method,
-      ServerEndpoint endpoint,
-      AggregatedHttpResponse response) {
+        int size,
+        String traceId,
+        String parentId,
+        String spanId,
+        String method,
+        ServerEndpoint endpoint,
+        AggregatedHttpResponse response) {
       HttpServerTest.this.assertTheTraces(size, traceId, parentId, spanId, method, endpoint, response)
     }
 

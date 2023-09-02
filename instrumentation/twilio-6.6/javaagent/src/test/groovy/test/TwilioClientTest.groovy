@@ -16,7 +16,7 @@ import com.twilio.rest.api.v2010.account.Call
 import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.apache.http.HttpEntity
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse

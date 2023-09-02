@@ -13,7 +13,7 @@ import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.sync.RedisCommands
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 
@@ -39,9 +39,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
 
   @Shared
   Map<String, String> testHashMap = [
-    firstname: "John",
-    lastname : "Doe",
-    age      : "53"
+      firstname: "John",
+      lastname : "Doe",
+      age      : "53"
   ]
 
   RedisClient redisClient
@@ -386,8 +386,8 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
   def "mset command"() {
     when:
     def res = syncCommands.mset([
-      "key1": "value1",
-      "key2": "value2"
+        "key1": "value1",
+        "key2": "value2"
     ])
 
     then:

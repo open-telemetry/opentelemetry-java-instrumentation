@@ -11,7 +11,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,7 +27,8 @@ final class TemporaryMetricsView {
   private static final Set<AttributeKey> oldDurationClientView = buildOldDurationClientView();
   private static final Set<AttributeKey> oldDurationServerView = buildOldDurationServerView();
 
-  private static final Set<AttributeKey> activeRequestsView = buildActiveRequestsView();
+  private static final Set<AttributeKey> stableActiveRequestsView = buildStableActiveRequestsView();
+  private static final Set<AttributeKey> oldActiveRequestsView = buildOldActiveRequestsView();
 
   private static Set<AttributeKey> buildStableDurationClientView() {
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpclientrequestduration
@@ -84,21 +84,22 @@ final class TemporaryMetricsView {
     return view;
   }
 
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
-  private static Set<AttributeKey> buildActiveRequestsView() {
+  private static Set<AttributeKey> buildStableActiveRequestsView() {
     Set<AttributeKey> view = new HashSet<>();
-    if (SemconvStability.emitOldHttpSemconv()) {
-      // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/metrics/semantic_conventions/http-metrics.md#metric-httpserveractive_requests
-      view.add(SemanticAttributes.HTTP_METHOD);
-      view.add(SemanticAttributes.HTTP_SCHEME);
-      view.add(SemanticAttributes.NET_HOST_NAME);
-      view.add(SemanticAttributes.NET_HOST_PORT);
-    }
-    if (SemconvStability.emitStableHttpSemconv()) {
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserveractive_requests
     view.add(HttpAttributes.HTTP_REQUEST_METHOD);
     view.add(UrlAttributes.URL_SCHEME);
-    }
+    return view;
+  }
+
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
+  private static Set<AttributeKey> buildOldActiveRequestsView() {
+    Set<AttributeKey> view = new HashSet<>();
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/metrics/semantic_conventions/http-metrics.md#metric-httpserveractive_requests
+    view.add(SemanticAttributes.HTTP_METHOD);
+    view.add(SemanticAttributes.HTTP_SCHEME);
+    view.add(SemanticAttributes.NET_HOST_NAME);
+    view.add(SemanticAttributes.NET_HOST_PORT);
     return view;
   }
 
@@ -156,7 +157,8 @@ final class TemporaryMetricsView {
 
   static Attributes applyActiveRequestsView(Attributes attributes) {
     AttributesBuilder filtered = Attributes.builder();
-    applyView(filtered, attributes, activeRequestsView);
+    applyView(filtered, attributes, stableActiveRequestsView);
+    applyView(filtered, attributes, oldActiveRequestsView);
     return filtered.build();
   }
 

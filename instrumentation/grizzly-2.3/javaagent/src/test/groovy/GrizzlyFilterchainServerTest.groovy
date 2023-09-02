@@ -7,7 +7,7 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.glassfish.grizzly.filterchain.BaseFilter
 import org.glassfish.grizzly.filterchain.FilterChain
 import org.glassfish.grizzly.filterchain.FilterChainBuilder
@@ -92,7 +92,7 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
 
   void setUpTransport(FilterChain filterChain) {
     TCPNIOTransportBuilder transportBuilder = TCPNIOTransportBuilder.newInstance()
-      .setOptimizedForMultiplexing(true)
+        .setOptimizedForMultiplexing(true)
 
     transportBuilder.setTcpNoDelay(true)
     transportBuilder.setKeepAlive(false)
@@ -106,11 +106,11 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
 
   FilterChain setUpFilterChain() {
     return FilterChainBuilder.stateless()
-      .add(createTransportFilter())
-      .add(createIdleTimeoutFilter())
-      .add(new HttpServerFilter())
-      .add(new LastFilter())
-      .build()
+        .add(createTransportFilter())
+        .add(createIdleTimeoutFilter())
+        .add(new HttpServerFilter())
+        .add(new LastFilter())
+        .build()
   }
 
   TransportFilter createTransportFilter() {
@@ -132,15 +132,15 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
           HttpRequestPacket request = (HttpRequestPacket) httpContent.getHttpHeader()
           ResponseParameters responseParameters = buildResponse(request)
           HttpResponsePacket.Builder builder = HttpResponsePacket.builder(request)
-            .status(responseParameters.getStatus())
-            .header("Content-Length", valueOf(responseParameters.getResponseBody().length))
+              .status(responseParameters.getStatus())
+              .header("Content-Length", valueOf(responseParameters.getResponseBody().length))
           responseParameters.fillHeaders(builder)
           HttpResponsePacket responsePacket = builder.build()
           controller(responseParameters.getEndpoint()) {
             responseParameters.execute()
             ctx.write(HttpContent.builder(responsePacket)
-              .content(wrap(ctx.getMemoryManager(), responseParameters.getResponseBody()))
-              .build())
+                .content(wrap(ctx.getMemoryManager(), responseParameters.getResponseBody()))
+                .build())
           }
         }
       }

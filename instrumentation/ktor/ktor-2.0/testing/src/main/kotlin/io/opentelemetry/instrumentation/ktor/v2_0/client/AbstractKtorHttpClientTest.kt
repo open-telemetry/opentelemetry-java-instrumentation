@@ -16,8 +16,12 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import kotlinx.coroutines.*
+import io.opentelemetry.instrumentation.testing.junit.http.SemconvStabilityUtil
+import io.opentelemetry.semconv.SemanticAttributes
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.net.URI
 
 abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBuilder>() {
@@ -65,7 +69,7 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
       // related issue https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/5722
       disableTestRedirects()
 
-      setHttpAttributes { DEFAULT_HTTP_ATTRIBUTES - setOf(SemanticAttributes.NET_PROTOCOL_NAME, SemanticAttributes.NET_PROTOCOL_VERSION) }
+      setHttpAttributes { DEFAULT_HTTP_ATTRIBUTES - setOf(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION)) }
 
       setSingleConnectionFactory { host, port ->
         KtorHttpClientSingleConnection(host, port) { installTracing() }

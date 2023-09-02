@@ -6,7 +6,7 @@
 package springdata
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.io.FileSystemUtils
@@ -51,14 +51,14 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
     println "ES work dir: $esWorkingDir"
 
     def settings = Settings.builder()
-      .put("path.home", esWorkingDir.path)
+        .put("path.home", esWorkingDir.path)
     // Since we use listeners to close spans this should make our span closing deterministic which is good for tests
-      .put("thread_pool.listener.size", 1)
-      .put("transport.type", "netty3")
-      .put("http.type", "netty3")
-      .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
-      .put("discovery.type", "single-node")
-      .build()
+        .put("thread_pool.listener.size", 1)
+        .put("transport.type", "netty3")
+        .put("http.type", "netty3")
+        .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
+        .put("discovery.type", "single-node")
+        .build()
     testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
     testNode.start()
     runWithSpan("setup") {
@@ -118,21 +118,21 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
 
     when:
     NativeSearchQuery query = new NativeSearchQueryBuilder()
-      .withIndices(indexName)
-      .withTypes(indexType)
-      .withIds([id])
-      .build()
+        .withIndices(indexName)
+        .withTypes(indexType)
+        .withIds([id])
+        .build()
 
     then:
     template.queryForIds(query) == []
 
     when:
     def result = template.index(IndexQueryBuilder.newInstance()
-      .withObject(new Doc())
-      .withIndexName(indexName)
-      .withType(indexType)
-      .withId(id)
-      .build())
+        .withObject(new Doc())
+        .withIndexName(indexName)
+        .withType(indexType)
+        .withId(id)
+        .build())
     template.refresh(Doc)
 
     then:
@@ -246,15 +246,15 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
     testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
 
     template.index(IndexQueryBuilder.newInstance()
-      .withObject(new Doc(id: 1, data: "doc a"))
-      .withIndexName(indexName)
-      .withId("a")
-      .build())
+        .withObject(new Doc(id: 1, data: "doc a"))
+        .withIndexName(indexName)
+        .withId("a")
+        .build())
     template.index(IndexQueryBuilder.newInstance()
-      .withObject(new Doc(id: 2, data: "doc b"))
-      .withIndexName(indexName)
-      .withId("b")
-      .build())
+        .withObject(new Doc(id: 2, data: "doc b"))
+        .withIndexName(indexName)
+        .withId("b")
+        .build())
     template.refresh(indexName)
     ignoreTracesAndClear(5)
 

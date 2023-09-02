@@ -28,7 +28,7 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE
@@ -57,83 +57,83 @@ class Netty40ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
     def eventLoopGroup = new NioEventLoopGroup()
 
     ServerBootstrap bootstrap = new ServerBootstrap()
-      .group(eventLoopGroup)
-      .handler(LOGGING_HANDLER)
-      .childHandler([
-        initChannel: { ch ->
-          ChannelPipeline pipeline = ch.pipeline()
-          pipeline.addFirst("logger", LOGGING_HANDLER)
+        .group(eventLoopGroup)
+        .handler(LOGGING_HANDLER)
+        .childHandler([
+            initChannel: { ch ->
+              ChannelPipeline pipeline = ch.pipeline()
+              pipeline.addFirst("logger", LOGGING_HANDLER)
 
-          def handlers = [new HttpRequestDecoder(), new HttpResponseEncoder()]
-          handlers.each { pipeline.addLast(it) }
-          pipeline.addLast(new SimpleChannelInboundHandler() {
+              def handlers = [new HttpRequestDecoder(), new HttpResponseEncoder()]
+              handlers.each { pipeline.addLast(it) }
+              pipeline.addLast(new SimpleChannelInboundHandler() {
 
-            @Override
-            protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
-              if (msg instanceof HttpRequest) {
-                def request = msg as HttpRequest
-                def uri = URI.create(request.uri)
-                ServerEndpoint endpoint = ServerEndpoint.forPath(uri.path)
-                ctx.write controller(endpoint) {
-                  ByteBuf content = null
-                  FullHttpResponse response
-                  switch (endpoint) {
-                    case SUCCESS:
-                    case ERROR:
-                      content = Unpooled.copiedBuffer(endpoint.body, CharsetUtil.UTF_8)
-                      response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
-                      break
-                    case INDEXED_CHILD:
-                      content = Unpooled.EMPTY_BUFFER
-                      endpoint.collectSpanAttributes { new QueryStringDecoder(uri).parameters().get(it).find() }
-                      response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
-                      break
-                    case QUERY_PARAM:
-                      content = Unpooled.copiedBuffer(uri.query, CharsetUtil.UTF_8)
-                      response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
-                      break
-                    case REDIRECT:
-                      content = Unpooled.EMPTY_BUFFER
-                      response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
-                      response.headers().set(HttpHeaders.Names.LOCATION, endpoint.body)
-                      break
-                    case CAPTURE_HEADERS:
-                      content = Unpooled.copiedBuffer(endpoint.body, CharsetUtil.UTF_8)
-                      response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
-                      response.headers().set("X-Test-Response", request.headers().get("X-Test-Request"))
-                      break
-                    case EXCEPTION:
-                      throw new Exception(endpoint.body)
-                    default:
-                      content = Unpooled.copiedBuffer(NOT_FOUND.body, CharsetUtil.UTF_8)
-                      response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(NOT_FOUND.status), content)
-                      break
+                @Override
+                protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
+                  if (msg instanceof HttpRequest) {
+                    def request = msg as HttpRequest
+                    def uri = URI.create(request.uri)
+                    ServerEndpoint endpoint = ServerEndpoint.forPath(uri.path)
+                    ctx.write controller(endpoint) {
+                      ByteBuf content = null
+                      FullHttpResponse response
+                      switch (endpoint) {
+                        case SUCCESS:
+                        case ERROR:
+                          content = Unpooled.copiedBuffer(endpoint.body, CharsetUtil.UTF_8)
+                          response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
+                          break
+                        case INDEXED_CHILD:
+                          content = Unpooled.EMPTY_BUFFER
+                          endpoint.collectSpanAttributes { new QueryStringDecoder(uri).parameters().get(it).find() }
+                          response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
+                          break
+                        case QUERY_PARAM:
+                          content = Unpooled.copiedBuffer(uri.query, CharsetUtil.UTF_8)
+                          response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
+                          break
+                        case REDIRECT:
+                          content = Unpooled.EMPTY_BUFFER
+                          response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
+                          response.headers().set(HttpHeaders.Names.LOCATION, endpoint.body)
+                          break
+                        case CAPTURE_HEADERS:
+                          content = Unpooled.copiedBuffer(endpoint.body, CharsetUtil.UTF_8)
+                          response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
+                          response.headers().set("X-Test-Response", request.headers().get("X-Test-Request"))
+                          break
+                        case EXCEPTION:
+                          throw new Exception(endpoint.body)
+                        default:
+                          content = Unpooled.copiedBuffer(NOT_FOUND.body, CharsetUtil.UTF_8)
+                          response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(NOT_FOUND.status), content)
+                          break
+                      }
+                      response.headers().set(CONTENT_TYPE, "text/plain")
+                      if (content) {
+                        response.headers().set(CONTENT_LENGTH, content.readableBytes())
+                      }
+                      return response
+                    }
                   }
-                  response.headers().set(CONTENT_TYPE, "text/plain")
-                  if (content) {
-                    response.headers().set(CONTENT_LENGTH, content.readableBytes())
-                  }
-                  return response
                 }
-              }
-            }
 
-            @Override
-            void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-              ByteBuf content = Unpooled.copiedBuffer(cause.message, CharsetUtil.UTF_8)
-              FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, INTERNAL_SERVER_ERROR, content)
-              response.headers().set(CONTENT_TYPE, "text/plain")
-              response.headers().set(CONTENT_LENGTH, content.readableBytes())
-              ctx.write(response)
-            }
+                @Override
+                void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+                  ByteBuf content = Unpooled.copiedBuffer(cause.message, CharsetUtil.UTF_8)
+                  FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, INTERNAL_SERVER_ERROR, content)
+                  response.headers().set(CONTENT_TYPE, "text/plain")
+                  response.headers().set(CONTENT_LENGTH, content.readableBytes())
+                  ctx.write(response)
+                }
 
-            @Override
-            void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-              ctx.flush()
+                @Override
+                void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+                  ctx.flush()
+                }
+              })
             }
-          })
-        }
-      ] as ChannelInitializer).channel(NioServerSocketChannel)
+        ] as ChannelInitializer).channel(NioServerSocketChannel)
     bootstrap.bind(port).sync()
 
     return eventLoopGroup

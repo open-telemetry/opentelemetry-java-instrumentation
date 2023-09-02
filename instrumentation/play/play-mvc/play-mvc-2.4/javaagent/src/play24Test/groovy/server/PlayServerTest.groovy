@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import play.libs.F.Function0
 import play.mvc.Results
 import play.routing.RoutingDsl
@@ -35,47 +35,47 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   @Override
   Server startServer(int port) {
     def router =
-      new RoutingDsl()
-        .GET(SUCCESS.getPath()).routeTo({
-        controller(SUCCESS) {
-          Results.status(SUCCESS.getStatus(), SUCCESS.getBody())
-        }
-      } as Function0)
-        .GET(INDEXED_CHILD.getPath()).routeTo({
-        controller(INDEXED_CHILD) {
-          INDEXED_CHILD.collectSpanAttributes { request().getQueryString(it) }
-          Results.status(INDEXED_CHILD.getStatus())
-        }
-      } as Function0)
-        .GET(QUERY_PARAM.getPath()).routeTo({
-        controller(QUERY_PARAM) {
-          Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())
-        }
-      } as Function0)
-        .GET(REDIRECT.getPath()).routeTo({
-        controller(REDIRECT) {
-          Results.found(REDIRECT.getBody())
-        }
-      } as play.libs.F.Function0)
-        .GET(CAPTURE_HEADERS.getPath()).routeTo({
-        controller(CAPTURE_HEADERS) {
-          def javaResult = Results.status(CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
-          def headers = Arrays.asList(new Tuple2<>("X-Test-Response", request().getHeader("X-Test-Request")))
-          def scalaResult = javaResult.toScala().withHeaders(JavaConverters.asScalaIteratorConverter(headers.iterator()).asScala().toSeq())
+        new RoutingDsl()
+            .GET(SUCCESS.getPath()).routeTo({
+          controller(SUCCESS) {
+            Results.status(SUCCESS.getStatus(), SUCCESS.getBody())
+          }
+        } as Function0)
+            .GET(INDEXED_CHILD.getPath()).routeTo({
+          controller(INDEXED_CHILD) {
+            INDEXED_CHILD.collectSpanAttributes { request().getQueryString(it) }
+            Results.status(INDEXED_CHILD.getStatus())
+          }
+        } as Function0)
+            .GET(QUERY_PARAM.getPath()).routeTo({
+          controller(QUERY_PARAM) {
+            Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())
+          }
+        } as Function0)
+            .GET(REDIRECT.getPath()).routeTo({
+          controller(REDIRECT) {
+            Results.found(REDIRECT.getBody())
+          }
+        } as play.libs.F.Function0)
+            .GET(CAPTURE_HEADERS.getPath()).routeTo({
+          controller(CAPTURE_HEADERS) {
+            def javaResult = Results.status(CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
+            def headers = Arrays.asList(new Tuple2<>("X-Test-Response", request().getHeader("X-Test-Request")))
+            def scalaResult = javaResult.toScala().withHeaders(JavaConverters.asScalaIteratorConverter(headers.iterator()).asScala().toSeq())
 
-          return new Results.Status(scalaResult)
-        }
-      } as Function0)
-        .GET(ERROR.getPath()).routeTo({
-        controller(ERROR) {
-          Results.status(ERROR.getStatus(), ERROR.getBody())
-        }
-      } as Function0)
-        .GET(EXCEPTION.getPath()).routeTo({
-        controller(EXCEPTION) {
-          throw new Exception(EXCEPTION.getBody())
-        }
-      } as Function0)
+            return new Results.Status(scalaResult)
+          }
+        } as Function0)
+            .GET(ERROR.getPath()).routeTo({
+          controller(ERROR) {
+            Results.status(ERROR.getStatus(), ERROR.getBody())
+          }
+        } as Function0)
+            .GET(EXCEPTION.getPath()).routeTo({
+          controller(EXCEPTION) {
+            throw new Exception(EXCEPTION.getBody())
+          }
+        } as Function0)
 
     return Server.forRouter(router.build(), port)
   }

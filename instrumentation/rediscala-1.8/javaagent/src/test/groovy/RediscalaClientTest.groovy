@@ -5,7 +5,7 @@
 
 import akka.actor.ActorSystem
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.testcontainers.containers.GenericContainer
 import redis.ByteStringDeserializerDefault
 import redis.ByteStringSerializerLowPriority
@@ -36,13 +36,13 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
     port = redisServer.getMappedPort(6379)
     system = ActorSystem.create()
     redisClient = new RedisClient("localhost",
-      port,
-      Option.apply(null),
-      Option.apply(null),
-      "RedisClient",
-      Option.apply(null),
-      system,
-      new RedisDispatcher("rediscala.rediscala-client-worker-dispatcher"))
+        port,
+        Option.apply(null),
+        Option.apply(null),
+        "RedisClient",
+        Option.apply(null),
+        system,
+        new RedisDispatcher("rediscala.rediscala-client-worker-dispatcher"))
   }
 
   def cleanupSpec() {
@@ -53,12 +53,12 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
   def "set command"() {
     when:
     def value = redisClient.set("foo",
-      "bar",
-      Option.apply(null),
-      Option.apply(null),
-      false,
-      false,
-      new ByteStringSerializerLowPriority.String$())
+        "bar",
+        Option.apply(null),
+        Option.apply(null),
+        false,
+        false,
+        new ByteStringSerializerLowPriority.String$())
 
 
     then:
@@ -81,12 +81,12 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
     when:
     def (write, value) = runWithSpan("parent") {
       def w = redisClient.set("bar",
-        "baz",
-        Option.apply(null),
-        Option.apply(null),
-        false,
-        false,
-        new ByteStringSerializerLowPriority.String$())
+          "baz",
+          Option.apply(null),
+          Option.apply(null),
+          false,
+          false,
+          new ByteStringSerializerLowPriority.String$())
       def v = redisClient.get("bar", new ByteStringDeserializerDefault.String$())
       return new Tuple(w, v)
     }

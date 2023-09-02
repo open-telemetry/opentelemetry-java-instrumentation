@@ -12,7 +12,7 @@ import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 
 import java.util.regex.Pattern
 
@@ -38,8 +38,8 @@ class SpanAssert {
   }
 
   void assertSpan(
-    @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.SpanAssert'])
-    @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+      @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.SpanAssert'])
+      @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def clone = (Closure) spec.clone()
     clone.delegate = this
     clone.resolveStrategy = Closure.DELEGATE_FIRST

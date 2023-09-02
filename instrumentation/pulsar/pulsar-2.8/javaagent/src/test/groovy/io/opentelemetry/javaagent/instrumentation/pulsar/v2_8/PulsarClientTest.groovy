@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.apache.pulsar.client.admin.PulsarAdmin
 import org.apache.pulsar.client.api.Consumer
 import org.apache.pulsar.client.api.Message
@@ -38,7 +38,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
   private static final Logger logger = LoggerFactory.getLogger(PulsarClientTest)
 
   private static final DockerImageName DEFAULT_IMAGE_NAME =
-    DockerImageName.parse("apachepulsar/pulsar:2.8.0")
+      DockerImageName.parse("apachepulsar/pulsar:2.8.0")
 
   @Shared
   private PulsarContainer pulsar
@@ -61,9 +61,9 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
   @Override
   def setupSpec() {
     pulsar = new PulsarContainer(DEFAULT_IMAGE_NAME)
-      .withEnv("PULSAR_MEM", "-Xmx128m")
-      .withLogConsumer(new Slf4jLogConsumer(logger))
-      .withStartupTimeout(Duration.ofMinutes(2))
+        .withEnv("PULSAR_MEM", "-Xmx128m")
+        .withLogConsumer(new Slf4jLogConsumer(logger))
+        .withStartupTimeout(Duration.ofMinutes(2))
     pulsar.start()
 
     brokerHost = pulsar.host
@@ -87,8 +87,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     def topic = "persistent://public/default/testSendNonPartitionedTopic"
     admin.topics().createNonPartitionedTopic(topic)
     producer =
-      client.newProducer(Schema.STRING).topic(topic)
-        .enableBatching(false).create()
+        client.newProducer(Schema.STRING).topic(topic)
+            .enableBatching(false).create()
 
     when:
     String msg = "test"
@@ -115,22 +115,22 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     def latch = new CountDownLatch(1)
     admin.topics().createNonPartitionedTopic(topic)
     consumer = client.newConsumer(Schema.STRING)
-      .subscriptionName("test_sub")
-      .topic(topic)
-      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-      .messageListener(new MessageListener<String>() {
-        @Override
-        void received(Consumer<String> consumer, Message<String> msg) {
-          consumer.acknowledge(msg)
-          latch.countDown()
-        }
-      })
-      .subscribe()
+        .subscriptionName("test_sub")
+        .topic(topic)
+        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+        .messageListener(new MessageListener<String>() {
+          @Override
+          void received(Consumer<String> consumer, Message<String> msg) {
+            consumer.acknowledge(msg)
+            latch.countDown()
+          }
+        })
+        .subscribe()
 
     producer = client.newProducer(Schema.STRING)
-      .topic(topic)
-      .enableBatching(false)
-      .create()
+        .topic(topic)
+        .enableBatching(false)
+        .create()
 
     when:
     def msg = "test"
@@ -160,15 +160,15 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     def topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceive"
     admin.topics().createNonPartitionedTopic(topic)
     consumer = client.newConsumer(Schema.STRING)
-      .subscriptionName("test_sub")
-      .topic(topic)
-      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-      .subscribe()
+        .subscriptionName("test_sub")
+        .topic(topic)
+        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+        .subscribe()
 
     producer = client.newProducer(Schema.STRING)
-      .topic(topic)
-      .enableBatching(false)
-      .create()
+        .topic(topic)
+        .enableBatching(false)
+        .create()
 
     when:
     def msg = "test"
@@ -198,15 +198,15 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     def topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceiveAsync"
     admin.topics().createNonPartitionedTopic(topic)
     consumer = client.newConsumer(Schema.STRING)
-      .subscriptionName("test_sub")
-      .topic(topic)
-      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-      .subscribe()
+        .subscriptionName("test_sub")
+        .topic(topic)
+        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+        .subscribe()
 
     producer = client.newProducer(Schema.STRING)
-      .topic(topic)
-      .enableBatching(false)
-      .create()
+        .topic(topic)
+        .enableBatching(false)
+        .create()
 
     when:
     CompletableFuture<Message<String>> result = consumer.receiveAsync().whenComplete { receivedMsg, throwable ->
@@ -248,15 +248,15 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     def topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceiveWithTimeout"
     admin.topics().createNonPartitionedTopic(topic)
     consumer = client.newConsumer(Schema.STRING)
-      .subscriptionName("test_sub")
-      .topic(topic)
-      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-      .subscribe()
+        .subscriptionName("test_sub")
+        .topic(topic)
+        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+        .subscribe()
 
     producer = client.newProducer(Schema.STRING)
-      .topic(topic)
-      .enableBatching(false)
-      .create()
+        .topic(topic)
+        .enableBatching(false)
+        .create()
 
     when:
     def msg = "test"
@@ -286,15 +286,15 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     def topic = "persistent://public/default/testConsumeNonPartitionedTopicCallBatchReceive"
     admin.topics().createNonPartitionedTopic(topic)
     consumer = client.newConsumer(Schema.STRING)
-      .subscriptionName("test_sub")
-      .topic(topic)
-      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-      .subscribe()
+        .subscriptionName("test_sub")
+        .topic(topic)
+        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+        .subscribe()
 
     producer = client.newProducer(Schema.STRING)
-      .topic(topic)
-      .enableBatching(false)
-      .create()
+        .topic(topic)
+        .enableBatching(false)
+        .create()
 
     when:
     def msg = "test"
@@ -335,15 +335,15 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     def topic = "persistent://public/default/testConsumeNonPartitionedTopicCallBatchReceiveAsync"
     admin.topics().createNonPartitionedTopic(topic)
     consumer = client.newConsumer(Schema.STRING)
-      .subscriptionName("test_sub")
-      .topic(topic)
-      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-      .subscribe()
+        .subscriptionName("test_sub")
+        .topic(topic)
+        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+        .subscribe()
 
     producer = client.newProducer(Schema.STRING)
-      .topic(topic)
-      .enableBatching(false)
-      .create()
+        .topic(topic)
+        .enableBatching(false)
+        .create()
 
     when:
     def msg = "test"
@@ -396,22 +396,22 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     def latch = new CountDownLatch(1)
     admin.topics().createNonPartitionedTopic(topic)
     consumer = client.newConsumer(Schema.STRING)
-      .subscriptionName("test_sub")
-      .topic(topic)
-      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-      .messageListener(new MessageListener<String>() {
-        @Override
-        void received(Consumer<String> consumer, Message<String> msg) {
-          consumer.acknowledge(msg)
-          latch.countDown()
-        }
-      })
-      .subscribe()
+        .subscriptionName("test_sub")
+        .topic(topic)
+        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+        .messageListener(new MessageListener<String>() {
+          @Override
+          void received(Consumer<String> consumer, Message<String> msg) {
+            consumer.acknowledge(msg)
+            latch.countDown()
+          }
+        })
+        .subscribe()
 
     producer = client.newProducer(Schema.STRING)
-      .topic(topic)
-      .enableBatching(false)
-      .create()
+        .topic(topic)
+        .enableBatching(false)
+        .create()
 
     when:
     def msg = "test"
@@ -441,8 +441,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     def topic = "persistent://public/default/testSendPartitionedTopic"
     admin.topics().createPartitionedTopic(topic, 2)
     producer =
-      client.newProducer(Schema.STRING).topic(topic)
-        .enableBatching(false).create()
+        client.newProducer(Schema.STRING).topic(topic)
+            .enableBatching(false).create()
 
     when:
     String msg = "test"
@@ -470,22 +470,22 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     def latch = new CountDownLatch(1)
     consumer = client.newConsumer(Schema.STRING)
-      .subscriptionName("test_sub")
-      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-      .topic(topic)
-      .messageListener(new MessageListener<String>() {
-        @Override
-        void received(Consumer<String> consumer, Message<String> msg) {
-          consumer.acknowledge(msg)
-          latch.countDown()
-        }
-      })
-      .subscribe()
+        .subscriptionName("test_sub")
+        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+        .topic(topic)
+        .messageListener(new MessageListener<String>() {
+          @Override
+          void received(Consumer<String> consumer, Message<String> msg) {
+            consumer.acknowledge(msg)
+            latch.countDown()
+          }
+        })
+        .subscribe()
 
     producer = client.newProducer(Schema.STRING)
-      .topic(topic)
-      .enableBatching(false)
-      .create()
+        .topic(topic)
+        .enableBatching(false)
+        .create()
 
     when:
     def msg = "test"
@@ -504,7 +504,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
         }
         producerSpan(it, 1, span(0), topic, ~/${topic}-partition-.*publish/, { it.startsWith(topic) }, msgId)
-        receiveSpan(it, 2, span(1), topic,  ~/${topic}-partition-.*receive/, { it.startsWith(topic) }, msgId)
+        receiveSpan(it, 2, span(1), topic, ~/${topic}-partition-.*receive/, { it.startsWith(topic) }, msgId)
         processSpan(it, 3, span(2), topic, ~/${topic}-partition-.*process/, { it.startsWith(topic) }, msgId)
       }
     }
@@ -519,13 +519,13 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     def latch = new CountDownLatch(2)
     producer = client.newProducer(Schema.STRING)
-      .topic(topic1)
-      .enableBatching(false)
-      .create()
+        .topic(topic1)
+        .enableBatching(false)
+        .create()
     producer2 = client.newProducer(Schema.STRING)
-      .topic(topic2)
-      .enableBatching(false)
-      .create()
+        .topic(topic2)
+        .enableBatching(false)
+        .create()
 
     when:
     runWithSpan("parent1") {
@@ -536,17 +536,17 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     }
 
     consumer = client.newConsumer(Schema.STRING)
-      .topic(topic2, topic1)
-      .subscriptionName("test_sub")
-      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-      .messageListener(new MessageListener<String>() {
-        @Override
-        void received(Consumer<String> consumer, Message<String> msg) {
-          consumer.acknowledge(msg)
-          latch.countDown()
-        }
-      })
-      .subscribe()
+        .topic(topic2, topic1)
+        .subscriptionName("test_sub")
+        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+        .messageListener(new MessageListener<String>() {
+          @Override
+          void received(Consumer<String> consumer, Message<String> msg) {
+            consumer.acknowledge(msg)
+            latch.countDown()
+          }
+        })
+        .subscribe()
 
     latch.await(1, TimeUnit.MINUTES)
 

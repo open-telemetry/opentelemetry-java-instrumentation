@@ -7,7 +7,7 @@ import com.google.common.util.concurrent.MoreExecutors
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.javaagent.instrumentation.spymemcached.CompletionListener
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import net.spy.memcached.CASResponse
 import net.spy.memcached.ConnectionFactory
 import net.spy.memcached.ConnectionFactoryBuilder
@@ -47,12 +47,12 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   def setupSpec() {
     memcachedContainer = new GenericContainer('memcached:latest')
-      .withExposedPorts(11211)
-      .withStartupTimeout(Duration.ofSeconds(120))
+        .withExposedPorts(11211)
+        .withStartupTimeout(Duration.ofSeconds(120))
     memcachedContainer.start()
     memcachedAddress = new InetSocketAddress(
-      memcachedContainer.host,
-      memcachedContainer.getMappedPort(11211)
+        memcachedContainer.host,
+        memcachedContainer.getMappedPort(11211)
     )
   }
 
@@ -74,9 +74,9 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
     ExecutorService listenerExecutorService = MoreExecutors.newDirectExecutorService()
 
     ConnectionFactory connectionFactory = (new ConnectionFactoryBuilder())
-      .setListenerExecutorService(listenerExecutorService)
-      .setProtocol(BINARY)
-      .build()
+        .setListenerExecutorService(listenerExecutorService)
+        .setProtocol(BINARY)
+        .build()
     memcached = new MemcachedClient(connectionFactory, Arrays.asList(memcachedAddress))
 
     def lockableQueueFactory = new OperationQueueFactory() {
@@ -87,32 +87,32 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
     }
 
     ConnectionFactory lockableConnectionFactory = (new ConnectionFactoryBuilder())
-      .setListenerExecutorService(listenerExecutorService)
-      .setProtocol(BINARY)
-      .setOpQueueFactory(lockableQueueFactory)
-      .build()
+        .setListenerExecutorService(listenerExecutorService)
+        .setProtocol(BINARY)
+        .setOpQueueFactory(lockableQueueFactory)
+        .build()
     lockableMemcached = new MemcachedClient(lockableConnectionFactory, Arrays.asList(memcachedAddress))
 
     ConnectionFactory timingoutConnectionFactory = (new ConnectionFactoryBuilder())
-      .setListenerExecutorService(listenerExecutorService)
-      .setProtocol(BINARY)
-      .setOpQueueFactory(lockableQueueFactory)
-      .setOpTimeout(timingOutMemcachedOpTimeout)
-      .build()
+        .setListenerExecutorService(listenerExecutorService)
+        .setProtocol(BINARY)
+        .setOpQueueFactory(lockableQueueFactory)
+        .setOpTimeout(timingOutMemcachedOpTimeout)
+        .build()
     timingoutMemcached = new MemcachedClient(timingoutConnectionFactory, Arrays.asList(memcachedAddress))
 
     // Add some keys to test on later:
     def valuesToSet = [
-      "test-get"    : "get test",
-      "test-get-2"  : "get test 2",
-      "test-append" : "append test",
-      "test-prepend": "prepend test",
-      "test-delete" : "delete test",
-      "test-replace": "replace test",
-      "test-touch"  : "touch test",
-      "test-cas"    : "cas test",
-      "test-decr"   : "200",
-      "test-incr"   : "100"
+        "test-get"    : "get test",
+        "test-get-2"  : "get test 2",
+        "test-append" : "append test",
+        "test-prepend": "prepend test",
+        "test-delete" : "delete test",
+        "test-replace": "replace test",
+        "test-touch"  : "touch test",
+        "test-cas"    : "cas test",
+        "test-decr"   : "200",
+        "test-incr"   : "100"
     ]
     runWithSpan("setup") {
       valuesToSet.each { k, v -> assert memcached.set(key(k), expiration, v).get() }
@@ -612,14 +612,14 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
       if (error == "timeout") {
         errorEvent(
-          CheckedOperationTimeoutException,
-          "Operation timed out. - failing node: ${memcachedAddress.address}:${memcachedAddress.port}")
+            CheckedOperationTimeoutException,
+            "Operation timed out. - failing node: ${memcachedAddress.address}:${memcachedAddress.port}")
       }
 
       if (error == "long key") {
         errorEvent(
-          IllegalArgumentException,
-          "Key is too long (maxlen = 250)")
+            IllegalArgumentException,
+            "Key is too long (maxlen = 250)")
       }
 
       attributes {

@@ -9,7 +9,7 @@ import io.lettuce.core.RedisClient
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceReactiveClientTest
 import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import reactor.core.scheduler.Schedulers
 
 class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implements AgentTestTrait {
@@ -24,9 +24,9 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
     when:
     runWithSpan("test-parent") {
       reactiveCommands.set("a", "1")
-        .then(reactiveCommands.get("a"))
-        .subscribeOn(Schedulers.elastic())
-        .subscribe()
+          .then(reactiveCommands.get("a"))
+          .subscribeOn(Schedulers.elastic())
+          .subscribe()
     }
 
     then:

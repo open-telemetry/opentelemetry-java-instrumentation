@@ -10,7 +10,7 @@ import com.lambdaworks.redis.api.StatefulConnection
 import com.lambdaworks.redis.api.sync.RedisCommands
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 
@@ -41,9 +41,9 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
 
   @Shared
   Map<String, String> testHashMap = [
-    firstname: "John",
-    lastname : "Doe",
-    age      : "53"
+      firstname: "John",
+      lastname : "Doe",
+      age      : "53"
   ]
 
   RedisClient redisClient

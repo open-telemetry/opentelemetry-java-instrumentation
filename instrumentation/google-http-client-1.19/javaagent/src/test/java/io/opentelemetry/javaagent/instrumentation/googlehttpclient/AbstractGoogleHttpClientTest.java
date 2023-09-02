@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.SemconvStabilityUtil;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
@@ -126,8 +127,8 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+          attributes.remove(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME));
+          attributes.remove(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION));
           return attributes;
         });
   }

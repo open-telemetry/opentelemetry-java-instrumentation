@@ -6,7 +6,7 @@
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
@@ -57,15 +57,15 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
 
     def serverApp = new SpringApplication(ServerConfig)
     serverApp.setDefaultProperties([
-      "spring.jmx.enabled"              : false,
-      "spring.main.web-application-type": "none",
+        "spring.jmx.enabled"              : false,
+        "spring.main.web-application-type": "none",
     ])
     serverAppContext = serverApp.run()
 
     def clientApp = new SpringApplication(ClientConfig)
     clientApp.setDefaultProperties([
-      "spring.jmx.enabled"              : false,
-      "spring.main.web-application-type": "none",
+        "spring.jmx.enabled"              : false,
+        "spring.main.web-application-type": "none",
     ])
     clientAppContext = clientApp.run()
   }

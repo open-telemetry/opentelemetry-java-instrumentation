@@ -15,7 +15,7 @@ import io.lettuce.core.api.sync.RedisCommands
 import io.lettuce.core.codec.StringCodec
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
@@ -52,9 +52,9 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
 
   @Shared
   Map<String, String> testHashMap = [
-    firstname: "John",
-    lastname : "Doe",
-    age      : "53"
+      firstname: "John",
+      lastname : "Doe",
+      age      : "53"
   ]
 
   RedisClient redisClient
@@ -112,7 +112,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
 
     when:
     ConnectionFuture connectionFuture = testConnectionClient.connectAsync(StringCodec.UTF8,
-      RedisURI.create("redis://${host}:${port}?timeout=3s"))
+        RedisURI.create("redis://${host}:${port}?timeout=3s"))
     StatefulConnection connection = connectionFuture.get()
 
     then:
@@ -132,7 +132,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
 
     when:
     ConnectionFuture connectionFuture = testConnectionClient.connectAsync(StringCodec.UTF8,
-      RedisURI.create("redis://${host}:${incorrectPort}?timeout=3s"))
+        RedisURI.create("redis://${host}:${incorrectPort}?timeout=3s"))
     StatefulConnection connection = connectionFuture.get()
 
     then:

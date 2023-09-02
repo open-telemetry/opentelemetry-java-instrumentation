@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import play.mvc.Results
 import play.routing.RoutingDsl
 import play.server.Server
@@ -33,44 +33,44 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   @Override
   Server startServer(int port) {
     def router =
-      new RoutingDsl()
-        .GET(SUCCESS.getPath()).routeTo({
-        controller(SUCCESS) {
-          Results.status(SUCCESS.getStatus(), SUCCESS.getBody())
-        }
-      } as Supplier)
-        .GET(INDEXED_CHILD.getPath()).routeTo({
-        controller(INDEXED_CHILD) {
-          INDEXED_CHILD.collectSpanAttributes { request().getQueryString(it) }
-          Results.status(INDEXED_CHILD.getStatus())
-        }
-      } as Supplier)
-        .GET(QUERY_PARAM.getPath()).routeTo({
-        controller(QUERY_PARAM) {
-          Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())
-        }
-      } as Supplier)
-        .GET(REDIRECT.getPath()).routeTo({
-        controller(REDIRECT) {
-          Results.found(REDIRECT.getBody())
-        }
-      } as Supplier)
-        .GET(CAPTURE_HEADERS.getPath()).routeTo({
-        controller(CAPTURE_HEADERS) {
-          Results.status(CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
-            .withHeader("X-Test-Response", request().getHeader("X-Test-Request"))
-        }
-      } as Supplier)
-        .GET(ERROR.getPath()).routeTo({
-        controller(ERROR) {
-          Results.status(ERROR.getStatus(), ERROR.getBody())
-        }
-      } as Supplier)
-        .GET(EXCEPTION.getPath()).routeTo({
-        controller(EXCEPTION) {
-          throw new Exception(EXCEPTION.getBody())
-        }
-      } as Supplier)
+        new RoutingDsl()
+            .GET(SUCCESS.getPath()).routeTo({
+          controller(SUCCESS) {
+            Results.status(SUCCESS.getStatus(), SUCCESS.getBody())
+          }
+        } as Supplier)
+            .GET(INDEXED_CHILD.getPath()).routeTo({
+          controller(INDEXED_CHILD) {
+            INDEXED_CHILD.collectSpanAttributes { request().getQueryString(it) }
+            Results.status(INDEXED_CHILD.getStatus())
+          }
+        } as Supplier)
+            .GET(QUERY_PARAM.getPath()).routeTo({
+          controller(QUERY_PARAM) {
+            Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())
+          }
+        } as Supplier)
+            .GET(REDIRECT.getPath()).routeTo({
+          controller(REDIRECT) {
+            Results.found(REDIRECT.getBody())
+          }
+        } as Supplier)
+            .GET(CAPTURE_HEADERS.getPath()).routeTo({
+          controller(CAPTURE_HEADERS) {
+            Results.status(CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
+                .withHeader("X-Test-Response", request().getHeader("X-Test-Request"))
+          }
+        } as Supplier)
+            .GET(ERROR.getPath()).routeTo({
+          controller(ERROR) {
+            Results.status(ERROR.getStatus(), ERROR.getBody())
+          }
+        } as Supplier)
+            .GET(EXCEPTION.getPath()).routeTo({
+          controller(EXCEPTION) {
+            throw new Exception(EXCEPTION.getBody())
+          }
+        } as Supplier)
 
     return Server.forRouter(router.build(), port)
   }

@@ -23,7 +23,7 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Shared
 
 import java.util.concurrent.CompletableFuture
@@ -47,18 +47,18 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   Bootstrap buildBootstrap(boolean readTimeout = false) {
     Bootstrap bootstrap = new Bootstrap()
     bootstrap.group(eventLoopGroup)
-      .channel(NioSocketChannel)
-      .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
-      .handler(new ChannelInitializer<SocketChannel>() {
-        @Override
-        protected void initChannel(SocketChannel socketChannel) throws Exception {
-          ChannelPipeline pipeline = socketChannel.pipeline()
-          if (readTimeout) {
-            pipeline.addLast(new ReadTimeoutHandler(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+        .channel(NioSocketChannel)
+        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
+        .handler(new ChannelInitializer<SocketChannel>() {
+          @Override
+          protected void initChannel(SocketChannel socketChannel) throws Exception {
+            ChannelPipeline pipeline = socketChannel.pipeline()
+            if (readTimeout) {
+              pipeline.addLast(new ReadTimeoutHandler(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+            }
+            pipeline.addLast(new HttpClientCodec())
           }
-          pipeline.addLast(new HttpClientCodec())
-        }
-      })
+        })
 
     return bootstrap
   }

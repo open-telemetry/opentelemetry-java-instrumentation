@@ -15,7 +15,7 @@ import com.lambdaworks.redis.codec.Utf8StringCodec
 import com.lambdaworks.redis.protocol.AsyncCommand
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
@@ -55,9 +55,9 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
 
   @Shared
   Map<String, String> testHashMap = [
-    firstname: "John",
-    lastname : "Doe",
-    age      : "53"
+      firstname: "John",
+      lastname : "Doe",
+      age      : "53"
   ]
 
   RedisClient redisClient
@@ -101,7 +101,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
 
     when:
     StatefulConnection connection = testConnectionClient.connect(new Utf8StringCodec(),
-      new RedisURI(host, port, 3, TimeUnit.SECONDS))
+        new RedisURI(host, port, 3, TimeUnit.SECONDS))
 
     then:
     connection != null
@@ -130,7 +130,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
 
     when:
     StatefulConnection connection = testConnectionClient.connect(new Utf8StringCodec(),
-      new RedisURI(host, incorrectPort, 3, TimeUnit.SECONDS))
+        new RedisURI(host, incorrectPort, 3, TimeUnit.SECONDS))
 
     then:
     connection == null

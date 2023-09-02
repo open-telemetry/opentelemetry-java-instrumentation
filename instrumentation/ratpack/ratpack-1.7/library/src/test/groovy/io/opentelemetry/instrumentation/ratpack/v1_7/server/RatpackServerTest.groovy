@@ -13,7 +13,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import ratpack.exec.Blocking
 import ratpack.registry.Registry
 import ratpack.test.embed.EmbeddedApp
@@ -24,12 +24,12 @@ class RatpackServerTest extends Specification {
 
   def spanExporter = InMemorySpanExporter.create()
   def tracerProvider = SdkTracerProvider.builder()
-    .addSpanProcessor(SimpleSpanProcessor.create(spanExporter))
-    .build()
+      .addSpanProcessor(SimpleSpanProcessor.create(spanExporter))
+      .build()
 
   def openTelemetry = OpenTelemetrySdk.builder()
-    .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-    .setTracerProvider(tracerProvider).build()
+      .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+      .setTracerProvider(tracerProvider).build()
 
   def telemetry = RatpackTelemetry.create(openTelemetry)
 

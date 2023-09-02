@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Shared
 
 import java.util.concurrent.TimeUnit
@@ -39,21 +39,21 @@ abstract class AbstractCouchbaseTest extends AgentInstrumentationSpecification {
 
   @Shared
   protected bucketCouchbase = DefaultBucketSettings.builder()
-    .enableFlush(true)
-    .name("$testBucketName-cb")
-    .password("test-pass")
-    .type(BucketType.COUCHBASE)
-    .quota(100)
-    .build()
+      .enableFlush(true)
+      .name("$testBucketName-cb")
+      .password("test-pass")
+      .type(BucketType.COUCHBASE)
+      .quota(100)
+      .build()
 
   @Shared
   protected bucketMemcache = DefaultBucketSettings.builder()
-    .enableFlush(true)
-    .name("$testBucketName-mem")
-    .password("test-pass")
-    .type(BucketType.MEMCACHED)
-    .quota(100)
-    .build()
+      .enableFlush(true)
+      .name("$testBucketName-mem")
+      .password("test-pass")
+      .type(BucketType.MEMCACHED)
+      .quota(100)
+      .build()
 
   @Shared
   CouchbaseMock mock
@@ -86,22 +86,22 @@ abstract class AbstractCouchbaseTest extends AgentInstrumentationSpecification {
     // Couchbase seems to be really slow to start sometimes
     def timeout = TimeUnit.SECONDS.toMillis(20)
     return DefaultCouchbaseEnvironment.builder()
-      .bootstrapCarrierDirectPort(mock.getCarrierPort(bucketSettings.name()))
-      .bootstrapHttpDirectPort(port)
+        .bootstrapCarrierDirectPort(mock.getCarrierPort(bucketSettings.name()))
+        .bootstrapHttpDirectPort(port)
     // settings to try to reduce variability in the tests:
-      .runtimeMetricsCollectorConfig(DefaultMetricsCollectorConfig.create(0, TimeUnit.DAYS))
-      .networkLatencyMetricsCollectorConfig(DefaultLatencyMetricsCollectorConfig.create(0, TimeUnit.DAYS))
-      .computationPoolSize(1)
-      .connectTimeout(timeout)
-      .disconnectTimeout(timeout)
-      .kvTimeout(timeout)
-      .managementTimeout(timeout)
-      .queryTimeout(timeout)
-      .viewTimeout(timeout)
-      .keepAliveTimeout(timeout)
-      .searchTimeout(timeout)
-      .analyticsTimeout(timeout)
-      .socketConnectTimeout(timeout.intValue())
+        .runtimeMetricsCollectorConfig(DefaultMetricsCollectorConfig.create(0, TimeUnit.DAYS))
+        .networkLatencyMetricsCollectorConfig(DefaultLatencyMetricsCollectorConfig.create(0, TimeUnit.DAYS))
+        .computationPoolSize(1)
+        .connectTimeout(timeout)
+        .disconnectTimeout(timeout)
+        .kvTimeout(timeout)
+        .managementTimeout(timeout)
+        .queryTimeout(timeout)
+        .viewTimeout(timeout)
+        .keepAliveTimeout(timeout)
+        .searchTimeout(timeout)
+        .analyticsTimeout(timeout)
+        .socketConnectTimeout(timeout.intValue())
   }
 
   void assertCouchbaseCall(TraceAssert trace,

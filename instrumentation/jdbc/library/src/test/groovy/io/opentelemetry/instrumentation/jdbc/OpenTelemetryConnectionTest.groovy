@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryStatement
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createStatementInstrumenter
@@ -198,15 +198,15 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
 
   private DbInfo getDbInfo() {
     DbInfo.builder()
-      .system("my_system")
-      .subtype("my_sub_type")
-      .shortUrl("my_connection_string")
-      .user("my_user")
-      .name("my_name")
-      .db("my_db")
-      .host("my_host")
-      .port(1234)
-      .build()
+        .system("my_system")
+        .subtype("my_sub_type")
+        .shortUrl("my_connection_string")
+        .user("my_user")
+        .name("my_name")
+        .db("my_db")
+        .host("my_host")
+        .port(1234)
+        .build()
   }
 
 }

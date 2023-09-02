@@ -9,7 +9,7 @@ import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.reactive.RedisReactiveCommands
 import io.lettuce.core.api.sync.RedisCommands
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.testcontainers.containers.GenericContainer
 import reactor.core.scheduler.Schedulers
 import spock.lang.Shared
@@ -311,8 +311,8 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
     when:
     runWithSpan("test-parent") {
       reactiveCommands.set("a", "1")
-        .then(reactiveCommands.get("a"))
-        .block()
+          .then(reactiveCommands.get("a"))
+          .block()
     }
 
     then:
@@ -351,8 +351,8 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
     when:
     runWithSpan("test-parent") {
       reactiveCommands.set("a", "1")
-        .then(reactiveCommands.get("a"))
-        .subscribe()
+          .then(reactiveCommands.get("a"))
+          .subscribe()
     }
 
     then:
@@ -391,9 +391,9 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
     when:
     runWithSpan("test-parent") {
       reactiveCommands.set("a", "1")
-        .then(reactiveCommands.get("a"))
-        .subscribeOn(Schedulers.elastic())
-        .subscribe()
+          .then(reactiveCommands.get("a"))
+          .subscribeOn(Schedulers.elastic())
+          .subscribe()
     }
 
     then:

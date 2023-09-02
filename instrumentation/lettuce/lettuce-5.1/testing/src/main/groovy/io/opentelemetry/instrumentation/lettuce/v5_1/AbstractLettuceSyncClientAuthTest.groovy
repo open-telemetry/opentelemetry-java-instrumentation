@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1
 
 import io.lettuce.core.RedisClient
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 
@@ -33,7 +33,7 @@ abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecific
     password = "password"
 
     redisServer = redisServer
-      .withCommand("redis-server", "--requirepass $password")
+        .withCommand("redis-server", "--requirepass $password")
   }
 
   def setup() {

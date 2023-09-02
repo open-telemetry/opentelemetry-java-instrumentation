@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.SemconvStabilityUtil;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -341,8 +342,8 @@ public abstract class AbstractApacheHttpClientTest {
         endpoint -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.add(SemanticAttributes.HTTP_SCHEME);
-          attributes.add(SemanticAttributes.HTTP_TARGET);
+          attributes.add(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.HTTP_SCHEME));
+          attributes.add(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.HTTP_TARGET));
           return attributes;
         });
   }

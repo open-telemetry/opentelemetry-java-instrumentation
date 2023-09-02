@@ -6,7 +6,7 @@
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.apache.commons.httpclient.HttpClient
 import org.apache.commons.httpclient.HttpConnectionManager
 import org.apache.commons.httpclient.HttpMethod
@@ -101,8 +101,8 @@ abstract class AbstractCommonsHttpClientTest extends HttpClientTest<HttpMethod> 
   @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     Set<AttributeKey<?>> extra = [
-      SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_TARGET
+        SemanticAttributes.HTTP_SCHEME,
+        SemanticAttributes.HTTP_TARGET
     ]
     super.httpAttributes(uri) + extra
   }

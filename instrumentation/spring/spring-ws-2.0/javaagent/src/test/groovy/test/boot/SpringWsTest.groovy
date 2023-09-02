@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.test.hello_web_service.HelloRequest
 import io.opentelemetry.test.hello_web_service.HelloRequestSoapAction
 import io.opentelemetry.test.hello_web_service.HelloRequestWsAction
@@ -49,10 +49,10 @@ class SpringWsTest extends AgentInstrumentationSpecification implements HttpServ
   ConfigurableApplicationContext startServer(int port) {
     def app = new SpringApplication(AppConfig, WebServiceConfig)
     app.setDefaultProperties([
-      "server.port"                 : port,
-      "server.context-path"         : getContextPath(),
-      "server.servlet.contextPath"  : getContextPath(),
-      "server.error.include-message": "always"])
+        "server.port"                 : port,
+        "server.context-path"         : getContextPath(),
+        "server.servlet.contextPath"  : getContextPath(),
+        "server.error.include-message": "always"])
     def context = app.run()
     return context
   }

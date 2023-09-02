@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.SemconvStabilityUtil;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.HashSet;
@@ -92,8 +93,8 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
         endpoint -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+          attributes.remove(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME));
+          attributes.remove(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION));
           return attributes;
         });
   }

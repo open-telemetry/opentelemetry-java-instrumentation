@@ -25,7 +25,7 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.netty.v4_1.ClientHandler
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Shared
 
 import javax.net.ssl.SSLEngine

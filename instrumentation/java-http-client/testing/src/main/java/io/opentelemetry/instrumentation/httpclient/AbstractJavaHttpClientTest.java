@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.SemconvStabilityUtil;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
@@ -91,8 +92,8 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
           if ("http://localhost:61/".equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())
               || uri.toString().contains("/read-timeout")) {
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+            attributes.remove(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME));
+            attributes.remove(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION));
           }
           return attributes;
         });

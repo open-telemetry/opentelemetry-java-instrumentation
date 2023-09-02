@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.testing.junit.{
 import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.semconv.SemanticAttributes.DbSystemValues
 import java.util.function.Consumer
 import org.assertj.core.api.Assertions.assertThat

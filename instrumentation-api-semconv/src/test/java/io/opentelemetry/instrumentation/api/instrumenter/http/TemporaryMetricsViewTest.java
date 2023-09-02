@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 class TemporaryMetricsViewTest {
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void shouldApplyClientDurationView() {
     Attributes startAttributes =
         Attributes.builder()
@@ -100,6 +101,7 @@ class TemporaryMetricsViewTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void shouldApplyServerDurationView() {
     Attributes startAttributes =
         Attributes.builder()
@@ -182,6 +184,7 @@ class TemporaryMetricsViewTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void shouldApplyClientSizeView() {
     Attributes startAttributes =
         Attributes.builder()
@@ -256,6 +259,7 @@ class TemporaryMetricsViewTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void shouldApplyServerSizeView() {
     Attributes startAttributes =
         Attributes.builder()
@@ -338,6 +342,7 @@ class TemporaryMetricsViewTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void shouldApplyActiveRequestsView() {
     Attributes attributes =
         Attributes.builder()
