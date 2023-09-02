@@ -14,6 +14,7 @@ import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class SemconvStabilityUtil {
   private static final Map<AttributeKey<?>, AttributeKey<?>> oldToNewMap = new HashMap<>();
 
