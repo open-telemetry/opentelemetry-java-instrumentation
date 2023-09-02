@@ -35,7 +35,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP
 
 class Netty40ClientSslTest extends AgentInstrumentationSpecification {
 

@@ -28,10 +28,10 @@ import spock.util.concurrent.PollingConditions
 
 import javax.inject.Singleton
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_ROUTE
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_TARGET
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_METHOD
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_STATUS_CODE
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_TARGET
 
 class RatpackServerApplicationTest extends Specification {
 
@@ -124,8 +124,8 @@ class OpenTelemetryModule extends AbstractModule {
   @Singleton
   OpenTelemetry providesOpenTelemetry(SpanExporter spanExporter) {
     def tracerProvider = SdkTracerProvider.builder()
-      .addSpanProcessor(SimpleSpanProcessor.create(spanExporter))
-      .build()
+        .addSpanProcessor(SimpleSpanProcessor.create(spanExporter))
+        .build()
     return OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).build()
   }
 
@@ -148,17 +148,17 @@ class RatpackApp {
   static void main(String... args) {
     RatpackServer.start { server ->
       server
-        .registry(Guice.registry { b -> b.module(OpenTelemetryModule) })
-        .handlers { chain ->
-          chain
-            .get("ignore") { ctx -> ctx.render("ignored") }
-            .all(OpenTelemetryServerHandler)
-            .get("foo") { ctx -> ctx.render("hi-foo") }
-            .get("bar") { ctx ->
-              ctx.get(HttpClient).get(ctx.get(URI))
-                .then { ctx.render("hi-bar") }
-            }
-        }
+          .registry(Guice.registry { b -> b.module(OpenTelemetryModule) })
+          .handlers { chain ->
+            chain
+                .get("ignore") { ctx -> ctx.render("ignored") }
+                .all(OpenTelemetryServerHandler)
+                .get("foo") { ctx -> ctx.render("hi-foo") }
+                .get("bar") { ctx ->
+                  ctx.get(HttpClient).get(ctx.get(URI))
+                      .then { ctx.render("hi-bar") }
+                }
+          }
     }
   }
 }

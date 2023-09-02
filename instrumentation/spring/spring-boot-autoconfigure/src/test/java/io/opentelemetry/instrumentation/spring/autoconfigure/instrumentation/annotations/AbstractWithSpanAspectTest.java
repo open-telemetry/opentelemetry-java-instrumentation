@@ -10,8 +10,8 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.SemanticAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.SemanticAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.OpenTelemetry;

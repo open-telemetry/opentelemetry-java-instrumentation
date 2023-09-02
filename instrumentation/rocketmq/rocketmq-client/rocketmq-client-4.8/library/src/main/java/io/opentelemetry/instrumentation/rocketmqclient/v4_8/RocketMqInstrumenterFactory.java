@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor.constant;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_OPERATION;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;

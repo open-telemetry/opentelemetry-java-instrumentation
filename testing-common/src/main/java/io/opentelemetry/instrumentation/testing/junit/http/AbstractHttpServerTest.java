@@ -16,7 +16,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;

@@ -13,7 +13,7 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMe
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyStableClientDurationView;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyStableServerDurationView;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;

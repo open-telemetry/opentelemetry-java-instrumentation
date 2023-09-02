@@ -17,7 +17,7 @@ import spock.lang.Unroll
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP
 
 @Unroll
 abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1;
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_MONGODB_COLLECTION;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_MONGODB_COLLECTION;
 import static java.util.Arrays.asList;
 
 import com.mongodb.event.CommandStartedEvent;

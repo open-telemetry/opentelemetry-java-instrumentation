@@ -9,9 +9,9 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.emptyIfNull;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.lowercaseMap;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_TRIGGER;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.USER_AGENT_ORIGINAL;
+import static io.opentelemetry.semconv.SemanticAttributes.FAAS_TRIGGER;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_STATUS_CODE;
+import static io.opentelemetry.semconv.SemanticAttributes.USER_AGENT_ORIGINAL;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
