@@ -74,6 +74,7 @@ import server.TestController;
       SpringWebFluxTestApplication.class,
       SpringWebfluxTest.ForceNettyAutoConfiguration.class
     })
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public class SpringWebfluxTest {
   @TestConfiguration
   static class ForceNettyAutoConfiguration {

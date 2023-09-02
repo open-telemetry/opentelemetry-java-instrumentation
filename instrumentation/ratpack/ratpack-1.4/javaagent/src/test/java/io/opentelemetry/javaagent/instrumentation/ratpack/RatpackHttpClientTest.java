@@ -21,6 +21,7 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected Set<AttributeKey<?>> computeHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(super.computeHttpAttributes(uri));
     // underlying netty instrumentation does not provide these

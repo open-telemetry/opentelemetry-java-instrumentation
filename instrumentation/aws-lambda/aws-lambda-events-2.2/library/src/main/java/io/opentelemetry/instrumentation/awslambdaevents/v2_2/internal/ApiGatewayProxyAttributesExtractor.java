@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.emptyIfNull;
@@ -48,6 +49,7 @@ final class ApiGatewayProxyAttributesExtractor
     }
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void onRequest(AttributesBuilder attributes, APIGatewayProxyRequestEvent request) {
     String method = request.getHttpMethod();
     if (SemconvStability.emitStableHttpSemconv()) {
@@ -113,6 +115,7 @@ final class ApiGatewayProxyAttributesExtractor
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
@@ -122,7 +125,12 @@ final class ApiGatewayProxyAttributesExtractor
     if (response instanceof APIGatewayProxyResponseEvent) {
       Integer statusCode = ((APIGatewayProxyResponseEvent) response).getStatusCode();
       if (statusCode != null) {
-        attributes.put(HTTP_STATUS_CODE, statusCode);
+        if (SemconvStability.emitStableHttpSemconv()) {
+          attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode);
+        }
+        if (SemconvStability.emitOldHttpSemconv()) {
+          attributes.put(HTTP_STATUS_CODE, statusCode);
+        }
       }
     }
   }

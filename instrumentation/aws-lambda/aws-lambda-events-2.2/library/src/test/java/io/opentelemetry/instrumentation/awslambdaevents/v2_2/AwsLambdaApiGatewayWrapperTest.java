@@ -34,6 +34,7 @@ import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public class AwsLambdaApiGatewayWrapperTest {
 
   @RegisterExtension

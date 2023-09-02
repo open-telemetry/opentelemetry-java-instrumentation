@@ -34,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class KubernetesClientTest {
 
   private static final String TEST_USER_AGENT = "test-user-agent";

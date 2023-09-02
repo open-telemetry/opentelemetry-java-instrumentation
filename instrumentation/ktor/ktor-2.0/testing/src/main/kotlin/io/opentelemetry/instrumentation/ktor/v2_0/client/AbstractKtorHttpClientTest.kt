@@ -26,54 +26,65 @@ import java.net.URI
 
 abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBuilder>() {
 
-  private val client = HttpClient(CIO) {
-    install(HttpRedirect)
+    private val client = HttpClient(CIO) {
+        install(HttpRedirect)
 
-    installTracing()
-  }
-
-  abstract fun HttpClientConfig<*>.installTracing()
-
-  override fun buildRequest(requestMethod: String, uri: URI, requestHeaders: MutableMap<String, String>) =
-    HttpRequestBuilder(uri.toURL()).apply {
-      method = HttpMethod.parse(requestMethod)
-
-      requestHeaders.forEach { (header, value) -> headers.append(header, value) }
+        installTracing()
     }
 
-  override fun sendRequest(request: HttpRequestBuilder, method: String, uri: URI, headers: MutableMap<String, String>) = runBlocking {
-    client.request(request).status.value
-  }
+    abstract fun HttpClientConfig<*>.installTracing()
 
-  override fun sendRequestWithCallback(
-    request: HttpRequestBuilder,
-    method: String,
-    uri: URI,
-    headers: MutableMap<String, String>,
-    httpClientResult: HttpClientResult,
-  ) {
-    CoroutineScope(Dispatchers.Default + Context.current().asContextElement()).launch {
-      try {
-        val statusCode = client.request(request).status.value
-        httpClientResult.complete(statusCode)
-      } catch (e: Throwable) {
-        httpClientResult.complete(e)
-      }
+    override fun buildRequest(requestMethod: String, uri: URI, requestHeaders: MutableMap<String, String>) =
+        HttpRequestBuilder(uri.toURL()).apply {
+            method = HttpMethod.parse(requestMethod)
+
+            requestHeaders.forEach { (header, value) -> headers.append(header, value) }
+        }
+
+    override fun sendRequest(
+        request: HttpRequestBuilder,
+        method: String,
+        uri: URI,
+        headers: MutableMap<String, String>
+    ) = runBlocking {
+        client.request(request).status.value
     }
-  }
 
-  override fun configure(optionsBuilder: HttpClientTestOptions.Builder) {
-    with(optionsBuilder) {
-      disableTestReadTimeout()
-      // this instrumentation creates a span per each physical request
-      // related issue https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/5722
-      disableTestRedirects()
-
-      setHttpAttributes { DEFAULT_HTTP_ATTRIBUTES - setOf(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION)) }
-
-      setSingleConnectionFactory { host, port ->
-        KtorHttpClientSingleConnection(host, port) { installTracing() }
-      }
+    override fun sendRequestWithCallback(
+        request: HttpRequestBuilder,
+        method: String,
+        uri: URI,
+        headers: MutableMap<String, String>,
+        httpClientResult: HttpClientResult,
+    ) {
+        CoroutineScope(Dispatchers.Default + Context.current().asContextElement()).launch {
+            try {
+                val statusCode = client.request(request).status.value
+                httpClientResult.complete(statusCode)
+            } catch (e: Throwable) {
+                httpClientResult.complete(e)
+            }
+        }
     }
-  }
+
+    @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
+    override fun configure(optionsBuilder: HttpClientTestOptions.Builder) {
+        with(optionsBuilder) {
+            disableTestReadTimeout()
+            // this instrumentation creates a span per each physical request
+            // related issue https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/5722
+            disableTestRedirects()
+
+            setHttpAttributes {
+                DEFAULT_HTTP_ATTRIBUTES - setOf(
+                    SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME),
+                    SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION)
+                )
+            }
+
+            setSingleConnectionFactory { host, port ->
+                KtorHttpClientSingleConnection(host, port) { installTracing() }
+            }
+        }
+    }
 }

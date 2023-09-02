@@ -85,6 +85,7 @@ class TwoServicesWithDirectClientCamelTest
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void twoCamelServiceSpans() throws Exception {
     createAndStartClient();
 

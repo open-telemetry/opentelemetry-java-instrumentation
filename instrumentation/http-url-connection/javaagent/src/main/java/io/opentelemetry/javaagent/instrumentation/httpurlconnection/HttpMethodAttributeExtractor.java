@@ -39,6 +39,7 @@ public class HttpMethodAttributeExtractor<
       AttributesBuilder attributes, Context parentContext, HttpURLConnection connection) {}
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onEnd(
       AttributesBuilder attributes,
       Context context,

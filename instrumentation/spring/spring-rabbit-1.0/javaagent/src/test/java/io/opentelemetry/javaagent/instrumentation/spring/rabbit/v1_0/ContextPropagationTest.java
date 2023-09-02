@@ -43,6 +43,7 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public class ContextPropagationTest {
 
   @RegisterExtension
