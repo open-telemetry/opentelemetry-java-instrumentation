@@ -11,6 +11,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashSet;
 import java.util.Set;
@@ -83,16 +84,21 @@ final class TemporaryMetricsView {
     return view;
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static Set<AttributeKey> buildActiveRequestsView() {
     Set<AttributeKey> view = new HashSet<>();
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/metrics/semantic_conventions/http-metrics.md#metric-httpserveractive_requests
-    view.add(SemanticAttributes.HTTP_METHOD);
-    view.add(SemanticAttributes.HTTP_SCHEME);
-    view.add(SemanticAttributes.NET_HOST_NAME);
-    view.add(SemanticAttributes.NET_HOST_PORT);
+    if (SemconvStability.emitOldHttpSemconv()) {
+      // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/metrics/semantic_conventions/http-metrics.md#metric-httpserveractive_requests
+      view.add(SemanticAttributes.HTTP_METHOD);
+      view.add(SemanticAttributes.HTTP_SCHEME);
+      view.add(SemanticAttributes.NET_HOST_NAME);
+      view.add(SemanticAttributes.NET_HOST_PORT);
+    }
+    if (SemconvStability.emitStableHttpSemconv()) {
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserveractive_requests
     view.add(HttpAttributes.HTTP_REQUEST_METHOD);
     view.add(UrlAttributes.URL_SCHEME);
+    }
     return view;
   }
 
