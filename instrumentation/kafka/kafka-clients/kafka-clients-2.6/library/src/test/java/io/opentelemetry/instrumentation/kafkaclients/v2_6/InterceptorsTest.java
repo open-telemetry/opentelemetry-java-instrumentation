@@ -86,7 +86,7 @@ class InterceptorsTest extends KafkaClientBaseTest {
                         equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                         equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                         satisfies(
-                            SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                            SemanticAttributes.MESSAGING_CLIENT_ID,
                             stringAssert -> stringAssert.startsWith("producer")));
               },
               span -> {
@@ -100,19 +100,17 @@ class InterceptorsTest extends KafkaClientBaseTest {
                         equalTo(
                             SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                             greeting.getBytes(StandardCharsets.UTF_8).length),
-                        satisfies(
-                            SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
-                            AbstractLongAssert::isNotNegative),
+                        // TODO (trask) does this have a replacement?
+                        // satisfies(
+                        //     SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                        //     AbstractLongAssert::isNotNegative),
                         satisfies(
                             SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                             AbstractLongAssert::isNotNegative),
                         equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                         satisfies(
-                            SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                            stringAssert -> stringAssert.startsWith("consumer")),
-                        satisfies(
-                            SemanticAttributes.MESSAGING_CONSUMER_ID,
-                            stringAssert -> stringAssert.startsWith("test - consumer")));
+                            SemanticAttributes.MESSAGING_CLIENT_ID,
+                            stringAssert -> stringAssert.startsWith("consumer")));
               });
         },
         trace -> {

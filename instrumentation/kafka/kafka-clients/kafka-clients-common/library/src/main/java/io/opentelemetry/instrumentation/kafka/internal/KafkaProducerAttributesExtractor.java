@@ -28,7 +28,7 @@ final class KafkaProducerAttributesExtractor
       attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
     if (request.getClientId() != null) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID, request.getClientId());
+      attributes.put(SemanticAttributes.MESSAGING_CLIENT_ID, request.getClientId());
     }
   }
 
