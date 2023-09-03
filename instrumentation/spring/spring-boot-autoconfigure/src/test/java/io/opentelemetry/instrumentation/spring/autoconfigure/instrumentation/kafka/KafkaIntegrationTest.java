@@ -145,7 +145,7 @@ class KafkaIntegrationTest {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static void send(
       KafkaOperations<String, String> ops, String topic, String key, String data) {
     // In kafka 2 ops.send is deprecated. We are using it to avoid reflection because kafka 3 also
