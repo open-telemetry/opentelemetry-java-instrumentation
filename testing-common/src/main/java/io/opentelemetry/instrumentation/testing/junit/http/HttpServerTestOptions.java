@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.netty.v4.common.internal.client;
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_UDP;
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_UDP;
 
 import io.netty.channel.Channel;
 import io.netty.channel.socket.DatagramChannel;

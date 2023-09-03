@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.resources;
 
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.PROCESS_RUNTIME_DESCRIPTION;
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.PROCESS_RUNTIME_NAME;
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.PROCESS_RUNTIME_VERSION;
+import static io.opentelemetry.semconv.ResourceAttributes.PROCESS_RUNTIME_DESCRIPTION;
+import static io.opentelemetry.semconv.ResourceAttributes.PROCESS_RUNTIME_NAME;
+import static io.opentelemetry.semconv.ResourceAttributes.PROCESS_RUNTIME_VERSION;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
+import io.opentelemetry.semconv.ResourceAttributes;
 
 /** Factory of a {@link Resource} which provides information about the Java runtime. */
 public final class ProcessRuntimeResource {
