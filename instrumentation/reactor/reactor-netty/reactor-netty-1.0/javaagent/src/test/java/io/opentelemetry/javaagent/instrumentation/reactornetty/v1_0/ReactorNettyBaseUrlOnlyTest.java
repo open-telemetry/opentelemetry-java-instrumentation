@@ -76,6 +76,7 @@ class ReactorNettyBaseUrlOnlyTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void testSuccessfulRequest() {
     HttpClient httpClient = HttpClient.create();
     String uri = "http://localhost:" + server.httpPort() + "/base";

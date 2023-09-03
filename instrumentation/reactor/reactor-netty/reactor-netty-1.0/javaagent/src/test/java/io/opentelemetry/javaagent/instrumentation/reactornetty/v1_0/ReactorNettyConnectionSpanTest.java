@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.netty.http.client.HttpClient;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class ReactorNettyConnectionSpanTest {
 
   @RegisterExtension

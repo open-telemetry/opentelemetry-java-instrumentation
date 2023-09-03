@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 class RpcClientMetricsTest {
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =

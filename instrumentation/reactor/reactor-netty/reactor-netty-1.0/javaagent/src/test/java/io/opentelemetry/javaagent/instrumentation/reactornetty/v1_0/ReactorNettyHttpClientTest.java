@@ -55,6 +55,7 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
     if (uri.toString().contains("/success")) {
       // the single connection test does not report net.peer.* attributes; it only reports the

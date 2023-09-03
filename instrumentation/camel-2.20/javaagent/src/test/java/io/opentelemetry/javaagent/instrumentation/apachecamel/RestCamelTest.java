@@ -61,6 +61,7 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void restComponentServerAndClientCallWithJettyBackend() {
     CamelContext camelContext = appContext.getBean(CamelContext.class);
     ProducerTemplate template = camelContext.createProducerTemplate();

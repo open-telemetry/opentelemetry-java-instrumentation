@@ -980,6 +980,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   }
 
   // Visible for spock bridge.
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   SpanDataAssert assertClientSpan(
       SpanDataAssert span,
       URI uri,

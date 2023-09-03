@@ -28,6 +28,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class ElasticsearchRest7Test {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();

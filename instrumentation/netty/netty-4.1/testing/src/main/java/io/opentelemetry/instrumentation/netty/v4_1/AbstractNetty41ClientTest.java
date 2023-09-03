@@ -114,6 +114,7 @@ public abstract class AbstractNetty41ClientTest
     optionsBuilder.disableTestRedirects();
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static Set<AttributeKey<?>> getHttpAttributes(URI uri) {
     String uriString = uri.toString();
     // http://localhost:61/ => unopened port, https://192.0.2.1/ => non routable address

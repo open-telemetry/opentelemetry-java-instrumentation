@@ -138,6 +138,7 @@ class HibernateReactiveTest {
     assertTrace();
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static void assertTrace() {
     testing.waitAndAssertTraces(
         trace ->

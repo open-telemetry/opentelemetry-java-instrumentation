@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class VertxSqlClientTest {
   private static final Logger logger = LoggerFactory.getLogger(VertxSqlClientTest.class);
 

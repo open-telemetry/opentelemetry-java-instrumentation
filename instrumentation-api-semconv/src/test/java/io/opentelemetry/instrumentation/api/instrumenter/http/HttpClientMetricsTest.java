@@ -30,6 +30,7 @@ class HttpClientMetricsTest {
           .toArray();
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =

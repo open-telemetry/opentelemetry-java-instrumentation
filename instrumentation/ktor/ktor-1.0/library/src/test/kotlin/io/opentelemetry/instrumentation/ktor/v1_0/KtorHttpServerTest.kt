@@ -121,6 +121,7 @@ class KtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
     }
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   override fun configure(options: HttpServerTestOptions) {
     options.setTestPathParam(true)
 

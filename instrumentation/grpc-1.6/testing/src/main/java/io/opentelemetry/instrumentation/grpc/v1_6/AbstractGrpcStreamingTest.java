@@ -37,6 +37,7 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junitpioneer.jupiter.cartesian.CartesianTest;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public abstract class AbstractGrpcStreamingTest {
 
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);

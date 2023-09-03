@@ -126,6 +126,7 @@ public abstract class AbstractR2dbcStatementTest {
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideParameters")
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void testQueries(Parameter parameter) {
     DbSystemProps props = SYSTEMS.get(parameter.system);
     startContainer(props);

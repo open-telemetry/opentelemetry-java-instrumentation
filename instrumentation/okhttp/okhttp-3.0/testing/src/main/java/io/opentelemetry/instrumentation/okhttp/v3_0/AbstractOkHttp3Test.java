@@ -112,6 +112,7 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.markAsLowLevelInstrumentation();
     optionsBuilder.setMaxRedirects(21); // 1st send + 20 retries

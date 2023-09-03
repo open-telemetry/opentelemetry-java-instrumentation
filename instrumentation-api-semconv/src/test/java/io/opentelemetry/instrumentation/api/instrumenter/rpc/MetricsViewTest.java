@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 class MetricsViewTest {
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void shouldApplyClientView() {
     Attributes startAttributes =
         Attributes.builder()
@@ -81,6 +82,7 @@ class MetricsViewTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void shouldApplyServerView() {
     Attributes startAttributes =
         Attributes.builder()

@@ -31,6 +31,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class HttpClientAttributesExtractorTest {
 
   static class TestHttpClientAttributesGetter

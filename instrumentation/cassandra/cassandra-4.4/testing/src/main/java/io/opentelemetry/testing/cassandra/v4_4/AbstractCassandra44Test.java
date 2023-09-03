@@ -36,6 +36,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideReactiveParameters")
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void reactiveTest(Parameter parameter) {
     CqlSession session = getSession(parameter.keyspace);
 

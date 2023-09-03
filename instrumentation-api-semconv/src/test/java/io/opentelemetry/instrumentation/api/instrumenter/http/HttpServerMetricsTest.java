@@ -23,6 +23,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class HttpServerMetricsTest {
 
   static final double[] DEFAULT_BUCKETS =

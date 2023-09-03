@@ -36,6 +36,7 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientResponse;
 import reactor.netty.tcp.SslProvider;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class ReactorNettyClientSslTest {
 
   @RegisterExtension

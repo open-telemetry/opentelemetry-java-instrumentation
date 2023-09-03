@@ -56,6 +56,7 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void singleCamelServiceSpan() {
     URI requestUrl = address.resolve("/camelService");
 

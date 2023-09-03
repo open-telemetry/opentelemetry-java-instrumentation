@@ -43,6 +43,7 @@ public class SparkJavaBasedTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void generatesSpans() {
     AggregatedHttpResponse response = client.get("/param/asdf1234").aggregate().join();
     String content = response.contentUtf8();
