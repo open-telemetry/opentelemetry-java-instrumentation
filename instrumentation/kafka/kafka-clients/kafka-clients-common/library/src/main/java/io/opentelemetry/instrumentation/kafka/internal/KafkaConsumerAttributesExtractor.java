@@ -22,7 +22,8 @@ final class KafkaConsumerAttributesExtractor
 
     ConsumerRecord<?, ?> record = request.getRecord();
 
-    attributes.put(SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION, (long) record.partition());
+    attributes.put(
+        SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION, (long) record.partition());
     attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, record.offset());
 
     Object key = record.key();
@@ -40,12 +41,7 @@ final class KafkaConsumerAttributesExtractor
 
     String clientId = request.getClientId();
     if (clientId != null) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID, clientId);
-    }
-
-    String consumerId = request.getConsumerId();
-    if (consumerId != null) {
-      attributes.put(SemanticAttributes.MESSAGING_CONSUMER_ID, consumerId);
+      attributes.put(SemanticAttributes.MESSAGING_CLIENT_ID, clientId);
     }
   }
 

@@ -137,7 +137,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.endsWith("consumer") }
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION" { it >= 0 }
+            "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
             "kafka.record.queue_time_ms" { it >= 0 }
@@ -193,7 +193,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID" { it.startsWith("consumer") }
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION" { it >= 0 }
+            "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
             if (Boolean.getBoolean("testLatestDeps")) {

@@ -110,7 +110,7 @@ class KafkaIntegrationTest {
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testTopic"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                SemanticAttributes.MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("producer")),
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
@@ -131,7 +131,7 @@ class KafkaIntegrationTest {
                                 SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                                SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
@@ -140,12 +140,8 @@ class KafkaIntegrationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "testListener"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                stringAssert ->
-                                    stringAssert.startsWith("testListener - consumer"))),
+                                SemanticAttributes.MESSAGING_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("consumer"))),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
