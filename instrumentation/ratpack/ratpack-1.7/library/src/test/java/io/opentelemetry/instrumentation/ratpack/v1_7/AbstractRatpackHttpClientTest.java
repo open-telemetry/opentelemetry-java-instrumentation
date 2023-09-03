@@ -154,6 +154,7 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
     optionsBuilder.setHttpAttributes(this::getHttpAttributes);
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);

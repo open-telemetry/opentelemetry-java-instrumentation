@@ -35,6 +35,7 @@ public final class InternalUrlAttributesExtractor<REQUEST> {
     this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onStart(AttributesBuilder attributes, REQUEST request) {
     String urlScheme = getUrlScheme(request);
     String urlPath = getter.getUrlPath(request);

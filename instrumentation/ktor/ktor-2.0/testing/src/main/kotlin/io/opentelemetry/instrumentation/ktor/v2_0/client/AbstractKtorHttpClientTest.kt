@@ -58,6 +58,7 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
     }
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   override fun configure(optionsBuilder: HttpClientTestOptions.Builder) {
     with(optionsBuilder) {
       disableTestReadTimeout()

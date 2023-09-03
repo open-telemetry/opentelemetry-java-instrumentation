@@ -101,6 +101,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 

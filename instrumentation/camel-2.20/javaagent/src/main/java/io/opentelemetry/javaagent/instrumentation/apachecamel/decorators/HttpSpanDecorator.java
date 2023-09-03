@@ -91,6 +91,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void pre(
       AttributesBuilder attributes,
       Exchange exchange,
@@ -176,6 +177,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void post(AttributesBuilder attributes, Exchange exchange, Endpoint endpoint) {
     super.post(attributes, exchange, endpoint);
 

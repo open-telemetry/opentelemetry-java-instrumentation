@@ -43,6 +43,7 @@ final class MetricsView {
     return view;
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static Set<AttributeKey> buildClientView() {
     // the list of rpc client metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
@@ -55,6 +56,7 @@ final class MetricsView {
     return view;
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static Set<AttributeKey> buildServerView() {
     // the list of rpc server metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
@@ -66,6 +68,7 @@ final class MetricsView {
     return view;
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static Set<AttributeKey> buildServerFallbackView() {
     // the list of rpc server metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
@@ -86,6 +89,7 @@ final class MetricsView {
     return applyView(clientView, startAttributes, endAttributes);
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   static Attributes applyServerView(Attributes startAttributes, Attributes endAttributes) {
     Set<AttributeKey> fullSet = serverView;
     if (SemconvStability.emitOldHttpSemconv()

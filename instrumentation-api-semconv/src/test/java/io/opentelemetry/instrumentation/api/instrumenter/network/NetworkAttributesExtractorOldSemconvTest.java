@@ -19,6 +19,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class NetworkAttributesExtractorOldSemconvTest {
 
   static class TestNetworkAttributesGetter

@@ -35,6 +35,7 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
     this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onEnd(AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
     String protocolName = lowercase(getter.getNetworkProtocolName(request, response));
     String protocolVersion = lowercase(getter.getNetworkProtocolVersion(request, response));

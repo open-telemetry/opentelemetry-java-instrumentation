@@ -49,6 +49,7 @@ final class ApiGatewayProxyAttributesExtractor
     }
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void onRequest(AttributesBuilder attributes, APIGatewayProxyRequestEvent request) {
     String method = request.getHttpMethod();
     if (SemconvStability.emitStableHttpSemconv()) {
@@ -114,6 +115,7 @@ final class ApiGatewayProxyAttributesExtractor
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onEnd(
       AttributesBuilder attributes,
       Context context,

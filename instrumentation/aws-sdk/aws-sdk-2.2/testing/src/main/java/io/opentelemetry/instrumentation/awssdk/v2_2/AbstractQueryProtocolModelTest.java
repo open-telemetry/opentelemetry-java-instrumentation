@@ -55,6 +55,7 @@ public abstract class AbstractQueryProtocolModelTest {
   protected abstract InstrumentationExtension getTesting();
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void testClientWithQueryProtocolModel() {
     server.enqueue(
         HttpResponse.of(

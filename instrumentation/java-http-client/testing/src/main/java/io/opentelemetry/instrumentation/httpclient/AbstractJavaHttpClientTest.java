@@ -78,6 +78,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestCircularRedirects();
     // TODO nested client span is not created, but context is still injected

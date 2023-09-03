@@ -76,6 +76,7 @@ class ContextBridgeTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void testHttpRouteHolder_SameSourceAsServerInstrumentationDoesNotOverrideRoute() {
     AgentSpanTesting.runWithHttpServerSpan(
         "server",
@@ -96,6 +97,7 @@ class ContextBridgeTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void testHttpRouteHolder_SourceWithHigherOrderValueOverridesRoute() {
     AgentSpanTesting.runWithHttpServerSpan(
         "server",

@@ -33,6 +33,7 @@ import org.opensearch.client.RestClient;
 import org.opensearch.testcontainers.OpensearchContainer;
 import org.testcontainers.utility.DockerImageName;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public class OpenSearchRestTest {
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();

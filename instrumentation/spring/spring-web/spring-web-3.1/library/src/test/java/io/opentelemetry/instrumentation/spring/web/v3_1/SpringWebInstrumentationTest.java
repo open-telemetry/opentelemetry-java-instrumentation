@@ -96,6 +96,7 @@ public class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEnt
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestCircularRedirects();
     optionsBuilder.disableTestReadTimeout();

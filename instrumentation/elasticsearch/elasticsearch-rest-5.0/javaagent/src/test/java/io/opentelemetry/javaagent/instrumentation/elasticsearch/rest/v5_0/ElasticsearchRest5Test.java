@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class ElasticsearchRest5Test {
 
   @RegisterExtension
