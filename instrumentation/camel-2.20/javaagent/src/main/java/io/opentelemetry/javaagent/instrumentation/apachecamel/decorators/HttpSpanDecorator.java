@@ -183,7 +183,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
       Object responseCode = exchange.getOut().getHeader(Exchange.HTTP_RESPONSE_CODE);
       if (responseCode instanceof Integer) {
         if (SemconvStability.emitStableHttpSemconv()) {
-          attributes.put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, (Integer) responseCode);
+          attributes.put(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, (Integer) responseCode);
         }
         if (SemconvStability.emitOldHttpSemconv()) {
           attributes.put(SemanticAttributes.HTTP_STATUS_CODE, (Integer) responseCode);
