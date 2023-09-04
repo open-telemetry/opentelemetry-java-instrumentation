@@ -22,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 public class IndyModuleRegistry {
 
-  private IndyModuleRegistry(){}
+  private IndyModuleRegistry() {}
 
   private static final ConcurrentHashMap<String, InstrumentationModule> modulesByName =
       new ConcurrentHashMap<>();
@@ -67,7 +67,7 @@ public class IndyModuleRegistry {
       InstrumentationModule module, ClassLoader instrumentedClassloader) {
 
     Set<String> toInject = new HashSet<>(InstrumentationModuleMuzzle.getHelperClassNames(module));
-    //TODO (Jonas): Make muzlle include advice classes as helper classes
+    // TODO (Jonas): Make muzlle include advice classes as helper classes
     // so that we don't have to include them here
     toInject.addAll(getModuleAdviceNames(module));
 

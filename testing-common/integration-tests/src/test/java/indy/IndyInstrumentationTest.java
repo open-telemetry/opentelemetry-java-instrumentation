@@ -44,7 +44,6 @@ public class IndyInstrumentationTest {
 
   private void exceptionPlease() {}
 
-
   private Class<?> getHelperClass(boolean local) {
     return null;
   }

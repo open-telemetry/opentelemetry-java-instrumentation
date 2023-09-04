@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.bootstrap;
 
 import java.lang.invoke.CallSite;
@@ -18,27 +23,28 @@ public class IndyBootstrapDispatcher {
 
   static {
     try {
-      VOID_NOOP = MethodHandles.publicLookup().findStatic(IndyBootstrapDispatcher.class, "voidNoop", MethodType.methodType(void.class));
+      VOID_NOOP =
+          MethodHandles.publicLookup()
+              .findStatic(
+                  IndyBootstrapDispatcher.class, "voidNoop", MethodType.methodType(void.class));
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }
   }
 
-  private IndyBootstrapDispatcher(){}
+  private IndyBootstrapDispatcher() {}
 
   @SuppressWarnings("CatchAndPrintStackTrace")
-  public static CallSite bootstrap(MethodHandles.Lookup lookup,
+  public static CallSite bootstrap(
+      MethodHandles.Lookup lookup,
       String adviceMethodName,
       MethodType adviceMethodType,
       Object... args) {
     CallSite callSite = null;
     if (bootstrap != null) {
       try {
-        callSite = (CallSite) bootstrap.invoke(null,
-            lookup,
-            adviceMethodName,
-            adviceMethodType,
-            args);
+        callSite =
+            (CallSite) bootstrap.invoke(null, lookup, adviceMethodName, adviceMethodType, args);
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -51,9 +57,11 @@ public class IndyBootstrapDispatcher {
       } else if (!returnType.isPrimitive()) {
         noopNoArg = MethodHandles.constant(returnType, null);
       } else {
-        noopNoArg = MethodHandles.constant(returnType, Array.get(Array.newInstance(returnType, 1), 0));
+        noopNoArg =
+            MethodHandles.constant(returnType, Array.get(Array.newInstance(returnType, 1), 0));
       }
-      MethodHandle noop = MethodHandles.dropArguments(noopNoArg, 0, adviceMethodType.parameterList());
+      MethodHandle noop =
+          MethodHandles.dropArguments(noopNoArg, 0, adviceMethodType.parameterList());
       callSite = new ConstantCallSite(noop);
     }
     return callSite;
@@ -70,11 +78,11 @@ public class IndyBootstrapDispatcher {
       try {
         t.printStackTrace();
       } catch (Throwable e) {
-        //nothing we can do here, it seems like we can't event print exceptions (e.g. due to OOM or StackOverflow).
+        // nothing we can do here, it seems like we can't event print exceptions (e.g. due to OOM or
+        // StackOverflow).
       }
     }
   }
 
-  public static void voidNoop() {
-  }
+  public static void voidNoop() {}
 }
