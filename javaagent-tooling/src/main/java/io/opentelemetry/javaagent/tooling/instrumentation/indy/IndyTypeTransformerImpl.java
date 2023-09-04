@@ -19,24 +19,32 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
 
   private final InstrumentationModule instrumentationModule;
 
-  public IndyTypeTransformerImpl(AgentBuilder.Identified.Extendable agentBuilder, InstrumentationModule module) {
+  public IndyTypeTransformerImpl(
+      AgentBuilder.Identified.Extendable agentBuilder, InstrumentationModule module) {
     this.agentBuilder = agentBuilder;
     this.instrumentationModule = module;
   }
 
   @Override
-  public void applyAdviceToMethod(ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
-    Advice.WithCustomMapping withCustomMapping = Advice
-        .withCustomMapping()
-        .with(new Advice.AssignReturned.Factory().withSuppressed(ClassCastException.class))
-        .bootstrap(IndyBootstrap.getIndyBootstrapMethod(), IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule));
-    StackManipulation exceptionHandler = MethodInvocation.invoke(new MethodDescription.ForLoadedMethod(IndyBootstrap.getExceptionHandlerMethod()));
-    agentBuilder = agentBuilder.transform(
-        new AgentBuilder.Transformer.ForAdvice(withCustomMapping)
-          .advice(methodMatcher, adviceClassName)
-          .include(ClassLoader.getSystemClassLoader(), instrumentationModule.getClass().getClassLoader())
-          .withExceptionHandler(new Advice.ExceptionHandler.Simple(exceptionHandler))
-    );
+  public void applyAdviceToMethod(
+      ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
+    Advice.WithCustomMapping withCustomMapping =
+        Advice.withCustomMapping()
+            .with(new Advice.AssignReturned.Factory().withSuppressed(ClassCastException.class))
+            .bootstrap(
+                IndyBootstrap.getIndyBootstrapMethod(),
+                IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule));
+    StackManipulation exceptionHandler =
+        MethodInvocation.invoke(
+            new MethodDescription.ForLoadedMethod(IndyBootstrap.getExceptionHandlerMethod()));
+    agentBuilder =
+        agentBuilder.transform(
+            new AgentBuilder.Transformer.ForAdvice(withCustomMapping)
+                .advice(methodMatcher, adviceClassName)
+                .include(
+                    ClassLoader.getSystemClassLoader(),
+                    instrumentationModule.getClass().getClassLoader())
+                .withExceptionHandler(new Advice.ExceptionHandler.Simple(exceptionHandler)));
   }
 
   @Override

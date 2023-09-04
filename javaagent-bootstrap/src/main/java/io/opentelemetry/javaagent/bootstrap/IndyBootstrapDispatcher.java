@@ -20,10 +20,13 @@ public class IndyBootstrapDispatcher {
     try {
       VOID_NOOP = MethodHandles.publicLookup().findStatic(IndyBootstrapDispatcher.class, "voidNoop", MethodType.methodType(void.class));
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
   }
 
+  private IndyBootstrapDispatcher(){}
+
+  @SuppressWarnings("CatchAndPrintStackTrace")
   public static CallSite bootstrap(MethodHandles.Lookup lookup,
       String adviceMethodName,
       MethodType adviceMethodType,
@@ -37,7 +40,7 @@ public class IndyBootstrapDispatcher {
             adviceMethodType,
             args);
       } catch (Exception e) {
-        printStackTrace(e);
+        e.printStackTrace();
       }
     }
     if (callSite == null) {
@@ -61,29 +64,13 @@ public class IndyBootstrapDispatcher {
       if (logAdviceException != null) {
         logAdviceException.invoke(null, exception);
       } else {
-        printStackTrace(exception);
+        exception.printStackTrace();
       }
     } catch (Throwable t) {
       try {
-        printStackTrace(t);
+        t.printStackTrace();
       } catch (Throwable e) {
         //nothing we can do here, it seems like we can't event print exceptions (e.g. due to OOM or StackOverflow).
-      }
-    }
-  }
-
-  /**
-   * Replicates the logic from SystemStandardOutputLogger, as it cannot be directly accessed here.
-   * Note that we don't log anything if the security manager is enabled, as we don't want to deal
-   * with doPrivileged() here.
-   *
-   * @param t the throwable to print
-   */
-  private static void printStackTrace(Throwable t) {
-    if (System.getSecurityManager() == null) {
-      boolean loggingDisabled = System.getProperty("elastic.apm.system_output_disabled") != null || System.getenv("ELASTIC_APM_SYSTEM_OUTPUT_DISABLED") != null;
-      if (!loggingDisabled) {
-        t.printStackTrace();
       }
     }
   }

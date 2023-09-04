@@ -22,8 +22,6 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 public class InstrumentationLoader implements AgentExtension {
   private static final Logger logger = Logger.getLogger(InstrumentationLoader.class.getName());
 
-
-
   private final InstrumentationModuleInstaller instrumentationModuleInstaller =
       new InstrumentationModuleInstaller(InstrumentationHolder.getInstrumentation());
 
@@ -42,7 +40,7 @@ public class InstrumentationLoader implements AgentExtension {
             });
       }
       try {
-          agentBuilder =
+        agentBuilder =
             instrumentationModuleInstaller.install(instrumentationModule, agentBuilder, config);
         numberOfLoadedModules++;
       } catch (Exception | LinkageError e) {

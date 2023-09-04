@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package indy;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,21 +16,24 @@ public class IndyInstrumentationTest {
 
   private String privateField;
 
-  //The following methods are instrumented by the IndyInstrumentationTestModule
+  // The following methods are instrumented by the IndyInstrumentationTestModule
 
   private void assignToFieldViaReturn(String toAssign) {}
+
   private void assignToFieldViaArray(String toAssign) {}
 
   private String assignToArgumentViaReturn(String a, String toAssign) {
-    return "Arg:"+a;
+    return "Arg:" + a;
   }
+
   private String assignToArgumentViaArray(String a, String toAssign) {
-    return "Arg:"+a;
+    return "Arg:" + a;
   }
 
   private String assignToReturnViaReturn(String toAssign) {
     return "replace_me";
   }
+
   private String assignToReturnViaArray(String toAssign) {
     return "replace_me";
   }
@@ -34,8 +42,8 @@ public class IndyInstrumentationTest {
     return s + "_no_exception";
   }
 
-  private void exceptionPlease() {
-  }
+  private void exceptionPlease() {}
+
 
   private Class<?> getHelperClass(boolean local) {
     return null;
@@ -60,13 +68,13 @@ public class IndyInstrumentationTest {
 
   @Test
   void testAssignToArgumentViaReturn() {
-    String value = assignToArgumentViaReturn("","arg_val");
+    String value = assignToArgumentViaReturn("", "arg_val");
     assertThat(value).isEqualTo("Arg:arg_val");
   }
 
   @Test
   void testAssignToArgumentViaArray() {
-    String value = assignToArgumentViaArray("","arg_array_val");
+    String value = assignToArgumentViaArray("", "arg_array_val");
     assertThat(value).isEqualTo("Arg:arg_array_val");
   }
 
@@ -96,7 +104,8 @@ public class IndyInstrumentationTest {
   void testHelperClassLoading() {
     Class<?> localHelper = getHelperClass(true);
     assertThat(localHelper.getName()).endsWith("LocalHelper");
-    assertThat(localHelper.getClassLoader().getClass().getName()).endsWith("InstrumentationModuleClassLoader");
+    assertThat(localHelper.getClassLoader().getClass().getName())
+        .endsWith("InstrumentationModuleClassLoader");
 
     Class<?> globalHelper = getHelperClass(false);
     assertThat(globalHelper.getName()).endsWith("GlobalHelper");
