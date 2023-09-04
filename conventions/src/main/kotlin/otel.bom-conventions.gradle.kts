@@ -21,7 +21,6 @@ afterEvaluate {
   val bomProjects = rootProject.subprojects
     .sortedBy { it.findProperty("archivesName") as String? }
     .filter { !it.name.startsWith("bom") }
-    .filter { !it.name.equals("javaagent") }
     .filter(otelBom.projectFilter.get()::test)
     .filter { it.plugins.hasPlugin("maven-publish") }
 
