@@ -22,22 +22,18 @@ import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstal
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.PatchBytecodeVersionTo51Transformer;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.PatchByteCodeVersionTransformer;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
 import io.opentelemetry.javaagent.tooling.util.NamedMatcher;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
-import java.security.ProtectionDomain;
 import java.util.List;
 import net.bytebuddy.agent.builder.AgentBuilder;
-import net.bytebuddy.asm.TypeConstantAdjustment;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.utility.JavaModule;
 
 public final class InstrumentationModuleInstaller {
 
@@ -85,8 +81,6 @@ public final class InstrumentationModuleInstaller {
 
     indyModuleRegistry.registerIndyModule(instrumentationModule);
 
-    ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher =
-        instrumentationModule.classLoaderMatcher();
     //TODO (Jonas): Adapt MuzzleMatcher to use the same type lookup strategy as the InstrumentationModuleClassLoader
     //MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
     VirtualFieldImplementationInstaller contextProvider =
@@ -94,55 +88,21 @@ public final class InstrumentationModuleInstaller {
 
     AgentBuilder agentBuilder = parentAgentBuilder;
     for (TypeInstrumentation typeInstrumentation : instrumentationModule.typeInstrumentations()) {
-      ElementMatcher<TypeDescription> typeMatcher =
-          new NamedMatcher<>(
-              instrumentationModule.getClass().getSimpleName()
-                  + "#"
-                  + typeInstrumentation.getClass().getSimpleName(),
-              new IgnoreFailedTypeMatcher(typeInstrumentation.typeMatcher()));
-      ElementMatcher<ClassLoader> classLoaderMatcher =
-          new NamedMatcher<>(
-              instrumentationModule.getClass().getSimpleName()
-                  + "#"
-                  + typeInstrumentation.getClass().getSimpleName(),
-              moduleClassLoaderMatcher.and(typeInstrumentation.classLoaderOptimization()));
-
       AgentBuilder.Identified.Extendable extendableAgentBuilder =
-          agentBuilder
-              .type(
-                  new LoggingFailSafeMatcher<>(
-                      typeMatcher,
-                      "Instrumentation type matcher unexpected exception: " + typeMatcher),
-                  new LoggingFailSafeMatcher<>(
-                      classLoaderMatcher,
-                      "Instrumentation class loader matcher unexpected exception: "
-                          + classLoaderMatcher))
-              .and(
-                  (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) ->
-                      classLoader == null || NOT_DECORATOR_MATCHER.matches(typeDescription))
-              .transform(new PatchBytecodeVersionTo51Transformer());
+          setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
+              .transform(new PatchByteCodeVersionTransformer());
 
       IndyTypeTransformerImpl typeTransformer = new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule);
       typeInstrumentation.transform(typeTransformer);
       extendableAgentBuilder = typeTransformer.getAgentBuilder();
-      extendableAgentBuilder = extendableAgentBuilder.transform(new AgentBuilder.Transformer() {
-        @Override
-        public DynamicType.Builder<?> transform(DynamicType.Builder<?> builder, TypeDescription typeDescription,
-            ClassLoader classLoader, JavaModule module, ProtectionDomain protectionDomain) {
-          //TODO: make instrumentation of very old bytecode opt-in
-          //if (!ancientBytecodeInstrumentationEnabled) {
-          //  builder = builder.visit(MinimumClassFileVersionValidator.V1_4);
-          //}
-          // As long as we allow 1.4 bytecode, we need to add this constant pool adjustment as well
-          return builder.visit(TypeConstantAdjustment.INSTANCE);
-        }
-      });
+      //TODO (Jonas): make instrumentation of bytecode older than 1.4 opt-in via a config option
       extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
 
       agentBuilder = extendableAgentBuilder;
     }
     return agentBuilder;
   }
+
 
   private AgentBuilder installInjectingModule(InstrumentationModule instrumentationModule,
       AgentBuilder parentAgentBuilder, ConfigProperties config) {
@@ -162,8 +122,6 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher =
-        instrumentationModule.classLoaderMatcher();
     MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
@@ -177,32 +135,8 @@ public final class InstrumentationModuleInstaller {
 
     AgentBuilder agentBuilder = parentAgentBuilder;
     for (TypeInstrumentation typeInstrumentation : typeInstrumentations) {
-      ElementMatcher<TypeDescription> typeMatcher =
-          new NamedMatcher<>(
-              instrumentationModule.getClass().getSimpleName()
-                  + "#"
-                  + typeInstrumentation.getClass().getSimpleName(),
-              new IgnoreFailedTypeMatcher(typeInstrumentation.typeMatcher()));
-      ElementMatcher<ClassLoader> classLoaderMatcher =
-          new NamedMatcher<>(
-              instrumentationModule.getClass().getSimpleName()
-                  + "#"
-                  + typeInstrumentation.getClass().getSimpleName(),
-              moduleClassLoaderMatcher.and(typeInstrumentation.classLoaderOptimization()));
 
-      AgentBuilder.Identified.Extendable extendableAgentBuilder =
-          agentBuilder
-              .type(
-                  new LoggingFailSafeMatcher<>(
-                      typeMatcher,
-                      "Instrumentation type matcher unexpected exception: " + typeMatcher),
-                  new LoggingFailSafeMatcher<>(
-                      classLoaderMatcher,
-                      "Instrumentation class loader matcher unexpected exception: "
-                          + classLoaderMatcher))
-              .and(
-                  (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) ->
-                      classLoader == null || NOT_DECORATOR_MATCHER.matches(typeDescription))
+      AgentBuilder.Identified.Extendable extendableAgentBuilder = setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
               .and(muzzleMatcher)
               .transform(ConstantAdjuster.instance())
               .transform(helperInjector);
@@ -216,6 +150,41 @@ public final class InstrumentationModuleInstaller {
     }
 
     return agentBuilder;
+  }
+
+  private static AgentBuilder.Identified.Narrowable setTypeMatcher(
+      AgentBuilder agentBuilder,
+      InstrumentationModule instrumentationModule,
+      TypeInstrumentation typeInstrumentation) {
+
+    ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher =
+        instrumentationModule.classLoaderMatcher();
+
+    ElementMatcher<TypeDescription> typeMatcher =
+        new NamedMatcher<>(
+            instrumentationModule.getClass().getSimpleName()
+                + "#"
+                + typeInstrumentation.getClass().getSimpleName(),
+            new IgnoreFailedTypeMatcher(typeInstrumentation.typeMatcher()));
+    ElementMatcher<ClassLoader> classLoaderMatcher =
+        new NamedMatcher<>(
+            instrumentationModule.getClass().getSimpleName()
+                + "#"
+                + typeInstrumentation.getClass().getSimpleName(),
+            moduleClassLoaderMatcher.and(typeInstrumentation.classLoaderOptimization()));
+
+    return agentBuilder
+        .type(
+            new LoggingFailSafeMatcher<>(
+                typeMatcher,
+                "Instrumentation type matcher unexpected exception: " + typeMatcher),
+            new LoggingFailSafeMatcher<>(
+                classLoaderMatcher,
+                "Instrumentation class loader matcher unexpected exception: "
+                    + classLoaderMatcher))
+        .and(
+            (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) ->
+                classLoader == null || NOT_DECORATOR_MATCHER.matches(typeDescription));
   }
 
 
