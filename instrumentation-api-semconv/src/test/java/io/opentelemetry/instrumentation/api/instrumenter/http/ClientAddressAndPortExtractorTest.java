@@ -66,6 +66,7 @@ class ClientAddressAndPortExtractorTest {
 
           // ipv6
           arguments(singletonList("for=[::1]"), "::1", null),
+          arguments(singletonList("For=[::1]"), "::1", null),
           arguments(singletonList("for=\"[::1]\":42"), "::1", null),
           arguments(singletonList("for=[::1]:42"), "::1", 42),
           arguments(singletonList("for=\"[::1]:42\""), "::1", 42),
@@ -76,6 +77,7 @@ class ClientAddressAndPortExtractorTest {
 
           // ipv4
           arguments(singletonList("for=1.2.3.4"), "1.2.3.4", null),
+          arguments(singletonList("FOR=1.2.3.4"), "1.2.3.4", null),
           arguments(singletonList("for=1.2.3.4, :42"), "1.2.3.4", null),
           arguments(singletonList("for=1.2.3.4;proto=https;by=4.3.2.1"), "1.2.3.4", null),
           arguments(singletonList("for=1.2.3.4:42"), "1.2.3.4", 42),
