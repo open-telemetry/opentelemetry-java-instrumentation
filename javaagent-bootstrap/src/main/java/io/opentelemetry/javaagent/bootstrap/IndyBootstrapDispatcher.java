@@ -17,7 +17,6 @@ import java.lang.reflect.Method;
 public class IndyBootstrapDispatcher {
 
   public static Method bootstrap;
-  public static Method logAdviceException;
 
   private static final MethodHandle VOID_NOOP;
 
@@ -46,7 +45,7 @@ public class IndyBootstrapDispatcher {
         callSite =
             (CallSite) bootstrap.invoke(null, lookup, adviceMethodName, adviceMethodType, args);
       } catch (Exception e) {
-        e.printStackTrace();
+        ExceptionLogger.logSuppressedError("Error bootstrapping indy instruction", e);
       }
     }
     if (callSite == null) {
@@ -65,23 +64,6 @@ public class IndyBootstrapDispatcher {
       callSite = new ConstantCallSite(noop);
     }
     return callSite;
-  }
-
-  public static void logAdviceException(Throwable exception) {
-    try {
-      if (logAdviceException != null) {
-        logAdviceException.invoke(null, exception);
-      } else {
-        exception.printStackTrace();
-      }
-    } catch (Throwable t) {
-      try {
-        t.printStackTrace();
-      } catch (Throwable e) {
-        // nothing we can do here, it seems like we can't event print exceptions (e.g. due to OOM or
-        // StackOverflow).
-      }
-    }
   }
 
   public static void voidNoop() {}

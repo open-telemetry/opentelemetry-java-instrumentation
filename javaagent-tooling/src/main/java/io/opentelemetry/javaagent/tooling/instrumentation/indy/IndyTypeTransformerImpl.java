@@ -7,11 +7,10 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.implementation.bytecode.StackManipulation;
-import net.bytebuddy.implementation.bytecode.member.MethodInvocation;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public final class IndyTypeTransformerImpl implements TypeTransformer {
@@ -34,9 +33,6 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
             .bootstrap(
                 IndyBootstrap.getIndyBootstrapMethod(),
                 IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule));
-    StackManipulation exceptionHandler =
-        MethodInvocation.invoke(
-            new MethodDescription.ForLoadedMethod(IndyBootstrap.getExceptionHandlerMethod()));
     agentBuilder =
         agentBuilder.transform(
             new AgentBuilder.Transformer.ForAdvice(withCustomMapping)
@@ -44,7 +40,7 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
                 .include(
                     ClassLoader.getSystemClassLoader(),
                     instrumentationModule.getClass().getClassLoader())
-                .withExceptionHandler(new Advice.ExceptionHandler.Simple(exceptionHandler)));
+                .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler()));
   }
 
   @Override

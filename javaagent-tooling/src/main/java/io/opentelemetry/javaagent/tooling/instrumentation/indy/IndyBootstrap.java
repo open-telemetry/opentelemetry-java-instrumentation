@@ -28,8 +28,6 @@ public class IndyBootstrap {
 
   private static final Method indyBootstrapMethod;
 
-  private static final Method bootstrapLoggingMethod;
-
   private static final CallDepth callDepth = CallDepth.forClass(IndyBootstrap.class);
 
   static {
@@ -41,11 +39,7 @@ public class IndyBootstrap {
               String.class,
               MethodType.class,
               Object[].class);
-      bootstrapLoggingMethod =
-          IndyBootstrapDispatcher.class.getMethod("logAdviceException", Throwable.class);
 
-      IndyBootstrapDispatcher.logAdviceException =
-          IndyBootstrap.class.getMethod("logExceptionThrownByAdvice", Throwable.class);
       IndyBootstrapDispatcher.bootstrap =
           IndyBootstrap.class.getMethod(
               "bootstrap",
@@ -62,10 +56,6 @@ public class IndyBootstrap {
 
   public static Method getIndyBootstrapMethod() {
     return indyBootstrapMethod;
-  }
-
-  public static Method getExceptionHandlerMethod() {
-    return bootstrapLoggingMethod;
   }
 
   @Nullable
@@ -126,15 +116,6 @@ public class IndyBootstrap {
       return null;
     } finally {
       callDepth.decrementAndGet();
-    }
-  }
-
-  public static void logExceptionThrownByAdvice(Throwable exception) {
-    try {
-      logger.log(Level.SEVERE, "Advice threw an exception, this should never happen!", exception);
-    } catch (Throwable t) {
-      // we were unable to print the exception (e.g. due to OOM / StackOverflow). Not much we can do
-      // here.
     }
   }
 
