@@ -27,6 +27,11 @@ public class IndyModuleRegistry {
   private static final ConcurrentHashMap<String, InstrumentationModule> modulesByName =
       new ConcurrentHashMap<>();
 
+  /**
+   * Weekly references the {@link InstrumentationModuleClassLoader}s for a given application classloader.
+   * We only store weak references to make sure we don't prevent application classloaders from being GCed.
+   * The application classloaders will strongly reference the {@link InstrumentationModuleClassLoader} through the invokedynamic callsites.
+   */
   private static final ConcurrentHashMap<
           InstrumentationModule,
           Cache<ClassLoader, WeakReference<InstrumentationModuleClassLoader>>>
@@ -51,9 +56,10 @@ public class IndyModuleRegistry {
     WeakReference<InstrumentationModuleClassLoader> cached =
         cacheForModule.get(instrumentedClassloader);
     if (cached != null) {
-      // cached.get() is guaranteed to be non-null because the instrumedClassloader strongly
-      // references the InstrumentaitonModuleClassloader through Indy-CallSites
-      return cached.get();
+      InstrumentationModuleClassLoader cachedCl = cached.get();
+      if(cachedCl != null) {
+        return cachedCl;
+      }
     }
     // We can't directly use "compute-if-absent" here because then for a short time only the
     // WeakReference will point to the InstrumentationModuleCL
@@ -67,7 +73,7 @@ public class IndyModuleRegistry {
       InstrumentationModule module, ClassLoader instrumentedClassloader) {
 
     Set<String> toInject = new HashSet<>(InstrumentationModuleMuzzle.getHelperClassNames(module));
-    // TODO (Jonas): Make muzlle include advice classes as helper classes
+    // TODO (Jonas): Make muzzle include advice classes as helper classes
     // so that we don't have to include them here
     toInject.addAll(getModuleAdviceNames(module));
 
