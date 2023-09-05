@@ -28,7 +28,7 @@ public class IndyModuleRegistry {
       new ConcurrentHashMap<>();
 
   /**
-   * Weekly references the {@link InstrumentationModuleClassLoader}s for a given application classloader.
+   * Weakly references the {@link InstrumentationModuleClassLoader}s for a given application classloader.
    * We only store weak references to make sure we don't prevent application classloaders from being GCed.
    * The application classloaders will strongly reference the {@link InstrumentationModuleClassLoader} through the invokedynamic callsites.
    */

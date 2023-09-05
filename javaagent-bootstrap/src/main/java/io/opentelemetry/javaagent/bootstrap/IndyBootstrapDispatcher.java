@@ -11,12 +11,18 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Array;
-import java.lang.reflect.Method;
 
+/**
+ * Contains the bootstrap method for initializing invokedynamic callsites which are added via agent instrumentation.
+ */
 @SuppressWarnings("unused")
 public class IndyBootstrapDispatcher {
 
-  public static Method bootstrap;
+  /**
+   * Pointer to the actual bootstrapping implementation.
+   * This field is initialized by {@link io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyBootstrap}.
+   */
+  public static MethodHandle bootstrap;
 
   private static final MethodHandle VOID_NOOP;
 
@@ -43,8 +49,8 @@ public class IndyBootstrapDispatcher {
     if (bootstrap != null) {
       try {
         callSite =
-            (CallSite) bootstrap.invoke(null, lookup, adviceMethodName, adviceMethodType, args);
-      } catch (Exception e) {
+            (CallSite) bootstrap.invoke(lookup, adviceMethodName, adviceMethodType, args);
+      } catch (Throwable e) {
         ExceptionLogger.logSuppressedError("Error bootstrapping indy instruction", e);
       }
     }

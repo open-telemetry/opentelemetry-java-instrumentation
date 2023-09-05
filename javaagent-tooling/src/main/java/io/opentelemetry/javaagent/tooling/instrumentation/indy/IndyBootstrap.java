@@ -40,13 +40,14 @@ public class IndyBootstrap {
               MethodType.class,
               Object[].class);
 
-      IndyBootstrapDispatcher.bootstrap =
-          IndyBootstrap.class.getMethod(
-              "bootstrap",
-              MethodHandles.Lookup.class,
-              String.class,
-              MethodType.class,
-              Object[].class);
+      MethodType bootstrapMethodType = MethodType.methodType(
+          ConstantCallSite.class,
+          MethodHandles.Lookup.class,
+          String.class,
+          MethodType.class,
+          Object[].class);
+
+      IndyBootstrapDispatcher.bootstrap = MethodHandles.lookup().findStatic(IndyBootstrap.class, "bootstrap", bootstrapMethodType);
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }
@@ -59,11 +60,12 @@ public class IndyBootstrap {
   }
 
   @Nullable
-  public static ConstantCallSite bootstrap(
+  @SuppressWarnings("unused")
+  private static ConstantCallSite bootstrap(
       MethodHandles.Lookup lookup,
       String adviceMethodName,
       MethodType adviceMethodType,
-      Object... args) {
+      Object[] args) {
 
     if (System.getSecurityManager() == null) {
       return internalBootstrap(lookup, adviceMethodName, adviceMethodType, args);
@@ -72,12 +74,7 @@ public class IndyBootstrap {
     // callsite resolution needs privileged access to call Class#getClassLoader() and
     // MethodHandles$Lookup#findStatic
     return AccessController.doPrivileged(
-        new PrivilegedAction<ConstantCallSite>() {
-          @Override
-          public ConstantCallSite run() {
-            return internalBootstrap(lookup, adviceMethodName, adviceMethodType, args);
-          }
-        });
+        (PrivilegedAction<ConstantCallSite>) () -> internalBootstrap(lookup, adviceMethodName, adviceMethodType, args));
   }
 
   private static ConstantCallSite internalBootstrap(
