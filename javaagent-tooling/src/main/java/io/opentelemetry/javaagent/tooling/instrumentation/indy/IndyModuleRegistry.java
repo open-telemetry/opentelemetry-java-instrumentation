@@ -28,9 +28,10 @@ public class IndyModuleRegistry {
       new ConcurrentHashMap<>();
 
   /**
-   * Weakly references the {@link InstrumentationModuleClassLoader}s for a given application classloader.
-   * We only store weak references to make sure we don't prevent application classloaders from being GCed.
-   * The application classloaders will strongly reference the {@link InstrumentationModuleClassLoader} through the invokedynamic callsites.
+   * Weakly references the {@link InstrumentationModuleClassLoader}s for a given application
+   * classloader. We only store weak references to make sure we don't prevent application
+   * classloaders from being GCed. The application classloaders will strongly reference the {@link
+   * InstrumentationModuleClassLoader} through the invokedynamic callsites.
    */
   private static final ConcurrentHashMap<
           InstrumentationModule,
@@ -57,7 +58,7 @@ public class IndyModuleRegistry {
         cacheForModule.get(instrumentedClassloader);
     if (cached != null) {
       InstrumentationModuleClassLoader cachedCl = cached.get();
-      if(cachedCl != null) {
+      if (cachedCl != null) {
         return cachedCl;
       }
     }

@@ -13,14 +13,15 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.Array;
 
 /**
- * Contains the bootstrap method for initializing invokedynamic callsites which are added via agent instrumentation.
+ * Contains the bootstrap method for initializing invokedynamic callsites which are added via agent
+ * instrumentation.
  */
 @SuppressWarnings("unused")
 public class IndyBootstrapDispatcher {
 
   /**
-   * Pointer to the actual bootstrapping implementation.
-   * This field is initialized by {@link io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyBootstrap}.
+   * Pointer to the actual bootstrapping implementation. This field is initialized by {@link
+   * io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyBootstrap}.
    */
   public static MethodHandle bootstrap;
 
@@ -48,8 +49,7 @@ public class IndyBootstrapDispatcher {
     CallSite callSite = null;
     if (bootstrap != null) {
       try {
-        callSite =
-            (CallSite) bootstrap.invoke(lookup, adviceMethodName, adviceMethodType, args);
+        callSite = (CallSite) bootstrap.invoke(lookup, adviceMethodName, adviceMethodType, args);
       } catch (Throwable e) {
         ExceptionLogger.logSuppressedError("Error bootstrapping indy instruction", e);
       }
