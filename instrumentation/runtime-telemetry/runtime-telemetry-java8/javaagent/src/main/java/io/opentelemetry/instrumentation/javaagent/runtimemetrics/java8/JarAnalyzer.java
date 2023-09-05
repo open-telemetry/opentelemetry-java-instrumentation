@@ -141,16 +141,16 @@ final class JarAnalyzer {
       return;
     }
     if ("jrt".equals(archiveUrl.getProtocol())) {
-      logger.log(Level.FINEST, "Skipping processing for java runtime module: " + archiveUrl);
+      logger.log(Level.FINEST, "Skipping processing for java runtime module: {0}", archiveUrl);
       return;
     }
     String file = archiveUrl.getFile();
     if (file.endsWith("/")) {
-      logger.log(Level.FINEST, "Skipping processing non-archive code location: " + archiveUrl);
+      logger.log(Level.FINEST, "Skipping processing non-archive code location: {0}", archiveUrl);
       return;
     }
     if (!file.endsWith(JAR_EXTENSION) && !file.endsWith(WAR_EXTENSION)) {
-      logger.log(Level.INFO, "Skipping processing unrecognized code location: " + archiveUrl);
+      logger.log(Level.INFO, "Skipping processing unrecognized code location: {0}", archiveUrl);
       return;
     }
 
@@ -209,7 +209,7 @@ final class JarAnalyzer {
     try {
       addPackageType(builder, archiveUrl);
     } catch (Exception e) {
-      logger.log(Level.WARNING, "Error adding package type for archive URL: " + archiveUrl, e);
+      logger.log(Level.WARNING, "Error adding package type for archive URL: {0}" + archiveUrl, e);
     }
 
     try {

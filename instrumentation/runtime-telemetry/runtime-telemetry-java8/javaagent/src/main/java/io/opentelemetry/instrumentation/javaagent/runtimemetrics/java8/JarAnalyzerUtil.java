@@ -16,6 +16,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
@@ -28,6 +29,18 @@ final class JarAnalyzerUtil {
       AttributeKey.stringKey("package.description");
   static final AttributeKey<String> PACKAGE_CHECKSUM = AttributeKey.stringKey("package.checksum");
   static final AttributeKey<String> PACKAGE_PATH = AttributeKey.stringKey("package.path");
+
+  private static final ThreadLocal<MessageDigest> MESSAGE_DIGEST_THREAD_LOCAL =
+      ThreadLocal.withInitial(JarAnalyzerUtil::createSha1MessageDigest);
+
+  private static MessageDigest createSha1MessageDigest() {
+    try {
+      return MessageDigest.getInstance("SHA1");
+    } catch (NoSuchAlgorithmException e) {
+      throw new IllegalStateException(
+          "Unexpected error. Checksum algorithm SHA1 does not exist.", e);
+    }
+  }
 
   /**
    * Set the attributes {@link #PACKAGE_TYPE} from the {@code archiveUrl}.
@@ -55,13 +68,8 @@ final class JarAnalyzerUtil {
   }
 
   private static String computeSha1(URL archiveUrl) throws IOException {
-    MessageDigest md;
-    try {
-      md = MessageDigest.getInstance("SHA1");
-    } catch (NoSuchAlgorithmException e) {
-      throw new IllegalStateException(
-          "Unexpected error. Checksum algorithm SHA1 does not exist.", e);
-    }
+    MessageDigest md = MESSAGE_DIGEST_THREAD_LOCAL.get();
+    md.reset(); // Reset reused thread local message digest instead
 
     try (InputStream is = new DigestInputStream(archiveUrl.openStream(), md)) {
       byte[] buffer = new byte[1024 * 8];
@@ -106,9 +114,8 @@ final class JarAnalyzerUtil {
    * {Implementation-Vendor}", e.g. {@code Jackson datatype: JSR310 by FasterXML}.
    */
   static void addPackageDescription(AttributesBuilder builder, URL archiveUrl) throws IOException {
-    try (InputStream inputStream = archiveUrl.openStream();
-        JarInputStream jarInputStream = new JarInputStream(inputStream)) {
-      Manifest manifest = jarInputStream.getManifest();
+    try (JarFile jarFile = new JarFile(archiveUrl.getFile())) {
+      Manifest manifest = jarFile.getManifest();
       if (manifest == null) {
         return;
       }
