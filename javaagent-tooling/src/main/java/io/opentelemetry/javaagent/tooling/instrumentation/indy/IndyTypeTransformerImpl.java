@@ -37,9 +37,7 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
         agentBuilder.transform(
             new AgentBuilder.Transformer.ForAdvice(withCustomMapping)
                 .advice(methodMatcher, adviceClassName)
-                .include(
-                    ClassLoader.getSystemClassLoader(),
-                    instrumentationModule.getClass().getClassLoader())
+                .include(instrumentationModule.getClass().getClassLoader())
                 .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler()));
   }
 
