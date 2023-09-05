@@ -15,3 +15,13 @@ muzzle {
 dependencies {
   library("com.google.http-client:google-http-client:1.19.0")
 }
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}

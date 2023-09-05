@@ -55,14 +55,21 @@ If you are on Windows and you want to run the tests using linux containers:
 USE_LINUX_CONTAINERS=1 ./gradlew :smoke-tests:test -PsmokeTestSuite=payara
 ```
 
+# Smoke OpenTelemetry starter tests
+
+Smoke tests for the [OpenTelemetry Spring starter](../../instrumentation/spring/starters/spring-boot-starter/README.md).
+
+You can execute the tests in a JVM (`./gradlew smoke-tests-otel-starter:test`) or as Spring native tests (`./gradlew smoke-tests-otel-starter:nativeTest`).
+
 ## GraalVM native test
 
-Some tests can be executed as GraalVM native executables:
+To execute all the instrumentation tests runnable as GraalVM native executables:
 
 ```
 ./gradlew nativeTest
 ```
 
+[A Github workflow](../../.github/workflows/native-tests-daily.yml) executes the native tests every day.
 
 ## Docker disk space
 

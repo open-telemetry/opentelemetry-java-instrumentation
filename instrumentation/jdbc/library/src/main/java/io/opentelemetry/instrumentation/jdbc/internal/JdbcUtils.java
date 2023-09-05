@@ -26,12 +26,19 @@ public final class JdbcUtils {
 
   @Nullable private static Field c3poField = null;
 
-  /** Returns the unwrapped connection or null if exception was thrown. */
   public static Connection connectionFromStatement(Statement statement) {
-    Connection connection;
     try {
-      connection = statement.getConnection();
+      return unwrapConnection(statement.getConnection());
+    } catch (Throwable e) {
+      // Had some problem getting the connection.
+      logger.log(FINE, "Could not get connection from a statement", e);
+      return null;
+    }
+  }
 
+  /** Returns the unwrapped connection or null if exception was thrown. */
+  public static Connection unwrapConnection(Connection connection) {
+    try {
       if (c3poField != null) {
         if (connection.getClass().getName().equals("com.mchange.v2.c3p0.impl.NewProxyConnection")) {
           return (Connection) c3poField.get(connection);
@@ -64,7 +71,7 @@ public final class JdbcUtils {
       }
     } catch (Throwable e) {
       // Had some problem getting the connection.
-      logger.log(FINE, "Could not get connection for StatementAdvice", e);
+      logger.log(FINE, "Could not unwrap connection", e);
       return null;
     }
     return connection;

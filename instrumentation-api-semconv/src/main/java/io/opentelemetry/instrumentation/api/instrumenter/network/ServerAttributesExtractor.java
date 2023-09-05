@@ -10,6 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 
 /**
@@ -26,22 +27,39 @@ public final class ServerAttributesExtractor<REQUEST, RESPONSE>
    */
   public static <REQUEST, RESPONSE> ServerAttributesExtractor<REQUEST, RESPONSE> create(
       ServerAttributesGetter<REQUEST, RESPONSE> getter) {
-    return new ServerAttributesExtractor<>(getter);
+    return new ServerAttributesExtractor<>(getter, InternalServerAttributesExtractor.Mode.PEER);
+  }
+
+  /**
+   * Returns a new {@link ServerAttributesExtractor} that will use the passed {@link
+   * ServerAttributesGetter}.
+   *
+   * @deprecated This method will be removed in the 2.0 release. It was only introduced to ease the
+   *     transition from using the old {@code NetServerAttributesGetter} to the new {@code
+   *     ...network} attribute getter classes.
+   */
+  @Deprecated
+  public static <REQUEST, RESPONSE>
+      ServerAttributesExtractor<REQUEST, RESPONSE> createForServerSide(
+          ServerAttributesGetter<REQUEST, RESPONSE> getter) {
+    return new ServerAttributesExtractor<>(getter, InternalServerAttributesExtractor.Mode.HOST);
   }
 
   private final InternalServerAttributesExtractor<REQUEST, RESPONSE> internalExtractor;
 
-  ServerAttributesExtractor(ServerAttributesGetter<REQUEST, RESPONSE> getter) {
+  ServerAttributesExtractor(
+      ServerAttributesGetter<REQUEST, RESPONSE> getter,
+      InternalServerAttributesExtractor.Mode mode) {
     // the ServerAttributesExtractor will always emit new semconv
     internalExtractor =
         new InternalServerAttributesExtractor<>(
             getter,
             (port, request) -> true,
             FallbackAddressPortExtractor.noop(),
-            /* emitStableUrlAttributes= */ true,
-            /* emitOldHttpAttributes= */ false,
-            // this param does not matter when old semconv is off
-            InternalServerAttributesExtractor.Mode.HOST);
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv(),
+            mode,
+            /* captureServerSocketAttributes= */ true);
   }
 
   @Override

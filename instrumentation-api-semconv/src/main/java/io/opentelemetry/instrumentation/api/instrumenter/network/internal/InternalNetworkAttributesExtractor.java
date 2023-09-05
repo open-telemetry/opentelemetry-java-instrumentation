@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.api.instrumenter.network.internal;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Locale;
 import javax.annotation.Nullable;
 
@@ -55,8 +55,8 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
     if (emitOldHttpAttributes) {
       // net.transport and net.sock.family are not 1:1 convertible with network.transport and
       // network.type; they must be handled separately in the old net.* extractors
-      internalSet(attributes, NetAttributes.NET_PROTOCOL_NAME, protocolName);
-      internalSet(attributes, NetAttributes.NET_PROTOCOL_VERSION, protocolVersion);
+      internalSet(attributes, SemanticAttributes.NET_PROTOCOL_NAME, protocolName);
+      internalSet(attributes, SemanticAttributes.NET_PROTOCOL_VERSION, protocolVersion);
     }
   }
 

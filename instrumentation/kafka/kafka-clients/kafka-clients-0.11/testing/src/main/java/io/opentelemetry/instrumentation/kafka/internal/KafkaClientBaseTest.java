@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -99,7 +100,7 @@ public abstract class KafkaClientBaseTest {
         });
   }
 
-  public HashMap<String, Object> consumerProps() {
+  public Map<String, Object> consumerProps() {
     HashMap<String, Object> props = new HashMap<>();
     props.put("bootstrap.servers", kafka.getBootstrapServers());
     props.put("group.id", "test");
@@ -111,7 +112,7 @@ public abstract class KafkaClientBaseTest {
     return props;
   }
 
-  public HashMap<String, Object> producerProps() {
+  public Map<String, Object> producerProps() {
     HashMap<String, Object> props = new HashMap<>();
     props.put("bootstrap.servers", kafka.getBootstrapServers());
     props.put("retries", 0);

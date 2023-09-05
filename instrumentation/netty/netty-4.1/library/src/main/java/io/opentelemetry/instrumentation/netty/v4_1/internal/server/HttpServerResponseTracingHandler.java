@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1.internal.server;
 
-import static io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerRequestTracingHandler.HTTP_SERVER_REQUEST;
-
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
@@ -22,6 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import java.util.Deque;
 import javax.annotation.Nullable;
 
@@ -46,17 +45,15 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) throws Exception {
-    Attribute<Deque<Context>> contextAttr = ctx.channel().attr(AttributeKeys.SERVER_CONTEXT);
+    Attribute<Deque<ServerContext>> serverContextAttr =
+        ctx.channel().attr(AttributeKeys.SERVER_CONTEXT);
 
-    Deque<Context> contexts = contextAttr.get();
-    Context context = contexts != null ? contexts.peekFirst() : null;
-    if (context == null) {
+    Deque<ServerContext> serverContexts = serverContextAttr.get();
+    ServerContext serverContext = serverContexts != null ? serverContexts.peekFirst() : null;
+    if (serverContext == null) {
       super.write(ctx, msg, prm);
       return;
     }
-    Attribute<Deque<HttpRequestAndChannel>> requestAttr = ctx.channel().attr(HTTP_SERVER_REQUEST);
-    Deque<HttpRequestAndChannel> requests = requestAttr.get();
-    HttpRequestAndChannel request = requests != null ? requests.peekFirst() : null;
 
     ChannelPromise writePromise;
 
@@ -73,35 +70,39 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       // Going to finish the span after the write of the last content finishes.
       if (msg instanceof FullHttpResponse) {
         // Headers and body all sent together, we have the response information in the msg.
-        beforeCommitHandler.handle(context, (HttpResponse) msg);
-        contexts.removeFirst();
-        requests.removeFirst();
+        beforeCommitHandler.handle(serverContext.context(), (HttpResponse) msg);
+        serverContexts.removeFirst();
         writePromise.addListener(
-            future -> end(context, request, (FullHttpResponse) msg, writePromise));
+            future ->
+                end(
+                    serverContext.context(),
+                    serverContext.request(),
+                    (FullHttpResponse) msg,
+                    writePromise));
       } else {
         // Body sent after headers. We stored the response information in the context when
         // encountering HttpResponse (which was not FullHttpResponse since it's not
         // LastHttpContent).
-        contexts.removeFirst();
-        requests.removeFirst();
+        serverContexts.removeFirst();
         HttpResponse response = ctx.channel().attr(HTTP_SERVER_RESPONSE).getAndSet(null);
-        writePromise.addListener(future -> end(context, request, response, writePromise));
+        writePromise.addListener(
+            future ->
+                end(serverContext.context(), serverContext.request(), response, writePromise));
       }
     } else {
       writePromise = prm;
       if (msg instanceof HttpResponse) {
         // Headers before body has been sent, store them to use when finishing the span.
-        beforeCommitHandler.handle(context, (HttpResponse) msg);
+        beforeCommitHandler.handle(serverContext.context(), (HttpResponse) msg);
         ctx.channel().attr(HTTP_SERVER_RESPONSE).set((HttpResponse) msg);
       }
     }
 
-    try (Scope ignored = context.makeCurrent()) {
+    try (Scope ignored = serverContext.context().makeCurrent()) {
       super.write(ctx, msg, writePromise);
     } catch (Throwable throwable) {
-      contexts.removeFirst();
-      requests.removeFirst();
-      end(context, request, null, throwable);
+      serverContexts.removeFirst();
+      end(serverContext.context(), serverContext.request(), null, throwable);
       throw throwable;
     }
   }

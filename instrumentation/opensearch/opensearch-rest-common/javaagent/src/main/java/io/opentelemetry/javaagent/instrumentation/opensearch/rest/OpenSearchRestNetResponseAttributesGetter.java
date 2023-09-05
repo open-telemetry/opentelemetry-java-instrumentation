@@ -5,13 +5,41 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import java.net.Inet4Address;
 import java.net.Inet6Address;
+import java.net.InetAddress;
 import javax.annotation.Nullable;
 import org.opensearch.client.Response;
 
+@SuppressWarnings("deprecation") // have to use the deprecated Net*AttributesGetter for now
 final class OpenSearchRestNetResponseAttributesGetter
-    implements NetClientAttributesGetter<OpenSearchRestRequest, Response> {
+    implements io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter<
+        OpenSearchRestRequest, Response> {
+
+  @Nullable
+  @Override
+  public String getSockFamily(
+      OpenSearchRestRequest elasticsearchRestRequest, @Nullable Response response) {
+    if (response != null && response.getHost().getAddress() instanceof Inet6Address) {
+      return "inet6";
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkType(OpenSearchRestRequest request, @Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
+    InetAddress address = response.getHost().getAddress();
+    if (address instanceof Inet4Address) {
+      return "ipv4";
+    } else if (address instanceof Inet6Address) {
+      return "ipv6";
+    }
+    return null;
+  }
 
   @Override
   @Nullable
@@ -22,16 +50,6 @@ final class OpenSearchRestNetResponseAttributesGetter
   @Override
   @Nullable
   public Integer getServerPort(OpenSearchRestRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getSockFamily(
-      OpenSearchRestRequest elasticsearchRestRequest, @Nullable Response response) {
-    if (response != null && response.getHost().getAddress() instanceof Inet6Address) {
-      return "inet6";
-    }
     return null;
   }
 

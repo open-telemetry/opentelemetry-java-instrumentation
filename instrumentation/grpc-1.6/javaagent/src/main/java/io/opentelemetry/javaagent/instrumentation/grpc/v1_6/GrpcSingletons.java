@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 // Holds singleton references.
 public final class GrpcSingletons {
@@ -23,7 +24,7 @@ public final class GrpcSingletons {
 
   public static final ServerInterceptor SERVER_INTERCEPTOR;
 
-  public static final Context.Storage STORAGE = new ContextStorageBridge(false);
+  private static final AtomicReference<Context.Storage> STORAGE_REFERENCE = new AtomicReference<>();
 
   static {
     boolean experimentalSpanAttributes =
@@ -46,6 +47,15 @@ public final class GrpcSingletons {
 
     CLIENT_INTERCEPTOR = telemetry.newClientInterceptor();
     SERVER_INTERCEPTOR = telemetry.newServerInterceptor();
+  }
+
+  public static Context.Storage getStorage() {
+    return STORAGE_REFERENCE.get();
+  }
+
+  public static Context.Storage setStorage(Context.Storage storage) {
+    STORAGE_REFERENCE.compareAndSet(null, new ContextStorageBridge(storage));
+    return getStorage();
   }
 
   private GrpcSingletons() {}

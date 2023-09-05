@@ -115,6 +115,8 @@ tasks {
         // lots of low level APIs use arrays
         disable("AvoidObjectArrays")
 
+        disable("BanClassLoader")
+
         // YodaConditions may improve safety in some cases. The argument of increased
         // cognitive load is dubious.
         disable("YodaCondition")

@@ -8,9 +8,12 @@ package io.opentelemetry.instrumentation.armeria.v1_3;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.RequestContext;
+import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.armeria.v1_3.internal.RequestContextAccess;
+import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -73,6 +76,43 @@ enum ArmeriaHttpServerAttributesGetter
       return ((ServiceRequestContext) ctx).config().route().patternString();
     }
     return null;
+  }
+
+  @Override
+  public String getNetworkProtocolName(RequestContext ctx, @Nullable RequestLog requestLog) {
+    return "http";
+  }
+
+  @Override
+  public String getNetworkProtocolVersion(RequestContext ctx, @Nullable RequestLog requestLog) {
+    SessionProtocol protocol = ctx.sessionProtocol();
+    return protocol.isMultiplex() ? "2" : "1.1";
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(RequestContext ctx) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(RequestContext ctx) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public InetSocketAddress getClientInetSocketAddress(
+      RequestContext ctx, @Nullable RequestLog requestLog) {
+    return RequestContextAccess.remoteAddress(ctx);
+  }
+
+  @Nullable
+  @Override
+  public InetSocketAddress getServerInetSocketAddress(
+      RequestContext ctx, @Nullable RequestLog log) {
+    return RequestContextAccess.localAddress(ctx);
   }
 
   private static HttpRequest request(RequestContext ctx) {

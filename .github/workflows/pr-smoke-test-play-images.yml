@@ -3,8 +3,8 @@ name: PR build Play images for smoke tests
 on:
   pull_request:
     paths:
-      - 'smoke-tests/images/play/**'
-      - '.github/workflows/pr-smoke-test-play-images.yml'
+      - "smoke-tests/images/play/**"
+      - ".github/workflows/pr-smoke-test-play-images.yml"
 
 jobs:
   build:

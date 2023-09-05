@@ -5,15 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorContextKeys.CLIENT_CONTEXT_KEY;
-import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorContextKeys.CLIENT_PARENT_CONTEXT_KEY;
-import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorContextKeys.CONTEXTS_HOLDER_KEY;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientResendCount;
 import io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetry;
-import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -29,8 +25,7 @@ public final class HttpResponseReceiverInstrumenter {
   // this method adds several stateful listeners that execute the instrumenter lifecycle during HTTP
   // request processing
   // it should be used just before one of the response*() methods is called - after this point the
-  // HTTP
-  // request is no longer modifiable by the user
+  // HTTP request is no longer modifiable by the user
   @Nullable
   public static HttpClient.ResponseReceiver<?> instrument(HttpClient.ResponseReceiver<?> receiver) {
     // receiver should always be an HttpClientFinalizer, which both extends HttpClient and
@@ -39,15 +34,18 @@ public final class HttpResponseReceiverInstrumenter {
       HttpClient client = (HttpClient) receiver;
       HttpClientConfig config = client.configuration();
 
-      ContextHolder contextHolder = new ContextHolder();
+      InstrumentationContexts instrumentationContexts = new InstrumentationContexts();
 
       HttpClient modified =
           client
-              .mapConnect(new StartOperation(contextHolder, config))
-              .doOnRequest(new PropagateContext(contextHolder))
-              .doOnRequestError(new EndOperationWithRequestError(contextHolder, config))
-              .doOnResponseError(new EndOperationWithResponseError(contextHolder, config))
-              .doAfterResponseSuccess(new EndOperationWithSuccess(contextHolder, config));
+              .mapConnect(new CaptureParentContext(instrumentationContexts))
+              .doOnRequestError(new EndOperationWithRequestError(config, instrumentationContexts))
+              .doOnRequest(new StartOperation(instrumentationContexts))
+              .doOnResponseError(new EndOperationWithResponseError(instrumentationContexts))
+              .doAfterResponseSuccess(new EndOperationWithSuccess(instrumentationContexts))
+              // end the current span on redirects; StartOperation will start another one for the
+              // next resend
+              .doOnRedirect(new EndOperationWithSuccess(instrumentationContexts));
 
       // modified should always be an HttpClientFinalizer too
       if (modified instanceof HttpClient.ResponseReceiver) {
@@ -58,32 +56,13 @@ public final class HttpResponseReceiverInstrumenter {
     return null;
   }
 
-  static final class ContextHolder {
-
-    private static final AtomicReferenceFieldUpdater<ContextHolder, Context> contextUpdater =
-        AtomicReferenceFieldUpdater.newUpdater(ContextHolder.class, Context.class, "context");
-
-    volatile Context parentContext;
-    volatile Context context;
-
-    void setContext(Context context) {
-      contextUpdater.set(this, context);
-    }
-
-    Context getAndRemoveContext() {
-      return contextUpdater.getAndSet(this, null);
-    }
-  }
-
-  static final class StartOperation
+  private static final class CaptureParentContext
       implements Function<Mono<? extends Connection>, Mono<? extends Connection>> {
 
-    private final ContextHolder contextHolder;
-    private final HttpClientConfig config;
+    private final InstrumentationContexts instrumentationContexts;
 
-    StartOperation(ContextHolder contextHolder, HttpClientConfig config) {
-      this.contextHolder = contextHolder;
-      this.config = config;
+    CaptureParentContext(InstrumentationContexts instrumentationContexts) {
+      this.instrumentationContexts = instrumentationContexts;
     }
 
     @Override
@@ -91,118 +70,90 @@ public final class HttpResponseReceiverInstrumenter {
       return Mono.defer(
               () -> {
                 Context parentContext = Context.current();
-                contextHolder.parentContext = parentContext;
-                if (!instrumenter().shouldStart(parentContext, config)) {
-                  // make context accessible via the reactor ContextView - the doOn* callbacks
-                  // instrumentation uses this to set the proper context for callbacks
-                  return mono.contextWrite(
-                      ctx -> ctx.put(CLIENT_PARENT_CONTEXT_KEY, parentContext));
-                }
-
-                Context context = instrumenter().start(parentContext, config);
-                contextHolder.setContext(context);
-                return ContextPropagationOperator.runWithContext(mono, context)
-                    // make contexts accessible via the reactor ContextView - the doOn* callbacks
-                    // instrumentation uses the parent context to set the proper context for
-                    // callbacks
-                    .contextWrite(ctx -> ctx.put(CLIENT_PARENT_CONTEXT_KEY, parentContext))
-                    .contextWrite(ctx -> ctx.put(CLIENT_CONTEXT_KEY, context));
+                instrumentationContexts.initialize(parentContext);
+                // make contexts accessible via the reactor ContextView - the doOn* callbacks
+                // instrumentation uses this to set the proper context for callbacks
+                return mono.contextWrite(
+                    ctx -> ctx.put(CONTEXTS_HOLDER_KEY, instrumentationContexts));
               })
-          .doOnCancel(
-              () -> {
-                Context context = contextHolder.getAndRemoveContext();
-                if (context == null) {
-                  return;
-                }
-                instrumenter().end(context, config, null, null);
-              });
+          // if there's still any span in flight, end it
+          .doOnCancel(() -> instrumentationContexts.endClientSpan(null, null));
     }
   }
 
-  static final class PropagateContext implements BiConsumer<HttpClientRequest, Connection> {
+  private static final class StartOperation implements BiConsumer<HttpClientRequest, Connection> {
 
-    private final ContextHolder contextHolder;
+    private final InstrumentationContexts instrumentationContexts;
 
-    PropagateContext(ContextHolder contextHolder) {
-      this.contextHolder = contextHolder;
+    StartOperation(InstrumentationContexts instrumentationContexts) {
+      this.instrumentationContexts = instrumentationContexts;
     }
 
     @Override
-    public void accept(HttpClientRequest httpClientRequest, Connection connection) {
-      Context context = contextHolder.context;
-      if (context != null) {
-        GlobalOpenTelemetry.getPropagators()
-            .getTextMapPropagator()
-            .inject(context, httpClientRequest, HttpClientRequestHeadersSetter.INSTANCE);
-      }
+    public void accept(HttpClientRequest request, Connection connection) {
+      Context context = instrumentationContexts.startClientSpan(request);
 
       // also propagate the context to the underlying netty instrumentation
       // if this span was suppressed and context is null, propagate parentContext - this will allow
       // netty spans to be suppressed too
-      Context nettyParentContext = context == null ? contextHolder.parentContext : context;
+      Context nettyParentContext =
+          context == null ? instrumentationContexts.getParentContext() : context;
       NettyClientTelemetry.setChannelContext(connection.channel(), nettyParentContext);
     }
   }
 
-  static final class EndOperationWithRequestError
+  private static final class EndOperationWithRequestError
       implements BiConsumer<HttpClientRequest, Throwable> {
 
-    private final ContextHolder contextHolder;
     private final HttpClientConfig config;
+    private final InstrumentationContexts instrumentationContexts;
 
-    EndOperationWithRequestError(ContextHolder contextHolder, HttpClientConfig config) {
-      this.contextHolder = contextHolder;
+    EndOperationWithRequestError(
+        HttpClientConfig config, InstrumentationContexts instrumentationContexts) {
       this.config = config;
+      this.instrumentationContexts = instrumentationContexts;
     }
 
     @Override
-    public void accept(HttpClientRequest httpClientRequest, Throwable error) {
-      Context context = contextHolder.getAndRemoveContext();
-      if (context == null) {
-        return;
+    public void accept(HttpClientRequest request, Throwable error) {
+      instrumentationContexts.endClientSpan(null, error);
+
+      if (HttpClientResendCount.get(instrumentationContexts.getParentContext()) == 0) {
+        // request is an instance of FailedHttpClientRequest, which does not implement a correct
+        // resourceUrl() method -- we have to work around that
+        request = FailedRequestWithUrlMaker.create(config, request);
+        instrumentationContexts.startAndEndConnectionErrorSpan(request, error);
       }
-      instrumenter().end(context, config, null, error);
     }
   }
 
-  static final class EndOperationWithResponseError
+  private static final class EndOperationWithResponseError
       implements BiConsumer<HttpClientResponse, Throwable> {
 
-    private final ContextHolder contextHolder;
-    private final HttpClientConfig config;
+    private final InstrumentationContexts instrumentationContexts;
 
-    EndOperationWithResponseError(ContextHolder contextHolder, HttpClientConfig config) {
-      this.contextHolder = contextHolder;
-      this.config = config;
+    EndOperationWithResponseError(InstrumentationContexts instrumentationContexts) {
+      this.instrumentationContexts = instrumentationContexts;
     }
 
     @Override
     public void accept(HttpClientResponse response, Throwable error) {
-      Context context = contextHolder.getAndRemoveContext();
-      if (context == null) {
-        return;
-      }
-      instrumenter().end(context, config, response, error);
+      instrumentationContexts.endClientSpan(response, error);
     }
   }
 
-  static final class EndOperationWithSuccess implements BiConsumer<HttpClientResponse, Connection> {
+  private static final class EndOperationWithSuccess
+      implements BiConsumer<HttpClientResponse, Connection> {
 
-    private final ContextHolder contextHolder;
-    private final HttpClientConfig config;
+    private final InstrumentationContexts instrumentationContexts;
 
-    EndOperationWithSuccess(ContextHolder contextHolder, HttpClientConfig config) {
-      this.contextHolder = contextHolder;
-      this.config = config;
+    EndOperationWithSuccess(InstrumentationContexts instrumentationContexts) {
+      this.instrumentationContexts = instrumentationContexts;
     }
 
     @Override
     public void accept(HttpClientResponse response, Connection connection) {
-      Context context = contextHolder.getAndRemoveContext();
-      if (context == null) {
-        return;
-      }
-      instrumenter().end(context, config, response, null);
+      instrumentationContexts.endClientSpan(response, null);
     }
   }
 

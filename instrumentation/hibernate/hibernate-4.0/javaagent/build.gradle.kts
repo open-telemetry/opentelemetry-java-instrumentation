@@ -32,6 +32,8 @@ dependencies {
 
   testImplementation("org.hibernate:hibernate-core:4.0.0.Final")
   testImplementation("org.hibernate:hibernate-entitymanager:4.0.0.Final")
+
+  testImplementation("org.javassist:javassist:3.28.0-GA")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -40,9 +42,6 @@ testing {
     val version5Test by registering(JvmTestSuite::class) {
       dependencies {
         sources {
-          groovy {
-            setSrcDirs(listOf("src/test/groovy"))
-          }
           java {
             setSrcDirs(listOf("src/test/java"))
           }

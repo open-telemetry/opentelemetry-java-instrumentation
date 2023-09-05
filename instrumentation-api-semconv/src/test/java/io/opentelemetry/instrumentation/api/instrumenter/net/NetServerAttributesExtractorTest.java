@@ -14,7 +14,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +21,7 @@ import javax.annotation.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // testing deprecated class
 class NetServerAttributesExtractorTest {
 
   static class TestNetServerAttributesGetter
@@ -139,8 +139,8 @@ class NetServerAttributesExtractorTest {
 
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"),
+            entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
             entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"),
             entry(SemanticAttributes.NET_SOCK_HOST_PORT, 8080L),
             entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),

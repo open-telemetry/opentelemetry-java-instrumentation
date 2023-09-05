@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -13,17 +14,22 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.MetricAssert;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import org.assertj.core.api.ListAssert;
 import org.awaitility.core.ConditionTimeoutException;
 
 /**
@@ -76,6 +82,12 @@ public abstract class InstrumentationTestRunner {
   public final void waitAndAssertSortedTraces(
       Comparator<List<SpanData>> traceComparator, Consumer<TraceAssert>... assertions) {
     waitAndAssertTraces(traceComparator, Arrays.asList(assertions), true);
+  }
+
+  public final void waitAndAssertSortedTraces(
+      Comparator<List<SpanData>> traceComparator,
+      Iterable<? extends Consumer<TraceAssert>> assertions) {
+    waitAndAssertTraces(traceComparator, assertions, true);
   }
 
   @SafeVarargs
@@ -131,6 +143,47 @@ public abstract class InstrumentationTestRunner {
       traces.sort(traceComparator);
     }
     TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
+  }
+
+  /**
+   * Waits for the assertion applied to all metrics of the given instrumentation and metric name to
+   * pass.
+   */
+  public final void waitAndAssertMetrics(
+      String instrumentationName, String metricName, Consumer<ListAssert<MetricData>> assertion) {
+    await()
+        .untilAsserted(
+            () ->
+                assertion.accept(
+                    assertThat(getExportedMetrics())
+                        .filteredOn(
+                            data ->
+                                data.getInstrumentationScopeInfo()
+                                        .getName()
+                                        .equals(instrumentationName)
+                                    && data.getName().equals(metricName))));
+  }
+
+  @SafeVarargs
+  public final void waitAndAssertMetrics(
+      String instrumentationName, Consumer<MetricAssert>... assertions) {
+    await()
+        .untilAsserted(
+            () -> {
+              Collection<MetricData> metrics = instrumentationMetrics(instrumentationName);
+              assertThat(metrics).isNotEmpty();
+              for (Consumer<MetricAssert> assertion : assertions) {
+                assertThat(metrics)
+                    .anySatisfy(
+                        metric -> assertion.accept(OpenTelemetryAssertions.assertThat(metric)));
+              }
+            });
+  }
+
+  private List<MetricData> instrumentationMetrics(String instrumentationName) {
+    return getExportedMetrics().stream()
+        .filter(m -> m.getInstrumentationScopeInfo().getName().equals(instrumentationName))
+        .collect(Collectors.toList());
   }
 
   /**

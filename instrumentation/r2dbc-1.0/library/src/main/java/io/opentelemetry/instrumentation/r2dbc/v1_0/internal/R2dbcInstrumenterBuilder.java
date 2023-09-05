@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,8 +50,7 @@ public final class R2dbcInstrumenterBuilder {
             SqlClientAttributesExtractor.builder(R2dbcSqlAttributesGetter.INSTANCE)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
-        .addAttributesExtractor(
-            NetClientAttributesExtractor.create(R2dbcNetAttributesGetter.INSTANCE))
+        .addAttributesExtractor(ServerAttributesExtractor.create(R2dbcNetAttributesGetter.INSTANCE))
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 }

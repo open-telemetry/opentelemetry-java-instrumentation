@@ -27,18 +27,21 @@ public final class MetroServerSpanNaming {
     }
 
     Packet packet = metroRequest.packet();
-    HttpServletRequest request = (HttpServletRequest) packet.get(MessageContext.SERVLET_REQUEST);
-    if (request != null) {
-      String servletPath = request.getServletPath();
-      if (!servletPath.isEmpty()) {
-        String pathInfo = request.getPathInfo();
-        if (pathInfo != null) {
-          spanName = servletPath + "/" + spanName;
-        } else {
-          // when pathInfo is null then there is a servlet that is mapped to this exact service
-          // servletPath already contains the service name
-          String operationName = packet.getWSDLOperation().getLocalPart();
-          spanName = servletPath + "/" + operationName;
+    if (packet.supports(MessageContext.SERVLET_REQUEST)) {
+      Object request = packet.get(MessageContext.SERVLET_REQUEST);
+      if (request instanceof HttpServletRequest) {
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        String servletPath = httpRequest.getServletPath();
+        if (!servletPath.isEmpty()) {
+          String pathInfo = httpRequest.getPathInfo();
+          if (pathInfo != null) {
+            spanName = servletPath + "/" + spanName;
+          } else {
+            // when pathInfo is null then there is a servlet that is mapped to this exact service
+            // servletPath already contains the service name
+            String operationName = packet.getWSDLOperation().getLocalPart();
+            spanName = servletPath + "/" + operationName;
+          }
         }
       }
     }

@@ -2,6 +2,101 @@
 
 ## Unreleased
 
+### Migration notes
+
+- Experimental HTTP server metrics have been split out from `HttpServerMetrics` into a separate
+  class `HttpServerExperimentalMetrics`
+  ([#9259](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9259))
+
+## Version 1.29.0 (2023-08-17)
+
+### Migration notes
+
+- `NetClientAttributesExtractor` and `NetServerAttributesExtractor`
+  have been deprecated
+  ([#9165](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9165),
+   [#9156](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9156))
+- `HttpClientAttributesGetter` now extends `NetClientAttributesGetter`
+  and `HttpServerAttributesGetter` extends `NetServerAttributesGetter`
+  ([#9015](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9015),
+   [#9088](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9088))
+- A couple of Spring starter configuration options have been renamed to match Java agent options:
+  - `otel.springboot.httpclients.enabled` -> `otel.instrumentation.spring-webmvc.enabled`
+    or `otel.instrumentation.spring-webmvc.enabled` depending on the underlying http client
+  - `otel.springboot.aspects.enabled` -> `otel.instrumentation.annotations.enabled`
+  ([#8950](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8950))
+- Previously deprecated suppression key `executor` was removed from executors module,
+  the new suppression key is `executors`
+  ([#9064](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9064))
+
+### 🌟 New javaagent instrumentation
+
+- Ktor
+  ([#9149](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9149))
+
+### 🌟 New library instrumentation
+
+- Elasticsearch rest client
+  ([#8911](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8911))
+
+### 📈 Enhancements
+
+- Include OpenTelemetry logging appenders in the Spring Starter
+  ([#8945](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8945))
+- Support RPC metrics under "stable" http semconv opt-in
+  ([#8948](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8948))
+- Support the `http.request.method_original` attribute under "stable" semconv opt-in
+  ([#8779](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8779))
+- Make `server.socket.*` attributes on the HTTP server side opt-in
+  ([#8747](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8747))
+- Fill additional db.* attributes on DataSource#getConnection()
+  ([#8966](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8966))
+- Lettuce instrumentation - optimization to avoid extra toString()
+  ([#8984](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8984))
+- Allow overriding span name in spring web library instrumentation
+  ([#8933](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8933))
+- Implement HTTP resend spec for Reactor Netty (excl CONNECT spans)
+  ([#8111](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8111))
+- Set `process.runtime.jvm.system.cpu.load_1m` metric unit to `{run_queue_item}`
+  ([#8777](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8777))
+- Update elasticsearch instrumentation to work with latest version
+  ([#9066](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9066))
+- Reactor Netty: emit actual HTTP client spans on connection errors
+  ([#9063](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9063))
+- Rename `http.*.duration` to `http.*.request.duration` under "stable" semconv opt-in
+  ([#9089](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9089))
+- Snippet inject support for non-empty head tags
+  ([#8736](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8736))
+- Update network.protocol.version `2.0` -> `2` and `3.0` -> `3`
+  ([#9145](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9145))
+- @WithSpan support for kotlin coroutines
+  ([#8870](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8870))
+
+### 🛠️ Bug fixes
+
+- Fix incompatibility between quarkus resteasy reactive and vertx-web instrumentations
+  ([#8998](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8998))
+- Fix `IllegalArgumentException` in `MetroServerSpanNaming`
+  ([#9075](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9075))
+- Fix rector netty instrumentation under concurrency
+  ([#9081](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9081))
+- Improve grpc cancellation propagation
+  ([#8957](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8957))
+- Add missing timestamp for jboss logmanager instrumentation
+  ([#9159](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9159))
+- Handle kafka `METRIC_REPORTER_CLASSES_CONFIG` being set to a List
+  ([#9155](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9155))
+- Fix NullPointerException with Pulsar and SSL
+  ([#9166](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9166))
+- Netty 4.1: handle closing connection before the request completes
+  ([#9157](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9157))
+- Micrometer bridge: use app's thread context class loader for callbacks into app
+  ([#9000](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9000))
+- Fix context propagation in Executor#execute() for non-capturing lambdas
+  ([#9179](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9179))
+- Ensure reactor netty spans are ended in the order they were started
+  ([#9203](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9203))
+
 ## Version 1.28.0 (2023-07-12)
 
 ### Migration notes
@@ -79,16 +174,16 @@
 - The `opentelemetry-runtime-metrics` artifact has been renamed and split into
   `opentelemetry-runtime-telemetry-java8` and `opentelemetry-runtime-telemetry-java17`
   ([#8165](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8165),
-   [#8715](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8715))
+  [#8715](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8715))
 - `InetSocketAddressNetServerAttributesGetter` and `InetSocketAddressNetClientAttributesGetter`
   have been deprecated
   ([#8341](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8341),
-   [#8591](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8591))
+  [#8591](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8591))
 - The new HTTP and network semantic conventions can be opted into using either the system
   property `otel.semconv-stability.opt-in` or the environment variable
   `OTEL_SEMCONV_STABILITY_OPT_IN`, which support two values:
   - `http` - emit the new, stable HTTP and networking attributes, and stop emitting the old
-   experimental HTTP and networking attributes that the instrumentation emitted previously.
+    experimental HTTP and networking attributes that the instrumentation emitted previously.
   - `http/dup` - emit both the old and the stable HTTP and networking attributes, allowing
     for a more seamless transition.
   - The default behavior (in the absence of one of these values) is to continue emitting
@@ -104,7 +199,7 @@
   ([#8487](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8487))
 - Reactor Kafka
   ([#8439](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8439),
-   [#8529](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8529))
+  [#8529](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8529))
 
 ### 📈 Enhancements
 
@@ -286,7 +381,7 @@
   ([#8174](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8174))
 - Spring scheduling: run error handler with the same context as task
   ([#8220](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8220))
-- Switch from http.flavor to net.protocol.*
+- Switch from http.flavor to net.protocol.\*
   ([#8131](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8131),
   [#8244](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8244))
 - Support latest Armeria release
@@ -598,7 +693,7 @@
 
 ### 🧰 Tooling
 
-- Muzzle logs should be logged using the io.opentelemetry.* logger name
+- Muzzle logs should be logged using the io.opentelemetry.\* logger name
   ([#7446](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7446))
 
 ## Version 1.21.0 (2022-12-13)
@@ -840,12 +935,12 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
 
 - There were a few late-breaking changes in `opentelemetry-instrumentation-api`, prior to it being
   declared stable:
-  * `InstrumenterBuilder.addAttributesExtractors(AttributesExtractor...)` was removed, use instead
+  - `InstrumenterBuilder.addAttributesExtractors(AttributesExtractor...)` was removed, use instead
     `addAttributesExtractors(AttributesExtractor)` or
     `addAttributesExtractors(Iterable<AttributesExtractor>)`
-  * `SpanLinksExtractor.extractFromRequest()` was removed, use instead manual extraction
-  * `ErrorCauseExtractor.jdk()` was renamed to `ErrorCauseExtractor.getDefault()`
-  * `ClassNames` utility was removed with no direct replacement
+  - `SpanLinksExtractor.extractFromRequest()` was removed, use instead manual extraction
+  - `ErrorCauseExtractor.jdk()` was renamed to `ErrorCauseExtractor.getDefault()`
+  - `ClassNames` utility was removed with no direct replacement
 - The deprecated `io.opentelemetry.instrumentation.api.config.Config` and related classes
   have been removed
   ([#6501](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6501))
@@ -1208,15 +1303,15 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
 
 - Micrometer instrumentation is now automatically applied to spring-boot-actuator apps
 - Some configuration properties have been renamed:
-  * `otel.instrumentation.common.experimental.suppress-controller-spans`
+  - `otel.instrumentation.common.experimental.suppress-controller-spans`
     → `otel.instrumentation.common.experimental.controller-telemetry.enabled`
     (important: note that the meaning is inverted)
-  * `otel.instrumentation.common.experimental.suppress-view-spans`
+  - `otel.instrumentation.common.experimental.suppress-view-spans`
     → `otel.instrumentation.common.experimental.view-telemetry.enabled`
     (important: note that the meaning is inverted)
-  * `otel.instrumentation.netty.always-create-connect-span`
+  - `otel.instrumentation.netty.always-create-connect-span`
     → `otel.instrumentation.netty.connection-telemetry.enabled`
-  * `otel.instrumentation.reactor-netty.always-create-connect-span`
+  - `otel.instrumentation.reactor-netty.always-create-connect-span`
     → `otel.instrumentation.reactor-netty.connection-telemetry.enabled`
 - Runtime memory metric names were updated to reflect
   [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/runtime-environment-metrics.md#jvm-metrics)
@@ -1519,7 +1614,7 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   ([#5112](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5112))
 - Parameterize VirtualField field type
   ([#5165](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5165))
-- Remove old TraceUtils and use InstrumentationTestRunner#run*Span() (almost) everywhere
+- Remove old TraceUtils and use InstrumentationTestRunner#run\*Span() (almost) everywhere
   ([#5160](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5160))
 - Remove deprecated tracer API
   ([#5175](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5175))

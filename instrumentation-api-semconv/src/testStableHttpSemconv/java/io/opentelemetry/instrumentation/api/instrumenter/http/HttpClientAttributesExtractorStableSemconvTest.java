@@ -18,11 +18,13 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.ToIntFunction;
@@ -34,6 +36,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class HttpClientAttributesExtractorStableSemconvTest {
 
@@ -42,7 +45,7 @@ class HttpClientAttributesExtractorStableSemconvTest {
 
     @Override
     public String getUrlFull(Map<String, String> request) {
-      return request.get("url");
+      return request.get("urlFull");
     }
 
     @Override
@@ -69,23 +72,19 @@ class HttpClientAttributesExtractorStableSemconvTest {
       String value = response.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
     }
-  }
-
-  static class TestNetClientAttributesGetter
-      implements NetClientAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Nullable
     @Override
     public String getNetworkTransport(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("transport");
+      return request.get("networkTransport");
     }
 
     @Nullable
     @Override
     public String getNetworkType(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("type");
+      return request.get("networkType");
     }
 
     @Nullable
@@ -105,13 +104,13 @@ class HttpClientAttributesExtractorStableSemconvTest {
     @Nullable
     @Override
     public String getServerAddress(Map<String, String> request) {
-      return request.get("peerName");
+      return request.get("serverAddress");
     }
 
     @Nullable
     @Override
     public Integer getServerPort(Map<String, String> request) {
-      String value = request.get("peerPort");
+      String value = request.get("serverPort");
       return value == null ? null : Integer.parseInt(value);
     }
   }
@@ -120,16 +119,16 @@ class HttpClientAttributesExtractorStableSemconvTest {
   void normal() {
     Map<String, String> request = new HashMap<>();
     request.put("method", "POST");
-    request.put("url", "http://github.com");
+    request.put("urlFull", "http://github.com");
     request.put("header.content-length", "10");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.custom-request-header", "123,456");
-    request.put("transport", "udp");
-    request.put("type", "ipv4");
+    request.put("networkTransport", "udp");
+    request.put("networkType", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "1.1");
-    request.put("peerName", "github.com");
-    request.put("peerPort", "123");
+    request.put("serverAddress", "github.com");
+    request.put("serverPort", "123");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
@@ -139,12 +138,11 @@ class HttpClientAttributesExtractorStableSemconvTest {
     ToIntFunction<Context> resendCountFromContext = context -> 2;
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        new HttpClientAttributesExtractor<>(
-            new TestHttpClientAttributesGetter(),
-            new TestNetClientAttributesGetter(),
-            singletonList("Custom-Request-Header"),
-            singletonList("Custom-Response-Header"),
-            resendCountFromContext);
+        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter())
+            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
+            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
+            .setResendCountIncrementer(resendCountFromContext)
+            .build();
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -186,11 +184,10 @@ class HttpClientAttributesExtractorStableSemconvTest {
     Map<String, String> request = new HashMap<>();
     request.put("protocolName", observedProtocolName);
     request.put("protocolVersion", observedProtocolVersion);
-    request.put("transport", observedTransport);
+    request.put("networkTransport", observedTransport);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(
-            new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter());
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -218,5 +215,99 @@ class HttpClientAttributesExtractorStableSemconvTest {
           arguments("http", "3.0", "tcp", "tcp"),
           arguments("http", "42", "tcp", "tcp"));
     }
+  }
+
+  @ParameterizedTest
+  @ArgumentsSource(ValidRequestMethodsProvider.class)
+  void shouldExtractKnownMethods(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, requestMethod)
+        .doesNotContainKey(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"get", "Get"})
+  void shouldTreatMethodsAsCaseSensitive(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"PURGE", "not a method really"})
+  void shouldUseOtherForUnknownMethods(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"only", "custom", "methods", "allowed"})
+  void shouldExtractKnownMethods_override(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter())
+            .setKnownMethods(new HashSet<>(asList("only", "custom", "methods", "allowed")))
+            .build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, requestMethod)
+        .doesNotContainKey(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
+  }
+
+  @ParameterizedTest
+  @ArgumentsSource(ValidRequestMethodsProvider.class)
+  void shouldUseOtherForUnknownMethods_override(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter())
+            .setKnownMethods(new HashSet<>(asList("only", "custom", "methods", "allowed")))
+            .build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 }

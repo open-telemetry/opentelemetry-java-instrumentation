@@ -12,7 +12,7 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-grpc:1.24.2")
+  implementation("com.linecorp.armeria:armeria-grpc:1.25.2")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   runtimeOnly("org.slf4j:slf4j-simple")
 }

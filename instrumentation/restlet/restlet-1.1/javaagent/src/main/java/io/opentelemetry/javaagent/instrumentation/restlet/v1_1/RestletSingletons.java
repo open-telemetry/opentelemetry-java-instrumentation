@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.restlet.v1_1;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteGetter;
 import io.opentelemetry.instrumentation.restlet.v1_1.RestletTelemetry;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
@@ -20,6 +20,7 @@ public final class RestletSingletons {
       RestletTelemetry.builder(GlobalOpenTelemetry.get())
           .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
           .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+          .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
           .build()
           .getServerInstrumenter();
 
@@ -27,7 +28,7 @@ public final class RestletSingletons {
     return INSTRUMENTER;
   }
 
-  public static HttpRouteGetter<String> serverSpanName() {
+  public static HttpServerRouteGetter<String> serverSpanName() {
     return ServletContextPath::prepend;
   }
 

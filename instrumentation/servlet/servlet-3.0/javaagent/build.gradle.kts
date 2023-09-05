@@ -37,9 +37,19 @@ dependencies {
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // see servlet-5.0 module
 }
 
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

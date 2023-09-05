@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 
 public final class RedissonInstrumenterFactory {
 
@@ -23,7 +23,7 @@ public final class RedissonInstrumenterFactory {
             instrumentationName,
             DbClientSpanNameExtractor.create(dbAttributesGetter))
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-        .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+        .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

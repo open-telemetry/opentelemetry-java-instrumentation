@@ -10,7 +10,7 @@ import com.linecorp.armeria.server.HttpService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTelemetry;
-import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetClientAttributesGetter;
+import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaHttpClientAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.util.function.Function;
 
@@ -26,10 +26,15 @@ public final class ArmeriaSingletons {
         ArmeriaTelemetry.builder(GlobalOpenTelemetry.get())
             .setCapturedClientRequestHeaders(CommonConfig.get().getClientRequestHeaders())
             .setCapturedClientResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+            .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
             .addClientAttributeExtractor(
                 PeerServiceAttributesExtractor.create(
-                    new ArmeriaNetClientAttributesGetter(),
+                    ArmeriaHttpClientAttributesGetter.INSTANCE,
                     CommonConfig.get().getPeerServiceMapping()))
+            .setEmitExperimentalHttpClientMetrics(
+                CommonConfig.get().shouldEmitExperimentalHttpClientMetrics())
+            .setEmitExperimentalHttpServerMetrics(
+                CommonConfig.get().shouldEmitExperimentalHttpServerMetrics())
             .build();
 
     CLIENT_DECORATOR = telemetry.newClientDecorator();

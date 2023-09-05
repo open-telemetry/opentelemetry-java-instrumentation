@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.ktor.v2_0.client
 
 import io.ktor.client.request.*
-import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.*
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter
 
 internal object KtorHttpClientAttributesGetter : HttpClientAttributesGetter<HttpRequestData, HttpResponse> {
@@ -25,4 +25,19 @@ internal object KtorHttpClientAttributesGetter : HttpClientAttributesGetter<Http
 
   override fun getHttpResponseHeader(request: HttpRequestData, response: HttpResponse, name: String) =
     response.headers.getAll(name).orEmpty()
+
+  override fun getNetworkProtocolName(request: HttpRequestData?, response: HttpResponse?): String? =
+    response?.version?.name
+
+  override fun getNetworkProtocolVersion(request: HttpRequestData?, response: HttpResponse?): String? {
+    val version = response?.version ?: return null
+    if (version.minor == 0) {
+      return "${version.major}"
+    }
+    return "${version.major}.${version.minor}"
+  }
+
+  override fun getServerAddress(request: HttpRequestData) = request.url.host
+
+  override fun getServerPort(request: HttpRequestData) = request.url.port
 }

@@ -5,14 +5,15 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
-import static java.util.Collections.emptyList;
-
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpInstrumenterFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -22,8 +23,9 @@ public final class OkHttpTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<Request, Response>> additionalExtractors =
       new ArrayList<>();
-  private List<String> capturedRequestHeaders = emptyList();
-  private List<String> capturedResponseHeaders = emptyList();
+  private Consumer<HttpClientAttributesExtractorBuilder<Request, Response>> extractorConfigurer =
+      builder -> {};
+  private boolean emitExperimentalHttpClientMetrics = false;
 
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -47,7 +49,8 @@ public final class OkHttpTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    capturedRequestHeaders = new ArrayList<>(requestHeaders);
+    extractorConfigurer =
+        extractorConfigurer.andThen(builder -> builder.setCapturedRequestHeaders(requestHeaders));
     return this;
   }
 
@@ -58,7 +61,41 @@ public final class OkHttpTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
-    capturedResponseHeaders = new ArrayList<>(responseHeaders);
+    extractorConfigurer =
+        extractorConfigurer.andThen(builder -> builder.setCapturedResponseHeaders(responseHeaders));
+    return this;
+  }
+
+  /**
+   * Configures the instrumentation to recognize an alternative set of HTTP request methods.
+   *
+   * <p>By default, this instrumentation defines "known" methods as the ones listed in <a
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
+   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   *
+   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
+   * not supplement it.
+   *
+   * @param knownMethods A set of recognized HTTP request methods.
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   */
+  @CanIgnoreReturnValue
+  public OkHttpTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+    extractorConfigurer =
+        extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
+    return this;
+  }
+
+  /**
+   * Configures the instrumentation to emit experimental HTTP client metrics.
+   *
+   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public OkHttpTelemetryBuilder setEmitExperimentalHttpClientMetrics(
+      boolean emitExperimentalHttpClientMetrics) {
+    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
     return this;
   }
 
@@ -68,7 +105,10 @@ public final class OkHttpTelemetryBuilder {
   public OkHttpTelemetry build() {
     return new OkHttpTelemetry(
         OkHttpInstrumenterFactory.create(
-            openTelemetry, capturedRequestHeaders, capturedResponseHeaders, additionalExtractors),
+            openTelemetry,
+            extractorConfigurer,
+            additionalExtractors,
+            emitExperimentalHttpClientMetrics),
         openTelemetry.getPropagators());
   }
 }

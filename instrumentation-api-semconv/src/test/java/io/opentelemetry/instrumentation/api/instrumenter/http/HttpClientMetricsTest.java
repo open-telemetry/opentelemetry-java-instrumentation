@@ -15,7 +15,6 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.internal.aggregator.ExplicitBucketHistogramUtils;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
@@ -53,8 +52,8 @@ class HttpClientMetricsTest {
         Attributes.builder()
             .put("http.status_code", 200)
             .put("http.response_content_length", 200)
-            .put(NetAttributes.NET_PROTOCOL_NAME, "http")
-            .put(NetAttributes.NET_PROTOCOL_VERSION, "2.0")
+            .put(SemanticAttributes.NET_PROTOCOL_NAME, "http")
+            .put(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0")
             .put("net.sock.peer.addr", "1.2.3.4")
             .put("net.sock.peer.name", "somehost20")
             .put("net.sock.peer.port", 8080)
@@ -95,8 +94,8 @@ class HttpClientMetricsTest {
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                                            equalTo(NetAttributes.NET_PROTOCOL_NAME, "http"),
-                                            equalTo(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
+                                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+                                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
                                             equalTo(
@@ -106,55 +105,7 @@ class HttpClientMetricsTest {
                                                 exemplar
                                                     .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
                                                     .hasSpanId("090a0b0c0d0e0f00"))
-                                        .hasBucketBoundaries(DEFAULT_BUCKETS))),
-            metric ->
-                assertThat(metric)
-                    .hasName("http.client.request.size")
-                    .hasUnit("By")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(100 /* bytes */)
-                                        .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                                            equalTo(NetAttributes.NET_PROTOCOL_NAME, "http"),
-                                            equalTo(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                            equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
-                                            equalTo(
-                                                SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00")))),
-            metric ->
-                assertThat(metric)
-                    .hasName("http.client.response.size")
-                    .hasUnit("By")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(200 /* bytes */)
-                                        .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                                            equalTo(NetAttributes.NET_PROTOCOL_NAME, "http"),
-                                            equalTo(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                            equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
-                                            equalTo(
-                                                SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00")))));
+                                        .hasBucketBoundaries(DEFAULT_BUCKETS))));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
@@ -165,19 +116,8 @@ class HttpClientMetricsTest {
                     .hasName("http.client.duration")
                     .hasHistogramSatisfying(
                         histogram ->
-                            histogram.hasPointsSatisfying(point -> point.hasSum(300 /* millis */))),
-            metric ->
-                assertThat(metric)
-                    .hasName("http.client.request.size")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(point -> point.hasSum(200 /* bytes */))),
-            metric ->
-                assertThat(metric)
-                    .hasName("http.client.response.size")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(point -> point.hasSum(400 /* bytes */))));
+                            histogram.hasPointsSatisfying(
+                                point -> point.hasSum(300 /* millis */))));
   }
 
   private static long nanos(int millis) {

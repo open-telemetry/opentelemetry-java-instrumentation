@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.restlet.v2_0;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource.CONTROLLER;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.resource.ResourceException;
@@ -39,7 +39,7 @@ final class TracingFilter extends Filter {
       scope = context.makeCurrent();
     }
 
-    HttpRouteHolder.updateHttpRoute(context, CONTROLLER, (ctx, s) -> s, path);
+    HttpServerRoute.update(context, CONTROLLER, path);
 
     Throwable statusThrowable = null;
     try {

@@ -62,10 +62,7 @@ public final class ExecutorAdviceHelper {
       }
     }
 
-    if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
-      context =
-          ContextPropagationDebug.appendLocations(context, new Exception().getStackTrace(), task);
-    }
+    context = ContextPropagationDebug.addDebugInfo(context, task);
     propagatedContext.setContext(context);
     return propagatedContext;
   }

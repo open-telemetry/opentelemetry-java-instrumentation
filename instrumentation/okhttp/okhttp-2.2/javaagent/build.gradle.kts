@@ -22,3 +22,13 @@ dependencies {
 
   latestDepTestLibrary("com.squareup.okhttp:okhttp:2.+") // see okhttp-3.0 module
 }
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}

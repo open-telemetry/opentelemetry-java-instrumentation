@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+@SuppressWarnings("deprecation") // testing deprecated class
 @ExtendWith(MockitoExtension.class)
 class InetSocketAddressNetClientAttributesGetterTest {
 
@@ -56,6 +57,7 @@ class InetSocketAddressNetClientAttributesGetterTest {
   }
 
   @Test
+  @SuppressWarnings("AddressSelection")
   void fullAddress() {
     // given
     InetSocketAddress address = new InetSocketAddress("api.github.com", 456);

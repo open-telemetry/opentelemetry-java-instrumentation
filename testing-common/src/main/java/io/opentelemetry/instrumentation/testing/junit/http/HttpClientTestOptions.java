@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import java.net.URI;
@@ -26,8 +26,8 @@ public abstract class HttpClientTestOptions {
       Collections.unmodifiableSet(
           new HashSet<>(
               Arrays.asList(
-                  NetAttributes.NET_PROTOCOL_NAME,
-                  NetAttributes.NET_PROTOCOL_VERSION,
+                  SemanticAttributes.NET_PROTOCOL_NAME,
+                  SemanticAttributes.NET_PROTOCOL_VERSION,
                   SemanticAttributes.NET_PEER_NAME,
                   SemanticAttributes.NET_PEER_PORT,
                   SemanticAttributes.HTTP_URL,
@@ -35,7 +35,7 @@ public abstract class HttpClientTestOptions {
                   SemanticAttributes.USER_AGENT_ORIGINAL)));
 
   public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =
-      (uri, method) -> method;
+      (uri, method) -> HttpConstants._OTHER.equals(method) ? "TEST" : method;
 
   public static final int FOUND_STATUS_CODE = HttpStatus.FOUND.code();
 
@@ -93,6 +93,8 @@ public abstract class HttpClientTestOptions {
 
   public abstract boolean getTestErrorWithCallback();
 
+  public abstract boolean getTestNonStandardHttpMethod();
+
   static Builder builder() {
     return new AutoValue_HttpClientTestOptions.Builder().withDefaults();
   }
@@ -121,7 +123,8 @@ public abstract class HttpClientTestOptions {
           .setTestCallback(true)
           .setTestCallbackWithParent(true)
           .setTestCallbackWithImplicitParent(false)
-          .setTestErrorWithCallback(true);
+          .setTestErrorWithCallback(true)
+          .setTestNonStandardHttpMethod(true);
     }
 
     Builder setHttpAttributes(Function<URI, Set<AttributeKey<?>>> value);
@@ -163,6 +166,8 @@ public abstract class HttpClientTestOptions {
     Builder setTestCallbackWithImplicitParent(boolean value);
 
     Builder setTestErrorWithCallback(boolean value);
+
+    Builder setTestNonStandardHttpMethod(boolean value);
 
     @CanIgnoreReturnValue
     default Builder disableTestWithClientParent() {
@@ -217,6 +222,11 @@ public abstract class HttpClientTestOptions {
     @CanIgnoreReturnValue
     default Builder disableTestErrorWithCallback() {
       return setTestErrorWithCallback(false);
+    }
+
+    @CanIgnoreReturnValue
+    default Builder disableTestNonStandardHttpMethod() {
+      return setTestNonStandardHttpMethod(false);
     }
 
     @CanIgnoreReturnValue

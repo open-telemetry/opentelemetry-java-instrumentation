@@ -3,8 +3,8 @@ name: PR build Security Manager test app images for smoke tests
 on:
   pull_request:
     paths:
-      - 'smoke-tests/images/security-manager/**'
-      - '.github/workflows/pr-smoke-test-security-manager-images.yml'
+      - "smoke-tests/images/security-manager/**"
+      - ".github/workflows/pr-smoke-test-security-manager-images.yml"
 
 jobs:
   build:

@@ -14,6 +14,7 @@ import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.MessageHeaders;
+import org.apache.hc.core5.http.ProtocolVersion;
 import org.apache.hc.core5.net.URIAuthority;
 
 final class ApacheHttpClientHttpAttributesGetter
@@ -88,5 +89,47 @@ final class ApacheHttpClientHttpAttributesGetter
       headersList.add(header.getValue());
     }
     return headersList;
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkProtocolName(HttpRequest request, @Nullable HttpResponse response) {
+    ProtocolVersion protocolVersion = getVersion(request, response);
+    if (protocolVersion == null) {
+      return null;
+    }
+    return protocolVersion.getProtocol();
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkProtocolVersion(HttpRequest request, @Nullable HttpResponse response) {
+    ProtocolVersion protocolVersion = getVersion(request, response);
+    if (protocolVersion == null) {
+      return null;
+    }
+    if (protocolVersion.getMinor() == 0) {
+      return Integer.toString(protocolVersion.getMajor());
+    }
+    return protocolVersion.getMajor() + "." + protocolVersion.getMinor();
+  }
+
+  @Override
+  @Nullable
+  public String getServerAddress(HttpRequest request) {
+    return request.getAuthority().getHostName();
+  }
+
+  @Override
+  public Integer getServerPort(HttpRequest request) {
+    return request.getAuthority().getPort();
+  }
+
+  private static ProtocolVersion getVersion(HttpRequest request, @Nullable HttpResponse response) {
+    ProtocolVersion protocolVersion = request.getVersion();
+    if (protocolVersion == null && response != null) {
+      protocolVersion = response.getVersion();
+    }
+    return protocolVersion;
   }
 }

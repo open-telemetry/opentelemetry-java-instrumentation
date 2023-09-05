@@ -28,11 +28,11 @@ logs can correlate traces/spans with log statements.
 
 > Note: There are also log appenders for exporting logs to OpenTelemetry, not to be confused with the MDC appenders.
 
-| Library | Auto-instrumented versions | Standalone Library Instrumentation                                                   |
-|---------|----------------------------|--------------------------------------------------------------------------------------|
-| Log4j 1 | 1.2+                       |                                                                                      |
-| Log4j 2 | 2.7+                       | [opentelemetry-log4j-context-data-2.17-autoconfigure](../instrumentation/log4j/log4j-context-data/log4j-context-data-2.17/library-autoconfigure) |                                                                                     |
-| Logback | 1.0+                       | [opentelemetry-logback-mdc-1.0](../instrumentation/logback/logback-mdc-1.0/library)  |
+| Library | Auto-instrumented versions | Standalone Library Instrumentation                                                                                                               |
+| ------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Log4j 1 | 1.2+                       |                                                                                                                                                  |
+| Log4j 2 | 2.7+                       | [opentelemetry-log4j-context-data-2.17-autoconfigure](../instrumentation/log4j/log4j-context-data/log4j-context-data-2.17/library-autoconfigure) |
+| Logback | 1.0+                       | [opentelemetry-logback-mdc-1.0](../instrumentation/logback/logback-mdc-1.0/library)                                                              |
 
 ## Frameworks
 

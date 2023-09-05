@@ -3,7 +3,6 @@ import java.time.Duration
 plugins {
   id("idea")
 
-  id("com.github.ben-manes.versions")
   id("io.github.gradle-nexus.publish-plugin")
   id("otel.spotless-conventions")
 }

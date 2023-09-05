@@ -20,12 +20,22 @@ final class InMemoryLogStore {
 
   private final int limit;
 
+  private InternalLogger.Factory applicationLoggerFactory;
+
   InMemoryLogStore(int limit) {
     this.limit = limit;
   }
 
   void write(InMemoryLog log) {
     synchronized (lock) {
+      // redirect to application logging system if it is already set up
+      // this is here to ensure that we don't lose any logs when switching from in memory to
+      // application logging
+      if (applicationLoggerFactory != null) {
+        applicationLoggerFactory.create(log.name()).log(log.level(), log.message(), log.error());
+        return;
+      }
+
       // just drop the log if hit the limit
       if (limit >= 0 && inMemoryLogs.size() >= limit) {
         return;
@@ -46,6 +56,12 @@ final class InMemoryLogStore {
     // ConcurrentModificationException
     for (InMemoryLog log : copy) {
       applicationLoggerFactory.create(log.name()).log(log.level(), log.message(), log.error());
+    }
+  }
+
+  void setApplicationLoggerFactory(InternalLogger.Factory applicationLoggerFactory) {
+    synchronized (lock) {
+      this.applicationLoggerFactory = applicationLoggerFactory;
     }
   }
 

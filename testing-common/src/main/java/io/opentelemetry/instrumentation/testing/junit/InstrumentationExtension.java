@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
@@ -85,19 +86,15 @@ public abstract class InstrumentationExtension
    * Waits for the assertion applied to all metrics of the given instrumentation and metric name to
    * pass.
    */
-  public void waitAndAssertMetrics(
+  public final void waitAndAssertMetrics(
       String instrumentationName, String metricName, Consumer<ListAssert<MetricData>> assertion) {
-    await()
-        .untilAsserted(
-            () ->
-                assertion.accept(
-                    assertThat(metrics())
-                        .filteredOn(
-                            data ->
-                                data.getInstrumentationScopeInfo()
-                                        .getName()
-                                        .equals(instrumentationName)
-                                    && data.getName().equals(metricName))));
+    testRunner.waitAndAssertMetrics(instrumentationName, metricName, assertion);
+  }
+
+  @SafeVarargs
+  public final void waitAndAssertMetrics(
+      String instrumentationName, Consumer<MetricAssert>... assertions) {
+    testRunner.waitAndAssertMetrics(instrumentationName, assertions);
   }
 
   /**
@@ -136,6 +133,12 @@ public abstract class InstrumentationExtension
   @SuppressWarnings("varargs")
   public final void waitAndAssertSortedTraces(
       Comparator<List<SpanData>> traceComparator, Consumer<TraceAssert>... assertions) {
+    testRunner.waitAndAssertSortedTraces(traceComparator, assertions);
+  }
+
+  public final void waitAndAssertSortedTraces(
+      Comparator<List<SpanData>> traceComparator,
+      Iterable<? extends Consumer<TraceAssert>> assertions) {
     testRunner.waitAndAssertSortedTraces(traceComparator, assertions);
   }
 

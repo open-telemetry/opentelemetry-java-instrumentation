@@ -35,6 +35,7 @@ public class CustomNameResolverGroup extends AddressResolverGroup<InetSocketAddr
     }
 
     @Override
+    @SuppressWarnings("AddressSelection")
     protected void doResolve(String inetHost, Promise<InetAddress> promise) {
       try {
         promise.setSuccess(InetAddress.getByName(inetHost));
@@ -44,6 +45,7 @@ public class CustomNameResolverGroup extends AddressResolverGroup<InetSocketAddr
     }
 
     @Override
+    @SuppressWarnings("AddressSelection")
     protected void doResolveAll(String inetHost, Promise<List<InetAddress>> promise) {
       try {
         // default implementation calls InetAddress.getAllByName

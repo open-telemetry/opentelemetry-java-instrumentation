@@ -11,20 +11,20 @@ its usage.
 
 This repository has four main submodules:
 
-* `custom` contains all custom functionality, SPI and other extensions
-* `agent` contains the main repackaging functionality and, optionally, an entry point to the agent, if one wishes to
-customize that
-* `instrumentation` contains custom instrumentations added by vendor
-* `smoke-tests` contains simple tests to verify that resulting agent builds and applies correctly
+- `custom` contains all custom functionality, SPI and other extensions
+- `agent` contains the main repackaging functionality and, optionally, an entry point to the agent, if one wishes to
+  customize that
+- `instrumentation` contains custom instrumentations added by vendor
+- `smoke-tests` contains simple tests to verify that resulting agent builds and applies correctly
 
 ## Extensions examples
 
-* [DemoIdGenerator](custom/src/main/java/com/example/javaagent/DemoIdGenerator.java) - custom `IdGenerator`
-* [DemoPropagator](custom/src/main/java/com/example/javaagent/DemoPropagator.java) - custom `TextMapPropagator`
-* [DemoSampler](custom/src/main/java/com/example/javaagent/DemoSampler.java) - custom `Sampler`
-* [DemoSpanProcessor](custom/src/main/java/com/example/javaagent/DemoSpanProcessor.java) - custom `SpanProcessor`
-* [DemoSpanExporter](custom/src/main/java/com/example/javaagent/DemoSpanExporter.java) - custom `SpanExporter`
-* [DemoServlet3InstrumentationModule](instrumentation/servlet-3/src/main/java/com/example/javaagent/instrumentation/DemoServlet3InstrumentationModule.java) - additional instrumentation
+- [DemoIdGenerator](custom/src/main/java/com/example/javaagent/DemoIdGenerator.java) - custom `IdGenerator`
+- [DemoPropagator](custom/src/main/java/com/example/javaagent/DemoPropagator.java) - custom `TextMapPropagator`
+- [DemoSampler](custom/src/main/java/com/example/javaagent/DemoSampler.java) - custom `Sampler`
+- [DemoSpanProcessor](custom/src/main/java/com/example/javaagent/DemoSpanProcessor.java) - custom `SpanProcessor`
+- [DemoSpanExporter](custom/src/main/java/com/example/javaagent/DemoSpanExporter.java) - custom `SpanExporter`
+- [DemoServlet3InstrumentationModule](instrumentation/servlet-3/src/main/java/com/example/javaagent/instrumentation/DemoServlet3InstrumentationModule.java) - additional instrumentation
 
 ## Instrumentation customisation
 

@@ -1,6 +1,6 @@
 # OpenTelemetry Jaeger Exporter Starter
 
-OpenTelemetry Jaeger Exporter Starter is a starter package that includes the opentelemetry-api, opentelemetry-sdk, opentelemetry-extension-annotations, opentelmetry-logging-exporter, opentelemetry-spring-boot-autoconfigurations and spring framework starters required to setup distributed tracing. It also provides the [opentelemetry-exporters-jaeger](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/jaeger) artifact and corresponding exporter auto-configuration.  Check out [opentelemetry-spring-boot-autoconfigure](../../spring-boot-autoconfigure/README.md#features) for the list of supported libraries and features.
+OpenTelemetry Jaeger Exporter Starter is a starter package that includes the opentelemetry-api, opentelemetry-sdk, opentelemetry-extension-annotations, opentelmetry-logging-exporter, opentelemetry-spring-boot-autoconfigurations and spring framework starters required to setup distributed tracing. It also provides the [opentelemetry-exporters-jaeger](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/jaeger) artifact and corresponding exporter auto-configuration. Check out [opentelemetry-spring-boot-autoconfigure](../../spring-boot-autoconfigure/README.md#features) for the list of supported libraries and features.
 
 ## Quickstart
 

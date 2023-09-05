@@ -7,6 +7,10 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
+import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes
+import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
@@ -142,23 +146,41 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             eventName "after-event"
           }
 
-          attributes {
-            "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
-            "$SemanticAttributes.HTTP_SCHEME" uri.getScheme()
-            "$SemanticAttributes.HTTP_TARGET" uri.getPath()
-            "$SemanticAttributes.HTTP_METHOD" "GET"
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
-            "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_TARGET" "/sendResponse"
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
-            "$SemanticAttributes.NET_HOST_NAME" uri.host
-            "$SemanticAttributes.NET_HOST_PORT" uri.port
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
-            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
+          if (SemconvStability.emitOldHttpSemconv()) {
+            attributes {
+              "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
+              "$SemanticAttributes.HTTP_SCHEME" uri.getScheme()
+              "$SemanticAttributes.HTTP_TARGET" uri.getPath()
+              "$SemanticAttributes.HTTP_METHOD" "GET"
+              "$SemanticAttributes.HTTP_STATUS_CODE" 200
+              "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
+              "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+              "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+              "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
+              "$SemanticAttributes.NET_HOST_NAME" uri.host
+              "$SemanticAttributes.NET_HOST_PORT" uri.port
+              "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+              "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+              "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
+            }
+          }
+          if (SemconvStability.emitStableHttpSemconv()) {
+            attributes {
+              "$NetworkAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
+              "$UrlAttributes.URL_SCHEME" uri.getScheme()
+              "$UrlAttributes.URL_PATH" uri.getPath()
+              "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+              "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+              "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
+              "$HttpAttributes.HTTP_RESPONSE_BODY_SIZE" Long
+              "$NetworkAttributes.NETWORK_PROTOCOL_NAME" "http"
+              "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+              "$NetworkAttributes.NETWORK_TYPE" "ipv4"
+              "$NetworkAttributes.SERVER_ADDRESS" uri.host
+              "$NetworkAttributes.SERVER_PORT" uri.port
+              "$NetworkAttributes.CLIENT_SOCKET_ADDRESS" "127.0.0.1"
+              "$NetworkAttributes.CLIENT_SOCKET_PORT" Long
+            }
           }
         }
         span(1) {
@@ -196,23 +218,41 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           }
           errorEvent(Exception, "exception after sending response", 2)
 
-          attributes {
-            "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
-            "$SemanticAttributes.HTTP_SCHEME" uri.getScheme()
-            "$SemanticAttributes.HTTP_TARGET" uri.getPath()
-            "$SemanticAttributes.HTTP_METHOD" "GET"
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
-            "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_TARGET" "/sendResponseWithException"
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
-            "$SemanticAttributes.NET_HOST_NAME" uri.host
-            "$SemanticAttributes.NET_HOST_PORT" uri.port
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
-            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
+          if (SemconvStability.emitOldHttpSemconv()) {
+            attributes {
+              "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
+              "$SemanticAttributes.HTTP_SCHEME" uri.getScheme()
+              "$SemanticAttributes.HTTP_TARGET" uri.getPath()
+              "$SemanticAttributes.HTTP_METHOD" "GET"
+              "$SemanticAttributes.HTTP_STATUS_CODE" 200
+              "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
+              "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+              "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+              "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
+              "$SemanticAttributes.NET_HOST_NAME" uri.host
+              "$SemanticAttributes.NET_HOST_PORT" uri.port
+              "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+              "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+              "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
+            }
+          }
+          if (SemconvStability.emitStableHttpSemconv()) {
+            attributes {
+              "$NetworkAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
+              "$UrlAttributes.URL_SCHEME" uri.getScheme()
+              "$UrlAttributes.URL_PATH" uri.getPath()
+              "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+              "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+              "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
+              "$HttpAttributes.HTTP_RESPONSE_BODY_SIZE" Long
+              "$NetworkAttributes.NETWORK_PROTOCOL_NAME" "http"
+              "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+              "$NetworkAttributes.NETWORK_TYPE" "ipv4"
+              "$NetworkAttributes.SERVER_ADDRESS" uri.host
+              "$NetworkAttributes.SERVER_PORT" uri.port
+              "$NetworkAttributes.CLIENT_SOCKET_ADDRESS" "127.0.0.1"
+              "$NetworkAttributes.CLIENT_SOCKET_PORT" Long
+            }
           }
         }
         span(1) {

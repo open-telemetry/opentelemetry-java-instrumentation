@@ -5,19 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.StreamUtils.readLines;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -25,6 +28,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +82,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     // HttpURLConnection can't be reused
     optionsBuilder.disableTestReusedRequest();
     optionsBuilder.disableTestCallback();
+    optionsBuilder.disableTestNonStandardHttpMethod();
   }
 
   @ParameterizedTest
@@ -119,15 +124,17 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("net.protocol.name"), "http"),
-                            equalTo(stringKey("net.protocol.version"), "1.1"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, url.getPort()),
-                            equalTo(SemanticAttributes.HTTP_URL, url.toString()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, STATUS),
+                            equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), "http"),
+                            equalTo(
+                                getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
+                            equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
+                            equalTo(
+                                getAttributeKey(SemanticAttributes.NET_PEER_PORT), url.getPort()),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), url.toString()),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET"),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), STATUS),
                             satisfies(
-                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                getAttributeKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH),
                                 AbstractLongAssert::isNotNegative)),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1)),
@@ -136,15 +143,17 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("net.protocol.name"), "http"),
-                            equalTo(stringKey("net.protocol.version"), "1.1"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, url.getPort()),
-                            equalTo(SemanticAttributes.HTTP_URL, url.toString()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, STATUS),
+                            equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), "http"),
+                            equalTo(
+                                getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
+                            equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
+                            equalTo(
+                                getAttributeKey(SemanticAttributes.NET_PEER_PORT), url.getPort()),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), url.toString()),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET"),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), STATUS),
                             satisfies(
-                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                getAttributeKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH),
                                 AbstractLongAssert::isNotNegative)),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(3))));
@@ -174,15 +183,17 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("net.protocol.name"), "http"),
-                            equalTo(stringKey("net.protocol.version"), "1.1"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, url.getPort()),
-                            equalTo(SemanticAttributes.HTTP_URL, url.toString()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, STATUS),
+                            equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), "http"),
+                            equalTo(
+                                getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
+                            equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
+                            equalTo(
+                                getAttributeKey(SemanticAttributes.NET_PEER_PORT), url.getPort()),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), url.toString()),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET"),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), STATUS),
                             satisfies(
-                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                getAttributeKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH),
                                 AbstractLongAssert::isNotNegative)),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
@@ -225,18 +236,20 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("net.protocol.name"), "http"),
-                            equalTo(stringKey("net.protocol.version"), "1.1"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, url.getPort()),
-                            equalTo(SemanticAttributes.HTTP_URL, url.toString()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, STATUS),
+                            equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), "http"),
+                            equalTo(
+                                getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
+                            equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
+                            equalTo(
+                                getAttributeKey(SemanticAttributes.NET_PEER_PORT), url.getPort()),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), url.toString()),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "POST"),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), STATUS),
                             satisfies(
-                                SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
+                                getAttributeKey(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH),
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                getAttributeKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH),
                                 AbstractLongAssert::isNotNegative)),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
@@ -281,20 +294,68 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("net.protocol.name"), "http"),
-                            equalTo(stringKey("net.protocol.version"), "1.1"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, url.getPort()),
-                            equalTo(SemanticAttributes.HTTP_URL, url.toString()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, STATUS),
+                            equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), "http"),
+                            equalTo(
+                                getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
+                            equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
+                            equalTo(
+                                getAttributeKey(SemanticAttributes.NET_PEER_PORT), url.getPort()),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), url.toString()),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "POST"),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), STATUS),
                             satisfies(
-                                SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
+                                getAttributeKey(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH),
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                getAttributeKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH),
                                 AbstractLongAssert::isNotNegative)),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"http", "https"})
+  public void traceRequestWithConnectionFailure(String scheme) {
+    String uri = scheme + "://localhost:" + PortUtils.UNUSABLE_PORT;
+
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                testing.runWithSpan(
+                    "someTrace",
+                    () -> {
+                      URL url = new URI(uri).toURL();
+                      URLConnection connection = url.openConnection();
+                      connection.setConnectTimeout(10000);
+                      connection.setReadTimeout(10000);
+                      assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                      connection.getInputStream();
+                    }));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("someTrace")
+                        .hasKind(INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(thrown),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasException(thrown)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), "http"),
+                            equalTo(
+                                getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
+                            equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
+                            equalTo(
+                                getAttributeKey(SemanticAttributes.NET_PEER_PORT),
+                                PortUtils.UNUSABLE_PORT),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), uri),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET"))));
   }
 }

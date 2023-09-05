@@ -51,4 +51,19 @@ class AwsSdkHttpAttributesGetter
     List<String> value = response.headers().get(name);
     return value == null ? emptyList() : value;
   }
+
+  @Override
+  @Nullable
+  public String getServerAddress(ExecutionAttributes request) {
+    SdkHttpRequest httpRequest =
+        request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
+    return httpRequest.host();
+  }
+
+  @Override
+  public Integer getServerPort(ExecutionAttributes request) {
+    SdkHttpRequest httpRequest =
+        request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
+    return httpRequest.port();
+  }
 }

@@ -5,6 +5,7 @@
 
 package io.lettuce.core.protocol;
 
+import io.lettuce.core.codec.StringCodec;
 import io.lettuce.core.protocol.CommandArgs.KeyArgument;
 import io.lettuce.core.protocol.CommandArgs.SingularArgument;
 import io.lettuce.core.protocol.CommandArgs.ValueArgument;
@@ -22,18 +23,26 @@ public final class OtelCommandArgsUtil {
    */
   public static List<String> getCommandArgs(CommandArgs<?, ?> commandArgs) {
     List<String> result = new ArrayList<>();
+    StringCodec stringCodec = new StringCodec();
+
     for (SingularArgument argument : commandArgs.singularArguments) {
-      String value = argument.toString();
-      if (argument instanceof KeyArgument && value.startsWith("key<") && value.endsWith(">")) {
-        value = value.substring("key<".length(), value.length() - 1);
-      } else if (argument instanceof ValueArgument
-          && value.startsWith("value<")
-          && value.endsWith(">")) {
-        value = value.substring("value<".length(), value.length() - 1);
-      }
+      String value = getArgValue(stringCodec, argument);
       result.add(value);
     }
     return result;
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private static String getArgValue(StringCodec stringCodec, SingularArgument argument) {
+    if (argument instanceof KeyArgument) {
+      KeyArgument keyArg = (KeyArgument) argument;
+      return stringCodec.decodeKey(keyArg.codec.encodeKey(keyArg.key));
+    }
+    if (argument instanceof ValueArgument) {
+      ValueArgument valueArg = (ValueArgument) argument;
+      return stringCodec.decodeValue(valueArg.codec.encodeValue(valueArg.val));
+    }
+    return argument.toString();
   }
 
   private OtelCommandArgsUtil() {}

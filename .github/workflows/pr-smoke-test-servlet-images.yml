@@ -3,8 +3,8 @@ name: PR build Servlet images for smoke tests
 on:
   pull_request:
     paths:
-      - 'smoke-tests/images/servlet/**'
-      - '.github/workflows/pr-smoke-test-servlet-images.yml'
+      - "smoke-tests/images/servlet/**"
+      - ".github/workflows/pr-smoke-test-servlet-images.yml"
 
 jobs:
   build:
@@ -32,6 +32,9 @@ jobs:
         if: matrix.os == 'windows-latest'
 
       - uses: actions/checkout@v3
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3

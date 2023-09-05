@@ -10,8 +10,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 
 public final class JedisSingletons {
@@ -21,7 +21,7 @@ public final class JedisSingletons {
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
-    JedisNetAttributesGetter netAttributesGetter = new JedisNetAttributesGetter();
+    JedisNetworkAttributesGetter netAttributesGetter = new JedisNetworkAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<JedisRequest, Void>builder(
@@ -29,7 +29,7 @@ public final class JedisSingletons {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))

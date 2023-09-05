@@ -16,8 +16,9 @@ import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
 import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
@@ -33,10 +34,6 @@ public final class KafkaSingletons {
   private static final boolean METRICS_ENABLED =
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.kafka.metric-reporter.enabled", true);
-
-  private static final Pattern METRIC_REPORTER_PRESENT_PATTERN =
-      Pattern.compile(
-          "(^|,)" + Pattern.quote(OpenTelemetryMetricsReporter.class.getName()) + "($|,)");
 
   private static final Instrumenter<KafkaProducerRequest, RecordMetadata> PRODUCER_INSTRUMENTER;
   private static final Instrumenter<KafkaReceiveRequest, Void> CONSUMER_RECEIVE_INSTRUMENTER;
@@ -72,21 +69,28 @@ public final class KafkaSingletons {
     return CONSUMER_PROCESS_INSTRUMENTER;
   }
 
+  @SuppressWarnings("unchecked")
   public static void enhanceConfig(Map<? super String, Object> config) {
-    if (!METRICS_ENABLED) {
+    // skip enhancing configuration when metrics are disabled or when we have already enhanced it
+    if (!METRICS_ENABLED
+        || config.get(OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME)
+            != null) {
       return;
     }
     config.merge(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
         OpenTelemetryMetricsReporter.class.getName(),
         (class1, class2) -> {
-          if (class1 instanceof String) {
+          // class1 is either a class name or List of class names or classes
+          if (class1 instanceof List) {
+            List<Object> result = new ArrayList<>();
+            result.addAll((List<Object>) class1);
+            result.add(class2);
+            return result;
+          } else if (class1 instanceof String) {
             String className1 = (String) class1;
             if (className1.isEmpty()) {
               return class2;
-            }
-            if (METRIC_REPORTER_PRESENT_PATTERN.matcher(className1).find()) {
-              return class1;
             }
           }
           return class1 + "," + class2;

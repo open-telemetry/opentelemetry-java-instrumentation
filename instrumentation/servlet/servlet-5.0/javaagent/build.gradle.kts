@@ -27,8 +27,19 @@ dependencies {
   // Tomcat 10.1 requires Java 11
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:10.0.+")
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:10.0.+")
+  latestDepTestLibrary("org.eclipse.jetty:jetty-server:11.+")
 }
 
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

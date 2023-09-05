@@ -2,7 +2,7 @@ name: Overhead benchmark (daily)
 on:
   schedule:
     # daily at 5:00 UTC
-    - cron: '0 5 * * *'
+    - cron: "0 5 * * *"
   workflow_dispatch:
 
 jobs:
@@ -15,6 +15,9 @@ jobs:
         with:
           ref: gh-pages
           path: gh-pages
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
 
       - name: Copy results from gh-pages branch
         run: |
@@ -36,10 +39,10 @@ jobs:
       - name: Commit updated results
         uses: EndBug/add-and-commit@v9
         with:
-          add: 'benchmark-overhead/results'
-          cwd: './gh-pages'
-          branch: 'gh-pages'
-          message: 'update test result data'
+          add: "benchmark-overhead/results"
+          cwd: "./gh-pages"
+          branch: "gh-pages"
+          message: "update test result data"
           author_name: opentelemetrybot
           author_email: 107717825+opentelemetrybot@users.noreply.github.com
           committer_name: opentelemetrybot

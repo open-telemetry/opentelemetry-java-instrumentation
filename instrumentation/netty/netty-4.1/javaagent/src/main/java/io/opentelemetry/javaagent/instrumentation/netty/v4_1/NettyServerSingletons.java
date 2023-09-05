@@ -18,8 +18,12 @@ public final class NettyServerSingletons {
       NettyServerInstrumenterFactory.create(
           GlobalOpenTelemetry.get(),
           "io.opentelemetry.netty-4.1",
-          CommonConfig.get().getServerRequestHeaders(),
-          CommonConfig.get().getServerResponseHeaders());
+          builder ->
+              builder
+                  .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
+                  .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+                  .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
+          CommonConfig.get().shouldEmitExperimentalHttpServerMetrics());
 
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {
     return INSTRUMENTER;

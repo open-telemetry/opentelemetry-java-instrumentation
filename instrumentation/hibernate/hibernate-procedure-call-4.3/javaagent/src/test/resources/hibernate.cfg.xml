@@ -17,7 +17,7 @@
     <property name="hibernate.hbm2ddl.auto">create</property>
 
     <!-- Objects -->
-    <mapping class="Value"/>
+    <mapping class="io.opentelemetry.javaagent.instrumentation.hibernate.v4_3.Value"/>
 
   </session-factory>
 

@@ -68,11 +68,11 @@ span and finishes recording the metrics (if any are registered in the `Instrumen
 
 The `end()` method accepts several arguments:
 
-* The OpenTelemetry `Context` that was returned by the `start()` method.
-* The `REQUEST` instance that started the processing.
-* Optionally, the `RESPONSE` instance that ends the processing - it may be `null` in case it was not
+- The OpenTelemetry `Context` that was returned by the `start()` method.
+- The `REQUEST` instance that started the processing.
+- Optionally, the `RESPONSE` instance that ends the processing - it may be `null` in case it was not
   received or an error has occurred.
-* Optionally, a `Throwable` error that was thrown by the operation.
+- Optionally, a `Throwable` error that was thrown by the operation.
 
 Consider the following example:
 
@@ -105,13 +105,13 @@ An `Instrumenter` can be obtained by calling its static `builder()` method and u
 returned `InstrumenterBuilder` to configure captured telemetry and apply customizations.
 The `builder()` method accepts three arguments:
 
-* An `OpenTelemetry` instance, which is used to obtain the `Tracer` and `Meter` objects.
-* The instrumentation name, which indicates the _instrumentation_ library name, not the
+- An `OpenTelemetry` instance, which is used to obtain the `Tracer` and `Meter` objects.
+- The instrumentation name, which indicates the _instrumentation_ library name, not the
   _instrumented_ library name. The value passed here should uniquely identify the instrumentation
   library so that during troubleshooting it's possible to determine where the telemetry came from.
   Read more about instrumentation libraries in
   the [OpenTelemetry specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#instrumentation-libraries).
-* A `SpanNameExtractor` that determines the span name.
+- A `SpanNameExtractor` that determines the span name.
 
 An `Instrumenter` can be built from several smaller components. The following subsections describe
 all interfaces that can be used to customize an `Instrumenter`.
@@ -122,17 +122,17 @@ By setting the instrumentation library version, you let users identify which ver
 instrumentation produced the telemetry. Make sure you always provide the version to
 the `Instrumenter`. You can do this in two ways:
 
-* By calling the `setInstrumentationVersion()` method on the `InstrumenterBuilder`.
-* By making sure that the JAR file with your instrumentation library contains a properties file in
+- By calling the `setInstrumentationVersion()` method on the `InstrumenterBuilder`.
+- By making sure that the JAR file with your instrumentation library contains a properties file in
   the `META-INF/io/opentelemetry/instrumentation/` directory. You must name the file
   `${instrumentationName}.properties`, where `${instrumentationName}` is the name of the
   instrumentation library passed to the `Instrumenter#builder()` method. The file must contain a
   single property, `version`. For example:
 
-    ```properties
-    # META-INF/io/opentelemetry/instrumentation/my-instrumentation.properties
-    version=1.2.3
-    ```
+  ```properties
+  # META-INF/io/opentelemetry/instrumentation/my-instrumentation.properties
+  version=1.2.3
+  ```
 
   The `Instrumenter` automatically detects the properties file and determines the instrumentation
   version based on its name.
@@ -171,9 +171,9 @@ method.
 An `AttributesExtractor` is responsible for extracting span and metric attributes when the
 processing starts and ends. It contains two methods:
 
-* The `onStart()` method is called when the instrumented operation starts. It accepts two
+- The `onStart()` method is called when the instrumented operation starts. It accepts two
   parameters: an `AttributesBuilder` instance and the incoming `REQUEST` instance.
-* The `onEnd()` method is called when the instrumented operation ends. It accepts the same two
+- The `onEnd()` method is called when the instrumented operation ends. It accepts the same two
   parameters as `onStart()` and also an optional `RESPONSE` and an optional `Throwable` error.
 
 The aim of both methods is to extract interesting attributes from the received request (and response
@@ -253,9 +253,9 @@ the `setSpanStatusExtractor()` method.
 The `SpanLinksExtractor` interface can be used to add links to other spans when the instrumented
 operation starts. It has a single `extract()` method that receives the following arguments:
 
-* A `SpanLinkBuilder` that can be used to add the links.
-* The parent `Context` that was passed in to `Instrumenter#start()`.
-* The `REQUEST` instance that was passed in to `Instrumenter#start()`.
+- A `SpanLinkBuilder` that can be used to add the links.
+- The parent `Context` that was passed in to `Instrumenter#start()`.
+- The `REQUEST` instance that was passed in to `Instrumenter#start()`.
 
 You can read more about span links and their use
 cases [here](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#links-between-spans).
@@ -326,10 +326,10 @@ and `OperationListener` interfaces. `OperationMetrics` is simply a factory inter
 the `OperationListener` - it receives an OpenTelemetry `Meter` and returns a new listener.
 The `OperationListener` contains two methods:
 
-* `onStart()` that gets executed when the instrumented operation starts. It returns a `Context` - it
+- `onStart()` that gets executed when the instrumented operation starts. It returns a `Context` - it
   can be used to store internal metrics state that should be propagated to the `onEnd()` call, if
   needed.
-* `onEnd()` that gets executed when the instrumented operation ends.
+- `onEnd()` that gets executed when the instrumented operation ends.
 
 Both methods accept a `Context`, an instance of `Attributes` that contains either attributes
 computed on instrumented operation start or end, and the start and end nanoseconds timestamp that
@@ -418,16 +418,16 @@ method for that: passing `false` will turn the newly created `Instrumenter` into
 The `Instrumenter` creation process ends with calling one of the following `InstrumenterBuilder`
 methods:
 
-* `newInstrumenter()`: the returned `Instrumenter` will always start spans with kind `INTERNAL`.
-* `newInstrumenter(SpanKindExtractor)`: the returned `Instrumenter` will always start spans with
+- `newInstrumenter()`: the returned `Instrumenter` will always start spans with kind `INTERNAL`.
+- `newInstrumenter(SpanKindExtractor)`: the returned `Instrumenter` will always start spans with
   kind determined by the passed `SpanKindExtractor`.
-* `newClientInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `CLIENT`
+- `newClientInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `CLIENT`
   spans and will propagate operation context into the outgoing request.
-* `newServerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
+- `newServerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
   spans and will extract the parent span context from the incoming request.
-* `newProducerInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `PRODUCER`
+- `newProducerInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `PRODUCER`
   spans and will propagate operation context into the outgoing request.
-* `newConsumerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
+- `newConsumerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
   spans and will extract the parent span context from the incoming request.
 
 The last four variants that create non-`INTERNAL` spans accept either `TextMapSetter`

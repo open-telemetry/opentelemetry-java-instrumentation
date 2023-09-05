@@ -9,9 +9,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Deque;
@@ -40,11 +40,11 @@ public class HttpTrafficHandlerInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.FieldValue("ctx") ChannelHandlerContext channelHandlerContext) {
       // set context to the first unprocessed request
-      Deque<Context> contexts =
+      Deque<ServerContext> serverContexts =
           channelHandlerContext.channel().attr(AttributeKeys.SERVER_CONTEXT).get();
-      Context context = contexts != null ? contexts.peekFirst() : null;
-      if (context != null) {
-        return context.makeCurrent();
+      ServerContext serverContext = serverContexts != null ? serverContexts.peekFirst() : null;
+      if (serverContext != null) {
+        return serverContext.context().makeCurrent();
       }
       return null;
     }

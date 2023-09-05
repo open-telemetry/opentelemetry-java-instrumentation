@@ -14,8 +14,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 
 class ServerDecorator extends SimpleDecoratingHttpService {
 
@@ -34,8 +34,7 @@ class ServerDecorator extends SimpleDecoratingHttpService {
 
     Context otelContext = Context.current();
 
-    HttpRouteHolder.updateHttpRoute(
-        otelContext, HttpRouteSource.SERVLET, (context, name) -> name, matchedRoute);
+    HttpServerRoute.update(otelContext, HttpServerRouteSource.SERVER, matchedRoute);
 
     try {
       return unwrap().serve(ctx, req);

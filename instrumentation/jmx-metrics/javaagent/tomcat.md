@@ -3,7 +3,7 @@
 Here is the list of metrics based on MBeans exposed by Tomcat.
 
 | Metric Name                                | Type          | Attributes      | Description                                                     |
-|--------------------------------------------|---------------|-----------------|-----------------------------------------------------------------|
+| ------------------------------------------ | ------------- | --------------- | --------------------------------------------------------------- |
 | http.server.tomcat.sessions.activeSessions | UpDownCounter | context         | The number of active sessions                                   |
 | http.server.tomcat.errorCount              | Gauge         | name            | The number of errors per second on all request processors       |
 | http.server.tomcat.requestCount            | Gauge         | name            | The number of requests per second across all request processors |

@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import io.opentelemetry.instrumentation.api.instrumenter.network.ClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.url.UrlAttributesGetter;
 import javax.annotation.Nullable;
 
@@ -15,8 +18,17 @@ import javax.annotation.Nullable;
  * library/framework. It will be used by the {@link HttpServerAttributesExtractor} to obtain the
  * various HTTP server attributes in a type-generic way.
  */
+@SuppressWarnings(
+    "deprecation") // implementing the NetServerAttributesGetter for the old->stable semconv story;
+// will be removed in 2.0
 public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
-    extends HttpCommonAttributesGetter<REQUEST, RESPONSE>, UrlAttributesGetter<REQUEST> {
+    extends HttpCommonAttributesGetter<REQUEST, RESPONSE>,
+        UrlAttributesGetter<REQUEST>,
+        io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
+            REQUEST, RESPONSE>,
+        NetworkAttributesGetter<REQUEST, RESPONSE>,
+        ServerAttributesGetter<REQUEST, RESPONSE>,
+        ClientAttributesGetter<REQUEST, RESPONSE> {
 
   /** {@inheritDoc} */
   @Nullable

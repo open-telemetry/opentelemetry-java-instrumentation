@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.quarkus.resteasy.reactive;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 
 public final class OtelRequestContext {
@@ -15,8 +14,7 @@ public final class OtelRequestContext {
   public static OtelRequestContext start(ResteasyReactiveRequestContext requestContext) {
     OtelRequestContext context = new OtelRequestContext();
     contextThreadLocal.set(context);
-    ResteasyReactiveSpanName.INSTANCE.updateServerSpanName(
-        requestContext, HttpRouteSource.CONTROLLER);
+    ResteasyReactiveSpanName.INSTANCE.updateServerSpanName(requestContext);
     return context;
   }
 
@@ -31,8 +29,7 @@ public final class OtelRequestContext {
       context.firstInvoke = false;
       return;
     }
-    ResteasyReactiveSpanName.INSTANCE.updateServerSpanName(
-        requestContext, HttpRouteSource.NESTED_CONTROLLER);
+    ResteasyReactiveSpanName.INSTANCE.updateServerSpanName(requestContext);
   }
 
   public void close() {

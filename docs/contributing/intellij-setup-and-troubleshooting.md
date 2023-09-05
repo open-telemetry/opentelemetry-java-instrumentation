@@ -26,14 +26,14 @@ maybe due to other reasons. In any case, here's some things that might help:
 
 ### Invalidate Caches > "Just restart"
 
-* Go to File > Invalidate Caches...
-* Unselect all the options
-* Click the "Just restart" link
+- Go to File > Invalidate Caches...
+- Unselect all the options
+- Click the "Just restart" link
 
 This seems to fix more issues than just closing and re-opening Intellij :shrug:.
 
 ### Delete your `.idea` directory
 
-* Close Intellij
-* Delete the `.idea` directory in the root directory of your local repository
-* Open Intellij
+- Close Intellij
+- Delete the `.idea` directory in the root directory of your local repository
+- Open Intellij
