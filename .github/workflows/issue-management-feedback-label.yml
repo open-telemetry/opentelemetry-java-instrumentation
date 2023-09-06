@@ -11,7 +11,7 @@ jobs:
       github.event.comment.user.login == github.event.issue.user.login
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Remove labels
         env:
