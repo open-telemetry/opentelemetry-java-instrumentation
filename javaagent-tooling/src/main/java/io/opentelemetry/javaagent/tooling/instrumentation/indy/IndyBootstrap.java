@@ -84,8 +84,8 @@ public class IndyBootstrap {
               MethodType.class,
               Object[].class);
 
-      IndyBootstrapDispatcher.bootstrap =
-          MethodHandles.lookup().findStatic(IndyBootstrap.class, "bootstrap", bootstrapMethodType);
+      IndyBootstrapDispatcher.init(
+          MethodHandles.lookup().findStatic(IndyBootstrap.class, "bootstrap", bootstrapMethodType));
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }

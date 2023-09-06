@@ -19,28 +19,20 @@ import java.lang.reflect.Array;
 @SuppressWarnings("unused")
 public class IndyBootstrapDispatcher {
 
-  /**
-   * Pointer to the actual bootstrapping implementation. This field is initialized by {@link
-   * io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyBootstrap}.
-   */
-  public static MethodHandle bootstrap;
-
-  private static final MethodHandle VOID_NOOP;
-
-  static {
-    try {
-      VOID_NOOP =
-          MethodHandles.publicLookup()
-              .findStatic(
-                  IndyBootstrapDispatcher.class, "voidNoop", MethodType.methodType(void.class));
-    } catch (Exception e) {
-      throw new IllegalStateException(e);
-    }
-  }
+  private static MethodHandle bootstrap;
 
   private IndyBootstrapDispatcher() {}
 
-  @SuppressWarnings("CatchAndPrintStackTrace")
+  /**
+   * Initialized the invokedynamic bootstrapping method to which this class will delegate.
+   *
+   * @param bootstrapMethod the method to delegate to. Must have the same type as {@link
+   *     #bootstrap}.
+   */
+  public static void init(MethodHandle bootstrapMethod) {
+    bootstrap = bootstrapMethod;
+  }
+
   public static CallSite bootstrap(
       MethodHandles.Lookup lookup,
       String adviceMethodName,
@@ -55,21 +47,36 @@ public class IndyBootstrapDispatcher {
       }
     }
     if (callSite == null) {
-      Class<?> returnType = adviceMethodType.returnType();
-      MethodHandle noopNoArg;
-      if (returnType == void.class) {
-        noopNoArg = VOID_NOOP;
-      } else if (!returnType.isPrimitive()) {
-        noopNoArg = MethodHandles.constant(returnType, null);
-      } else {
-        noopNoArg =
-            MethodHandles.constant(returnType, Array.get(Array.newInstance(returnType, 1), 0));
-      }
-      MethodHandle noop =
-          MethodHandles.dropArguments(noopNoArg, 0, adviceMethodType.parameterList());
+      // The MethodHandle pointing to the Advice could not be created for some reason,
+      // fallback to a Noop MethodHandle to not crash the application
+      MethodHandle noop = generateNoopMethodHandle(adviceMethodType);
       callSite = new ConstantCallSite(noop);
     }
     return callSite;
+  }
+
+  // package visibility for testing
+  static MethodHandle generateNoopMethodHandle(MethodType methodType) {
+    Class<?> returnType = methodType.returnType();
+    MethodHandle noopNoArg;
+    if (returnType == void.class) {
+      noopNoArg =
+          MethodHandles.constant(Void.class, null).asType(MethodType.methodType(void.class));
+    } else {
+      noopNoArg = MethodHandles.constant(returnType, getDefaultValue(returnType));
+    }
+    return MethodHandles.dropArguments(noopNoArg, 0, methodType.parameterList());
+  }
+
+  private static Object getDefaultValue(Class<?> classOrPrimitive) {
+    if (classOrPrimitive.isPrimitive()) {
+      // arrays of primitives are initialized with the correct primitive default value (e.g. 0 for
+      // int.class)
+      // we use this fact to generate the correct default value reflectively
+      return Array.get(Array.newInstance(classOrPrimitive, 1), 0);
+    } else {
+      return null; // null is the default value for reference types
+    }
   }
 
   public static void voidNoop() {}
