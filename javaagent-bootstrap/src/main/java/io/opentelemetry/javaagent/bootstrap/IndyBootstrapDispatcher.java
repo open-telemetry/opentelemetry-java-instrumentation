@@ -78,6 +78,5 @@ public class IndyBootstrapDispatcher {
       return null; // null is the default value for reference types
     }
   }
-
-  public static void voidNoop() {}
+  
 }
