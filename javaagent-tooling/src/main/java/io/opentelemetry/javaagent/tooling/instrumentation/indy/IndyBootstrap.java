@@ -140,6 +140,8 @@ public class IndyBootstrap {
           IndyModuleRegistry.getInstrumentationClassloader(
               moduleClassName, lookup.lookupClass().getClassLoader());
 
+      // Advices are not inlined. They are loaded as normal classes by the
+      // InstrumentationModuleClassloader and invoked via a method call from the instrumented method
       Class<?> adviceClass = instrumentationClassloader.loadClass(adviceClassName);
       MethodHandle methodHandle =
           instrumentationClassloader
