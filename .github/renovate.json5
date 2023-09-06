@@ -57,6 +57,12 @@
       "enabled": false
     },
     {
+      // system-stubs-jupiter 2.1+ requires Java 11+
+      "matchPackageNames": ["uk.org.webcompere:system-stubs-jupiter"],
+      "matchUpdateTypes": ["minor"],
+      "enabled": false
+    },
+    {
       // intentionally using Spring Boot 2 in this smoke tests
       "matchFileNames": ["smoke-tests/images/spring-boot/build.gradle.kts"],
       "matchPackageNames": ["org.springframework.boot", "org.springframework.boot:spring-boot-dependencies"],
