@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashSet;
 import java.util.Set;
@@ -46,9 +47,11 @@ final class MetricsView {
     // the list of rpc client metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
     Set<AttributeKey> view = new HashSet<>(alwaysInclude);
-    view.add(SemanticAttributes.NET_PEER_NAME);
-    view.add(SemanticAttributes.NET_PEER_PORT);
-    view.add(SemanticAttributes.NET_TRANSPORT);
+    if (SemconvStability.emitOldHttpSemconv()) {
+      view.add(SemanticAttributes.NET_PEER_NAME);
+      view.add(SemanticAttributes.NET_PEER_PORT);
+      view.add(SemanticAttributes.NET_TRANSPORT);
+    }
     return view;
   }
 
@@ -56,8 +59,10 @@ final class MetricsView {
     // the list of rpc server metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
     Set<AttributeKey> view = new HashSet<>(alwaysInclude);
-    view.add(SemanticAttributes.NET_HOST_NAME);
-    view.add(SemanticAttributes.NET_TRANSPORT);
+    if (SemconvStability.emitOldHttpSemconv()) {
+      view.add(SemanticAttributes.NET_HOST_NAME);
+      view.add(SemanticAttributes.NET_TRANSPORT);
+    }
     return view;
   }
 
@@ -65,8 +70,10 @@ final class MetricsView {
     // the list of rpc server metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
     Set<AttributeKey> view = new HashSet<>(alwaysInclude);
-    view.add(SemanticAttributes.NET_SOCK_HOST_ADDR);
-    view.add(SemanticAttributes.NET_TRANSPORT);
+    if (SemconvStability.emitOldHttpSemconv()) {
+      view.add(SemanticAttributes.NET_SOCK_HOST_ADDR);
+      view.add(SemanticAttributes.NET_TRANSPORT);
+    }
     return view;
   }
 
@@ -81,7 +88,8 @@ final class MetricsView {
 
   static Attributes applyServerView(Attributes startAttributes, Attributes endAttributes) {
     Set<AttributeKey> fullSet = serverView;
-    if (!containsAttribute(SemanticAttributes.NET_HOST_NAME, startAttributes, endAttributes)) {
+    if (SemconvStability.emitOldHttpSemconv()
+        && !containsAttribute(SemanticAttributes.NET_HOST_NAME, startAttributes, endAttributes)) {
       fullSet = serverFallbackView;
     }
     return applyView(fullSet, startAttributes, endAttributes);

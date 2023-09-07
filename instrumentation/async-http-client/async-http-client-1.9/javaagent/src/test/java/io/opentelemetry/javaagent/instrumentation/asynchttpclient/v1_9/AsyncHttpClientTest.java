@@ -13,6 +13,7 @@ import com.ning.http.client.RequestBuilder;
 import com.ning.http.client.Response;
 import com.ning.http.client.uri.Uri;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -88,13 +89,15 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
     if (!Boolean.getBoolean("testLatestDeps")) {
       optionsBuilder.disableTestReadTimeout();
     }
-    optionsBuilder.setHttpAttributes(
-        endpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
-          return attributes;
-        });
+    if (SemconvStability.emitOldHttpSemconv()) {
+      optionsBuilder.setHttpAttributes(
+          endpoint -> {
+            Set<AttributeKey<?>> attributes =
+                new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+            attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
+            attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+            return attributes;
+          });
+    }
   }
 }
