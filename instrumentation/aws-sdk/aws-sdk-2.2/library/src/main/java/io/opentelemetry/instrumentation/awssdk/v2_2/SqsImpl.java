@@ -79,7 +79,7 @@ final class SqsImpl {
     for (Message message: messages) {
       SpanContext spanContext  = getParentContext(config, message);
 
-      if (spanContext.isValid() && spanContext.isSampled()) {
+      if (spanContext.isValid()) {
         spanBuilder.addLink(spanContext);
       }
 
@@ -90,7 +90,7 @@ final class SqsImpl {
 
     Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter =
         config.getConsumerInstrumenter();
-    
+
     if (consumerInstrumenter.shouldStart(io.opentelemetry.context.Context.root(), executionAttributes)) {
       Span consumerSpan = spanBuilder.startSpan();
       consumerSpan.end();
