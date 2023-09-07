@@ -39,7 +39,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:scala-fork-join-2.8:javaagent"))
 
   latestDepTestLibrary("com.typesafe.akka:akka-http_2.13:+")
-  latestDepTestLibrary("com.typesafe.akka:akka-stream_2.13:+")
+  latestDepTestLibrary("com.typesafe.akka:akka-stream_2.13:2.8.+")
 }
 
 tasks {

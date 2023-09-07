@@ -62,10 +62,6 @@ public class ExtensionClassLoader extends URLClassLoader {
 
     extensions.addAll(parseLocation(earlyConfig.getString(EXTENSIONS_CONFIG), javaagentFile));
 
-    extensions.addAll(
-        parseLocation(
-            earlyConfig.getString("otel.javaagent.experimental.extensions"), javaagentFile));
-
     // TODO when logging is configured add warning about deprecated property
 
     if (extensions.isEmpty()) {
