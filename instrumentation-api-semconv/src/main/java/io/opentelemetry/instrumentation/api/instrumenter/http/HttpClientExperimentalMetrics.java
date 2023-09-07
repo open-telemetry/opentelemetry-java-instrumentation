@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpRequestBodySize;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpResponseBodySize;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyClientDurationAndSizeView;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyClientRequestSizeView;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.Attributes;
@@ -24,7 +24,7 @@ import java.util.logging.Logger;
  * href="https://github.com/open-telemetry/semantic-conventions/blob/main/specification/metrics/semantic_conventions/http-metrics.md#http-client">non-stable
  * HTTP client metrics</a>: <a
  * href="https://github.com/open-telemetry/semantic-conventions/blob/main/specification/metrics/semantic_conventions/http-metrics.md#metric-httpclientrequestsize">the
- * request size </a> and the <a
+ * request size </a> and <a
  * href="https://github.com/open-telemetry/semantic-conventions/blob/main/specification/metrics/semantic_conventions/http-metrics.md#metric-httpclientresponsesize">
  * the response size</a>.
  */
@@ -81,7 +81,7 @@ public final class HttpClientExperimentalMetrics implements OperationListener {
       return;
     }
 
-    Attributes sizeAttributes = applyClientDurationAndSizeView(startAttributes, endAttributes);
+    Attributes sizeAttributes = applyClientRequestSizeView(startAttributes, endAttributes);
 
     Long requestBodySize = getHttpRequestBodySize(endAttributes, startAttributes);
     if (requestBodySize != null) {

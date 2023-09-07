@@ -17,9 +17,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +38,7 @@ class HttpClientAttributesExtractorTest {
 
     @Override
     public String getUrlFull(Map<String, String> request) {
-      return request.get("url");
+      return request.get("urlFull");
     }
 
     @Override
@@ -67,23 +64,19 @@ class HttpClientAttributesExtractorTest {
       String value = response.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
     }
-  }
-
-  static class TestNetClientAttributesGetter
-      implements NetClientAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Nullable
     @Override
     public String getNetworkTransport(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("transport");
+      return request.get("networkTransport");
     }
 
     @Nullable
     @Override
     public String getNetworkType(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("type");
+      return request.get("networkType");
     }
 
     @Nullable
@@ -103,13 +96,13 @@ class HttpClientAttributesExtractorTest {
     @Nullable
     @Override
     public String getServerAddress(Map<String, String> request) {
-      return request.get("peerName");
+      return request.get("serverAddress");
     }
 
     @Nullable
     @Override
     public Integer getServerPort(Map<String, String> request) {
-      String statusCode = request.get("peerPort");
+      String statusCode = request.get("serverPort");
       return statusCode == null ? null : Integer.parseInt(statusCode);
     }
   }
@@ -118,16 +111,16 @@ class HttpClientAttributesExtractorTest {
   void normal() {
     Map<String, String> request = new HashMap<>();
     request.put("method", "POST");
-    request.put("url", "http://github.com");
+    request.put("urlFull", "http://github.com");
     request.put("header.content-length", "10");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.custom-request-header", "123,456");
-    request.put("transport", "tcp");
-    request.put("type", "ipv4");
+    request.put("networkTransport", "tcp");
+    request.put("networkType", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "1.1");
-    request.put("peerName", "github.com");
-    request.put("peerPort", "123");
+    request.put("serverAddress", "github.com");
+    request.put("serverPort", "123");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
@@ -137,13 +130,11 @@ class HttpClientAttributesExtractorTest {
     ToIntFunction<Context> resendCountFromContext = context -> 2;
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        new HttpClientAttributesExtractor<>(
-            new TestHttpClientAttributesGetter(),
-            new TestNetClientAttributesGetter(),
-            singletonList("Custom-Request-Header"),
-            singletonList("Custom-Response-Header"),
-            HttpConstants.KNOWN_METHODS,
-            resendCountFromContext);
+        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter())
+            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
+            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
+            .setResendCountIncrementer(resendCountFromContext)
+            .build();
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -169,20 +160,18 @@ class HttpClientAttributesExtractorTest {
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")),
-            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(NetAttributes.NET_PROTOCOL_VERSION, "1.1"));
+            entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"));
   }
 
   @ParameterizedTest
   @ArgumentsSource(StripUrlArgumentSource.class)
   void stripBasicAuthTest(String url, String expectedResult) {
     Map<String, String> request = new HashMap<>();
-    request.put("url", url);
+    request.put("urlFull", url);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.builder(
-                new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
-            .build();
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -223,11 +212,7 @@ class HttpClientAttributesExtractorTest {
     response.put("statusCode", "0");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.builder(
-                new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
-            .setCapturedRequestHeaders(emptyList())
-            .setCapturedResponseHeaders(emptyList())
-            .build();
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -243,8 +228,7 @@ class HttpClientAttributesExtractorTest {
     request.put("header.host", "thehost:777");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(
-            new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter());
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -259,12 +243,11 @@ class HttpClientAttributesExtractorTest {
   void extractNetHostAndPortFromNetAttributesGetter() {
     Map<String, String> request = new HashMap<>();
     request.put("header.host", "notthehost:77777"); // this should have lower precedence
-    request.put("peerName", "thehost");
-    request.put("peerPort", "777");
+    request.put("serverAddress", "thehost");
+    request.put("serverPort", "777");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(
-            new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter());
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -279,13 +262,11 @@ class HttpClientAttributesExtractorTest {
   @ArgumentsSource(DefaultPeerPortArgumentSource.class)
   void defaultPeerPort(int peerPort, String url) {
     Map<String, String> request = new HashMap<>();
-    request.put("url", url);
-    request.put("peerPort", String.valueOf(peerPort));
+    request.put("urlFull", url);
+    request.put("serverPort", String.valueOf(peerPort));
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.builder(
-                new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
-            .build();
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -297,7 +278,11 @@ class HttpClientAttributesExtractorTest {
 
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(arguments(80, "http://github.com"), arguments(443, "https://github.com"));
+      return Stream.of(
+          arguments(80, "http://github.com"),
+          arguments(80, "HTTP://GITHUB.COM"),
+          arguments(443, "https://github.com"),
+          arguments(443, "HTTPS://GITHUB.COM"));
     }
   }
 
@@ -307,14 +292,10 @@ class HttpClientAttributesExtractorTest {
 
     ToIntFunction<Context> resendCountFromContext = context -> 0;
 
-    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        new HttpClientAttributesExtractor<>(
-            new TestHttpClientAttributesGetter(),
-            new TestNetClientAttributesGetter(),
-            emptyList(),
-            emptyList(),
-            HttpConstants.KNOWN_METHODS,
-            resendCountFromContext);
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter())
+            .setResendCountIncrementer(resendCountFromContext)
+            .build();
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);

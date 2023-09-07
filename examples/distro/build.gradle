@@ -12,9 +12,9 @@ buildscript {
     }
   }
   dependencies {
-    classpath "com.diffplug.spotless:spotless-plugin-gradle:6.20.0"
+    classpath "com.diffplug.spotless:spotless-plugin-gradle:6.21.0"
     classpath "gradle.plugin.com.github.johnrengelman:shadow:8.0.0"
-    classpath "io.opentelemetry.instrumentation:gradle-plugins:1.29.0-alpha-SNAPSHOT"
+    classpath "io.opentelemetry.instrumentation:gradle-plugins:1.30.0-alpha-SNAPSHOT"
   }
 }
 
@@ -27,19 +27,17 @@ subprojects {
   ext {
     versions = [
       // this line is managed by .github/scripts/update-sdk-version.sh
-      opentelemetrySdk           : "1.28.0",
+      opentelemetrySdk           : "1.29.0",
 
       // these lines are managed by .github/scripts/update-version.sh
-      opentelemetryJavaagent     : "1.29.0-SNAPSHOT",
-      opentelemetryJavaagentAlpha: "1.29.0-alpha-SNAPSHOT",
+      opentelemetryJavaagent     : "1.30.0-SNAPSHOT",
+      opentelemetryJavaagentAlpha: "1.30.0-alpha-SNAPSHOT",
 
-      bytebuddy                  : "1.14.5",
       autoservice                : "1.1.1",
-      junit                      : "5.9.3"
+      junit                      : "5.10.0"
     ]
 
     deps = [
-      bytebuddy  : "net.bytebuddy:byte-buddy-dep:${versions.bytebuddy}",
       autoservice: [
         "com.google.auto.service:auto-service:${versions.autoservice}",
         "com.google.auto.service:auto-service-annotations:${versions.autoservice}",
@@ -70,7 +68,7 @@ subprojects {
     implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:${versions.opentelemetryJavaagent}"))
     implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${versions.opentelemetryJavaagentAlpha}"))
 
-    testImplementation("org.mockito:mockito-core:5.4.0")
+    testImplementation("org.mockito:mockito-core:5.5.0")
     testImplementation(enforcedPlatform("org.junit:junit-bom:${versions.junit}"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")

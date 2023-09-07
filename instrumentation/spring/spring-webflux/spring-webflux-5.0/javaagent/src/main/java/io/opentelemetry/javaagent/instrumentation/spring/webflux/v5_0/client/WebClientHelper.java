@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.client;
 
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxTelemetryClientBuilder;
-import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientNetAttributesGetter;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.ClientInstrumenterFactory;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientTracingFilter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
@@ -21,20 +23,21 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 public final class WebClientHelper {
 
   private static final Instrumenter<ClientRequest, ClientResponse> instrumenter =
-      new SpringWebfluxTelemetryClientBuilder(GlobalOpenTelemetry.get())
-          .setCapturedClientRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-          .setCapturedClientResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-          .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
-          .addClientAttributesExtractor(
+      ClientInstrumenterFactory.create(
+          GlobalOpenTelemetry.get(),
+          builder ->
+              builder
+                  .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
+                  .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+                  .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
+          singletonList(
               PeerServiceAttributesExtractor.create(
-                  new WebClientNetAttributesGetter(), CommonConfig.get().getPeerServiceMapping()))
-          .setCaptureExperimentalSpanAttributes(
-              InstrumentationConfig.get()
-                  .getBoolean(
-                      "otel.instrumentation.spring-webflux.experimental-span-attributes", false))
-          .setEmitExperimentalHttpClientMetrics(
-              CommonConfig.get().shouldEmitExperimentalHttpClientMetrics())
-          .build();
+                  WebClientHttpAttributesGetter.INSTANCE,
+                  CommonConfig.get().getPeerServiceMapping())),
+          InstrumentationConfig.get()
+              .getBoolean(
+                  "otel.instrumentation.spring-webflux.experimental-span-attributes", false),
+          CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
 
   public static void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
     for (ExchangeFilterFunction filterFunction : exchangeFilterFunctions) {

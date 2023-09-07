@@ -7,9 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
@@ -22,24 +24,25 @@ public final class LibertyDispatcherSingletons {
   static {
     LibertyDispatcherHttpAttributesGetter httpAttributesGetter =
         new LibertyDispatcherHttpAttributesGetter();
-    LibertyDispatcherNetAttributesGetter netAttributesGetter =
-        new LibertyDispatcherNetAttributesGetter();
 
-    INSTRUMENTER =
+    InstrumenterBuilder<LibertyRequest, LibertyResponse> builder =
         Instrumenter.<LibertyRequest, LibertyResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                HttpServerAttributesExtractor.builder(httpAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
-            .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
-            .addOperationMetrics(HttpServerMetrics.get())
-            .buildServerInstrumenter(LibertyDispatcherRequestGetter.INSTANCE);
+            .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
+            .addOperationMetrics(HttpServerMetrics.get());
+    if (CommonConfig.get().shouldEmitExperimentalHttpServerMetrics()) {
+      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+    }
+    INSTRUMENTER = builder.buildServerInstrumenter(LibertyDispatcherRequestGetter.INSTANCE);
   }
 
   public static Instrumenter<LibertyRequest, LibertyResponse> instrumenter() {

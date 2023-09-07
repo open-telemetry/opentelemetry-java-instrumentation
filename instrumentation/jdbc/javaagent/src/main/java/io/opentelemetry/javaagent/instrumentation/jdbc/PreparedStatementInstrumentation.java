@@ -17,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcData;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -55,6 +56,12 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") DbRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      // skip prepared statements without attached sql, probably a wrapper around the actual
+      // prepared statement
+      if (JdbcData.preparedStatement.get(statement) == null) {
+        return;
+      }
+
       // Connection#getMetaData() may execute a Statement or PreparedStatement to retrieve DB info
       // this happens before the DB CLIENT span is started (and put in the current context), so this
       // instrumentation runs again and the shouldStartSpan() check always returns true - and so on

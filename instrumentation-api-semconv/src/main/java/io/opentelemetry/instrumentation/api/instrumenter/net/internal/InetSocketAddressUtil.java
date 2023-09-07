@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.net.internal;
 
+import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -42,7 +43,12 @@ public final class InetSocketAddressUtil {
       return null;
     }
     InetAddress remoteAddress = address.getAddress();
-    return remoteAddress instanceof Inet6Address ? "ipv6" : "ipv4";
+    if (remoteAddress instanceof Inet4Address) {
+      return "ipv4";
+    } else if (remoteAddress instanceof Inet6Address) {
+      return "ipv6";
+    }
+    return null;
   }
 
   @Nullable

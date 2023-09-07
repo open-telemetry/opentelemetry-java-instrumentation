@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
@@ -19,6 +20,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtr
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
 
@@ -31,9 +34,12 @@ public final class SpringWebTelemetryBuilder {
       new ArrayList<>();
   private final HttpClientAttributesExtractorBuilder<HttpRequest, ClientHttpResponse>
       httpAttributesExtractorBuilder =
-          HttpClientAttributesExtractor.builder(
-              SpringWebHttpAttributesGetter.INSTANCE, new SpringWebNetAttributesGetter());
+          HttpClientAttributesExtractor.builder(SpringWebHttpAttributesGetter.INSTANCE);
   private boolean emitExperimentalHttpClientMetrics = false;
+
+  @Nullable
+  private Function<SpanNameExtractor<HttpRequest>, ? extends SpanNameExtractor<? super HttpRequest>>
+      spanNameExtractorTransformer;
 
   SpringWebTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -69,6 +75,15 @@ public final class SpringWebTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
+    return this;
+  }
+
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public SpringWebTelemetryBuilder setSpanNameExtractor(
+      Function<SpanNameExtractor<HttpRequest>, ? extends SpanNameExtractor<? super HttpRequest>>
+          spanNameExtractor) {
+    this.spanNameExtractorTransformer = spanNameExtractor;
     return this;
   }
 
@@ -111,11 +126,16 @@ public final class SpringWebTelemetryBuilder {
   public SpringWebTelemetry build() {
     SpringWebHttpAttributesGetter httpAttributeGetter = SpringWebHttpAttributesGetter.INSTANCE;
 
+    SpanNameExtractor<HttpRequest> originalSpanNameExtractor =
+        HttpSpanNameExtractor.create(httpAttributeGetter);
+    SpanNameExtractor<? super HttpRequest> spanNameExtractor = originalSpanNameExtractor;
+    if (spanNameExtractorTransformer != null) {
+      spanNameExtractor = spanNameExtractorTransformer.apply(originalSpanNameExtractor);
+    }
+
     InstrumenterBuilder<HttpRequest, ClientHttpResponse> builder =
         Instrumenter.<HttpRequest, ClientHttpResponse>builder(
-                openTelemetry,
-                INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributeGetter))
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)

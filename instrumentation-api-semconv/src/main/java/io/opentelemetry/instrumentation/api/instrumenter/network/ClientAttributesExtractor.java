@@ -10,6 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 
 /**
@@ -32,13 +33,12 @@ public final class ClientAttributesExtractor<REQUEST, RESPONSE>
   private final InternalClientAttributesExtractor<REQUEST, RESPONSE> internalExtractor;
 
   ClientAttributesExtractor(ClientAttributesGetter<REQUEST, RESPONSE> getter) {
-    // the ClientAttributesExtractor will always emit new semconv
     internalExtractor =
         new InternalClientAttributesExtractor<>(
             getter,
             FallbackAddressPortExtractor.noop(),
-            /* emitStableUrlAttributes= */ true,
-            /* emitOldHttpAttributes= */ false);
+            SemconvStability.emitStableHttpSemconv(),
+            SemconvStability.emitOldHttpSemconv());
   }
 
   @Override

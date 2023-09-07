@@ -5,24 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class RedissonNetAttributesGetter
-    implements NetClientAttributesGetter<RedissonRequest, Void> {
-
-  @Nullable
-  @Override
-  public String getServerAddress(RedissonRequest redissonRequest) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(RedissonRequest redissonRequest) {
-    return null;
-  }
+final class RedissonNetAttributesGetter implements ServerAttributesGetter<RedissonRequest, Void> {
 
   @Override
   public InetSocketAddress getServerInetSocketAddress(

@@ -18,10 +18,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
@@ -36,10 +36,7 @@ class KtorServerTracing private constructor(
 
     internal val additionalExtractors = mutableListOf<AttributesExtractor<in ApplicationRequest, in ApplicationResponse>>()
 
-    internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(
-      KtorHttpServerAttributesGetter.INSTANCE,
-      KtorNetServerAttributesGetter()
-    )
+    internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE)
 
     internal var statusExtractor:
       (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse> = { a -> a }
@@ -124,7 +121,7 @@ class KtorServerTracing private constructor(
         setSpanStatusExtractor(configuration.statusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter)))
         addAttributesExtractor(configuration.httpAttributesExtractorBuilder.build())
         addOperationMetrics(HttpServerMetrics.get())
-        addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
+        addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
       }
 
       val instrumenter = InstrumenterUtil.buildUpstreamInstrumenter(
@@ -178,7 +175,7 @@ class KtorServerTracing private constructor(
       pipeline.environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
         val context = call.attributes.getOrNull(contextKey)
         if (context != null) {
-          HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.SERVLET, { _, arg -> arg.route.parent.toString() }, call)
+          HttpServerRoute.update(context, HttpServerRouteSource.SERVER, { _, arg -> arg.route.parent.toString() }, call)
         }
       }
 

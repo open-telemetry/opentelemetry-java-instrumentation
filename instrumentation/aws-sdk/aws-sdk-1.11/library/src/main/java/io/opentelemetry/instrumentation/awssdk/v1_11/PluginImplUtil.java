@@ -45,10 +45,12 @@ final class PluginImplUtil { // TODO: Copy & paste from v2
       // dependency is not on the class path).
       logger.log(
           Level.FINE,
-          e,
           () ->
-              implFullClassName
-                  + " not present. "
+              "Failed to load "
+                  + implFullClassName
+                  + " ("
+                  + e.getClass().getName()
+                  + "). "
                   + "Most likely, corresponding SDK component is either not on classpath or incompatible.");
       return false;
     }

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.okhttp.v3_0;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientResend;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientResendCount;
 import java.io.IOException;
 import okhttp3.Interceptor;
 import okhttp3.Request;
@@ -23,7 +23,7 @@ final class ContextInterceptor implements Interceptor {
       parentContext = Context.current();
     }
     // include the resend counter
-    Context context = HttpClientResend.initialize(parentContext);
+    Context context = HttpClientResendCount.initialize(parentContext);
     try (Scope ignored = context.makeCurrent()) {
       return chain.proceed(request);
     }

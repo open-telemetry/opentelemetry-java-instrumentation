@@ -17,9 +17,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.NetAttributes;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -46,19 +43,19 @@ class HttpServerAttributesExtractorTest {
 
     @Override
     public String getUrlScheme(Map<String, Object> request) {
-      return (String) request.get("scheme");
+      return (String) request.get("urlScheme");
     }
 
     @Nullable
     @Override
     public String getUrlPath(Map<String, Object> request) {
-      return (String) request.get("path");
+      return (String) request.get("urlPath");
     }
 
     @Nullable
     @Override
     public String getUrlQuery(Map<String, Object> request) {
-      return (String) request.get("query");
+      return (String) request.get("urlQuery");
     }
 
     @Override
@@ -85,23 +82,19 @@ class HttpServerAttributesExtractorTest {
       String values = (String) response.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
     }
-  }
-
-  static class TestNetServerAttributesGetter
-      implements NetServerAttributesGetter<Map<String, Object>, Map<String, Object>> {
 
     @Nullable
     @Override
     public String getNetworkTransport(
         Map<String, Object> request, @Nullable Map<String, Object> response) {
-      return (String) request.get("transport");
+      return (String) request.get("networkTransport");
     }
 
     @Nullable
     @Override
     public String getNetworkType(
         Map<String, Object> request, @Nullable Map<String, Object> response) {
-      return (String) request.get("type");
+      return (String) request.get("networkType");
     }
 
     @Nullable
@@ -121,13 +114,13 @@ class HttpServerAttributesExtractorTest {
     @Nullable
     @Override
     public String getServerAddress(Map<String, Object> request) {
-      return (String) request.get("hostName");
+      return (String) request.get("serverAddress");
     }
 
     @Nullable
     @Override
     public Integer getServerPort(Map<String, Object> request) {
-      return (Integer) request.get("hostPort");
+      return (Integer) request.get("serverPort");
     }
   }
 
@@ -135,18 +128,18 @@ class HttpServerAttributesExtractorTest {
   void normal() {
     Map<String, Object> request = new HashMap<>();
     request.put("method", "POST");
-    request.put("url", "http://github.com");
-    request.put("path", "/repositories/1");
-    request.put("query", "details=true");
-    request.put("scheme", "http");
+    request.put("urlFull", "http://github.com");
+    request.put("urlPath", "/repositories/1");
+    request.put("urlQuery", "details=true");
+    request.put("urlScheme", "http");
     request.put("header.content-length", "10");
     request.put("route", "/repositories/{id}");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.host", "github.com");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
-    request.put("transport", "tcp");
-    request.put("type", "ipv4");
+    request.put("networkTransport", "tcp");
+    request.put("networkType", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "2.0");
 
@@ -157,15 +150,12 @@ class HttpServerAttributesExtractorTest {
 
     Function<Context, String> routeFromContext = ctx -> "/repositories/{repoId}";
 
-    HttpServerAttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        new HttpServerAttributesExtractor<>(
-            new TestHttpServerAttributesGetter(),
-            new TestNetServerAttributesGetter(),
-            singletonList("Custom-Request-Header"),
-            singletonList("Custom-Response-Header"),
-            HttpConstants.KNOWN_METHODS,
-            false,
-            routeFromContext);
+    AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
+            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
+            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
+            .setHttpRouteGetter(routeFromContext)
+            .build();
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -186,8 +176,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(NetAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(NetAttributes.NET_PROTOCOL_VERSION, "2.0"),
+            entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
@@ -203,8 +193,7 @@ class HttpServerAttributesExtractorTest {
     request.put("header.x-forwarded-for", "1.1.1.1");
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.builder(
-                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
             .setCapturedResponseHeaders(emptyList())
             .build();
@@ -225,8 +214,7 @@ class HttpServerAttributesExtractorTest {
     request.put("header.x-forwarded-proto", "https");
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.builder(
-                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
             .setCapturedResponseHeaders(emptyList())
             .build();
@@ -245,8 +233,7 @@ class HttpServerAttributesExtractorTest {
     request.put("header.host", "thehost:777");
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.builder(
-                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
             .setCapturedResponseHeaders(emptyList())
             .build();
@@ -263,12 +250,11 @@ class HttpServerAttributesExtractorTest {
   void extractNetHostAndPortFromNetAttributesGetter() {
     Map<String, Object> request = new HashMap<>();
     request.put("header.host", "notthehost:77777"); // this should have lower precedence
-    request.put("hostName", "thehost");
-    request.put("hostPort", 777);
+    request.put("serverAddress", "thehost");
+    request.put("serverPort", 777);
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.builder(
-                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
             .setCapturedResponseHeaders(emptyList())
             .build();
@@ -285,12 +271,11 @@ class HttpServerAttributesExtractorTest {
   @ArgumentsSource(DefaultHostPortArgumentSource.class)
   void defaultHostPort(int hostPort, String scheme) {
     Map<String, Object> request = new HashMap<>();
-    request.put("scheme", scheme);
-    request.put("hostPort", hostPort);
+    request.put("urlScheme", scheme);
+    request.put("serverPort", hostPort);
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.builder(
-                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
             .setCapturedResponseHeaders(emptyList())
             .build();
@@ -313,12 +298,11 @@ class HttpServerAttributesExtractorTest {
   @ArgumentsSource(PathAndQueryArgumentSource.class)
   void computeTargetFromPathAndQuery(String path, String query, String expectedTarget) {
     Map<String, Object> request = new HashMap<>();
-    request.put("path", path);
-    request.put("query", query);
+    request.put("urlPath", path);
+    request.put("urlQuery", query);
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.create(
-            new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);

@@ -18,7 +18,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
@@ -50,19 +50,19 @@ class HttpServerAttributesExtractorStableSemconvTest {
 
     @Override
     public String getUrlScheme(Map<String, String> request) {
-      return request.get("scheme");
+      return request.get("urlScheme");
     }
 
     @Nullable
     @Override
     public String getUrlPath(Map<String, String> request) {
-      return request.get("path");
+      return request.get("urlPath");
     }
 
     @Nullable
     @Override
     public String getUrlQuery(Map<String, String> request) {
-      return request.get("query");
+      return request.get("urlQuery");
     }
 
     @Override
@@ -89,23 +89,19 @@ class HttpServerAttributesExtractorStableSemconvTest {
       String values = response.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
     }
-  }
-
-  static class TestNetServerAttributesGetter
-      implements NetServerAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Nullable
     @Override
     public String getNetworkTransport(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("transport");
+      return request.get("networkTransport");
     }
 
     @Nullable
     @Override
     public String getNetworkType(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("type");
+      return request.get("networkType");
     }
 
     @Nullable
@@ -125,13 +121,13 @@ class HttpServerAttributesExtractorStableSemconvTest {
     @Nullable
     @Override
     public String getServerAddress(Map<String, String> request) {
-      return request.get("hostName");
+      return request.get("serverAddress");
     }
 
     @Nullable
     @Override
     public Integer getServerPort(Map<String, String> request) {
-      String value = request.get("hostPort");
+      String value = request.get("serverPort");
       return value == null ? null : Integer.parseInt(value);
     }
 
@@ -155,18 +151,18 @@ class HttpServerAttributesExtractorStableSemconvTest {
   void normal() {
     Map<String, String> request = new HashMap<>();
     request.put("method", "POST");
-    request.put("url", "http://github.com");
-    request.put("path", "/repositories/1");
-    request.put("query", "details=true");
-    request.put("scheme", "http");
+    request.put("urlFull", "http://github.com");
+    request.put("urlPath", "/repositories/1");
+    request.put("urlQuery", "details=true");
+    request.put("urlScheme", "http");
     request.put("header.content-length", "10");
     request.put("route", "/repositories/{id}");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.host", "github.com");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
-    request.put("transport", "udp");
-    request.put("type", "ipv4");
+    request.put("networkTransport", "udp");
+    request.put("networkType", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "2.0");
     request.put("serverSocketAddress", "1.2.3.4");
@@ -179,15 +175,12 @@ class HttpServerAttributesExtractorStableSemconvTest {
 
     Function<Context, String> routeFromContext = ctx -> "/repositories/{repoId}";
 
-    HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        new HttpServerAttributesExtractor<>(
-            new TestHttpServerAttributesGetter(),
-            new TestNetServerAttributesGetter(),
-            singletonList("Custom-Request-Header"),
-            singletonList("Custom-Response-Header"),
-            HttpConstants.KNOWN_METHODS,
-            false,
-            routeFromContext);
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
+            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
+            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
+            .setHttpRouteGetter(routeFromContext)
+            .build();
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -232,11 +225,10 @@ class HttpServerAttributesExtractorStableSemconvTest {
     Map<String, String> request = new HashMap<>();
     request.put("protocolName", observedProtocolName);
     request.put("protocolVersion", observedProtocolVersion);
-    request.put("transport", observedTransport);
+    request.put("networkTransport", observedTransport);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(
-            new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -273,8 +265,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("method", requestMethod);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(
-            new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -292,8 +283,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("method", requestMethod);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(
-            new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -311,8 +301,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("method", requestMethod);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(
-            new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -330,8 +319,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("method", requestMethod);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(
-                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
             .setKnownMethods(new HashSet<>(asList("only", "custom", "methods", "allowed")))
             .build();
 
@@ -351,8 +339,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("method", requestMethod);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(
-                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
             .setKnownMethods(new HashSet<>(asList("only", "custom", "methods", "allowed")))
             .build();
 

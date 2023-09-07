@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder
-import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 
 import javax.servlet.Servlet
 
@@ -80,14 +79,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     addServlet(context, CAPTURE_PARAMETERS.path, servlet)
     addServlet(context, HTML_PRINT_WRITER.path, servlet)
     addServlet(context, HTML_SERVLET_OUTPUT_STREAM.path, servlet)
-  }
-
-  protected ServerEndpoint lastRequest
-
-  @Override
-  AggregatedHttpRequest request(ServerEndpoint uri, String method) {
-    lastRequest = uri
-    super.request(uri, method)
   }
 
   @Override

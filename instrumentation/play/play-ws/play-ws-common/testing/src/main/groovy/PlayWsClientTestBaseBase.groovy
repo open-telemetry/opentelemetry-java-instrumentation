@@ -21,8 +21,6 @@ import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClientConfig
 import play.shaded.ahc.org.asynchttpclient.RequestBuilderBase
 import spock.lang.Shared
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey
-
 abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST> implements AgentTestTrait {
   @Shared
   ActorSystem system
@@ -87,8 +85,8 @@ abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST>
   @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
-    attributes.remove(stringKey("net.protocol.name"))
-    attributes.remove(stringKey("net.protocol.version"))
+    attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME)
+    attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION)
     if (uri.toString().endsWith("/circular-redirect")) {
       attributes.remove(SemanticAttributes.NET_PEER_NAME)
       attributes.remove(SemanticAttributes.NET_PEER_PORT)

@@ -96,8 +96,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_ROUTE" route
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
@@ -154,8 +154,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
@@ -209,8 +209,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
             "$SemanticAttributes.HTTP_ROUTE" route
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
@@ -272,8 +272,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 500
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
@@ -340,8 +340,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
@@ -389,8 +389,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
@@ -470,8 +470,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 500
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
@@ -520,8 +520,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"

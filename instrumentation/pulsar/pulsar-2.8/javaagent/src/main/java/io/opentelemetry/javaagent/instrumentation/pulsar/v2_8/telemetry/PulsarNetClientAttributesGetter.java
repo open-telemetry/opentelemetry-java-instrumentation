@@ -5,16 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
 public final class PulsarNetClientAttributesGetter
-    implements NetClientAttributesGetter<BasePulsarRequest, Void> {
-  @Nullable
-  @Override
-  public String getTransport(BasePulsarRequest request, @Nullable Void unused) {
-    return null;
-  }
+    implements ServerAttributesGetter<BasePulsarRequest, Void> {
 
   @Nullable
   @Override

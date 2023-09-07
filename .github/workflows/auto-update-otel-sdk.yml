@@ -14,7 +14,7 @@ jobs:
       latest-version: ${{ steps.check-versions.outputs.latest-version }}
       already-opened: ${{ steps.check-versions.outputs.already-opened }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - id: check-versions
         name: Check versions
@@ -50,7 +50,7 @@ jobs:
     needs:
       - check-versions
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Update version
         env:
@@ -59,6 +59,9 @@ jobs:
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3

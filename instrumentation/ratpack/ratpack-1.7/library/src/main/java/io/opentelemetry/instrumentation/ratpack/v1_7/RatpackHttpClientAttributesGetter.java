@@ -43,4 +43,15 @@ enum RatpackHttpClientAttributesGetter
       RequestSpec requestSpec, HttpResponse httpResponse, String name) {
     return httpResponse.getHeaders().getAll(name);
   }
+
+  @Override
+  @Nullable
+  public String getServerAddress(RequestSpec request) {
+    return request.getUri().getHost();
+  }
+
+  @Override
+  public Integer getServerPort(RequestSpec request) {
+    return request.getUri().getPort();
+  }
 }

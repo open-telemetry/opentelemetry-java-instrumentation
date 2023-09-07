@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
-
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -15,11 +13,13 @@ import com.ning.http.client.RequestBuilder;
 import com.ning.http.client.Response;
 import com.ning.http.client.uri.Uri;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
@@ -89,13 +89,15 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
     if (!Boolean.getBoolean("testLatestDeps")) {
       optionsBuilder.disableTestReadTimeout();
     }
-    optionsBuilder.setHttpAttributes(
-        endpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(stringKey("net.protocol.name"));
-          attributes.remove(stringKey("net.protocol.version"));
-          return attributes;
-        });
+    if (SemconvStability.emitOldHttpSemconv()) {
+      optionsBuilder.setHttpAttributes(
+          endpoint -> {
+            Set<AttributeKey<?>> attributes =
+                new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+            attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
+            attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+            return attributes;
+          });
+    }
   }
 }

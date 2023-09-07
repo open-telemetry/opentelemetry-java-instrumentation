@@ -9,8 +9,6 @@ import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.internal.ClassLoaderMatcherCacheHolder;
 import io.opentelemetry.javaagent.bootstrap.internal.InClassLoaderMatcher;
 import java.util.BitSet;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -30,9 +28,6 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
     resources = classNames;
     for (int i = 0; i < resources.length; i++) {
       resources[i] = resources[i].replace(".", "/") + ".class";
-    }
-    if (useCache) {
-      Manager.INSTANCE.add(this);
     }
   }
 
@@ -65,28 +60,18 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
 
   private static class Manager {
     static final Manager INSTANCE = new Manager();
-    private final List<ClassLoaderHasClassesNamedMatcher> matchers = new CopyOnWriteArrayList<>();
     // each matcher gets a two bits in BitSet, that first bit indicates whether current matcher has
     // been run for given class loader and the second whether it matched or not
     private final Cache<ClassLoader, BitSet> enabled = Cache.weak();
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final Lock readLock = lock.readLock();
     private final Lock writeLock = lock.writeLock();
-    private volatile boolean matchCalled = false;
 
     Manager() {
       ClassLoaderMatcherCacheHolder.addCache(enabled);
     }
 
-    void add(ClassLoaderHasClassesNamedMatcher matcher) {
-      if (matchCalled) {
-        throw new IllegalStateException("All matchers should be create before match is called");
-      }
-      matchers.add(matcher);
-    }
-
     boolean match(ClassLoaderHasClassesNamedMatcher matcher, ClassLoader cl) {
-      matchCalled = true;
       BitSet set = enabled.computeIfAbsent(cl, (unused) -> new BitSet(counter.get() * 2));
       int matcherRunBit = 2 * matcher.index;
       int matchedBit = matcherRunBit + 1;

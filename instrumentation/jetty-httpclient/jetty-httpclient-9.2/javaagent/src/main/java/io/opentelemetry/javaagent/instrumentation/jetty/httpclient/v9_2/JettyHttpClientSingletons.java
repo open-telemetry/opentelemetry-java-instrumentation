@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterBuilder;
-import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClientNetAttributesGetter;
+import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientHttpAttributesGetter;
+import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -17,17 +19,18 @@ import org.eclipse.jetty.client.api.Response;
 public class JettyHttpClientSingletons {
 
   private static final Instrumenter<Request, Response> INSTRUMENTER =
-      new JettyClientInstrumenterBuilder(GlobalOpenTelemetry.get())
-          .addAttributeExtractor(
+      JettyClientInstrumenterFactory.create(
+          GlobalOpenTelemetry.get(),
+          builder ->
+              builder
+                  .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
+                  .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+                  .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
+          singletonList(
               PeerServiceAttributesExtractor.create(
-                  new JettyHttpClientNetAttributesGetter(),
-                  CommonConfig.get().getPeerServiceMapping()))
-          .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-          .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-          .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
-          .setEmitExperimentalHttpClientMetrics(
-              CommonConfig.get().shouldEmitExperimentalHttpClientMetrics())
-          .build();
+                  JettyClientHttpAttributesGetter.INSTANCE,
+                  CommonConfig.get().getPeerServiceMapping())),
+          CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
 
   public static Instrumenter<Request, Response> instrumenter() {
     return INSTRUMENTER;

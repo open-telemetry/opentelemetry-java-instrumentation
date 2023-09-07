@@ -25,8 +25,6 @@ import spock.lang.Shared
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey
-
 class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> implements AgentTestTrait {
 
   @Shared
@@ -109,8 +107,8 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
   @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
-    attributes.remove(stringKey("net.protocol.name"))
-    attributes.remove(stringKey("net.protocol.version"))
+    attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME)
+    attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION)
     attributes.remove(SemanticAttributes.NET_PEER_NAME)
     attributes.remove(SemanticAttributes.NET_PEER_PORT)
     return attributes

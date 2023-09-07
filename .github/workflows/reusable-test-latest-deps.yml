@@ -30,7 +30,7 @@ jobs:
           - 3
       fail-fast: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -47,10 +47,6 @@ jobs:
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-test-latest-cache-pnpm-modules
-
-      - name: Increase gradle daemon heap size
-        run: |
-          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
       - name: List tests
         env:

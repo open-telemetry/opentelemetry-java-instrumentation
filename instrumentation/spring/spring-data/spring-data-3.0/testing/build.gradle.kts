@@ -15,6 +15,8 @@ dependencies {
   testLibrary("org.springframework:spring-test:6.0.0")
 
   testImplementation("org.hsqldb:hsqldb:2.0.0")
+
+  latestDepTestLibrary("org.hibernate.orm:hibernate-core:6.2.+")
 }
 
 otelJava {

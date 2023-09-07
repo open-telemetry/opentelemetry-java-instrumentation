@@ -9,8 +9,8 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsAnnotat
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming;
@@ -64,9 +64,9 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
       Context parentContext = Java8BytecodeBridge.currentContext();
       handlerData = new Jaxrs2HandlerData(filterClass, method);
 
-      HttpRouteHolder.updateHttpRoute(
+      HttpServerRoute.update(
           parentContext,
-          HttpRouteSource.CONTROLLER,
+          HttpServerRouteSource.CONTROLLER,
           JaxrsServerSpanNaming.SERVER_SPAN_NAME,
           handlerData);
 

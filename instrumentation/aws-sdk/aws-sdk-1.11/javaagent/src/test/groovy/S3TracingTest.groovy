@@ -60,8 +60,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -85,8 +85,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -110,8 +110,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -135,8 +135,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -160,8 +160,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -184,8 +184,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -208,8 +208,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -231,8 +231,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.url" String
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -260,8 +260,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -284,8 +284,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -308,8 +308,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 204
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -332,8 +332,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 204
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -356,8 +356,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -410,8 +410,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -434,8 +434,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -458,8 +458,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -481,8 +481,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -504,8 +504,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -528,8 +528,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -551,8 +551,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -575,8 +575,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -600,8 +600,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -624,8 +624,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -652,8 +652,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -677,8 +677,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.url" String
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -701,8 +701,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -725,8 +725,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 204
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -749,8 +749,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 204
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -773,8 +773,8 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.protocol.name" "http"
-            "net.protocol.version" "1.1"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }

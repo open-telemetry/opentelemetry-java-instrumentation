@@ -15,11 +15,15 @@ jobs:
           days-before-stale: 7
           days-before-close: 7
           only-labels: "needs author feedback"
+          stale-issue-label: stale
           stale-issue-message: >
             This has been automatically marked as stale because it has been marked
             as needing author feedback and has not had any activity for 7 days.
-            It will be closed if no further activity occurs within 7 days of this comment.
+            It will be closed automatically if there is no response from the author
+            within 7 additional days from this comment.
+          stale-pr-label: stale
           stale-pr-message: >
             This has been automatically marked as stale because it has been marked
             as needing author feedback and has not had any activity for 7 days.
-            It will be closed if no further activity occurs within 7 days of this comment.
+            It will be closed automatically if there is no response from the author
+            within 7 additional days from this comment.

@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
@@ -77,51 +78,8 @@ class HttpServerMetricsStableSemconvTest {
     Context parent1 = Context.root().with(Span.wrap(spanContext1));
     Context context1 = listener.onStart(parent1, requestAttributes, nanos(100));
 
-    assertThat(metricReader.collectAllMetrics())
-        .satisfiesExactlyInAnyOrder(
-            metric ->
-                assertThat(metric)
-                    .hasName("http.server.active_requests")
-                    .hasDescription(
-                        "The number of concurrent HTTP requests that are currently in-flight")
-                    .hasUnit("{requests}")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfying(
-                                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext1.getTraceId())
-                                                    .hasSpanId(spanContext1.getSpanId())))));
-
     Context parent2 = Context.root().with(Span.wrap(spanContext2));
     Context context2 = listener.onStart(parent2, requestAttributes, nanos(150));
-
-    assertThat(metricReader.collectAllMetrics())
-        .satisfiesExactlyInAnyOrder(
-            metric ->
-                assertThat(metric)
-                    .hasName("http.server.active_requests")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(2)
-                                        .hasAttributesSatisfying(
-                                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext2.getTraceId())
-                                                    .hasSpanId(spanContext2.getSpanId())))));
 
     listener.onEnd(context1, responseAttributes, nanos(250));
 
@@ -129,24 +87,7 @@ class HttpServerMetricsStableSemconvTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("http.server.active_requests")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfying(
-                                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext1.getTraceId())
-                                                    .hasSpanId(spanContext1.getSpanId())))),
-            metric ->
-                assertThat(metric)
-                    .hasName("http.server.duration")
+                    .hasName("http.server.request.duration")
                     .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
@@ -167,53 +108,7 @@ class HttpServerMetricsStableSemconvTest {
                                                 exemplar
                                                     .hasTraceId(spanContext1.getTraceId())
                                                     .hasSpanId(spanContext1.getSpanId()))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))),
-            metric ->
-                assertThat(metric)
-                    .hasName("http.server.request.size")
-                    .hasUnit("By")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(100 /* bytes */)
-                                        .hasAttributesSatisfying(
-                                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                            equalTo(
-                                                NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
-                                            equalTo(
-                                                NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext1.getTraceId())
-                                                    .hasSpanId(spanContext1.getSpanId())))),
-            metric ->
-                assertThat(metric)
-                    .hasName("http.server.response.size")
-                    .hasUnit("By")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(200 /* bytes */)
-                                        .hasAttributesSatisfying(
-                                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                            equalTo(
-                                                NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
-                                            equalTo(
-                                                NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext1.getTraceId())
-                                                    .hasSpanId(spanContext1.getSpanId())))));
+                                        .hasBucketBoundaries(DURATION_BUCKETS))));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
@@ -221,55 +116,13 @@ class HttpServerMetricsStableSemconvTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("http.server.active_requests")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(0)
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext2.getTraceId())
-                                                    .hasSpanId(spanContext2.getSpanId())))),
-            metric ->
-                assertThat(metric)
-                    .hasName("http.server.duration")
+                    .hasName("http.server.request.duration")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
                                 point ->
                                     point
                                         .hasSum(0.3 /* seconds */)
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext2.getTraceId())
-                                                    .hasSpanId(spanContext2.getSpanId())))),
-            metric ->
-                assertThat(metric)
-                    .hasName("http.server.request.size")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(200 /* bytes */)
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext2.getTraceId())
-                                                    .hasSpanId(spanContext2.getSpanId())))),
-            metric ->
-                assertThat(metric)
-                    .hasName("http.server.response.size")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(400 /* bytes */)
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -306,7 +159,7 @@ class HttpServerMetricsStableSemconvTest {
         .anySatisfy(
             metric ->
                 assertThat(metric)
-                    .hasName("http.server.duration")
+                    .hasName("http.server.request.duration")
                     .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->

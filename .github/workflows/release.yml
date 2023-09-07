@@ -28,7 +28,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set environment variables
         run: |
@@ -57,7 +57,7 @@ jobs:
 
         # check out main branch to verify there won't be problems with merging the change log
         # at the end of this workflow
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: main
 
@@ -72,10 +72,13 @@ jobs:
           fi
 
         # back to the release branch
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # tags are needed for the generate-release-contributors.sh script
           fetch-depth: 0
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
 
       - uses: actions/setup-java@v3
         with:
@@ -169,7 +172,7 @@ jobs:
     needs:
       - release
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Copy change log section from release branch
         env:
@@ -178,7 +181,7 @@ jobs:
           sed -n "0,/^## Version $VERSION /d;/^## Version /q;p" CHANGELOG.md \
             > /tmp/changelog-section.md
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: main
 

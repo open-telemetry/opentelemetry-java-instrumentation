@@ -5,29 +5,19 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractClientIpFromForwardedForHeader;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractClientIpFromForwardedHeader;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractProtoFromForwardedHeader;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractProtoFromForwardedProtoHeader;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -47,8 +37,23 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
 
   /** Creates the HTTP server attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
+      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
+    return builder(httpAttributesGetter).build();
+  }
+
+  /**
+   * Creates the HTTP server attributes extractor with default configuration.
+   *
+   * @deprecated Make sure that your {@linkplain HttpServerAttributesGetter getter} implements all
+   *     the network-related methods and use {@link #create(HttpServerAttributesGetter)} instead.
+   *     This method will be removed in the 2.0 release.
+   */
+  @Deprecated
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
+      io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
+              REQUEST, RESPONSE>
+          netAttributesGetter) {
     return builder(httpAttributesGetter, netAttributesGetter).build();
   }
 
@@ -57,86 +62,46 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
    * HTTP client attributes extractor.
    */
   public static <REQUEST, RESPONSE> HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
-    return new HttpServerAttributesExtractorBuilder<>(httpAttributesGetter, netAttributesGetter);
+      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
+    return new HttpServerAttributesExtractorBuilder<>(httpAttributesGetter, httpAttributesGetter);
   }
 
-  // if set to true, the instrumentation will prefer the scheme from Forwarded/X-Forwarded-Proto
-  // headers over the one extracted from the URL
-  private static final boolean PREFER_FORWARDED_URL_SCHEME =
-      ConfigPropertiesUtil.getBoolean(
-          "otel.instrumentation.http.prefer-forwarded-url-scheme", false);
+  /**
+   * Returns a new {@link HttpServerAttributesExtractorBuilder} that can be used to configure the
+   * HTTP client attributes extractor.
+   *
+   * @deprecated Make sure that your {@linkplain HttpServerAttributesGetter getter} implements all
+   *     the network-related methods and use {@link #builder(HttpServerAttributesGetter)} instead.
+   *     This method will be removed in the 2.0 release.
+   */
+  @Deprecated
+  public static <REQUEST, RESPONSE> HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
+      io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
+              REQUEST, RESPONSE>
+          netAttributesGetter) {
+    return new HttpServerAttributesExtractorBuilder<>(httpAttributesGetter, netAttributesGetter);
+  }
 
   private final InternalUrlAttributesExtractor<REQUEST> internalUrlExtractor;
   private final InternalNetServerAttributesExtractor<REQUEST, RESPONSE> internalNetExtractor;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final InternalServerAttributesExtractor<REQUEST, RESPONSE> internalServerExtractor;
   private final InternalClientAttributesExtractor<REQUEST, RESPONSE> internalClientExtractor;
-  private final Function<Context, String> httpRouteHolderGetter;
+  private final Function<Context, String> httpRouteGetter;
 
-  HttpServerAttributesExtractor(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
-      List<String> capturedRequestHeaders,
-      List<String> capturedResponseHeaders,
-      Set<String> knownMethods,
-      boolean captureServerSocketAttributes) {
-    this(
-        httpAttributesGetter,
-        netAttributesGetter,
-        capturedRequestHeaders,
-        capturedResponseHeaders,
-        knownMethods,
-        captureServerSocketAttributes,
-        HttpRouteHolder::getRoute);
-  }
-
-  // visible for tests
-  HttpServerAttributesExtractor(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
-      List<String> capturedRequestHeaders,
-      List<String> capturedResponseHeaders,
-      Set<String> knownMethods,
-      boolean captureServerSocketAttributes,
-      Function<Context, String> httpRouteHolderGetter) {
-    super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders, knownMethods);
-    HttpNetAddressPortExtractor<REQUEST> addressPortExtractor =
-        new HttpNetAddressPortExtractor<>(httpAttributesGetter);
-    internalUrlExtractor =
-        new InternalUrlAttributesExtractor<>(
-            httpAttributesGetter,
-            /* alternateSchemeProvider= */ this::forwardedProto,
-            SemconvStability.emitStableHttpSemconv(),
-            SemconvStability.emitOldHttpSemconv());
-    internalNetExtractor =
-        new InternalNetServerAttributesExtractor<>(
-            netAttributesGetter, addressPortExtractor, SemconvStability.emitOldHttpSemconv());
-    internalNetworkExtractor =
-        new InternalNetworkAttributesExtractor<>(
-            netAttributesGetter,
-            HttpNetworkTransportFilter.INSTANCE,
-            SemconvStability.emitStableHttpSemconv(),
-            SemconvStability.emitOldHttpSemconv());
-    internalServerExtractor =
-        new InternalServerAttributesExtractor<>(
-            netAttributesGetter,
-            this::shouldCaptureServerPort,
-            addressPortExtractor,
-            SemconvStability.emitStableHttpSemconv(),
-            SemconvStability.emitOldHttpSemconv(),
-            InternalServerAttributesExtractor.Mode.HOST,
-            // we're not capturing these by default, since they're opt-in
-            // we'll add a configuration flag if someone happens to request them
-            /* captureServerSocketAttributes= */ false);
-    internalClientExtractor =
-        new InternalClientAttributesExtractor<>(
-            netAttributesGetter,
-            new ClientAddressAndPortExtractor<>(httpAttributesGetter),
-            SemconvStability.emitStableHttpSemconv(),
-            SemconvStability.emitOldHttpSemconv());
-    this.httpRouteHolderGetter = httpRouteHolderGetter;
+  HttpServerAttributesExtractor(HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder) {
+    super(
+        builder.httpAttributesGetter,
+        builder.capturedRequestHeaders,
+        builder.capturedResponseHeaders,
+        builder.knownMethods);
+    internalUrlExtractor = builder.buildUrlExtractor();
+    internalNetExtractor = builder.buildNetExtractor();
+    internalNetworkExtractor = builder.buildNetworkExtractor();
+    internalServerExtractor = builder.buildServerExtractor();
+    internalClientExtractor = builder.buildClientExtractor();
+    httpRouteGetter = builder.httpRouteGetter;
   }
 
   @Override
@@ -149,18 +114,6 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     internalClientExtractor.onStart(attributes, request);
 
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.getHttpRoute(request));
-  }
-
-  private boolean shouldCaptureServerPort(int port, REQUEST request) {
-    String scheme = getter.getUrlScheme(request);
-    if (scheme == null) {
-      return true;
-    }
-    // according to spec: extract if not default (80 for http scheme, 443 for https).
-    if ((scheme.equals("http") && port == 80) || (scheme.equals("https") && port == 443)) {
-      return false;
-    }
-    return true;
   }
 
   @Override
@@ -177,32 +130,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     internalServerExtractor.onEnd(attributes, request, response);
     internalClientExtractor.onEnd(attributes, request, response);
 
-    internalSet(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteHolderGetter.apply(context));
-  }
-
-  @Nullable
-  private String forwardedProto(REQUEST request) {
-    if (!PREFER_FORWARDED_URL_SCHEME) {
-      // don't parse headers, extract scheme from the URL
-      return null;
-    }
-
-    // try Forwarded
-    String forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "forwarded"));
-    if (forwarded != null) {
-      forwarded = extractProtoFromForwardedHeader(forwarded);
-      if (forwarded != null) {
-        return forwarded;
-      }
-    }
-
-    // try X-Forwarded-Proto
-    forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "x-forwarded-proto"));
-    if (forwarded != null) {
-      return extractProtoFromForwardedProtoHeader(forwarded);
-    }
-
-    return null;
+    internalSet(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteGetter.apply(context));
   }
 
   /**
@@ -212,36 +140,5 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public SpanKey internalGetSpanKey() {
     return SpanKey.HTTP_SERVER;
-  }
-
-  private static final class ClientAddressAndPortExtractor<REQUEST>
-      implements FallbackAddressPortExtractor<REQUEST> {
-
-    private final HttpServerAttributesGetter<REQUEST, ?> getter;
-
-    private ClientAddressAndPortExtractor(HttpServerAttributesGetter<REQUEST, ?> getter) {
-      this.getter = getter;
-    }
-
-    @Override
-    public void extract(AddressPortSink sink, REQUEST request) {
-      // try Forwarded
-      String forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "forwarded"));
-      if (forwarded != null) {
-        forwarded = extractClientIpFromForwardedHeader(forwarded);
-        if (forwarded != null) {
-          sink.setAddress(forwarded);
-          return;
-        }
-      }
-
-      // try X-Forwarded-For
-      forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "x-forwarded-for"));
-      if (forwarded != null) {
-        sink.setAddress(extractClientIpFromForwardedForHeader(forwarded));
-      }
-
-      // TODO: client.port will be implemented in a future PR
-    }
   }
 }

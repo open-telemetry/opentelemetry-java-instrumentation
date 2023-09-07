@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import org.reactivestreams.Subscription;
 import org.springframework.core.Ordered;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -131,10 +131,11 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
     private void end(Context currentContext, Throwable t) {
       // Update HTTP route now, because during instrumenter.start()
       // the HTTP route isn't available from the exchange attributes, but is afterwards
-      HttpRouteHolder.updateHttpRoute(
+      HttpServerRoute.update(
           currentContext,
-          HttpRouteSource.CONTROLLER,
-          WebfluxServerHttpAttributesGetter.INSTANCE.getHttpRoute(exchange));
+          HttpServerRouteSource.CONTROLLER,
+          (context, exchange) -> WebfluxServerHttpAttributesGetter.INSTANCE.getHttpRoute(exchange),
+          exchange);
       instrumenter.end(currentContext, exchange, exchange, t);
     }
   }

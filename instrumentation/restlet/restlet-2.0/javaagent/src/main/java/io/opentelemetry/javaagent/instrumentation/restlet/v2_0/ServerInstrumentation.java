@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.restlet.v2_0;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.restlet.v2_0.RestletSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.restlet.v2_0.RestletSingletons.serverSpanName;
@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -77,7 +77,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
       scope.close();
 
       if (Status.CLIENT_ERROR_NOT_FOUND.equals(response.getStatus())) {
-        HttpRouteHolder.updateHttpRoute(context, CONTROLLER, serverSpanName(), "/*");
+        HttpServerRoute.update(context, CONTROLLER, serverSpanName(), "/*");
       }
 
       HttpServerResponseCustomizerHolder.getCustomizer()

@@ -84,6 +84,22 @@ dependencies {
   testLibrary("software.amazon.awssdk:ses:2.2.0")
 }
 
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+testing {
+  suites {
+    val s3PresignerTest by registering(JvmTestSuite::class) {
+      dependencies {
+        if (latestDepTest) {
+          implementation("software.amazon.awssdk:s3:+")
+        } else {
+          implementation("software.amazon.awssdk:s3:2.10.12")
+        }
+      }
+    }
+  }
+}
+
 tasks {
   val testExperimentalSqs by registering(Test::class) {
     group = "verification"
@@ -93,6 +109,7 @@ tasks {
 
   check {
     dependsOn(testExperimentalSqs)
+    dependsOn(testing.suites)
   }
 
   withType<Test>().configureEach {

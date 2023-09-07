@@ -11,8 +11,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 
 public final class FinatraSingletons {
 
@@ -34,8 +34,7 @@ public final class FinatraSingletons {
   }
 
   public static void updateServerSpanName(Context context, RouteInfo routeInfo) {
-    HttpRouteHolder.updateHttpRoute(
-        context, HttpRouteSource.CONTROLLER, (c, route) -> route.path(), routeInfo);
+    HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, routeInfo.path());
   }
 
   private FinatraSingletons() {}

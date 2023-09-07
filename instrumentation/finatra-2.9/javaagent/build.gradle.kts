@@ -81,12 +81,20 @@ tasks {
       dependsOn(testing.suites)
     }
   }
-}
 
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  withType<Test>().configureEach {
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }
 
 // com.fasterxml.jackson.module:jackson-module-scala_2.11:2.15.2 is missing force using jackson 2.15.1

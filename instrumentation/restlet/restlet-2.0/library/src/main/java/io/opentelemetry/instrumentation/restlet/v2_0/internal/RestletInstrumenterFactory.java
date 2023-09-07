@@ -8,8 +8,10 @@ package io.opentelemetry.instrumentation.restlet.v2_0.internal;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.List;
@@ -27,18 +29,25 @@ public final class RestletInstrumenterFactory {
   public static Instrumenter<Request, Response> newServerInstrumenter(
       OpenTelemetry openTelemetry,
       AttributesExtractor<Request, Response> httpServerAttributesExtractor,
-      List<AttributesExtractor<Request, Response>> additionalExtractors) {
+      List<AttributesExtractor<Request, Response>> additionalExtractors,
+      boolean emitExperimentalHttpServerMetrics) {
 
     RestletHttpAttributesGetter httpAttributesGetter = RestletHttpAttributesGetter.INSTANCE;
 
-    return Instrumenter.<Request, Response>builder(
-            openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributesGetter))
-        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-        .addAttributesExtractor(httpServerAttributesExtractor)
-        .addAttributesExtractors(additionalExtractors)
-        .addOperationMetrics(HttpServerMetrics.get())
-        .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
-        .buildServerInstrumenter(new RestletHeadersGetter());
+    InstrumenterBuilder<Request, Response> builder =
+        Instrumenter.<Request, Response>builder(
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(httpServerAttributesExtractor)
+            .addAttributesExtractors(additionalExtractors)
+            .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
+            .addOperationMetrics(HttpServerMetrics.get());
+    if (emitExperimentalHttpServerMetrics) {
+      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+    }
+    return builder.buildServerInstrumenter(new RestletHeadersGetter());
   }
 
   private RestletInstrumenterFactory() {}

@@ -104,6 +104,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "\$invoke"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == null || it instanceof String}
           }
         }
         span(2) {
@@ -178,6 +179,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "\$invokeAsync"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == null || it instanceof String}
           }
         }
         span(2) {

@@ -5,13 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.handler.codec.http.HttpMethod;
@@ -105,9 +103,13 @@ abstract class AbstractReactorNettyHttpClientTest
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.disableTestRedirects();
+    optionsBuilder.markAsLowLevelInstrumentation();
+    optionsBuilder.setMaxRedirects(52);
+
     optionsBuilder.setUserAgent(USER_AGENT);
-    optionsBuilder.enableTestCallbackWithImplicitParent();
+    // TODO: remove this test altogether? this scenario is (was) only implemented in reactor-netty,
+    // all other HTTP clients worked in a different way
+    //    optionsBuilder.enableTestCallbackWithImplicitParent();
 
     optionsBuilder.setClientSpanErrorMapper(
         (uri, exception) -> {
@@ -125,16 +127,18 @@ abstract class AbstractReactorNettyHttpClientTest
   }
 
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
+    Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+
     // unopened port or non routable address
     if ("http://localhost:61/".equals(uri.toString())
         || "https://192.0.2.1/".equals(uri.toString())) {
-      return emptySet();
+      attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
+      attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
     }
 
-    Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     if (uri.toString().contains("/read-timeout")) {
-      attributes.remove(stringKey("net.protocol.name"));
-      attributes.remove(stringKey("net.protocol.version"));
+      attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
+      attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
       attributes.remove(SemanticAttributes.NET_PEER_NAME);
       attributes.remove(SemanticAttributes.NET_PEER_PORT);
     }
@@ -186,7 +190,7 @@ abstract class AbstractReactorNettyHttpClientTest
               span -> span.hasName("GET").hasKind(CLIENT).hasParent(parentSpan),
               span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(nettyClientSpan));
 
-          assertSameSpan(nettyClientSpan, onRequestSpan);
+          assertSameSpan(parentSpan, onRequestSpan);
           assertSameSpan(nettyClientSpan, afterRequestSpan);
           assertSameSpan(nettyClientSpan, onResponseSpan);
           assertSameSpan(parentSpan, afterResponseSpan);
@@ -307,6 +311,7 @@ abstract class AbstractReactorNettyHttpClientTest
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_URL, uri.toString()),
                             equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, USER_AGENT),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 0),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, uri.getPort())),
                 span ->

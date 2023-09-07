@@ -18,7 +18,11 @@ import javax.annotation.Nullable;
  * <p>Instrumentation authors will create implementations of this interface for their specific
  * library/framework. It will be used by the NetClientAttributesExtractor to obtain the various
  * network attributes in a type-generic way.
+ *
+ * @deprecated Make sure that your instrumentation implements the getters from the {@code
+ *     ...network} package instead. This class will be removed in the 2.0 release.
  */
+@Deprecated
 public interface NetClientAttributesGetter<REQUEST, RESPONSE>
     extends NetworkAttributesGetter<REQUEST, RESPONSE>, ServerAttributesGetter<REQUEST, RESPONSE> {
 

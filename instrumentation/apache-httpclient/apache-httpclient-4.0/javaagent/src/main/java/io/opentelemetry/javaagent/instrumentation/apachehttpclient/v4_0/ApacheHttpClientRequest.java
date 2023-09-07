@@ -77,6 +77,9 @@ public final class ApacheHttpClientRequest {
 
   String getProtocolVersion() {
     ProtocolVersion protocolVersion = delegate.getProtocolVersion();
+    if (protocolVersion.getMinor() == 0) {
+      return Integer.toString(protocolVersion.getMajor());
+    }
     return protocolVersion.getMajor() + "." + protocolVersion.getMinor();
   }
 

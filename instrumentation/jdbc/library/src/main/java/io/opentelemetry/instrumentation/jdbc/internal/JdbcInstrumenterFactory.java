@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 
 /**
@@ -21,7 +21,8 @@ import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
   private static final JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
-  private static final JdbcNetAttributesGetter netAttributesGetter = new JdbcNetAttributesGetter();
+  private static final JdbcNetworkAttributesGetter netAttributesGetter =
+      new JdbcNetworkAttributesGetter();
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter() {
     return createStatementInstrumenter(GlobalOpenTelemetry.get());
@@ -39,7 +40,7 @@ public final class JdbcInstrumenterFactory {
                     ConfigPropertiesUtil.getBoolean(
                         "otel.instrumentation.common.db-statement-sanitizer.enabled", true))
                 .build())
-        .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+        .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

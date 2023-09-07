@@ -12,3 +12,13 @@ dependencies {
 
   latestDepTestLibrary("org.eclipse.jetty:jetty-client:9.+")
 }
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}

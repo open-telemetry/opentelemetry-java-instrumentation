@@ -24,7 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AnnotationInstrumentationModule extends InstrumentationModule {
 
   public AnnotationInstrumentationModule() {
-    super("opentelemetry-instrumentation-annotations");
+    super("opentelemetry-instrumentation-annotations", "annotations");
   }
 
   @Override

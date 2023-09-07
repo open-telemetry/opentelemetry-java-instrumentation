@@ -10,18 +10,16 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHtt
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.responseAttributeKey;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
-import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -32,8 +30,6 @@ import javax.annotation.Nullable;
 abstract class HttpCommonAttributesExtractor<
         REQUEST, RESPONSE, GETTER extends HttpCommonAttributesGetter<REQUEST, RESPONSE>>
     implements AttributesExtractor<REQUEST, RESPONSE> {
-
-  private static final Logger logger = Logger.getLogger(HttpCommonAttributesGetter.class.getName());
 
   final GETTER getter;
   private final List<String> capturedRequestHeaders;
@@ -55,7 +51,7 @@ abstract class HttpCommonAttributesExtractor<
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     String method = getter.getHttpRequestMethod(request);
     if (SemconvStability.emitStableHttpSemconv()) {
-      if (knownMethods.contains(method)) {
+      if (method == null || knownMethods.contains(method)) {
         internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
       } else {
         internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
@@ -150,37 +146,6 @@ abstract class HttpCommonAttributesExtractor<
     } catch (NumberFormatException e) {
       // not a number
       return null;
-    }
-  }
-
-  static final class HttpNetAddressPortExtractor<REQUEST>
-      implements FallbackAddressPortExtractor<REQUEST> {
-
-    private final HttpCommonAttributesGetter<REQUEST, ?> getter;
-
-    HttpNetAddressPortExtractor(HttpCommonAttributesGetter<REQUEST, ?> getter) {
-      this.getter = getter;
-    }
-
-    @Override
-    public void extract(AddressPortSink sink, REQUEST request) {
-      String host = firstHeaderValue(getter.getHttpRequestHeader(request, "host"));
-      if (host == null) {
-        return;
-      }
-
-      int hostHeaderSeparator = host.indexOf(':');
-      if (hostHeaderSeparator == -1) {
-        sink.setAddress(host);
-        return;
-      }
-
-      sink.setAddress(host.substring(0, hostHeaderSeparator));
-      try {
-        sink.setPort(Integer.parseInt(host.substring(hostHeaderSeparator + 1)));
-      } catch (NumberFormatException e) {
-        logger.log(FINE, e.getMessage(), e);
-      }
     }
   }
 }
