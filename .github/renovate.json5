@@ -59,7 +59,7 @@
     {
       // system-stubs-jupiter 2.1+ requires Java 11+
       "matchPackageNames": ["uk.org.webcompere:system-stubs-jupiter"],
-      "matchUpdateTypes": ["minor"],
+      "matchUpdateTypes": ["major", "minor"],
       "enabled": false
     },
     {
