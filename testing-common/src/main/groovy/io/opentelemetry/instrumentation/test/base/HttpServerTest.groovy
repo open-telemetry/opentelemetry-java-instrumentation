@@ -16,16 +16,17 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
-import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
 import spock.lang.Shared
 import spock.lang.Unroll
 
 import javax.annotation.Nullable
 import java.util.concurrent.Callable
+import java.util.function.Consumer
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
@@ -237,13 +238,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     @Override
     void assertTheTraces(
       int size,
-      String traceId,
-      String parentId,
-      String spanId,
       String method,
       ServerEndpoint endpoint,
-      AggregatedHttpResponse response) {
-      HttpServerTest.this.assertTheTraces(size, traceId, parentId, spanId, method, endpoint, response)
+      Consumer<SpanDataAssert> extraServerSpanAssert) {
+      HttpServerTest.this.assertTheTraces(size, method, endpoint, extraServerSpanAssert)
     }
 
     @Override
@@ -372,7 +370,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   //FIXME: add tests for POST with large/chunked data
 
-  void assertTheTraces(int size, String traceID = null, String parentID = null, String spanID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, AggregatedHttpResponse response = null) {
+  void assertTheTraces(int size, String method = "GET", ServerEndpoint endpoint = SUCCESS, Consumer<SpanDataAssert> extraServerSpanAssert) {
     def spanCount = 1 // server span
     if (hasResponseSpan(endpoint)) {
       spanCount++
@@ -398,7 +396,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
               assert it.span(0).endEpochNanos - it.span(index).endEpochNanos >= 0
             }
           }
-          serverSpan(it, spanIndex++, traceID, parentID, method, response?.content()?.length(), endpoint, spanID)
+          serverSpan(it, spanIndex++, method, endpoint, extraServerSpanAssert)
           if (hasHandlerSpan(endpoint)) {
             handlerSpan(it, spanIndex++, span(0), method, endpoint)
           }
@@ -471,21 +469,11 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     }
   }
 
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS, String spanID = null) {
+  void serverSpan(TraceAssert trace, int index, String method = "GET", ServerEndpoint endpoint = SUCCESS, Consumer<SpanDataAssert> extraServerSpanAssert) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
     def assertion = junitTest.assertServerSpan(OpenTelemetryAssertions.assertThat(spanData), method, endpoint)
-    if (parentID == null) {
-      assertion.hasParentSpanId(SpanId.invalid)
-    } else {
-      assertion.hasParentSpanId(parentID)
-    }
-    if (traceID != null) {
-      assertion.hasTraceId(traceID)
-    }
-    if (spanID != null) {
-      assertion.hasSpanId(spanID)
-    }
+    extraServerSpanAssert.accept(assertion);
   }
 
   void indexedServerSpan(TraceAssert trace, int index, Object parent, int requestId) {

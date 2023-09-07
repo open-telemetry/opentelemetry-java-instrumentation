@@ -139,7 +139,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       assertResponseHasCustomizedHeaders(response, SUCCESS, null);
     }
 
-    assertTheTraces(count, null, null, null, method, SUCCESS, responses.get(0));
+    assertTheTraces(count, method, SUCCESS, SpanDataAssert::hasNoParent);
   }
 
   @Test
@@ -160,7 +160,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     String spanId = assertResponseHasCustomizedHeaders(response, SUCCESS, traceId);
-    assertTheTraces(1, traceId, parentId, spanId, "GET", SUCCESS, response);
+    assertTheTraces(
+        1,
+        "GET",
+        SUCCESS,
+        span -> span.hasTraceId(traceId).hasParentSpanId(parentId).hasSpanId(spanId));
   }
 
   @Test
@@ -179,7 +183,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     String spanId = assertResponseHasCustomizedHeaders(response, SUCCESS, traceId);
-    assertTheTraces(1, traceId, parentId, spanId, "GET", SUCCESS, response);
+    assertTheTraces(
+        1,
+        "GET",
+        SUCCESS,
+        span -> span.hasTraceId(traceId).hasParentSpanId(parentId).hasSpanId(spanId));
   }
 
   @ParameterizedTest
@@ -193,7 +201,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.contentUtf8()).isEqualTo(endpoint.getBody());
 
     String spanId = assertResponseHasCustomizedHeaders(response, endpoint, null);
-    assertTheTraces(1, null, null, spanId, method, endpoint, response);
+    assertTheTraces(1, method, endpoint, span -> span.hasNoParent().hasSpanId(spanId));
   }
 
   private static Stream<ServerEndpoint> provideServerEndpoints() {
@@ -217,7 +225,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                     .isEqualTo(address.resolve(REDIRECT.getBody()).toString()));
 
     String spanId = assertResponseHasCustomizedHeaders(response, REDIRECT, null);
-    assertTheTraces(1, null, null, spanId, method, REDIRECT, response);
+    assertTheTraces(1, method, REDIRECT, span -> span.hasNoParent().hasSpanId(spanId));
   }
 
   @Test
@@ -234,7 +242,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     }
 
     String spanId = assertResponseHasCustomizedHeaders(response, ERROR, null);
-    assertTheTraces(1, null, null, spanId, method, ERROR, response);
+    assertTheTraces(1, method, ERROR, span -> span.hasNoParent().hasSpanId(spanId));
   }
 
   @Test
@@ -252,7 +260,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       assertThat(response.status().code()).isEqualTo(EXCEPTION.getStatus());
 
       String spanId = assertResponseHasCustomizedHeaders(response, EXCEPTION, null);
-      assertTheTraces(1, null, null, spanId, method, EXCEPTION, response);
+      assertTheTraces(1, method, EXCEPTION, span -> span.hasNoParent().hasSpanId(spanId));
     } finally {
       Awaitility.reset();
     }
@@ -269,7 +277,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.status().code()).isEqualTo(NOT_FOUND.getStatus());
 
     String spanId = assertResponseHasCustomizedHeaders(response, NOT_FOUND, null);
-    assertTheTraces(1, null, null, spanId, method, NOT_FOUND, response);
+    assertTheTraces(1, method, NOT_FOUND, span -> span.hasNoParent().hasSpanId(spanId));
   }
 
   @Test
@@ -284,7 +292,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.contentUtf8()).isEqualTo(PATH_PARAM.getBody());
 
     String spanId = assertResponseHasCustomizedHeaders(response, PATH_PARAM, null);
-    assertTheTraces(1, null, null, spanId, method, PATH_PARAM, response);
+    assertTheTraces(1, method, PATH_PARAM, span -> span.hasNoParent().hasSpanId(spanId));
   }
 
   @Test
@@ -303,7 +311,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.headers().get("X-Test-Response")).isEqualTo("test");
 
     String spanId = assertResponseHasCustomizedHeaders(response, CAPTURE_HEADERS, null);
-    assertTheTraces(1, null, null, spanId, "GET", CAPTURE_HEADERS, response);
+    assertTheTraces(1, "GET", CAPTURE_HEADERS, span -> span.hasNoParent().hasSpanId(spanId));
   }
 
   @Test
@@ -323,7 +331,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.contentUtf8()).isEqualTo(CAPTURE_PARAMETERS.getBody());
 
     String spanId = assertResponseHasCustomizedHeaders(response, CAPTURE_PARAMETERS, null);
-    assertTheTraces(1, null, null, spanId, "POST", CAPTURE_PARAMETERS, response);
+    assertTheTraces(1, "POST", CAPTURE_PARAMETERS, span -> span.hasNoParent().hasSpanId(spanId));
   }
 
   @Test
@@ -562,32 +570,16 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   // HttpServerTest does
   protected void assertTheTraces(
       int size,
-      String traceId,
-      String parentId,
-      String spanId,
       String method,
       ServerEndpoint endpoint,
-      AggregatedHttpResponse response) {
+      Consumer<SpanDataAssert> extraServerSpanAssert) {
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < size; i++) {
       assertions.add(
           trace -> {
             List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
             spanAssertions.add(
-                span -> {
-                  assertServerSpan(span, method, endpoint);
-                  if (traceId != null) {
-                    span.hasTraceId(traceId);
-                  }
-                  if (spanId != null) {
-                    span.hasSpanId(spanId);
-                  }
-                  if (parentId != null) {
-                    span.hasParentSpanId(parentId);
-                  } else {
-                    span.hasNoParent();
-                  }
-                });
+                span -> extraServerSpanAssert.accept(assertServerSpan(span, method, endpoint)));
 
             if (options.hasHandlerSpan.test(endpoint)) {
               spanAssertions.add(

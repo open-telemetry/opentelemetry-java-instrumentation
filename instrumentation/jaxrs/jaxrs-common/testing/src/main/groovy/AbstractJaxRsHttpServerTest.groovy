@@ -7,11 +7,14 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Unroll
 
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
@@ -226,17 +229,14 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
   @Override
   void serverSpan(TraceAssert trace,
                   int index,
-                  String traceID = null,
-                  String parentID = null,
                   String method = "GET",
-                  Long responseContentLength = null,
                   ServerEndpoint endpoint = SUCCESS,
-                  String spanID = null) {
-    serverSpan(trace, index, traceID, parentID, spanID, method,
+                  Consumer<SpanDataAssert> extraServerSpanAssert) {
+    serverSpan(trace, index, method,
       endpoint == PATH_PARAM ? getContextPath() + "/path/{id}/param" : endpoint.resolvePath(address).path,
       endpoint.resolve(address),
       endpoint.status,
-      endpoint.query)
+      extraServerSpanAssert)
   }
 
   void asyncServerSpan(TraceAssert trace,
@@ -244,39 +244,25 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
                        String url,
                        int statusCode) {
     def rawUrl = URI.create(url).toURL()
-    serverSpan(trace, index, null, null, null, "GET",
+    serverSpan(trace, index, "GET",
       rawUrl.path,
       rawUrl.toURI(),
       statusCode,
-      null)
+      SpanDataAssert.&hasNoParent)
   }
 
   void serverSpan(TraceAssert trace,
                   int index,
-                  String traceID,
-                  String parentID,
-                  String spanID,
                   String method,
                   String path,
                   URI fullUrl,
                   int statusCode,
-                  String query) {
+                  Consumer<SpanDataAssert> extraServerSpanAssert) {
     trace.span(index) {
       name method + " " + path
       kind SERVER
       if (statusCode >= 500) {
         status ERROR
-      }
-      if (traceID != null) {
-        traceId traceID
-      }
-      if (parentID != null) {
-        parentSpanId parentID
-      } else {
-        hasNoParent()
-      }
-      if (spanID != null) {
-        spanId spanID
       }
       attributes {
         "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
@@ -301,6 +287,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         }
       }
     }
+    extraServerSpanAssert.accept(OpenTelemetryAssertions.assertThat(trace.span(index)))
   }
 
   @Override

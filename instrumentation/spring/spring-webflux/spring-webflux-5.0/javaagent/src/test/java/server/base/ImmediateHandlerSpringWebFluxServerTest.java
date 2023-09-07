@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import org.junit.jupiter.api.Test;
@@ -72,6 +73,6 @@ public class ImmediateHandlerSpringWebFluxServerTest extends HandlerSpringWebFlu
     assertThat(response.contentUtf8()).isEqualTo(NESTED_PATH.getBody());
     assertResponseHasCustomizedHeaders(response, NESTED_PATH, null);
 
-    assertTheTraces(1, null, null, null, method, NESTED_PATH, response);
+    assertTheTraces(1, method, NESTED_PATH, SpanDataAssert::hasNoParent);
   }
 }
