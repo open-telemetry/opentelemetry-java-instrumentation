@@ -35,7 +35,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttribu
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Set;

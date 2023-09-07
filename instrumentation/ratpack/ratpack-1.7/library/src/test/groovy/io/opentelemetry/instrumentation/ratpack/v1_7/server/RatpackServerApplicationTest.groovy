@@ -28,10 +28,10 @@ import spock.util.concurrent.PollingConditions
 
 import javax.inject.Singleton
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_ROUTE
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_TARGET
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_METHOD
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_STATUS_CODE
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_TARGET
 
 class RatpackServerApplicationTest extends Specification {
 

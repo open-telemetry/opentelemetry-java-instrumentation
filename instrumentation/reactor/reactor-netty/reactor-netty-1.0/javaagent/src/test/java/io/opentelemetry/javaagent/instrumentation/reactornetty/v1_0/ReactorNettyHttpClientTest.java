@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 import io.netty.channel.ChannelOption;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames;
 import java.net.URI;
 import java.util.HashSet;
