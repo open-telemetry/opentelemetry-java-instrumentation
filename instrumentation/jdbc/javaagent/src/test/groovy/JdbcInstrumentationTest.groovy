@@ -861,4 +861,36 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     statement.close()
     connection.close()
   }
+
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/9359
+  def "test proxy prepared statement"() {
+    def connection = new Driver().connect(jdbcUrls.get("h2"), null)
+    PreparedStatement statement = connection.prepareStatement("SELECT 3")
+    PreparedStatement proxyStatement = ProxyStatementFactory.proxyPreparedStatement(statement)
+    ResultSet resultSet = runWithSpan("parent") {
+      return proxyStatement.executeQuery()
+    }
+
+    expect:
+    resultSet.next()
+    resultSet.getInt(1) == 3
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "SELECT $dbNameLower"
+          kind CLIENT
+          childOf span(0)
+        }
+      }
+    }
+
+    cleanup:
+    statement.close()
+    connection.close()
+  }
 }
