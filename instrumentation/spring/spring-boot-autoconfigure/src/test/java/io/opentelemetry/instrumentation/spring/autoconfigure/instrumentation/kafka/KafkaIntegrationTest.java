@@ -130,10 +130,9 @@ class KafkaIntegrationTest {
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                                 AbstractLongAssert::isNotNegative),
-                            // TODO (trask) does this have a replacement?
-                            // satisfies(
-                            //     SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
-                            //     AbstractLongAssert::isNotNegative),
+                            satisfies(
+                                SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
+                                AbstractLongAssert::isNotNegative),
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                                 AbstractLongAssert::isNotNegative),

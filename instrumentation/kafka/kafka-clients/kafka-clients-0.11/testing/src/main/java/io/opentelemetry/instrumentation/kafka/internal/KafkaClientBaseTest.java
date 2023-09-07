@@ -217,10 +217,9 @@ public abstract class KafkaClientBaseTest {
                 satisfies(
                     SemanticAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("consumer")),
-                // TODO (trask) does this have a replacement?
-                // satisfies(
-                //     SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
-                //     AbstractLongAssert::isNotNegative),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
+                    AbstractLongAssert::isNotNegative),
                 satisfies(
                     SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                     AbstractLongAssert::isNotNegative),

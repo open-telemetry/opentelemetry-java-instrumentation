@@ -22,9 +22,8 @@ final class KafkaConsumerAttributesExtractor
 
     ConsumerRecord<?, ?> record = request.getRecord();
 
-    // TODO (trask) does this have a replacement?
-    // attributes.put(SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION, (long)
-    // record.partition());
+    attributes.put(
+        SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION, (long) record.partition());
     attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, record.offset());
 
     Object key = record.key();
