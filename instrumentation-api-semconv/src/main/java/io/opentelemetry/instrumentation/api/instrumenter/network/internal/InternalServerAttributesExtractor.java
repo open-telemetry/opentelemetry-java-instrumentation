@@ -117,7 +117,7 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
-  @SuppressWarnings("ImmutableEnumChecker")
+  @SuppressWarnings({"ImmutableEnumChecker", "deprecation"}) // until old http semconv are dropped in 2.0
   public enum Mode {
     PEER(
         SemanticAttributes.NET_PEER_NAME,

@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class HttpClientTestOptions {
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
       Collections.unmodifiableSet(
           new HashSet<>(

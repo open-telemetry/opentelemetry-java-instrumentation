@@ -42,6 +42,7 @@ final class TemporaryMetricsView {
     return view;
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static Set<AttributeKey> buildOldDurationClientView() {
     // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/metrics/semantic_conventions/http-metrics.md#metric-httpclientduration
     Set<AttributeKey> view = new HashSet<>();
@@ -67,6 +68,7 @@ final class TemporaryMetricsView {
     return view;
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static Set<AttributeKey> buildOldDurationServerView() {
     // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/metrics/semantic_conventions/http-metrics.md#metric-httpserverduration
     Set<AttributeKey> view = new HashSet<>();
@@ -81,6 +83,7 @@ final class TemporaryMetricsView {
     return view;
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static Set<AttributeKey> buildActiveRequestsView() {
     Set<AttributeKey> view = new HashSet<>();
     // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/metrics/semantic_conventions/http-metrics.md#metric-httpserveractive_requests
