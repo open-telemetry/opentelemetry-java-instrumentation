@@ -5,13 +5,20 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.interceptor.Context;
@@ -48,20 +55,50 @@ final class SqsImpl {
     }
 
     ReceiveMessageResponse response = (ReceiveMessageResponse) rawResponse;
-    SdkHttpResponse httpResponse = context.httpResponse();
-    for (Message message : response.messages()) {
-      createConsumerSpan(message, httpResponse, executionAttributes, config);
-    }
+    createConsumerSpan(response.messages(), config, executionAttributes);
 
     return true;
   }
 
   private static void createConsumerSpan(
-      Message message,
-      SdkHttpResponse httpResponse,
-      ExecutionAttributes executionAttributes,
-      TracingExecutionInterceptor config) {
+      List<Message> messages,
+      TracingExecutionInterceptor config,
+      ExecutionAttributes executionAttributes) {
 
+    Tracer tracer =
+        GlobalOpenTelemetry.get().getTracer("io.opentelemetry.aws-sdk-2.2");
+
+    SpanBuilder spanBuilder =
+        tracer.spanBuilder("AmazonSQS receive").setSpanKind(SpanKind.CONSUMER);
+    spanBuilder.setAttribute(SemanticAttributes.MESSAGING_OPERATION,
+        SemanticAttributes.MessagingOperationValues.RECEIVE);
+    spanBuilder.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS");
+
+    long totalPayloadSizeInBytes = 0;
+
+    for (Message message: messages) {
+      SpanContext spanContext  = getParentContext(config, message);
+
+      if (spanContext.isValid() && spanContext.isSampled()) {
+        spanBuilder.addLink(spanContext);
+      }
+
+      totalPayloadSizeInBytes += message.body().length();
+    }
+
+    spanBuilder.setAttribute(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, totalPayloadSizeInBytes);
+
+    Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter =
+        config.getConsumerInstrumenter();
+    
+    if (consumerInstrumenter.shouldStart(io.opentelemetry.context.Context.root(), executionAttributes)) {
+      Span consumerSpan = spanBuilder.startSpan();
+      consumerSpan.end();
+    }
+  }
+
+  private static SpanContext getParentContext(
+      TracingExecutionInterceptor config, Message message) {
     io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.root();
 
     TextMapPropagator messagingPropagator = config.getMessagingPropagator();
@@ -75,18 +112,7 @@ final class SqsImpl {
       parentContext = SqsParentContext.ofSystemAttributes(message.attributesAsStrings());
     }
 
-    Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter =
-        config.getConsumerInstrumenter();
-    if (consumerInstrumenter.shouldStart(parentContext, executionAttributes)) {
-      io.opentelemetry.context.Context context =
-          consumerInstrumenter.start(parentContext, executionAttributes);
-
-      // TODO: Even if we keep HTTP attributes (see afterMarshalling), does it make sense here
-      //  per-message?
-      // TODO: Should we really create root spans if we can't extract anything, or should we attach
-      //  to the current context?
-      consumerInstrumenter.end(context, executionAttributes, httpResponse, null);
-    }
+    return Span.fromContext(parentContext).getSpanContext();
   }
 
   @Nullable
