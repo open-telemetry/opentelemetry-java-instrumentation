@@ -10,7 +10,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doReturn;
 
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
 import java.util.List;
@@ -37,7 +37,7 @@ class ClientAddressAndPortExtractorTest {
   @ArgumentsSource(ForwardedArgs.class)
   void shouldParseForwarded(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
-    when(getter.getHttpRequestHeader("request", "forwarded")).thenReturn(headers);
+    doReturn(headers).when(getter).getHttpRequestHeader("request", "forwarded");
 
     AddressAndPort sink = new AddressAndPort();
     underTest.extract(sink, "request");
@@ -94,8 +94,8 @@ class ClientAddressAndPortExtractorTest {
   @ArgumentsSource(ForwardedForArgs.class)
   void shouldParseForwardedFor(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
-    when(getter.getHttpRequestHeader("request", "forwarded")).thenReturn(emptyList());
-    when(getter.getHttpRequestHeader("request", "x-forwarded-for")).thenReturn(headers);
+    doReturn(emptyList()).when(getter).getHttpRequestHeader("request", "forwarded");
+    doReturn(headers).when(getter).getHttpRequestHeader("request", "x-forwarded-for");
 
     AddressAndPort sink = new AddressAndPort();
     underTest.extract(sink, "request");
