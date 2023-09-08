@@ -332,7 +332,7 @@ class LettuceAsyncClientTest {
   }
 
   @Test
-  void testCommandWithNoArgumentsUsingABiconsumer() {
+  void testCommandWithNoArgumentsUsingBiconsumer() {
     AsyncConditions conditions = new AsyncConditions();
     BiConsumer<String, Throwable> biConsumer =
         (keyRetrieved, error) ->
@@ -535,7 +535,7 @@ class LettuceAsyncClientTest {
   }
 
   @Test
-  void testShutdownCommandShouldProduceASpan() {
+  void testShutdownCommandShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
     GenericContainer<?> server =
         new GenericContainer<>(DockerImageName.parse("redis:6.2.3-alpine")).withExposedPorts(6379);

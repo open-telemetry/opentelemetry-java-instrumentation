@@ -274,7 +274,7 @@ class LettuceSyncClientTest {
   }
 
   @Test
-  void testShutdownCommandShouldProduceASpan() {
+  void testShutdownCommandShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
     GenericContainer<?> server =
         new GenericContainer<>(DockerImageName.parse("redis:6.2.3-alpine")).withExposedPorts(6379);
