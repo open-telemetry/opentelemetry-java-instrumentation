@@ -113,9 +113,9 @@ class LettuceSyncClientTest {
     RedisClient testConnectionClient = RedisClient.create(dbUriNonExistent);
     testConnectionClient.setOptions(CLIENT_OPTIONS);
 
-    Exception test = catchException(testConnectionClient::connect);
+    Exception exception = catchException(testConnectionClient::connect);
 
-    assertThat(test).isInstanceOf(RedisConnectionException.class);
+    assertThat(exception).isInstanceOf(RedisConnectionException.class);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -123,7 +123,7 @@ class LettuceSyncClientTest {
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.CLIENT)
-                        .hasException(test)
+                        .hasException(exception)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.NET_PEER_NAME, host),
                             equalTo(SemanticAttributes.NET_PEER_PORT, incorrectPort),
@@ -243,7 +243,7 @@ class LettuceSyncClientTest {
   }
 
   @Test
-  void testDebugSegfaultCommandReturnsVoidWithNoArgumentShouldProduceSpan() {
+  void testDebugSegfaultCommandWithNoArgumentShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
     GenericContainer<?> server =
         new GenericContainer<>(DockerImageName.parse("redis:6.2.3-alpine")).withExposedPorts(6379);
@@ -274,7 +274,7 @@ class LettuceSyncClientTest {
   }
 
   @Test
-  void testShutdownCommandReturnsVoidShouldProduceASpan() {
+  void testShutdownCommandShouldProduceASpan() {
     // Test Causes redis to crash therefore it needs its own container
     GenericContainer<?> server =
         new GenericContainer<>(DockerImageName.parse("redis:6.2.3-alpine")).withExposedPorts(6379);
@@ -300,7 +300,6 @@ class LettuceSyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SHUTDOWN"))));
-
     // Server already crashed but just in case
     connection1.close();
     server.stop();
