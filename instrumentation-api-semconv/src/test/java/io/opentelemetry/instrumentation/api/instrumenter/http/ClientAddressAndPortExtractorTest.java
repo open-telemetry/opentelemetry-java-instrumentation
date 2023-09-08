@@ -111,7 +111,6 @@ class ClientAddressAndPortExtractorTest {
       return Stream.of(
           // empty/invalid headers
           arguments(singletonList(""), null, null),
-          arguments(singletonList(""), null, null),
           arguments(singletonList(";"), null, null),
           arguments(singletonList("\""), null, null),
           arguments(singletonList("\"\""), null, null),
