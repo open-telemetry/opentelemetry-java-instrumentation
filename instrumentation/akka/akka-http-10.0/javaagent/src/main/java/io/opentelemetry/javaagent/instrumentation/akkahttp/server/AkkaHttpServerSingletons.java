@@ -9,7 +9,9 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -23,7 +25,7 @@ public final class AkkaHttpServerSingletons {
 
   static {
     AkkaHttpServerAttributesGetter httpAttributesGetter = new AkkaHttpServerAttributesGetter();
-    INSTRUMENTER =
+    InstrumenterBuilder<HttpRequest, HttpResponse> builder =
         Instrumenter.<HttpRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 AkkaHttpUtil.instrumentationName(),
@@ -36,8 +38,11 @@ public final class AkkaHttpServerSingletons {
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addOperationMetrics(HttpServerMetrics.get())
-            .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
-            .buildServerInstrumenter(AkkaHttpServerHeaders.INSTANCE);
+            .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter));
+    if (CommonConfig.get().shouldEmitExperimentalHttpServerMetrics()) {
+      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+    }
+    INSTRUMENTER = builder.buildServerInstrumenter(AkkaHttpServerHeaders.INSTANCE);
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {

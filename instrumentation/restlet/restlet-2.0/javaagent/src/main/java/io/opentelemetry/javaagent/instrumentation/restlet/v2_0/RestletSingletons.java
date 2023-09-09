@@ -27,7 +27,8 @@ public final class RestletSingletons {
               .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
               .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
               .build(),
-          Collections.emptyList());
+          Collections.emptyList(),
+          CommonConfig.get().shouldEmitExperimentalHttpServerMetrics());
 
   public static Instrumenter<Request, Response> instrumenter() {
     return INSTRUMENTER;

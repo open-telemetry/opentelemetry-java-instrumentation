@@ -7,7 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.grizzly;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -24,7 +26,7 @@ public final class GrizzlySingletons {
   static {
     GrizzlyHttpAttributesGetter httpAttributesGetter = new GrizzlyHttpAttributesGetter();
 
-    INSTRUMENTER =
+    InstrumenterBuilder<HttpRequestPacket, HttpResponsePacket> builder =
         Instrumenter.<HttpRequestPacket, HttpResponsePacket>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.grizzly-2.3",
@@ -36,7 +38,12 @@ public final class GrizzlySingletons {
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
-            .addOperationMetrics(HttpServerMetrics.get())
+            .addOperationMetrics(HttpServerMetrics.get());
+    if (CommonConfig.get().shouldEmitExperimentalHttpServerMetrics()) {
+      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+    }
+    INSTRUMENTER =
+        builder
             .addContextCustomizer(
                 (context, request, attributes) ->
                     new AppServerBridge.Builder()

@@ -1,7 +1,7 @@
 
 # javaagent
 ## Dependency License Report
-_2023-08-14 14:12:07 PDT_
+_2023-09-03 14:50:35 PDT_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -180,10 +180,10 @@ _2023-08-14 14:12:07 PDT_
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-2.23.2.jar/META-INF/LICENSE](zipkin-2.23.2.jar/META-INF/LICENSE)
 
-**39** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.14.6`
+**39** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.14.7`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [byte-buddy-dep-1.14.6.jar/META-INF/LICENSE](byte-buddy-dep-1.14.6.jar/META-INF/LICENSE)
-    - [byte-buddy-dep-1.14.6.jar/META-INF/NOTICE](byte-buddy-dep-1.14.6.jar/META-INF/NOTICE)
+> - **Embedded license files**: [byte-buddy-dep-1.14.7.jar/META-INF/LICENSE](byte-buddy-dep-1.14.7.jar/META-INF/LICENSE)
+    - [byte-buddy-dep-1.14.7.jar/META-INF/NOTICE](byte-buddy-dep-1.14.7.jar/META-INF/NOTICE)
 
 **40** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)
@@ -226,7 +226,7 @@ _2023-08-14 14:12:07 PDT_
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**48** **Group:** `org.snakeyaml` **Name:** `snakeyaml-engine` **Version:** `2.6`
+**48** **Group:** `org.snakeyaml` **Name:** `snakeyaml-engine` **Version:** `2.7`
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM Project URL**: [https://bitbucket.org/snakeyaml/snakeyaml-engine](https://bitbucket.org/snakeyaml/snakeyaml-engine)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
@@ -238,15 +238,15 @@ _2023-08-14 14:12:07 PDT_
 
 ## MIT License
 
-**50** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.7`
+**50** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.9`
 > - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
-> - **Embedded license files**: [slf4j-api-2.0.7.jar/META-INF/LICENSE.txt](slf4j-api-2.0.7.jar/META-INF/LICENSE.txt)
+> - **Embedded license files**: [slf4j-api-2.0.9.jar/META-INF/LICENSE.txt](slf4j-api-2.0.9.jar/META-INF/LICENSE.txt)
 
-**51** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.7`
+**51** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.9`
 > - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
-> - **Embedded license files**: [slf4j-simple-2.0.7.jar/META-INF/LICENSE.txt](slf4j-simple-2.0.7.jar/META-INF/LICENSE.txt)
+> - **Embedded license files**: [slf4j-simple-2.0.9.jar/META-INF/LICENSE.txt](slf4j-simple-2.0.9.jar/META-INF/LICENSE.txt)
 
 ## The 3-Clause BSD License
 

@@ -219,6 +219,12 @@ class JdbcConnectionUrlParserTest extends Specification {
     "jdbc:tibcosoftware:postgresql://server_name:5432;DatabaseName=dbname"                            | null     | "tibcosoftware:postgresql://server_name:5432"                      | "postgresql" | "postgresql"  | null          | "server_name"                               | 5432  | null                               | "dbname"
     "jdbc:tibcosoftware:db2://server_name:50000;DatabaseName=dbname"                                  | null     | "tibcosoftware:db2://server_name:50000"                            | "db2"        | "db2"         | null          | "server_name"                               | 50000 | null                               | "dbname"
 
+    // https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieving-secrets_jdbc.html
+    "jdbc-secretsmanager:mysql://example.com:50000"                                                   | null     | "mysql://example.com:50000"                                        | "mysql"      | null          | null          | "example.com"                               | 50000 | null                               | null
+    "jdbc-secretsmanager:postgresql://example.com:50000/dbname"                                       | null     | "postgresql://example.com:50000"                                   | "postgresql" | null          | null          | "example.com"                               | 50000 | null                               | "dbname"
+    "jdbc-secretsmanager:oracle:thin:@example.com:50000/ORCL"                                         | null     | "oracle:thin://example.com:50000"                                  | "oracle"     | "thin"        | null          | "example.com"                               | 50000 | "orcl"                             | null
+    "jdbc-secretsmanager:sqlserver://example.com:50000"                                               | null     | "sqlserver://example.com:50000"                                    | "mssql"      | null          | null          | "example.com"                               | 50000 | null                               | null
+
     expected = DbInfo.builder().system(system).subtype(subtype).user(user).name(name).db(db).host(host).port(port).shortUrl(shortUrl).build()
   }
 }

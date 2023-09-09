@@ -21,7 +21,6 @@ afterEvaluate {
   val bomProjects = rootProject.subprojects
     .sortedBy { it.findProperty("archivesName") as String? }
     .filter { !it.name.startsWith("bom") }
-    .filter { !it.name.equals("javaagent") }
     .filter(otelBom.projectFilter.get()::test)
     .filter { it.plugins.hasPlugin("maven-publish") }
 
@@ -32,22 +31,4 @@ afterEvaluate {
       }
     }
   }
-}
-
-evaluationDependsOn(":dependencyManagement")
-val dependencyManagementConf = configurations.create("dependencyManagement") {
-  isCanBeConsumed = false
-  isCanBeResolved = false
-  isVisible = false
-}
-afterEvaluate {
-  configurations.configureEach {
-    if (isCanBeResolved && !isCanBeConsumed) {
-      extendsFrom(dependencyManagementConf)
-    }
-  }
-}
-
-dependencies {
-  add(dependencyManagementConf.name, platform(project(":dependencyManagement")))
 }

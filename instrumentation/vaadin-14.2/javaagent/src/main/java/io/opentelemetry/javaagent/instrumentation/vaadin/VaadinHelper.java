@@ -110,7 +110,7 @@ public class VaadinHelper {
     HttpServerRoute.update(
         context,
         HttpServerRouteSource.NESTED_CONTROLLER,
-        (c, loc) -> ServletContextPath.prepend(c, getSpanNameForLocation(loc)),
+        (ctx, loc) -> ServletContextPath.prepend(ctx, getSpanNameForLocation(loc)),
         location);
   }
 

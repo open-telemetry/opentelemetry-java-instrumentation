@@ -4,17 +4,16 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.3.2"
     id("com.gradle.plugin-publish") version "1.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
-    // at the moment 1.9.0 is the latest version supported by codeql
-    id("org.jetbrains.kotlin.jvm") version "1.9.0"
+    id("org.jetbrains.kotlin.jvm") version "1.9.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
-    id("org.graalvm.buildtools.native") version "0.9.25"
+    id("org.graalvm.buildtools.native") version "0.9.26"
   }
 }
 
 plugins {
   id("com.gradle.enterprise") version "3.14.1"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.11.1"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.11.2"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123

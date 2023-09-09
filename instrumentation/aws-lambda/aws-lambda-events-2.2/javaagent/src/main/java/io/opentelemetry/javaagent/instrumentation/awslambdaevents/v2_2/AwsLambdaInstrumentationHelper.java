@@ -10,13 +10,15 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal.AwsLambdaEventsInstrumenterFactory;
 import io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal.AwsLambdaSqsInstrumenterFactory;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 
 public final class AwsLambdaInstrumentationHelper {
 
   private static final io.opentelemetry.instrumentation.awslambdacore.v1_0.internal
           .AwsLambdaFunctionInstrumenter
       FUNCTION_INSTRUMENTER =
-          AwsLambdaEventsInstrumenterFactory.createInstrumenter(GlobalOpenTelemetry.get());
+          AwsLambdaEventsInstrumenterFactory.createInstrumenter(
+              GlobalOpenTelemetry.get(), CommonConfig.get().getKnownHttpRequestMethods());
 
   public static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal
           .AwsLambdaFunctionInstrumenter

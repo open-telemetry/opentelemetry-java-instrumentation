@@ -34,8 +34,7 @@ public final class FinatraSingletons {
   }
 
   public static void updateServerSpanName(Context context, RouteInfo routeInfo) {
-    HttpServerRoute.update(
-        context, HttpServerRouteSource.CONTROLLER, (c, route) -> route.path(), routeInfo);
+    HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, routeInfo.path());
   }
 
   private FinatraSingletons() {}

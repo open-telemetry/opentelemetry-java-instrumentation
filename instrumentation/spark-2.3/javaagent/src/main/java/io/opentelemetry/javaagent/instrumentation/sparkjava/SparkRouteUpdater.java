@@ -16,8 +16,7 @@ public final class SparkRouteUpdater {
   public static void updateHttpRoute(@Nullable RouteMatch routeMatch) {
     if (routeMatch != null) {
       Context context = Context.current();
-      HttpServerRoute.update(
-          context, HttpServerRouteSource.CONTROLLER, (c, r) -> r.getMatchUri(), routeMatch);
+      HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, routeMatch.getMatchUri());
     }
   }
 

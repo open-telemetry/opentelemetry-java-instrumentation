@@ -41,8 +41,7 @@ public final class RatpackSingletons {
     }
 
     // update the netty server span name; FILTER is probably the best match for ratpack Handlers
-    HttpServerRoute.update(
-        otelContext, HttpServerRouteSource.SERVER_FILTER, (context, name) -> name, matchedRoute);
+    HttpServerRoute.update(otelContext, HttpServerRouteSource.SERVER_FILTER, matchedRoute);
     return matchedRoute;
   }
 

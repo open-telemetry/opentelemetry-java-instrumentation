@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.executors;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.instrumentation.executors.ExecutorMatchers.executorNameMatcher;
+import static io.opentelemetry.javaagent.instrumentation.executors.ExecutorMatchers.isExecutor;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -19,6 +21,7 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingRunnable;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,8 +29,15 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
 
-public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation {
+public class JavaExecutorInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return executorNameMatcher().and(isExecutor()); // Apply expensive matcher last.
+  }
 
   @Override
   public void transform(TypeTransformer transformer) {
