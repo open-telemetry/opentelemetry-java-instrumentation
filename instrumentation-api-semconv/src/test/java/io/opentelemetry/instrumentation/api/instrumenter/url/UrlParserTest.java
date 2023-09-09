@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class UrlParserTest {
 
   @Test
-  public void testGetHost() {
+  void testGetHost() {
     assertThat(UrlParser.getHost("https://localhost")).isEqualTo("localhost");
     assertThat(UrlParser.getHost("https://localhost/")).isEqualTo("localhost");
 
@@ -30,7 +30,7 @@ class UrlParserTest {
   }
 
   @Test
-  public void testGetHostWithPort() {
+  void testGetHostWithPort() {
     assertThat(UrlParser.getHost("https://localhost:8080")).isEqualTo("localhost");
     assertThat(UrlParser.getHost("https://localhost:8080/")).isEqualTo("localhost");
 
@@ -48,7 +48,7 @@ class UrlParserTest {
   }
 
   @Test
-  public void testGetHostWithNoAuthority() {
+  void testGetHostWithNoAuthority() {
     assertThat(UrlParser.getHost("https:")).isNull();
     assertThat(UrlParser.getHost("https:/")).isNull();
 
@@ -66,7 +66,7 @@ class UrlParserTest {
   }
 
   @Test
-  public void testGetHostWithNoScheme() {
+  void testGetHostWithNoScheme() {
     assertThat(UrlParser.getHost("")).isNull();
     assertThat(UrlParser.getHost("/")).isNull();
 
@@ -84,7 +84,7 @@ class UrlParserTest {
   }
 
   @Test
-  public void testGetPort() {
+  void testGetPort() {
     assertThat(UrlParser.getPort("https://localhost")).isNull();
     assertThat(UrlParser.getPort("https://localhost/")).isNull();
 
@@ -102,7 +102,7 @@ class UrlParserTest {
   }
 
   @Test
-  public void testGetPortWithPort() {
+  void testGetPortWithPort() {
     assertThat(UrlParser.getPort("https://localhost:8080")).isEqualTo(8080);
     assertThat(UrlParser.getPort("https://localhost:8080/")).isEqualTo(8080);
 
@@ -120,7 +120,7 @@ class UrlParserTest {
   }
 
   @Test
-  public void testGetPortWithNoAuthority() {
+  void testGetPortWithNoAuthority() {
     assertThat(UrlParser.getPort("https:")).isNull();
     assertThat(UrlParser.getPort("https:/")).isNull();
 
@@ -138,7 +138,7 @@ class UrlParserTest {
   }
 
   @Test
-  public void testGetPortWithNoScheme() {
+  void testGetPortWithNoScheme() {
     assertThat(UrlParser.getPort("")).isNull();
     assertThat(UrlParser.getPort("/")).isNull();
 
@@ -156,7 +156,7 @@ class UrlParserTest {
   }
 
   @Test
-  public void testGetPath() {
+  void testGetPath() {
     assertThat(UrlParser.getPath("https://localhost")).isNull();
     assertThat(UrlParser.getPath("https://localhost/")).isEqualTo("/");
     assertThat(UrlParser.getPath("https://localhost/api/v1")).isEqualTo("/api/v1");
@@ -179,7 +179,7 @@ class UrlParserTest {
   }
 
   @Test
-  public void testGetPathWithPort() {
+  void testGetPathWithPort() {
     assertThat(UrlParser.getPath("https://localhost:8080")).isNull();
     assertThat(UrlParser.getPath("https://localhost:8080/")).isEqualTo("/");
     assertThat(UrlParser.getPath("https://localhost:8080/api/v1")).isEqualTo("/api/v1");
@@ -202,7 +202,7 @@ class UrlParserTest {
   }
 
   @Test
-  public void testGetPathWithNoAuthority() {
+  void testGetPathWithNoAuthority() {
     assertThat(UrlParser.getPath("https:")).isNull();
     assertThat(UrlParser.getPath("https:/")).isNull();
     assertThat(UrlParser.getPath("https:/api/v1")).isNull();
@@ -225,7 +225,7 @@ class UrlParserTest {
   }
 
   @Test
-  public void testGetPathtWithNoScheme() {
+  void testGetPathtWithNoScheme() {
     assertThat(UrlParser.getPath("")).isNull();
     assertThat(UrlParser.getPath("/")).isNull();
     assertThat(UrlParser.getPath("/api/v1")).isNull();

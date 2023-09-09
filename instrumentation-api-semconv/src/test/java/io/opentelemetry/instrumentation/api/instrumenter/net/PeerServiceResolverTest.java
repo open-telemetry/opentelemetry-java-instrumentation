@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 class PeerServiceResolverTest {
 
   @Test
-  public void test() {
+  void test() {
     Map<String, String> peerServiceMapping = new HashMap<>();
     peerServiceMapping.put("example.com:8080", "myService");
     peerServiceMapping.put("example.com", "myServiceBase");
