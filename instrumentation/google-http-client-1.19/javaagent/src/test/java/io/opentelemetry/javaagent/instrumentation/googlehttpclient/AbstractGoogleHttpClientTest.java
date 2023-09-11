@@ -17,6 +17,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.util.ClassInfo;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -122,13 +123,15 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
     // can only use supported method
     optionsBuilder.disableTestNonStandardHttpMethod();
 
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
-          return attributes;
-        });
+    if (SemconvStability.emitOldHttpSemconv()) {
+      optionsBuilder.setHttpAttributes(
+          uri -> {
+            Set<AttributeKey<?>> attributes =
+                new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+            attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
+            attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+            return attributes;
+          });
+    }
   }
 }
