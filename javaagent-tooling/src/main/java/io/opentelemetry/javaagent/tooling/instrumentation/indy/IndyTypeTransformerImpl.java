@@ -29,7 +29,7 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
       ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
     Advice.WithCustomMapping withCustomMapping =
         Advice.withCustomMapping()
-            .with(new Advice.AssignReturned.Factory().withSuppressed(ClassCastException.class))
+            .with(new Advice.AssignReturned.Factory().withSuppressed(Throwable.class))
             .bootstrap(
                 IndyBootstrap.getIndyBootstrapMethod(),
                 IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule));
