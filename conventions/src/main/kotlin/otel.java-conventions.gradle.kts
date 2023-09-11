@@ -420,3 +420,9 @@ configurations.configureEach {
     exclude("io.opentelemetry.instrumentation", "opentelemetry-instrumentation-bom-alpha")
   }
 }
+
+// Pin opentelemetry-semconv to last version where io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+// isn't deprecated.
+configurations.configureEach {
+  resolutionStrategy.force("io.opentelemetry:opentelemetry-semconv:1.29.0-alpha")
+}
