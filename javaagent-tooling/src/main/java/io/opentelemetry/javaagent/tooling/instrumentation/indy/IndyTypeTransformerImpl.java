@@ -14,28 +14,28 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public final class IndyTypeTransformerImpl implements TypeTransformer {
+  private final Advice.WithCustomMapping adviceMapping;
   private AgentBuilder.Identified.Extendable agentBuilder;
-
   private final InstrumentationModule instrumentationModule;
 
   public IndyTypeTransformerImpl(
       AgentBuilder.Identified.Extendable agentBuilder, InstrumentationModule module) {
     this.agentBuilder = agentBuilder;
     this.instrumentationModule = module;
-  }
-
-  @Override
-  public void applyAdviceToMethod(
-      ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
-    Advice.WithCustomMapping withCustomMapping =
+    this.adviceMapping =
         Advice.withCustomMapping()
             .with(new Advice.AssignReturned.Factory().withSuppressed(Throwable.class))
             .bootstrap(
                 IndyBootstrap.getIndyBootstrapMethod(),
                 IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule));
+  }
+
+  @Override
+  public void applyAdviceToMethod(
+      ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
     agentBuilder =
         agentBuilder.transform(
-            new AgentBuilder.Transformer.ForAdvice(withCustomMapping)
+            new AgentBuilder.Transformer.ForAdvice(adviceMapping)
                 .advice(methodMatcher, adviceClassName)
                 .include(instrumentationModule.getClass().getClassLoader())
                 .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler()));

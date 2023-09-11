@@ -16,10 +16,9 @@ import java.lang.reflect.Array;
  * Contains the bootstrap method for initializing invokedynamic callsites which are added via agent
  * instrumentation.
  */
-@SuppressWarnings("unused")
 public class IndyBootstrapDispatcher {
 
-  private static MethodHandle bootstrap;
+  private static volatile MethodHandle bootstrap;
 
   private IndyBootstrapDispatcher() {}
 

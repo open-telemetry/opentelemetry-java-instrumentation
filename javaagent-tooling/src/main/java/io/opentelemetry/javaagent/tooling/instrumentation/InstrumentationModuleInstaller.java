@@ -95,6 +95,11 @@ public final class InstrumentationModuleInstaller {
       typeInstrumentation.transform(typeTransformer);
       extendableAgentBuilder = typeTransformer.getAgentBuilder();
       // TODO (Jonas): make instrumentation of bytecode older than 1.4 opt-in via a config option
+      // TODO (Jonas): we are not calling
+      // contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder) anymore
+      // As a result the advices should store `VirtualFields` as static variables instead of having
+      // the lookup inline
+      // We need to update our documentation on that
       extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
 
       agentBuilder = extendableAgentBuilder;
