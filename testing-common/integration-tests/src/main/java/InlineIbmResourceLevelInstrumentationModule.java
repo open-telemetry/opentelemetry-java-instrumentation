@@ -11,18 +11,13 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class IbmResourceLevelInstrumentationModule extends InstrumentationModule {
-  public IbmResourceLevelInstrumentationModule() {
-    super(IbmResourceLevelInstrumentationModule.class.getName());
-  }
-
-  @Override
-  public boolean isIndyModule() {
-    return true;
+public class InlineIbmResourceLevelInstrumentationModule extends InstrumentationModule {
+  public InlineIbmResourceLevelInstrumentationModule() {
+    super("inline-ibm-resource-level");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new ResourceLevelInstrumentation());
+    return singletonList(new InlineResourceLevelInstrumentation());
   }
 }
