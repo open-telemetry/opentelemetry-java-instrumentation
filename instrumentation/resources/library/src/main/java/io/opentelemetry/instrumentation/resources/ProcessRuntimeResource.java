@@ -11,7 +11,6 @@ import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.PR
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 
 /** Factory of a {@link Resource} which provides information about the Java runtime. */
 public final class ProcessRuntimeResource {
@@ -43,7 +42,7 @@ public final class ProcessRuntimeResource {
               version,
               PROCESS_RUNTIME_DESCRIPTION,
               description),
-          ResourceAttributes.SCHEMA_URL);
+          ResourceConstants.SCHEMA_URL);
     } catch (SecurityException ignored) {
       return Resource.empty();
     }
