@@ -17,6 +17,7 @@ import com.lambdaworks.redis.api.StatefulRedisConnection;
 import com.lambdaworks.redis.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -33,6 +34,10 @@ class LettuceSyncClientTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  static final DockerImageName containerImage = DockerImageName.parse("redis:6.2.3-alpine");
+
   private static final int DB_INDEX = 0;
 
   // Disable auto reconnect, so we do not get stray traces popping up on server shutdown
@@ -40,7 +45,7 @@ class LettuceSyncClientTest {
       new ClientOptions.Builder().autoReconnect(false).build();
 
   private static final GenericContainer<?> redisServer =
-      new GenericContainer<>(DockerImageName.parse("redis:6.2.3-alpine")).withExposedPorts(6379);
+      new GenericContainer<>(containerImage).withExposedPorts(6379);
 
   private static String host;
   private static int port;
@@ -245,13 +250,15 @@ class LettuceSyncClientTest {
   @Test
   void testDebugSegfaultCommandWithNoArgumentShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    GenericContainer<?> server =
-        new GenericContainer<>(DockerImageName.parse("redis:6.2.3-alpine")).withExposedPorts(6379);
+    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
     server.start();
+    cleanup.deferCleanup(server::stop);
 
     long serverPort = server.getMappedPort(6379);
     RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
     StatefulRedisConnection<String, String> connection1 = client.connect();
+    cleanup.deferCleanup(connection1);
+
     RedisCommands<String, String> commands = connection1.sync();
     // 1 connect trace
     testing.clearData();
@@ -267,24 +274,22 @@ class LettuceSyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_OPERATION, "DEBUG"))));
-
-    // Server already crashed but just in case
-    connection1.close();
-    server.stop();
   }
 
   @Test
   void testShutdownCommandShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    GenericContainer<?> server =
-        new GenericContainer<>(DockerImageName.parse("redis:6.2.3-alpine")).withExposedPorts(6379);
+    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
     server.start();
+    cleanup.deferCleanup(server::stop);
 
     long shutdownServerPort = server.getMappedPort(6379);
 
     RedisClient client =
         RedisClient.create("redis://" + host + ":" + shutdownServerPort + "/" + DB_INDEX);
     StatefulRedisConnection<String, String> connection1 = client.connect();
+    cleanup.deferCleanup(connection1);
+
     RedisCommands<String, String> commands = connection1.sync();
     // 1 connect trace
     testing.clearData();
@@ -300,8 +305,5 @@ class LettuceSyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SHUTDOWN"))));
-    // Server already crashed but just in case
-    connection1.close();
-    server.stop();
   }
 }

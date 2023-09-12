@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.awaitility.Awaitility.await;
 
 import com.google.common.collect.ImmutableMap;
 import com.lambdaworks.redis.ClientOptions;
@@ -25,14 +26,14 @@ import com.lambdaworks.redis.protocol.AsyncCommand;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -44,8 +45,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -54,7 +53,9 @@ class LettuceAsyncClientTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final Logger logger = LoggerFactory.getLogger(LettuceAsyncClientTest.class);
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  static final DockerImageName containerImage = DockerImageName.parse("redis:6.2.3-alpine");
 
   private static final int DB_INDEX = 0;
 
@@ -63,7 +64,7 @@ class LettuceAsyncClientTest {
       new ClientOptions.Builder().autoReconnect(false).build();
 
   private static final GenericContainer<?> redisServer =
-      new GenericContainer<>(DockerImageName.parse("redis:6.2.3-alpine")).withExposedPorts(6379);
+      new GenericContainer<>(containerImage).withExposedPorts(6379);
 
   private static String host;
   private static int port;
@@ -80,7 +81,6 @@ class LettuceAsyncClientTest {
   static RedisClient redisClient;
   private static StatefulRedisConnection<String, String> connection;
   static RedisAsyncCommands<String, String> asyncCommands;
-  static RedisCommands<String, String> syncCommands;
 
   @BeforeAll
   public static void setUp() {
@@ -97,7 +97,7 @@ class LettuceAsyncClientTest {
 
     connection = redisClient.connect();
     asyncCommands = connection.async();
-    syncCommands = connection.sync();
+    RedisCommands<String, String> syncCommands = connection.sync();
 
     syncCommands.set("TESTKEY", "TESTVAL");
 
@@ -116,11 +116,12 @@ class LettuceAsyncClientTest {
     RedisClient testConnectionClient = RedisClient.create(embeddedDbUri);
     testConnectionClient.setOptions(CLIENT_OPTIONS);
 
-    StatefulRedisConnection<String, String> connection =
+    StatefulRedisConnection<String, String> connection1 =
         testConnectionClient.connect(
             new Utf8StringCodec(), new RedisURI(host, port, 3, TimeUnit.SECONDS));
+    cleanup.deferCleanup(connection1);
 
-    assertThat(connection).isNotNull();
+    assertThat(connection1).isNotNull();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -132,7 +133,6 @@ class LettuceAsyncClientTest {
                             equalTo(SemanticAttributes.NET_PEER_NAME, host),
                             equalTo(SemanticAttributes.NET_PEER_PORT, port),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"))));
-    connection.close();
   }
 
   @Test
@@ -142,14 +142,9 @@ class LettuceAsyncClientTest {
 
     Exception exception =
         catchException(
-            () -> {
-              StatefulRedisConnection<String, String> connection =
-                  testConnectionClient.connect(
-                      new Utf8StringCodec(),
-                      new RedisURI(host, incorrectPort, 3, TimeUnit.SECONDS));
-
-              assertThat(connection).isNull();
-            });
+            () ->
+                testConnectionClient.connect(
+                    new Utf8StringCodec(), new RedisURI(host, incorrectPort, 3, TimeUnit.SECONDS)));
 
     assertThat(exception).isInstanceOf(RedisConnectionException.class);
 
@@ -187,12 +182,13 @@ class LettuceAsyncClientTest {
   }
 
   @Test
-  void testCommandChainedWithThenAccept() throws Throwable {
-    AsyncConditions conditions = new AsyncConditions();
+  void testCommandChainedWithThenAccept() {
+    CompletableFuture<String> future = new CompletableFuture<>();
     Consumer<String> consumer =
-        res ->
-            testing.runWithSpan(
-                "callback", () -> conditions.evaluate(() -> assertThat(res).isEqualTo("TESTVAL")));
+        res -> {
+          testing.runWithSpan("callback", () -> assertThat(res).isEqualTo("TESTVAL"));
+          future.complete("complete");
+        };
 
     testing.runWithSpan(
         "parent",
@@ -201,7 +197,7 @@ class LettuceAsyncClientTest {
           redisFuture.thenAccept(consumer);
         });
 
-    conditions.await(10);
+    await().untilAsserted(() -> assertThat(future).isCompleted());
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -219,86 +215,34 @@ class LettuceAsyncClientTest {
                         .hasParent(trace.getSpan(0))));
   }
 
-  private static class AsyncConditions {
-    private final int numEvalBlocks;
-    private final CountDownLatch latch;
-    private final ConcurrentLinkedQueue<Throwable> exceptions;
-
-    public AsyncConditions() {
-      this(1);
-    }
-
-    public AsyncConditions(int numEvalBlocks) {
-      this.exceptions = new ConcurrentLinkedQueue<>();
-      this.numEvalBlocks = numEvalBlocks;
-      this.latch = new CountDownLatch(numEvalBlocks);
-    }
-
-    public void evaluate(Runnable block) {
-      try {
-        block.run();
-      } catch (Throwable var3) {
-        this.exceptions.add(var3);
-        this.wakeUp();
-      }
-
-      this.latch.countDown();
-    }
-
-    private void wakeUp() {
-      long pendingEvalBlocks = this.latch.getCount();
-
-      for (int i = 0; (long) i < pendingEvalBlocks; ++i) {
-        this.latch.countDown();
-      }
-    }
-
-    public void await(double seconds) throws Throwable {
-      this.latch.await((long) (seconds * 1000.0), TimeUnit.MILLISECONDS);
-      if (!this.exceptions.isEmpty()) {
-        throw this.exceptions.poll();
-      } else {
-        long pendingEvalBlocks = this.latch.getCount();
-        if (pendingEvalBlocks > 0L) {
-          String msg =
-              String.format(
-                  "Async conditions timed out after %1.2f seconds; %d out of %d evaluate blocks did not complete in time",
-                  seconds, pendingEvalBlocks, this.numEvalBlocks);
-          throw new TimeoutException(msg);
-        }
-      }
-    }
-  }
-
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
-  // still
-  // recording metrics
+  // still recording spans
   @Test
-  void getNonExistentKeyCommandWithHandleAsyncAndChainedWithThenApply() throws Throwable {
-    AsyncConditions conditions = new AsyncConditions();
+  void getNonExistentKeyCommandWithHandleAsyncAndChainedWithThenApply() {
+    CompletableFuture<String> future1 = new CompletableFuture<>();
+    CompletableFuture<String> future2 = new CompletableFuture<>();
+
     String successStr = "KEY MISSING";
 
     BiFunction<String, Throwable, String> firstStage =
         (res, error) -> {
           testing.runWithSpan(
               "callback1",
-              () ->
-                  conditions.evaluate(
-                      () -> {
-                        assertThat(res).isNull();
-                        assertThat(error).isNull();
-                      }));
+              () -> {
+                assertThat(res).isNull();
+                assertThat(error).isNull();
+                future1.complete(null);
+              });
           return (res == null ? successStr : res);
         };
     Function<String, Object> secondStage =
         input -> {
           testing.runWithSpan(
               "callback2",
-              () ->
-                  conditions.evaluate(
-                      () -> {
-                        assertThat(input).isEqualTo(successStr);
-                      }));
+              () -> {
+                assertThat(input).isEqualTo(successStr);
+                future2.complete(successStr);
+              });
           return null;
         };
 
@@ -309,7 +253,13 @@ class LettuceAsyncClientTest {
           redisFuture.handle(firstStage).thenApply(secondStage);
         });
 
-    conditions.await(10);
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(future1).isCompletedWithValue(null);
+              assertThat(future2).isCompletedWithValue(successStr);
+            });
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -333,11 +283,15 @@ class LettuceAsyncClientTest {
 
   @Test
   void testCommandWithNoArgumentsUsingBiconsumer() {
-    AsyncConditions conditions = new AsyncConditions();
+    CompletableFuture<String> future = new CompletableFuture<>();
     BiConsumer<String, Throwable> biConsumer =
         (keyRetrieved, error) ->
             testing.runWithSpan(
-                "callback", () -> conditions.evaluate(() -> assertThat(keyRetrieved).isNotNull()));
+                "callback",
+                () -> {
+                  assertThat(keyRetrieved).isNotNull();
+                  future.complete(keyRetrieved);
+                });
 
     testing.runWithSpan(
         "parent",
@@ -346,6 +300,7 @@ class LettuceAsyncClientTest {
           redisFuture.whenCompleteAsync(biConsumer);
         });
 
+    await().untilAsserted(() -> assertThat(future).isCompleted());
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -364,8 +319,8 @@ class LettuceAsyncClientTest {
   }
 
   @Test
-  void testHashSetAndThenNestApplyToHashGetall() throws Throwable {
-    AsyncConditions conditions = new AsyncConditions();
+  void testHashSetAndThenNestApplyToHashGetall() {
+    CompletableFuture<Map<String, String>> future = new CompletableFuture<>();
 
     RedisFuture<String> hmsetFuture = asyncCommands.hmset("TESTHM", testHashMap);
     hmsetFuture.thenApplyAsync(
@@ -373,23 +328,24 @@ class LettuceAsyncClientTest {
           // Wait for 'hmset' trace to get written
           testing.waitForTraces(1);
 
-          conditions.evaluate(
-              () -> {
-                assertThat(setResult).isEqualTo("OK");
-              });
+          if (!"OK".equals(setResult)) {
+            future.completeExceptionally(new AssertionError("Wrong hmset result " + setResult));
+            return null;
+          }
+
           RedisFuture<Map<String, String>> hmGetAllFuture = asyncCommands.hgetall("TESTHM");
-          hmGetAllFuture.exceptionally(
-              error -> {
-                logger.error("unexpected: {}", error.toString());
-                return null;
+          hmGetAllFuture.whenComplete(
+              (result, exception) -> {
+                if (exception != null) {
+                  future.completeExceptionally(exception);
+                } else {
+                  future.complete(result);
+                }
               });
-          hmGetAllFuture.thenAccept(
-              hmGetAllResult ->
-                  conditions.evaluate(() -> assertThat(testHashMap).isEqualTo(hmGetAllResult)));
           return null;
         });
 
-    conditions.await(10);
+    await().untilAsserted(() -> assertThat(future).isCompletedWithValue(testHashMap));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -411,11 +367,10 @@ class LettuceAsyncClientTest {
   }
 
   @Test
-  void testCommandCompletesExceptionally() throws Throwable {
+  void testCommandCompletesExceptionally() {
     // turn off auto flush to complete the command exceptionally manually
     asyncCommands.setAutoFlushCommands(false);
-
-    AsyncConditions conditions = new AsyncConditions();
+    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
 
     RedisFuture<Long> redisFuture = asyncCommands.del("key1", "key2");
     boolean completedExceptionally =
@@ -424,21 +379,21 @@ class LettuceAsyncClientTest {
 
     redisFuture.exceptionally(
         error -> {
-          conditions.evaluate(
-              () -> {
-                assertThat(error).isNotNull();
-                assertThat(error).isInstanceOf(IllegalStateException.class);
-                assertThat(error.getMessage()).isEqualTo("TestException");
-              });
+          assertThat(error).isNotNull();
+          assertThat(error).isInstanceOf(IllegalStateException.class);
+          assertThat(error.getMessage()).isEqualTo("TestException");
           throw new RuntimeException(error);
         });
 
     asyncCommands.flushCommands();
     Throwable thrown = catchThrowable(redisFuture::get);
 
-    conditions.await(10);
-    assertThat(completedExceptionally).isTrue();
-    assertThat(thrown).isInstanceOf(Exception.class);
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(thrown).isInstanceOf(ExecutionException.class);
+              assertThat(completedExceptionally).isTrue();
+            });
 
     testing.waitAndAssertTraces(
         trace ->
@@ -451,14 +406,12 @@ class LettuceAsyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_OPERATION, "DEL"))));
-    // set this back so other tests don't fail
-    asyncCommands.setAutoFlushCommands(true);
   }
 
   @Test
-  void testCommandBeforeItFinished() throws Throwable {
+  void testCommandBeforeItFinished() {
     asyncCommands.setAutoFlushCommands(false);
-    AsyncConditions conditions = new AsyncConditions();
+    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
 
     RedisFuture<Long> redisFuture =
         testing.runWithSpan("parent", () -> asyncCommands.sadd("SKEY", "1", "2"));
@@ -466,19 +419,15 @@ class LettuceAsyncClientTest {
         (res, error) ->
             testing.runWithSpan(
                 "callback",
-                () ->
-                    conditions.evaluate(
-                        () -> {
-                          assertThat(error).isNotNull();
-                          assertThat(error).isInstanceOf(CancellationException.class);
-                        })));
+                () -> {
+                  assertThat(error).isNotNull();
+                  assertThat(error).isInstanceOf(CancellationException.class);
+                }));
 
     boolean cancelSuccess = redisFuture.cancel(true);
     asyncCommands.flushCommands();
 
-    conditions.await(10);
-
-    assertThat(cancelSuccess).isTrue();
+    await().untilAsserted(() -> assertThat(cancelSuccess).isTrue());
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -499,20 +448,20 @@ class LettuceAsyncClientTest {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
-    // set this back so other tests don't fail
-    asyncCommands.setAutoFlushCommands(true);
   }
 
   @Test
   void testDebugSegfaultCommandWithNoArgumentShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    GenericContainer<?> server =
-        new GenericContainer<>(DockerImageName.parse("redis:6.2.3-alpine")).withExposedPorts(6379);
+    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
     server.start();
+    cleanup.deferCleanup(server::stop);
 
     long serverPort = server.getMappedPort(6379);
     RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
     StatefulRedisConnection<String, String> connection1 = client.connect();
+    cleanup.deferCleanup(connection1);
+
     RedisAsyncCommands<String, String> commands = connection1.async();
     // 1 connect trace
     testing.clearData();
@@ -528,24 +477,22 @@ class LettuceAsyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_OPERATION, "DEBUG"))));
-
-    // Server already crashed but just in case
-    connection1.close();
-    server.stop();
   }
 
   @Test
   void testShutdownCommandShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    GenericContainer<?> server =
-        new GenericContainer<>(DockerImageName.parse("redis:6.2.3-alpine")).withExposedPorts(6379);
+    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
     server.start();
+    cleanup.deferCleanup(server::stop);
 
     long shutdownServerPort = server.getMappedPort(6379);
 
     RedisClient client =
         RedisClient.create("redis://" + host + ":" + shutdownServerPort + "/" + DB_INDEX);
     StatefulRedisConnection<String, String> connection1 = client.connect();
+    cleanup.deferCleanup(connection1);
+
     RedisAsyncCommands<String, String> commands = connection1.async();
     // 1 connect trace
     testing.clearData();
@@ -561,8 +508,5 @@ class LettuceAsyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SHUTDOWN"))));
-    // Server already crashed but just in case
-    connection1.close();
-    server.stop();
   }
 }
