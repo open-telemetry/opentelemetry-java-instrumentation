@@ -22,6 +22,8 @@ dependencies {
 
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
   testImplementation("org.testcontainers:elasticsearch")
+
+  latestDepTestLibrary("co.elastic.clients:elasticsearch-java:8.0.+")
 }
 
 tasks {
