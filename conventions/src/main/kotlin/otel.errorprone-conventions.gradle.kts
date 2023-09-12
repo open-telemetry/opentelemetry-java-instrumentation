@@ -105,8 +105,9 @@ tasks {
         // some moving.
         disable("DefaultPackage")
 
-        // we use modified OtelPrivateConstructorForUtilityClass which ignores *Advice classes
+        // we use modified Otel* checks which ignore *Advice classes
         disable("PrivateConstructorForUtilityClass")
+        disable("CanIgnoreReturnValueSuggester")
 
         // TODO(anuraaga): Remove this, probably after instrumenter API migration instead of dealing
         // with older APIs.
@@ -127,7 +128,7 @@ tasks {
         }
         if (project.path.endsWith(":testing") || name.contains("Test")) {
           // This check causes too many failures, ignore the ones in tests
-          disable("CanIgnoreReturnValueSuggester")
+          disable("OtelCanIgnoreReturnValueSuggester")
         }
       }
     }

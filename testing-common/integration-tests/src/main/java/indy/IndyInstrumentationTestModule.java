@@ -70,7 +70,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule {
           named("noExceptionPlease"), prefix + "$SuppressExceptionAdvice");
     }
 
-    @SuppressWarnings({"unused", "CanIgnoreReturnValueSuggester"})
+    @SuppressWarnings({"unused"})
     public static class AssignFieldViaReturnAdvice {
 
       @Advice.OnMethodEnter(inline = false)
@@ -80,7 +80,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule {
       }
     }
 
-    @SuppressWarnings({"unused", "CanIgnoreReturnValueSuggester"})
+    @SuppressWarnings({"unused"})
     public static class AssignFieldViaArrayAdvice {
 
       @Advice.OnMethodEnter(inline = false)
@@ -90,7 +90,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule {
       }
     }
 
-    @SuppressWarnings({"unused", "CanIgnoreReturnValueSuggester"})
+    @SuppressWarnings({"unused"})
     public static class AssignArgumentViaReturnAdvice {
 
       @Advice.OnMethodEnter(inline = false)
@@ -100,7 +100,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule {
       }
     }
 
-    @SuppressWarnings({"unused", "CanIgnoreReturnValueSuggester"})
+    @SuppressWarnings({"unused"})
     public static class AssignArgumentViaArrayAdvice {
 
       @Advice.OnMethodEnter(inline = false)
@@ -110,7 +110,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule {
       }
     }
 
-    @SuppressWarnings({"unused", "CanIgnoreReturnValueSuggester"})
+    @SuppressWarnings({"unused"})
     public static class AssignReturnViaReturnAdvice {
 
       @Advice.OnMethodExit(inline = false)
@@ -120,7 +120,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule {
       }
     }
 
-    @SuppressWarnings({"unused", "CanIgnoreReturnValueSuggester"})
+    @SuppressWarnings({"unused"})
     public static class AssignReturnViaArrayAdvice {
 
       @Advice.OnMethodExit(inline = false)
@@ -130,7 +130,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule {
       }
     }
 
-    @SuppressWarnings({"unused", "CanIgnoreReturnValueSuggester"})
+    @SuppressWarnings({"unused"})
     public static class GetHelperClassAdvice {
 
       @Advice.OnMethodExit(inline = false)

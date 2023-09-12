@@ -82,7 +82,7 @@ public final class SupportabilityMetrics {
   }
 
   // this private method is designed for assignment of the return value
-  @SuppressWarnings("CanIgnoreReturnValueSuggester")
+  @SuppressWarnings("OtelCanIgnoreReturnValueSuggester")
   private SupportabilityMetrics start() {
     if (agentDebugEnabled) {
       ScheduledExecutorService executor =
