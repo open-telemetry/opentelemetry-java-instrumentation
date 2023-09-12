@@ -122,7 +122,9 @@ public final class ApacheHttpClientTelemetryBuilder {
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter, knownMethods))
+                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                    .setKnownMethods(knownMethods)
+                    .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)

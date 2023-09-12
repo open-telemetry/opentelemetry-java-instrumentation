@@ -31,8 +31,9 @@ public final class AsyncHttpClientSingletons {
         Instrumenter.<Request, Response>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(
-                    httpAttributesGetter, CommonConfig.get().getKnownHttpRequestMethods()))
+                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
                 HttpClientAttributesExtractor.builder(httpAttributesGetter)

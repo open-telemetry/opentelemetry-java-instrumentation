@@ -24,7 +24,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor
-import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
 import kotlinx.coroutines.withContext
 
@@ -39,13 +38,13 @@ class KtorServerTracing private constructor(
 
     internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE)
 
+    internal val httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE)
+
     internal var statusExtractor:
       (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse> = { a -> a }
 
     internal var spanKindExtractor:
       (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest> = { a -> a }
-
-    internal var knownMethods: Set<String> = HttpConstants.KNOWN_METHODS
 
     fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
       this.openTelemetry = openTelemetry
@@ -77,7 +76,7 @@ class KtorServerTracing private constructor(
 
     fun setKnownMethods(knownMethods: Set<String>) {
       httpAttributesExtractorBuilder.setKnownMethods(knownMethods)
-      this.knownMethods = HashSet(knownMethods)
+      httpSpanNameExtractorBuilder.setKnownMethods(knownMethods)
     }
 
     internal fun isOpenTelemetryInitialized(): Boolean = this::openTelemetry.isInitialized
@@ -116,7 +115,7 @@ class KtorServerTracing private constructor(
       val instrumenterBuilder = Instrumenter.builder<ApplicationRequest, ApplicationResponse>(
         configuration.openTelemetry,
         INSTRUMENTATION_NAME,
-        HttpSpanNameExtractor.create(httpAttributesGetter, configuration.knownMethods),
+        configuration.httpSpanNameExtractorBuilder.build()
       )
 
       configuration.additionalExtractors.forEach { instrumenterBuilder.addAttributesExtractor(it) }

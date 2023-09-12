@@ -120,7 +120,9 @@ public final class RestletTelemetryBuilder {
         Instrumenter.<Request, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter, knownMethods))
+                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                    .setKnownMethods(knownMethods)
+                    .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)

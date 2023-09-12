@@ -181,7 +181,7 @@ public final class RatpackTelemetryBuilder {
         Instrumenter.<Request, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributes, knownMethods))
+                HttpSpanNameExtractor.builder(httpAttributes).setKnownMethods(knownMethods).build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
             .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
@@ -200,7 +200,7 @@ public final class RatpackTelemetryBuilder {
         Instrumenter.<RequestSpec, HttpResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributes, knownMethods))
+                HttpSpanNameExtractor.builder(httpAttributes).setKnownMethods(knownMethods).build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
             .addAttributesExtractor(httpClientAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalHttpClientExtractors)

@@ -40,7 +40,9 @@ public final class RestletInstrumenterFactory {
         Instrumenter.<Request, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter, knownMethods))
+                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                    .setKnownMethods(knownMethods)
+                    .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpServerAttributesExtractor)
             .addAttributesExtractors(additionalExtractors)

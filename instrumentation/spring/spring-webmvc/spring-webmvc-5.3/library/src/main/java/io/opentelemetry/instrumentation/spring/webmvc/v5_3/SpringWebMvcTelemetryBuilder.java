@@ -139,7 +139,7 @@ public final class SpringWebMvcTelemetryBuilder {
         SpringWebMvcHttpAttributesGetter.INSTANCE;
 
     SpanNameExtractor<HttpServletRequest> originalSpanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesGetter, knownMethods);
+        HttpSpanNameExtractor.builder(httpAttributesGetter).setKnownMethods(knownMethods).build();
     SpanNameExtractor<? super HttpServletRequest> spanNameExtractor = originalSpanNameExtractor;
     if (spanNameExtractorTransformer != null) {
       spanNameExtractor = spanNameExtractorTransformer.apply(originalSpanNameExtractor);

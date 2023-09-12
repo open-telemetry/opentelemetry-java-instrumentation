@@ -30,8 +30,9 @@ public final class GrizzlySingletons {
         Instrumenter.<HttpRequestPacket, HttpResponsePacket>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.grizzly-2.3",
-                HttpSpanNameExtractor.create(
-                    httpAttributesGetter, CommonConfig.get().getKnownHttpRequestMethods()))
+                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
                 HttpServerAttributesExtractor.builder(httpAttributesGetter)

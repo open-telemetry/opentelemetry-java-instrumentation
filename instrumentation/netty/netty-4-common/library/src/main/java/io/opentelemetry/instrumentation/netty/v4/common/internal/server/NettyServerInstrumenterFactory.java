@@ -45,7 +45,9 @@ public final class NettyServerInstrumenterFactory {
         Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
                 openTelemetry,
                 instrumentationName,
-                HttpSpanNameExtractor.create(httpAttributesGetter, knownMethods))
+                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                    .setKnownMethods(knownMethods)
+                    .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(extractorBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get());

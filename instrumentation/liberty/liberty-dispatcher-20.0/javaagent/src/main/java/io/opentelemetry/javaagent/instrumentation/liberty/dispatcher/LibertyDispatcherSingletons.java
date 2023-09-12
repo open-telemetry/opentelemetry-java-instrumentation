@@ -29,8 +29,9 @@ public final class LibertyDispatcherSingletons {
         Instrumenter.<LibertyRequest, LibertyResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(
-                    httpAttributesGetter, CommonConfig.get().getKnownHttpRequestMethods()))
+                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
                 HttpServerAttributesExtractor.builder(httpAttributesGetter)

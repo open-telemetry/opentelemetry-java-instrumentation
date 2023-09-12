@@ -210,12 +210,16 @@ public final class ArmeriaTelemetryBuilder {
         Instrumenter.builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            HttpSpanNameExtractor.create(clientAttributesGetter, knownMethods));
+            HttpSpanNameExtractor.builder(clientAttributesGetter)
+                .setKnownMethods(knownMethods)
+                .build());
     InstrumenterBuilder<ServiceRequestContext, RequestLog> serverInstrumenterBuilder =
         Instrumenter.builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            HttpSpanNameExtractor.create(serverAttributesGetter, knownMethods));
+            HttpSpanNameExtractor.builder(serverAttributesGetter)
+                .setKnownMethods(knownMethods)
+                .build());
 
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
         .forEach(instrumenter -> instrumenter.addAttributesExtractors(additionalExtractors));

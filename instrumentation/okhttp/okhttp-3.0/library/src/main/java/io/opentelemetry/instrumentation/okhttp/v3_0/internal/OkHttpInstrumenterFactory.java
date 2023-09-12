@@ -48,7 +48,9 @@ public final class OkHttpInstrumenterFactory {
         Instrumenter.<Request, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter, knownMethods))
+                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                    .setKnownMethods(knownMethods)
+                    .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(extractorBuilder.build())
             .addAttributesExtractors(additionalAttributesExtractors)

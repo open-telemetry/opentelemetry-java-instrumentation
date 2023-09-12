@@ -10,7 +10,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
@@ -38,8 +37,7 @@ public class InstrumenterBenchmark {
       Instrumenter.<Void, Void>builder(
               OpenTelemetry.noop(),
               "benchmark",
-              HttpSpanNameExtractor.create(
-                  ConstantHttpAttributesGetter.INSTANCE, HttpConstants.KNOWN_METHODS))
+              HttpSpanNameExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
           .addAttributesExtractor(
               HttpClientAttributesExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
           .buildInstrumenter();

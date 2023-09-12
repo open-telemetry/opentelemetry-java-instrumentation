@@ -221,7 +221,7 @@ public final class SpringWebfluxTelemetryBuilder {
         Instrumenter.<ServerWebExchange, ServerWebExchange>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(getter, knownMethods))
+                HttpSpanNameExtractor.builder(getter).setKnownMethods(knownMethods).build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(getter))
             .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
             .addAttributesExtractors(serverAdditionalExtractors)

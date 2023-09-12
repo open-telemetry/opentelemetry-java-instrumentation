@@ -22,7 +22,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
@@ -48,10 +47,7 @@ final class TestInstrumenters {
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
     httpServerInstrumenter =
         Instrumenter.<String, Void>builder(
-                openTelemetry,
-                "test",
-                HttpSpanNameExtractor.create(
-                    HttpServerGetter.INSTANCE, HttpConstants.KNOWN_METHODS))
+                openTelemetry, "test", HttpSpanNameExtractor.create(HttpServerGetter.INSTANCE))
             // cover both semconv and span-kind strategies
             .addAttributesExtractor(HttpServerAttributesExtractor.create(HttpServerGetter.INSTANCE))
             .addAttributesExtractor(new SpanKeyAttributesExtractor(SpanKey.KIND_SERVER))
