@@ -44,7 +44,6 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testImplementation("org.springframework.boot:spring-boot-starter:1.5.17.RELEASE")
 
-  testImplementation("org.spockframework:spock-spring")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.elasticmq:elasticmq-rest-sqs_2.12:1.0.0")
 

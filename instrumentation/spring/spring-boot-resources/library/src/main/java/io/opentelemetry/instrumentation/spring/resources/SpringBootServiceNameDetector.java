@@ -259,7 +259,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   @Nullable
   private String loadFromClasspath(String filename, Function<InputStream, String> parser) {
     try (InputStream in = system.openClasspathResource(filename)) {
-      return parser.apply(in);
+      return in != null ? parser.apply(in) : null;
     } catch (Exception e) {
       return null;
     }
