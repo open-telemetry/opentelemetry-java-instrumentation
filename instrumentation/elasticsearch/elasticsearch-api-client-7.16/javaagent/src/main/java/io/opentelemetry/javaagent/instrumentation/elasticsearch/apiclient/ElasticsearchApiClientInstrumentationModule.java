@@ -23,7 +23,8 @@ public class ElasticsearchApiClientInstrumentationModule extends Instrumentation
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // Since Elasticsearch client version 8.10, the ES client comes with a native OTel instrumentation
+    // Since Elasticsearch client version 8.10, the ES client comes with a native OTel
+    // instrumentation
     // that introduced the class `co.elastic.clients.transport.instrumentation.Instrumentation`.
     // Disabling agent instrumentation for those cases.
     return not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation"));

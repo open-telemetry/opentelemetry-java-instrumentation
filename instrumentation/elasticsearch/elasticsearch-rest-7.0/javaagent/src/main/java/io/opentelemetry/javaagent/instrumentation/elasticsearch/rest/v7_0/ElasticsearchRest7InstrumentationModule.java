@@ -24,11 +24,12 @@ public class ElasticsearchRest7InstrumentationModule extends InstrumentationModu
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // Class `org.elasticsearch.client.RestClient$InternalRequest` introduced in 7.0.0.
-    // Since Elasticsearch client version 8.10, the ES client comes with a native OTel instrumentation
+    // Since Elasticsearch client version 8.10, the ES client comes with a native OTel
+    // instrumentation
     // that introduced the class `co.elastic.clients.transport.instrumentation.Instrumentation`.
     // Disabling agent instrumentation for those cases.
-    return hasClassesNamed("org.elasticsearch.client.RestClient$InternalRequest").and(
-        not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation")));
+    return hasClassesNamed("org.elasticsearch.client.RestClient$InternalRequest")
+        .and(not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation")));
   }
 
   @Override
