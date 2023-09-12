@@ -7,7 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.undertow;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -25,7 +27,7 @@ public final class UndertowSingletons {
   static {
     UndertowHttpAttributesGetter httpAttributesGetter = new UndertowHttpAttributesGetter();
 
-    INSTRUMENTER =
+    InstrumenterBuilder<HttpServerExchange, HttpServerExchange> builder =
         Instrumenter.<HttpServerExchange, HttpServerExchange>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -49,8 +51,11 @@ public final class UndertowSingletons {
                       .recordException()
                       .init(context);
                 })
-            .addOperationMetrics(HttpServerMetrics.get())
-            .buildServerInstrumenter(UndertowExchangeGetter.INSTANCE);
+            .addOperationMetrics(HttpServerMetrics.get());
+    if (CommonConfig.get().shouldEmitExperimentalHttpServerMetrics()) {
+      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+    }
+    INSTRUMENTER = builder.buildServerInstrumenter(UndertowExchangeGetter.INSTANCE);
   }
 
   private static final UndertowHelper HELPER = new UndertowHelper(INSTRUMENTER);

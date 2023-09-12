@@ -27,7 +27,7 @@ jobs:
   spotless:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -53,14 +53,14 @@ jobs:
   gradle-wrapper-validation:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: gradle/wrapper-validation-action@v1.1.0
 
   license-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -107,7 +107,7 @@ jobs:
   extra-dependency-management-enforcement:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Dependency check
         run: |
@@ -130,7 +130,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -196,7 +196,7 @@ jobs:
             vm: openj9
       fail-fast: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -318,7 +318,7 @@ jobs:
         run: git config --system core.longpaths true
         if: matrix.os == 'windows-latest'
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -375,7 +375,7 @@ jobs:
   gradle-plugins:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -396,7 +396,7 @@ jobs:
   examples:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh

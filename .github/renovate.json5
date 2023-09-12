@@ -30,6 +30,16 @@
       "groupName": "armeria packages"
     },
     {
+      // prevent update to 2.4-groovy-4.0-SNAPSHOT
+      "matchPackageNames": ["org.spockframework:spock-bom"],
+      "allowedVersions": "!/\\-SNAPSHOT$/"
+    },
+    {
+      // prevent 3.0.1u2 -> 3.0.1
+      "matchPackageNames": ["com.google.code.findbugs:annotations"],
+      "allowedVersions": "!/3\\.0\\.1$/"
+    },
+    {
       // OpenTelemetry SDK updates are handled by auto-update-otel-sdk.yml
       "matchPackagePrefixes": ["io.opentelemetry:"],
       "enabled": false
@@ -44,6 +54,12 @@
       // mockito 5+ requires Java 11+
       "matchPackagePrefixes": ["org.mockito:"],
       "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      // system-stubs-jupiter 2.1+ requires Java 11+
+      "matchPackageNames": ["uk.org.webcompere:system-stubs-jupiter"],
+      "matchUpdateTypes": ["major", "minor"],
       "enabled": false
     },
     {

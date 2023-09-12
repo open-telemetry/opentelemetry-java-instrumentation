@@ -67,5 +67,13 @@ tasks {
     check {
       dependsOn(testing.suites)
     }
+
+    val testStableSemconv by registering(Test::class) {
+      jvmArgs("-Dotel.semconv-stability.opt-in=http")
+    }
+
+    check {
+      dependsOn(testStableSemconv)
+    }
   }
 }

@@ -26,6 +26,7 @@ public class ExecutorsInstrumentationModule extends InstrumentationModule {
         new FutureInstrumentation(),
         new JavaExecutorInstrumentation(),
         new JavaForkJoinTaskInstrumentation(),
-        new RunnableInstrumentation());
+        new RunnableInstrumentation(),
+        new ThreadPoolExtendingExecutorInstrumentation());
   }
 }

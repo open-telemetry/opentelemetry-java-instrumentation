@@ -30,6 +30,14 @@ System.out.println();
 Thread.dumpStack();
 ```
 
+Byte Buddy can also output the modified class files to a directory which can be decompiled to see
+exactly what changes are taking place. Add the following to your JVM startup arguments with
+an existing target directory defined:
+
+```shell
+-Dnet.bytebuddy.dump=/some/path
+```
+
 ## Agent initialization code
 
 If you want to debug agent initialization code (e.g. `OpenTelemetryAgent`, `AgentInitializer`,

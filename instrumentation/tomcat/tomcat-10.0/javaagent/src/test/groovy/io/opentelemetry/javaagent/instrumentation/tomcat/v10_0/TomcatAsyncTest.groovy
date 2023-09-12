@@ -76,6 +76,13 @@ class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
     return "/tomcat-context"
   }
 
+  @Override
+  String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
+    "io.opentelemetry.servlet-5.0"
+  }
+
   protected void setupServlets(Context context) {
     def servlet = servlet()
 
