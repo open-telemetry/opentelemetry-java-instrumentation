@@ -35,5 +35,7 @@ abstract class AbstractHttpServerInstrumentationTest
           t != ServerEndpoint.EXCEPTION
       }
     )
+    // instrumentation does not create a span at all
+    options.disableTestNonStandardHttpMethod
   }
 }

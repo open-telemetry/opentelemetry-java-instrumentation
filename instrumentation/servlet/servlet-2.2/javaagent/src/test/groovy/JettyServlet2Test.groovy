@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -83,6 +84,9 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint, String method, @Nullable String route) {
+    if (method == HttpConstants._OTHER) {
+      return "TEST " + endpoint.resolvePath(address).path
+    }
     switch (endpoint) {
       case NOT_FOUND:
         return method

@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -82,12 +83,15 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   }
 
   @Override
-  String expectedHttpRoute(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    if (method == HttpConstants._OTHER) {
+      return endpoint.resolvePath(address).path
+    }
     switch (endpoint) {
       case NOT_FOUND:
         return getContextPath() + "/*"
       default:
-        return super.expectedHttpRoute(endpoint)
+        return super.expectedHttpRoute(endpoint, method)
     }
   }
 
@@ -147,7 +151,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     cleanup:
     ExperimentalSnippetHolder.setSnippet("")
 
-    def expectedRoute = expectedHttpRoute(HTML_SERVLET_OUTPUT_STREAM)
+    def expectedRoute = expectedHttpRoute(HTML_SERVLET_OUTPUT_STREAM, "GET")
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
@@ -190,7 +194,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     cleanup:
     ExperimentalSnippetHolder.setSnippet("")
 
-    def expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER)
+    def expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER, "GET")
     assertTraces(1) {
       trace(0, 2) {
         span(0) {

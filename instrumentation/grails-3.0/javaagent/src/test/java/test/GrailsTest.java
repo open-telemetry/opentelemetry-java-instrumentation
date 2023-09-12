@@ -19,6 +19,7 @@ import grails.boot.GrailsApp;
 import grails.boot.config.GrailsAutoConfiguration;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -64,6 +65,7 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     options.setHasErrorPageSpans(
         endpoint -> endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND);
     options.setTestPathParam(true);
+    options.setResponseCodeOnNonStandardHttpMethod(501);
   }
 
   @SpringBootApplication
@@ -106,7 +108,10 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
   }
 
   @Override
-  public String expectedHttpRoute(ServerEndpoint endpoint) {
+  public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    if (HttpConstants._OTHER.equals(method)) {
+      return getContextPath() + "/*";
+    }
     if (PATH_PARAM.equals(endpoint)) {
       return getContextPath() + "/test/path";
     } else if (QUERY_PARAM.equals(endpoint)) {

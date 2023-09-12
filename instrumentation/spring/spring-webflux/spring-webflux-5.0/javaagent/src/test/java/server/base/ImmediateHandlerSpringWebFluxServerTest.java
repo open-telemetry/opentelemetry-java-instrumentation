@@ -72,6 +72,6 @@ public class ImmediateHandlerSpringWebFluxServerTest extends HandlerSpringWebFlu
     assertThat(response.contentUtf8()).isEqualTo(NESTED_PATH.getBody());
     assertResponseHasCustomizedHeaders(response, NESTED_PATH, null);
 
-    assertTheTraces(1, null, null, null, method, NESTED_PATH, response);
+    assertTheTraces(1, null, null, null, method, NESTED_PATH);
   }
 }

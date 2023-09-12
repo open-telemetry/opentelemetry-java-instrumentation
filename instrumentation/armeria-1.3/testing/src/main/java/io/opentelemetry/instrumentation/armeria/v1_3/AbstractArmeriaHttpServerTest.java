@@ -178,13 +178,13 @@ public abstract class AbstractArmeriaHttpServerTest extends AbstractHttpServerTe
   @Override
   protected void configure(HttpServerTestOptions options) {
     options.setExpectedHttpRoute(
-        endpoint -> {
+        (endpoint, method) -> {
           if (endpoint == ServerEndpoint.NOT_FOUND) {
             // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
             // currently reports '/*' which is a fallback route.
             return "/*";
           }
-          return expectedHttpRoute(endpoint);
+          return expectedHttpRoute(endpoint, method);
         });
 
     options.setTestPathParam(true);

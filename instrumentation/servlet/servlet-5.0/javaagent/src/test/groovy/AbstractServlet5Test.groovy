@@ -4,11 +4,13 @@
  */
 
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import jakarta.servlet.Servlet
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED
@@ -91,12 +93,19 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   }
 
   @Override
-  String expectedHttpRoute(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    // no need to compute route if we're not expecting it
+    if (!httpAttributes(endpoint).contains(SemanticAttributes.HTTP_ROUTE)) {
+      return null
+    }
+    if (method == HttpConstants._OTHER) {
+      return endpoint.resolvePath(address).path
+    }
     switch (endpoint) {
       case NOT_FOUND:
         return getContextPath() + "/*"
       default:
-        return super.expectedHttpRoute(endpoint)
+        return super.expectedHttpRoute(endpoint, method)
     }
   }
 
@@ -147,7 +156,7 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     cleanup:
     ExperimentalSnippetHolder.setSnippet("")
 
-    def expectedRoute = expectedHttpRoute(HTML_SERVLET_OUTPUT_STREAM)
+    def expectedRoute = expectedHttpRoute(HTML_SERVLET_OUTPUT_STREAM, "GET")
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
@@ -190,7 +199,7 @@ abstract class AbstractServlet5Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     cleanup:
     ExperimentalSnippetHolder.setSnippet("")
 
-    def expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER)
+    def expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER, "GET")
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
