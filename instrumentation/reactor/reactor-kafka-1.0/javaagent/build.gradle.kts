@@ -76,7 +76,7 @@ testing {
       targets {
         all {
           testTask.configure {
-            systemProperty("hasConsumerGroupAndId", true)
+            systemProperty("hasConsumerGroup", true)
           }
         }
       }

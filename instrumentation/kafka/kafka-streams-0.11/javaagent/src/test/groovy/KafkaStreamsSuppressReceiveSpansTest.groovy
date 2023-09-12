@@ -118,7 +118,6 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
             "asdf" "testing"
             if (Boolean.getBoolean("testLatestDeps")) {
               "$SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test-application"
-              "$SemanticAttributes.MESSAGING_CONSUMER_ID" { it.startsWith("test-application - ") }
             }
           }
         }
@@ -154,7 +153,6 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
             if (Boolean.getBoolean("testLatestDeps")) {
               "$SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test"
-              "$SemanticAttributes.MESSAGING_CONSUMER_ID" { it.startsWith("test - consumer") }
             }
             "kafka.record.queue_time_ms" { it >= 0 }
             "testing" 123
