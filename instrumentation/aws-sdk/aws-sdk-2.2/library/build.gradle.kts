@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
+  implementation("commons-io:commons-io")
 
   library("software.amazon.awssdk:aws-core:2.2.0")
   library("software.amazon.awssdk:sqs:2.2.0")
@@ -47,5 +48,6 @@ tasks {
     // set the value directly (the "library" does not normally query it, only library-autoconfigure)
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
     systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", true)
+    systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", true)
   }
 }

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.DYNAMODB;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -15,8 +16,15 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.SemanticAttributes;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
+import org.apache.commons.io.IOUtils;
 import software.amazon.awssdk.auth.signer.AwsSignerExecutionAttribute;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.ClientType;
@@ -49,6 +57,11 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter;
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
+  private static final Logger logger = Logger.getLogger(PluginImplUtil.class.getName());
+
+  static final AttributeKey<String> HTTP_ERROR_MSG =
+      AttributeKey.stringKey("aws.http.error_message");
+  static final String HTTP_FAILURE_EVENT = "HTTP request failure";
 
   Instrumenter<ExecutionAttributes, SdkHttpResponse> getConsumerInstrumenter() {
     return consumerInstrumenter;
@@ -65,6 +78,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   @Nullable private final TextMapPropagator messagingPropagator;
   private final boolean useXrayPropagator;
+  private final boolean recordIndividualHttpError;
   private final FieldMapper fieldMapper;
 
   TracingExecutionInterceptor(
@@ -72,12 +86,14 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter,
       boolean captureExperimentalSpanAttributes,
       TextMapPropagator messagingPropagator,
-      boolean useXrayPropagator) {
+      boolean useXrayPropagator,
+      boolean recordIndividualHttpError) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerInstrumenter = consumerInstrumenter;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingPropagator = messagingPropagator;
     this.useXrayPropagator = useXrayPropagator;
+    this.recordIndividualHttpError = recordIndividualHttpError;
     this.fieldMapper = new FieldMapper();
   }
 
@@ -285,6 +301,40 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       AwsSdkRequest sdkRequest = executionAttributes.getAttribute(AWS_SDK_REQUEST_ATTRIBUTE);
       if (sdkRequest != null) {
         fieldMapper.mapToAttributes(response, sdkRequest, span);
+      }
+    }
+  }
+
+  @Override
+  public void afterTransmission(
+      Context.AfterTransmission context, ExecutionAttributes executionAttributes) {
+    if (!recordIndividualHttpError) {
+      return;
+    }
+
+    io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
+    if (otelContext != null) {
+      Span span = Span.fromContext(otelContext);
+      SdkHttpResponse response = context.httpResponse();
+
+      if (!response.isSuccessful()) {
+        int errorCode = response.statusCode();
+        // we want to record the error message from http response
+        Optional<InputStream> responseBody = context.responseBody();
+        if (responseBody.isPresent()) {
+          try {
+            String errorMsg = IOUtils.toString(responseBody.get(), StandardCharsets.UTF_8);
+            Attributes attributes =
+                Attributes.of(
+                    SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
+                    Long.valueOf(errorCode),
+                    HTTP_ERROR_MSG,
+                    errorMsg);
+            span.addEvent(HTTP_FAILURE_EVENT, attributes);
+          } catch (IOException ex) {
+            logger.log(Level.FINE, "Failed to read the response", ex);
+          }
+        }
       }
     }
   }
