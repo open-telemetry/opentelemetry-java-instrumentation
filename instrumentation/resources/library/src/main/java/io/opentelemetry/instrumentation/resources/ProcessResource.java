@@ -105,7 +105,7 @@ public final class ProcessResource {
       }
     }
 
-    return Resource.create(attributes.build(), ResourceAttributes.SCHEMA_URL);
+    return Resource.create(attributes.build(), ResourceConstants.SCHEMA_URL);
   }
 
   private ProcessResource() {}

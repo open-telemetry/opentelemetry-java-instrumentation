@@ -25,7 +25,7 @@ class HostResourceTest {
     Attributes attributes = resource.getAttributes();
 
     // then
-    assertThat(resource.getSchemaUrl()).isEqualTo(ResourceAttributes.SCHEMA_URL);
+    assertThat(resource.getSchemaUrl()).isEqualTo(ResourceConstants.SCHEMA_URL);
     assertThat(attributes.get(ResourceAttributes.HOST_NAME)).isNotBlank();
     assertThat(attributes.get(ResourceAttributes.HOST_ARCH)).isNotBlank();
   }

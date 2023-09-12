@@ -8,7 +8,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.29.0"
+val otelSdkVersion = "1.30.1"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -38,7 +38,7 @@ val DEPENDENCY_BOMS = listOf(
 )
 
 val autoServiceVersion = "1.1.1"
-val autoValueVersion = "1.10.3"
+val autoValueVersion = "1.10.4"
 val errorProneVersion = "2.21.1"
 val byteBuddyVersion = "1.14.7"
 val asmVersion = "9.5"
