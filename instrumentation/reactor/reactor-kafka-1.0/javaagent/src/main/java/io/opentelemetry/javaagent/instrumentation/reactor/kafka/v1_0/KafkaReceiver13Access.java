@@ -12,7 +12,7 @@ import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverRecord;
 import reactor.kafka.sender.TransactionManager;
 
-final class KafkaReceiver133Access {
+final class KafkaReceiver13Access {
 
   @NoMuzzle
   static <K, V> Flux<ReceiverRecord<K, V>> receive(KafkaReceiver<K, V> receiver, Integer prefetch) {
@@ -37,5 +37,16 @@ final class KafkaReceiver133Access {
     return receiver.receiveExactlyOnce(transactionManager, prefetch);
   }
 
-  private KafkaReceiver133Access() {}
+  @NoMuzzle
+  static <K, V> Flux<Flux<ReceiverRecord<K, V>>> receiveBatch(
+      KafkaReceiver<K, V> receiver, Integer prefetch) {
+    return receiver.receiveBatch(prefetch);
+  }
+
+  @NoMuzzle
+  static <K, V> Flux<Flux<ReceiverRecord<K, V>>> receiveBatch(KafkaReceiver<K, V> receiver) {
+    return receiver.receiveBatch();
+  }
+
+  private KafkaReceiver13Access() {}
 }
