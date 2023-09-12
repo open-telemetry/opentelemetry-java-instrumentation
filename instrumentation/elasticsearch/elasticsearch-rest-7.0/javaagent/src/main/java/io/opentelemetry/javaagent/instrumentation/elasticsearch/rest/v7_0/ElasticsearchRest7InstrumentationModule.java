@@ -22,7 +22,7 @@ public class ElasticsearchRest7InstrumentationModule extends InstrumentationModu
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // class introduced in 7.0.0
+    // Class `org.elasticsearch.client.RestClient$InternalRequest` introduced in 7.0.0.
     return hasClassesNamed("org.elasticsearch.client.RestClient$InternalRequest");
   }
 
