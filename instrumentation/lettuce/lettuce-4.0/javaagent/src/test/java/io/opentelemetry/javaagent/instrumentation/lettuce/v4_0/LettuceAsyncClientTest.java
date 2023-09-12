@@ -187,7 +187,7 @@ class LettuceAsyncClientTest {
     Consumer<String> consumer =
         res -> {
           testing.runWithSpan("callback", () -> assertThat(res).isEqualTo("TESTVAL"));
-          future.complete("complete");
+          future.complete(res);
         };
 
     testing.runWithSpan(
@@ -197,7 +197,7 @@ class LettuceAsyncClientTest {
           redisFuture.thenAccept(consumer);
         });
 
-    await().untilAsserted(() -> assertThat(future).isCompleted());
+    await().untilAsserted(() -> assertThat(future).isCompletedWithValue("TESTVAL"));
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
