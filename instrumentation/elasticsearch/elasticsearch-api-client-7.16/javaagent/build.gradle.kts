@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("co.elastic.clients")
     module.set("elasticsearch-java")
-    versions.set("[7.16,8.10)")
+    versions.set("[7.16,8.10)") // 8.10+ has native, on-by-default opentelemetry instrumentation
     assertInverse.set(true)
   }
 }
