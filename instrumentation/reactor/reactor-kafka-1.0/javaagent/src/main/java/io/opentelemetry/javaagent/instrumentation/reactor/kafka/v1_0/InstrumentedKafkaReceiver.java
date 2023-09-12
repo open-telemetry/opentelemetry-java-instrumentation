@@ -25,7 +25,7 @@ public final class InstrumentedKafkaReceiver<K, V> implements KafkaReceiver<K, V
   // added in 1.3.3
   @Override
   public Flux<ReceiverRecord<K, V>> receive(Integer prefetch) {
-    return wrap(KafkaReceiver133Access.receive(actual, prefetch));
+    return wrap(KafkaReceiver13Access.receive(actual, prefetch));
   }
 
   @Override
@@ -36,7 +36,7 @@ public final class InstrumentedKafkaReceiver<K, V> implements KafkaReceiver<K, V
   // added in 1.3.3
   @Override
   public Flux<Flux<ConsumerRecord<K, V>>> receiveAutoAck(Integer prefetch) {
-    return KafkaReceiver133Access.receiveAutoAck(actual, prefetch)
+    return KafkaReceiver13Access.receiveAutoAck(actual, prefetch)
         .map(InstrumentedKafkaReceiver::wrap);
   }
 
@@ -48,7 +48,7 @@ public final class InstrumentedKafkaReceiver<K, V> implements KafkaReceiver<K, V
   // added in 1.3.3
   @Override
   public Flux<ConsumerRecord<K, V>> receiveAtmostOnce(Integer prefetch) {
-    return wrap(KafkaReceiver133Access.receiveAtmostOnce(actual, prefetch));
+    return wrap(KafkaReceiver13Access.receiveAtmostOnce(actual, prefetch));
   }
 
   @Override
@@ -66,13 +66,26 @@ public final class InstrumentedKafkaReceiver<K, V> implements KafkaReceiver<K, V
   @Override
   public Flux<Flux<ConsumerRecord<K, V>>> receiveExactlyOnce(
       TransactionManager transactionManager, Integer prefetch) {
-    return KafkaReceiver133Access.receiveExactlyOnce(actual, transactionManager, prefetch)
+    return KafkaReceiver13Access.receiveExactlyOnce(actual, transactionManager, prefetch)
         .map(InstrumentedKafkaReceiver::wrap);
   }
 
   @Override
   public <T> Mono<T> doOnConsumer(Function<Consumer<K, V>, ? extends T> function) {
     return actual.doOnConsumer(function);
+  }
+
+  // added in 1.3.21
+  @Override
+  public Flux<Flux<ReceiverRecord<K, V>>> receiveBatch(Integer prefetch) {
+    return KafkaReceiver13Access.receiveBatch(actual, prefetch)
+        .map(InstrumentedKafkaReceiver::wrap);
+  }
+
+  // added in 1.3.21
+  @Override
+  public Flux<Flux<ReceiverRecord<K, V>>> receiveBatch() {
+    return KafkaReceiver13Access.receiveBatch(actual).map(InstrumentedKafkaReceiver::wrap);
   }
 
   private static <K, V, R extends ConsumerRecord<K, V>> Flux<R> wrap(Flux<R> flux) {
