@@ -5,14 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createStableDurationHistogram;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyOldServerDurationView;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyStableServerDurationView;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createStableDurationHistogramBuilder;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -52,19 +51,22 @@ public final class HttpServerMetrics implements OperationListener {
 
   private HttpServerMetrics(Meter meter) {
     if (SemconvStability.emitStableHttpSemconv()) {
-      stableDuration =
-          createStableDurationHistogram(
+      DoubleHistogramBuilder stableDurationBuilder =
+          createStableDurationHistogramBuilder(
               meter, "http.server.request.duration", "The duration of the inbound HTTP request");
+      HttpMetricsAdvice.applyStableServerDurationAdvice(stableDurationBuilder);
+      stableDuration = stableDurationBuilder.build();
     } else {
       stableDuration = null;
     }
     if (SemconvStability.emitOldHttpSemconv()) {
-      oldDuration =
+      DoubleHistogramBuilder oldDurationBuilder =
           meter
               .histogramBuilder("http.server.duration")
               .setUnit("ms")
-              .setDescription("The duration of the inbound HTTP request")
-              .build();
+              .setDescription("The duration of the inbound HTTP request");
+      HttpMetricsAdvice.applyOldServerDurationAdvice(oldDurationBuilder);
+      oldDuration = oldDurationBuilder.build();
     } else {
       oldDuration = null;
     }
@@ -88,18 +90,14 @@ public final class HttpServerMetrics implements OperationListener {
       return;
     }
 
+    Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
+
     if (stableDuration != null) {
-      Attributes stableDurationAttributes =
-          applyStableServerDurationView(state.startAttributes(), endAttributes);
-      stableDuration.record(
-          (endNanos - state.startTimeNanos()) / NANOS_PER_S, stableDurationAttributes, context);
+      stableDuration.record((endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
     }
 
     if (oldDuration != null) {
-      Attributes stableDurationAttributes =
-          applyOldServerDurationView(state.startAttributes(), endAttributes);
-      oldDuration.record(
-          (endNanos - state.startTimeNanos()) / NANOS_PER_MS, stableDurationAttributes, context);
+      oldDuration.record((endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
     }
   }
 

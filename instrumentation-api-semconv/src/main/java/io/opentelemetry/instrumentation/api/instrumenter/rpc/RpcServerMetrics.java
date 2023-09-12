@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.rpc.MetricsView.applyServerView;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -36,12 +36,13 @@ public final class RpcServerMetrics implements OperationListener {
   private final DoubleHistogram serverDurationHistogram;
 
   private RpcServerMetrics(Meter meter) {
-    serverDurationHistogram =
+    DoubleHistogramBuilder durationBuilder =
         meter
             .histogramBuilder("rpc.server.duration")
             .setDescription("The duration of an inbound RPC invocation")
-            .setUnit("ms")
-            .build();
+            .setUnit("ms");
+    RpcMetricsAdvice.applyServerDurationAdvice(durationBuilder);
+    serverDurationHistogram = durationBuilder.build();
   }
 
   /**
@@ -72,7 +73,7 @@ public final class RpcServerMetrics implements OperationListener {
     }
     serverDurationHistogram.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
-        applyServerView(state.startAttributes(), endAttributes),
+        state.startAttributes().toBuilder().putAll(endAttributes).build(),
         context);
   }
 
