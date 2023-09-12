@@ -29,7 +29,8 @@ public final class AkkaHttpServerSingletons {
         Instrumenter.<HttpRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 AkkaHttpUtil.instrumentationName(),
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.create(
+                    httpAttributesGetter, CommonConfig.get().getKnownHttpRequestMethods()))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
                 HttpServerAttributesExtractor.builder(httpAttributesGetter)

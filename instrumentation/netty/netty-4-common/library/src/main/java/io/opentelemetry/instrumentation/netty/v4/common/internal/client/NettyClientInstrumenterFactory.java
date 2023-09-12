@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionReq
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -57,7 +58,8 @@ public final class NettyClientInstrumenterFactory {
       Consumer<HttpClientAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse>>
           extractorConfigurer,
       List<AttributesExtractor<HttpRequestAndChannel, HttpResponse>>
-          additionalHttpAttributeExtractors) {
+          additionalHttpAttributeExtractors,
+      Set<String> knownMethods) {
     NettyHttpClientAttributesGetter httpAttributesGetter = new NettyHttpClientAttributesGetter();
 
     HttpClientAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse> extractorBuilder =
@@ -68,7 +70,7 @@ public final class NettyClientInstrumenterFactory {
         Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
                 openTelemetry,
                 instrumentationName,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.create(httpAttributesGetter, knownMethods))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(extractorBuilder.build())
             .addAttributesExtractor(

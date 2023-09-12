@@ -27,7 +27,8 @@ public final class VertxClientInstrumenterFactory {
         Instrumenter.<HttpClientRequest, HttpClientResponse>builder(
                 GlobalOpenTelemetry.get(),
                 instrumentationName,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.create(
+                    httpAttributesGetter, CommonConfig.get().getKnownHttpRequestMethods()))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
                 HttpClientAttributesExtractor.builder(httpAttributesGetter)

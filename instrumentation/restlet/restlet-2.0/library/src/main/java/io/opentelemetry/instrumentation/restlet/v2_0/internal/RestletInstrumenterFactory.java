@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.List;
+import java.util.Set;
 import org.restlet.Request;
 import org.restlet.Response;
 
@@ -30,6 +31,7 @@ public final class RestletInstrumenterFactory {
       OpenTelemetry openTelemetry,
       AttributesExtractor<Request, Response> httpServerAttributesExtractor,
       List<AttributesExtractor<Request, Response>> additionalExtractors,
+      Set<String> knownMethods,
       boolean emitExperimentalHttpServerMetrics) {
 
     RestletHttpAttributesGetter httpAttributesGetter = RestletHttpAttributesGetter.INSTANCE;
@@ -38,7 +40,7 @@ public final class RestletInstrumenterFactory {
         Instrumenter.<Request, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.create(httpAttributesGetter, knownMethods))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpServerAttributesExtractor)
             .addAttributesExtractors(additionalExtractors)

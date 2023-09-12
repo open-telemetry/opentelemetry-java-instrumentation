@@ -31,7 +31,8 @@ public final class UndertowSingletons {
         Instrumenter.<HttpServerExchange, HttpServerExchange>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.create(
+                    httpAttributesGetter, CommonConfig.get().getKnownHttpRequestMethods()))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
                 HttpServerAttributesExtractor.builder(httpAttributesGetter)

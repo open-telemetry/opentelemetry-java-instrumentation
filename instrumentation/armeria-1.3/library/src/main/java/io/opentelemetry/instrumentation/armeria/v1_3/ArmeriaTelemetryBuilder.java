@@ -26,9 +26,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaHttpClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -43,6 +45,7 @@ public final class ArmeriaTelemetryBuilder {
   @Nullable private String peerService;
   private boolean emitExperimentalHttpClientMetrics = false;
   private boolean emitExperimentalHttpServerMetrics = false;
+  private Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
 
   private final List<AttributesExtractor<? super RequestContext, ? super RequestLog>>
       additionalExtractors = new ArrayList<>();
@@ -167,6 +170,7 @@ public final class ArmeriaTelemetryBuilder {
   public ArmeriaTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     httpClientAttributesExtractorBuilder.setKnownMethods(knownMethods);
     httpServerAttributesExtractorBuilder.setKnownMethods(knownMethods);
+    this.knownMethods = new HashSet<>(knownMethods);
     return this;
   }
 
@@ -206,12 +210,12 @@ public final class ArmeriaTelemetryBuilder {
         Instrumenter.builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            HttpSpanNameExtractor.create(clientAttributesGetter));
+            HttpSpanNameExtractor.create(clientAttributesGetter, knownMethods));
     InstrumenterBuilder<ServiceRequestContext, RequestLog> serverInstrumenterBuilder =
         Instrumenter.builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            HttpSpanNameExtractor.create(serverAttributesGetter));
+            HttpSpanNameExtractor.create(serverAttributesGetter, knownMethods));
 
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
         .forEach(instrumenter -> instrumenter.addAttributesExtractors(additionalExtractors));

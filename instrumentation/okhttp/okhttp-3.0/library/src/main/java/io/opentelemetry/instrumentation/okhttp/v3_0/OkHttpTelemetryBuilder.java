@@ -9,8 +9,10 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpInstrumenterFactory;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -25,6 +27,7 @@ public final class OkHttpTelemetryBuilder {
       new ArrayList<>();
   private Consumer<HttpClientAttributesExtractorBuilder<Request, Response>> extractorConfigurer =
       builder -> {};
+  private Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
   private boolean emitExperimentalHttpClientMetrics = false;
 
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -83,6 +86,7 @@ public final class OkHttpTelemetryBuilder {
   public OkHttpTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     extractorConfigurer =
         extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
+    this.knownMethods = new HashSet<>(knownMethods);
     return this;
   }
 
@@ -108,6 +112,7 @@ public final class OkHttpTelemetryBuilder {
             openTelemetry,
             extractorConfigurer,
             additionalExtractors,
+            knownMethods,
             emitExperimentalHttpClientMetrics),
         openTelemetry.getPropagators());
   }

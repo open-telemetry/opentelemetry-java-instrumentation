@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -30,20 +31,26 @@ class HttpSpanNameExtractorTest {
   void routeAndMethod() {
     when(serverGetter.getHttpRoute(anyMap())).thenReturn("/cats/{id}");
     when(serverGetter.getHttpRequestMethod(anyMap())).thenReturn("GET");
-    assertThat(HttpSpanNameExtractor.create(serverGetter).extract(Collections.emptyMap()))
+    assertThat(
+            HttpSpanNameExtractor.create(serverGetter, HttpConstants.KNOWN_METHODS)
+                .extract(Collections.emptyMap()))
         .isEqualTo("GET /cats/{id}");
   }
 
   @Test
   void method() {
     when(clientGetter.getHttpRequestMethod(anyMap())).thenReturn("GET");
-    assertThat(HttpSpanNameExtractor.create(clientGetter).extract(Collections.emptyMap()))
+    assertThat(
+            HttpSpanNameExtractor.create(clientGetter, HttpConstants.KNOWN_METHODS)
+                .extract(Collections.emptyMap()))
         .isEqualTo("GET");
   }
 
   @Test
   void nothing() {
-    assertThat(HttpSpanNameExtractor.create(clientGetter).extract(Collections.emptyMap()))
+    assertThat(
+            HttpSpanNameExtractor.create(clientGetter, HttpConstants.KNOWN_METHODS)
+                .extract(Collections.emptyMap()))
         .isEqualTo("HTTP");
   }
 }

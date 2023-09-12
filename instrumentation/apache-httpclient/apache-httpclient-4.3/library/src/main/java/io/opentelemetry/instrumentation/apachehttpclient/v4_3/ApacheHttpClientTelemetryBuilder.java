@@ -17,7 +17,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperime
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.http.HttpResponse;
@@ -35,6 +37,7 @@ public final class ApacheHttpClientTelemetryBuilder {
       httpAttributesExtractorBuilder =
           HttpClientAttributesExtractor.builder(ApacheHttpClientHttpAttributesGetter.INSTANCE);
   private boolean emitExperimentalHttpClientMetrics = false;
+  private Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
 
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -90,6 +93,7 @@ public final class ApacheHttpClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
+    this.knownMethods = new HashSet<>(knownMethods);
     return this;
   }
 
@@ -118,7 +122,7 @@ public final class ApacheHttpClientTelemetryBuilder {
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.create(httpAttributesGetter, knownMethods))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)

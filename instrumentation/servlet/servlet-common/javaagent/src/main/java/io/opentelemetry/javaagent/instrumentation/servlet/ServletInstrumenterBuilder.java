@@ -87,7 +87,8 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
     HttpServerAttributesGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
         httpAttributesGetter = new ServletHttpAttributesGetter<>(accessor);
     SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesGetter);
+        HttpSpanNameExtractor.create(
+            httpAttributesGetter, CommonConfig.get().getKnownHttpRequestMethods());
 
     return build(instrumentationName, accessor, spanNameExtractor, httpAttributesGetter);
   }

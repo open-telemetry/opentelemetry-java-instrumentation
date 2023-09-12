@@ -30,6 +30,7 @@ public class JettyHttpClientSingletons {
               PeerServiceAttributesExtractor.create(
                   JettyClientHttpAttributesGetter.INSTANCE,
                   CommonConfig.get().getPeerServiceMapping())),
+          CommonConfig.get().getKnownHttpRequestMethods(),
           CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
 
   public static Instrumenter<Request, Response> instrumenter() {

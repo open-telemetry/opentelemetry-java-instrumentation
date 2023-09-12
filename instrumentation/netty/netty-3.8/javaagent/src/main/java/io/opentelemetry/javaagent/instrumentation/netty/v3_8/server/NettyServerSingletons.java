@@ -31,7 +31,8 @@ final class NettyServerSingletons {
         Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.netty-3.8",
-                HttpSpanNameExtractor.create(httpServerAttributesGetter))
+                HttpSpanNameExtractor.create(
+                    httpServerAttributesGetter, CommonConfig.get().getKnownHttpRequestMethods()))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpServerAttributesGetter))
             .addAttributesExtractor(
                 HttpServerAttributesExtractor.builder(httpServerAttributesGetter)

@@ -28,6 +28,7 @@ public final class RestletSingletons {
               .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
               .build(),
           Collections.emptyList(),
+          CommonConfig.get().getKnownHttpRequestMethods(),
           CommonConfig.get().shouldEmitExperimentalHttpServerMetrics());
 
   public static Instrumenter<Request, Response> instrumenter() {

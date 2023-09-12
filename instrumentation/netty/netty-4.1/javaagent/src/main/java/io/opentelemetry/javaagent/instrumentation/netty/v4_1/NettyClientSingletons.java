@@ -56,7 +56,8 @@ public final class NettyClientSingletons {
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-            Collections.emptyList());
+            Collections.emptyList(),
+            CommonConfig.get().getKnownHttpRequestMethods());
     CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter();
     SSL_INSTRUMENTER = factory.createSslInstrumenter();
   }

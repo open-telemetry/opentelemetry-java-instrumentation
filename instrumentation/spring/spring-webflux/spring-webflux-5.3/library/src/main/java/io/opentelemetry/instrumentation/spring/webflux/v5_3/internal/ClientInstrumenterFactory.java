@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -37,6 +38,7 @@ public final class ClientInstrumenterFactory {
       Consumer<HttpClientAttributesExtractorBuilder<ClientRequest, ClientResponse>>
           extractorConfigurer,
       List<AttributesExtractor<ClientRequest, ClientResponse>> additionalExtractors,
+      Set<String> knownMethods,
       boolean captureExperimentalSpanAttributes,
       boolean emitExperimentalHttpClientMetrics) {
 
@@ -50,7 +52,7 @@ public final class ClientInstrumenterFactory {
         Instrumenter.<ClientRequest, ClientResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.create(httpAttributesGetter, knownMethods))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(extractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)

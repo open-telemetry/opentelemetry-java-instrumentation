@@ -36,6 +36,7 @@ public final class OkHttp3Singletons {
           singletonList(
               PeerServiceAttributesExtractor.create(
                   OkHttpAttributesGetter.INSTANCE, CommonConfig.get().getPeerServiceMapping())),
+          CommonConfig.get().getKnownHttpRequestMethods(),
           CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
 
   public static final Interceptor CONTEXT_INTERCEPTOR =

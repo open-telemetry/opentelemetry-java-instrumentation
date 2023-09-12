@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -32,6 +33,7 @@ public final class JettyClientInstrumenterFactory {
       OpenTelemetry openTelemetry,
       Consumer<HttpClientAttributesExtractorBuilder<Request, Response>> extractorConfigurer,
       List<AttributesExtractor<? super Request, ? super Response>> additionalExtractors,
+      Set<String> knownMethods,
       boolean emitExperimentalHttpClientMetrics) {
 
     JettyClientHttpAttributesGetter httpAttributesGetter = JettyClientHttpAttributesGetter.INSTANCE;
@@ -44,7 +46,7 @@ public final class JettyClientInstrumenterFactory {
         Instrumenter.<Request, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.create(httpAttributesGetter, knownMethods))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)

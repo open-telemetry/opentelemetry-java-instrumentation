@@ -33,7 +33,8 @@ public final class TomcatInstrumenterFactory {
         Instrumenter.<Request, Response>builder(
                 GlobalOpenTelemetry.get(),
                 instrumentationName,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.create(
+                    httpAttributesGetter, CommonConfig.get().getKnownHttpRequestMethods()))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor))
             .addAttributesExtractor(

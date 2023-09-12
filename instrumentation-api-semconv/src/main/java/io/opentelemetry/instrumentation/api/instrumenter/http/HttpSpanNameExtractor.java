@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import java.util.HashSet;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -21,14 +24,23 @@ public final class HttpSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
    * will be examined to determine the name of the span.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
+      HttpCommonAttributesGetter<REQUEST, ?> getter, Set<String> knownMethods) {
+    return new HttpSpanNameExtractor<>(getter, knownMethods);
+  }
+
+  @Deprecated
+  public static <REQUEST> SpanNameExtractor<REQUEST> create(
       HttpCommonAttributesGetter<REQUEST, ?> getter) {
-    return new HttpSpanNameExtractor<>(getter);
+    return new HttpSpanNameExtractor<>(getter, HttpConstants.KNOWN_METHODS);
   }
 
   private final HttpCommonAttributesGetter<REQUEST, ?> getter;
+  private final Set<String> knownMethods;
 
-  private HttpSpanNameExtractor(HttpCommonAttributesGetter<REQUEST, ?> getter) {
+  private HttpSpanNameExtractor(
+      HttpCommonAttributesGetter<REQUEST, ?> getter, Set<String> knownMethods) {
     this.getter = getter;
+    this.knownMethods = new HashSet<>(knownMethods);
   }
 
   @Override
@@ -36,6 +48,9 @@ public final class HttpSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
     String method = getter.getHttpRequestMethod(request);
     String route = extractRoute(request);
     if (method != null) {
+      if (!knownMethods.contains(method)) {
+        method = "HTTP";
+      }
       return route == null ? method : method + " " + route;
     }
     return "HTTP";

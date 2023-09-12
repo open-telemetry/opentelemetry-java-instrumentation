@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtr
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -33,6 +34,7 @@ public final class JavaHttpClientInstrumenterFactory {
       Consumer<HttpClientAttributesExtractorBuilder<HttpRequest, HttpResponse<?>>>
           extractorConfigurer,
       List<AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>>> additionalExtractors,
+      Set<String> knownMethods,
       boolean emitExperimentalHttpClientMetrics) {
 
     JavaHttpClientAttributesGetter httpAttributesGetter = JavaHttpClientAttributesGetter.INSTANCE;
@@ -46,7 +48,7 @@ public final class JavaHttpClientInstrumenterFactory {
         Instrumenter.<HttpRequest, HttpResponse<?>>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.create(httpAttributesGetter, knownMethods))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
