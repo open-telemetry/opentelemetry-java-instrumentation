@@ -135,11 +135,7 @@ public abstract class AbstractReactorKafkaTest {
   protected void testSingleRecordProcess(
       Function<Consumer<ConsumerRecord<String, String>>, Disposable> subscriptionFunction) {
     Disposable disposable =
-        subscriptionFunction.apply(
-            record ->
-                testing.runWithSpan(
-                    "consumer",
-                    () -> {}));
+        subscriptionFunction.apply(record -> testing.runWithSpan("consumer", () -> {}));
     cleanup.deferCleanup(disposable::dispose);
 
     SenderRecord<String, String, Object> record =
