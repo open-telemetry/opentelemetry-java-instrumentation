@@ -12,6 +12,15 @@ muzzle {
 
   fail {
     group.set("org.elasticsearch.client")
+    module.set("elasticsearch-rest-client")
+    versions.set("[8.10,)")
+    // elasticsearch-java 8.10+ has native, on-by-default opentelemetry instrumentation
+    // we disable our elasticsearch-rest-client instrumentation when elasticsearch-java is present
+    extraDependency("co.elastic.clients:elasticsearch-java:8.10.0")
+  }
+
+  fail {
+    group.set("org.elasticsearch.client")
     module.set("rest")
     versions.set("(,)")
   }

@@ -24,7 +24,7 @@ dependencies {
   testImplementation("org.testcontainers:elasticsearch")
 
   // 8.10+ has native, on-by-default opentelemetry instrumentation
-  latestDepTestLibrary("co.elastic.clients:elasticsearch-java:8.0.+")
+  latestDepTestLibrary("co.elastic.clients:elasticsearch-java:8.9.+")
 }
 
 tasks {
