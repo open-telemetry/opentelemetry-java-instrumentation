@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
-import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
@@ -22,7 +21,7 @@ final class HttpMetricsUtil {
               0.0, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5,
               10.0));
 
-  static DoubleHistogram createStableDurationHistogram(
+  static DoubleHistogramBuilder createStableDurationHistogramBuilder(
       Meter meter, String name, String description) {
     DoubleHistogramBuilder durationBuilder =
         meter.histogramBuilder(name).setUnit("s").setDescription(description);
@@ -31,7 +30,7 @@ final class HttpMetricsUtil {
       ((ExtendedDoubleHistogramBuilder) durationBuilder)
           .setAdvice(advice -> advice.setExplicitBucketBoundaries(DURATION_SECONDS_BUCKETS));
     }
-    return durationBuilder.build();
+    return durationBuilder;
   }
 
   private HttpMetricsUtil() {}
