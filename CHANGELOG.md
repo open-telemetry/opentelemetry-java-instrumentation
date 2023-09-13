@@ -4,6 +4,70 @@
 
 ### Migration notes
 
+- Refactor and rename `HttpClientResend` and `HttpRouteHolder`
+  ([#9280](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9280))
+- Remove `otel.javaagent.experimental.extensions` which has been replaced by
+  `otel.javaagent.extensions`.
+  ([#9378](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9378))
+
+### 🌟 New javaagent instrumentation
+
+- Add instrumentation for hibernate reactive
+  ([#9304](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9304))
+
+### 📈 Enhancements
+
+- Don't log stack trace for expected exceptions in AWS SDK instrumentation
+  ([#9279](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9279))
+- Add support for the AWS Secrets Manager JDBC URLs
+  ([#9335](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9335))
+- More support for upcoming semantic convention changes
+  ([#9346](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9346)
+   [#9345](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9345),
+   [#9320](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9320),
+   [#9355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9355),
+   [#9381](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9381),
+   [#9441](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9441))
+- Unwrap Runnable in ThreadPoolExecutor before/after methods
+  ([#9326](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9326))
+- Add javaagent to instrumentation bom
+  ([#9026](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9026))
+- Add support for multiple headers in AlternateUrlSchemeProvider
+  ([#9389](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9389))
+- Skip PreparedStatement wrappers
+  ([#9399](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9399))
+- Disable Elasticsearch instrumentation for ES clients 8.10+
+  ([#9337](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9337))
+- Disable elasticsearch-rest-7.0 instrumentation when elasticsearch-java 8.10+ is present
+  ([#9450](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9450))
+- Use attributes advice for HTTP & RPC metrics
+  ([#9440](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9440))
+- Update Messaging semantic conventions to 1.21.0
+  ([#9408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9408))
+
+### 🛠️ Bug fixes
+
+- Ensure .class files aren't present in the resources library MR jar
+  ([#9245](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9245))
+- Fixed getDefinedPackage lookup for OpenJ9 (8)
+  ([#9272](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9272))
+- Ignore aws sdk v2 presign requests
+  ([#9275](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9275))
+- Add logging timestamp for log4j1 appender instrument
+  ([#9309](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9309))
+- Fix VerifyError with kotlin @WithSpan instrumentation
+  ([#9313](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9313))
+- Fix serializing key to string in Lettuce instrumentation
+  ([#9347](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9347))
+- Auto-instrumentation with JMX not working without a trigger
+  ([#9362](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9362))
+- Return default DbInfo when connection is null
+  ([#9413](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9413))
+- Fix instrumentation for reactor kafka 1.3.21
+  ([#9445](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9445))
+
+### Migration notes
+
 - Experimental HTTP server metrics have been split out from `HttpServerMetrics` into a separate
   class `HttpServerExperimentalMetrics`
   ([#9259](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9259))
