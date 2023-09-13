@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +36,8 @@ public final class SpringWebTelemetryBuilder {
   private final HttpClientAttributesExtractorBuilder<HttpRequest, ClientHttpResponse>
       httpAttributesExtractorBuilder =
           HttpClientAttributesExtractor.builder(SpringWebHttpAttributesGetter.INSTANCE);
+  private final HttpSpanNameExtractorBuilder<HttpRequest> httpSpanNameExtractorBuilder =
+      HttpSpanNameExtractor.builder(SpringWebHttpAttributesGetter.INSTANCE);
   private boolean emitExperimentalHttpClientMetrics = false;
 
   @Nullable
@@ -103,6 +106,7 @@ public final class SpringWebTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
+    httpSpanNameExtractorBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -126,8 +130,7 @@ public final class SpringWebTelemetryBuilder {
   public SpringWebTelemetry build() {
     SpringWebHttpAttributesGetter httpAttributeGetter = SpringWebHttpAttributesGetter.INSTANCE;
 
-    SpanNameExtractor<HttpRequest> originalSpanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributeGetter);
+    SpanNameExtractor<HttpRequest> originalSpanNameExtractor = httpSpanNameExtractorBuilder.build();
     SpanNameExtractor<? super HttpRequest> spanNameExtractor = originalSpanNameExtractor;
     if (spanNameExtractorTransformer != null) {
       spanNameExtractor = spanNameExtractorTransformer.apply(originalSpanNameExtractor);

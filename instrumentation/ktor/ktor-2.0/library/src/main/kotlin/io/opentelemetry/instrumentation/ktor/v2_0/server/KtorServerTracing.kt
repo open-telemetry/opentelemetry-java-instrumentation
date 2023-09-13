@@ -39,6 +39,8 @@ class KtorServerTracing private constructor(
 
     internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE)
 
+    internal val httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE)
+
     internal var statusExtractor:
       (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse> = { a -> a }
 
@@ -75,6 +77,7 @@ class KtorServerTracing private constructor(
 
     fun setKnownMethods(knownMethods: Set<String>) {
       httpAttributesExtractorBuilder.setKnownMethods(knownMethods)
+      httpSpanNameExtractorBuilder.setKnownMethods(knownMethods)
     }
 
     internal fun isOpenTelemetryInitialized(): Boolean = this::openTelemetry.isInitialized
@@ -112,7 +115,7 @@ class KtorServerTracing private constructor(
       val instrumenterBuilder = Instrumenter.builder<ApplicationRequest, ApplicationResponse>(
         configuration.openTelemetry,
         INSTRUMENTATION_NAME,
-        HttpSpanNameExtractor.create(httpAttributesGetter),
+        configuration.httpSpanNameExtractorBuilder.build()
       )
 
       configuration.additionalExtractors.forEach { instrumenterBuilder.addAttributesExtractor(it) }

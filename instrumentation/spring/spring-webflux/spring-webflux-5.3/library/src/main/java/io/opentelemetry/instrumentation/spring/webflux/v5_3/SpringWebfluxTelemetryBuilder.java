@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperime
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.ClientInstrumenterFactory;
 import java.util.ArrayList;
@@ -41,9 +42,13 @@ public final class SpringWebfluxTelemetryBuilder {
   private final HttpServerAttributesExtractorBuilder<ServerWebExchange, ServerWebExchange>
       httpServerAttributesExtractorBuilder =
           HttpServerAttributesExtractor.builder(WebfluxServerHttpAttributesGetter.INSTANCE);
+  private final HttpSpanNameExtractorBuilder<ServerWebExchange> httpServerSpanNameExtractorBuilder =
+      HttpSpanNameExtractor.builder(WebfluxServerHttpAttributesGetter.INSTANCE);
 
   private Consumer<HttpClientAttributesExtractorBuilder<ClientRequest, ClientResponse>>
       clientExtractorConfigurer = builder -> {};
+  private Consumer<HttpSpanNameExtractorBuilder<ClientRequest>> clientSpanNameExtractorConfigurer =
+      builder -> {};
   private boolean captureExperimentalSpanAttributes = false;
   private boolean emitExperimentalHttpClientMetrics = false;
   private boolean emitExperimentalHttpServerMetrics = false;
@@ -158,7 +163,10 @@ public final class SpringWebfluxTelemetryBuilder {
   public SpringWebfluxTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     clientExtractorConfigurer =
         clientExtractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
+    clientSpanNameExtractorConfigurer =
+        clientSpanNameExtractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
     httpServerAttributesExtractorBuilder.setKnownMethods(knownMethods);
+    httpServerSpanNameExtractorBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -198,6 +206,7 @@ public final class SpringWebfluxTelemetryBuilder {
         ClientInstrumenterFactory.create(
             openTelemetry,
             clientExtractorConfigurer,
+            clientSpanNameExtractorConfigurer,
             clientAdditionalExtractors,
             captureExperimentalSpanAttributes,
             emitExperimentalHttpClientMetrics);
@@ -214,7 +223,7 @@ public final class SpringWebfluxTelemetryBuilder {
 
     InstrumenterBuilder<ServerWebExchange, ServerWebExchange> builder =
         Instrumenter.<ServerWebExchange, ServerWebExchange>builder(
-                openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(getter))
+                openTelemetry, INSTRUMENTATION_NAME, httpServerSpanNameExtractorBuilder.build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(getter))
             .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
             .addAttributesExtractors(serverAdditionalExtractors)
