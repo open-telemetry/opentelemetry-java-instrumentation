@@ -9,10 +9,9 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.server.NettyServerInstrumenterFactory;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -24,7 +23,8 @@ public final class NettyServerTelemetryBuilder {
 
   private Consumer<HttpServerAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse>>
       extractorConfigurer = builder -> {};
-  private Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
+  private Consumer<HttpSpanNameExtractorBuilder<HttpRequestAndChannel>>
+      spanNameExtractorConfigurer = builder -> {};
   private boolean emitExperimentalHttpServerMetrics = false;
 
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -76,7 +76,8 @@ public final class NettyServerTelemetryBuilder {
   public NettyServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     extractorConfigurer =
         extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
-    this.knownMethods = new HashSet<>(knownMethods);
+    spanNameExtractorConfigurer =
+        spanNameExtractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
     return this;
   }
 
@@ -100,7 +101,7 @@ public final class NettyServerTelemetryBuilder {
             openTelemetry,
             "io.opentelemetry.netty-4.1",
             extractorConfigurer,
-            knownMethods,
+            spanNameExtractorConfigurer,
             emitExperimentalHttpServerMetrics));
   }
 }

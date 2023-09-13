@@ -10,13 +10,12 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
 import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstrumenterFactory;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -29,7 +28,8 @@ public final class JavaHttpClientTelemetryBuilder {
       additionalExtractors = new ArrayList<>();
   private Consumer<HttpClientAttributesExtractorBuilder<HttpRequest, HttpResponse<?>>>
       extractorConfigurer = builder -> {};
-  private Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
+  private Consumer<HttpSpanNameExtractorBuilder<HttpRequest>> spanNameExtractorConfigurer =
+      builder -> {};
   private boolean emitExperimentalHttpClientMetrics = false;
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -88,7 +88,8 @@ public final class JavaHttpClientTelemetryBuilder {
   public JavaHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     extractorConfigurer =
         extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
-    this.knownMethods = new HashSet<>(knownMethods);
+    spanNameExtractorConfigurer =
+        spanNameExtractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
     return this;
   }
 
@@ -110,8 +111,8 @@ public final class JavaHttpClientTelemetryBuilder {
         JavaHttpClientInstrumenterFactory.createInstrumenter(
             openTelemetry,
             extractorConfigurer,
+            spanNameExtractorConfigurer,
             additionalExtractors,
-            knownMethods,
             emitExperimentalHttpClientMetrics);
 
     return new JavaHttpClientTelemetry(

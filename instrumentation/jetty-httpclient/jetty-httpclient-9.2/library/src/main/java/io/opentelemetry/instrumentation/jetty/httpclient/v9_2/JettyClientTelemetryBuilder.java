@@ -9,10 +9,9 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterFactory;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -29,7 +28,8 @@ public final class JettyClientTelemetryBuilder {
       new ArrayList<>();
   private Consumer<HttpClientAttributesExtractorBuilder<Request, Response>> extractorConfigurer =
       builder -> {};
-  private Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
+  private Consumer<HttpSpanNameExtractorBuilder<Request>> spanNameExtractorConfigurer =
+      builder -> {};
   private boolean emitExperimentalHttpClientMetrics = false;
   private HttpClientTransport httpClientTransport;
   private SslContextFactory sslContextFactory;
@@ -103,7 +103,8 @@ public final class JettyClientTelemetryBuilder {
   public JettyClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     extractorConfigurer =
         extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
-    this.knownMethods = new HashSet<>(knownMethods);
+    spanNameExtractorConfigurer =
+        spanNameExtractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
     return this;
   }
 
@@ -130,8 +131,8 @@ public final class JettyClientTelemetryBuilder {
             JettyClientInstrumenterFactory.create(
                 openTelemetry,
                 extractorConfigurer,
+                spanNameExtractorConfigurer,
                 additionalExtractors,
-                knownMethods,
                 emitExperimentalHttpClientMetrics),
             sslContextFactory,
             httpClientTransport);

@@ -15,10 +15,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperime
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
-import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -32,7 +32,7 @@ public final class NettyServerInstrumenterFactory {
       String instrumentationName,
       Consumer<HttpServerAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse>>
           extractorConfigurer,
-      Set<String> knownMethods,
+      Consumer<HttpSpanNameExtractorBuilder<HttpRequestAndChannel>> spanNameExtractorConfigurer,
       boolean emitExperimentalHttpServerMetrics) {
 
     NettyHttpServerAttributesGetter httpAttributesGetter = new NettyHttpServerAttributesGetter();
@@ -41,13 +41,13 @@ public final class NettyServerInstrumenterFactory {
         HttpServerAttributesExtractor.builder(httpAttributesGetter);
     extractorConfigurer.accept(extractorBuilder);
 
+    HttpSpanNameExtractorBuilder<HttpRequestAndChannel> httpSpanNameExtractorBuilder =
+        HttpSpanNameExtractor.builder(httpAttributesGetter);
+    spanNameExtractorConfigurer.accept(httpSpanNameExtractorBuilder);
+
     InstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder =
         Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
-                openTelemetry,
-                instrumentationName,
-                HttpSpanNameExtractor.builder(httpAttributesGetter)
-                    .setKnownMethods(knownMethods)
-                    .build())
+                openTelemetry, instrumentationName, httpSpanNameExtractorBuilder.build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(extractorBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get());

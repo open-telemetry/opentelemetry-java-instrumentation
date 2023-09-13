@@ -17,10 +17,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperime
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -39,6 +38,8 @@ public final class SpringWebMvcTelemetryBuilder {
   private final HttpServerAttributesExtractorBuilder<HttpServletRequest, HttpServletResponse>
       httpAttributesExtractorBuilder =
           HttpServerAttributesExtractor.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
+  private final HttpSpanNameExtractorBuilder<HttpServletRequest> httpSpanNameExtractorBuilder =
+      HttpSpanNameExtractor.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
 
   @Nullable
   private Function<
@@ -46,7 +47,6 @@ public final class SpringWebMvcTelemetryBuilder {
           ? extends SpanNameExtractor<? super HttpServletRequest>>
       spanNameExtractorTransformer;
 
-  private Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
   private boolean emitExperimentalHttpServerMetrics = false;
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -113,7 +113,7 @@ public final class SpringWebMvcTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
-    this.knownMethods = new HashSet<>(knownMethods);
+    httpSpanNameExtractorBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -139,7 +139,7 @@ public final class SpringWebMvcTelemetryBuilder {
         SpringWebMvcHttpAttributesGetter.INSTANCE;
 
     SpanNameExtractor<HttpServletRequest> originalSpanNameExtractor =
-        HttpSpanNameExtractor.builder(httpAttributesGetter).setKnownMethods(knownMethods).build();
+        httpSpanNameExtractorBuilder.build();
     SpanNameExtractor<? super HttpServletRequest> spanNameExtractor = originalSpanNameExtractor;
     if (spanNameExtractorTransformer != null) {
       spanNameExtractor = spanNameExtractorTransformer.apply(originalSpanNameExtractor);

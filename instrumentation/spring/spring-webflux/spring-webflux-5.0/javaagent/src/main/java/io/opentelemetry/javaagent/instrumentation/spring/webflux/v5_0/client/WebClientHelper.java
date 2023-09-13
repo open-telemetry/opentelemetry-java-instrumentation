@@ -30,11 +30,11 @@ public final class WebClientHelper {
                   .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                   .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                   .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
+          builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
           singletonList(
               PeerServiceAttributesExtractor.create(
                   WebClientHttpAttributesGetter.INSTANCE,
                   CommonConfig.get().getPeerServiceMapping())),
-          CommonConfig.get().getKnownHttpRequestMethods(),
           InstrumentationConfig.get()
               .getBoolean(
                   "otel.instrumentation.spring-webflux.experimental-span-attributes", false),

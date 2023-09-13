@@ -26,11 +26,11 @@ public class JettyHttpClientSingletons {
                   .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                   .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                   .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
+          builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
           singletonList(
               PeerServiceAttributesExtractor.create(
                   JettyClientHttpAttributesGetter.INSTANCE,
                   CommonConfig.get().getPeerServiceMapping())),
-          CommonConfig.get().getKnownHttpRequestMethods(),
           CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
 
   public static Instrumenter<Request, Response> instrumenter() {

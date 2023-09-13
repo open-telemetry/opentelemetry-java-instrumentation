@@ -9,13 +9,12 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.List;
-import java.util.Set;
 import org.restlet.Request;
 import org.restlet.Response;
 
@@ -30,19 +29,15 @@ public final class RestletInstrumenterFactory {
   public static Instrumenter<Request, Response> newServerInstrumenter(
       OpenTelemetry openTelemetry,
       AttributesExtractor<Request, Response> httpServerAttributesExtractor,
+      SpanNameExtractor<Request> httpServerSpanNameExtractor,
       List<AttributesExtractor<Request, Response>> additionalExtractors,
-      Set<String> knownMethods,
       boolean emitExperimentalHttpServerMetrics) {
 
     RestletHttpAttributesGetter httpAttributesGetter = RestletHttpAttributesGetter.INSTANCE;
 
     InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(
-                openTelemetry,
-                INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.builder(httpAttributesGetter)
-                    .setKnownMethods(knownMethods)
-                    .build())
+                openTelemetry, INSTRUMENTATION_NAME, httpServerSpanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpServerAttributesExtractor)
             .addAttributesExtractors(additionalExtractors)

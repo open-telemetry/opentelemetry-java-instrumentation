@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.HashSet;
 import java.util.Set;
