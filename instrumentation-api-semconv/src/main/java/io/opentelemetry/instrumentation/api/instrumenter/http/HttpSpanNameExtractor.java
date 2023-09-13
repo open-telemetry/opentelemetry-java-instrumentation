@@ -27,14 +27,6 @@ public final class HttpSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
     return builder(getter).build();
   }
 
-  /*
-  public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      HttpCommonAttributesGetter<REQUEST, ?> getter, Set<String> knownMethods) {
-    return new HttpSpanNameExtractor<>(getter, knownMethods);
-  }
-
-   */
-
   /**
    * Returns a new {@link HttpSpanNameExtractorBuilder} that can be used to configure the HTTP span
    * name extractor.
