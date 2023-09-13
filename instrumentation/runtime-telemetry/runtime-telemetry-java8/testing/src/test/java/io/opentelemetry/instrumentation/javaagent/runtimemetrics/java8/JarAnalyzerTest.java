@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8;
 
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.PACKAGE_CHECKSUM;
+import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.PACKAGE_CHECKSUM_ALGORITHM;
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.PACKAGE_DESCRIPTION;
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.PACKAGE_NAME;
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.PACKAGE_PATH;
@@ -61,6 +62,7 @@ class JarAnalyzerTest {
                             PACKAGE_PATH,
                             "opentelemetry-javaagent-runtime-telemetry-java8-1.30.0-alpha-SNAPSHOT.jar")
                         .containsEntry(PACKAGE_DESCRIPTION, "javaagent by OpenTelemetry")
+                        .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA1")
                         .hasEntrySatisfying(
                             PACKAGE_CHECKSUM, checksum -> assertThat(checksum).isNotEmpty()))),
         // dummy war
@@ -72,6 +74,7 @@ class JarAnalyzerTest {
                         .containsEntry(PACKAGE_TYPE, "war")
                         .containsEntry(PACKAGE_PATH, "app.war")
                         .containsEntry(PACKAGE_DESCRIPTION, "Dummy App by OpenTelemetry")
+                        .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA1")
                         .hasEntrySatisfying(
                             PACKAGE_CHECKSUM, checksum -> assertThat(checksum).isNotEmpty()))),
         // io.opentelemetry:opentelemetry-api
@@ -81,9 +84,9 @@ class JarAnalyzerTest {
                 attributes ->
                     attributes
                         .containsEntry(PACKAGE_TYPE, "jar")
-                        //
                         .containsEntry(PACKAGE_PATH, "opentelemetry-api-1.29.0.jar")
                         .containsEntry(PACKAGE_DESCRIPTION, "all")
+                        .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA1")
                         .hasEntrySatisfying(
                             PACKAGE_CHECKSUM, checksum -> assertThat(checksum).isNotEmpty()))),
         // org.springframework:spring-webmvc
@@ -97,6 +100,7 @@ class JarAnalyzerTest {
                         // package.version field?
                         .containsEntry(PACKAGE_PATH, "spring-web-3.1.0.RELEASE.jar")
                         .containsEntry(PACKAGE_DESCRIPTION, "org.springframework.web")
+                        .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA1")
                         .hasEntrySatisfying(
                             PACKAGE_CHECKSUM, checksum -> assertThat(checksum).isNotEmpty()))),
         // com.google.guava:guava
@@ -109,6 +113,7 @@ class JarAnalyzerTest {
                         .containsEntry(PACKAGE_PATH, "guava-32.1.2-jre.jar")
                         .containsEntry(PACKAGE_NAME, "com.google.guava:guava")
                         .containsEntry(PACKAGE_VERSION, "32.1.2-jre")
+                        .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA1")
                         .hasEntrySatisfying(
                             PACKAGE_CHECKSUM, checksum -> assertThat(checksum).isNotEmpty()))));
   }

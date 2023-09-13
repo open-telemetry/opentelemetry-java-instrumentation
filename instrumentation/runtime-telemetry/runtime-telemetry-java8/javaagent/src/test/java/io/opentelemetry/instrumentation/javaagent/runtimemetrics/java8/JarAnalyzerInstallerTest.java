@@ -42,6 +42,7 @@ class JarAnalyzerInstallerTest {
             logRecord ->
                 assertThat(logRecord.getAttributes())
                     .containsEntry("package.type", "jar")
+                    .containsEntry("package.checksum_algorithm", "SHA1")
                     .hasEntrySatisfying(
                         AttributeKey.stringKey("package.checksum"),
                         value -> assertThat(value).isNotNull())

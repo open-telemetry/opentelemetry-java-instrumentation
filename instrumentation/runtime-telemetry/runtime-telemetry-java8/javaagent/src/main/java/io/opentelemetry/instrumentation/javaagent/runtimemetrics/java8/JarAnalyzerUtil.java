@@ -28,6 +28,8 @@ final class JarAnalyzerUtil {
   static final AttributeKey<String> PACKAGE_DESCRIPTION =
       AttributeKey.stringKey("package.description");
   static final AttributeKey<String> PACKAGE_CHECKSUM = AttributeKey.stringKey("package.checksum");
+  static final AttributeKey<String> PACKAGE_CHECKSUM_ALGORITHM =
+      AttributeKey.stringKey("package.checksum_algorithm");
   static final AttributeKey<String> PACKAGE_PATH = AttributeKey.stringKey("package.path");
 
   private static final ThreadLocal<MessageDigest> MESSAGE_DIGEST_THREAD_LOCAL =
@@ -65,6 +67,7 @@ final class JarAnalyzerUtil {
    */
   static void addPackageChecksum(AttributesBuilder builder, URL archiveUrl) throws IOException {
     builder.put(PACKAGE_CHECKSUM, computeSha1(archiveUrl));
+    builder.put(PACKAGE_CHECKSUM_ALGORITHM, "SHA1");
   }
 
   private static String computeSha1(URL archiveUrl) throws IOException {
