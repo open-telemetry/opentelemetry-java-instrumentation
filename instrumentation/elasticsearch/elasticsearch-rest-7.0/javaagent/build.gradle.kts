@@ -24,9 +24,6 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
-  // TODO: review the following claim, we are not using embedded ES anymore
-  // Netty is used, but it adds complexity to the tests since we're using embedded ES.
-  // testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
   testImplementation("org.testcontainers:elasticsearch")
