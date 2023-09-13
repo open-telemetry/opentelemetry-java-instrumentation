@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 
 class AwsSpanAssertions {
 
@@ -33,6 +33,7 @@ class AwsSpanAssertions {
     return sqs(span, spanName, queueUrl, queueName, CLIENT);
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   static SpanDataAssert sqs(
       SpanDataAssert span, String spanName, String queueUrl, String queueName, SpanKind spanKind) {
 
@@ -88,6 +89,7 @@ class AwsSpanAssertions {
             equalTo(stringKey("rpc.service"), "AmazonSQS"));
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   static SpanDataAssert s3(SpanDataAssert span, String spanName, String bucketName, String method) {
     return span.hasName(spanName)
         .hasAttributesSatisfyingExactly(
@@ -115,6 +117,7 @@ class AwsSpanAssertions {
                         v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   static SpanDataAssert sns(SpanDataAssert span, String spanName) {
     return span.hasName(spanName)
         .hasKind(CLIENT)

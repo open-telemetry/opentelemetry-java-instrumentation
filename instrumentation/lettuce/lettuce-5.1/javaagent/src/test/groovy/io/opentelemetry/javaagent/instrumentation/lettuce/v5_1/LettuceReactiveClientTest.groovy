@@ -9,7 +9,7 @@ import io.lettuce.core.RedisClient
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceReactiveClientTest
 import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import reactor.core.scheduler.Schedulers
 
 class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implements AgentTestTrait {

@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcClientNetworkAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

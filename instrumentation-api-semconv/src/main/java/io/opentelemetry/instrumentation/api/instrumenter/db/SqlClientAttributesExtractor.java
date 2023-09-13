@@ -13,7 +13,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 
 /**
  * Extractor of <a

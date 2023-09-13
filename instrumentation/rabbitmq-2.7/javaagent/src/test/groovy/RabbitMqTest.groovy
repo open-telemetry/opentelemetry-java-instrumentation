@@ -15,7 +15,7 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.springframework.amqp.core.AmqpAdmin
 import org.springframework.amqp.core.AmqpTemplate
 import org.springframework.amqp.core.Queue

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.resources;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
+import io.opentelemetry.semconv.ResourceAttributes;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -40,7 +40,7 @@ public final class HostResource {
       attributes.put(ResourceAttributes.HOST_ARCH, hostArch);
     }
 
-    return Resource.create(attributes.build(), ResourceConstants.SCHEMA_URL);
+    return Resource.create(attributes.build(), ResourceAttributes.SCHEMA_URL);
   }
 
   private HostResource() {}

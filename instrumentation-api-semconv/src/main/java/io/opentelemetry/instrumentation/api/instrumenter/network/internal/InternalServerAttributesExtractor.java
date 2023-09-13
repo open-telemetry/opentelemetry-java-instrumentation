@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.function.BiPredicate;
 import javax.annotation.Nullable;
 
@@ -117,7 +117,10 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
-  @SuppressWarnings("ImmutableEnumChecker")
+  @SuppressWarnings({
+    "ImmutableEnumChecker",
+    "deprecation"
+  }) // until old http semconv are dropped in 2.0
   public enum Mode {
     PEER(
         SemanticAttributes.NET_PEER_NAME,

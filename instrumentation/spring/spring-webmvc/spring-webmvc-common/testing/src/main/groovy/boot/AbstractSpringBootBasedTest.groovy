@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpData
 import io.opentelemetry.testing.internal.armeria.common.MediaType

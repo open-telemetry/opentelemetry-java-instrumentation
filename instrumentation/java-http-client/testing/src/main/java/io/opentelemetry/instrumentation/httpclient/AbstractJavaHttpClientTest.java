@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -78,6 +78,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestCircularRedirects();
     // TODO nested client span is not created, but context is still injected

@@ -13,12 +13,13 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class ClientAttributesExtractorOldSemconvTest {
 
   static class TestClientAttributesGetter

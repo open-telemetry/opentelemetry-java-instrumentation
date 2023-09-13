@@ -11,7 +11,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 
 /** A builder of {@link SqlClientAttributesExtractor}. */
 public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {

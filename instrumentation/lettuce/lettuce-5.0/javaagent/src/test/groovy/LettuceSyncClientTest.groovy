@@ -11,7 +11,7 @@ import io.lettuce.core.api.sync.RedisCommands
 import io.netty.channel.AbstractChannel
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 

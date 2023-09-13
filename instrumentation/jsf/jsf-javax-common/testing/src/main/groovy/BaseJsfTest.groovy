@@ -8,7 +8,7 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpData

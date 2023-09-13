@@ -5,7 +5,7 @@
 
 import io.dropwizard.testing.junit.ResourceTestRule
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.junit.ClassRule
 import spock.lang.Shared
 import spock.lang.Unroll

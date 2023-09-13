@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_UDP;
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_UDP;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;

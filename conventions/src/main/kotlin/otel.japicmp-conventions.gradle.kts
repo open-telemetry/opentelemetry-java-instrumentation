@@ -16,8 +16,8 @@ plugins {
 val latestReleasedVersion: String by lazy {
   // hack to find the current released version of the project
   val temp: Configuration = configurations.create("tempConfig")
-  // pick the agent, since it's always there.
-  dependencies.add(temp.name, "io.opentelemetry.javaagent:opentelemetry-javaagent:latest.release")
+  // pick the bom, since we don't use dependency substitution on it.
+  dependencies.add(temp.name, "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:latest.release")
   val moduleVersion = configurations["tempConfig"].resolvedConfiguration.firstLevelModuleDependencies.elementAt(0).moduleVersion
 
   configurations.remove(temp)

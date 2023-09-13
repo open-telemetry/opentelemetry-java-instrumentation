@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 
 public final class HttpServerTestOptions {
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
       Collections.unmodifiableSet(
           new HashSet<>(

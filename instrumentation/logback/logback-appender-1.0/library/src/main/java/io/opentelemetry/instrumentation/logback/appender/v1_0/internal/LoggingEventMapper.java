@@ -17,7 +17,7 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;

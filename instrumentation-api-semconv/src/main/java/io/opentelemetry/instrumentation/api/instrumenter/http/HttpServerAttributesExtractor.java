@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.internal.Intern
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 

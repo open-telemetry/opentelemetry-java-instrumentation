@@ -12,7 +12,7 @@ import com.sun.jersey.api.client.filter.LoggingFilter
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Shared
 
 class JaxRsClientV1Test extends HttpClientTest<WebResource.Builder> implements AgentTestTrait {

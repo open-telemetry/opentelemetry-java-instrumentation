@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class ElasticsearchRest5Test {
 
   @RegisterExtension

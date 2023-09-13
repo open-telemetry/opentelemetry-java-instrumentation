@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.url.UrlAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -35,6 +35,7 @@ public final class InternalUrlAttributesExtractor<REQUEST> {
     this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onStart(AttributesBuilder attributes, REQUEST request) {
     String urlScheme = getUrlScheme(request);
     String urlPath = getter.getUrlPath(request);

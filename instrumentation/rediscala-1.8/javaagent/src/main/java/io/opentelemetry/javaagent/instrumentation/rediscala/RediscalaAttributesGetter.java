@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Locale;
 import javax.annotation.Nullable;
 import redis.RedisCommand;

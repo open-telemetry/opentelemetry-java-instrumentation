@@ -5,15 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_GROUP;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MessagingRocketmqMessageTypeValues.DELAY;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MessagingRocketmqMessageTypeValues.FIFO;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MessagingRocketmqMessageTypeValues.NORMAL;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MessagingRocketmqMessageTypeValues.TRANSACTION;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_GROUP;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
+import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.DELAY;
+import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.FIFO;
+import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.NORMAL;
+import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.TRANSACTION;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;

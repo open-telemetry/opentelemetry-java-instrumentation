@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +43,7 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public class ContextPropagationTest {
 
   @RegisterExtension
