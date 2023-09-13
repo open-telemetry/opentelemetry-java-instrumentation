@@ -4,10 +4,11 @@
 
 ### Migration notes
 
-- Refactor and rename `HttpClientResend` and `HttpRouteHolder`
+- `HttpClientResend` has been renamed to `HttpClientResendCount`, and `HttpRouteHolder`
+  has been renamed to `HttpServerRoute`
   ([#9280](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9280))
-- Remove `otel.javaagent.experimental.extensions` which has been replaced by
-  `otel.javaagent.extensions`.
+- The previously deprecated `otel.javaagent.experimental.extensions` configuration was removed
+  (it is replaced by `otel.javaagent.extensions`)
   ([#9378](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9378))
 
 ### 🌟 New javaagent instrumentation
