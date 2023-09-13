@@ -43,6 +43,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> {
 
+  static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
+
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
@@ -65,7 +67,7 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     options.setHasErrorPageSpans(
         endpoint -> endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND);
     options.setTestPathParam(true);
-    options.setResponseCodeOnNonStandardHttpMethod(501);
+    options.setResponseCodeOnNonStandardHttpMethod(testLatestDeps ? 200 : 501);
   }
 
   @SpringBootApplication
@@ -110,7 +112,9 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
   @Override
   public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     if (HttpConstants._OTHER.equals(method)) {
-      return getContextPath() + "/*";
+      return testLatestDeps
+          ? getContextPath() + "/test" + endpoint.getPath()
+          : getContextPath() + "/*";
     }
     if (PATH_PARAM.equals(endpoint)) {
       return getContextPath() + "/test/path";
