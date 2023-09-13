@@ -36,7 +36,7 @@ public abstract class HttpClientTestOptions {
                   SemconvStabilityUtil.getAttributeKey(SemanticAttributes.USER_AGENT_ORIGINAL))));
 
   public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =
-      (uri, method) -> HttpConstants._OTHER.equals(method) ? "TEST" : method;
+      (uri, method) -> HttpConstants._OTHER.equals(method) ? "HTTP" : method;
 
   public static final int FOUND_STATUS_CODE = HttpStatus.FOUND.code();
 

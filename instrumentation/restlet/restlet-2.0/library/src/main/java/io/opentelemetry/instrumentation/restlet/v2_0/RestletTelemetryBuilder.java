@@ -11,6 +11,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHttpAttributesGetter;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletInstrumenterFactory;
 import java.util.ArrayList;
@@ -28,7 +30,8 @@ public final class RestletTelemetryBuilder {
   private final HttpServerAttributesExtractorBuilder<Request, Response>
       httpAttributesExtractorBuilder =
           HttpServerAttributesExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
-
+  private final HttpSpanNameExtractorBuilder<Request> httpSpanNameExtractorBuilder =
+      HttpSpanNameExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
   private boolean emitExperimentalHttpServerMetrics = false;
 
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -84,6 +87,7 @@ public final class RestletTelemetryBuilder {
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
+    httpSpanNameExtractorBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -109,6 +113,7 @@ public final class RestletTelemetryBuilder {
         RestletInstrumenterFactory.newServerInstrumenter(
             openTelemetry,
             httpAttributesExtractorBuilder.build(),
+            httpSpanNameExtractorBuilder.build(),
             additionalExtractors,
             emitExperimentalHttpServerMetrics);
 
