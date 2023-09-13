@@ -10,12 +10,13 @@ import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
 final class RpcMetricsAdvice {
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   static void applyClientDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
       return;
@@ -47,6 +48,7 @@ final class RpcMetricsAdvice {
         .setAdvice(advice -> advice.setAttributes(attributes));
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   static void applyServerDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
       return;

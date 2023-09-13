@@ -16,7 +16,7 @@ import io.opentelemetry.extension.incubator.metrics.ExtendedLongUpDownCounterBui
 import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 
 final class HttpMetricsAdvice {
 
@@ -38,6 +38,7 @@ final class HttpMetricsAdvice {
                         NetworkAttributes.SERVER_SOCKET_ADDRESS)));
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   static void applyOldClientDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
       return;
@@ -56,6 +57,7 @@ final class HttpMetricsAdvice {
                         SemanticAttributes.NET_SOCK_PEER_ADDR)));
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   static void applyClientRequestSizeAdvice(LongHistogramBuilder builder) {
     if (!(builder instanceof ExtendedLongHistogramBuilder)) {
       return;
@@ -100,6 +102,7 @@ final class HttpMetricsAdvice {
                         UrlAttributes.URL_SCHEME)));
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   static void applyOldServerDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
       return;
@@ -119,6 +122,7 @@ final class HttpMetricsAdvice {
                         SemanticAttributes.NET_PROTOCOL_VERSION)));
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   static void applyServerRequestSizeAdvice(LongHistogramBuilder builder) {
     if (!(builder instanceof ExtendedLongHistogramBuilder)) {
       return;
@@ -146,6 +150,7 @@ final class HttpMetricsAdvice {
                         SemanticAttributes.NET_PROTOCOL_VERSION)));
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   static void applyServerActiveRequestsAdvice(LongUpDownCounterBuilder builder) {
     if (!(builder instanceof ExtendedLongUpDownCounterBuilder)) {
       return;
