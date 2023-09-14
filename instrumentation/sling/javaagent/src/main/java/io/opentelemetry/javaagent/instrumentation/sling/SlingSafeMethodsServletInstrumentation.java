@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.sling;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
@@ -15,11 +20,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSou
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.servlet.ServletRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.sling.api.SlingHttpServletRequest;
-import javax.servlet.ServletRequest;
 
 public class SlingSafeMethodsServletInstrumentation implements TypeInstrumentation {
   @Override
@@ -52,7 +57,7 @@ public class SlingSafeMethodsServletInstrumentation implements TypeInstrumentati
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      if ( !(request instanceof SlingHttpServletRequest) ) {
+      if (!(request instanceof SlingHttpServletRequest)) {
         return;
       }
 
@@ -66,18 +71,20 @@ public class SlingSafeMethodsServletInstrumentation implements TypeInstrumentati
 
       // written by ServletResolverInstrumentation
       Object servletName = request.getAttribute(REQUEST_ATTR_RESOLVED_SERVLET_NAME);
-      if ( !(servletName instanceof String) ) {
+      if (!(servletName instanceof String)) {
         return;
       }
 
-      // TODO - figure out why don't we have matches for all requests and find a better way to filter
+      // TODO - figure out why don't we have matches for all requests and find a better way to
+      // filter
       context = helper().start(parentContext, slingRequest);
       scope = context.makeCurrent();
 
       // ensure that the top-level route is Sling-specific
       HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, (String) servletName);
 
-      // cleanup and ensure we don't have reuse the resolved Servlet name by accident for other requests
+      // cleanup and ensure we don't have reuse the resolved Servlet name by accident for other
+      // requests
       request.removeAttribute(REQUEST_ATTR_RESOLVED_SERVLET_NAME);
     }
 

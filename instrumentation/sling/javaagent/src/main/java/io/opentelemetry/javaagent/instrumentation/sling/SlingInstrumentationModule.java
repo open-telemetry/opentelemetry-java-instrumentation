@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.sling;
 
 import com.google.auto.service.AutoService;
@@ -15,6 +20,7 @@ public class SlingInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(new ServletResolverInstrumentation(), new SlingSafeMethodsServletInstrumentation());
+    return Arrays.asList(
+        new ServletResolverInstrumentation(), new SlingSafeMethodsServletInstrumentation());
   }
 }
