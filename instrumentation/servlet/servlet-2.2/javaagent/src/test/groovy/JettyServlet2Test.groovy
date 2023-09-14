@@ -85,7 +85,7 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint, String method, @Nullable String route) {
     if (method == HttpConstants._OTHER) {
-      return "TEST " + endpoint.resolvePath(address).path
+      return "HTTP " + endpoint.resolvePath(address).path
     }
     switch (endpoint) {
       case NOT_FOUND:

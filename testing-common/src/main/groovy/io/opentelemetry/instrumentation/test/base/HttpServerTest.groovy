@@ -51,7 +51,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   String expectedServerSpanName(ServerEndpoint endpoint, String method, @Nullable String route) {
     if (method == HttpConstants._OTHER) {
-      method = "TEST"
+      method = "HTTP"
     }
     return route == null ? method : method + " " + route
   }
