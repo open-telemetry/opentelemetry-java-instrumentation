@@ -203,6 +203,10 @@ class VertxSqlClientTest {
         .toCompletableFuture()
         .get(30, TimeUnit.SECONDS);
 
+    assertPreparedSelect();
+  }
+
+  private static void assertPreparedSelect() {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -249,5 +253,39 @@ class VertxSqlClientTest {
                             equalTo(DB_SQL_TABLE, "test"),
                             equalTo(NET_PEER_NAME, "localhost"),
                             equalTo(NET_PEER_PORT, port))));
+  }
+
+  @Test
+  void testWithTransaction() throws Exception {
+    testing
+        .runWithSpan(
+            "parent",
+            () ->
+                pool.withTransaction(
+                    conn ->
+                        conn.preparedQuery("select * from test where id = $1")
+                            .execute(Tuple.of(1))))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, TimeUnit.SECONDS);
+
+    assertPreparedSelect();
+  }
+
+  @Test
+  void testWithConnection() throws Exception {
+    testing
+        .runWithSpan(
+            "parent",
+            () ->
+                pool.withConnection(
+                    conn ->
+                        conn.preparedQuery("select * from test where id = $1")
+                            .execute(Tuple.of(1))))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, TimeUnit.SECONDS);
+
+    assertPreparedSelect();
   }
 }
