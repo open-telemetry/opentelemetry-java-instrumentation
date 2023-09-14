@@ -4,7 +4,10 @@
 
 ### Migration notes
 
-- `HttpClientResend` has been renamed to `HttpClientResendCount`, and `HttpRouteHolder`
+- Experimental HTTP server metrics have been split out from `HttpServerMetrics` into a separate
+  class `HttpServerExperimentalMetrics`
+  ([#9259](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9259))
+- `HttpClientResend` has been renamed to `HttpClientResendCount`, `HttpRouteHolder`
   has been renamed to `HttpServerRoute`
   ([#9280](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9280))
 - The previously deprecated `otel.javaagent.experimental.extensions` configuration was removed
@@ -66,12 +69,6 @@
   ([#9413](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9413))
 - Fix instrumentation for reactor kafka 1.3.21
   ([#9445](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9445))
-
-### Migration notes
-
-- Experimental HTTP server metrics have been split out from `HttpServerMetrics` into a separate
-  class `HttpServerExperimentalMetrics`
-  ([#9259](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9259))
 
 ## Version 1.29.0 (2023-08-17)
 
