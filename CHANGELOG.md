@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.30.0 (2023-09-14)
+
 ### Migration notes
 
 - Experimental HTTP server metrics have been split out from `HttpServerMetrics` into a separate
