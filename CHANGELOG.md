@@ -48,6 +48,8 @@
   ([#9440](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9440))
 - Update Messaging semantic conventions to 1.21.0
   ([#9408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9408))
+- Add semconv to alpha bom
+  ([#9425](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9425))
 
 ### 🛠️ Bug fixes
 
