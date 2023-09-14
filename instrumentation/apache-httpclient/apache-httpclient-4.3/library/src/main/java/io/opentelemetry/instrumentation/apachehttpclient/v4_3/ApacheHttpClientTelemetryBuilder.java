@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,8 @@ public final class ApacheHttpClientTelemetryBuilder {
   private final HttpClientAttributesExtractorBuilder<ApacheHttpClientRequest, HttpResponse>
       httpAttributesExtractorBuilder =
           HttpClientAttributesExtractor.builder(ApacheHttpClientHttpAttributesGetter.INSTANCE);
+  private final HttpSpanNameExtractorBuilder<ApacheHttpClientRequest> httpSpanNameExtractorBuilder =
+      HttpSpanNameExtractor.builder(ApacheHttpClientHttpAttributesGetter.INSTANCE);
   private boolean emitExperimentalHttpClientMetrics = false;
 
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -90,6 +93,7 @@ public final class ApacheHttpClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
+    httpSpanNameExtractorBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -116,9 +120,7 @@ public final class ApacheHttpClientTelemetryBuilder {
 
     InstrumenterBuilder<ApacheHttpClientRequest, HttpResponse> builder =
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
-                openTelemetry,
-                INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                openTelemetry, INSTRUMENTATION_NAME, httpSpanNameExtractorBuilder.build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)

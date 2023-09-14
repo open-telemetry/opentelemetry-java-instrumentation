@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
+import io.opentelemetry.semconv.ResourceAttributes;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -24,7 +24,7 @@ class ProcessResourceTest {
   @SetSystemProperty(key = "os.name", value = "Linux 4.12")
   void notWindows() {
     Resource resource = ProcessResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(ResourceConstants.SCHEMA_URL);
+    assertThat(resource.getSchemaUrl()).isEqualTo(ResourceAttributes.SCHEMA_URL);
     Attributes attributes = resource.getAttributes();
 
     assertThat(attributes.get(ResourceAttributes.PROCESS_PID)).isGreaterThan(1);
@@ -39,7 +39,7 @@ class ProcessResourceTest {
   @SetSystemProperty(key = "os.name", value = "Windows 10")
   void windows() {
     Resource resource = ProcessResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(ResourceConstants.SCHEMA_URL);
+    assertThat(resource.getSchemaUrl()).isEqualTo(ResourceAttributes.SCHEMA_URL);
     Attributes attributes = resource.getAttributes();
 
     assertThat(attributes.get(ResourceAttributes.PROCESS_PID)).isGreaterThan(1);

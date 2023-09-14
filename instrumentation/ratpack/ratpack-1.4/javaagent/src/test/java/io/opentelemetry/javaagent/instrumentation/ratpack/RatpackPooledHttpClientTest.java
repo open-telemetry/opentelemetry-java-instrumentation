@@ -9,7 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.ratpack.client.AbstractRatpackPooledHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,6 +21,7 @@ class RatpackPooledHttpClientTest extends AbstractRatpackPooledHttpClientTest {
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected Set<AttributeKey<?>> computeHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(super.computeHttpAttributes(uri));
     // underlying netty instrumentation does not provide these

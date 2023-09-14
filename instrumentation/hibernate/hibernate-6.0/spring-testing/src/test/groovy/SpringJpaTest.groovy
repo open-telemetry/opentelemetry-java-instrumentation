@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.hibernate.Version
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared

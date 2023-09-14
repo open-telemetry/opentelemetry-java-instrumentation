@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperime
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,6 +38,8 @@ public final class SpringWebMvcTelemetryBuilder {
   private final HttpServerAttributesExtractorBuilder<HttpServletRequest, HttpServletResponse>
       httpAttributesExtractorBuilder =
           HttpServerAttributesExtractor.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
+  private final HttpSpanNameExtractorBuilder<HttpServletRequest> httpSpanNameExtractorBuilder =
+      HttpSpanNameExtractor.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
 
   @Nullable
   private Function<
@@ -110,6 +113,7 @@ public final class SpringWebMvcTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
+    httpSpanNameExtractorBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -135,7 +139,7 @@ public final class SpringWebMvcTelemetryBuilder {
         SpringWebMvcHttpAttributesGetter.INSTANCE;
 
     SpanNameExtractor<HttpServletRequest> originalSpanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesGetter);
+        httpSpanNameExtractorBuilder.build();
     SpanNameExtractor<? super HttpServletRequest> spanNameExtractor = originalSpanNameExtractor;
     if (spanNameExtractorTransformer != null) {
       spanNameExtractor = spanNameExtractorTransformer.apply(originalSpanNameExtractor);

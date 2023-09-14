@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 /**
@@ -34,6 +34,7 @@ public final class InternalClientAttributesExtractor<REQUEST, RESPONSE> {
     this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onStart(AttributesBuilder attributes, REQUEST request) {
     AddressAndPort clientAddressAndPort = extractClientAddressAndPort(request);
 
@@ -48,6 +49,7 @@ public final class InternalClientAttributesExtractor<REQUEST, RESPONSE> {
     }
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onEnd(AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
     AddressAndPort clientAddressAndPort = extractClientAddressAndPort(request);
     String clientSocketAddress = getter.getClientSocketAddress(request, response);

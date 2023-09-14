@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.resources;
 
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.CONTAINER_ID;
+import static io.opentelemetry.semconv.ResourceAttributes.CONTAINER_ID;
 
 import com.google.errorprone.annotations.MustBeClosed;
 import io.opentelemetry.api.common.Attributes;

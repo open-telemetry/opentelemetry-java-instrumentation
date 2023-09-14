@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.internal.Networ
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -41,6 +41,7 @@ public class ElasticsearchClientAttributeExtractor
     this.knownMethods = new HashSet<>(knownMethods);
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static void setServerAttributes(AttributesBuilder attributes, Response response) {
     HttpHost host = response.getHost();
     if (host != null) {
@@ -55,6 +56,7 @@ public class ElasticsearchClientAttributeExtractor
     }
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static void setUrlAttribute(AttributesBuilder attributes, Response response) {
     String uri = response.getRequestLine().getUri();
     uri = uri.startsWith("/") ? uri : "/" + uri;
@@ -87,6 +89,7 @@ public class ElasticsearchClientAttributeExtractor
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ElasticsearchRestRequest request) {
     String method = request.getMethod();

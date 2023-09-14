@@ -6,7 +6,7 @@
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.apache.commons.httpclient.HttpClient
 import org.apache.commons.httpclient.HttpConnectionManager
 import org.apache.commons.httpclient.HttpMethod

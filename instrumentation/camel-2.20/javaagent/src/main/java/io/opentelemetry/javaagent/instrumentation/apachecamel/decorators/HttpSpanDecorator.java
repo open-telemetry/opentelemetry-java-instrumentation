@@ -35,7 +35,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttribu
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Set;
@@ -91,6 +91,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void pre(
       AttributesBuilder attributes,
       Exchange exchange,
@@ -176,6 +177,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void post(AttributesBuilder attributes, Exchange exchange, Endpoint endpoint) {
     super.post(attributes, exchange, endpoint);
 

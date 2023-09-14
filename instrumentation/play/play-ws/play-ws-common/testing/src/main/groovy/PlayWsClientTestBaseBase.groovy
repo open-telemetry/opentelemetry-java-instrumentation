@@ -9,7 +9,7 @@ import akka.stream.ActorMaterializerSettings
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import play.shaded.ahc.io.netty.resolver.InetNameResolver
 import play.shaded.ahc.io.netty.util.concurrent.EventExecutor
 import play.shaded.ahc.io.netty.util.concurrent.ImmediateEventExecutor

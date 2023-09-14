@@ -10,10 +10,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttri
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public class SemconvStabilityUtil {
   private static final Map<AttributeKey<?>, AttributeKey<?>> oldToNewMap = new HashMap<>();
 
