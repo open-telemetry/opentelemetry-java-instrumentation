@@ -20,7 +20,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.sling.api.SlingHttpServletRequest;
 import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 
 public class SlingSafeMethodsServletInstrumentation implements TypeInstrumentation {
   @Override
@@ -50,7 +49,6 @@ public class SlingSafeMethodsServletInstrumentation implements TypeInstrumentati
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) ServletRequest request,
-        @Advice.Argument(1) ServletResponse response,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
@@ -86,7 +84,6 @@ public class SlingSafeMethodsServletInstrumentation implements TypeInstrumentati
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.Argument(0) ServletRequest request,
-        @Advice.Argument(1) ServletResponse response,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
