@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -44,6 +45,8 @@ public final class SpringWebfluxTelemetryBuilder {
           HttpServerAttributesExtractor.builder(WebfluxServerHttpAttributesGetter.INSTANCE);
   private final HttpSpanNameExtractorBuilder<ServerWebExchange> httpServerSpanNameExtractorBuilder =
       HttpSpanNameExtractor.builder(WebfluxServerHttpAttributesGetter.INSTANCE);
+  private final HttpServerRouteBuilder<ServerWebExchange> httpServerRouteBuilder =
+      HttpServerRoute.builder(WebfluxServerHttpAttributesGetter.INSTANCE);
 
   private Consumer<HttpClientAttributesExtractorBuilder<ClientRequest, ClientResponse>>
       clientExtractorConfigurer = builder -> {};
@@ -167,6 +170,7 @@ public final class SpringWebfluxTelemetryBuilder {
         clientSpanNameExtractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
     httpServerAttributesExtractorBuilder.setKnownMethods(knownMethods);
     httpServerSpanNameExtractorBuilder.setKnownMethods(knownMethods);
+    httpServerRouteBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -227,7 +231,7 @@ public final class SpringWebfluxTelemetryBuilder {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(getter))
             .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
             .addAttributesExtractors(serverAdditionalExtractors)
-            .addContextCustomizer(HttpServerRoute.create(getter))
+            .addContextCustomizer(httpServerRouteBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get());
     if (emitExperimentalHttpServerMetrics) {
       builder.addOperationMetrics(HttpServerExperimentalMetrics.get());

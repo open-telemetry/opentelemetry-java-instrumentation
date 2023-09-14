@@ -40,7 +40,10 @@ public final class AkkaHttpServerSingletons {
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addOperationMetrics(HttpServerMetrics.get())
-            .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter));
+            .addContextCustomizer(
+                HttpServerRoute.builder(httpAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build());
     if (CommonConfig.get().shouldEmitExperimentalHttpServerMetrics()) {
       builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
     }

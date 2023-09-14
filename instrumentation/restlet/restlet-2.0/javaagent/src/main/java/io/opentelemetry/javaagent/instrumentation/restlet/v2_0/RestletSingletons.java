@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.restlet.v2_0;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHttpAttributesGetter;
@@ -29,6 +30,9 @@ public final class RestletSingletons {
               .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
               .build(),
           HttpSpanNameExtractor.builder(RestletHttpAttributesGetter.INSTANCE)
+              .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+              .build(),
+          HttpServerRoute.builder(RestletHttpAttributesGetter.INSTANCE)
               .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
               .build(),
           Collections.emptyList(),

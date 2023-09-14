@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -37,6 +38,8 @@ public final class RestletTelemetryBuilder {
           HttpServerAttributesExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
   private final HttpSpanNameExtractorBuilder<Request> httpSpanNameExtractorBuilder =
       HttpSpanNameExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
+  private final HttpServerRouteBuilder<Request> httpServerRouteBuilder =
+      HttpServerRoute.builder(RestletHttpAttributesGetter.INSTANCE);
   private boolean emitExperimentalHttpServerMetrics = false;
 
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -93,6 +96,7 @@ public final class RestletTelemetryBuilder {
   public RestletTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
     httpSpanNameExtractorBuilder.setKnownMethods(knownMethods);
+    httpServerRouteBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -122,7 +126,7 @@ public final class RestletTelemetryBuilder {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
-            .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
+            .addContextCustomizer(httpServerRouteBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get());
     if (emitExperimentalHttpServerMetrics) {
       builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
