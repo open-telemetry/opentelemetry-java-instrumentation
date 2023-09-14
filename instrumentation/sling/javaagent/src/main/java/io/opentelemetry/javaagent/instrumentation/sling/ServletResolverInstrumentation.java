@@ -40,21 +40,6 @@ public class ServletResolverInstrumentation  implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ResolveServletAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) SlingHttpServletRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-//      Context parentContext = Java8BytecodeBridge.currentContext();
-//
-//      if (!helper().shouldStart(parentContext, request)) {
-//        return;
-//      }
-//
-//      context = helper().start(parentContext, request);
-//      scope = context.makeCurrent();
-    }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
@@ -63,11 +48,6 @@ public class ServletResolverInstrumentation  implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-
-//      if (scope == null) {
-//        return;
-//      }
-//      scope.close();
 
       // TODO - copied from RequestUtil
       String name = null;
@@ -89,12 +69,7 @@ public class ServletResolverInstrumentation  implements TypeInstrumentation {
         request.setAttribute(REQUEST_ATTR_RESOLVED_SERVLET_NAME, servletNames);
       }
       servletNames.addLast(name);
-      System.out.format("SLING TRACE resolved name %s for servlet %s; current stack is %s%n", name, servlet, servletNames);
-
-//      Span.fromContext(context).updateName(name);
-//      HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, name);
-//
-//      helper().end(context, request, null, throwable);
+      System.out.format("SLING TRACE resolved name %s for uri=%s, current stack is %s%n", name, request.getRequestURI(), servletNames);
     }
   }
 }

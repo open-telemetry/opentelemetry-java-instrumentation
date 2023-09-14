@@ -27,8 +27,6 @@ import java.util.Deque;
 public class SlingSafeMethodsServletInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    System.out.format("SLING TRACE Got asked about typeMatcher%n");
-//    return named("org.apache.sling.api.servlets.SlingSafeMethodsServlet");
     return AgentElementMatchers.implementsInterface(named("javax.servlet.Servlet"));
   }
 
@@ -40,8 +38,6 @@ public class SlingSafeMethodsServletInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
 
-    System.out.format("SLING TRACE transforming using %s%n", transformer);
-
     String adviceClassName = this.getClass().getName() + "$ServiceServletAdvice";
     transformer.applyAdviceToMethod(
         named("service")
@@ -49,8 +45,6 @@ public class SlingSafeMethodsServletInstrumentation implements TypeInstrumentati
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse"))),
         adviceClassName);
-
-    System.out.format("SLING TRACE transformed using %s ; adviceClassName = %s %n", transformer, adviceClassName);
   }
 
   @SuppressWarnings("unused")
@@ -62,11 +56,11 @@ public class SlingSafeMethodsServletInstrumentation implements TypeInstrumentati
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      System.out.format("SLING TRACE Handling request %s%n", request);
-
       if ( !(request instanceof SlingHttpServletRequest) ) {
         return;
       }
+
+      System.out.format("SLING TRACE Handling request %s%n", request);
 
       SlingHttpServletRequest slingRequest = (SlingHttpServletRequest) request;
 
