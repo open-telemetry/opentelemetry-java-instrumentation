@@ -108,7 +108,8 @@ public final class PulsarSingletons {
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(getter, MessageOperation.PROCESS));
     boolean enabled = ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
-    return enabled ? builder.buildInstrumenter()
+    return enabled
+        ? builder.buildInstrumenter()
         : builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
