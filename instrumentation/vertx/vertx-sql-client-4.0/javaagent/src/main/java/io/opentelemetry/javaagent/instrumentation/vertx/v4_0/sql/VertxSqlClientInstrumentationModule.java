@@ -30,6 +30,7 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule {
         new PoolInstrumentation(),
         new SqlClientBaseInstrumentation(),
         new QueryExecutorInstrumentation(),
-        new QueryResultBuilderInstrumentation());
+        new QueryResultBuilderInstrumentation(),
+        new TransactionImplInstrumentation());
   }
 }
