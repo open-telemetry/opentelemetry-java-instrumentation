@@ -1,5 +1,6 @@
 package io.opentelemetry.javaagent.instrumentation.sling;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.sling.SlingSingletons.REQUEST_ATTR_RESOLVED_SERVLET_NAME;
 import static io.opentelemetry.javaagent.instrumentation.sling.SlingSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -24,13 +25,16 @@ import javax.servlet.ServletResponse;
 import java.util.Deque;
 
 public class SlingSafeMethodsServletInstrumentation implements TypeInstrumentation {
-
-  // TODO - classloader optimisation
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     System.out.format("SLING TRACE Got asked about typeMatcher%n");
 //    return named("org.apache.sling.api.servlets.SlingSafeMethodsServlet");
     return AgentElementMatchers.implementsInterface(named("javax.servlet.Servlet"));
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.apache.sling.api.SlingHttpServletRequest");
   }
 
   @Override
