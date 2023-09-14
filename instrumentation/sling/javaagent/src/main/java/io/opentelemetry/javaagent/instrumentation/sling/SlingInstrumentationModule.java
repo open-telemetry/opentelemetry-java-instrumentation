@@ -17,9 +17,4 @@ public class SlingInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return Arrays.asList(new ServletResolverInstrumentation(), new SlingSafeMethodsServletInstrumentation());
   }
-
-  @Override
-  public int order() {
-    return -1;
-  }
 }

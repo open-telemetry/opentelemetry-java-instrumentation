@@ -11,9 +11,6 @@ import org.apache.sling.api.SlingHttpServletRequest;
 
 import javax.servlet.Servlet;
 
-import java.util.Deque;
-import java.util.LinkedList;
-
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.sling.SlingSingletons.REQUEST_ATTR_RESOLVED_SERVLET_NAME;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -49,7 +46,6 @@ public class ServletResolverInstrumentation  implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      // TODO - copied from RequestUtil
       String name = null;
 
       if (servlet.getServletConfig() != null) {
@@ -62,14 +58,7 @@ public class ServletResolverInstrumentation  implements TypeInstrumentation {
         name = servlet.getClass().getName();
       }
 
-      @SuppressWarnings("unchecked")
-      Deque<String> servletNames = (Deque<String>) request.getAttribute(REQUEST_ATTR_RESOLVED_SERVLET_NAME);
-      if ( servletNames == null ) {
-        servletNames = new LinkedList<>();
-        request.setAttribute(REQUEST_ATTR_RESOLVED_SERVLET_NAME, servletNames);
-      }
-      servletNames.addLast(name);
-      System.out.format("SLING TRACE resolved name %s for uri=%s, current stack is %s%n", name, request.getRequestURI(), servletNames);
+      request.setAttribute(REQUEST_ATTR_RESOLVED_SERVLET_NAME, name);
     }
   }
 }

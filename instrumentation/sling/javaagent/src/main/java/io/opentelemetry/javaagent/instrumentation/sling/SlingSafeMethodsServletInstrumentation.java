@@ -1,13 +1,13 @@
 package io.opentelemetry.javaagent.instrumentation.sling;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.sling.SlingSingletons.REQUEST_ATTR_RESOLVED_SERVLET_NAME;
 import static io.opentelemetry.javaagent.instrumentation.sling.SlingSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
@@ -15,19 +15,17 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSou
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.sling.api.SlingHttpServletRequest;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import java.util.Deque;
 
 public class SlingSafeMethodsServletInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return AgentElementMatchers.implementsInterface(named("javax.servlet.Servlet"));
+    return implementsInterface(named("javax.servlet.Servlet"));
   }
 
   @Override
@@ -60,19 +58,29 @@ public class SlingSafeMethodsServletInstrumentation implements TypeInstrumentati
         return;
       }
 
-      System.out.format("SLING TRACE Handling request %s%n", request);
-
       SlingHttpServletRequest slingRequest = (SlingHttpServletRequest) request;
 
       Context parentContext = Java8BytecodeBridge.currentContext();
 
       if (!helper().shouldStart(parentContext, slingRequest)) {
-        System.out.format("SLING TRACE should not handle %s%n", request);
         return;
       }
 
+      // written by ServletResolverInstrumentation
+      Object servletName = request.getAttribute(REQUEST_ATTR_RESOLVED_SERVLET_NAME);
+      if ( !(servletName instanceof String) ) {
+        return;
+      }
+
+      // TODO - figure out why don't we have matches for all requests and find a better way to filter
       context = helper().start(parentContext, slingRequest);
       scope = context.makeCurrent();
+
+      // ensure that the top-level route is Sling-specific
+      HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, (String) servletName);
+
+      // cleanup and ensure we don't have reuse the resolved Servlet name by accident for other requests
+      request.removeAttribute(REQUEST_ATTR_RESOLVED_SERVLET_NAME);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
@@ -83,27 +91,12 @@ public class SlingSafeMethodsServletInstrumentation implements TypeInstrumentati
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      System.out.format("SLING TRACE on exit for %s%n", request);
-
       if (scope == null) {
         return;
       }
       scope.close();
 
       SlingHttpServletRequest slingRequest = (SlingHttpServletRequest) request;
-      // written by ServletResolverInstrumentation
-      Object servletNameStack = request.getAttribute(REQUEST_ATTR_RESOLVED_SERVLET_NAME);
-
-      System.out.format("SLING TRACE servletName attr for %s is %s%n", request, servletNameStack);
-
-      if ( servletNameStack instanceof Deque<?>) {
-        Deque<?> nameStack = (Deque<?>) servletNameStack;
-        if ( ! nameStack.isEmpty() ) {
-          String servletName = (String) nameStack.removeLast();
-          Span.fromContext(context).updateName(servletName);
-          HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER,servletName);
-        }
-      }
       helper().end(context, slingRequest, null, throwable);
     }
   }
