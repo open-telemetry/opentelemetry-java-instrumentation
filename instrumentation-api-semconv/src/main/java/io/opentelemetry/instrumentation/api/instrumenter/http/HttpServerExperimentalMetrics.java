@@ -7,13 +7,13 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpRequestBodySize;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpResponseBodySize;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerRequestSizeView;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.LongHistogramBuilder;
 import io.opentelemetry.api.metrics.LongUpDownCounter;
+import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -54,31 +54,34 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
   private final LongHistogram responseSize;
 
   private HttpServerExperimentalMetrics(Meter meter) {
-    activeRequests =
+    LongUpDownCounterBuilder activeRequestsBuilder =
         meter
             .upDownCounterBuilder("http.server.active_requests")
             .setUnit("{requests}")
-            .setDescription("The number of concurrent HTTP requests that are currently in-flight")
-            .build();
-    requestSize =
+            .setDescription("The number of concurrent HTTP requests that are currently in-flight");
+    HttpMetricsAdvice.applyServerActiveRequestsAdvice(activeRequestsBuilder);
+    activeRequests = activeRequestsBuilder.build();
+    LongHistogramBuilder requestSizeBuilder =
         meter
             .histogramBuilder("http.server.request.size")
             .setUnit("By")
             .setDescription("The size of HTTP request messages")
-            .ofLongs()
-            .build();
-    responseSize =
+            .ofLongs();
+    HttpMetricsAdvice.applyServerRequestSizeAdvice(requestSizeBuilder);
+    requestSize = requestSizeBuilder.build();
+    LongHistogramBuilder responseSizeBuilder =
         meter
             .histogramBuilder("http.server.response.size")
             .setUnit("By")
             .setDescription("The size of HTTP response messages")
-            .ofLongs()
-            .build();
+            .ofLongs();
+    HttpMetricsAdvice.applyServerRequestSizeAdvice(responseSizeBuilder);
+    responseSize = responseSizeBuilder.build();
   }
 
   @Override
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-    activeRequests.add(1, applyActiveRequestsView(startAttributes), context);
+    activeRequests.add(1, startAttributes, context);
 
     return context.with(HTTP_SERVER_EXPERIMENTAL_METRICS_START_ATTRIBUTES, startAttributes);
   }
@@ -95,9 +98,9 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
     }
     // it's important to use exactly the same attributes that were used when incrementing the active
     // request count (otherwise it will split the timeseries)
-    activeRequests.add(-1, applyActiveRequestsView(startAttributes), context);
+    activeRequests.add(-1, startAttributes, context);
 
-    Attributes sizeAttributes = applyServerRequestSizeView(startAttributes, endAttributes);
+    Attributes sizeAttributes = startAttributes.toBuilder().putAll(endAttributes).build();
 
     Long requestBodySize = getHttpRequestBodySize(endAttributes, startAttributes);
     if (requestBodySize != null) {

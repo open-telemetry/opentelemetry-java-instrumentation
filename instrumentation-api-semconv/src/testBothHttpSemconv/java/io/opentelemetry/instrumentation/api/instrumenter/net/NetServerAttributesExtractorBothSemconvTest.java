@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
@@ -14,7 +14,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;

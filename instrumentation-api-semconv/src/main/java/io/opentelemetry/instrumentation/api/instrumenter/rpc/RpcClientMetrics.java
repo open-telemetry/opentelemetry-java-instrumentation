@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.rpc.MetricsView.applyClientView;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -36,12 +36,13 @@ public final class RpcClientMetrics implements OperationListener {
   private final DoubleHistogram clientDurationHistogram;
 
   private RpcClientMetrics(Meter meter) {
-    clientDurationHistogram =
+    DoubleHistogramBuilder durationBuilder =
         meter
             .histogramBuilder("rpc.client.duration")
             .setDescription("The duration of an outbound RPC invocation")
-            .setUnit("ms")
-            .build();
+            .setUnit("ms");
+    RpcMetricsAdvice.applyClientDurationAdvice(durationBuilder);
+    clientDurationHistogram = durationBuilder.build();
   }
 
   /**
@@ -72,7 +73,7 @@ public final class RpcClientMetrics implements OperationListener {
     }
     clientDurationHistogram.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
-        applyClientView(state.startAttributes(), endAttributes),
+        state.startAttributes().toBuilder().putAll(endAttributes).build(),
         context);
   }
 

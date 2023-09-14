@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,6 +121,7 @@ class HttpServerAttributesExtractorBothSemconvTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void normal() {
     Map<String, Object> request = new HashMap<>();
     request.put("method", "POST");

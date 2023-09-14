@@ -19,7 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.test.server.http.RequestContextGetter;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -76,6 +76,7 @@ class ReactorNettyBaseUrlOnlyTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void testSuccessfulRequest() {
     HttpClient httpClient = HttpClient.create();
     String uri = "http://localhost:" + server.httpPort() + "/base";

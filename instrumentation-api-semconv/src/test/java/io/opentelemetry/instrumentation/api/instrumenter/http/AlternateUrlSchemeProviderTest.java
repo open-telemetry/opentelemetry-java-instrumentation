@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,6 +14,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,8 +44,8 @@ class AlternateUrlSchemeProviderTest {
 
   @ParameterizedTest
   @ArgumentsSource(ForwardedHeaderValues.class)
-  void parseForwardedHeader(String headerValue, String expectedScheme) {
-    doReturn(singletonList(headerValue)).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
+  void parseForwardedHeader(List<String> values, String expectedScheme) {
+    doReturn(values).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
     assertThat(underTest.apply(REQUEST)).isEqualTo(expectedScheme);
   }
 
@@ -52,29 +54,28 @@ class AlternateUrlSchemeProviderTest {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) {
       return Stream.of(
-          arguments("for=1.1.1.1;proto=xyz", "xyz"),
-          arguments("for=1.1.1.1;proto=xyz;", "xyz"),
-          arguments("for=1.1.1.1;proto=xyz,", "xyz"),
-          arguments("for=1.1.1.1;proto=", null),
-          arguments("for=1.1.1.1;proto=;", null),
-          arguments("for=1.1.1.1;proto=,", null),
-          arguments("for=1.1.1.1;proto=\"xyz\"", "xyz"),
-          arguments("for=1.1.1.1;proto=\"xyz\";", "xyz"),
-          arguments("for=1.1.1.1;proto=\"xyz\",", "xyz"),
-          arguments("for=1.1.1.1;proto=\"", null),
-          arguments("for=1.1.1.1;proto=\"\"", null),
-          arguments("for=1.1.1.1;proto=\"\";", null),
-          arguments("for=1.1.1.1;proto=\"\",", null));
+          arguments(singletonList("for=1.1.1.1;proto=xyz"), "xyz"),
+          arguments(singletonList("for=1.1.1.1;proto=xyz;"), "xyz"),
+          arguments(singletonList("for=1.1.1.1;proto=xyz,"), "xyz"),
+          arguments(singletonList("for=1.1.1.1;proto="), null),
+          arguments(singletonList("for=1.1.1.1;proto=;"), null),
+          arguments(singletonList("for=1.1.1.1;proto=,"), null),
+          arguments(singletonList("for=1.1.1.1;proto=\"xyz\""), "xyz"),
+          arguments(singletonList("for=1.1.1.1;proto=\"xyz\";"), "xyz"),
+          arguments(singletonList("for=1.1.1.1;proto=\"xyz\","), "xyz"),
+          arguments(singletonList("for=1.1.1.1;proto=\""), null),
+          arguments(singletonList("for=1.1.1.1;proto=\"\""), null),
+          arguments(singletonList("for=1.1.1.1;proto=\"\";"), null),
+          arguments(singletonList("for=1.1.1.1;proto=\"\","), null),
+          arguments(asList("for=1.1.1.1", "proto=xyz", "proto=abc"), "xyz"));
     }
   }
 
   @ParameterizedTest
   @ArgumentsSource(ForwardedProtoHeaderValues.class)
-  void parseForwardedProtoHeader(String headerValue, String expectedScheme) {
+  void parseForwardedProtoHeader(List<String> values, String expectedScheme) {
     doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
-    doReturn(singletonList(headerValue))
-        .when(getter)
-        .getHttpRequestHeader(REQUEST, "x-forwarded-proto");
+    doReturn(values).when(getter).getHttpRequestHeader(REQUEST, "x-forwarded-proto");
     assertThat(underTest.apply(REQUEST)).isEqualTo(expectedScheme);
   }
 
@@ -82,7 +83,11 @@ class AlternateUrlSchemeProviderTest {
 
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) {
-      return Stream.of(arguments("xyz", "xyz"), arguments("\"xyz\"", "xyz"), arguments("\"", null));
+      return Stream.of(
+          arguments(singletonList("xyz"), "xyz"),
+          arguments(singletonList("\"xyz\""), "xyz"),
+          arguments(singletonList("\""), null),
+          arguments(asList("xyz", "abc"), "xyz"));
     }
   }
 }

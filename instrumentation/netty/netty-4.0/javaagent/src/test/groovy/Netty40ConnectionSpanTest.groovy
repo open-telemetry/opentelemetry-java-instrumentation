@@ -22,7 +22,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Shared
 
 import java.util.concurrent.CompletableFuture
@@ -32,7 +32,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP
 
 class Netty40ConnectionSpanTest extends InstrumentationSpecification implements AgentTestTrait {
 

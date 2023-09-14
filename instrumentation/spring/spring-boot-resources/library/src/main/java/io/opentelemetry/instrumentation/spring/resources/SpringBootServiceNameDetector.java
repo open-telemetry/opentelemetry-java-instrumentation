@@ -12,7 +12,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
+import io.opentelemetry.semconv.ResourceAttributes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -259,7 +259,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   @Nullable
   private String loadFromClasspath(String filename, Function<InputStream, String> parser) {
     try (InputStream in = system.openClasspathResource(filename)) {
-      return parser.apply(in);
+      return in != null ? parser.apply(in) : null;
     } catch (Exception e) {
       return null;
     }

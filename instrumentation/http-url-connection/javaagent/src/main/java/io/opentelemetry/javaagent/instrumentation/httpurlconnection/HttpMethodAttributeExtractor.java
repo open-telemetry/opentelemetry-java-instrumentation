@@ -14,7 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.HttpURLConnection;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -39,6 +39,7 @@ public class HttpMethodAttributeExtractor<
       AttributesBuilder attributes, Context parentContext, HttpURLConnection connection) {}
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onEnd(
       AttributesBuilder attributes,
       Context context,

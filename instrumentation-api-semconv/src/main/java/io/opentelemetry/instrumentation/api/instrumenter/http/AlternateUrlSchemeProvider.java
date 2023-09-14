@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpCommonAttributesExtractor.firstHeaderValue;
-
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.util.Locale;
 import java.util.function.Function;
@@ -34,18 +32,19 @@ final class AlternateUrlSchemeProvider<REQUEST> implements Function<REQUEST, Str
     }
 
     // try Forwarded
-    String forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "forwarded"));
-    if (forwarded != null) {
-      forwarded = extractProtoFromForwardedHeader(forwarded);
-      if (forwarded != null) {
-        return forwarded;
+    for (String forwarded : getter.getHttpRequestHeader(request, "forwarded")) {
+      String proto = extractProtoFromForwardedHeader(forwarded);
+      if (proto != null) {
+        return proto;
       }
     }
 
     // try X-Forwarded-Proto
-    forwarded = firstHeaderValue(getter.getHttpRequestHeader(request, "x-forwarded-proto"));
-    if (forwarded != null) {
-      return extractProtoFromForwardedProtoHeader(forwarded);
+    for (String forwardedProto : getter.getHttpRequestHeader(request, "x-forwarded-proto")) {
+      String proto = extractProtoFromForwardedProtoHeader(forwardedProto);
+      if (proto != null) {
+        return proto;
+      }
     }
 
     return null;

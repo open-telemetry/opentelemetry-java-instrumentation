@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -87,6 +87,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void traceRequest(boolean useCache) throws IOException {
     URL url = resolveAddress("/success").toURL();
 
@@ -161,6 +162,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @ParameterizedTest
   @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void testBrokenApiUsage() throws IOException {
     URL url = resolveAddress("/success").toURL();
     HttpURLConnection connection =
@@ -202,6 +204,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void testPostRequest() throws IOException {
     URL url = resolveAddress("/success").toURL();
     testing.runWithSpan(
@@ -256,6 +259,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void getOutputStreamShouldTransformGetIntoPost() throws IOException {
     URL url = resolveAddress("/success").toURL();
     testing.runWithSpan(
@@ -315,6 +319,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @ParameterizedTest
   @ValueSource(strings = {"http", "https"})
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void traceRequestWithConnectionFailure(String scheme) {
     String uri = scheme + "://localhost:" + PortUtils.UNUSABLE_PORT;
 

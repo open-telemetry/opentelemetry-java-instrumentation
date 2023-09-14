@@ -8,12 +8,13 @@ package io.opentelemetry.instrumentation.spring.web.v3_1;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashSet;
@@ -95,17 +96,20 @@ public class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEnt
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestCircularRedirects();
     optionsBuilder.disableTestReadTimeout();
     optionsBuilder.disableTestNonStandardHttpMethod();
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
-          return attributes;
-        });
+    if (SemconvStability.emitOldHttpSemconv()) {
+      optionsBuilder.setHttpAttributes(
+          uri -> {
+            Set<AttributeKey<?>> attributes =
+                new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+            attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
+            attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+            return attributes;
+          });
+    }
   }
 }

@@ -5,13 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.util.Map;
-import java.util.Set;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -26,11 +24,6 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.setUserAgent(USER_AGENT);
-    optionsBuilder.setHttpAttributes(AbstractApacheHttpClientTest::getHttpAttributes);
-  }
-
-  private static Set<AttributeKey<?>> getHttpAttributes(URI endpoint) {
-    return HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES;
   }
 
   @Override

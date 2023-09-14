@@ -23,7 +23,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -37,6 +37,7 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junitpioneer.jupiter.cartesian.CartesianTest;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public abstract class AbstractGrpcStreamingTest {
 
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);
