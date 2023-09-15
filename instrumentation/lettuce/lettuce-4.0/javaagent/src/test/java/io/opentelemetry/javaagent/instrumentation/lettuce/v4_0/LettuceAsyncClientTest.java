@@ -84,7 +84,7 @@ class LettuceAsyncClientTest {
   static RedisAsyncCommands<String, String> asyncCommands;
 
   @BeforeAll
-  public static void setUp() {
+  static void setUp() {
     redisServer.start();
     host = redisServer.getHost();
     port = redisServer.getMappedPort(6379);
@@ -107,7 +107,7 @@ class LettuceAsyncClientTest {
   }
 
   @AfterAll
-  public static void cleanUp() {
+  static void cleanUp() {
     connection.close();
     redisServer.stop();
   }

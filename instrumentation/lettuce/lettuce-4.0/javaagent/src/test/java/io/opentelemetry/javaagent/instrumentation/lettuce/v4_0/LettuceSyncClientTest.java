@@ -66,7 +66,7 @@ class LettuceSyncClientTest {
   static RedisCommands<String, String> syncCommands;
 
   @BeforeAll
-  public static void setUp() {
+  static void setUp() {
     redisServer.start();
 
     host = redisServer.getHost();
@@ -89,7 +89,7 @@ class LettuceSyncClientTest {
   }
 
   @AfterAll
-  public static void cleanUp() {
+  static void cleanUp() {
     connection.close();
     redisServer.stop();
   }
@@ -100,6 +100,7 @@ class LettuceSyncClientTest {
     testConnectionClient.setOptions(CLIENT_OPTIONS);
 
     StatefulRedisConnection<String, String> testConnection = testConnectionClient.connect();
+    cleanup.deferCleanup(() -> testConnection.close());
 
     testing.waitAndAssertTraces(
         trace ->
@@ -111,7 +112,6 @@ class LettuceSyncClientTest {
                             equalTo(SemanticAttributes.NET_PEER_NAME, host),
                             equalTo(SemanticAttributes.NET_PEER_PORT, port),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"))));
-    testConnection.close();
   }
 
   @Test
