@@ -26,7 +26,7 @@ jib {
 }
 
 // windows containers are built manually since jib does not support windows containers yet
-val backendDockerBuildDir = file("$buildDir/docker-backend")
+val backendDockerBuildDir = layout.buildDirectory.dir("docker-backend")
 
 tasks {
   withType<JavaCompile>().configureEach {
@@ -59,7 +59,7 @@ tasks {
     inputDir.set(backendDockerBuildDir)
 
     images.add("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:$extraTag")
-    dockerFile.set(File(backendDockerBuildDir, "windows.dockerfile"))
+    dockerFile.set(File(backendDockerBuildDir.get().asFile, "windows.dockerfile"))
   }
 
   val dockerPush by registering(DockerPushImage::class) {
