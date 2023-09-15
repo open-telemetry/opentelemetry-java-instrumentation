@@ -129,10 +129,10 @@ class KtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
       HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES - SemanticAttributes.NET_PEER_PORT
     }
 
-    options.setExpectedHttpRoute {
-      when (it) {
+    options.setExpectedHttpRoute { endpoint, method ->
+      when (endpoint) {
         ServerEndpoint.PATH_PARAM -> "/path/{id}/param"
-        else -> expectedHttpRoute(it)
+        else -> expectedHttpRoute(endpoint, method)
       }
     }
     // ktor does not have a controller lifecycle so the server span ends immediately when the

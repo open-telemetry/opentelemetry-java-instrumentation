@@ -39,7 +39,10 @@ public final class LibertyDispatcherSingletons {
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
-            .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
+            .addContextCustomizer(
+                HttpServerRoute.builder(httpAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build())
             .addOperationMetrics(HttpServerMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpServerMetrics()) {
       builder.addOperationMetrics(HttpServerExperimentalMetrics.get());

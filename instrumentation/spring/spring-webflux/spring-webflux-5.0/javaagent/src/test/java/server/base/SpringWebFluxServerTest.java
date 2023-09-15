@@ -49,7 +49,7 @@ public abstract class SpringWebFluxServerTest
   }
 
   @Override
-  public String expectedHttpRoute(ServerEndpoint endpoint) {
+  public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     if (endpoint.equals(PATH_PARAM)) {
       return getContextPath() + "/path/{id}/param";
     } else if (endpoint.equals(NOT_FOUND)) {
@@ -57,7 +57,7 @@ public abstract class SpringWebFluxServerTest
     } else if (endpoint.equals(NESTED_PATH)) {
       return "/nestedPath/hello/world";
     }
-    return super.expectedHttpRoute(endpoint);
+    return super.expectedHttpRoute(endpoint, method);
   }
 
   @Override

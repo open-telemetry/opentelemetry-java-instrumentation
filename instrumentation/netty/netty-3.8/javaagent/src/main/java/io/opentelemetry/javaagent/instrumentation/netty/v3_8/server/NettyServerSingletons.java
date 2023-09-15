@@ -49,7 +49,10 @@ final class NettyServerSingletons {
         builder
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
-            .addContextCustomizer(HttpServerRoute.create(httpServerAttributesGetter))
+            .addContextCustomizer(
+                HttpServerRoute.builder(httpServerAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build())
             .buildServerInstrumenter(NettyHeadersGetter.INSTANCE);
   }
 

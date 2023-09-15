@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -50,6 +51,9 @@ public final class RatpackTelemetryBuilder {
       HttpSpanNameExtractor.builder(RatpackHttpClientAttributesGetter.INSTANCE);
   private final HttpSpanNameExtractorBuilder<Request> httpServerSpanNameExtractorBuilder =
       HttpSpanNameExtractor.builder(RatpackHttpAttributesGetter.INSTANCE);
+
+  private final HttpServerRouteBuilder<Request> httpServerRouteBuilder =
+      HttpServerRoute.builder(RatpackHttpAttributesGetter.INSTANCE);
 
   private final List<AttributesExtractor<? super RequestSpec, ? super HttpResponse>>
       additionalHttpClientExtractors = new ArrayList<>();
@@ -143,6 +147,7 @@ public final class RatpackTelemetryBuilder {
     httpServerAttributesExtractorBuilder.setKnownMethods(knownMethods);
     httpClientSpanNameExtractorBuilder.setKnownMethods(knownMethods);
     httpServerSpanNameExtractorBuilder.setKnownMethods(knownMethods);
+    httpServerRouteBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -187,7 +192,7 @@ public final class RatpackTelemetryBuilder {
             .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpServerMetrics.get())
-            .addContextCustomizer(HttpServerRoute.create(httpAttributes));
+            .addContextCustomizer(httpServerRouteBuilder.build());
     if (emitExperimentalHttpServerMetrics) {
       builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
     }

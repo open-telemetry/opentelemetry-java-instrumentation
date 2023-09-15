@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -61,6 +62,9 @@ public final class ArmeriaTelemetryBuilder {
       HttpSpanNameExtractor.builder(ArmeriaHttpClientAttributesGetter.INSTANCE);
   private final HttpSpanNameExtractorBuilder<RequestContext> httpServerSpanNameExtractorBuilder =
       HttpSpanNameExtractor.builder(ArmeriaHttpServerAttributesGetter.INSTANCE);
+
+  private final HttpServerRouteBuilder<RequestContext> httpServerRouteBuilder =
+      HttpServerRoute.builder(ArmeriaHttpServerAttributesGetter.INSTANCE);
 
   private Function<
           SpanStatusExtractor<RequestContext, RequestLog>,
@@ -175,6 +179,7 @@ public final class ArmeriaTelemetryBuilder {
     httpServerAttributesExtractorBuilder.setKnownMethods(knownMethods);
     httpClientSpanNameExtractorBuilder.setKnownMethods(knownMethods);
     httpServerSpanNameExtractorBuilder.setKnownMethods(knownMethods);
+    httpServerRouteBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -233,7 +238,7 @@ public final class ArmeriaTelemetryBuilder {
                 HttpSpanStatusExtractor.create(serverAttributesGetter)))
         .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
         .addOperationMetrics(HttpServerMetrics.get())
-        .addContextCustomizer(HttpServerRoute.create(serverAttributesGetter));
+        .addContextCustomizer(httpServerRouteBuilder.build());
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
@@ -14,6 +15,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
+import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +35,10 @@ class HttpServerRouteTest {
   void setUp() {
     instrumenter =
         Instrumenter.<String, Void>builder(testing.getOpenTelemetry(), "test", s -> s)
-            .addContextCustomizer(HttpServerRoute.create(getter))
+            .addContextCustomizer(
+                HttpServerRoute.builder(getter)
+                    .setKnownMethods(new HashSet<>(singletonList("GET")))
+                    .build())
             .buildInstrumenter();
   }
 
@@ -158,7 +163,7 @@ class HttpServerRouteTest {
   }
 
   @Test
-  void shouldNotUpdateSpanName_noMethod() {
+  void shouldUseHttp_noMethod() {
     when(getter.getHttpRequestMethod("test")).thenReturn(null);
 
     Context context = instrumenter.start(Context.root(), "test");
@@ -169,6 +174,23 @@ class HttpServerRouteTest {
     instrumenter.end(context, "test", null, null);
 
     assertEquals("/get/:id", HttpServerRoute.get(context));
-    assertThat(testing.getSpans()).satisfiesExactly(span -> assertThat(span).hasName("test"));
+    assertThat(testing.getSpans())
+        .satisfiesExactly(span -> assertThat(span).hasName("HTTP /get/:id"));
+  }
+
+  @Test
+  void shouldUseHttp_unknownMethod() {
+    when(getter.getHttpRequestMethod("test")).thenReturn("POST");
+
+    Context context = instrumenter.start(Context.root(), "test");
+    assertNull(HttpServerRoute.get(context));
+
+    HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/get/:id");
+
+    instrumenter.end(context, "test", null, null);
+
+    assertEquals("/get/:id", HttpServerRoute.get(context));
+    assertThat(testing.getSpans())
+        .satisfiesExactly(span -> assertThat(span).hasName("HTTP /get/:id"));
   }
 }

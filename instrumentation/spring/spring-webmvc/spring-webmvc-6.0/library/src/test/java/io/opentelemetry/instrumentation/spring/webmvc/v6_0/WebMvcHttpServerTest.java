@@ -38,11 +38,11 @@ class WebMvcHttpServerTest extends AbstractHttpServerTest<ConfigurableApplicatio
     options.setTestException(false);
 
     options.setExpectedHttpRoute(
-        endpoint -> {
+        (endpoint, method) -> {
           if (endpoint == ServerEndpoint.PATH_PARAM) {
             return CONTEXT_PATH + "/path/{id}/param";
           }
-          return expectedHttpRoute(endpoint);
+          return expectedHttpRoute(endpoint, method);
         });
   }
 }

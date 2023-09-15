@@ -9,6 +9,7 @@ import com.linecorp.armeria.server.ServerBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -27,5 +28,12 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
                 Collections.singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
             .build()
             .newServiceDecorator());
+  }
+
+  @Override
+  protected void configure(HttpServerTestOptions options) {
+    super.configure(options);
+    // library instrumentation does not create a span at all
+    options.disableTestNonStandardHttpMethod();
   }
 }

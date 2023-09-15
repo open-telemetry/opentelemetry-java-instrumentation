@@ -229,7 +229,6 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
                   String traceID = null,
                   String parentID = null,
                   String method = "GET",
-                  Long responseContentLength = null,
                   ServerEndpoint endpoint = SUCCESS,
                   String spanID = null) {
     serverSpan(trace, index, traceID, parentID, spanID, method,
