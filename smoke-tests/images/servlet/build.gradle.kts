@@ -136,7 +136,7 @@ fun configureImage(
   isWindows: Boolean
 ): String {
   // Using separate build directory for different image
-  val dockerWorkingDir = file("$buildDir/docker-$server-$version-jdk$jdk-$vm-$warProject")
+  val dockerWorkingDir = layout.buildDirectory.dir("docker-$server-$version-jdk$jdk-$vm-$warProject")
   val dockerFileName = "$dockerfile.${if (isWindows) "windows." else ""}dockerfile"
   val platformSuffix = if (isWindows) "-windows" else ""
 
@@ -200,7 +200,7 @@ fun configureImage(
 
     inputDir.set(dockerWorkingDir)
     images.add(image)
-    dockerFile.set(File(dockerWorkingDir, dockerFileName))
+    dockerFile.set(File(dockerWorkingDir.get().asFile, dockerFileName))
     buildArgs.set(extraArgs + mapOf("jdk" to jdk, "vm" to vm, "version" to version, "jdkImage" to jdkImage))
     doLast {
       matrix.add(image)
