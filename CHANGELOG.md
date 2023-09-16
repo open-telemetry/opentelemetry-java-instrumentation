@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fix `rpc.server.duration` metric description to match semantic conventions
+   ([#9479](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9479))
+
 ## Version 1.30.0 (2023-09-14)
 
 ### Migration notes
