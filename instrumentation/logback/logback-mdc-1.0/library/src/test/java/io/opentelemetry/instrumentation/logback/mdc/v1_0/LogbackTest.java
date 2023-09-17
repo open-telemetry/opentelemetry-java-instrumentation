@@ -5,4 +5,4 @@
 
 package io.opentelemetry.instrumentation.logback.mdc.v1_0;
 
-class LogbackTest extends AbstractLogbackTest {}
+class LogbackTest extends AbstractLogbackLibraryTest {}

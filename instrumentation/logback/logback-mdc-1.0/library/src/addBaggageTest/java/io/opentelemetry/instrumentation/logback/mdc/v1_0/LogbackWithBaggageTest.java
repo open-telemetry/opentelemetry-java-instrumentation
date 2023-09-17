@@ -5,4 +5,9 @@
 
 package io.opentelemetry.instrumentation.logback.mdc.v1_0;
 
-class LogbackWithBaggageTest extends AbstractLogbackWithBaggageTest {}
+class LogbackWithBaggageTest extends AbstractLogbackLibraryTest {
+  @Override
+  boolean expectBaggage() {
+    return true;
+  }
+}

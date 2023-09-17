@@ -7,9 +7,4 @@ package io.opentelemetry.javaagent.instrumentation.logback.v1_0;
 
 import io.opentelemetry.instrumentation.logback.mdc.v1_0.AbstractLogbackAgentTest;
 
-class LogbackWithBaggageTest extends AbstractLogbackAgentTest {
-  @Override
-  protected boolean expectBaggage() {
-    return true;
-  }
-}
+class LogbackTest extends AbstractLogbackAgentTest {}
