@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.spring.resources;
 
 import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_VERSION;
@@ -6,11 +11,11 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
+import java.io.InputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import java.io.InputStream;
 
 @ExtendWith(MockitoExtension.class)
 class SpringBootServiceVersionDetectorTest {
@@ -18,10 +23,8 @@ class SpringBootServiceVersionDetectorTest {
   static final String BUILD_PROPS = "build-info.properties";
   static final String META_INFO = "META-INF";
 
-  @Mock
-  ConfigProperties config;
-  @Mock
-  SpringBootServiceNameDetector.SystemHelper system;
+  @Mock ConfigProperties config;
+  @Mock SpringBootServiceNameDetector.SystemHelper system;
 
   @Test
   void givenBuildVersionIsPresentInBuildInfProperties_thenReturnBuildVersion() {
@@ -36,5 +39,4 @@ class SpringBootServiceVersionDetectorTest {
   private InputStream openClasspathResource(String resource) {
     return getClass().getClassLoader().getResourceAsStream(resource);
   }
-
 }
