@@ -3,25 +3,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
+package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 
 import com.google.common.collect.ImmutableMap;
-import com.lambdaworks.redis.ClientOptions;
-import com.lambdaworks.redis.RedisClient;
-import com.lambdaworks.redis.RedisConnectionException;
-import com.lambdaworks.redis.api.StatefulRedisConnection;
-import com.lambdaworks.redis.api.sync.RedisCommands;
+import io.lettuce.core.ClientOptions;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisConnectionException;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Map;
+import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -31,19 +35,18 @@ import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class LettuceSyncClientTest {
-
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static final DockerImageName containerImage = DockerImageName.parse("redis:6.2.3-alpine");
-
   private static final int DB_INDEX = 0;
 
-  // Disable auto reconnect, so we do not get stray traces popping up on server shutdown
+  // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   private static final ClientOptions CLIENT_OPTIONS =
-      new ClientOptions.Builder().autoReconnect(false).build();
+      ClientOptions.builder().autoReconnect(false).build();
+
+  static final DockerImageName containerImage = DockerImageName.parse("redis:6.2.3-alpine");
 
   private static final GenericContainer<?> redisServer =
       new GenericContainer<>(containerImage).withExposedPorts(6379);
@@ -129,11 +132,26 @@ class LettuceSyncClientTest {
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.CLIENT)
-                        .hasException(exception)
+                        .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.NET_PEER_NAME, host),
                             equalTo(SemanticAttributes.NET_PEER_PORT, incorrectPort),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"))));
+                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"))
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            AttributeKey.stringKey("exception.type"),
+                                            "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
+                                        equalTo(
+                                            AttributeKey.stringKey("exception.message"),
+                                            "Connection refused: localhost/127.0.0.1:"
+                                                + incorrectPort),
+                                        satisfies(
+                                            AttributeKey.stringKey("exception.stacktrace"),
+                                            AbstractAssert::isNotNull)))));
   }
 
   @Test
@@ -149,6 +167,7 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+                            equalTo(SemanticAttributes.DB_STATEMENT, "SET TESTSETKEY ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"))));
   }
 
@@ -165,6 +184,7 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+                            equalTo(SemanticAttributes.DB_STATEMENT, "GET TESTKEY"),
                             equalTo(SemanticAttributes.DB_OPERATION, "GET"))));
   }
 
@@ -181,6 +201,7 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+                            equalTo(SemanticAttributes.DB_STATEMENT, "GET NON_EXISTENT_KEY"),
                             equalTo(SemanticAttributes.DB_OPERATION, "GET"))));
   }
 
@@ -197,6 +218,7 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+                            equalTo(SemanticAttributes.DB_STATEMENT, "RANDOMKEY"),
                             equalTo(SemanticAttributes.DB_OPERATION, "RANDOMKEY"))));
   }
 
@@ -213,6 +235,7 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+                            equalTo(SemanticAttributes.DB_STATEMENT, "LPUSH TESTLIST ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "LPUSH"))));
   }
 
@@ -229,6 +252,9 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+                            equalTo(
+                                SemanticAttributes.DB_STATEMENT,
+                                "HMSET user firstname ? lastname ? age ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "HMSET"))));
   }
 
@@ -245,24 +271,14 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+                            equalTo(SemanticAttributes.DB_STATEMENT, "HGETALL TESTHM"),
                             equalTo(SemanticAttributes.DB_OPERATION, "HGETALL"))));
   }
 
   @Test
   void testDebugSegfaultCommandWithNoArgumentShouldProduceSpan() {
-    // Test Causes redis to crash therefore it needs its own container
-    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
-    server.start();
-    cleanup.deferCleanup(server::stop);
-
-    long serverPort = server.getMappedPort(6379);
-    RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
-    StatefulRedisConnection<String, String> connection1 = client.connect();
-    cleanup.deferCleanup(connection1);
-
-    RedisCommands<String, String> commands = connection1.sync();
-    // 1 connect trace
-    testing.clearData();
+    // Test causes redis to crash therefore it needs its own container
+    RedisCommands<String, String> commands = newContainerCommands();
 
     commands.debugSegfault();
 
@@ -274,27 +290,14 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+                            equalTo(SemanticAttributes.DB_STATEMENT, "DEBUG SEGFAULT"),
                             equalTo(SemanticAttributes.DB_OPERATION, "DEBUG"))));
   }
 
   @Test
   void testShutdownCommandShouldProduceSpan() {
-    // Test Causes redis to crash therefore it needs its own container
-    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
-    server.start();
-    cleanup.deferCleanup(server::stop);
-
-    long shutdownServerPort = server.getMappedPort(6379);
-
-    RedisClient client =
-        RedisClient.create("redis://" + host + ":" + shutdownServerPort + "/" + DB_INDEX);
-    StatefulRedisConnection<String, String> connection1 = client.connect();
-    cleanup.deferCleanup(connection1);
-
-    RedisCommands<String, String> commands = connection1.sync();
-    // 1 connect trace
-    testing.clearData();
-
+    // Test causes redis to crash therefore it needs its own container
+    RedisCommands<String, String> commands = newContainerCommands();
     commands.shutdown(false);
 
     testing.waitAndAssertTraces(
@@ -305,6 +308,24 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+                            equalTo(SemanticAttributes.DB_STATEMENT, "DEBUG SEGFAULT"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SHUTDOWN"))));
+  }
+
+  private static RedisCommands<String, String> newContainerCommands() {
+    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
+    server.start();
+    cleanup.deferCleanup(server::stop);
+
+    long serverPort = server.getMappedPort(6379);
+
+    RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
+    StatefulRedisConnection<String, String> statefulConnection = client.connect();
+    cleanup.deferCleanup(statefulConnection);
+
+    RedisCommands<String, String> commands = statefulConnection.sync();
+    // 1 connect trace
+    testing.clearData();
+    return commands;
   }
 }
