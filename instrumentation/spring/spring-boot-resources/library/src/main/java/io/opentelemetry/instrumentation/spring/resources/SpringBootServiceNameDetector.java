@@ -293,6 +293,11 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
       return classLoader.getResourceAsStream(path);
     }
 
+    InputStream openClasspathResource(String filename, String location) {
+      String path = location + "/" + filename;
+      return classLoader.getResourceAsStream(path);
+    }
+
     InputStream openFile(String filename) throws Exception {
       return Files.newInputStream(Paths.get(filename));
     }
