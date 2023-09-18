@@ -21,17 +21,6 @@ public final class HttpStatusCodeUtil {
 
   static {
     Map<Integer, String> phrases = new HashMap<>();
-    phrases.put(500, "Internal Server Error");
-    phrases.put(501, "Not Implemented");
-    phrases.put(502, "Bad Gateway");
-    phrases.put(503, "Service Unavailable");
-    phrases.put(504, "Gateway Timeout");
-    phrases.put(505, "HTTP Version Not Supported");
-    phrases.put(506, "Variant Also Negotiates");
-    phrases.put(507, "Insufficient Storage");
-    phrases.put(508, "Loop Detected");
-    phrases.put(510, "Not Extended");
-    phrases.put(511, "Network Authentication Required");
     phrases.put(400, "Bad Request");
     phrases.put(401, "Unauthorized");
     phrases.put(402, "Payment Required");
@@ -61,6 +50,17 @@ public final class HttpStatusCodeUtil {
     phrases.put(429, "Too Many Requests");
     phrases.put(431, "Request Header Fields Too Large");
     phrases.put(451, "Unavailable For Legal Reasons");
+    phrases.put(500, "Internal Server Error");
+    phrases.put(501, "Not Implemented");
+    phrases.put(502, "Bad Gateway");
+    phrases.put(503, "Service Unavailable");
+    phrases.put(504, "Gateway Timeout");
+    phrases.put(505, "HTTP Version Not Supported");
+    phrases.put(506, "Variant Also Negotiates");
+    phrases.put(507, "Insufficient Storage");
+    phrases.put(508, "Loop Detected");
+    phrases.put(510, "Not Extended");
+    phrases.put(511, "Network Authentication Required");
     errorTypes = unmodifiableMap(phrases);
   }
 
