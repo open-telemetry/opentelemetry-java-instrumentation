@@ -123,26 +123,154 @@ class HibernateReactiveTest {
     testing.runWithSpan(
         "parent",
         () ->
-            Vertx.vertx()
-                .getOrCreateContext()
-                .runOnContext(
-                    event ->
-                        stageSessionFactory
-                            .withSession(
-                                session -> {
-                                  if (!Span.current().getSpanContext().isValid()) {
-                                    throw new IllegalStateException("missing parent span");
-                                  }
+            runWithVertx(
+                () ->
+                    stageSessionFactory
+                        .withSession(
+                            session -> {
+                              if (!Span.current().getSpanContext().isValid()) {
+                                throw new IllegalStateException("missing parent span");
+                              }
 
-                                  return session
-                                      .find(Value.class, 1L)
-                                      .thenAccept(
-                                          value -> testing.runWithSpan("callback", () -> {}));
-                                })
-                            .thenAccept(unused -> latch.countDown())));
+                              return session
+                                  .find(Value.class, 1L)
+                                  .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                            })
+                        .thenAccept(unused -> latch.countDown())));
     latch.await(30, TimeUnit.SECONDS);
 
     assertTrace();
+  }
+
+  @Test
+  void testStageWithStatelessSession() throws Exception {
+    CountDownLatch latch = new CountDownLatch(1);
+    testing.runWithSpan(
+        "parent",
+        () ->
+            runWithVertx(
+                () ->
+                    stageSessionFactory
+                        .withStatelessSession(
+                            session -> {
+                              if (!Span.current().getSpanContext().isValid()) {
+                                throw new IllegalStateException("missing parent span");
+                              }
+
+                              return session
+                                  .get(Value.class, 1L)
+                                  .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                            })
+                        .thenAccept(unused -> latch.countDown())));
+    latch.await(30, TimeUnit.SECONDS);
+
+    assertTrace();
+  }
+
+  @Test
+  void testStageSessionWithTransaction() throws Exception {
+    CountDownLatch latch = new CountDownLatch(1);
+    testing.runWithSpan(
+        "parent",
+        () ->
+            runWithVertx(
+                () ->
+                    stageSessionFactory
+                        .withSession(
+                            session -> {
+                              if (!Span.current().getSpanContext().isValid()) {
+                                throw new IllegalStateException("missing parent span");
+                              }
+
+                              return session
+                                  .withTransaction(transaction -> session.find(Value.class, 1L))
+                                  .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                            })
+                        .thenAccept(unused -> latch.countDown())));
+    latch.await(30, TimeUnit.SECONDS);
+
+    assertTrace();
+  }
+
+  @Test
+  void testStageStatelessSessionWithTransaction() throws Exception {
+    CountDownLatch latch = new CountDownLatch(1);
+    testing.runWithSpan(
+        "parent",
+        () ->
+            runWithVertx(
+                () ->
+                    stageSessionFactory
+                        .withStatelessSession(
+                            session -> {
+                              if (!Span.current().getSpanContext().isValid()) {
+                                throw new IllegalStateException("missing parent span");
+                              }
+
+                              return session
+                                  .withTransaction(transaction -> session.get(Value.class, 1L))
+                                  .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                            })
+                        .thenAccept(unused -> latch.countDown())));
+    latch.await(30, TimeUnit.SECONDS);
+
+    assertTrace();
+  }
+
+  @Test
+  void testStageOpenSession() throws Exception {
+    CountDownLatch latch = new CountDownLatch(1);
+    testing.runWithSpan(
+        "parent",
+        () ->
+            runWithVertx(
+                () ->
+                    stageSessionFactory
+                        .openSession()
+                        .thenApply(
+                            session -> {
+                              if (!Span.current().getSpanContext().isValid()) {
+                                throw new IllegalStateException("missing parent span");
+                              }
+
+                              return session
+                                  .find(Value.class, 1L)
+                                  .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                            })
+                        .thenAccept(unused -> latch.countDown())));
+    latch.await(30, TimeUnit.SECONDS);
+
+    assertTrace();
+  }
+
+  @Test
+  void testStageOpenStatelessSession() throws Exception {
+    CountDownLatch latch = new CountDownLatch(1);
+    testing.runWithSpan(
+        "parent",
+        () ->
+            runWithVertx(
+                () ->
+                    stageSessionFactory
+                        .openStatelessSession()
+                        .thenApply(
+                            session -> {
+                              if (!Span.current().getSpanContext().isValid()) {
+                                throw new IllegalStateException("missing parent span");
+                              }
+
+                              return session
+                                  .get(Value.class, 1L)
+                                  .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                            })
+                        .thenAccept(unused -> latch.countDown())));
+    latch.await(30, TimeUnit.SECONDS);
+
+    assertTrace();
+  }
+
+  private static void runWithVertx(Runnable runnable) {
+    Vertx.vertx().getOrCreateContext().runOnContext(event -> runnable.run());
   }
 
   @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
