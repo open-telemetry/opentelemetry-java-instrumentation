@@ -20,6 +20,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.util.List;
@@ -92,19 +94,32 @@ public final class NettyClientInstrumenterFactory {
 
     boolean connectionTelemetryFullyEnabled =
         connectionTelemetryState == NettyConnectionInstrumentationFlag.ENABLED;
+    NettyConnectHttpAttributesGetter getter = NettyConnectHttpAttributesGetter.INSTANCE;
 
-    Instrumenter<NettyConnectionRequest, Channel> instrumenter =
+    InstrumenterBuilder<NettyConnectionRequest, Channel> builder =
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 openTelemetry, instrumentationName, NettyConnectionRequest::spanName)
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(
-                    NettyConnectHttpAttributesGetter.INSTANCE, peerServiceMapping))
-            .addAttributesExtractor(
-                HttpClientAttributesExtractor.create(NettyConnectHttpAttributesGetter.INSTANCE))
-            .buildInstrumenter(
-                connectionTelemetryFullyEnabled
-                    ? SpanKindExtractor.alwaysInternal()
-                    : SpanKindExtractor.alwaysClient());
+                PeerServiceAttributesExtractor.create(getter, peerServiceMapping));
+
+    if (connectionTelemetryFullyEnabled) {
+      // when the connection telemetry is fully enabled, CONNECT spans are created for every
+      // request; and semantically they're not HTTP spans, they must not use the HTTP client
+      // extractor
+      builder
+          .addAttributesExtractor(NetworkAttributesExtractor.create(getter))
+          .addAttributesExtractor(ServerAttributesExtractor.create(getter));
+    } else {
+      // in case the connection telemetry is emitted only on errors, the CONNECT span is a stand-in
+      // for the HTTP client span
+      builder.addAttributesExtractor(HttpClientAttributesExtractor.create(getter));
+    }
+
+    Instrumenter<NettyConnectionRequest, Channel> instrumenter =
+        builder.buildInstrumenter(
+            connectionTelemetryFullyEnabled
+                ? SpanKindExtractor.alwaysInternal()
+                : SpanKindExtractor.alwaysClient());
 
     return connectionTelemetryFullyEnabled
         ? new NettyConnectionInstrumenterImpl(instrumenter)

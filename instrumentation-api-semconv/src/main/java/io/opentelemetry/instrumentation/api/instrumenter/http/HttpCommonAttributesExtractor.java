@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashSet;
@@ -31,16 +32,19 @@ abstract class HttpCommonAttributesExtractor<
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   final GETTER getter;
+  private final HttpStatusCodeConverter statusCodeConverter;
   private final List<String> capturedRequestHeaders;
   private final List<String> capturedResponseHeaders;
   private final Set<String> knownMethods;
 
   HttpCommonAttributesExtractor(
       GETTER getter,
+      HttpStatusCodeConverter statusCodeConverter,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders,
       Set<String> knownMethods) {
     this.getter = getter;
+    this.statusCodeConverter = statusCodeConverter;
     this.capturedRequestHeaders = lowercase(capturedRequestHeaders);
     this.capturedResponseHeaders = lowercase(capturedResponseHeaders);
     this.knownMethods = new HashSet<>(knownMethods);
@@ -88,8 +92,9 @@ abstract class HttpCommonAttributesExtractor<
       internalSet(attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestBodySize);
     }
 
+    Integer statusCode = null;
     if (response != null) {
-      Integer statusCode = getter.getHttpResponseStatusCode(request, response, error);
+      statusCode = getter.getHttpResponseStatusCode(request, response, error);
       if (statusCode != null && statusCode > 0) {
         if (SemconvStability.emitStableHttpSemconv()) {
           internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, (long) statusCode);
@@ -113,6 +118,23 @@ abstract class HttpCommonAttributesExtractor<
           internalSet(attributes, responseAttributeKey(name), values);
         }
       }
+    }
+
+    if (SemconvStability.emitStableHttpSemconv()) {
+      String errorType;
+      if (statusCode != null) {
+        errorType = statusCodeConverter.getErrorType(statusCode);
+      } else {
+        errorType = getter.getErrorType(request, response, error);
+        // fall back to exception class name & _OTHER
+        if (errorType == null && error != null) {
+          errorType = error.getClass().getName();
+        }
+        if (errorType == null) {
+          errorType = _OTHER;
+        }
+      }
+      internalSet(attributes, HttpAttributes.ERROR_TYPE, errorType);
     }
   }
 

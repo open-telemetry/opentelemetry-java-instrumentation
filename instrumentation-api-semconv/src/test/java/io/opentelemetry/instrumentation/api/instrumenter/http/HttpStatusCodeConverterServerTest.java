@@ -5,24 +5,32 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpStatusConverter.SERVER;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpStatusCodeConverter.SERVER;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.trace.StatusCode;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class HttpServerStatusConverterTest {
+class HttpStatusCodeConverterServerTest {
 
   @ParameterizedTest
-  @MethodSource("generateParams")
+  @MethodSource("spanStatusCodes")
   void httpStatusCodeToOtelStatus(int numeric, StatusCode code) {
-    assertEquals(code, SERVER.statusFromHttpStatus(numeric));
+    assertEquals(code, SERVER.getSpanStatus(numeric));
   }
 
-  static Stream<Arguments> generateParams() {
+  static Stream<Arguments> spanStatusCodes() {
     return Stream.of(
         Arguments.of(100, StatusCode.UNSET),
         Arguments.of(101, StatusCode.UNSET),
@@ -90,5 +98,55 @@ public class HttpServerStatusConverterTest {
         // Don't exist
         Arguments.of(99, StatusCode.ERROR),
         Arguments.of(600, StatusCode.ERROR));
+  }
+
+  @ArgumentsSource(ServerErrorStatusCodes.class)
+  @ParameterizedTest
+  void shouldReturnErrorTypeForServerErrors(int httpStatusCode, String errorType) {
+    assertThat(SERVER.getErrorType(httpStatusCode)).isEqualTo(errorType);
+  }
+
+  static class ServerErrorStatusCodes implements ArgumentsProvider {
+
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) {
+      return Stream.of(
+          arguments(500, "Internal Server Error"),
+          arguments(501, "Not Implemented"),
+          arguments(502, "Bad Gateway"),
+          arguments(503, "Service Unavailable"),
+          arguments(504, "Gateway Timeout"),
+          arguments(505, "HTTP Version Not Supported"),
+          arguments(506, "Variant Also Negotiates"),
+          arguments(507, "Insufficient Storage"),
+          arguments(508, "Loop Detected"),
+          arguments(510, "Not Extended"),
+          arguments(511, "Network Authentication Required"));
+    }
+  }
+
+  @ArgumentsSource(OtherStatusCodes.class)
+  @ParameterizedTest
+  void noErrorTypeForOtherStatusCodes(int httpStatusCode) {
+    assertThat(SERVER.getErrorType(httpStatusCode)).isNull();
+  }
+
+  static class OtherStatusCodes implements ArgumentsProvider {
+
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext)
+        throws Exception {
+
+      Set<Integer> serverErrorCodes =
+          new ServerErrorStatusCodes()
+              .provideArguments(extensionContext)
+              .map(args -> args.get()[0])
+              .map(Integer.class::cast)
+              .collect(Collectors.toSet());
+
+      return IntStream.range(100, 600)
+          .filter(statusCode -> !serverErrorCodes.contains(statusCode))
+          .mapToObj(Arguments::of);
+    }
   }
 }

@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -48,6 +49,7 @@ class HttpClientExperimentalMetricsStableSemconvTest {
             .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
             .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
             .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
+            .put(HttpAttributes.ERROR_TYPE, "Bad Request")
             .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
             .put(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
             .put(SemanticAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4")
@@ -92,6 +94,7 @@ class HttpClientExperimentalMetricsStableSemconvTest {
                                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(HttpAttributes.ERROR_TYPE, "Bad Request"),
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
@@ -118,6 +121,7 @@ class HttpClientExperimentalMetricsStableSemconvTest {
                                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(HttpAttributes.ERROR_TYPE, "Bad Request"),
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(

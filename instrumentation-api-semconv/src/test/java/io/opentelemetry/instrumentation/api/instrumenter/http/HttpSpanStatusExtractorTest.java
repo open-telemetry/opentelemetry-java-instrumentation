@@ -34,7 +34,7 @@ class HttpSpanStatusExtractorTest {
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 500, 501, 600, 601})
   void hasServerStatus(int statusCode) {
-    StatusCode expectedStatusCode = HttpStatusConverter.SERVER.statusFromHttpStatus(statusCode);
+    StatusCode expectedStatusCode = HttpStatusCodeConverter.SERVER.getSpanStatus(statusCode);
     when(serverGetter.getHttpResponseStatusCode(anyMap(), anyMap(), isNull()))
         .thenReturn(statusCode);
 
@@ -51,7 +51,7 @@ class HttpSpanStatusExtractorTest {
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasClientStatus(int statusCode) {
-    StatusCode expectedStatusCode = HttpStatusConverter.CLIENT.statusFromHttpStatus(statusCode);
+    StatusCode expectedStatusCode = HttpStatusCodeConverter.CLIENT.getSpanStatus(statusCode);
     when(clientGetter.getHttpResponseStatusCode(anyMap(), anyMap(), isNull()))
         .thenReturn(statusCode);
 

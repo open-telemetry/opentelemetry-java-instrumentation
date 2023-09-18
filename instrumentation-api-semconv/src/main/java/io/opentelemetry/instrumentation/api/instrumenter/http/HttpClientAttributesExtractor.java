@@ -90,6 +90,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   HttpClientAttributesExtractor(HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder) {
     super(
         builder.httpAttributesGetter,
+        HttpStatusCodeConverter.CLIENT,
         builder.capturedRequestHeaders,
         builder.capturedResponseHeaders,
         builder.knownMethods);

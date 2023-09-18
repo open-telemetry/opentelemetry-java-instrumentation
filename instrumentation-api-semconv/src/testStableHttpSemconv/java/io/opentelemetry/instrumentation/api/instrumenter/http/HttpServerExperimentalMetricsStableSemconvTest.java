@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -51,6 +52,7 @@ class HttpServerExperimentalMetricsStableSemconvTest {
             .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
             .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
             .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
+            .put(HttpAttributes.ERROR_TYPE, "Internal Server Error")
             .put(SemanticAttributes.CLIENT_SOCKET_ADDRESS, "1.2.3.4")
             .put(SemanticAttributes.CLIENT_SOCKET_PORT, 8080)
             .put(SemanticAttributes.SERVER_SOCKET_ADDRESS, "4.3.2.1")
@@ -155,6 +157,8 @@ class HttpServerExperimentalMetricsStableSemconvTest {
                                             equalTo(
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(
+                                                HttpAttributes.ERROR_TYPE, "Internal Server Error"),
+                                            equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
@@ -179,6 +183,8 @@ class HttpServerExperimentalMetricsStableSemconvTest {
                                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(
+                                                HttpAttributes.ERROR_TYPE, "Internal Server Error"),
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(

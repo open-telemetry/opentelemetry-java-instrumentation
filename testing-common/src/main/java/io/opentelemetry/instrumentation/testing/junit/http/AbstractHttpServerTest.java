@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.HttpStatusCodeUtil.assertErrorTypeForStatusCode;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -796,8 +797,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                     SemanticAttributes.CLIENT_PORT, port -> assertThat(port).isGreaterThan(0));
           }
           assertThat(attrs).containsEntry(getAttributeKey(SemanticAttributes.HTTP_METHOD), method);
+
           assertThat(attrs)
               .containsEntry(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), statusCode);
+          if (statusCode >= 500) {
+            assertErrorTypeForStatusCode(attrs, statusCode);
+          }
 
           AttributeKey<String> netProtocolKey =
               getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME);
