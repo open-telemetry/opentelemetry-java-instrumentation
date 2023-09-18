@@ -22,7 +22,6 @@ class UnionMapTest {
   @ParameterizedTest
   @MethodSource("providesMapsArguments")
   void testMaps(Map<String, String> first, Map<String, String> second) {
-
     UnionMap<String, String> union = new UnionMap<>(first, second);
 
     assertThat(union.get("cat")).isEqualTo("meow");

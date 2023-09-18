@@ -5,4 +5,17 @@
 
 package io.opentelemetry.instrumentation.logback.mdc.v1_0;
 
-class LogbackTest extends AbstractLogbackLibraryTest {}
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+class LogbackTest extends AbstractLogbackTest {
+
+  @RegisterExtension
+  static InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  @Override
+  public InstrumentationExtension getInstrumentationExtension() {
+    return testing;
+  }
+}

@@ -5,6 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.v1_0;
 
-import io.opentelemetry.instrumentation.logback.mdc.v1_0.AbstractLogbackAgentTest;
+import io.opentelemetry.instrumentation.logback.mdc.v1_0.AbstractLogbackTest;
 
-class LogbackTest extends AbstractLogbackAgentTest {}
+class LogbackTest extends AbstractLogbackTest {}

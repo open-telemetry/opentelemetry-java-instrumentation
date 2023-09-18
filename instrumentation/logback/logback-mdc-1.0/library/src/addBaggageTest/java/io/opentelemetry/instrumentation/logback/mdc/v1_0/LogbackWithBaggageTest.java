@@ -5,9 +5,22 @@
 
 package io.opentelemetry.instrumentation.logback.mdc.v1_0;
 
-class LogbackWithBaggageTest extends AbstractLogbackLibraryTest {
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+class LogbackWithBaggageTest extends AbstractLogbackTest {
+
+  @RegisterExtension
+  static InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
   @Override
-  boolean expectBaggage() {
+  public InstrumentationExtension getInstrumentationExtension() {
+    return testing;
+  }
+
+  @Override
+  protected boolean expectBaggage() {
     return true;
   }
 }

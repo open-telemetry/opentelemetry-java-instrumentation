@@ -11,6 +11,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.read.ListAppender;
 import io.opentelemetry.api.baggage.Baggage;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
@@ -19,11 +20,13 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-abstract class AbstractLogbackTest {
+public abstract class AbstractLogbackTest implements LogbackInstrumentationTest {
 
   protected static final Logger logger = LoggerFactory.getLogger("test");
 
   protected static ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+
+  protected Baggage baggage = Baggage.empty();
 
   @BeforeAll
   static void setUp() {
@@ -41,14 +44,13 @@ abstract class AbstractLogbackTest {
   }
 
   @BeforeEach
-  void clearList() {
+  void setUpData() {
     listAppender.list.clear();
+    baggage = Baggage.empty().toBuilder().put("baggage_key", "baggage_value").build();
   }
 
   @Test
   void testNoIdsWhenNoSpan() {
-    Baggage baggage = Baggage.empty().toBuilder().put("baggage_key", "baggage_value").build();
-
     runWithBaggage(
         baggage,
         () -> {
@@ -74,10 +76,56 @@ abstract class AbstractLogbackTest {
         .isEqualTo(expectBaggage() ? "baggage_value" : null);
   }
 
+  @Test
+  void testIdsWhenSpan() {
+    Span span1 = runWithSpanAndBaggage("test", baggage, () -> logger.info("log message 1"));
+
+    logger.info("log message 2");
+
+    Span span2 = runWithSpanAndBaggage("test 2", baggage, () -> logger.info("log message 3"));
+
+    List<ILoggingEvent> events = listAppender.list;
+
+    assertThat(events.size()).isEqualTo(3);
+    assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
+    assertThat(events.get(0).getMDCPropertyMap().get("trace_id"))
+        .isEqualTo(span1.getSpanContext().getTraceId());
+    assertThat(events.get(0).getMDCPropertyMap().get("span_id"))
+        .isEqualTo(span1.getSpanContext().getSpanId());
+    assertThat(events.get(0).getMDCPropertyMap().get("trace_flags")).isEqualTo("01");
+    assertThat(events.get(0).getMDCPropertyMap().get("baggage.baggage_key"))
+        .isEqualTo(expectBaggage() ? "baggage_value" : null);
+
+    assertThat(events.get(1).getMessage()).isEqualTo("log message 2");
+    assertThat(events.get(1).getMDCPropertyMap().get("trace_id")).isNull();
+    assertThat(events.get(1).getMDCPropertyMap().get("span_id")).isNull();
+    assertThat(events.get(1).getMDCPropertyMap().get("trace_flags")).isNull();
+    assertThat(events.get(1).getMDCPropertyMap().get("baggage.baggage_key")).isNull();
+
+    assertThat(events.get(2).getMessage()).isEqualTo("log message 3");
+    assertThat(events.get(2).getMDCPropertyMap().get("trace_id"))
+        .isEqualTo(span2.getSpanContext().getTraceId());
+    assertThat(events.get(2).getMDCPropertyMap().get("span_id"))
+        .isEqualTo(span2.getSpanContext().getSpanId());
+    assertThat(events.get(2).getMDCPropertyMap().get("trace_flags")).isEqualTo("01");
+    assertThat(events.get(2).getMDCPropertyMap().get("baggage.baggage_key"))
+        .isEqualTo(expectBaggage() ? "baggage_value" : null);
+  }
+
   void runWithBaggage(Baggage baggage, Runnable runnable) {
     try (Scope unusedScope = baggage.makeCurrent()) {
       runnable.run();
     }
+  }
+
+  Span runWithSpanAndBaggage(String spanName, Baggage baggage, Runnable runnable) {
+    return getInstrumentationExtension()
+        .runWithSpan(
+            spanName,
+            () -> {
+              runWithBaggage(baggage, runnable);
+              return Span.current();
+            });
   }
 
   protected boolean expectBaggage() {
