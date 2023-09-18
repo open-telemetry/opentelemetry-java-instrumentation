@@ -26,7 +26,7 @@ public abstract class AbstractLogbackTest implements LogbackInstrumentationTest 
 
   protected static ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
 
-  protected Baggage baggage = Baggage.empty();
+  protected final Baggage baggage = Baggage.empty().toBuilder().put("baggage_key", "baggage_value").build();
 
   @BeforeAll
   static void setUp() {
@@ -46,7 +46,6 @@ public abstract class AbstractLogbackTest implements LogbackInstrumentationTest 
   @BeforeEach
   void setUpData() {
     listAppender.list.clear();
-    baggage = Baggage.empty().toBuilder().put("baggage_key", "baggage_value").build();
   }
 
   @Test

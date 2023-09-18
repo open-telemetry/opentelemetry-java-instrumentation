@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 
 public interface LogbackInstrumentationTest {
-  static InstrumentationExtension agentTesting = AgentInstrumentationExtension.create();
+  InstrumentationExtension agentTesting = AgentInstrumentationExtension.create();
 
   default InstrumentationExtension getInstrumentationExtension() {
     return agentTesting;
