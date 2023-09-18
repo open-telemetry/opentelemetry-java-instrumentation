@@ -49,7 +49,7 @@ public class SpringBootServiceVersionDetector implements ResourceProvider {
 
   private Optional<String> getServiceVersionFromBuildInfo() {
     try (InputStream in = system.openClasspathResource("build-info.properties", "META-INF")) {
-      return getServiceVersionPropertyFromStream(in);
+      return in != null ? getServiceVersionPropertyFromStream(in) : Optional.empty();
     } catch (Exception e) {
       return Optional.empty();
     }

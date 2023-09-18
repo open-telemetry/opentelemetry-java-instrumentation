@@ -36,6 +36,25 @@ class SpringBootServiceVersionDetectorTest {
     assertThat(result.getAttribute(SERVICE_VERSION)).isEqualTo("0.0.2");
   }
 
+  @Test
+  void givenBuildVersionFileNotPresent_thenReturnEmptyResource() {
+    when(system.openClasspathResource(BUILD_PROPS, META_INFO)).thenReturn(null);
+
+    SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector(system);
+    Resource result = guesser.createResource(config);
+    assertThat(result).isEqualTo(Resource.empty());
+  }
+
+  @Test
+  void givenBuildVersionFileIsPresentButBuildVersionPropertyNotPresent_thenReturnEmptyResource() {
+    when(system.openClasspathResource(BUILD_PROPS, META_INFO))
+        .thenReturn(openClasspathResource(BUILD_PROPS));
+
+    SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector(system);
+    Resource result = guesser.createResource(config);
+    assertThat(result).isEqualTo(Resource.empty());
+  }
+
   private InputStream openClasspathResource(String resource) {
     return getClass().getClassLoader().getResourceAsStream(resource);
   }
