@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class LogbackTest extends AbstractLogbackTest {
+
   @RegisterExtension
   static InstrumentationExtension agentTesting = AgentInstrumentationExtension.create();
 
