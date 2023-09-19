@@ -12,7 +12,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -95,10 +94,10 @@ public class ElasticsearchClientAttributeExtractor
     String method = request.getMethod();
     if (SemconvStability.emitStableHttpSemconv()) {
       if (method == null || knownMethods.contains(method)) {
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
       } else {
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
       }
     }
     if (SemconvStability.emitOldHttpSemconv()) {

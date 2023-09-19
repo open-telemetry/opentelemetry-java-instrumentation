@@ -27,7 +27,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
@@ -523,7 +522,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                               HttpConstants._OTHER,
                               SUCCESS,
                               options.responseCodeOnNonStandardHttpMethod)
-                          .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
+                          .hasAttribute(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
     } finally {
       eventLoopGroup.shutdownGracefully().await(10, TimeUnit.SECONDS);
     }

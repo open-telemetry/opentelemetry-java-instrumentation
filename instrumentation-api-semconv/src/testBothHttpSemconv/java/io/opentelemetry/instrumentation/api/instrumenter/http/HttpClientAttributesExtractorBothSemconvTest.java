@@ -16,7 +16,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -138,7 +137,7 @@ class HttpClientAttributesExtractorBothSemconvTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
-            entry(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
+            entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_URL, "http://github.com"),
             entry(UrlAttributes.URL_FULL, "http://github.com"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
@@ -155,11 +154,11 @@ class HttpClientAttributesExtractorBothSemconvTest {
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
-            entry(HttpAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
+            entry(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
-            entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
+            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
-            entry(HttpAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
+            entry(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
             entry(SemanticAttributes.HTTP_RESEND_COUNT, 2L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),

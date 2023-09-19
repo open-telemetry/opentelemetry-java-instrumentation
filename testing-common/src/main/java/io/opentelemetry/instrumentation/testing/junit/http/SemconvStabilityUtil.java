@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -34,17 +33,19 @@ public class SemconvStabilityUtil {
     addKey(
         oldToNewMap, SemanticAttributes.NET_SOCK_PEER_PORT, NetworkAttributes.CLIENT_SOCKET_PORT);
     addKey(oldToNewMap, SemanticAttributes.HTTP_URL, UrlAttributes.URL_FULL);
-    addKey(oldToNewMap, SemanticAttributes.HTTP_METHOD, HttpAttributes.HTTP_REQUEST_METHOD);
+    addKey(oldToNewMap, SemanticAttributes.HTTP_METHOD, SemanticAttributes.HTTP_REQUEST_METHOD);
     addKey(
         oldToNewMap,
         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
-        HttpAttributes.HTTP_REQUEST_BODY_SIZE);
+        SemanticAttributes.HTTP_REQUEST_BODY_SIZE);
     addKey(
         oldToNewMap,
         SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-        HttpAttributes.HTTP_RESPONSE_BODY_SIZE);
+        SemanticAttributes.HTTP_RESPONSE_BODY_SIZE);
     addKey(
-        oldToNewMap, SemanticAttributes.HTTP_STATUS_CODE, HttpAttributes.HTTP_RESPONSE_STATUS_CODE);
+        oldToNewMap,
+        SemanticAttributes.HTTP_STATUS_CODE,
+        SemanticAttributes.HTTP_RESPONSE_STATUS_CODE);
     addKey(oldToNewMap, SemanticAttributes.NET_HOST_NAME, NetworkAttributes.SERVER_ADDRESS);
     addKey(oldToNewMap, SemanticAttributes.NET_HOST_PORT, NetworkAttributes.SERVER_PORT);
     addKey(oldToNewMap, SemanticAttributes.HTTP_CLIENT_IP, NetworkAttributes.CLIENT_ADDRESS);

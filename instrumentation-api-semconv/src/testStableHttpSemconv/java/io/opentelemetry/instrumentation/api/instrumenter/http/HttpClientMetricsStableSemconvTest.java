@@ -15,7 +15,6 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
@@ -38,7 +37,7 @@ class HttpClientMetricsStableSemconvTest {
 
     Attributes requestAttributes =
         Attributes.builder()
-            .put(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
+            .put(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
             .put(UrlAttributes.URL_FULL, "https://localhost:1234/")
             .put(UrlAttributes.URL_SCHEME, "https")
             .put(UrlAttributes.URL_PATH, "/")
@@ -49,9 +48,9 @@ class HttpClientMetricsStableSemconvTest {
 
     Attributes responseAttributes =
         Attributes.builder()
-            .put(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
-            .put(HttpAttributes.HTTP_REQUEST_BODY_SIZE, 100)
-            .put(HttpAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
+            .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
+            .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
+            .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
             .put(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http")
             .put(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
             .put(NetworkAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4")
@@ -92,8 +91,9 @@ class HttpClientMetricsStableSemconvTest {
                                     point
                                         .hasSum(0.15 /* seconds */)
                                         .hasAttributesSatisfying(
-                                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                                            equalTo(
+                                                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(
                                                 NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(

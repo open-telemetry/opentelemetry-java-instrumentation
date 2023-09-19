@@ -169,10 +169,10 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
               "$NetworkAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
               "$UrlAttributes.URL_SCHEME" uri.getScheme()
               "$UrlAttributes.URL_PATH" uri.getPath()
-              "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
-              "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+              "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
+              "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
               "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-              "$HttpAttributes.HTTP_RESPONSE_BODY_SIZE" Long
+              "$SemanticAttributes.HTTP_RESPONSE_BODY_SIZE" Long
               "$NetworkAttributes.NETWORK_PROTOCOL_NAME" "http"
               "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
               "$NetworkAttributes.NETWORK_TYPE" "ipv4"
@@ -241,10 +241,10 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
               "$NetworkAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
               "$UrlAttributes.URL_SCHEME" uri.getScheme()
               "$UrlAttributes.URL_PATH" uri.getPath()
-              "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
-              "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+              "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
+              "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
               "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-              "$HttpAttributes.HTTP_RESPONSE_BODY_SIZE" Long
+              "$SemanticAttributes.HTTP_RESPONSE_BODY_SIZE" Long
               "$NetworkAttributes.NETWORK_PROTOCOL_NAME" "http"
               "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
               "$NetworkAttributes.NETWORK_TYPE" "ipv4"

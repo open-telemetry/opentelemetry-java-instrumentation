@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashSet;
@@ -53,10 +52,10 @@ abstract class HttpCommonAttributesExtractor<
     String method = getter.getHttpRequestMethod(request);
     if (SemconvStability.emitStableHttpSemconv()) {
       if (method == null || knownMethods.contains(method)) {
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
       } else {
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
       }
     }
     if (SemconvStability.emitOldHttpSemconv()) {
@@ -83,7 +82,7 @@ abstract class HttpCommonAttributesExtractor<
 
     Long requestBodySize = requestBodySize(request);
     if (SemconvStability.emitStableHttpSemconv()) {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_BODY_SIZE, requestBodySize);
+      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_BODY_SIZE, requestBodySize);
     }
     if (SemconvStability.emitOldHttpSemconv()) {
       internalSet(attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestBodySize);
@@ -93,7 +92,7 @@ abstract class HttpCommonAttributesExtractor<
       Integer statusCode = getter.getHttpResponseStatusCode(request, response, error);
       if (statusCode != null && statusCode > 0) {
         if (SemconvStability.emitStableHttpSemconv()) {
-          internalSet(attributes, HttpAttributes.HTTP_RESPONSE_STATUS_CODE, (long) statusCode);
+          internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, (long) statusCode);
         }
         if (SemconvStability.emitOldHttpSemconv()) {
           internalSet(attributes, SemanticAttributes.HTTP_STATUS_CODE, (long) statusCode);
@@ -102,7 +101,7 @@ abstract class HttpCommonAttributesExtractor<
 
       Long responseBodySize = responseBodySize(request, response);
       if (SemconvStability.emitStableHttpSemconv()) {
-        internalSet(attributes, HttpAttributes.HTTP_RESPONSE_BODY_SIZE, responseBodySize);
+        internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, responseBodySize);
       }
       if (SemconvStability.emitOldHttpSemconv()) {
         internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, responseBodySize);

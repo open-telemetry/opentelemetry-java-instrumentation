@@ -30,7 +30,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
@@ -113,10 +112,10 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     String method = getHttpMethod(exchange, endpoint);
     if (SemconvStability.emitStableHttpSemconv()) {
       if (method == null || knownMethods.contains(method)) {
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
       } else {
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
       }
     }
     if (SemconvStability.emitOldHttpSemconv()) {
@@ -185,7 +184,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
       Object responseCode = exchange.getOut().getHeader(Exchange.HTTP_RESPONSE_CODE);
       if (responseCode instanceof Integer) {
         if (SemconvStability.emitStableHttpSemconv()) {
-          attributes.put(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, (Integer) responseCode);
+          attributes.put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, (Integer) responseCode);
         }
         if (SemconvStability.emitOldHttpSemconv()) {
           attributes.put(SemanticAttributes.HTTP_STATUS_CODE, (Integer) responseCode);

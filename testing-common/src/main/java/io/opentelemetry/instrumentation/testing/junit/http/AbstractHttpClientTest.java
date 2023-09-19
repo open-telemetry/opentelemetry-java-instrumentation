@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -137,7 +136,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 span ->
                     assertClientSpan(span, uri, HttpConstants._OTHER, responseCode, null)
                         .hasNoParent()
-                        .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
+                        .hasAttribute(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
   }
 
   @ParameterizedTest
