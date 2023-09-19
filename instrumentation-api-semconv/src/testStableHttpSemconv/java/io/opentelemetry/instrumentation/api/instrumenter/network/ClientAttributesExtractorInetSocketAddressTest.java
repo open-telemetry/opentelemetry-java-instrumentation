@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
+import io.opentelemetry.semconv.SemanticAttributes;
 import org.junit.jupiter.api.Test;
 
 class ClientAttributesExtractorInetSocketAddressTest {

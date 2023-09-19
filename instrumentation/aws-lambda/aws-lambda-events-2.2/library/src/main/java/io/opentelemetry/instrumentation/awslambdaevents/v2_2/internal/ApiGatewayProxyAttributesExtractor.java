@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.internal.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.emptyIfNull;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.lowercaseMap;
 import static io.opentelemetry.semconv.SemanticAttributes.FAAS_TRIGGER;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.SemanticAttributes.HTTP_STATUS_CODE;
 import static io.opentelemetry.semconv.SemanticAttributes.USER_AGENT_ORIGINAL;
 

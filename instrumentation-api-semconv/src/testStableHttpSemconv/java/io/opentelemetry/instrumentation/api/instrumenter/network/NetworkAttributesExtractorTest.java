@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
+import io.opentelemetry.semconv.SemanticAttributes;
 import org.junit.jupiter.api.Test;
 
 class NetworkAttributesExtractorTest {
