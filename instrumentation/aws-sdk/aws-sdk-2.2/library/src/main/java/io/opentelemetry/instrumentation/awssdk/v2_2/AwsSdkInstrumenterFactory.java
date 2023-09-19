@@ -61,12 +61,11 @@ final class AwsSdkInstrumenterFactory {
   static Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter(
       OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
 
-    return createInstrumenter(
-        openTelemetry,
-        captureExperimentalSpanAttributes
+    return new SqsReceiveInstrumenter(Instrumenter.<ExecutionAttributes, SdkHttpResponse>builder(
+            openTelemetry, INSTRUMENTATION_NAME, AwsSdkInstrumenterFactory::spanName)
+        .addAttributesExtractors(captureExperimentalSpanAttributes
             ? extendedConsumerAttributesExtractors
-            : defaultConsumerAttributesExtractors,
-        SpanKindExtractor.alwaysConsumer());
+            : defaultConsumerAttributesExtractors));
   }
 
   private static Instrumenter<ExecutionAttributes, SdkHttpResponse> createInstrumenter(

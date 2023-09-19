@@ -136,7 +136,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
           }
         }
       }
-      trace(1, 2) {
+      trace(1, 1) {
         span(0) {
           name "Sqs.SendMessage"
           kind PRODUCER
@@ -158,32 +158,12 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
-        span(1) {
-          name "Sqs.ReceiveMessage"
-          kind CONSUMER
-          childOf span(0)
-          hasNoLinks() // TODO: Link to receive operation?
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "rpc.method" "ReceiveMessage"
-            "rpc.system" "aws-api"
-            "rpc.service" "Sqs"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
-          }
-        }
       }
       /**
        * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
        * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
        */
-      trace(2, 1) {
+      trace(2, 2) {
         span(0) {
           name "Sqs.ReceiveMessage"
           kind CLIENT
@@ -198,6 +178,27 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.service" "Sqs"
             "http.method" "POST"
             "http.status_code" 200
+            "http.url" { it.startsWith("http://localhost:$sqsPort") }
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
+            "net.peer.name" "localhost"
+            "net.peer.port" sqsPort
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+          }
+        }
+        span(1) {
+          name "Sqs.ReceiveMessage"
+          kind CONSUMER
+          childOf span(0)
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "rpc.method" "ReceiveMessage"
+            "rpc.system" "aws-api"
+            "rpc.service" "Sqs"
+            "http.method" "POST"
+            "messaging.operation" "receive"
+            "messaging.system" "AmazonSQS"
+            "messaging.message.payload_size_bytes" 17
             "http.url" { it.startsWith("http://localhost:$sqsPort") }
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
@@ -266,7 +267,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
     // +2: 3 messages, 2x traceparent, 1x not injected due to too many attrs
     totalAttrs == 18 + (sqsAttributeInjectionEnabled ? 2 : 0)
 
-    assertTraces(xrayInjectionEnabled ? 3 : 4) {
+    assertTraces(3) {
       trace(0, 1) {
 
         span(0) {
@@ -274,7 +275,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
           kind CLIENT
         }
       }
-      trace(1, xrayInjectionEnabled ? 4 : 3) {
+      trace(1, 1) {
         span(0) {
           name "Sqs.SendMessageBatch"
           kind CLIENT // TODO: Probably this should be producer, but that would be a breaking change
@@ -296,35 +297,12 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
-        for (int i: 1..(xrayInjectionEnabled ? 3 : 2)) {
-          span(i) {
-            name "Sqs.ReceiveMessage"
-            kind CONSUMER
-            childOf span(0)
-            hasNoLinks() // TODO: Link to receive operation?
-
-            attributes {
-              "aws.agent" "java-aws-sdk"
-              "rpc.method" "ReceiveMessage"
-              "rpc.system" "aws-api"
-              "rpc.service" "Sqs"
-              "http.method" "POST"
-              "http.status_code" 200
-              "http.url" { it.startsWith("http://localhost:$sqsPort") }
-              "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-              "net.peer.name" "localhost"
-              "net.peer.port" sqsPort
-              "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-              "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
-            }
-          }
-        }
       }
       /**
        * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
        * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
        */
-      trace(2, 1) {
+      trace(2, 2) {
         span(0) {
           name "Sqs.ReceiveMessage"
           kind CLIENT
@@ -346,31 +324,25 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
-      }
-      if (!xrayInjectionEnabled) {
-        trace(3, 1) {
-          span(0) {
-            name "Sqs.ReceiveMessage"
-            kind CONSUMER
-
-            // TODO This is not nice at all, and can also happen if producer is not instrumented
-            hasNoParent()
-            hasNoLinks() // TODO: Link to receive operation?
-
-            attributes {
-              "aws.agent" "java-aws-sdk"
-              "rpc.method" "ReceiveMessage"
-              "rpc.system" "aws-api"
-              "rpc.service" "Sqs"
-              "http.method" "POST"
-              "http.status_code" 200
-              "http.url" { it.startsWith("http://localhost:$sqsPort") }
-              "net.peer.name" "localhost"
-              "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-              "net.peer.port" sqsPort
-              "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-              "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
-            }
+        span(1) {
+          name "Sqs.ReceiveMessage"
+          kind CONSUMER
+          childOf span(0)
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "rpc.method" "ReceiveMessage"
+            "rpc.system" "aws-api"
+            "rpc.service" "Sqs"
+            "http.method" "POST"
+            "messaging.operation" "receive"
+            "messaging.system" "AmazonSQS"
+            "messaging.message.payload_size_bytes" 6
+            "http.url" { it.startsWith("http://localhost:$sqsPort") }
+            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
+            "net.peer.name" "localhost"
+            "net.peer.port" sqsPort
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }

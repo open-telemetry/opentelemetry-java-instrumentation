@@ -67,12 +67,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
 
   private final String instrumentationName;
-  private final Tracer tracer;
-  private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
-  private final SpanKindExtractor<? super REQUEST> spanKindExtractor;
+  protected final Tracer tracer;
+  protected final SpanNameExtractor<? super REQUEST> spanNameExtractor;
+  protected final SpanKindExtractor<? super REQUEST> spanKindExtractor;
   private final SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor;
   private final List<? extends SpanLinksExtractor<? super REQUEST>> spanLinksExtractors;
-  private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
+  protected final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
       attributesExtractors;
   private final List<? extends ContextCustomizer<? super REQUEST>> contextCustomizers;
   private final List<? extends OperationListener> operationListeners;
@@ -80,7 +80,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final boolean enabled;
   private final SpanSuppressor spanSuppressor;
 
-  Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
+  protected Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
     this.tracer = builder.buildTracer();
     this.spanNameExtractor = builder.spanNameExtractor;

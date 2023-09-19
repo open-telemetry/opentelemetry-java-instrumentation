@@ -1,2 +1,7 @@
 Comparing source compatibility of  against 
-No changes.
+***  MODIFIED CLASS: PUBLIC io.opentelemetry.instrumentation.api.instrumenter.Instrumenter  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	GENERIC TEMPLATES: === REQUEST:java.lang.Object, === RESPONSE:java.lang.Object
+***  MODIFIED CLASS: PUBLIC (<- PACKAGE_PROTECTED) FINAL io.opentelemetry.instrumentation.api.instrumenter.UnsafeAttributes  (compatible)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	***  MODIFIED CONSTRUCTOR: PUBLIC (<- PACKAGE_PROTECTED) UnsafeAttributes()

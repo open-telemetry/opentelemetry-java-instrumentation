@@ -20,7 +20,7 @@ import java.util.function.BiConsumer;
  * couple of methods still require copying to satisfy the interface contracts, but in practice
  * should never be called by user code even though they can.
  */
-final class UnsafeAttributes extends HashMap<AttributeKey<?>, Object>
+public final class UnsafeAttributes extends HashMap<AttributeKey<?>, Object>
     implements Attributes, AttributesBuilder {
 
   private static final long serialVersionUID = 1L;

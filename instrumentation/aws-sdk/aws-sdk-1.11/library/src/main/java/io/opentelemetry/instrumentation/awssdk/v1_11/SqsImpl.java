@@ -51,7 +51,7 @@ final class SqsImpl {
     ReceiveMessageResult receiveMessageResult = (ReceiveMessageResult) response.getAwsResponse();
 
     Tracer tracer =
-        GlobalOpenTelemetry.get().getTracer("io.opentelemetry.aws-sdk-2.2");
+        GlobalOpenTelemetry.get().getTracer("io.opentelemetry.aws-sdk-1.11");
 
     SpanBuilder spanBuilder =
         tracer.spanBuilder("AmazonSQS receive").setSpanKind(SpanKind.CONSUMER);
@@ -77,7 +77,6 @@ final class SqsImpl {
       Span consumerSpan = spanBuilder.startSpan();
       consumerSpan.end();
     }
-
   }
 
   public static Context getParentContext(Message message) {
