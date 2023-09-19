@@ -339,6 +339,7 @@ class HttpClientAttributesExtractorStableSemconvTest {
   @Test
   void shouldExtractErrorType_getter() {
     Map<String, String> request = new HashMap<>();
+    request.put("statusCode", "0");
     request.put("errorType", "custom error type");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
