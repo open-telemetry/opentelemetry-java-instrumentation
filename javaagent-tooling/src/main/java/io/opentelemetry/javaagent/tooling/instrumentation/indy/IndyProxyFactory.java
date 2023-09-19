@@ -43,9 +43,9 @@ import net.bytebuddy.utility.JavaConstant;
  *   <li>all annotations on the proxied class and on its methods are copied to the proxy
  * </ul>
  *
- * <p>Note that only the public methods declared by the proxied class are actually proxied. Inherited
- * methods are not automatically proxied. If you want those to be proxied, you'll need to explicitly
- * override them in the proxied class.
+ * <p>Note that only the public methods declared by the proxied class are actually proxied.
+ * Inherited methods are not automatically proxied. If you want those to be proxied, you'll need to
+ * explicitly override them in the proxied class.
  */
 public class IndyProxyFactory {
 
