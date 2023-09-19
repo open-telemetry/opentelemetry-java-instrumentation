@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
@@ -32,7 +31,7 @@ public class SemconvStabilityUtil {
         NetworkAttributes.CLIENT_SOCKET_ADDRESS);
     addKey(
         oldToNewMap, SemanticAttributes.NET_SOCK_PEER_PORT, NetworkAttributes.CLIENT_SOCKET_PORT);
-    addKey(oldToNewMap, SemanticAttributes.HTTP_URL, UrlAttributes.URL_FULL);
+    addKey(oldToNewMap, SemanticAttributes.HTTP_URL, SemanticAttributes.URL_FULL);
     addKey(oldToNewMap, SemanticAttributes.HTTP_METHOD, SemanticAttributes.HTTP_REQUEST_METHOD);
     addKey(
         oldToNewMap,
@@ -49,7 +48,7 @@ public class SemconvStabilityUtil {
     addKey(oldToNewMap, SemanticAttributes.NET_HOST_NAME, NetworkAttributes.SERVER_ADDRESS);
     addKey(oldToNewMap, SemanticAttributes.NET_HOST_PORT, NetworkAttributes.SERVER_PORT);
     addKey(oldToNewMap, SemanticAttributes.HTTP_CLIENT_IP, NetworkAttributes.CLIENT_ADDRESS);
-    addKey(oldToNewMap, SemanticAttributes.HTTP_SCHEME, UrlAttributes.URL_SCHEME);
+    addKey(oldToNewMap, SemanticAttributes.HTTP_SCHEME, SemanticAttributes.URL_SCHEME);
     addKey(
         oldToNewMap,
         SemanticAttributes.NET_SOCK_HOST_ADDR,

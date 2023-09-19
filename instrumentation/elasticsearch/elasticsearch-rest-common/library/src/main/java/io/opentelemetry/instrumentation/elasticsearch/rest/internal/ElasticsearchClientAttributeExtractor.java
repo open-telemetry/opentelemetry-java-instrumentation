@@ -13,7 +13,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -62,7 +61,7 @@ public class ElasticsearchClientAttributeExtractor
     String fullUrl = response.getHost().toURI() + uri;
 
     if (SemconvStability.emitStableHttpSemconv()) {
-      internalSet(attributes, UrlAttributes.URL_FULL, fullUrl);
+      internalSet(attributes, SemanticAttributes.URL_FULL, fullUrl);
     }
 
     if (SemconvStability.emitOldHttpSemconv()) {

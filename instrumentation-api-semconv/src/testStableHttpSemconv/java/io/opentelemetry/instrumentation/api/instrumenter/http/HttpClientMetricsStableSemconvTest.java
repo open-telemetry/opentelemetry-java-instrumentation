@@ -16,7 +16,6 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.concurrent.TimeUnit;
@@ -38,10 +37,10 @@ class HttpClientMetricsStableSemconvTest {
     Attributes requestAttributes =
         Attributes.builder()
             .put(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
-            .put(UrlAttributes.URL_FULL, "https://localhost:1234/")
-            .put(UrlAttributes.URL_SCHEME, "https")
-            .put(UrlAttributes.URL_PATH, "/")
-            .put(UrlAttributes.URL_QUERY, "q=a")
+            .put(SemanticAttributes.URL_FULL, "https://localhost:1234/")
+            .put(SemanticAttributes.URL_SCHEME, "https")
+            .put(SemanticAttributes.URL_PATH, "/")
+            .put(SemanticAttributes.URL_QUERY, "q=a")
             .put(NetworkAttributes.SERVER_ADDRESS, "localhost")
             .put(NetworkAttributes.SERVER_PORT, 1234)
             .build();

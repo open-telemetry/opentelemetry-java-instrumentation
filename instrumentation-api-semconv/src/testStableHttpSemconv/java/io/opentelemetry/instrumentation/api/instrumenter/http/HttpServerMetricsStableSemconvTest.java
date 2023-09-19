@@ -16,7 +16,6 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -39,9 +38,9 @@ class HttpServerMetricsStableSemconvTest {
     Attributes requestAttributes =
         Attributes.builder()
             .put(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
-            .put(UrlAttributes.URL_SCHEME, "https")
-            .put(UrlAttributes.URL_PATH, "/")
-            .put(UrlAttributes.URL_QUERY, "q=a")
+            .put(SemanticAttributes.URL_SCHEME, "https")
+            .put(SemanticAttributes.URL_PATH, "/")
+            .put(SemanticAttributes.URL_QUERY, "q=a")
             .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
             .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
             .put(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http")
@@ -102,7 +101,7 @@ class HttpServerMetricsStableSemconvTest {
                                                 NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
                                                 NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
+                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -142,7 +141,7 @@ class HttpServerMetricsStableSemconvTest {
     Attributes requestAttributes =
         Attributes.builder()
             .put(NetworkAttributes.SERVER_ADDRESS, "host")
-            .put(UrlAttributes.URL_SCHEME, "https")
+            .put(SemanticAttributes.URL_SCHEME, "https")
             .build();
 
     Attributes responseAttributes =
@@ -168,7 +167,7 @@ class HttpServerMetricsStableSemconvTest {
                                     point
                                         .hasSum(0.100 /* seconds */)
                                         .hasAttributesSatisfying(
-                                            equalTo(UrlAttributes.URL_SCHEME, "https"),
+                                            equalTo(SemanticAttributes.URL_SCHEME, "https"),
                                             equalTo(
                                                 SemanticAttributes.HTTP_ROUTE, "/test/{id}")))));
   }

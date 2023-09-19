@@ -19,7 +19,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -72,7 +71,7 @@ final class ApiGatewayProxyAttributesExtractor
     String httpUrl = getHttpUrl(request, headers);
     if (httpUrl != null) {
       if (SemconvStability.emitStableHttpSemconv()) {
-        internalSet(attributes, UrlAttributes.URL_FULL, httpUrl);
+        internalSet(attributes, SemanticAttributes.URL_FULL, httpUrl);
       }
 
       if (SemconvStability.emitOldHttpSemconv()) {

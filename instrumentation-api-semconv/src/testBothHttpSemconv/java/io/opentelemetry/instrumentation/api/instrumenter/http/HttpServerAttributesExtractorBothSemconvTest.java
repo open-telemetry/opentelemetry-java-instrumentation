@@ -17,7 +17,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -163,9 +162,9 @@ class HttpServerAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_SCHEME, "http"),
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1?details=true"),
-            entry(UrlAttributes.URL_SCHEME, "http"),
-            entry(UrlAttributes.URL_PATH, "/repositories/1"),
-            entry(UrlAttributes.URL_QUERY, "details=true"),
+            entry(SemanticAttributes.URL_SCHEME, "http"),
+            entry(SemanticAttributes.URL_PATH, "/repositories/1"),
+            entry(SemanticAttributes.URL_QUERY, "details=true"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
             entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),

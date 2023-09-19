@@ -7,9 +7,8 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes
+
 import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -167,8 +166,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           if (SemconvStability.emitStableHttpSemconv()) {
             attributes {
               "$NetworkAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
-              "$UrlAttributes.URL_SCHEME" uri.getScheme()
-              "$UrlAttributes.URL_PATH" uri.getPath()
+              "$SemanticAttributes.URL_SCHEME" uri.getScheme()
+              "$SemanticAttributes.URL_PATH" uri.getPath()
               "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
               "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
               "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
@@ -239,8 +238,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           if (SemconvStability.emitStableHttpSemconv()) {
             attributes {
               "$NetworkAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
-              "$UrlAttributes.URL_SCHEME" uri.getScheme()
-              "$UrlAttributes.URL_PATH" uri.getPath()
+              "$SemanticAttributes.URL_SCHEME" uri.getScheme()
+              "$SemanticAttributes.URL_PATH" uri.getPath()
               "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
               "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
               "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT

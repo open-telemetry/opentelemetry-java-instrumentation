@@ -30,7 +30,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
@@ -101,7 +100,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     String httpUrl = getHttpUrl(exchange, endpoint);
     if (httpUrl != null) {
       if (SemconvStability.emitStableHttpSemconv()) {
-        internalSet(attributes, UrlAttributes.URL_FULL, httpUrl);
+        internalSet(attributes, SemanticAttributes.URL_FULL, httpUrl);
       }
 
       if (SemconvStability.emitOldHttpSemconv()) {

@@ -28,7 +28,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
@@ -827,9 +826,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             }
             if (SemconvStability.emitStableHttpSemconv()) {
               assertThat(attrs)
-                  .containsEntry(UrlAttributes.URL_PATH, endpoint.resolvePath(address).getPath());
+                  .containsEntry(
+                      SemanticAttributes.URL_PATH, endpoint.resolvePath(address).getPath());
               if (endpoint.getQuery() != null) {
-                assertThat(attrs).containsEntry(UrlAttributes.URL_QUERY, endpoint.getQuery());
+                assertThat(attrs).containsEntry(SemanticAttributes.URL_QUERY, endpoint.getQuery());
               }
             }
           }
@@ -887,8 +887,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     }
     if (SemconvStability.emitStableHttpSemconv()) {
       span.hasAttributesSatisfying(
-          equalTo(UrlAttributes.URL_PATH, endpoint.resolvePath(address).getPath()));
-      span.hasAttributesSatisfying(equalTo(UrlAttributes.URL_QUERY, "id=" + requestId));
+          equalTo(SemanticAttributes.URL_PATH, endpoint.resolvePath(address).getPath()));
+      span.hasAttributesSatisfying(equalTo(SemanticAttributes.URL_QUERY, "id=" + requestId));
     }
 
     return span;

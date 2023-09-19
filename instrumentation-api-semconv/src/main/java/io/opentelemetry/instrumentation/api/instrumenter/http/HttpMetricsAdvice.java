@@ -14,7 +14,6 @@ import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuild
 import io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedLongUpDownCounterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 
 final class HttpMetricsAdvice {
@@ -98,7 +97,7 @@ final class HttpMetricsAdvice {
                         SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
                         NetworkAttributes.NETWORK_PROTOCOL_NAME,
                         NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                        UrlAttributes.URL_SCHEME)));
+                        SemanticAttributes.URL_SCHEME)));
   }
 
   @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
@@ -137,7 +136,7 @@ final class HttpMetricsAdvice {
                         SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
                         NetworkAttributes.NETWORK_PROTOCOL_NAME,
                         NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                        UrlAttributes.URL_SCHEME,
+                        SemanticAttributes.URL_SCHEME,
                         // old attributes
                         SemanticAttributes.HTTP_SCHEME,
                         SemanticAttributes.HTTP_ROUTE,
@@ -166,7 +165,7 @@ final class HttpMetricsAdvice {
                         SemanticAttributes.NET_HOST_PORT,
                         // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserveractive_requests
                         SemanticAttributes.HTTP_REQUEST_METHOD,
-                        UrlAttributes.URL_SCHEME)));
+                        SemanticAttributes.URL_SCHEME)));
   }
 
   private HttpMetricsAdvice() {}

@@ -19,7 +19,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
@@ -148,7 +147,7 @@ class HttpClientAttributesExtractorStableSemconvTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-            entry(UrlAttributes.URL_FULL, "http://github.com"),
+            entry(SemanticAttributes.URL_FULL, "http://github.com"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),

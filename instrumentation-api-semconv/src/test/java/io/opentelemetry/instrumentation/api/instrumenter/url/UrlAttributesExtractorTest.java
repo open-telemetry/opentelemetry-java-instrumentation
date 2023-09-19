@@ -13,7 +13,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -56,9 +55,9 @@ class UrlAttributesExtractorTest {
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(UrlAttributes.URL_SCHEME, "https"),
-            entry(UrlAttributes.URL_PATH, "/test"),
-            entry(UrlAttributes.URL_QUERY, "q=Java"));
+            entry(SemanticAttributes.URL_SCHEME, "https"),
+            entry(SemanticAttributes.URL_PATH, "/test"),
+            entry(SemanticAttributes.URL_QUERY, "q=Java"));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
