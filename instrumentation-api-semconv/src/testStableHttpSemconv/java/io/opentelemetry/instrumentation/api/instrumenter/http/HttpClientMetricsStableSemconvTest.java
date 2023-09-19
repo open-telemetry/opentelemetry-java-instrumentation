@@ -15,7 +15,6 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.concurrent.TimeUnit;
@@ -41,8 +40,8 @@ class HttpClientMetricsStableSemconvTest {
             .put(SemanticAttributes.URL_SCHEME, "https")
             .put(SemanticAttributes.URL_PATH, "/")
             .put(SemanticAttributes.URL_QUERY, "q=a")
-            .put(NetworkAttributes.SERVER_ADDRESS, "localhost")
-            .put(NetworkAttributes.SERVER_PORT, 1234)
+            .put(SemanticAttributes.SERVER_ADDRESS, "localhost")
+            .put(SemanticAttributes.SERVER_PORT, 1234)
             .build();
 
     Attributes responseAttributes =
@@ -50,11 +49,11 @@ class HttpClientMetricsStableSemconvTest {
             .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
             .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
             .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
-            .put(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http")
-            .put(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
-            .put(NetworkAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4")
-            .put(NetworkAttributes.SERVER_SOCKET_DOMAIN, "somehost20")
-            .put(NetworkAttributes.SERVER_SOCKET_PORT, 8080)
+            .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
+            .put(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
+            .put(SemanticAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4")
+            .put(SemanticAttributes.SERVER_SOCKET_DOMAIN, "somehost20")
+            .put(SemanticAttributes.SERVER_SOCKET_PORT, 8080)
             .build();
 
     Context parent =
@@ -94,13 +93,14 @@ class HttpClientMetricsStableSemconvTest {
                                             equalTo(
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(
-                                                NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
+                                                SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
-                                                NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(NetworkAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(NetworkAttributes.SERVER_PORT, 1234),
+                                                SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+                                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                            equalTo(SemanticAttributes.SERVER_PORT, 1234),
                                             equalTo(
-                                                NetworkAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4"))
+                                                SemanticAttributes.SERVER_SOCKET_ADDRESS,
+                                                "1.2.3.4"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar

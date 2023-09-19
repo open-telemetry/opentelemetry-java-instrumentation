@@ -16,7 +16,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -145,8 +144,8 @@ class HttpClientAttributesExtractorBothSemconvTest {
                 asList("123", "456")),
             entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
             entry(SemanticAttributes.NET_PEER_PORT, 123L),
-            entry(NetworkAttributes.SERVER_ADDRESS, "github.com"),
-            entry(NetworkAttributes.SERVER_PORT, 123L));
+            entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
+            entry(SemanticAttributes.SERVER_PORT, 123L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
@@ -164,9 +163,9 @@ class HttpClientAttributesExtractorBothSemconvTest {
                 asList("654", "321")),
             entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
-            entry(NetworkAttributes.NETWORK_TRANSPORT, "udp"),
-            entry(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-            entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
-            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"));
+            entry(SemanticAttributes.NETWORK_TRANSPORT, "udp"),
+            entry(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"));
   }
 }

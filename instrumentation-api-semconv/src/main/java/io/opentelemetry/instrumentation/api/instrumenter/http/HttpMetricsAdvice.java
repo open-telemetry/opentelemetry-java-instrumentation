@@ -13,7 +13,6 @@ import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedLongUpDownCounterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 
 final class HttpMetricsAdvice {
@@ -29,11 +28,11 @@ final class HttpMetricsAdvice {
                     asList(
                         SemanticAttributes.HTTP_REQUEST_METHOD,
                         SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
-                        NetworkAttributes.NETWORK_PROTOCOL_NAME,
-                        NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                        NetworkAttributes.SERVER_ADDRESS,
-                        NetworkAttributes.SERVER_PORT,
-                        NetworkAttributes.SERVER_SOCKET_ADDRESS)));
+                        SemanticAttributes.NETWORK_PROTOCOL_NAME,
+                        SemanticAttributes.NETWORK_PROTOCOL_VERSION,
+                        SemanticAttributes.SERVER_ADDRESS,
+                        SemanticAttributes.SERVER_PORT,
+                        SemanticAttributes.SERVER_SOCKET_ADDRESS)));
   }
 
   @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
@@ -68,11 +67,11 @@ final class HttpMetricsAdvice {
                         // stable attributes
                         SemanticAttributes.HTTP_REQUEST_METHOD,
                         SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
-                        NetworkAttributes.NETWORK_PROTOCOL_NAME,
-                        NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                        NetworkAttributes.SERVER_ADDRESS,
-                        NetworkAttributes.SERVER_PORT,
-                        NetworkAttributes.SERVER_SOCKET_ADDRESS,
+                        SemanticAttributes.NETWORK_PROTOCOL_NAME,
+                        SemanticAttributes.NETWORK_PROTOCOL_VERSION,
+                        SemanticAttributes.SERVER_ADDRESS,
+                        SemanticAttributes.SERVER_PORT,
+                        SemanticAttributes.SERVER_SOCKET_ADDRESS,
                         // old attributes
                         SemanticAttributes.HTTP_METHOD,
                         SemanticAttributes.HTTP_STATUS_CODE,
@@ -95,8 +94,8 @@ final class HttpMetricsAdvice {
                         SemanticAttributes.HTTP_ROUTE,
                         SemanticAttributes.HTTP_REQUEST_METHOD,
                         SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
-                        NetworkAttributes.NETWORK_PROTOCOL_NAME,
-                        NetworkAttributes.NETWORK_PROTOCOL_VERSION,
+                        SemanticAttributes.NETWORK_PROTOCOL_NAME,
+                        SemanticAttributes.NETWORK_PROTOCOL_VERSION,
                         SemanticAttributes.URL_SCHEME)));
   }
 
@@ -134,8 +133,8 @@ final class HttpMetricsAdvice {
                         SemanticAttributes.HTTP_ROUTE,
                         SemanticAttributes.HTTP_REQUEST_METHOD,
                         SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
-                        NetworkAttributes.NETWORK_PROTOCOL_NAME,
-                        NetworkAttributes.NETWORK_PROTOCOL_VERSION,
+                        SemanticAttributes.NETWORK_PROTOCOL_NAME,
+                        SemanticAttributes.NETWORK_PROTOCOL_VERSION,
                         SemanticAttributes.URL_SCHEME,
                         // old attributes
                         SemanticAttributes.HTTP_SCHEME,

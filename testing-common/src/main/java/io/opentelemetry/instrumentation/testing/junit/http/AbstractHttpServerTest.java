@@ -27,7 +27,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
@@ -744,12 +743,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             assertThat(attrs).containsEntry(SemanticAttributes.NET_TRANSPORT, IP_TCP);
           }
           if (SemconvStability.emitStableHttpSemconv()
-              && attrs.get(NetworkAttributes.NETWORK_TRANSPORT) != null) {
-            assertThat(attrs).containsEntry(NetworkAttributes.NETWORK_TRANSPORT, "tcp");
+              && attrs.get(SemanticAttributes.NETWORK_TRANSPORT) != null) {
+            assertThat(attrs).containsEntry(SemanticAttributes.NETWORK_TRANSPORT, "tcp");
           }
           if (SemconvStability.emitStableHttpSemconv()
-              && attrs.get(NetworkAttributes.NETWORK_TYPE) != null) {
-            assertThat(attrs).containsEntry(NetworkAttributes.NETWORK_TYPE, "ipv4");
+              && attrs.get(SemanticAttributes.NETWORK_TYPE) != null) {
+            assertThat(attrs).containsEntry(SemanticAttributes.NETWORK_TYPE, "ipv4");
           }
 
           assertThat(attrs)
@@ -792,10 +791,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                               value -> assertThat(value).isNull(),
                               value -> assertThat(value).isEqualTo(TEST_CLIENT_IP)));
           if (SemconvStability.emitStableHttpSemconv()
-              && attrs.get(NetworkAttributes.CLIENT_PORT) != null) {
+              && attrs.get(SemanticAttributes.CLIENT_PORT) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
-                    NetworkAttributes.CLIENT_PORT, port -> assertThat(port).isGreaterThan(0));
+                    SemanticAttributes.CLIENT_PORT, port -> assertThat(port).isGreaterThan(0));
           }
           assertThat(attrs).containsEntry(getAttributeKey(SemanticAttributes.HTTP_METHOD), method);
           assertThat(attrs)

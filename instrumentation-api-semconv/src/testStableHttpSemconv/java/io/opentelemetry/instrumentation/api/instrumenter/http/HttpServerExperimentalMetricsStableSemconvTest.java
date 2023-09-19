@@ -15,7 +15,6 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.concurrent.TimeUnit;
@@ -38,12 +37,12 @@ class HttpServerExperimentalMetricsStableSemconvTest {
             .put(SemanticAttributes.URL_SCHEME, "https")
             .put(SemanticAttributes.URL_PATH, "/")
             .put(SemanticAttributes.URL_QUERY, "q=a")
-            .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
-            .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
-            .put(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http")
-            .put(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
-            .put(NetworkAttributes.SERVER_ADDRESS, "localhost")
-            .put(NetworkAttributes.SERVER_PORT, 1234)
+            .put(SemanticAttributes.NETWORK_TRANSPORT, "tcp")
+            .put(SemanticAttributes.NETWORK_TYPE, "ipv4")
+            .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
+            .put(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
+            .put(SemanticAttributes.SERVER_ADDRESS, "localhost")
+            .put(SemanticAttributes.SERVER_PORT, 1234)
             .build();
 
     Attributes responseAttributes =
@@ -51,10 +50,10 @@ class HttpServerExperimentalMetricsStableSemconvTest {
             .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
             .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
             .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
-            .put(NetworkAttributes.CLIENT_SOCKET_ADDRESS, "1.2.3.4")
-            .put(NetworkAttributes.CLIENT_SOCKET_PORT, 8080)
-            .put(NetworkAttributes.SERVER_SOCKET_ADDRESS, "4.3.2.1")
-            .put(NetworkAttributes.SERVER_SOCKET_PORT, 9090)
+            .put(SemanticAttributes.CLIENT_SOCKET_ADDRESS, "1.2.3.4")
+            .put(SemanticAttributes.CLIENT_SOCKET_PORT, 8080)
+            .put(SemanticAttributes.SERVER_SOCKET_ADDRESS, "4.3.2.1")
+            .put(SemanticAttributes.SERVER_SOCKET_PORT, 9090)
             .build();
 
     SpanContext spanContext1 =
@@ -155,9 +154,9 @@ class HttpServerExperimentalMetricsStableSemconvTest {
                                             equalTo(
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(
-                                                NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
+                                                SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
-                                                NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+                                                SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
@@ -179,9 +178,9 @@ class HttpServerExperimentalMetricsStableSemconvTest {
                                             equalTo(
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(
-                                                NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
+                                                SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
-                                                NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+                                                SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->

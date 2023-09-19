@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
@@ -18,19 +17,21 @@ public class SemconvStabilityUtil {
 
   static {
     addKey(
-        oldToNewMap, SemanticAttributes.NET_PROTOCOL_NAME, NetworkAttributes.NETWORK_PROTOCOL_NAME);
+        oldToNewMap,
+        SemanticAttributes.NET_PROTOCOL_NAME,
+        SemanticAttributes.NETWORK_PROTOCOL_NAME);
     addKey(
         oldToNewMap,
         SemanticAttributes.NET_PROTOCOL_VERSION,
-        NetworkAttributes.NETWORK_PROTOCOL_VERSION);
-    addKey(oldToNewMap, SemanticAttributes.NET_PEER_NAME, NetworkAttributes.SERVER_ADDRESS);
-    addKey(oldToNewMap, SemanticAttributes.NET_PEER_PORT, NetworkAttributes.SERVER_PORT);
+        SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+    addKey(oldToNewMap, SemanticAttributes.NET_PEER_NAME, SemanticAttributes.SERVER_ADDRESS);
+    addKey(oldToNewMap, SemanticAttributes.NET_PEER_PORT, SemanticAttributes.SERVER_PORT);
     addKey(
         oldToNewMap,
         SemanticAttributes.NET_SOCK_PEER_ADDR,
-        NetworkAttributes.CLIENT_SOCKET_ADDRESS);
+        SemanticAttributes.CLIENT_SOCKET_ADDRESS);
     addKey(
-        oldToNewMap, SemanticAttributes.NET_SOCK_PEER_PORT, NetworkAttributes.CLIENT_SOCKET_PORT);
+        oldToNewMap, SemanticAttributes.NET_SOCK_PEER_PORT, SemanticAttributes.CLIENT_SOCKET_PORT);
     addKey(oldToNewMap, SemanticAttributes.HTTP_URL, SemanticAttributes.URL_FULL);
     addKey(oldToNewMap, SemanticAttributes.HTTP_METHOD, SemanticAttributes.HTTP_REQUEST_METHOD);
     addKey(
@@ -45,14 +46,14 @@ public class SemconvStabilityUtil {
         oldToNewMap,
         SemanticAttributes.HTTP_STATUS_CODE,
         SemanticAttributes.HTTP_RESPONSE_STATUS_CODE);
-    addKey(oldToNewMap, SemanticAttributes.NET_HOST_NAME, NetworkAttributes.SERVER_ADDRESS);
-    addKey(oldToNewMap, SemanticAttributes.NET_HOST_PORT, NetworkAttributes.SERVER_PORT);
-    addKey(oldToNewMap, SemanticAttributes.HTTP_CLIENT_IP, NetworkAttributes.CLIENT_ADDRESS);
+    addKey(oldToNewMap, SemanticAttributes.NET_HOST_NAME, SemanticAttributes.SERVER_ADDRESS);
+    addKey(oldToNewMap, SemanticAttributes.NET_HOST_PORT, SemanticAttributes.SERVER_PORT);
+    addKey(oldToNewMap, SemanticAttributes.HTTP_CLIENT_IP, SemanticAttributes.CLIENT_ADDRESS);
     addKey(oldToNewMap, SemanticAttributes.HTTP_SCHEME, SemanticAttributes.URL_SCHEME);
     addKey(
         oldToNewMap,
         SemanticAttributes.NET_SOCK_HOST_ADDR,
-        NetworkAttributes.SERVER_SOCKET_ADDRESS);
+        SemanticAttributes.SERVER_SOCKET_ADDRESS);
   }
 
   private SemconvStabilityUtil() {}

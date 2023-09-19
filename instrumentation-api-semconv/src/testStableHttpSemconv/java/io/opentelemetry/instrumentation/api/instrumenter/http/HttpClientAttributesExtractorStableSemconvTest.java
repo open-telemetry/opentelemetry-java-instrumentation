@@ -18,7 +18,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
@@ -152,8 +151,8 @@ class HttpClientAttributesExtractorStableSemconvTest {
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")),
-            entry(NetworkAttributes.SERVER_ADDRESS, "github.com"),
-            entry(NetworkAttributes.SERVER_PORT, 123L));
+            entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
+            entry(SemanticAttributes.SERVER_PORT, 123L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
@@ -166,10 +165,10 @@ class HttpClientAttributesExtractorStableSemconvTest {
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")),
-            entry(NetworkAttributes.NETWORK_TRANSPORT, "udp"),
-            entry(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-            entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
-            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"));
+            entry(SemanticAttributes.NETWORK_TRANSPORT, "udp"),
+            entry(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"));
   }
 
   @ParameterizedTest
@@ -193,9 +192,9 @@ class HttpClientAttributesExtractorStableSemconvTest {
 
     if (extractedTransport != null) {
       assertThat(attributes.build())
-          .containsEntry(NetworkAttributes.NETWORK_TRANSPORT, extractedTransport);
+          .containsEntry(SemanticAttributes.NETWORK_TRANSPORT, extractedTransport);
     } else {
-      assertThat(attributes.build()).doesNotContainKey(NetworkAttributes.NETWORK_TRANSPORT);
+      assertThat(attributes.build()).doesNotContainKey(SemanticAttributes.NETWORK_TRANSPORT);
     }
   }
 

@@ -12,7 +12,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -44,8 +43,8 @@ public class ElasticsearchClientAttributeExtractor
     HttpHost host = response.getHost();
     if (host != null) {
       if (SemconvStability.emitStableHttpSemconv()) {
-        internalSet(attributes, NetworkAttributes.SERVER_ADDRESS, host.getHostName());
-        internalSet(attributes, NetworkAttributes.SERVER_PORT, (long) host.getPort());
+        internalSet(attributes, SemanticAttributes.SERVER_ADDRESS, host.getHostName());
+        internalSet(attributes, SemanticAttributes.SERVER_PORT, (long) host.getPort());
       }
       if (SemconvStability.emitOldHttpSemconv()) {
         internalSet(attributes, SemanticAttributes.NET_PEER_NAME, host.getHostName());

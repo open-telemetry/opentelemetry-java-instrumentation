@@ -13,7 +13,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -66,15 +65,15 @@ class ClientAttributesExtractorTest {
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(NetworkAttributes.CLIENT_ADDRESS, "opentelemetry.io"),
-            entry(NetworkAttributes.CLIENT_PORT, 80L));
+            entry(SemanticAttributes.CLIENT_ADDRESS, "opentelemetry.io"),
+            entry(SemanticAttributes.CLIENT_PORT, 80L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(NetworkAttributes.CLIENT_SOCKET_ADDRESS, "1.2.3.4"),
-            entry(NetworkAttributes.CLIENT_SOCKET_PORT, 8080L));
+            entry(SemanticAttributes.CLIENT_SOCKET_ADDRESS, "1.2.3.4"),
+            entry(SemanticAttributes.CLIENT_SOCKET_PORT, 8080L));
   }
 
   @Test
@@ -124,8 +123,8 @@ class ClientAttributesExtractorTest {
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(NetworkAttributes.CLIENT_ADDRESS, "opentelemetry.io"),
-            entry(NetworkAttributes.CLIENT_PORT, 80L));
+            entry(SemanticAttributes.CLIENT_ADDRESS, "opentelemetry.io"),
+            entry(SemanticAttributes.CLIENT_PORT, 80L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
