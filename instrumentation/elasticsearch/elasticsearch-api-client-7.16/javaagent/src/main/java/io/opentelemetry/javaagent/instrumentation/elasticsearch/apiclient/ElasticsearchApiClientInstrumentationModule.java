@@ -31,6 +31,13 @@ public class ElasticsearchApiClientInstrumentationModule extends Instrumentation
   }
 
   @Override
+  public boolean isIndyModule() {
+    // java.lang.ClassCastException: class
+    // io.opentelemetry.javaagent.shaded.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition cannot be cast to class io.opentelemetry.javaagent.shaded.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition (io.opentelemetry.javaagent.shaded.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition is in unnamed module of loader io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader @6baee63b; io.opentelemetry.javaagent.shaded.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition is in unnamed module of loader 'app')
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new RestClientTransportInstrumentation(), new RestClientHttpClientInstrumentation());

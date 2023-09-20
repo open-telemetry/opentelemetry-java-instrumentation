@@ -26,6 +26,12 @@ public class JakartaServletInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // JakartaServletServiceAdvice uses both @Advice.Argument(readOnly = false) and @Advice.Local
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Arrays.asList(
         new AsyncContextInstrumentation(

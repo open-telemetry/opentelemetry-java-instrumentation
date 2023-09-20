@@ -8,9 +8,12 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
+import java.io.IOException;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.dynamic.ClassFileLocator;
+import net.bytebuddy.dynamic.ClassFileLocator.Resolution;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public final class IndyTypeTransformerImpl implements TypeTransformer {
@@ -37,8 +40,13 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
         agentBuilder.transform(
             new AgentBuilder.Transformer.ForAdvice(adviceMapping)
                 .advice(methodMatcher, adviceClassName)
-                .include(instrumentationModule.getClass().getClassLoader())
+                .include(getAdviceLocator(instrumentationModule.getClass().getClassLoader()))
                 .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler()));
+  }
+
+  private static ClassFileLocator getAdviceLocator(ClassLoader classLoader) {
+    ClassFileLocator classFileLocator = ClassFileLocator.ForClassLoader.of(classLoader);
+    return new AdviceLocator(classFileLocator);
   }
 
   @Override
@@ -48,5 +56,50 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
 
   public AgentBuilder.Identified.Extendable getAgentBuilder() {
     return agentBuilder;
+  }
+
+  private static class AdviceLocator implements ClassFileLocator {
+    private final ClassFileLocator delegate;
+
+    AdviceLocator(ClassFileLocator delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public Resolution locate(String name) throws IOException {
+      Resolution resolution = delegate.locate(name);
+      return new AdviceTransformingResolution(name, resolution);
+    }
+
+    @Override
+    public void close() throws IOException {
+      delegate.close();
+    }
+  }
+
+  private static class AdviceTransformingResolution implements Resolution {
+    private final String name;
+    private final Resolution delegate;
+
+    AdviceTransformingResolution(String name, Resolution delegate) {
+      this.name = name;
+      this.delegate = delegate;
+    }
+
+    @Override
+    public boolean isResolved() {
+      return delegate.isResolved();
+    }
+
+    @Override
+    public byte[] resolve() {
+      byte[] bytes = delegate.resolve();
+      byte[] result = AdviceTransformer.transform(bytes);
+      if (result != null) {
+        InstrumentationModuleClassLoader.bytecodeOverride.put(name.replace('/', '.'), result);
+        return result;
+      }
+      return bytes;
+    }
   }
 }

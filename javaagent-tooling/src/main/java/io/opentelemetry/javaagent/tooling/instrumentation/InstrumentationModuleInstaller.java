@@ -90,16 +90,19 @@ public final class InstrumentationModuleInstaller {
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
               .transform(new PatchByteCodeVersionTransformer());
 
-      IndyTypeTransformerImpl typeTransformer =
-          new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule);
-      typeInstrumentation.transform(typeTransformer);
-      extendableAgentBuilder = typeTransformer.getAgentBuilder();
-      // TODO (Jonas): make instrumentation of bytecode older than 1.4 opt-in via a config option
       // TODO (Jonas): we are not calling
       // contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder) anymore
       // As a result the advices should store `VirtualFields` as static variables instead of having
       // the lookup inline
       // We need to update our documentation on that
+      // Added back the call to contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder)
+      // to get more instrumentations running.
+      extendableAgentBuilder = contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder);
+      IndyTypeTransformerImpl typeTransformer =
+          new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule);
+      typeInstrumentation.transform(typeTransformer);
+      extendableAgentBuilder = typeTransformer.getAgentBuilder();
+      // TODO (Jonas): make instrumentation of bytecode older than 1.4 opt-in via a config option
       extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
 
       agentBuilder = extendableAgentBuilder;

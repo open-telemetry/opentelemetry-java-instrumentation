@@ -34,6 +34,12 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // Servlet3Advice.onEnter uses both @Advice.Argument(readOnly = false) and @Advice.Local
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new AsyncContextInstrumentation(BASE_PACKAGE, adviceClassName(".AsyncDispatchAdvice")),

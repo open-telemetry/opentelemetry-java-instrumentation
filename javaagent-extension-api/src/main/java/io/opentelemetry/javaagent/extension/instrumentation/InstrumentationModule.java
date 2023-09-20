@@ -30,6 +30,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * java.util.ServiceLoader} for more details.
  */
 public abstract class InstrumentationModule implements Ordered {
+  public static boolean indyEnabled = false;
 
   private final Set<String> instrumentationNames;
 
@@ -110,7 +111,7 @@ public abstract class InstrumentationModule implements Ordered {
    * techniques. The non-inlining of advice will be enforced by muzzle (TODO)
    */
   public boolean isIndyModule() {
-    return false;
+    return indyEnabled;
   }
 
   /** Register resource names to inject into the user's class loader. */

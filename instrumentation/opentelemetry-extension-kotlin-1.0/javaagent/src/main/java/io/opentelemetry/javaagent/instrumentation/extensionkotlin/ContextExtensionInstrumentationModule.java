@@ -25,6 +25,11 @@ public class ContextExtensionInstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  public boolean isIndyModule() {
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ContextExtensionInstrumentation());
   }

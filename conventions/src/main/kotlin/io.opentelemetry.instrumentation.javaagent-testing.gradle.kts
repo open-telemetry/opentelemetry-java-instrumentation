@@ -86,6 +86,7 @@ class JavaagentTestArgumentsProvider(
     // in smoke tests instead.
     "-Dotel.javaagent.add-thread-details=false",
     "-Dotel.metrics.exporter=otlp",
+    "-Dotel.javaagent.indy=${findProperty("testIndy") != false}",
     // suppress repeated logging of "No metric data to export - skipping export."
     // since PeriodicMetricReader is configured with a short interval
     "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.opentelemetry.sdk.metrics.export.PeriodicMetricReader=INFO",

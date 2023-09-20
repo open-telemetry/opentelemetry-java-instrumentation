@@ -19,6 +19,12 @@ public class Elasticsearch5TransportClientInstrumentationModule extends Instrume
   }
 
   @Override
+  public boolean isIndyModule() {
+    // ExecuteAdvice uses both @Advice.Argument(readOnly = false) and @Advice.Local
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new AbstractClientInstrumentation());
   }

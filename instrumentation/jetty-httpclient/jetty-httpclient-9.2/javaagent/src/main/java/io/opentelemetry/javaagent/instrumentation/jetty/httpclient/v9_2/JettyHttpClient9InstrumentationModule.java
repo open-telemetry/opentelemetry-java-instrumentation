@@ -27,6 +27,12 @@ public class JettyHttpClient9InstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  public boolean isIndyModule() {
+    // JettyHttpClient9Advice uses both @Advice.Argument(readOnly = false) and @Advice.Local
+    return false;
+  }
+
+  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // AbstractTypedContentProvider  showed up in version Jetty Client 9.2 on to 10.x
     return hasClassesNamed("org.eclipse.jetty.client.util.AbstractTypedContentProvider");
