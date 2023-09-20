@@ -44,14 +44,14 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
       String transport = lowercase(getter.getNetworkTransport(request, response));
       if (networkTransportFilter.shouldAddNetworkTransport(
           protocolName, protocolVersion, transport)) {
-        internalSet(attributes, NetworkAttributes.NETWORK_TRANSPORT, transport);
+        internalSet(attributes, SemanticAttributes.NETWORK_TRANSPORT, transport);
       }
       internalSet(
           attributes,
-          NetworkAttributes.NETWORK_TYPE,
+          SemanticAttributes.NETWORK_TYPE,
           lowercase(getter.getNetworkType(request, response)));
-      internalSet(attributes, NetworkAttributes.NETWORK_PROTOCOL_NAME, protocolName);
-      internalSet(attributes, NetworkAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
+      internalSet(attributes, SemanticAttributes.NETWORK_PROTOCOL_NAME, protocolName);
+      internalSet(attributes, SemanticAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
     }
     if (emitOldHttpAttributes) {
       // net.transport and net.sock.family are not 1:1 convertible with network.transport and

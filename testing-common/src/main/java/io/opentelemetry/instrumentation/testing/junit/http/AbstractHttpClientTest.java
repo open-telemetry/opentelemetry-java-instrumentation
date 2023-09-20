@@ -17,8 +17,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -137,7 +135,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 span ->
                     assertClientSpan(span, uri, HttpConstants._OTHER, responseCode, null)
                         .hasNoParent()
-                        .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
+                        .hasAttribute(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
   }
 
   @ParameterizedTest
@@ -999,12 +997,12 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 assertThat(attrs).containsEntry(SemanticAttributes.NET_TRANSPORT, IP_TCP);
               }
               if (SemconvStability.emitStableHttpSemconv()
-                  && attrs.get(NetworkAttributes.NETWORK_TRANSPORT) != null) {
-                assertThat(attrs).containsEntry(NetworkAttributes.NETWORK_TRANSPORT, "tcp");
+                  && attrs.get(SemanticAttributes.NETWORK_TRANSPORT) != null) {
+                assertThat(attrs).containsEntry(SemanticAttributes.NETWORK_TRANSPORT, "tcp");
               }
               if (SemconvStability.emitStableHttpSemconv()
-                  && attrs.get(NetworkAttributes.NETWORK_TYPE) != null) {
-                assertThat(attrs).containsEntry(NetworkAttributes.NETWORK_TYPE, "ipv4");
+                  && attrs.get(SemanticAttributes.NETWORK_TYPE) != null) {
+                assertThat(attrs).containsEntry(SemanticAttributes.NETWORK_TYPE, "ipv4");
               }
               AttributeKey<String> netProtocolKey =
                   getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME);

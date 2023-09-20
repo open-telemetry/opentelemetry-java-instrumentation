@@ -42,9 +42,9 @@ public final class InternalUrlAttributesExtractor<REQUEST> {
     String urlQuery = getter.getUrlQuery(request);
 
     if (emitStableUrlAttributes) {
-      internalSet(attributes, UrlAttributes.URL_SCHEME, urlScheme);
-      internalSet(attributes, UrlAttributes.URL_PATH, urlPath);
-      internalSet(attributes, UrlAttributes.URL_QUERY, urlQuery);
+      internalSet(attributes, SemanticAttributes.URL_SCHEME, urlScheme);
+      internalSet(attributes, SemanticAttributes.URL_PATH, urlPath);
+      internalSet(attributes, SemanticAttributes.URL_QUERY, urlQuery);
     }
     if (emitOldHttpAttributes) {
       internalSet(attributes, SemanticAttributes.HTTP_SCHEME, urlScheme);
