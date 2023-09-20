@@ -26,13 +26,6 @@ public class NettyInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    // ClassCastException reading VirtualField. Seems like we have created an
-    // InstrumentationModuleClassLoader that delegates to another InstrumentationModuleClassLoader
-    return false;
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ChannelFutureListenerInstrumentation(),

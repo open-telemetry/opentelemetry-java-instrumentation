@@ -95,9 +95,7 @@ public final class InstrumentationModuleInstaller {
       // As a result the advices should store `VirtualFields` as static variables instead of having
       // the lookup inline
       // We need to update our documentation on that
-      // Added back the call to contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder)
-      // to get more instrumentations running.
-      extendableAgentBuilder = contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder);
+      extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
       IndyTypeTransformerImpl typeTransformer =
           new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule);
       typeInstrumentation.transform(typeTransformer);
@@ -149,6 +147,7 @@ public final class InstrumentationModuleInstaller {
               .and(muzzleMatcher)
               .transform(ConstantAdjuster.instance())
               .transform(helperInjector);
+      extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
       extendableAgentBuilder = contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder);
       TypeTransformerImpl typeTransformer = new TypeTransformerImpl(extendableAgentBuilder);
       typeInstrumentation.transform(typeTransformer);
