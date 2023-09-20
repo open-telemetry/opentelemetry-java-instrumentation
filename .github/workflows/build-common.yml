@@ -37,6 +37,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17.0.6
+          cache: gradle
 
       - name: Spotless
         uses: gradle/gradle-build-action@v2
@@ -70,6 +71,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17.0.6
+          cache: gradle
 
       - name: Generate license report
         uses: gradle/gradle-build-action@v2
@@ -140,6 +142,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17.0.6
+          cache: gradle
 
       - name: Increase gradle daemon heap size
         run: |
@@ -219,6 +222,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17.0.6
+          cache: gradle
 
       # vaadin 14 tests fail with node 18
       - name: Set up Node
@@ -333,6 +337,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17.0.6
+          cache: gradle
 
       - name: Set up Gradle cache
         uses: gradle/gradle-build-action@v2
@@ -390,6 +395,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17.0.6
+          cache: gradle
 
       - name: Build
         uses: gradle/gradle-build-action@v2
@@ -411,6 +417,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17.0.6
+          cache: gradle
 
       - name: Set up Gradle cache
         uses: gradle/gradle-build-action@v2

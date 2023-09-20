@@ -68,6 +68,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17.0.6
+          cache: gradle
 
       - name: Update license report
         uses: gradle/gradle-build-action@v2
