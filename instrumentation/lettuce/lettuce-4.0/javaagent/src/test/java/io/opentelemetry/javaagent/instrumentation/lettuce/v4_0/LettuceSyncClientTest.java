@@ -85,6 +85,7 @@ class LettuceSyncClientTest {
     syncCommands.hmset("TESTHM", testHashMap);
 
     // 2 sets + 1 connect trace
+    testing.waitForTraces(3);
     testing.clearData();
   }
 
