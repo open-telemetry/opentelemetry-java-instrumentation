@@ -333,7 +333,7 @@ class HttpClientAttributesExtractorStableSemconvTest {
 
     assertThat(attributes.build())
         .containsEntry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 400)
-        .containsEntry(HttpAttributes.ERROR_TYPE, "Bad Request");
+        .containsEntry(HttpAttributes.ERROR_TYPE, "400");
   }
 
   @Test

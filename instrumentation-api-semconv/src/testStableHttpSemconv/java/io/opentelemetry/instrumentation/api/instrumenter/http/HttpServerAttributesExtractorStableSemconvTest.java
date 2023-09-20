@@ -374,7 +374,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
 
     assertThat(attributes.build())
         .containsEntry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 500)
-        .containsEntry(HttpAttributes.ERROR_TYPE, "Internal Server Error");
+        .containsEntry(HttpAttributes.ERROR_TYPE, "500");
   }
 
   @Test

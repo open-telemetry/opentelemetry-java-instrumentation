@@ -59,9 +59,8 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
     if (response != null) {
       Integer statusCode = getter.getHttpResponseStatusCode(request, response, error);
       if (statusCode != null) {
-        StatusCode statusCodeObj = statusCodeConverter.getSpanStatus(statusCode);
-        if (statusCodeObj == StatusCode.ERROR) {
-          spanStatusBuilder.setStatus(statusCodeObj);
+        if (statusCodeConverter.isError(statusCode)) {
+          spanStatusBuilder.setStatus(StatusCode.ERROR);
           return;
         }
       }

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.http.HttpStatusCodeUtil.assertErrorTypeForStatusCode;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -1109,8 +1108,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                   getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE);
               if (responseCode != null) {
                 assertThat(attrs).containsEntry(httpResponseStatusKey, (long) responseCode);
-                if (responseCode >= 400) {
-                  assertErrorTypeForStatusCode(attrs, responseCode);
+                if (responseCode >= 400 && SemconvStability.emitStableHttpSemconv()) {
+                  assertThat(attrs)
+                      .containsEntry(HttpAttributes.ERROR_TYPE, String.valueOf(responseCode));
                 }
               } else {
                 assertThat(attrs).doesNotContainKey(httpResponseStatusKey);

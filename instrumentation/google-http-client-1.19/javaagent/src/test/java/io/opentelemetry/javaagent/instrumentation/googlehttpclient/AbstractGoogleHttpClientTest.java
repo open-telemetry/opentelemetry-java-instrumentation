@@ -111,7 +111,7 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
                     getAttributeKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH),
                     AbstractLongAssert::isPositive)));
     if (SemconvStability.emitStableHttpSemconv()) {
-      attributes.add(equalTo(HttpAttributes.ERROR_TYPE, "Internal Server Error"));
+      attributes.add(equalTo(HttpAttributes.ERROR_TYPE, "500"));
     }
 
     testing.waitAndAssertTraces(

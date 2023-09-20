@@ -47,9 +47,9 @@ class HttpClientExperimentalMetricsStableSemconvTest {
     Attributes responseAttributes =
         Attributes.builder()
             .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
+            .put(HttpAttributes.ERROR_TYPE, "400")
             .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
             .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
-            .put(HttpAttributes.ERROR_TYPE, "Bad Request")
             .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
             .put(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
             .put(SemanticAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4")
@@ -94,7 +94,7 @@ class HttpClientExperimentalMetricsStableSemconvTest {
                                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                            equalTo(HttpAttributes.ERROR_TYPE, "Bad Request"),
+                                            equalTo(HttpAttributes.ERROR_TYPE, "400"),
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
@@ -121,7 +121,7 @@ class HttpClientExperimentalMetricsStableSemconvTest {
                                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                            equalTo(HttpAttributes.ERROR_TYPE, "Bad Request"),
+                                            equalTo(HttpAttributes.ERROR_TYPE, "400"),
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
