@@ -75,6 +75,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17.0.6
+          cache: 'gradle'
 
       - name: Build and publish artifact snapshots
         env:
