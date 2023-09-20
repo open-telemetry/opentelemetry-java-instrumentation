@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;

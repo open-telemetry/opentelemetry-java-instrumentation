@@ -27,6 +27,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;

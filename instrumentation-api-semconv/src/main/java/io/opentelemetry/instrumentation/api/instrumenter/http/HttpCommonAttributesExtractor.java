@@ -121,9 +121,11 @@ abstract class HttpCommonAttributesExtractor<
     }
 
     if (SemconvStability.emitStableHttpSemconv()) {
-      String errorType;
-      if (statusCode != null && statusCodeConverter.isError(statusCode)) {
-        errorType = statusCode.toString();
+      String errorType = null;
+      if (statusCode != null && statusCode > 0) {
+        if (statusCodeConverter.isError(statusCode)) {
+          errorType = statusCode.toString();
+        }
       } else {
         errorType = getter.getErrorType(request, response, error);
         // fall back to exception class name & _OTHER

@@ -74,20 +74,20 @@ class HttpStatusCodeConverterServerTest {
         Arguments.of(429, false),
         Arguments.of(431, false),
         Arguments.of(451, false),
-        Arguments.of(500, false),
-        Arguments.of(501, false),
-        Arguments.of(502, false),
-        Arguments.of(503, false),
-        Arguments.of(504, false),
-        Arguments.of(505, false),
-        Arguments.of(506, false),
-        Arguments.of(507, false),
-        Arguments.of(508, false),
-        Arguments.of(510, false),
-        Arguments.of(511, false),
+        Arguments.of(500, true),
+        Arguments.of(501, true),
+        Arguments.of(502, true),
+        Arguments.of(503, true),
+        Arguments.of(504, true),
+        Arguments.of(505, true),
+        Arguments.of(506, true),
+        Arguments.of(507, true),
+        Arguments.of(508, true),
+        Arguments.of(510, true),
+        Arguments.of(511, true),
 
         // Don't exist
-        Arguments.of(99, false),
-        Arguments.of(600, false));
+        Arguments.of(99, true),
+        Arguments.of(600, true));
   }
 }
