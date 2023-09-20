@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.UnsafeAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
-import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import javax.annotation.Nullable;
@@ -27,40 +26,36 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInter
   This class gets around this by overriding the start and end function calls in order to create
   the span from the end function call.
  */
-public class SqsReceiveInstrumenter extends Instrumenter<ExecutionAttributes, SdkHttpResponse> {
-  public SqsReceiveInstrumenter(InstrumenterBuilder<ExecutionAttributes, SdkHttpResponse> builder) {
+public class SqsReceiveInstrumenter extends Instrumenter<ExecutionAttributes, software.amazon.awssdk.core.interceptor.Context.AfterExecution> {
+  protected TracingExecutionInterceptor config;
+
+  public SqsReceiveInstrumenter(InstrumenterBuilder<ExecutionAttributes, software.amazon.awssdk.core.interceptor.Context.AfterExecution> builder) {
     super(builder);
+  }
+
+  public void setTracingExecutionInterceptor(TracingExecutionInterceptor config) {
+    this.config = config;
   }
 
   /*
     We cannot start the span context here because we do not have the span links.
     And span links must be added at span creation time.
+    Therefore, this will be a no-op function call.
+    The span will be created in the end function call.
    */
   @Override
   public Context start(Context parentContext, ExecutionAttributes request) {
     return null;
   }
 
-  /*
-    We cannot end the span here because we do not have access to the TracingExecutionInterceptor.
-   */
   @Override
-  public void end(Context context, ExecutionAttributes request, @Nullable SdkHttpResponse response, @Nullable Throwable error) {
-  }
-
-  public void startAndEnd(
-      software.amazon.awssdk.core.interceptor.Context.AfterExecution context,
-      ExecutionAttributes request,
-      TracingExecutionInterceptor config) {
-
+  public void end(Context context, ExecutionAttributes request, @Nullable software.amazon.awssdk.core.interceptor.Context.AfterExecution response, @Nullable Throwable error) {
     SpanBuilder spanBuilder =
         tracer.spanBuilder(spanNameExtractor.extract(request)).setSpanKind(SpanKind.CONSUMER);
 
     Context parentContext = request.getAttribute(CONTEXT_ATTRIBUTE);
 
-    if (parentContext != null) {
-      spanBuilder.setParent(parentContext);
-    }
+    spanBuilder.setParent(parentContext);
 
     spanBuilder.setAttribute(SemanticAttributes.MESSAGING_OPERATION,
         SemanticAttributes.MessagingOperationValues.RECEIVE);
@@ -68,14 +63,14 @@ public class SqsReceiveInstrumenter extends Instrumenter<ExecutionAttributes, Sd
     spanBuilder.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS");
 
     UnsafeAttributes attributes = new UnsafeAttributes();
-    for (AttributesExtractor<? super ExecutionAttributes, ? super SdkHttpResponse> extractor : attributesExtractors) {
+    for (AttributesExtractor<? super ExecutionAttributes, ? super software.amazon.awssdk.core.interceptor.Context.AfterExecution> extractor : attributesExtractors) {
       extractor.onStart(attributes, parentContext, request);
     }
     spanBuilder.setAllAttributes(attributes);
 
     long totalPayloadSizeInBytes = 0;
 
-    ReceiveMessageResponse receiveMessageResponse = (ReceiveMessageResponse) context.response();
+    ReceiveMessageResponse receiveMessageResponse = (ReceiveMessageResponse) response.response();
 
     for (Message message: receiveMessageResponse.messages()) {
       SpanContext spanContext  = getParentContext(config, message);

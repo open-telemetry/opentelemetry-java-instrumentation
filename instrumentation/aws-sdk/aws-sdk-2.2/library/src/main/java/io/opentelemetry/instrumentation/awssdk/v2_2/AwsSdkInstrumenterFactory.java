@@ -22,12 +22,25 @@ final class AwsSdkInstrumenterFactory {
 
   static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse> rpcAttributesExtractor =
       RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
-  private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
-      new AwsSdkExperimentalAttributesExtractor();
+
+  static final AttributesExtractor<ExecutionAttributes, software.amazon.awssdk.core.interceptor.Context.AfterExecution> rpcAttributesExtractorConsumer =
+      RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
+
+  private static final AwsSdkExperimentalAttributesExtractor<SdkHttpResponse> experimentalAttributesExtractor =
+      new AwsSdkExperimentalAttributesExtractor<>();
+
+  private static final AwsSdkExperimentalAttributesExtractor<software.amazon.awssdk.core.interceptor.Context.AfterExecution> experimentalAttributesExtractorConsumer =
+      new AwsSdkExperimentalAttributesExtractor<>();
 
   static final AwsSdkHttpAttributesGetter httpAttributesGetter = new AwsSdkHttpAttributesGetter();
+
+  static final AwsSdkHttpAttributesGetterConsumer httpAttributesGetterConsumer = new AwsSdkHttpAttributesGetterConsumer();
+
   static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse> httpAttributesExtractor =
       HttpClientAttributesExtractor.create(httpAttributesGetter);
+
+  static final AttributesExtractor<ExecutionAttributes, software.amazon.awssdk.core.interceptor.Context.AfterExecution> httpAttributesExtractorConsumer =
+      HttpClientAttributesExtractor.create(httpAttributesGetterConsumer);
 
   private static final AwsSdkSpanKindExtractor spanKindExtractor = new AwsSdkSpanKindExtractor();
 
@@ -38,14 +51,14 @@ final class AwsSdkInstrumenterFactory {
       extendedAttributesExtractors =
           Arrays.asList(rpcAttributesExtractor, experimentalAttributesExtractor);
 
-  private static final List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>>
+  private static final List<AttributesExtractor<ExecutionAttributes, software.amazon.awssdk.core.interceptor.Context.AfterExecution>>
       defaultConsumerAttributesExtractors =
-          Arrays.asList(rpcAttributesExtractor, httpAttributesExtractor);
+          Arrays.asList(rpcAttributesExtractorConsumer, httpAttributesExtractorConsumer);
 
-  private static final List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>>
+  private static final List<AttributesExtractor<ExecutionAttributes, software.amazon.awssdk.core.interceptor.Context.AfterExecution>>
       extendedConsumerAttributesExtractors =
           Arrays.asList(
-              rpcAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
+              rpcAttributesExtractorConsumer, httpAttributesExtractorConsumer, experimentalAttributesExtractorConsumer);
 
   static Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter(
       OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
@@ -58,10 +71,10 @@ final class AwsSdkInstrumenterFactory {
         AwsSdkInstrumenterFactory.spanKindExtractor);
   }
 
-  static Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter(
+  static SqsReceiveInstrumenter consumerInstrumenter(
       OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
 
-    return new SqsReceiveInstrumenter(Instrumenter.<ExecutionAttributes, SdkHttpResponse>builder(
+    return new SqsReceiveInstrumenter(Instrumenter.<ExecutionAttributes, software.amazon.awssdk.core.interceptor.Context.AfterExecution>builder(
             openTelemetry, INSTRUMENTATION_NAME, AwsSdkInstrumenterFactory::spanName)
         .addAttributesExtractors(captureExperimentalSpanAttributes
             ? extendedConsumerAttributesExtractors

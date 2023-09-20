@@ -16,7 +16,6 @@ import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
-import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
@@ -46,11 +45,12 @@ final class SqsImpl {
       return false;
     }
 
-    Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter =
+    Instrumenter<ExecutionAttributes, software.amazon.awssdk.core.interceptor.Context.AfterExecution> consumerInstrumenter =
         config.getConsumerInstrumenter();
 
     if (consumerInstrumenter.shouldStart(io.opentelemetry.context.Context.root(), executionAttributes)) {
-      ((SqsReceiveInstrumenter)consumerInstrumenter).startAndEnd(context, executionAttributes, config);
+      consumerInstrumenter.start(io.opentelemetry.context.Context.root(), executionAttributes);
+      consumerInstrumenter.end(io.opentelemetry.context.Context.root(), executionAttributes, context, null);
     }
 
     return true;

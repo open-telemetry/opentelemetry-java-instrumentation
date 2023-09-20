@@ -47,10 +47,10 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".SdkRequest");
 
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter;
-  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter;
+  private final Instrumenter<ExecutionAttributes, software.amazon.awssdk.core.interceptor.Context.AfterExecution> consumerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
 
-  Instrumenter<ExecutionAttributes, SdkHttpResponse> getConsumerInstrumenter() {
+  Instrumenter<ExecutionAttributes, software.amazon.awssdk.core.interceptor.Context.AfterExecution> getConsumerInstrumenter() {
     return consumerInstrumenter;
   }
 
@@ -69,7 +69,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   TracingExecutionInterceptor(
       Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter,
-      Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter,
+      Instrumenter<ExecutionAttributes, software.amazon.awssdk.core.interceptor.Context.AfterExecution> consumerInstrumenter,
       boolean captureExperimentalSpanAttributes,
       TextMapPropagator messagingPropagator,
       boolean useXrayPropagator) {

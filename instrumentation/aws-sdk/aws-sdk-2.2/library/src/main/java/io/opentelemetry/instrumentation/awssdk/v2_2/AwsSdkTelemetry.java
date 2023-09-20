@@ -42,7 +42,7 @@ public class AwsSdkTelemetry {
   }
 
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter;
-  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter;
+  private final Instrumenter<ExecutionAttributes, software.amazon.awssdk.core.interceptor.Context.AfterExecution> consumerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
   @Nullable private final TextMapPropagator messagingPropagator;
   private final boolean useXrayPropagator;
@@ -69,11 +69,17 @@ public class AwsSdkTelemetry {
    * ClientOverrideConfiguration.Builder#addExecutionInterceptor(ExecutionInterceptor)}.
    */
   public ExecutionInterceptor newExecutionInterceptor() {
-    return new TracingExecutionInterceptor(
+    TracingExecutionInterceptor tracingExecutionInterceptor = new TracingExecutionInterceptor(
         requestInstrumenter,
         consumerInstrumenter,
         captureExperimentalSpanAttributes,
         messagingPropagator,
         useXrayPropagator);
+
+    if (consumerInstrumenter instanceof SqsReceiveInstrumenter) {
+      ((SqsReceiveInstrumenter)consumerInstrumenter).setTracingExecutionInterceptor(tracingExecutionInterceptor);
+    }
+
+    return tracingExecutionInterceptor;
   }
 }
