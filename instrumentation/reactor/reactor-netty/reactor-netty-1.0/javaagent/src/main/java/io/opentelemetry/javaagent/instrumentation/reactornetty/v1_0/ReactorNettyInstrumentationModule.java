@@ -37,9 +37,15 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isHelperClass(String className) {
+    return className.startsWith("reactor.netty.http.client.HttpClientConfigBuddy");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new HttpClientInstrumentation(),
+        new HttpClientConnectInstrumentation(),
         new ResponseReceiverInstrumentation(),
         new TransportConnectorInstrumentation());
   }
