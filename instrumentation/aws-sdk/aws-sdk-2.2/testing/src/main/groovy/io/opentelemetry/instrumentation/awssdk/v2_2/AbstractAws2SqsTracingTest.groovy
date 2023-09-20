@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
+import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
@@ -111,6 +112,8 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
   }
 
   void assertSqsTraces() {
+    SpanData producerSpan
+
     assertTraces(3) {
       trace(0, 1) {
 
@@ -137,6 +140,8 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
         }
       }
       trace(1, 1) {
+        producerSpan = span(0)
+
         span(0) {
           name "Sqs.SendMessage"
           kind PRODUCER
@@ -190,6 +195,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
           name "Sqs.ReceiveMessage"
           kind CONSUMER
           childOf span(0)
+          hasLink(producerSpan)
           attributes {
             "aws.agent" "java-aws-sdk"
             "rpc.method" "ReceiveMessage"
@@ -275,7 +281,11 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
           kind CLIENT
         }
       }
+      SpanData producerSpan
+
       trace(1, 1) {
+        producerSpan = span(0)
+
         span(0) {
           name "Sqs.SendMessageBatch"
           kind CLIENT // TODO: Probably this should be producer, but that would be a breaking change
@@ -328,6 +338,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
           name "Sqs.ReceiveMessage"
           kind CONSUMER
           childOf span(0)
+          hasLink(producerSpan)
           attributes {
             "aws.agent" "java-aws-sdk"
             "rpc.method" "ReceiveMessage"
