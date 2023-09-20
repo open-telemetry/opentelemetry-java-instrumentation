@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
  * <p>In addition, this classloader ensures that the lookup of corresponding .class resources follow
  * the same delegation strategy, so that bytecode inspection tools work correctly.
  */
-class InstrumentationModuleClassLoader extends ClassLoader {
+public class InstrumentationModuleClassLoader extends ClassLoader {
 
   static {
     ClassLoader.registerAsParallelCapable();

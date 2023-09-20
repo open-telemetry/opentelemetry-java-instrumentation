@@ -10,6 +10,7 @@ import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.ExtensionClassLoader;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
 @AutoService(IgnoredTypesConfigurer.class)
@@ -124,7 +125,8 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .ignoreClassLoader("org.codehaus.janino.ByteArrayClassLoader")
         .ignoreClassLoader("org.eclipse.persistence.internal.jaxb.JaxbClassLoader")
         .ignoreClassLoader(AgentClassLoader.class.getName())
-        .ignoreClassLoader(ExtensionClassLoader.class.getName());
+        .ignoreClassLoader(ExtensionClassLoader.class.getName())
+        .ignoreClassLoader(InstrumentationModuleClassLoader.class.getName());
 
     builder
         .ignoreClassLoader("datadog.")
