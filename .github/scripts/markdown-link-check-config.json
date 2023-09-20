@@ -13,6 +13,9 @@
     },
     {
       "pattern": "^https://kotlinlang\\.org/docs/coroutines-overview\\.html$"
+    },
+    {
+      "pattern": "^http://logback\\.qos\\.ch"
     }
   ]
 }
