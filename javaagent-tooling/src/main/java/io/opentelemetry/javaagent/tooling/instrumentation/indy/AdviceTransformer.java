@@ -383,12 +383,21 @@ class AdviceTransformer {
 
           @Override
           public void visitCode() {
-            if (isEnterAdvice) {
-              super.visitCode();
-              return;
-            }
+            super.visitCode();
             GeneratorAdapter ga = generatorRef.get();
             Type[] argumentTypes = ga.getArgumentTypes();
+
+            if (isEnterAdvice) {
+              // we have change the type fo method arguments annotated with @Advice.Local to Object
+              // here we'll load the argument, cast it to its actual type, and store it back
+              for (AdviceLocal adviceLocal : adviceLocals) {
+                ga.loadArg(adviceLocal.adviceIndex);
+                ga.checkCast(argumentTypes[adviceLocal.adviceIndex]);
+                ga.storeArg(adviceLocal.adviceIndex);
+              }
+              return;
+            }
+
             // the index of last argument where Map is inserted (argumentTypes array does not
             // contain the Map)
             int lastArgumentIndex = argumentTypes.length;
