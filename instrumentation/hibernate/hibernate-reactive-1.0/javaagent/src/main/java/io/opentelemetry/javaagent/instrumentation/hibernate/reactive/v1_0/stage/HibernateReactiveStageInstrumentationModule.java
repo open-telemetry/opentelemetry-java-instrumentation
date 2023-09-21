@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v1_0;
+package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v1_0.stage;
 
 import static java.util.Arrays.asList;
 
@@ -13,17 +13,14 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class HibernateReactiveInstrumentationModule extends InstrumentationModule {
+public class HibernateReactiveStageInstrumentationModule extends InstrumentationModule {
 
-  public HibernateReactiveInstrumentationModule() {
-    super("hibernate-reactive", "hibernate-reactive-1.0");
+  public HibernateReactiveStageInstrumentationModule() {
+    super("hibernate-reactive", "hibernate-reactive-1.0", "hibernate-reactive-stage");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new StageSessionFactoryInstrumentation(),
-        new StageSessionImplInstrumentation(),
-        new MutinySessionFactoryInstrumentation());
+    return asList(new StageSessionFactoryInstrumentation(), new StageSessionImplInstrumentation());
   }
 }
