@@ -47,6 +47,5 @@ tasks {
     // set the value directly (the "library" does not normally query it, only library-autoconfigure)
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
     systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", true)
-    systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", true)
   }
 }
