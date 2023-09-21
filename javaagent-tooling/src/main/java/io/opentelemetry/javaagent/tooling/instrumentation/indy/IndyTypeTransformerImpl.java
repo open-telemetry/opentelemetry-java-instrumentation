@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -17,6 +18,8 @@ import net.bytebuddy.dynamic.ClassFileLocator.Resolution;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public final class IndyTypeTransformerImpl implements TypeTransformer {
+  // path (with trailing slash) to dump transformed advice class to
+  private static final String DUMP_PATH = null;
   private final Advice.WithCustomMapping adviceMapping;
   private AgentBuilder.Identified.Extendable agentBuilder;
   private final InstrumentationModule instrumentationModule;
@@ -96,10 +99,23 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
       byte[] bytes = delegate.resolve();
       byte[] result = AdviceTransformer.transform(bytes);
       if (result != null) {
+        dump(name, result);
         InstrumentationModuleClassLoader.bytecodeOverride.put(name.replace('/', '.'), result);
         return result;
       }
       return bytes;
+    }
+  }
+
+  private static void dump(String name, byte[] bytes) {
+    if (DUMP_PATH == null) {
+      return;
+    }
+    try (FileOutputStream fos =
+        new FileOutputStream(DUMP_PATH + name.replace('/', '.') + ".class")) {
+      fos.write(bytes);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
     }
   }
 }
