@@ -19,12 +19,6 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    // SingleRequestAdvice uses both @Advice.Argument(readOnly = false) and @Advice.Local
-    return false;
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new HttpExtClientInstrumentation(), new PoolMasterActorInstrumentation());
   }

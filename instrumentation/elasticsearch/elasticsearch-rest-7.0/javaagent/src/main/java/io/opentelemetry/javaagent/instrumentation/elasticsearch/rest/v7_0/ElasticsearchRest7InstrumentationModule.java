@@ -34,7 +34,7 @@ public class ElasticsearchRest7InstrumentationModule extends InstrumentationModu
 
   @Override
   public boolean isIndyModule() {
-    // PerformRequestAsyncAdvice uses both @Advice.Argument(readOnly = false) and @Advice.Local
+    // shares a virtual field with elasticsearch-api-client
     return false;
   }
 

@@ -20,12 +20,6 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public boolean isIndyModule() {
-    // UriRequestWithHandlerAdvice uses both @Advice.Argument(readOnly = false) and @Advice.Local
-    return false;
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ApacheHttpClientInstrumentation());
   }

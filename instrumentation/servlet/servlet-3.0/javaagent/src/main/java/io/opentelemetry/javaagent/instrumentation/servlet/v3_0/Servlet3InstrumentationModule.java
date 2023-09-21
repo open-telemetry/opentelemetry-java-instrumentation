@@ -35,7 +35,7 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean isIndyModule() {
-    // Servlet3Advice.onEnter uses both @Advice.Argument(readOnly = false) and @Advice.Local
+    // GrailsTest fails
     return false;
   }
 

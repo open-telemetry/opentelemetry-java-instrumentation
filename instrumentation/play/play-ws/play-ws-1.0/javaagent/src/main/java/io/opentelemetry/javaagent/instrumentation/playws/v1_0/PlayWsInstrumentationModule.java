@@ -30,12 +30,6 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    // ClientAdvice uses both @Advice.Argument(readOnly = false) and @Advice.Local
-    return false;
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new AsyncHttpClientInstrumentation(

@@ -32,6 +32,7 @@ import org.objectweb.asm.tree.MethodNode;
  */
 class AdviceTransformer {
   private static final Type OBJECT_TYPE = Type.getType(Object.class);
+  private static final Type OBJECT_ARRAY_TYPE = Type.getType(Object[].class);
 
   static byte[] transform(byte[] bytes) {
     ClassReader cr = new ClassReader(bytes);
@@ -200,7 +201,10 @@ class AdviceTransformer {
    * }</pre>
    */
   private static MethodVisitor instrumentWritableArguments(
-      MethodVisitor target, MethodNode source, List<OutputArgument> writableArguments) {
+      MethodVisitor target,
+      MethodNode source,
+      List<OutputArgument> writableArguments,
+      int returnIndex) {
     MethodVisitor result =
         new MethodVisitor(Opcodes.ASM9, target) {
           @Override
@@ -214,7 +218,7 @@ class AdviceTransformer {
                   valueArrayVisitor.visitAnnotation(
                       null, Type.getDescriptor(Advice.AssignReturned.ToArguments.ToArgument.class));
               valueVisitor.visit("value", argument.methodIndex);
-              valueVisitor.visit("index", i);
+              valueVisitor.visit("index", returnIndex + i);
               valueVisitor.visitEnum(
                   "typing", Type.getDescriptor(Assigner.Typing.class), "DYNAMIC");
               valueVisitor.visitEnd();
@@ -226,22 +230,19 @@ class AdviceTransformer {
 
           @Override
           public void visitInsn(int opcode) {
-            if (Opcodes.RETURN == opcode) {
+            if (Opcodes.ARETURN == opcode) {
+              // expecting object array on stack
               GeneratorAdapter ga =
                   new GeneratorAdapter(mv, source.access, source.name, source.desc);
               Type[] argumentTypes = ga.getArgumentTypes();
-              ga.push(writableArguments.size());
-              ga.newArray(OBJECT_TYPE);
               for (int i = 0; i < writableArguments.size(); i++) {
                 OutputArgument argument = writableArguments.get(i);
                 ga.dup();
-                ga.push(i);
+                ga.push(returnIndex + i);
                 ga.loadArg(argument.adviceIndex);
                 ga.box(argumentTypes[argument.adviceIndex]);
                 ga.arrayStore(OBJECT_TYPE);
               }
-              mv.visitInsn(Opcodes.ARETURN);
-              return;
             }
             super.visitInsn(opcode);
           }
@@ -260,21 +261,23 @@ class AdviceTransformer {
    * <p>is transformed to
    *
    * <pre>{@code
-   * @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
-   * T foo(@Advice.Return(readOnly = true) T foo) {
+   * @Advice.AssignReturned.ToReturned(index = 0, typing = DYNAMIC)
+   * Object[] foo(@Advice.Return(readOnly = true) T foo) {
    *   ...
-   *   return foo;
+   *   return new Object[] { foo };
    * }
    * }</pre>
    */
+  @SuppressWarnings("UnusedVariable")
   private static MethodVisitor instrumentWritableReturn(
-      MethodVisitor target, MethodNode source, OutputArgument writableReturn) {
+      MethodVisitor target, MethodNode source, OutputArgument writableReturn, int returnIndex) {
     MethodVisitor result =
         new MethodVisitor(Opcodes.ASM9, target) {
           @Override
           public void visitCode() {
             AnnotationVisitor av =
                 visitAnnotation(Type.getDescriptor(Advice.AssignReturned.ToReturned.class), true);
+            av.visit("index", returnIndex);
             av.visitEnum("typing", Type.getDescriptor(Assigner.Typing.class), "DYNAMIC");
             av.visitEnd();
             super.visitCode();
@@ -282,14 +285,16 @@ class AdviceTransformer {
 
           @Override
           public void visitInsn(int opcode) {
-            if (Opcodes.RETURN == opcode) {
+            if (Opcodes.ARETURN == opcode) {
+              // expecting object array on stack
               GeneratorAdapter ga =
                   new GeneratorAdapter(mv, source.access, source.name, source.desc);
               Type[] argumentTypes = ga.getArgumentTypes();
+              ga.dup();
+              ga.push(returnIndex);
               ga.loadArg(writableReturn.adviceIndex);
               ga.box(argumentTypes[writableReturn.adviceIndex]);
-              mv.visitInsn(Opcodes.ARETURN);
-              return;
+              ga.arrayStore(OBJECT_TYPE);
             }
             super.visitInsn(opcode);
           }
@@ -308,19 +313,20 @@ class AdviceTransformer {
    * <p>for enter advice is transformed to
    *
    * <pre>{@code
-   * Map foo(@Advice.Unused Object foo, @Advice.Unused Object bar) {
+   * Object[] foo(@Advice.Unused Object foo, @Advice.Unused Object bar) {
    *   ...
    *   Map result = new HashMap();
    *   result.put("foo", foo);
    *   result.put("bar", bar);
-   *   return foo;
+   *   return new Object[] { result };
    * }
    * }</pre>
    *
    * <p>and for exit advice is transformed to
    *
    * <pre>{@code
-   * void foo(@Advice.Unused Object foo, @Advice.Unused Object bar, @Advice.Enter Map map) {
+   * void foo(@Advice.Unused Object foo, @Advice.Unused Object bar, @Advice.Enter Object[] array) {
+   *   Map map = (Map) array[0];
    *   foo = (T1) map.get("foo");
    *   bar = (T2) map.get("bar");
    *   ...
@@ -332,9 +338,10 @@ class AdviceTransformer {
       MethodVisitor target,
       MethodNode source,
       String originalDesc,
-      List<AdviceLocal> adviceLocals) {
+      List<AdviceLocal> adviceLocals,
+      int returnIndex) {
     AtomicReference<GeneratorAdapter> generatorRef = new AtomicReference<>();
-    AtomicInteger mapIndex = new AtomicInteger();
+    AtomicInteger dataIndex = new AtomicInteger();
 
     target =
         new MethodVisitor(Opcodes.ASM9, target) {
@@ -358,13 +365,19 @@ class AdviceTransformer {
 
           @Override
           public void visitInsn(int opcode) {
-            if (isEnterAdvice && Opcodes.RETURN == opcode) {
+            if (isEnterAdvice && Opcodes.ARETURN == opcode) {
+              // expecting object array on stack
               GeneratorAdapter ga = generatorRef.get();
+              // duplicate array
+              ga.dup();
+              // push array index for the map
+              ga.push(returnIndex);
               Type hashMapType = Type.getType(HashMap.class);
               Type[] argumentTypes = ga.getArgumentTypes();
               ga.newInstance(hashMapType);
               ga.dup();
               ga.invokeConstructor(hashMapType, Method.getMethod("void <init>()"));
+              // stack: array, array, array index for map, map
               for (AdviceLocal adviceLocal : adviceLocals) {
                 ga.dup();
                 ga.push(adviceLocal.name);
@@ -373,10 +386,13 @@ class AdviceTransformer {
                 ga.invokeVirtual(
                     hashMapType,
                     Method.getMethod("java.lang.Object put(java.lang.Object, java.lang.Object)"));
+                // por return value of Map.put
                 ga.pop();
               }
-              mv.visitInsn(Opcodes.ARETURN);
-              return;
+              // stack: array, array, array index for map, map
+              // store map in the array
+              ga.arrayStore(OBJECT_TYPE);
+              // stack: array
             }
             super.visitInsn(opcode);
           }
@@ -407,8 +423,15 @@ class AdviceTransformer {
             av.visitEnd();
 
             Type mapType = Type.getType(Map.class);
-            // load Map
-            ga.loadLocal(mapIndex.get(), mapType);
+            // load object array
+            ga.loadLocal(dataIndex.get(), OBJECT_ARRAY_TYPE);
+            ga.dup();
+            // we want the last element of the array
+            ga.arrayLength();
+            ga.visitInsn(Opcodes.ICONST_1);
+            ga.visitInsn(Opcodes.ISUB);
+            // load map
+            ga.arrayLoad(mapType);
             for (AdviceLocal adviceLocal : adviceLocals) {
               // duplicate Map
               ga.dup();
@@ -428,8 +451,9 @@ class AdviceTransformer {
         new GeneratorAdapter(target, Opcodes.ACC_STATIC, source.name, originalDesc);
     generatorRef.set(ga);
     if (!isEnterAdvice) {
-      // for exit advice create a new local for the map we added as the last method argument
-      mapIndex.set(ga.newLocal(Type.getType(Map.class)));
+      // for exit advice create a new local for the Object array we added as the last method
+      // argument
+      dataIndex.set(ga.newLocal(OBJECT_ARRAY_TYPE));
     }
 
     return ga;
@@ -445,27 +469,24 @@ class AdviceTransformer {
       List<OutputArgument> writableArguments = getWritableArguments(methodNode);
       OutputArgument writableReturn = getWritableReturnValue(methodNode);
       List<AdviceLocal> adviceLocals = getLocals(methodNode);
+      boolean isEnterAdvice = isEnterAdvice(methodNode);
 
-      if (!writableArguments.isEmpty()) {
-        methodNode.desc =
-            Type.getMethodDescriptor(
-                Type.getType(Object[].class), Type.getArgumentTypes(methodNode.desc));
-      } else if (writableReturn != null) {
-        methodNode.desc =
-            Type.getMethodDescriptor(
-                Type.getType(Object.class), Type.getArgumentTypes(methodNode.desc));
-      } else if (!adviceLocals.isEmpty() && isEnterAdvice(methodNode)) {
-        // Set type of arguments annotated with @Advice.Local to Object. These arguments are likely
-        // to be helper classes which currently breaks because the invokedynamic call in advised
-        // class needs access to the parameter types of the advice method.
-        Type[] newArgumentTypes = Type.getArgumentTypes(methodNode.desc);
-        for (AdviceLocal adviceLocal : adviceLocals) {
-          newArgumentTypes[adviceLocal.adviceIndex] = OBJECT_TYPE;
+      if (!writableArguments.isEmpty()
+          || writableReturn != null
+          || (!adviceLocals.isEmpty() && isEnterAdvice)) {
+        Type[] argumentTypes = Type.getArgumentTypes(methodNode.desc);
+        if (!adviceLocals.isEmpty() && isEnterAdvice) {
+          // Set type of arguments annotated with @Advice.Local to Object. These arguments are
+          // likely
+          // to be helper classes which currently breaks because the invokedynamic call in advised
+          // class needs access to the parameter types of the advice method.
+          for (AdviceLocal adviceLocal : adviceLocals) {
+            argumentTypes[adviceLocal.adviceIndex] = OBJECT_TYPE;
+          }
         }
-        methodNode.desc = Type.getMethodDescriptor(Type.getType(Map.class), newArgumentTypes);
-      }
 
-      if (!originalDescriptor.equals(methodNode.desc)) {
+        methodNode.desc = Type.getMethodDescriptor(OBJECT_ARRAY_TYPE, argumentTypes);
+
         MethodNode tmp =
             new MethodNode(
                 methodNode.access,
@@ -498,8 +519,9 @@ class AdviceTransformer {
           newArgumentTypes[adviceLocal.adviceIndex] = OBJECT_TYPE;
         }
         List<Type> typeList = new ArrayList<>(Arrays.asList(newArgumentTypes));
-        // add Map as the last argument
-        typeList.add(Type.getType(Map.class));
+        // add Object array as the last argument, this array is used to pass info from the enter
+        // advice
+        typeList.add(OBJECT_ARRAY_TYPE);
 
         methodNode.desc =
             Type.getMethodDescriptor(
@@ -513,7 +535,7 @@ class AdviceTransformer {
                 methodNode.signature,
                 exceptionsArray);
         MethodVisitor mv =
-            instrumentAdviceLocals(false, tmp, methodNode, originalDescriptor, adviceLocals);
+            instrumentAdviceLocals(false, tmp, methodNode, originalDescriptor, adviceLocals, -1);
         methodNode.accept(mv);
 
         methodNode = tmp;
@@ -540,13 +562,21 @@ class AdviceTransformer {
       OutputArgument writableReturn,
       List<AdviceLocal> adviceLocals) {
 
-    if (!writableArguments.isEmpty()) {
-      target = instrumentWritableArguments(target, source, writableArguments);
-    } else if (writableReturn != null) {
-      target = instrumentWritableReturn(target, source, writableReturn);
-    } else if (!adviceLocals.isEmpty() && isEnterAdvice(source)) {
-      target = instrumentAdviceLocals(true, target, source, originalDesc, adviceLocals);
+    int returnArraySize = 0;
+    if (writableReturn != null) {
+      target = instrumentWritableReturn(target, source, writableReturn, returnArraySize);
+      returnArraySize++;
     }
+    if (!writableArguments.isEmpty()) {
+      target = instrumentWritableArguments(target, source, writableArguments, returnArraySize);
+      returnArraySize += writableArguments.size();
+    }
+    if (!adviceLocals.isEmpty() && isEnterAdvice(source)) {
+      target =
+          instrumentAdviceLocals(true, target, source, originalDesc, adviceLocals, returnArraySize);
+      returnArraySize++;
+    }
+    target = addReturnArray(target, returnArraySize);
 
     return target;
   }
@@ -581,6 +611,21 @@ class AdviceTransformer {
     }
 
     return null;
+  }
+
+  private static MethodVisitor addReturnArray(MethodVisitor target, int returnArraySize) {
+    return new MethodVisitor(Opcodes.ASM9, target) {
+      @Override
+      public void visitInsn(int opcode) {
+        if (Opcodes.RETURN == opcode) {
+          GeneratorAdapter ga = new GeneratorAdapter(mv, 0, null, "()V");
+          ga.push(returnArraySize);
+          ga.newArray(OBJECT_TYPE);
+          opcode = Opcodes.ARETURN;
+        }
+        super.visitInsn(opcode);
+      }
+    };
   }
 
   /**

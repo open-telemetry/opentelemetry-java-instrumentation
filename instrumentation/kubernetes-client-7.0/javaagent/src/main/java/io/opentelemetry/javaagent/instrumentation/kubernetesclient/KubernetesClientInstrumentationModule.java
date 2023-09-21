@@ -21,7 +21,7 @@ public class KubernetesClientInstrumentationModule extends InstrumentationModule
 
   @Override
   public boolean isIndyModule() {
-    // ExecuteAsyncAdvice uses both @Advice.Argument(readOnly = false) and @Advice.Local
+    // conflict with bundled okhttp, BuildRequestAdvice uses okhttp3.Request
     return false;
   }
 
