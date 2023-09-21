@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.resources;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.spring.resources.SpringBootServiceNameDetector.SystemHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
@@ -32,7 +31,7 @@ public class SpringBootServiceVersionDetector implements ResourceProvider {
   }
 
   // Exists for testing
-  public SpringBootServiceVersionDetector(SystemHelper system) {
+  SpringBootServiceVersionDetector(SystemHelper system) {
     this.system = system;
   }
 
@@ -48,7 +47,7 @@ public class SpringBootServiceVersionDetector implements ResourceProvider {
   }
 
   private Optional<String> getServiceVersionFromBuildInfo() {
-    try (InputStream in = system.openClasspathResource("build-info.properties", "META-INF")) {
+    try (InputStream in = system.openClasspathResource("META-INF", "build-info.properties")) {
       return in != null ? getServiceVersionPropertyFromStream(in) : Optional.empty();
     } catch (Exception e) {
       return Optional.empty();

@@ -24,11 +24,11 @@ class SpringBootServiceVersionDetectorTest {
   static final String META_INFO = "META-INF";
 
   @Mock ConfigProperties config;
-  @Mock SpringBootServiceNameDetector.SystemHelper system;
+  @Mock SystemHelper system;
 
   @Test
   void givenBuildVersionIsPresentInBuildInfProperties_thenReturnBuildVersion() {
-    when(system.openClasspathResource(BUILD_PROPS, META_INFO))
+    when(system.openClasspathResource(META_INFO, BUILD_PROPS))
         .thenReturn(openClasspathResource(META_INFO + "/" + BUILD_PROPS));
 
     SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector(system);
@@ -38,7 +38,7 @@ class SpringBootServiceVersionDetectorTest {
 
   @Test
   void givenBuildVersionFileNotPresent_thenReturnEmptyResource() {
-    when(system.openClasspathResource(BUILD_PROPS, META_INFO)).thenReturn(null);
+    when(system.openClasspathResource(META_INFO, BUILD_PROPS)).thenReturn(null);
 
     SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector(system);
     Resource result = guesser.createResource(config);
@@ -47,7 +47,7 @@ class SpringBootServiceVersionDetectorTest {
 
   @Test
   void givenBuildVersionFileIsPresentButBuildVersionPropertyNotPresent_thenReturnEmptyResource() {
-    when(system.openClasspathResource(BUILD_PROPS, META_INFO))
+    when(system.openClasspathResource(META_INFO, BUILD_PROPS))
         .thenReturn(openClasspathResource(BUILD_PROPS));
 
     SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector(system);
