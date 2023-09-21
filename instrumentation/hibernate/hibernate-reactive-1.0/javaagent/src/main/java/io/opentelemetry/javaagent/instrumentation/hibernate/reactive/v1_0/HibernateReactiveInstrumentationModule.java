@@ -22,6 +22,8 @@ public class HibernateReactiveInstrumentationModule extends InstrumentationModul
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new StageSessionFactoryInstrumentation(), new MutinySessionFactoryInstrumentation());
+        new StageSessionFactoryInstrumentation(),
+        new StageSessionImplInstrumentation(),
+        new MutinySessionFactoryInstrumentation());
   }
 }

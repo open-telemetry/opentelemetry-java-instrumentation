@@ -16,7 +16,7 @@ import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
+
 import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.netty.v4_1.ClientHandler
 import io.opentelemetry.instrumentation.test.AgentTestTrait
@@ -118,8 +118,8 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
           }
           if (SemconvStability.emitStableHttpSemconv()) {
             attributes {
-              "$NetworkAttributes.SERVER_ADDRESS" uri.host
-              "$NetworkAttributes.SERVER_PORT" uri.port
+              "$SemanticAttributes.SERVER_ADDRESS" uri.host
+              "$SemanticAttributes.SERVER_PORT" uri.port
             }
           }
         }
@@ -137,11 +137,11 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
           }
           if (SemconvStability.emitStableHttpSemconv()) {
             attributes {
-              "$NetworkAttributes.NETWORK_TRANSPORT" "tcp"
-              "$NetworkAttributes.NETWORK_TYPE" "ipv4"
-              "$NetworkAttributes.SERVER_ADDRESS" uri.host
-              "$NetworkAttributes.SERVER_PORT" uri.port
-              "$NetworkAttributes.SERVER_SOCKET_ADDRESS" "127.0.0.1"
+              "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
+              "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+              "$SemanticAttributes.SERVER_ADDRESS" uri.host
+              "$SemanticAttributes.SERVER_PORT" uri.port
+              "$SemanticAttributes.SERVER_SOCKET_ADDRESS" "127.0.0.1"
             }
           }
         }
@@ -195,8 +195,8 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
           }
           if (SemconvStability.emitStableHttpSemconv()) {
             attributes {
-              "$NetworkAttributes.SERVER_ADDRESS" uri.host
-              "$NetworkAttributes.SERVER_PORT" uri.port
+              "$SemanticAttributes.SERVER_ADDRESS" uri.host
+              "$SemanticAttributes.SERVER_PORT" uri.port
             }
           }
         }
@@ -216,11 +216,11 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
           }
           if (SemconvStability.emitStableHttpSemconv()) {
             attributes {
-              "$NetworkAttributes.NETWORK_TRANSPORT" "tcp"
-              "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == null }
-              "$NetworkAttributes.SERVER_ADDRESS" uri.host
-              "$NetworkAttributes.SERVER_PORT" uri.port
-              "$NetworkAttributes.SERVER_SOCKET_ADDRESS" { it == "127.0.0.1" || it == null }
+              "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
+              "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == null }
+              "$SemanticAttributes.SERVER_ADDRESS" uri.host
+              "$SemanticAttributes.SERVER_PORT" uri.port
+              "$SemanticAttributes.SERVER_SOCKET_ADDRESS" { it == "127.0.0.1" || it == null }
             }
           }
         }

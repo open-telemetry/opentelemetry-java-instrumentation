@@ -13,7 +13,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -126,24 +125,24 @@ class NetClientAttributesExtractorBothSemconvTest {
         .containsOnly(
             entry(SemanticAttributes.NET_PEER_NAME, "opentelemetry.io"),
             entry(SemanticAttributes.NET_PEER_PORT, 42L),
-            entry(NetworkAttributes.SERVER_ADDRESS, "opentelemetry.io"),
-            entry(NetworkAttributes.SERVER_PORT, 42L));
+            entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"),
+            entry(SemanticAttributes.SERVER_PORT, 42L));
 
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
             entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
-            entry(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-            entry(NetworkAttributes.NETWORK_TYPE, "ipv6"),
-            entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
-            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+            entry(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+            entry(SemanticAttributes.NETWORK_TYPE, "ipv6"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
             entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"),
             entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
             entry(SemanticAttributes.NET_SOCK_PEER_NAME, "proxy.opentelemetry.io"),
             entry(SemanticAttributes.NET_SOCK_PEER_PORT, 123L),
-            entry(NetworkAttributes.SERVER_SOCKET_DOMAIN, "proxy.opentelemetry.io"),
-            entry(NetworkAttributes.SERVER_SOCKET_ADDRESS, "1:2:3:4::"),
-            entry(NetworkAttributes.SERVER_SOCKET_PORT, 123L));
+            entry(SemanticAttributes.SERVER_SOCKET_DOMAIN, "proxy.opentelemetry.io"),
+            entry(SemanticAttributes.SERVER_SOCKET_ADDRESS, "1:2:3:4::"),
+            entry(SemanticAttributes.SERVER_SOCKET_PORT, 123L));
   }
 }

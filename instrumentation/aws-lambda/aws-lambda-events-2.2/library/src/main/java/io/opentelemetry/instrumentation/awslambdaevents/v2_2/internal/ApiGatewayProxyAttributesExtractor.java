@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.emptyIfNull;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.lowercaseMap;
 import static io.opentelemetry.semconv.SemanticAttributes.FAAS_TRIGGER;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.SemanticAttributes.HTTP_STATUS_CODE;
 import static io.opentelemetry.semconv.SemanticAttributes.USER_AGENT_ORIGINAL;
 
@@ -19,8 +19,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -54,10 +52,10 @@ final class ApiGatewayProxyAttributesExtractor
     String method = request.getHttpMethod();
     if (SemconvStability.emitStableHttpSemconv()) {
       if (method == null || knownMethods.contains(method)) {
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
       } else {
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
       }
     }
     if (SemconvStability.emitOldHttpSemconv()) {
@@ -73,7 +71,7 @@ final class ApiGatewayProxyAttributesExtractor
     String httpUrl = getHttpUrl(request, headers);
     if (httpUrl != null) {
       if (SemconvStability.emitStableHttpSemconv()) {
-        internalSet(attributes, UrlAttributes.URL_FULL, httpUrl);
+        internalSet(attributes, SemanticAttributes.URL_FULL, httpUrl);
       }
 
       if (SemconvStability.emitOldHttpSemconv()) {

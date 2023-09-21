@@ -12,9 +12,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -46,8 +43,8 @@ public class ElasticsearchClientAttributeExtractor
     HttpHost host = response.getHost();
     if (host != null) {
       if (SemconvStability.emitStableHttpSemconv()) {
-        internalSet(attributes, NetworkAttributes.SERVER_ADDRESS, host.getHostName());
-        internalSet(attributes, NetworkAttributes.SERVER_PORT, (long) host.getPort());
+        internalSet(attributes, SemanticAttributes.SERVER_ADDRESS, host.getHostName());
+        internalSet(attributes, SemanticAttributes.SERVER_PORT, (long) host.getPort());
       }
       if (SemconvStability.emitOldHttpSemconv()) {
         internalSet(attributes, SemanticAttributes.NET_PEER_NAME, host.getHostName());
@@ -63,7 +60,7 @@ public class ElasticsearchClientAttributeExtractor
     String fullUrl = response.getHost().toURI() + uri;
 
     if (SemconvStability.emitStableHttpSemconv()) {
-      internalSet(attributes, UrlAttributes.URL_FULL, fullUrl);
+      internalSet(attributes, SemanticAttributes.URL_FULL, fullUrl);
     }
 
     if (SemconvStability.emitOldHttpSemconv()) {
@@ -95,10 +92,10 @@ public class ElasticsearchClientAttributeExtractor
     String method = request.getMethod();
     if (SemconvStability.emitStableHttpSemconv()) {
       if (method == null || knownMethods.contains(method)) {
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
       } else {
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
       }
     }
     if (SemconvStability.emitOldHttpSemconv()) {

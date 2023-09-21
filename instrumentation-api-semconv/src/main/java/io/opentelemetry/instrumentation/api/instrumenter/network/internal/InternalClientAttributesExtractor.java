@@ -39,9 +39,9 @@ public final class InternalClientAttributesExtractor<REQUEST, RESPONSE> {
     AddressAndPort clientAddressAndPort = extractClientAddressAndPort(request);
 
     if (emitStableUrlAttributes) {
-      internalSet(attributes, NetworkAttributes.CLIENT_ADDRESS, clientAddressAndPort.address);
+      internalSet(attributes, SemanticAttributes.CLIENT_ADDRESS, clientAddressAndPort.address);
       if (clientAddressAndPort.port != null && clientAddressAndPort.port > 0) {
-        internalSet(attributes, NetworkAttributes.CLIENT_PORT, (long) clientAddressAndPort.port);
+        internalSet(attributes, SemanticAttributes.CLIENT_PORT, (long) clientAddressAndPort.port);
       }
     }
     if (emitOldHttpAttributes) {
@@ -57,7 +57,7 @@ public final class InternalClientAttributesExtractor<REQUEST, RESPONSE> {
 
     if (clientSocketAddress != null && !clientSocketAddress.equals(clientAddressAndPort.address)) {
       if (emitStableUrlAttributes) {
-        internalSet(attributes, NetworkAttributes.CLIENT_SOCKET_ADDRESS, clientSocketAddress);
+        internalSet(attributes, SemanticAttributes.CLIENT_SOCKET_ADDRESS, clientSocketAddress);
       }
       if (emitOldHttpAttributes) {
         internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_ADDR, clientSocketAddress);
@@ -66,7 +66,7 @@ public final class InternalClientAttributesExtractor<REQUEST, RESPONSE> {
     if (clientSocketPort != null && clientSocketPort > 0) {
       if (emitStableUrlAttributes) {
         if (!clientSocketPort.equals(clientAddressAndPort.port)) {
-          internalSet(attributes, NetworkAttributes.CLIENT_SOCKET_PORT, (long) clientSocketPort);
+          internalSet(attributes, SemanticAttributes.CLIENT_SOCKET_PORT, (long) clientSocketPort);
         }
       }
       if (emitOldHttpAttributes) {
