@@ -13,11 +13,17 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import javax.annotation.Nullable;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
 final class InstrumentationContexts {
+
+  private static final AtomicReferenceFieldUpdater<InstrumentationContexts, Context>
+      parentContextUpdater =
+          AtomicReferenceFieldUpdater.newUpdater(
+              InstrumentationContexts.class, Context.class, "parentContext");
 
   private volatile Context parentContext;
   private volatile Timer timer;
@@ -27,8 +33,11 @@ final class InstrumentationContexts {
   private final Queue<RequestAndContext> clientContexts = new LinkedBlockingQueue<>();
 
   void initialize(Context parentContext) {
-    this.parentContext = HttpClientResendCount.initialize(parentContext);
-    timer = Timer.start();
+    Context parentContextWithResends = HttpClientResendCount.initialize(parentContext);
+    // make sure initialization happens only once
+    if (parentContextUpdater.compareAndSet(this, null, parentContextWithResends)) {
+      timer = Timer.start();
+    }
   }
 
   Context getParentContext() {
