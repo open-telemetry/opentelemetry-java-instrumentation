@@ -9,24 +9,14 @@ muzzle {
     module.set("pekko-http_2.12")
     versions.set("[1.0, 2.0)")
     assertInverse.set(true)
+    extraDependency("org.apache.pekko:pekko-stream_2.12:1.0.1")
   }
   pass {
     group.set("org.apache.pekko")
     module.set("pekko-http_2.13")
     versions.set("[1.0, 2.0)")
     assertInverse.set(true)
-  }
-  pass {
-    group.set("org.apache.pekko")
-    module.set("pekko-stream_2.12")
-    versions.set("[1.0, 2.0)")
-    assertInverse.set(true)
-  }
-  pass {
-    group.set("org.apache.pekko")
-    module.set("pekko-stream_2.13")
-    versions.set("[1.0, 2.0)")
-    assertInverse.set(true)
+    extraDependency("org.apache.pekko:pekko-stream_2.13:1.0.1")
   }
 }
 
