@@ -6,9 +6,11 @@
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
@@ -306,9 +308,7 @@ class AdviceTransformer {
    * <p>for enter advice is transformed to
    *
    * <pre>{@code
-   * Map foo() {
-   *   T1 foo = null;
-   *   T2 bar = null;
+   * Map foo(@Advice.Unused Object foo, @Advice.Unused Object bar) {
    *   ...
    *   Map result = new HashMap();
    *   result.put("foo", foo);
@@ -320,9 +320,9 @@ class AdviceTransformer {
    * <p>and for exit advice is transformed to
    *
    * <pre>{@code
-   * void foo(@Advice.Enter Map map) {
-   *   T1 foo = (T1) map.get("foo");
-   *   T2 bar = (T2) map.get("bar");
+   * void foo(@Advice.Unused Object foo, @Advice.Unused Object bar, @Advice.Enter Map map) {
+   *   foo = (T1) map.get("foo");
+   *   bar = (T2) map.get("bar");
    *   ...
    * }
    * }</pre>
@@ -332,45 +332,34 @@ class AdviceTransformer {
       MethodVisitor target,
       MethodNode source,
       String originalDesc,
-      List<AdviceLocal> adviceLocals,
-      Map<Integer, Integer> argumentIndexMapping) {
-    Type[] argumentTypes = Type.getArgumentTypes(source.desc);
+      List<AdviceLocal> adviceLocals) {
     AtomicReference<GeneratorAdapter> generatorRef = new AtomicReference<>();
+    AtomicInteger mapIndex = new AtomicInteger();
 
     target =
         new MethodVisitor(Opcodes.ASM9, target) {
           @Override
           public AnnotationVisitor visitParameterAnnotation(
               int parameter, String descriptor, boolean visible) {
+            // replace @Advice.Local with @Advice.Unused
             if (Type.getDescriptor(Advice.Local.class).equals(descriptor)) {
-              return null;
+              descriptor = Type.getDescriptor(Advice.Unused.class);
             }
-            return super.visitParameterAnnotation(
-                argumentIndexMapping.get(parameter), descriptor, visible);
+            return super.visitParameterAnnotation(parameter, descriptor, visible);
           }
 
           @Override
           public void visitAnnotableParameterCount(int parameterCount, boolean visible) {
-            if (isEnterAdvice) {
-              super.visitAnnotableParameterCount(parameterCount - adviceLocals.size(), visible);
-            } else {
-              super.visitAnnotableParameterCount(parameterCount - adviceLocals.size() + 1, visible);
+            if (!isEnterAdvice) {
+              parameterCount++;
             }
-          }
-
-          private int getArgIndex(Type[] argumentTypes, int arg) {
-            int index = 0;
-            for (int i = 0; i < arg; i++) {
-              index += argumentTypes[i].getSize();
-            }
-            return index;
+            super.visitAnnotableParameterCount(parameterCount, visible);
           }
 
           @Override
           public void visitInsn(int opcode) {
             if (isEnterAdvice && Opcodes.RETURN == opcode) {
-              GeneratorAdapter ga =
-                  new GeneratorAdapter(mv, source.access, source.name, originalDesc);
+              GeneratorAdapter ga = generatorRef.get();
               Type hashMapType = Type.getType(HashMap.class);
               Type[] argumentTypes = ga.getArgumentTypes();
               ga.newInstance(hashMapType);
@@ -379,12 +368,7 @@ class AdviceTransformer {
               for (AdviceLocal adviceLocal : adviceLocals) {
                 ga.dup();
                 ga.push(adviceLocal.name);
-                Type type = argumentTypes[adviceLocal.adviceIndex];
-                generatorRef
-                    .get()
-                    .visitVarInsn(
-                        type.getOpcode(Opcodes.ILOAD),
-                        getArgIndex(argumentTypes, adviceLocal.adviceIndex));
+                ga.loadArg(adviceLocal.adviceIndex);
                 ga.box(argumentTypes[adviceLocal.adviceIndex]);
                 ga.invokeVirtual(
                     hashMapType,
@@ -403,77 +387,40 @@ class AdviceTransformer {
               super.visitCode();
               return;
             }
-            // the index of last argument where Map is inserted
-            int adviceEnterIndex = argumentTypes.length - 1;
+            GeneratorAdapter ga = generatorRef.get();
+            Type[] argumentTypes = ga.getArgumentTypes();
+            // the index of last argument where Map is inserted (argumentTypes array does not
+            // contain the Map)
+            int lastArgumentIndex = argumentTypes.length;
             AnnotationVisitor av =
                 mv.visitParameterAnnotation(
-                    adviceEnterIndex, Type.getDescriptor(Advice.Enter.class), true);
+                    lastArgumentIndex, Type.getDescriptor(Advice.Enter.class), true);
             av.visitEnd();
 
-            super.visitCode();
-
-            GeneratorAdapter ga =
-                new GeneratorAdapter(mv, source.access, source.name, originalDesc);
             Type mapType = Type.getType(Map.class);
-            Type[] originalArgumentTypes = ga.getArgumentTypes();
             // load Map
-            mv.visitVarInsn(
-                mapType.getOpcode(Opcodes.ILOAD), getArgIndex(argumentTypes, adviceEnterIndex));
+            ga.loadLocal(mapIndex.get(), mapType);
             for (AdviceLocal adviceLocal : adviceLocals) {
               // duplicate Map
               ga.dup();
               ga.push(adviceLocal.name);
               ga.invokeInterface(
                   mapType, Method.getMethod("java.lang.Object get(java.lang.Object)"));
-              ga.unbox(originalArgumentTypes[adviceLocal.adviceIndex]);
-              Type type = originalArgumentTypes[adviceLocal.adviceIndex];
-              generatorRef
-                  .get()
-                  .visitVarInsn(
-                      type.getOpcode(Opcodes.ISTORE),
-                      getArgIndex(originalArgumentTypes, adviceLocal.adviceIndex));
+              ga.unbox(argumentTypes[adviceLocal.adviceIndex]);
+              ga.storeArg(adviceLocal.adviceIndex);
             }
             // pop Map
             ga.pop();
           }
         };
-    // pretend that this method doesn't take any arguments, we'll use this to shift all the locals
-    // and insert a mapping from current method arguments to what the original method had
+
+    // pretend that this method still takes the original arguments
     GeneratorAdapter ga =
-        new GeneratorAdapter(
-            target,
-            Opcodes.ACC_STATIC,
-            source.name,
-            Type.getMethodDescriptor(Type.getReturnType(source.desc)));
+        new GeneratorAdapter(target, Opcodes.ACC_STATIC, source.name, originalDesc);
     generatorRef.set(ga);
-    for (Type argumentType : argumentTypes) {
-      ga.newLocal(argumentType);
-    }
-    // position in modified method descriptor
-    int currentSlot = 0;
-    // position in original descriptor
-    int originalSlot = 0;
-    Type[] originalArgumentTypes = Type.getArgumentTypes(originalDesc);
-    for (int i = 0; i < originalArgumentTypes.length; i++) {
-      Type type = originalArgumentTypes[i];
-      if (argumentIndexMapping.get(i) == null) {
-        // argument that was annotated with @Advice.Local and removed from the advice method
-        // descriptor, set it to default value
-        if (type.getSort() == Type.OBJECT || type.getSort() == Type.ARRAY) {
-          target.visitInsn(Opcodes.ACONST_NULL);
-          ga.visitVarInsn(Opcodes.ASTORE, originalSlot);
-        } else {
-          // TODO: primitive types not handled
-        }
-      } else {
-        // copy value from current method descriptor position to the remapped position that
-        // corresponds to the same method argument in the original method descriptor
-        Type current = originalArgumentTypes[argumentIndexMapping.get(i)];
-        target.visitVarInsn(current.getOpcode(Opcodes.ILOAD), currentSlot);
-        ga.visitVarInsn(current.getOpcode(Opcodes.ISTORE), originalSlot);
-        currentSlot += current.getSize();
-      }
-      originalSlot += type.getSize();
+    if (!isEnterAdvice) {
+      // for exit advice create a new local for the map we added as the last method argument
+      mapIndex.set(ga.newLocal(Type.getType(Map.class)));
     }
 
     return ga;
@@ -489,7 +436,6 @@ class AdviceTransformer {
       List<OutputArgument> writableArguments = getWritableArguments(methodNode);
       OutputArgument writableReturn = getWritableReturnValue(methodNode);
       List<AdviceLocal> adviceLocals = getLocals(methodNode);
-      Map<Integer, Integer> argumentIndexMapping = new HashMap<>();
 
       if (!writableArguments.isEmpty()) {
         methodNode.desc =
@@ -500,25 +446,14 @@ class AdviceTransformer {
             Type.getMethodDescriptor(
                 Type.getType(Object.class), Type.getArgumentTypes(methodNode.desc));
       } else if (!adviceLocals.isEmpty() && isEnterAdvice(methodNode)) {
-        // remove arguments annotated with @Advice.Local and build a mapping from
-        // the original argument index to the modified index
-        List<Type> newArgumentTypes = new ArrayList<>();
-        Type[] argumentTypes = Type.getArgumentTypes(methodNode.desc);
-        int j = 0;
-        int k = 0;
-        for (int i = 0; i < argumentTypes.length; i++) {
-          if (j < adviceLocals.size() && adviceLocals.get(j).adviceIndex == i) {
-            j++;
-          } else {
-            argumentIndexMapping.put(i, k);
-            newArgumentTypes.add(argumentTypes[i]);
-            k++;
-          }
+        // Set type of arguments annotated with @Advice.Local to Object. These arguments are likely
+        // to be helper classes which currently breaks because the invokedynamic call in advised
+        // class needs access to the parameter types of the advice method.
+        Type[] newArgumentTypes = Type.getArgumentTypes(methodNode.desc);
+        for (AdviceLocal adviceLocal : adviceLocals) {
+          newArgumentTypes[adviceLocal.adviceIndex] = OBJECT_TYPE;
         }
-
-        methodNode.desc =
-            Type.getMethodDescriptor(
-                Type.getType(Map.class), newArgumentTypes.toArray(new Type[0]));
+        methodNode.desc = Type.getMethodDescriptor(Type.getType(Map.class), newArgumentTypes);
       }
 
       if (!originalDescriptor.equals(methodNode.desc)) {
@@ -536,39 +471,30 @@ class AdviceTransformer {
                 originalDescriptor,
                 writableArguments,
                 writableReturn,
-                adviceLocals,
-                argumentIndexMapping);
+                adviceLocals);
         methodNode.accept(mv);
 
         methodNode = tmp;
         adviceLocals = getLocals(methodNode);
-        argumentIndexMapping.clear();
       }
 
       // this is the only transformation that does not change the return type of the advice method,
       // thus it is also the only transformation that can be applied on top of the other transforms
       if (!adviceLocals.isEmpty() && isExitAdvice(methodNode)) {
-        // remove arguments annotated with @Advice.Local and build a mapping from
-        // the original argument index to the modified index
-        List<Type> newArgumentTypes = new ArrayList<>();
-        Type[] argumentTypes = Type.getArgumentTypes(methodNode.desc);
-        int j = 0;
-        int k = 0;
-        for (int i = 0; i < argumentTypes.length; i++) {
-          if (j < adviceLocals.size() && adviceLocals.get(j).adviceIndex == i) {
-            j++;
-          } else {
-            argumentIndexMapping.put(i, k);
-            newArgumentTypes.add(argumentTypes[i]);
-            k++;
-          }
+        // Set type of arguments annotated with @Advice.Local to Object. These arguments are likely
+        // to be helper classes which currently breaks because the invokedynamic call in advised
+        // class needs access to the parameter types of the advice method.
+        Type[] newArgumentTypes = Type.getArgumentTypes(methodNode.desc);
+        for (AdviceLocal adviceLocal : adviceLocals) {
+          newArgumentTypes[adviceLocal.adviceIndex] = OBJECT_TYPE;
         }
+        List<Type> typeList = new ArrayList<>(Arrays.asList(newArgumentTypes));
         // add Map as the last argument
-        newArgumentTypes.add(Type.getType(Map.class));
+        typeList.add(Type.getType(Map.class));
 
         methodNode.desc =
             Type.getMethodDescriptor(
-                Type.getReturnType(methodNode.desc), newArgumentTypes.toArray(new Type[0]));
+                Type.getReturnType(methodNode.desc), typeList.toArray(new Type[0]));
 
         MethodNode tmp =
             new MethodNode(
@@ -578,8 +504,7 @@ class AdviceTransformer {
                 methodNode.signature,
                 exceptionsArray);
         MethodVisitor mv =
-            instrumentAdviceLocals(
-                false, tmp, methodNode, originalDescriptor, adviceLocals, argumentIndexMapping);
+            instrumentAdviceLocals(false, tmp, methodNode, originalDescriptor, adviceLocals);
         methodNode.accept(mv);
 
         methodNode = tmp;
@@ -604,17 +529,14 @@ class AdviceTransformer {
       String originalDesc,
       List<OutputArgument> writableArguments,
       OutputArgument writableReturn,
-      List<AdviceLocal> adviceLocals,
-      Map<Integer, Integer> argumentIndexMapping) {
+      List<AdviceLocal> adviceLocals) {
 
     if (!writableArguments.isEmpty()) {
       target = instrumentWritableArguments(target, source, writableArguments);
     } else if (writableReturn != null) {
       target = instrumentWritableReturn(target, source, writableReturn);
     } else if (!adviceLocals.isEmpty() && isEnterAdvice(source)) {
-      target =
-          instrumentAdviceLocals(
-              true, target, source, originalDesc, adviceLocals, argumentIndexMapping);
+      target = instrumentAdviceLocals(true, target, source, originalDesc, adviceLocals);
     }
 
     return target;
