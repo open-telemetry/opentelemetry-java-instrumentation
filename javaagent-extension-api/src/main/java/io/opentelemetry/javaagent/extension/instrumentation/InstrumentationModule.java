@@ -34,6 +34,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public abstract class InstrumentationModule implements Ordered {
   private static final Logger logger = Logger.getLogger(InstrumentationModule.class.getName());
   private static final boolean indyEnabled;
+
   static {
     indyEnabled = ExperimentalConfig.get().indyEnabled();
     if (indyEnabled) {

@@ -48,8 +48,7 @@ public final class ExperimentalConfig {
   }
 
   public boolean indyEnabled() {
-    return config.getBoolean(
-        "otel.javaagent.experimental.indy", false);
+    return config.getBoolean("otel.javaagent.experimental.indy", false);
   }
 
   public List<String> getMessagingHeaders() {
