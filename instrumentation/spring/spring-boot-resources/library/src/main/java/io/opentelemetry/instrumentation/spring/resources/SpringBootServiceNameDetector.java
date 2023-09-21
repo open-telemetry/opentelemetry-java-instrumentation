@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.resources;
 
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINER;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -20,7 +21,6 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -69,7 +69,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   @Override
   public Resource createResource(ConfigProperties config) {
 
-    logger.log(Level.FINER, "Performing Spring Boot service name auto-detection...");
+    logger.log(FINER, "Performing Spring Boot service name auto-detection...");
     // Note: The order should be consistent with the order of Spring matching, but noting
     // that we have "first one wins" while Spring has "last one wins".
     // The docs for Spring are here:
@@ -80,8 +80,10 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
             this::findBySystemProperties,
             this::findByEnvironmentVariable,
             this::findByCurrentDirectoryApplicationProperties,
+            this::findByCurrentDirectoryApplicationYml,
             this::findByCurrentDirectoryApplicationYaml,
             this::findByClasspathApplicationProperties,
+            this::findByClasspathApplicationYml,
             this::findByClasspathApplicationYaml);
     return finders
         .map(Supplier::get)
@@ -115,14 +117,14 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   @Nullable
   private String findByEnvironmentVariable() {
     String result = system.getenv("SPRING_APPLICATION_NAME");
-    logger.log(Level.FINER, "Checking for SPRING_APPLICATION_NAME in env: {0}", result);
+    logger.log(FINER, "Checking for SPRING_APPLICATION_NAME in env: {0}", result);
     return result;
   }
 
   @Nullable
   private String findBySystemProperties() {
     String result = system.getProperty("spring.application.name");
-    logger.log(Level.FINER, "Checking for spring.application.name system property: {0}", result);
+    logger.log(FINER, "Checking for spring.application.name system property: {0}", result);
     return result;
   }
 
@@ -130,9 +132,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   private String findByClasspathApplicationProperties() {
     String result = readNameFromAppProperties();
     logger.log(
-        Level.FINER,
-        "Checking for spring.application.name in application.properties file: {0}",
-        result);
+        FINER, "Checking for spring.application.name in application.properties file: {0}", result);
     return result;
   }
 
@@ -144,27 +144,49 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     } catch (Exception e) {
       // expected to fail sometimes
     }
-    logger.log(Level.FINER, "Checking application.properties in current dir: {0}", result);
+    logger.log(FINER, "Checking application.properties in current dir: {0}", result);
     return result;
+  }
+
+  @Nullable
+  private String findByClasspathApplicationYml() {
+    return findByClasspathYamlFile("application.yml");
   }
 
   @Nullable
   private String findByClasspathApplicationYaml() {
-    String result =
-        loadFromClasspath("application.yml", SpringBootServiceNameDetector::parseNameFromYaml);
-    logger.log(Level.FINER, "Checking application.yml in classpath: {0}", result);
+    return findByClasspathYamlFile("application.yaml");
+  }
+
+  private String findByClasspathYamlFile(String fileName) {
+    String result = loadFromClasspath(fileName, SpringBootServiceNameDetector::parseNameFromYaml);
+    if (logger.isLoggable(FINER)) {
+      logger.log(FINER, "Checking {0} in classpath: {1}", new Object[] {fileName, result});
+    }
     return result;
   }
 
   @Nullable
+  private String findByCurrentDirectoryApplicationYml() {
+    return findByCurrentDirectoryYamlFile("application.yml");
+  }
+
+  @Nullable
   private String findByCurrentDirectoryApplicationYaml() {
+    return findByCurrentDirectoryYamlFile("application.yaml");
+  }
+
+  @Nullable
+  private String findByCurrentDirectoryYamlFile(String fileName) {
     String result = null;
-    try (InputStream in = system.openFile("application.yml")) {
+    try (InputStream in = system.openFile(fileName)) {
       result = parseNameFromYaml(in);
     } catch (Exception e) {
       // expected to fail sometimes
     }
-    logger.log(Level.FINER, "Checking application.yml in current dir: {0}", result);
+    if (logger.isLoggable(FINER)) {
+      logger.log(FINER, "Checking {0} in current dir: {1}", new Object[] {fileName, result});
+    }
     return result;
   }
 
@@ -199,7 +221,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
       String javaCommand = system.getProperty("sun.java.command");
       result = parseNameFromCommandLine(javaCommand);
     }
-    logger.log(Level.FINER, "Checking application commandline args: {0}", result);
+    logger.log(FINER, "Checking application commandline args: {0}", result);
     return result;
   }
 
