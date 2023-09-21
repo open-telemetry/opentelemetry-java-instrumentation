@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.ArrayList;
@@ -31,12 +30,12 @@ final class RpcMetricsAdvice {
     attributes.add(SemanticAttributes.RPC_METHOD);
     attributes.add(SemanticAttributes.RPC_GRPC_STATUS_CODE);
     if (SemconvStability.emitStableHttpSemconv()) {
-      attributes.add(NetworkAttributes.NETWORK_TYPE);
-      attributes.add(NetworkAttributes.NETWORK_TRANSPORT);
-      attributes.add(NetworkAttributes.SERVER_ADDRESS);
-      attributes.add(NetworkAttributes.SERVER_PORT);
-      attributes.add(NetworkAttributes.SERVER_SOCKET_ADDRESS);
-      attributes.add(NetworkAttributes.SERVER_SOCKET_PORT);
+      attributes.add(SemanticAttributes.NETWORK_TYPE);
+      attributes.add(SemanticAttributes.NETWORK_TRANSPORT);
+      attributes.add(SemanticAttributes.SERVER_ADDRESS);
+      attributes.add(SemanticAttributes.SERVER_PORT);
+      attributes.add(SemanticAttributes.SERVER_SOCKET_ADDRESS);
+      attributes.add(SemanticAttributes.SERVER_SOCKET_PORT);
     }
     if (SemconvStability.emitOldHttpSemconv()) {
       attributes.add(SemanticAttributes.NET_PEER_NAME);
@@ -63,12 +62,12 @@ final class RpcMetricsAdvice {
     attributes.add(SemanticAttributes.RPC_METHOD);
     attributes.add(SemanticAttributes.RPC_GRPC_STATUS_CODE);
     if (SemconvStability.emitStableHttpSemconv()) {
-      attributes.add(NetworkAttributes.NETWORK_TYPE);
-      attributes.add(NetworkAttributes.NETWORK_TRANSPORT);
-      attributes.add(NetworkAttributes.SERVER_ADDRESS);
-      attributes.add(NetworkAttributes.SERVER_PORT);
-      attributes.add(NetworkAttributes.SERVER_SOCKET_ADDRESS);
-      attributes.add(NetworkAttributes.SERVER_SOCKET_PORT);
+      attributes.add(SemanticAttributes.NETWORK_TYPE);
+      attributes.add(SemanticAttributes.NETWORK_TRANSPORT);
+      attributes.add(SemanticAttributes.SERVER_ADDRESS);
+      attributes.add(SemanticAttributes.SERVER_PORT);
+      attributes.add(SemanticAttributes.SERVER_SOCKET_ADDRESS);
+      attributes.add(SemanticAttributes.SERVER_SOCKET_PORT);
     }
     if (SemconvStability.emitOldHttpSemconv()) {
       attributes.add(SemanticAttributes.NET_HOST_NAME);

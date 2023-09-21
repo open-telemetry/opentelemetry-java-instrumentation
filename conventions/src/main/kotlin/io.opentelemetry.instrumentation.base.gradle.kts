@@ -143,11 +143,11 @@ tasks {
     inputs.property("instrumentation.name", name)
     inputs.property("instrumentation.version", version)
 
-    val propertiesDir = File(project.buildDir, "generated/instrumentationVersion/META-INF/io/opentelemetry/instrumentation/")
+    val propertiesDir = layout.buildDirectory.dir("generated/instrumentationVersion/META-INF/io/opentelemetry/instrumentation/")
     outputs.dir(propertiesDir)
 
     doLast {
-      File(propertiesDir, "$name.properties").writeText("version=$version")
+      File(propertiesDir.get().asFile, "$name.properties").writeText("version=$version")
     }
   }
 }

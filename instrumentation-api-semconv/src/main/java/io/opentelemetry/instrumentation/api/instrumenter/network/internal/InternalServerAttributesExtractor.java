@@ -49,7 +49,7 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
     AddressAndPort serverAddressAndPort = extractServerAddressAndPort(request);
 
     if (emitStableUrlAttributes) {
-      internalSet(attributes, NetworkAttributes.SERVER_ADDRESS, serverAddressAndPort.address);
+      internalSet(attributes, SemanticAttributes.SERVER_ADDRESS, serverAddressAndPort.address);
     }
     if (emitOldHttpAttributes) {
       internalSet(attributes, oldSemconvMode.address, serverAddressAndPort.address);
@@ -59,7 +59,7 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
         && serverAddressAndPort.port > 0
         && captureServerPortCondition.test(serverAddressAndPort.port, request)) {
       if (emitStableUrlAttributes) {
-        internalSet(attributes, NetworkAttributes.SERVER_PORT, (long) serverAddressAndPort.port);
+        internalSet(attributes, SemanticAttributes.SERVER_PORT, (long) serverAddressAndPort.port);
       }
       if (emitOldHttpAttributes) {
         internalSet(attributes, oldSemconvMode.port, (long) serverAddressAndPort.port);
@@ -73,7 +73,7 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
     String serverSocketAddress = getter.getServerSocketAddress(request, response);
     if (serverSocketAddress != null && !serverSocketAddress.equals(serverAddressAndPort.address)) {
       if (emitStableUrlAttributes && captureServerSocketAttributes) {
-        internalSet(attributes, NetworkAttributes.SERVER_SOCKET_ADDRESS, serverSocketAddress);
+        internalSet(attributes, SemanticAttributes.SERVER_SOCKET_ADDRESS, serverSocketAddress);
       }
       if (emitOldHttpAttributes) {
         internalSet(attributes, oldSemconvMode.socketAddress, serverSocketAddress);
@@ -85,7 +85,7 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
         && serverSocketPort > 0
         && !serverSocketPort.equals(serverAddressAndPort.port)) {
       if (emitStableUrlAttributes && captureServerSocketAttributes) {
-        internalSet(attributes, NetworkAttributes.SERVER_SOCKET_PORT, (long) serverSocketPort);
+        internalSet(attributes, SemanticAttributes.SERVER_SOCKET_PORT, (long) serverSocketPort);
       }
       if (emitOldHttpAttributes) {
         internalSet(attributes, oldSemconvMode.socketPort, (long) serverSocketPort);
@@ -95,7 +95,7 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
     String serverSocketDomain = getter.getServerSocketDomain(request, response);
     if (serverSocketDomain != null && !serverSocketDomain.equals(serverAddressAndPort.address)) {
       if (emitStableUrlAttributes && captureServerSocketAttributes) {
-        internalSet(attributes, NetworkAttributes.SERVER_SOCKET_DOMAIN, serverSocketDomain);
+        internalSet(attributes, SemanticAttributes.SERVER_SOCKET_DOMAIN, serverSocketDomain);
       }
       if (emitOldHttpAttributes && oldSemconvMode.socketDomain != null) {
         internalSet(attributes, oldSemconvMode.socketDomain, serverSocketDomain);
