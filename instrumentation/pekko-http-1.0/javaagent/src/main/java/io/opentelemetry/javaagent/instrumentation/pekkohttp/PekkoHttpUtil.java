@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp;
 
-import org.apache.pekko.http.scaladsl.model.HttpRequest;
-import org.apache.pekko.http.scaladsl.model.HttpResponse;
-
 import java.util.Collections;
 import java.util.List;
+import org.apache.pekko.http.scaladsl.model.HttpRequest;
+import org.apache.pekko.http.scaladsl.model.HttpResponse;
 
 public class PekkoHttpUtil {
 

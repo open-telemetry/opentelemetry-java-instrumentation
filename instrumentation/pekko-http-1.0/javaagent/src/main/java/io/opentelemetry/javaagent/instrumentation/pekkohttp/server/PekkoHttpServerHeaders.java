@@ -6,12 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.server;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
-import org.apache.pekko.http.javadsl.model.HttpHeader;
-import org.apache.pekko.http.scaladsl.model.HttpRequest;
-
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.apache.pekko.http.javadsl.model.HttpHeader;
+import org.apache.pekko.http.scaladsl.model.HttpRequest;
 
 enum PekkoHttpServerHeaders implements TextMapGetter<HttpRequest> {
   INSTANCE;

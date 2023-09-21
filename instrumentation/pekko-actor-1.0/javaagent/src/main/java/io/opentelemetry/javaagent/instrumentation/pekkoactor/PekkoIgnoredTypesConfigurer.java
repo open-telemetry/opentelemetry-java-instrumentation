@@ -15,8 +15,8 @@ public class PekkoIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
   public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
-    // This is a Mailbox created by org.apache.pekko.dispatch.Dispatcher#createMailbox. We must not add
-    // a context to it as context should only be carried by individual envelopes in the queue
+    // This is a Mailbox created by org.apache.pekko.dispatch.Dispatcher#createMailbox. We must not
+    // add a context to it as context should only be carried by individual envelopes in the queue
     // of this mailbox.
     builder.ignoreTaskClass("org.apache.pekko.dispatch.Dispatcher$$anon$1");
   }

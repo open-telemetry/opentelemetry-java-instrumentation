@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.server;
 
+import static net.bytebuddy.matcher.ElementMatchers.named;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -13,8 +15,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.stream.impl.fusing.GraphInterpreter;
-
-import static net.bytebuddy.matcher.ElementMatchers.named;
 
 public class GraphInterpreterInstrumentation implements TypeInstrumentation {
   @Override

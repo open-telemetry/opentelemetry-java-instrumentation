@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.pekkoactor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import org.apache.pekko.dispatch.Envelope;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
@@ -19,6 +18,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.pekko.dispatch.Envelope;
 
 public class PekkoDispatcherInstrumentation implements TypeInstrumentation {
 

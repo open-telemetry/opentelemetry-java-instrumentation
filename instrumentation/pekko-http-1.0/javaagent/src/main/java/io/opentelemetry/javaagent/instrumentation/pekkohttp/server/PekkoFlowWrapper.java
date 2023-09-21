@@ -5,8 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.server;
 
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.List;
 import org.apache.pekko.http.javadsl.model.HttpHeader;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
@@ -20,12 +25,6 @@ import org.apache.pekko.stream.stage.AbstractOutHandler;
 import org.apache.pekko.stream.stage.GraphStage;
 import org.apache.pekko.stream.stage.GraphStageLogic;
 import org.apache.pekko.stream.stage.OutHandler;
-
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.List;
-
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 
 public class PekkoFlowWrapper
     extends GraphStage<BidiShape<HttpResponse, HttpResponse, HttpRequest, HttpRequest>> {
@@ -116,7 +115,8 @@ public class PekkoFlowWrapper
               TracingRequest tracingRequest = TracingRequest.EMPTY;
               Context parentContext = currentContext();
               if (PekkoHttpServerSingletons.instrumenter().shouldStart(parentContext, request)) {
-                Context context = PekkoHttpServerSingletons.instrumenter().start(parentContext, request);
+                Context context =
+                    PekkoHttpServerSingletons.instrumenter().start(parentContext, request);
                 tracingRequest = new TracingRequest(context, request);
               }
               // event if span wasn't started we need to push TracingRequest to match response
@@ -157,7 +157,8 @@ public class PekkoFlowWrapper
                   response = (HttpResponse) response.addHeaders(headers);
                 }
 
-                PekkoHttpServerSingletons.instrumenter().end(tracingRequest.context, tracingRequest.request, response, null);
+                PekkoHttpServerSingletons.instrumenter()
+                    .end(tracingRequest.context, tracingRequest.request, response, null);
               }
               push(responseOut, response);
             }
@@ -171,7 +172,10 @@ public class PekkoFlowWrapper
                 }
                 PekkoHttpServerSingletons.instrumenter()
                     .end(
-                        tracingRequest.context, tracingRequest.request, PekkoHttpServerSingletons.errorResponse(), exception);
+                        tracingRequest.context,
+                        tracingRequest.request,
+                        PekkoHttpServerSingletons.errorResponse(),
+                        exception);
               }
 
               fail(responseOut, exception);

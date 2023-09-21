@@ -5,6 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.client;
 
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.pekkohttp.client.PekkoHttpClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.pekkohttp.client.PekkoHttpClientSingletons.setter;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -17,12 +23,6 @@ import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import scala.concurrent.Future;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.pekkohttp.client.PekkoHttpClientSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.pekkohttp.client.PekkoHttpClientSingletons.setter;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-
 public class HttpExtClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,7 +33,8 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     // This is mainly for compatibility with 10.0
     transformer.applyAdviceToMethod(
-        named("singleRequest").and(takesArgument(0, named("org.apache.pekko.http.scaladsl.model.HttpRequest"))),
+        named("singleRequest")
+            .and(takesArgument(0, named("org.apache.pekko.http.scaladsl.model.HttpRequest"))),
         this.getClass().getName() + "$SingleRequestAdvice");
     // This is for 10.1+
     transformer.applyAdviceToMethod(

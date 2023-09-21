@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.client;
 
+import static net.bytebuddy.matcher.ElementMatchers.named;
+
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -12,8 +14,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-
-import static net.bytebuddy.matcher.ElementMatchers.named;
 
 public class PoolMasterActorInstrumentation implements TypeInstrumentation {
   @Override
@@ -26,7 +26,9 @@ public class PoolMasterActorInstrumentation implements TypeInstrumentation {
     // scala compiler mangles method names
     transformer.applyAdviceToMethod(
         named("org$apache$pekko$http$impl$engine$client$PoolMasterActor$$startPoolInterface")
-            .or(named("org$apache$pekko$http$impl$engine$client$PoolMasterActor$$startPoolInterfaceActor")),
+            .or(
+                named(
+                    "org$apache$pekko$http$impl$engine$client$PoolMasterActor$$startPoolInterfaceActor")),
         ClearContextAdvice.class.getName());
   }
 

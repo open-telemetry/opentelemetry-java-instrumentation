@@ -10,7 +10,13 @@ package io.opentelemetry.instrumentation.pekkoactor
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import org.apache.pekko.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import org.apache.pekko.actor.{
+  Actor,
+  ActorLogging,
+  ActorRef,
+  ActorSystem,
+  Props
+}
 import org.apache.pekko.pattern.ask
 import org.apache.pekko.util.Timeout
 import io.opentelemetry.api.GlobalOpenTelemetry

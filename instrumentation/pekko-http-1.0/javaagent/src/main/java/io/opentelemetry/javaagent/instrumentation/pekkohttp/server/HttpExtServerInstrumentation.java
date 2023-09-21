@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.server;
 
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -13,9 +16,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import org.apache.pekko.stream.scaladsl.Flow;
-
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 public class HttpExtServerInstrumentation implements TypeInstrumentation {
   @Override
@@ -26,7 +26,8 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("bindAndHandle").and(takesArgument(0, named("org.apache.pekko.stream.scaladsl.Flow"))),
+        named("bindAndHandle")
+            .and(takesArgument(0, named("org.apache.pekko.stream.scaladsl.Flow"))),
         this.getClass().getName() + "$PekkoBindAndHandleAdvice");
   }
 

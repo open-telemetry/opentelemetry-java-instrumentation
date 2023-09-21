@@ -6,12 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.server;
 
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.pekko.http.javadsl.model.HttpHeader;
 import org.apache.pekko.http.javadsl.model.HttpResponse;
 import org.apache.pekko.http.javadsl.model.headers.RawHeader;
-
-import java.util.ArrayList;
-import java.util.List;
 
 final class PekkoHttpResponseMutator implements HttpServerResponseMutator<HttpResponse> {
 

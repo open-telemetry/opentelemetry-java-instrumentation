@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.pekkoactor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import org.apache.pekko.dispatch.Envelope;
-import org.apache.pekko.dispatch.sysmsg.SystemMessage;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
@@ -19,6 +17,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.pekko.dispatch.Envelope;
+import org.apache.pekko.dispatch.sysmsg.SystemMessage;
 
 public class PekkoActorCellInstrumentation implements TypeInstrumentation {
 
@@ -33,7 +33,8 @@ public class PekkoActorCellInstrumentation implements TypeInstrumentation {
         named("invoke").and(takesArgument(0, named("org.apache.pekko.dispatch.Envelope"))),
         PekkoActorCellInstrumentation.class.getName() + "$InvokeAdvice");
     transformer.applyAdviceToMethod(
-        named("systemInvoke").and(takesArgument(0, named("org.apache.pekko.dispatch.sysmsg.SystemMessage"))),
+        named("systemInvoke")
+            .and(takesArgument(0, named("org.apache.pekko.dispatch.sysmsg.SystemMessage"))),
         PekkoActorCellInstrumentation.class.getName() + "$SystemInvokeAdvice");
   }
 

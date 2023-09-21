@@ -7,11 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.client;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.PekkoHttpUtil;
+import java.util.List;
+import javax.annotation.Nullable;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
-
-import javax.annotation.Nullable;
-import java.util.List;
 
 class PekkoHttpClientAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, HttpResponse> {
