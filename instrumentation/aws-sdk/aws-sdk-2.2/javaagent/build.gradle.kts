@@ -10,7 +10,6 @@ muzzle {
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
-    extraDependency("commons-io:commons-io:2.13.0")
 
     excludeInstrumentationName("aws-sdk-2.2-sqs")
     excludeInstrumentationName("aws-sdk-2.2-sns")
@@ -26,7 +25,6 @@ muzzle {
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
-    extraDependency("commons-io:commons-io:2.13.0")
 
     // "fail" asserts that *all* the instrumentation modules fail to load, but the core one is
     // actually expected to succeed, so exclude it from checks.
@@ -43,7 +41,6 @@ muzzle {
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
-    extraDependency("commons-io:commons-io:2.13.0")
 
     excludeInstrumentationName("aws-sdk-2.2-sns")
 
@@ -58,7 +55,6 @@ muzzle {
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
-    extraDependency("commons-io:commons-io:2.13.0")
 
     excludeInstrumentationName("aws-sdk-2.2-sqs")
 

@@ -16,15 +16,14 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.SemanticAttributes;
-import java.io.IOException;
+import java.io.BufferedReader;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.apache.commons.io.IOUtils;
 import software.amazon.awssdk.auth.signer.AwsSignerExecutionAttribute;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.ClientType;
@@ -57,7 +56,6 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter;
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
-  private static final Logger logger = Logger.getLogger(PluginImplUtil.class.getName());
 
   static final AttributeKey<String> HTTP_ERROR_MSG =
       AttributeKey.stringKey("aws.http.error_message");
@@ -308,10 +306,13 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterTransmission(
       Context.AfterTransmission context, ExecutionAttributes executionAttributes) {
-    if (!recordIndividualHttpError) {
-      return;
+    if (recordIndividualHttpError) {
+      extractHttpErrorAsEvent(context, executionAttributes);
     }
+  }
 
+  private static void extractHttpErrorAsEvent(
+      Context.AfterTransmission context, ExecutionAttributes executionAttributes) {
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     if (otelContext != null) {
       Span span = Span.fromContext(otelContext);
@@ -322,18 +323,18 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
         // we want to record the error message from http response
         Optional<InputStream> responseBody = context.responseBody();
         if (responseBody.isPresent()) {
-          try {
-            String errorMsg = IOUtils.toString(responseBody.get(), StandardCharsets.UTF_8);
-            Attributes attributes =
-                Attributes.of(
-                    SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
-                    Long.valueOf(errorCode),
-                    HTTP_ERROR_MSG,
-                    errorMsg);
-            span.addEvent(HTTP_FAILURE_EVENT, attributes);
-          } catch (IOException ex) {
-            logger.log(Level.FINE, "Failed to read the response", ex);
-          }
+          String errorMsg =
+              new BufferedReader(
+                      new InputStreamReader(responseBody.get(), Charset.defaultCharset()))
+                  .lines()
+                  .collect(Collectors.joining("\n"));
+          Attributes attributes =
+              Attributes.of(
+                  SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
+                  Long.valueOf(errorCode),
+                  HTTP_ERROR_MSG,
+                  errorMsg);
+          span.addEvent(HTTP_FAILURE_EVENT, attributes);
         }
       }
     }
