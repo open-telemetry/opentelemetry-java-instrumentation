@@ -33,7 +33,7 @@ class SpringBootServiceNameDetectorTest {
   static final String PROPS = "application.properties";
   static final String APPLICATION_YML = "application.yml";
   @Mock ConfigProperties config;
-  @Mock SpringBootServiceNameDetector.SystemHelper system;
+  @Mock SystemHelper system;
 
   @Test
   void findByEnvVar() {
