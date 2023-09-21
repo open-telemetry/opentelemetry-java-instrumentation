@@ -41,6 +41,10 @@ public class HttpClientConnectInstrumentation implements TypeInstrumentation {
         @Advice.This HttpClient httpClient) {
 
       HttpClientConfig config = httpClient.configuration();
+      // reactor-netty 1.0.x has a bug: the .mapConnect() function is not applied when deferred
+      // configuration is used
+      // we're fixing this bug here, so that our instrumentation can safely add its own
+      // .mapConnect() listener
       if (HttpClientConfigBuddy.hasDeferredConfig(config)) {
         connection = HttpClientConfigBuddy.getConnector(config).apply(connection);
       }
