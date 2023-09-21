@@ -20,11 +20,6 @@ public class GraphqlInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    return true;
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Collections.singletonList(new GraphqlInstrumentation());
   }
