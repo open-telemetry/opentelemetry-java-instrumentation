@@ -29,7 +29,6 @@ import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
@@ -126,7 +125,6 @@ public class AgentInstaller {
     copyNecessaryConfigToSystemProperties(sdkConfig);
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
-    enableIndyMode(sdkConfig);
 
     for (BeforeAgentListener agentListener :
         loadOrdered(BeforeAgentListener.class, extensionClassLoader)) {
@@ -227,13 +225,6 @@ public class AgentInstaller {
       configurer.configure(builder, config);
     }
     BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(builder.build());
-  }
-
-  private static void enableIndyMode(ConfigProperties config) {
-    if (config.getBoolean("otel.javaagent.indy", false)) {
-      InstrumentationModule.indyEnabled = true;
-      logger.info("Enabled indy for instrumentation modules");
-    }
   }
 
   private static void setDefineClassHandler() {

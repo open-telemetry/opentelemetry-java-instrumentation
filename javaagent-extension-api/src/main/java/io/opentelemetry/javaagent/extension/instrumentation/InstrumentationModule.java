@@ -9,12 +9,14 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
@@ -30,7 +32,14 @@ import net.bytebuddy.matcher.ElementMatcher;
  * java.util.ServiceLoader} for more details.
  */
 public abstract class InstrumentationModule implements Ordered {
-  public static boolean indyEnabled = false;
+  private static final Logger logger = Logger.getLogger(InstrumentationModule.class.getName());
+  private static final boolean indyEnabled;
+  static {
+    indyEnabled = ExperimentalConfig.get().indyEnabled();
+    if (indyEnabled) {
+      logger.info("Enabled indy for instrumentation modules");
+    }
+  }
 
   private final Set<String> instrumentationNames;
 
