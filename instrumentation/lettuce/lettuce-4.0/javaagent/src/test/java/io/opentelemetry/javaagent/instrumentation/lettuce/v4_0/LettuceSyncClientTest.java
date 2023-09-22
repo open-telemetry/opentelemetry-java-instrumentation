@@ -92,6 +92,7 @@ class LettuceSyncClientTest {
   @AfterAll
   static void cleanUp() {
     connection.close();
+    redisClient.shutdown();
     redisServer.stop();
   }
 
@@ -102,6 +103,7 @@ class LettuceSyncClientTest {
 
     StatefulRedisConnection<String, String> testConnection = testConnectionClient.connect();
     cleanup.deferCleanup(() -> testConnection.close());
+    cleanup.deferCleanup(testConnectionClient::shutdown);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -119,6 +121,7 @@ class LettuceSyncClientTest {
   void testConnectException() {
     RedisClient testConnectionClient = RedisClient.create(dbUriNonExistent);
     testConnectionClient.setOptions(CLIENT_OPTIONS);
+    cleanup.deferCleanup(testConnectionClient::shutdown);
 
     Exception exception = catchException(testConnectionClient::connect);
 
@@ -258,11 +261,14 @@ class LettuceSyncClientTest {
 
     long serverPort = server.getMappedPort(6379);
     RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
+    client.setOptions(CLIENT_OPTIONS);
     StatefulRedisConnection<String, String> connection1 = client.connect();
     cleanup.deferCleanup(connection1);
+    cleanup.deferCleanup(client::shutdown);
 
     RedisCommands<String, String> commands = connection1.sync();
     // 1 connect trace
+    testing.waitForTraces(1);
     testing.clearData();
 
     commands.debugSegfault();
@@ -289,11 +295,14 @@ class LettuceSyncClientTest {
 
     RedisClient client =
         RedisClient.create("redis://" + host + ":" + shutdownServerPort + "/" + DB_INDEX);
+    client.setOptions(CLIENT_OPTIONS);
     StatefulRedisConnection<String, String> connection1 = client.connect();
     cleanup.deferCleanup(connection1);
+    cleanup.deferCleanup(client::shutdown);
 
     RedisCommands<String, String> commands = connection1.sync();
     // 1 connect trace
+    testing.waitForTraces(1);
     testing.clearData();
 
     commands.shutdown(false);
