@@ -176,13 +176,11 @@ public final class LogEventMapper<T> {
   }
 
   public static AttributeKey<String> getContextDataAttributeKey(String key) {
-    return contextDataAttributeKeyCache.computeIfAbsent(
-        key, k -> AttributeKey.stringKey("log4j.context_data." + k));
+    return contextDataAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
   public static AttributeKey<String> getMapMessageAttributeKey(String key) {
-    return mapMessageAttributeKeyCache.computeIfAbsent(
-        key, k -> AttributeKey.stringKey("log4j.map_message." + k));
+    return mapMessageAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
   private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {
