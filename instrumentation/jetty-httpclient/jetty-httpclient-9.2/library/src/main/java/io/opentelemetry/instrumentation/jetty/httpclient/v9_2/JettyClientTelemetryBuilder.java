@@ -9,6 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterFactory;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +27,8 @@ public final class JettyClientTelemetryBuilder {
   private final List<AttributesExtractor<? super Request, ? super Response>> additionalExtractors =
       new ArrayList<>();
   private Consumer<HttpClientAttributesExtractorBuilder<Request, Response>> extractorConfigurer =
+      builder -> {};
+  private Consumer<HttpSpanNameExtractorBuilder<Request>> spanNameExtractorConfigurer =
       builder -> {};
   private boolean emitExperimentalHttpClientMetrics = false;
   private HttpClientTransport httpClientTransport;
@@ -100,6 +103,8 @@ public final class JettyClientTelemetryBuilder {
   public JettyClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     extractorConfigurer =
         extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
+    spanNameExtractorConfigurer =
+        spanNameExtractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
     return this;
   }
 
@@ -126,6 +131,7 @@ public final class JettyClientTelemetryBuilder {
             JettyClientInstrumenterFactory.create(
                 openTelemetry,
                 extractorConfigurer,
+                spanNameExtractorConfigurer,
                 additionalExtractors,
                 emitExperimentalHttpClientMetrics),
             sslContextFactory,

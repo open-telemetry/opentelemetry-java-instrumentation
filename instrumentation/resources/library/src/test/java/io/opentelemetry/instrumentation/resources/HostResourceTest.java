@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
+import io.opentelemetry.semconv.ResourceAttributes;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -25,7 +25,7 @@ class HostResourceTest {
     Attributes attributes = resource.getAttributes();
 
     // then
-    assertThat(resource.getSchemaUrl()).isEqualTo(ResourceConstants.SCHEMA_URL);
+    assertThat(resource.getSchemaUrl()).isEqualTo(ResourceAttributes.SCHEMA_URL);
     assertThat(attributes.get(ResourceAttributes.HOST_NAME)).isNotBlank();
     assertThat(attributes.get(ResourceAttributes.HOST_ARCH)).isNotBlank();
   }

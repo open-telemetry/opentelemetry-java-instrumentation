@@ -150,7 +150,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
 
       (0..count - 1).each {
         trace(it, 2) {
-          serverSpan(it, 0, null, null, "GET", ACCESS_LOG_SUCCESS.body.length(), ACCESS_LOG_SUCCESS)
+          serverSpan(it, 0, null, null, "GET", ACCESS_LOG_SUCCESS)
           controllerSpan(it, 1, span(0))
         }
 
@@ -182,7 +182,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     }
     assertTraces(1) {
       trace(0, spanCount) {
-        serverSpan(it, 0, null, null, method, response.content().length(), ACCESS_LOG_ERROR)
+        serverSpan(it, 0, null, null, method, ACCESS_LOG_ERROR)
         def spanIndex = 1
         controllerSpan(it, spanIndex, span(spanIndex - 1))
         spanIndex++

@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.testing.AgentSpanTesting;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -76,6 +76,7 @@ class ContextBridgeTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void testHttpRouteHolder_SameSourceAsServerInstrumentationDoesNotOverrideRoute() {
     AgentSpanTesting.runWithHttpServerSpan(
         "server",
@@ -96,6 +97,7 @@ class ContextBridgeTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void testHttpRouteHolder_SourceWithHigherOrderValueOverridesRoute() {
     AgentSpanTesting.runWithHttpServerSpan(
         "server",

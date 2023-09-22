@@ -6,15 +6,14 @@
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -134,24 +133,24 @@ class NetServerAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
             entry(SemanticAttributes.NET_HOST_NAME, "opentelemetry.io"),
             entry(SemanticAttributes.NET_HOST_PORT, 80L),
-            entry(NetworkAttributes.SERVER_ADDRESS, "opentelemetry.io"),
-            entry(NetworkAttributes.SERVER_PORT, 80L),
+            entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"),
+            entry(SemanticAttributes.SERVER_PORT, 80L),
             entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"));
 
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"),
             entry(SemanticAttributes.NET_SOCK_HOST_PORT, 8080L),
-            entry(NetworkAttributes.SERVER_SOCKET_ADDRESS, "4:3:2:1::"),
-            entry(NetworkAttributes.SERVER_SOCKET_PORT, 8080L),
+            entry(SemanticAttributes.SERVER_SOCKET_ADDRESS, "4:3:2:1::"),
+            entry(SemanticAttributes.SERVER_SOCKET_PORT, 8080L),
             entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
             entry(SemanticAttributes.NET_SOCK_PEER_PORT, 42L),
-            entry(NetworkAttributes.CLIENT_SOCKET_ADDRESS, "1:2:3:4::"),
-            entry(NetworkAttributes.CLIENT_SOCKET_PORT, 42L),
-            entry(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-            entry(NetworkAttributes.NETWORK_TYPE, "ipv6"),
-            entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
-            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+            entry(SemanticAttributes.CLIENT_SOCKET_ADDRESS, "1:2:3:4::"),
+            entry(SemanticAttributes.CLIENT_SOCKET_PORT, 42L),
+            entry(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+            entry(SemanticAttributes.NETWORK_TYPE, "ipv6"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
             entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"));
   }

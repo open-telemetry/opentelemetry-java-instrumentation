@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 
-@SuppressWarnings("CanIgnoreReturnValueSuggester")
+@SuppressWarnings("OtelCanIgnoreReturnValueSuggester")
 enum DistributionStatisticConfigModifier {
   DISABLE_HISTOGRAM_GAUGES {
     @Override

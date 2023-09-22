@@ -49,8 +49,7 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
   public static class AddListenerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static PropagatedContext addListenerEnter(
-        @Advice.Argument(value = 0, readOnly = false) Runnable task) {
+    public static PropagatedContext addListenerEnter(@Advice.Argument(0) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         VirtualField<Runnable, PropagatedContext> virtualField =

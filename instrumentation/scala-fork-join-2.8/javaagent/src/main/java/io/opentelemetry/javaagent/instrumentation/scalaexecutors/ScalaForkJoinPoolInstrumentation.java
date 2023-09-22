@@ -41,8 +41,7 @@ public class ScalaForkJoinPoolInstrumentation implements TypeInstrumentation {
   public static class SetScalaForkJoinStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static PropagatedContext enterJobSubmit(
-        @Advice.Argument(value = 0, readOnly = false) ForkJoinTask<?> task) {
+    public static PropagatedContext enterJobSubmit(@Advice.Argument(0) ForkJoinTask<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =

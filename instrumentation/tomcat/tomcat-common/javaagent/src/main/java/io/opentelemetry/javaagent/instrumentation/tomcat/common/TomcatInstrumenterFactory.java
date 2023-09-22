@@ -33,7 +33,9 @@ public final class TomcatInstrumenterFactory {
         Instrumenter.<Request, Response>builder(
                 GlobalOpenTelemetry.get(),
                 instrumentationName,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor))
             .addAttributesExtractor(
@@ -42,7 +44,10 @@ public final class TomcatInstrumenterFactory {
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
-            .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
+            .addContextCustomizer(
+                HttpServerRoute.builder(httpAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build())
             .addContextCustomizer(
                 (context, request, attributes) ->
                     new AppServerBridge.Builder()

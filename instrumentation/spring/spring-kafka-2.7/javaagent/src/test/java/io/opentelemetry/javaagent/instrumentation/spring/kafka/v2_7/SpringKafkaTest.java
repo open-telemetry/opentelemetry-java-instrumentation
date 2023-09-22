@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.testing.AbstractSpringKafkaTest;
 import java.util.HashMap;
 import java.util.List;
@@ -76,7 +76,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                               AbstractLongAssert::isNotNegative),
                           equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                              SemanticAttributes.MESSAGING_CLIENT_ID,
                               stringAssert -> stringAssert.startsWith("producer"))));
 
           producer.set(trace.getSpan(1));
@@ -96,12 +96,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "testSingleListener"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                stringAssert ->
-                                    stringAssert.startsWith("testSingleListener - consumer"))),
+                                SemanticAttributes.MESSAGING_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("consumer"))),
                 span ->
                     span.hasName("testSingleTopic process")
                         .hasKind(SpanKind.CONSUMER)
@@ -116,7 +112,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                                 SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                                SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
@@ -126,12 +122,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "testSingleListener"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                SemanticAttributes.MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("consumer")),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                stringAssert ->
-                                    stringAssert.startsWith("testSingleListener - consumer")),
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
                                 AbstractLongAssert::isNotNegative)),
@@ -172,7 +164,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                               AbstractLongAssert::isNotNegative),
                           equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                              SemanticAttributes.MESSAGING_CLIENT_ID,
                               stringAssert -> stringAssert.startsWith("producer"))));
 
           producer.set(trace.getSpan(1));
@@ -192,12 +184,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "testSingleListener"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                stringAssert ->
-                                    stringAssert.startsWith("testSingleListener - consumer"))),
+                                SemanticAttributes.MESSAGING_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("consumer"))),
                 span ->
                     span.hasName("testSingleTopic process")
                         .hasKind(SpanKind.CONSUMER)
@@ -214,7 +202,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                                 SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                                SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
@@ -224,12 +212,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "testSingleListener"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                SemanticAttributes.MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("consumer")),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                stringAssert ->
-                                    stringAssert.startsWith("testSingleListener - consumer")),
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
                                 AbstractLongAssert::isNotNegative)),
@@ -266,7 +250,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                               AbstractLongAssert::isNotNegative),
                           equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                              SemanticAttributes.MESSAGING_CLIENT_ID,
                               stringAssert -> stringAssert.startsWith("producer"))),
               span ->
                   span.hasName("testBatchTopic publish")
@@ -283,7 +267,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                               AbstractLongAssert::isNotNegative),
                           equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "20"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                              SemanticAttributes.MESSAGING_CLIENT_ID,
                               stringAssert -> stringAssert.startsWith("producer"))));
 
           producer1.set(trace.getSpan(1));
@@ -304,12 +288,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "testBatchListener"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                stringAssert ->
-                                    stringAssert.startsWith("testBatchListener - consumer"))),
+                                SemanticAttributes.MESSAGING_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("consumer"))),
                 span ->
                     span.hasName("testBatchTopic process")
                         .hasKind(SpanKind.CONSUMER)
@@ -326,12 +306,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "testBatchListener"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                stringAssert ->
-                                    stringAssert.startsWith("testBatchListener - consumer"))),
+                                SemanticAttributes.MESSAGING_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("consumer"))),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
@@ -369,7 +345,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                               AbstractLongAssert::isNotNegative),
                           equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                           satisfies(
-                              SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                              SemanticAttributes.MESSAGING_CLIENT_ID,
                               stringAssert -> stringAssert.startsWith("producer"))));
 
           producer.set(trace.getSpan(1));
@@ -389,12 +365,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "testBatchListener"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                stringAssert ->
-                                    stringAssert.startsWith("testBatchListener - consumer"))),
+                                SemanticAttributes.MESSAGING_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("consumer"))),
                 span ->
                     span.hasName("testBatchTopic process")
                         .hasKind(SpanKind.CONSUMER)
@@ -411,12 +383,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "testBatchListener"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                stringAssert ->
-                                    stringAssert.startsWith("testBatchListener - consumer"))),
+                                SemanticAttributes.MESSAGING_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("consumer"))),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 }

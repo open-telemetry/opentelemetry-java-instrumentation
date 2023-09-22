@@ -16,7 +16,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import ratpack.exec.Execution
 import ratpack.exec.Promise
 import ratpack.func.Action
@@ -34,9 +34,9 @@ import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_ROUTE
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_METHOD
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_STATUS_CODE
 
 class InstrumentedHttpClientTest extends Specification {
 

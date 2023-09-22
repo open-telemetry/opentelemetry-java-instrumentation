@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
+import io.opentelemetry.semconv.SemanticAttributes.DbSystemValues;
 import java.util.HashMap;
 import java.util.Map;
 

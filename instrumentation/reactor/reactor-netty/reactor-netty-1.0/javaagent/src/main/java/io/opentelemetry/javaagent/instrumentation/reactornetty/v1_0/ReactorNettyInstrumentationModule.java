@@ -31,15 +31,27 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // ResponseMonoAdvice uses both @Advice.Local and return value from an @OnMethodEnter advice
+    return false;
+  }
+
+  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // Introduced in 1.0.0
     return hasClassesNamed("reactor.netty.transport.AddressUtils");
   }
 
   @Override
+  public boolean isHelperClass(String className) {
+    return className.startsWith("reactor.netty.http.client.HttpClientConfigBuddy");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new HttpClientInstrumentation(),
+        new HttpClientConnectInstrumentation(),
         new ResponseReceiverInstrumentation(),
         new TransportConnectorInstrumentation());
   }

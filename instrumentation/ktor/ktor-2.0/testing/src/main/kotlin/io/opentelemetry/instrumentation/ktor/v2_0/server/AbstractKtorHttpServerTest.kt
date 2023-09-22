@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
@@ -118,6 +118,7 @@ abstract class AbstractKtorHttpServerTest : AbstractHttpServerTest<ApplicationEn
     }
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   override fun configure(options: HttpServerTestOptions) {
     options.setTestPathParam(true)
 
@@ -125,10 +126,10 @@ abstract class AbstractKtorHttpServerTest : AbstractHttpServerTest<ApplicationEn
       HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES - SemanticAttributes.NET_PEER_PORT
     }
 
-    options.setExpectedHttpRoute {
-      when (it) {
+    options.setExpectedHttpRoute { endpoint, method ->
+      when (endpoint) {
         ServerEndpoint.PATH_PARAM -> "/path/{id}/param"
-        else -> expectedHttpRoute(it)
+        else -> expectedHttpRoute(endpoint, method)
       }
     }
 

@@ -30,7 +30,9 @@ public final class GrizzlySingletons {
         Instrumenter.<HttpRequestPacket, HttpResponsePacket>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.grizzly-2.3",
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
                 HttpServerAttributesExtractor.builder(httpAttributesGetter)
@@ -52,7 +54,10 @@ public final class GrizzlySingletons {
                         .init(context))
             .addContextCustomizer(
                 (context, httpRequestPacket, startAttributes) -> GrizzlyErrorHolder.init(context))
-            .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
+            .addContextCustomizer(
+                HttpServerRoute.builder(httpAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build())
             .buildServerInstrumenter(HttpRequestHeadersGetter.INSTANCE);
   }
 

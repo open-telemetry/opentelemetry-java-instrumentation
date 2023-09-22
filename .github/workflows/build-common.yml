@@ -172,6 +172,11 @@ jobs:
             exit 1
           fi
 
+      - name: Upload agent jar
+        uses: actions/upload-artifact@v3
+        with:
+          path: javaagent/build/libs/opentelemetry-javaagent-*-SNAPSHOT.jar
+
   test:
     name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }})
     runs-on: ubuntu-latest

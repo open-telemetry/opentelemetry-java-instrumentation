@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 
 class JaxWsAnnotationsTest extends AgentInstrumentationSpecification {
 

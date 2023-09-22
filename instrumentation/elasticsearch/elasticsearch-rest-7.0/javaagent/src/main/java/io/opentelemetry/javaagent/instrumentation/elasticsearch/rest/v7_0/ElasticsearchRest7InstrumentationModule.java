@@ -33,6 +33,12 @@ public class ElasticsearchRest7InstrumentationModule extends InstrumentationModu
   }
 
   @Override
+  public boolean isIndyModule() {
+    // shares a virtual field with elasticsearch-api-client
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RestClientInstrumentation());
   }

@@ -20,6 +20,12 @@ public class QuarkusResteasyReactiveInstrumentationModule extends Instrumentatio
   }
 
   @Override
+  public boolean isIndyModule() {
+    // RunAdvice returns OtelRequestContext that is not available to the application class loader
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new AbstractResteasyReactiveContextInstrumentation(),

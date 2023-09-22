@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.kafka.internal;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -28,7 +28,7 @@ final class KafkaProducerAttributesExtractor
       attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
     if (request.getClientId() != null) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID, request.getClientId());
+      attributes.put(SemanticAttributes.MESSAGING_CLIENT_ID, request.getClientId());
     }
   }
 

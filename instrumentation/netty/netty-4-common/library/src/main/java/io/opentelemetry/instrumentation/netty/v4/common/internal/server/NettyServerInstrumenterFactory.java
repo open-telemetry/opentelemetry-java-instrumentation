@@ -14,7 +14,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
@@ -31,6 +33,8 @@ public final class NettyServerInstrumenterFactory {
       String instrumentationName,
       Consumer<HttpServerAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse>>
           extractorConfigurer,
+      Consumer<HttpSpanNameExtractorBuilder<HttpRequestAndChannel>> spanNameExtractorConfigurer,
+      Consumer<HttpServerRouteBuilder<HttpRequestAndChannel>> httpServerRouteConfigurer,
       boolean emitExperimentalHttpServerMetrics) {
 
     NettyHttpServerAttributesGetter httpAttributesGetter = new NettyHttpServerAttributesGetter();
@@ -39,11 +43,13 @@ public final class NettyServerInstrumenterFactory {
         HttpServerAttributesExtractor.builder(httpAttributesGetter);
     extractorConfigurer.accept(extractorBuilder);
 
+    HttpSpanNameExtractorBuilder<HttpRequestAndChannel> httpSpanNameExtractorBuilder =
+        HttpSpanNameExtractor.builder(httpAttributesGetter);
+    spanNameExtractorConfigurer.accept(httpSpanNameExtractorBuilder);
+
     InstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder =
         Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
-                openTelemetry,
-                instrumentationName,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                openTelemetry, instrumentationName, httpSpanNameExtractorBuilder.build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(extractorBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get());
@@ -51,9 +57,13 @@ public final class NettyServerInstrumenterFactory {
       builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
 
+    HttpServerRouteBuilder<HttpRequestAndChannel> httpServerRouteBuilder =
+        HttpServerRoute.builder(httpAttributesGetter);
+    httpServerRouteConfigurer.accept(httpServerRouteBuilder);
+
     return builder
         .addContextCustomizer((context, request, attributes) -> NettyErrorHolder.init(context))
-        .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
+        .addContextCustomizer(httpServerRouteBuilder.build())
         .buildServerInstrumenter(HttpRequestHeadersGetter.INSTANCE);
   }
 

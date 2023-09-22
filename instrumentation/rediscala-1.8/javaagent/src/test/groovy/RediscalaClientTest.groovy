@@ -5,7 +5,7 @@
 
 import akka.actor.ActorSystem
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.testcontainers.containers.GenericContainer
 import redis.ByteStringDeserializerDefault
 import redis.ByteStringSerializerLowPriority

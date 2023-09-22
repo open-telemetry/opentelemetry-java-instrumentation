@@ -1,0 +1,92 @@
+name: Reusable - Test latest deps
+
+on:
+  workflow_call:
+    inputs:
+      cache-read-only:
+        type: boolean
+        required: false
+      no-build-cache:
+        type: boolean
+        required: false
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY:
+        required: false
+      GE_CACHE_USERNAME:
+        required: false
+      GE_CACHE_PASSWORD:
+        required: false
+
+jobs:
+  test-indy:
+    name: testIndy${{ matrix.test-partition }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'test indy') }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-partition:
+          - 0
+          - 1
+          - 2
+          - 3
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17.0.6
+
+      - name: Increase gradle daemon heap size
+        run: |
+          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
+
+      # vaadin 14 tests fail with node 18
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      # vaadin tests use pnpm
+      - name: Cache pnpm modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-test-latest-cache-pnpm-modules
+
+      - name: List tests
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: >
+            check -x spotlessCheck
+            listTestsInPartition
+            -PtestPartition=${{ matrix.test-partition }}
+          cache-read-only: true
+
+      - name: Set test tasks
+        run: |
+          echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
+
+      - name: Test
+        uses: gradle/gradle-build-action@v2
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        with:
+          arguments: >
+            ${{ env.test-tasks }}
+            -PtestIndy=true
+            ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+          cache-read-only: ${{ inputs.cache-read-only }}
+          # gradle enterprise is used for the build cache
+          gradle-home-cache-excludes: caches/build-cache-1
