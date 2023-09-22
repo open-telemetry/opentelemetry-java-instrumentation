@@ -145,7 +145,8 @@ class HttpClientAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
             entry(SemanticAttributes.NET_PEER_PORT, 123L),
             entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
-            entry(SemanticAttributes.SERVER_PORT, 123L));
+            entry(SemanticAttributes.SERVER_PORT, 123L),
+            entry(SemanticAttributes.HTTP_RESEND_COUNT, 2L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
@@ -157,7 +158,6 @@ class HttpClientAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
             entry(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
-            entry(SemanticAttributes.HTTP_RESEND_COUNT, 2L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")),

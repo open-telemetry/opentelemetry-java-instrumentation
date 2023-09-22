@@ -113,6 +113,11 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     if (SemconvStability.emitOldHttpSemconv()) {
       internalSet(attributes, SemanticAttributes.HTTP_URL, fullUrl);
     }
+
+    int resendCount = resendCountIncrementer.applyAsInt(parentContext);
+    if (resendCount > 0) {
+      attributes.put(SemanticAttributes.HTTP_RESEND_COUNT, resendCount);
+    }
   }
 
   @Override
@@ -127,11 +132,6 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     internalNetExtractor.onEnd(attributes, request, response);
     internalNetworkExtractor.onEnd(attributes, request, response);
     internalServerExtractor.onEnd(attributes, request, response);
-
-    int resendCount = resendCountIncrementer.applyAsInt(context);
-    if (resendCount > 0) {
-      attributes.put(SemanticAttributes.HTTP_RESEND_COUNT, resendCount);
-    }
   }
 
   /**

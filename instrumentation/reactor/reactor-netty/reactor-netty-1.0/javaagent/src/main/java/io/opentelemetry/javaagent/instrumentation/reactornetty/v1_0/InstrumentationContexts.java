@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientResendCount;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
@@ -19,6 +20,8 @@ import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
 final class InstrumentationContexts {
+  private static final VirtualField<HttpClientRequest, Context> requestContextVirtualField =
+      VirtualField.find(HttpClientRequest.class, Context.class);
 
   private static final AtomicReferenceFieldUpdater<InstrumentationContexts, Context>
       parentContextUpdater =
@@ -56,18 +59,27 @@ final class InstrumentationContexts {
     Context context = null;
     if (instrumenter().shouldStart(parentContext, request)) {
       context = instrumenter().start(parentContext, request);
+      requestContextVirtualField.set(request, context);
       clientContexts.offer(new RequestAndContext(request, context));
     }
     return context;
   }
 
-  // we are synchronizing here to ensure that spans are ended in the oder they are read from the
-  // queue
-  synchronized void endClientSpan(
-      @Nullable HttpClientResponse response, @Nullable Throwable error) {
+  void endClientSpan(@Nullable HttpClientResponse response, @Nullable Throwable error) {
+    HttpClientRequest request = null;
+    Context context = null;
     RequestAndContext requestAndContext = clientContexts.poll();
-    if (requestAndContext != null) {
-      instrumenter().end(requestAndContext.context, requestAndContext.request, response, error);
+    if (response instanceof HttpClientRequest) {
+      request = (HttpClientRequest) response;
+      context = requestContextVirtualField.get(request);
+    } else if (requestAndContext != null) {
+      // this branch is taken when there was an error (e.g. timeout) and response was null
+      request = requestAndContext.request;
+      context = requestAndContext.context;
+    }
+
+    if (request != null && context != null) {
+      instrumenter().end(context, request, response, error);
     }
   }
 
