@@ -9,10 +9,12 @@ import static com.google.errorprone.matchers.Description.NO_MATCH;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
+import com.google.errorprone.ErrorProneFlags;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.checkreturnvalue.CanIgnoreReturnValueSuggester;
 import com.google.errorprone.matchers.Description;
+import com.google.inject.Inject;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.util.TreePath;
@@ -27,7 +29,19 @@ public class OtelCanIgnoreReturnValueSuggester extends BugChecker
 
   private static final long serialVersionUID = 1L;
 
-  private final CanIgnoreReturnValueSuggester delegate = new CanIgnoreReturnValueSuggester();
+  private final CanIgnoreReturnValueSuggester delegate;
+
+  @Inject
+  OtelCanIgnoreReturnValueSuggester(ErrorProneFlags errorProneFlags) {
+    delegate = new CanIgnoreReturnValueSuggester(errorProneFlags);
+  }
+
+  public OtelCanIgnoreReturnValueSuggester() {
+    // https://errorprone.info/docs/plugins
+    // this constructor is used by ServiceLoader, actual instance will be created with the other
+    // constructor
+    delegate = null;
+  }
 
   @Override
   public Description matchMethod(MethodTree methodTree, VisitorState visitorState) {

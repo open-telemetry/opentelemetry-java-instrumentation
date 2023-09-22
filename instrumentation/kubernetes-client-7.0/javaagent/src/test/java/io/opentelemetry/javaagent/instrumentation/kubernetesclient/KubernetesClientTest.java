@@ -100,7 +100,7 @@ class KubernetesClientTest {
   void handleErrorsInSyncCall() {
     mockWebServer.enqueue(
         HttpResponse.of(HttpStatus.valueOf(451), MediaType.PLAIN_TEXT_UTF_8, "42"));
-    AtomicReference<ApiException> apiExceptionReference = new AtomicReference<>(null);
+    ApiException exception = null;
     try {
       testing.runWithSpan(
           "parent",
@@ -108,12 +108,11 @@ class KubernetesClientTest {
             coreV1Api.connectGetNamespacedPodProxy("name", "namespace", "path");
           });
     } catch (ApiException e) {
-      apiExceptionReference.set(e);
+      exception = e;
     }
-    assertThat(apiExceptionReference.get()).isNotNull();
+    ApiException apiException = exception;
+    assertThat(apiException).isNotNull();
     assertThat(mockWebServer.takeRequest().request().headers().get("traceparent")).isNotBlank();
-
-    ApiException apiException = apiExceptionReference.get();
 
     testing.waitAndAssertTraces(
         trace ->
