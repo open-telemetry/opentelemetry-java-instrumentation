@@ -158,7 +158,6 @@ class HttpClientAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
             entry(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
-            entry(SemanticAttributes.HTTP_RESEND_COUNT, 2L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")),
