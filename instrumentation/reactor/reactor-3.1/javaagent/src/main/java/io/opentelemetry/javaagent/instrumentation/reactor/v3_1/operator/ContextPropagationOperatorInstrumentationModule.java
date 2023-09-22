@@ -27,6 +27,12 @@ public class ContextPropagationOperatorInstrumentationModule extends Instrumenta
   }
 
   @Override
+  public boolean isIndyModule() {
+    // RunWithAdvice uses @Advice.FieldValue
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ContextPropagationOperatorInstrumentation());
   }

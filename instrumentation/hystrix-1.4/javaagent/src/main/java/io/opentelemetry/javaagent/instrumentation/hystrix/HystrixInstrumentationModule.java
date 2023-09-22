@@ -25,6 +25,12 @@ public class HystrixInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // rx.__OpenTelemetryTracingUtil is used for accessing a package private field
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HystrixCommandInstrumentation());
   }

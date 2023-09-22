@@ -20,6 +20,12 @@ public class SpymemcachedInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // SyncOperationAdvice uses both @Advice.Local and return value from an @OnMethodEnter advice
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new MemcachedClientInstrumentation());
   }

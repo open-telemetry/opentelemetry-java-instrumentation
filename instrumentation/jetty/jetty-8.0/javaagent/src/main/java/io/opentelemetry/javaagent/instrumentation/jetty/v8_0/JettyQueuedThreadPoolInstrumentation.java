@@ -38,8 +38,7 @@ public class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation
   public static class DispatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static PropagatedContext enterJobSubmit(
-        @Advice.Argument(value = 0, readOnly = false) Runnable task) {
+    public static PropagatedContext enterJobSubmit(@Advice.Argument(0) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         VirtualField<Runnable, PropagatedContext> virtualField =

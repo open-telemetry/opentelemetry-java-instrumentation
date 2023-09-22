@@ -27,6 +27,11 @@ public class InstrumentationApiInstrumentationModule extends InstrumentationModu
   }
 
   @Override
+  public boolean isIndyModule() {
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new HttpRouteStateInstrumentation(), new SpanKeyInstrumentation());
   }

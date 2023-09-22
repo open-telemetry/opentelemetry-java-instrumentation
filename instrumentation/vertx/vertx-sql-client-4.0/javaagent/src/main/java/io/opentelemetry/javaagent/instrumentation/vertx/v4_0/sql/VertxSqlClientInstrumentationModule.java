@@ -25,6 +25,12 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // QueryExecutorUtil accesses package private class io.vertx.sqlclient.impl.QueryExecutor
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new PoolInstrumentation(),

@@ -31,6 +31,11 @@ public class Log4j2InstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    return false;
+  }
+
+  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
         // class added in 2.17.0 and backported to 2.12.3

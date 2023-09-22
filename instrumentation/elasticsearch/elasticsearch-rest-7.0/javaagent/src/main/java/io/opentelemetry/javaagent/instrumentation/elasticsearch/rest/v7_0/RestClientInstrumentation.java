@@ -80,7 +80,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Return(readOnly = false) Response response,
+        @Advice.Return Response response,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelRequest") ElasticsearchRestRequest otelRequest,
         @Advice.Local("otelContext") Context context,
