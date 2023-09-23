@@ -9,61 +9,21 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 
-import com.google.common.collect.ImmutableMap;
-import com.lambdaworks.redis.ClientOptions;
 import com.lambdaworks.redis.RedisClient;
 import com.lambdaworks.redis.RedisConnectionException;
 import com.lambdaworks.redis.api.StatefulRedisConnection;
 import com.lambdaworks.redis.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
-class LettuceSyncClientTest {
-
-  @RegisterExtension
-  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
-
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
-
-  static final DockerImageName containerImage = DockerImageName.parse("redis:6.2.3-alpine");
-
-  private static final int DB_INDEX = 0;
-
-  // Disable auto reconnect, so we do not get stray traces popping up on server shutdown
-  private static final ClientOptions CLIENT_OPTIONS =
-      new ClientOptions.Builder().autoReconnect(false).build();
-
-  private static final GenericContainer<?> redisServer =
-      new GenericContainer<>(containerImage).withExposedPorts(6379);
-
-  private static String host;
-  private static int port;
-  private static int incorrectPort;
-  private static String dbUriNonExistent;
-  private static String embeddedDbUri;
-
-  private static final ImmutableMap<String, String> testHashMap =
-      ImmutableMap.of(
-          "firstname", "John",
-          "lastname", "Doe",
-          "age", "53");
-
-  static RedisClient redisClient;
-
-  private static StatefulRedisConnection<String, String> connection;
-  static RedisCommands<String, String> syncCommands;
+class LettuceSyncClientTest extends AbstractLettuceClientTest {
+  private static RedisCommands<String, String> syncCommands;
 
   @BeforeAll
   static void setUp() {
@@ -102,7 +62,7 @@ class LettuceSyncClientTest {
     testConnectionClient.setOptions(CLIENT_OPTIONS);
 
     StatefulRedisConnection<String, String> testConnection = testConnectionClient.connect();
-    cleanup.deferCleanup(() -> testConnection.close());
+    cleanup.deferCleanup(testConnection);
     cleanup.deferCleanup(testConnectionClient::shutdown);
 
     testing.waitAndAssertTraces(
@@ -190,8 +150,15 @@ class LettuceSyncClientTest {
 
   @Test
   void testCommandWithNoArguments() {
-    String res = syncCommands.randomkey();
-    assertThat(res).isNotNull();
+    try (StatefulRedisConnection<String, String> connection = newContainerConnection()) {
+      RedisCommands<String, String> commands = connection.sync();
+      commands.set("TESTKEY", "TESTVAL");
+      testing.waitForTraces(1);
+      testing.clearData();
+
+      String res = commands.randomkey();
+      assertThat(res).isNotNull();
+    }
 
     testing.waitAndAssertTraces(
         trace ->
@@ -255,23 +222,10 @@ class LettuceSyncClientTest {
   @Test
   void testDebugSegfaultCommandWithNoArgumentShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
-    server.start();
-    cleanup.deferCleanup(server::stop);
-
-    long serverPort = server.getMappedPort(6379);
-    RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
-    client.setOptions(CLIENT_OPTIONS);
-    StatefulRedisConnection<String, String> connection1 = client.connect();
-    cleanup.deferCleanup(connection1);
-    cleanup.deferCleanup(client::shutdown);
-
-    RedisCommands<String, String> commands = connection1.sync();
-    // 1 connect trace
-    testing.waitForTraces(1);
-    testing.clearData();
-
-    commands.debugSegfault();
+    try (StatefulRedisConnection<String, String> connection = newContainerConnection()) {
+      RedisCommands<String, String> commands = connection.sync();
+      commands.debugSegfault();
+    }
 
     testing.waitAndAssertTraces(
         trace ->
@@ -287,25 +241,10 @@ class LettuceSyncClientTest {
   @Test
   void testShutdownCommandShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
-    server.start();
-    cleanup.deferCleanup(server::stop);
-
-    long shutdownServerPort = server.getMappedPort(6379);
-
-    RedisClient client =
-        RedisClient.create("redis://" + host + ":" + shutdownServerPort + "/" + DB_INDEX);
-    client.setOptions(CLIENT_OPTIONS);
-    StatefulRedisConnection<String, String> connection1 = client.connect();
-    cleanup.deferCleanup(connection1);
-    cleanup.deferCleanup(client::shutdown);
-
-    RedisCommands<String, String> commands = connection1.sync();
-    // 1 connect trace
-    testing.waitForTraces(1);
-    testing.clearData();
-
-    commands.shutdown(false);
+    try (StatefulRedisConnection<String, String> connection = newContainerConnection()) {
+      RedisCommands<String, String> commands = connection.sync();
+      commands.shutdown(false);
+    }
 
     testing.waitAndAssertTraces(
         trace ->
