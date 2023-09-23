@@ -1,0 +1,60 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
+
+import io.lettuce.core.ClientOptions;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.utility.DockerImageName;
+
+abstract class AbstractLettuceClientTest {
+
+  @RegisterExtension
+  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  protected static final int DB_INDEX = 0;
+
+  // Disable autoreconnect so we do not get stray traces popping up on server shutdown
+  protected static final ClientOptions CLIENT_OPTIONS =
+      ClientOptions.builder().autoReconnect(false).build();
+
+  static final DockerImageName containerImage = DockerImageName.parse("redis:6.2.3-alpine");
+
+  protected static final GenericContainer<?> redisServer =
+      new GenericContainer<>(containerImage).withExposedPorts(6379);
+
+  protected static RedisClient redisClient;
+
+  protected static StatefulRedisConnection<String, String> connection;
+
+  protected static String host;
+  protected static int port;
+
+  protected static String embeddedDbUri;
+
+  protected static StatefulRedisConnection<String, String> newContainerConnection() {
+    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
+    server.start();
+    cleanup.deferCleanup(server::stop);
+
+    long serverPort = server.getMappedPort(6379);
+
+    RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
+    cleanup.deferCleanup(() -> client.shutdown());
+
+    StatefulRedisConnection<String, String> statefulConnection = client.connect();
+    cleanup.deferCleanup(statefulConnection);
+
+    return statefulConnection;
+  }
+}

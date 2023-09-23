@@ -11,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 
 import com.google.common.collect.ImmutableMap;
-import io.lettuce.core.ClientOptions;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisConnectionException;
 import io.lettuce.core.api.StatefulRedisConnection;
@@ -19,9 +18,6 @@ import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Map;
@@ -29,33 +25,12 @@ import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
-class LettuceSyncClientTest {
-  @RegisterExtension
-  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+class LettuceSyncClientTest extends AbstractLettuceClientTest {
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
-
-  private static final int DB_INDEX = 0;
-
-  // Disable autoreconnect so we do not get stray traces popping up on server shutdown
-  private static final ClientOptions CLIENT_OPTIONS =
-      ClientOptions.builder().autoReconnect(false).build();
-
-  static final DockerImageName containerImage = DockerImageName.parse("redis:6.2.3-alpine");
-
-  private static final GenericContainer<?> redisServer =
-      new GenericContainer<>(containerImage).withExposedPorts(6379);
-
-  private static String host;
-  private static int port;
   private static int incorrectPort;
   private static String dbUriNonExistent;
-  private static String embeddedDbUri;
 
   private static final ImmutableMap<String, String> testHashMap =
       ImmutableMap.of(
@@ -63,9 +38,6 @@ class LettuceSyncClientTest {
           "lastname", "Doe",
           "age", "53");
 
-  static RedisClient redisClient;
-
-  private static StatefulRedisConnection<String, String> connection;
   static RedisCommands<String, String> syncCommands;
 
   @BeforeAll
@@ -88,6 +60,7 @@ class LettuceSyncClientTest {
     syncCommands.hmset("TESTHM", testHashMap);
 
     // 2 sets + 1 connect trace
+    testing.waitForTraces(3);
     testing.clearData();
   }
 
@@ -308,23 +281,16 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "DEBUG SEGFAULT"),
+                            equalTo(SemanticAttributes.DB_STATEMENT, "SHUTDOWN NOSAVE"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SHUTDOWN"))));
   }
 
   private static RedisCommands<String, String> newContainerCommands() {
-    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
-    server.start();
-    cleanup.deferCleanup(server::stop);
-
-    long serverPort = server.getMappedPort(6379);
-
-    RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
-    StatefulRedisConnection<String, String> statefulConnection = client.connect();
-    cleanup.deferCleanup(statefulConnection);
+    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
 
     RedisCommands<String, String> commands = statefulConnection.sync();
     // 1 connect trace
+    testing.waitForTraces(1);
     testing.clearData();
     return commands;
   }
