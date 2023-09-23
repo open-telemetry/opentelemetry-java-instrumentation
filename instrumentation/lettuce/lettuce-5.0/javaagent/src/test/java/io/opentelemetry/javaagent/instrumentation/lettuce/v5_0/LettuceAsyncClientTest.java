@@ -55,7 +55,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           "lastname", "Doe",
           "age", "53");
 
-  static RedisAsyncCommands<String, String> asyncCommands;
+  private static RedisAsyncCommands<String, String> asyncCommands;
 
   @BeforeAll
   static void setUp() {
@@ -84,6 +84,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   @AfterAll
   static void cleanUp() {
     connection.close();
+    redisClient.shutdown();
     redisServer.stop();
   }
 
@@ -97,6 +98,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
             new Utf8StringCodec(), new RedisURI(host, port, 3, TimeUnit.SECONDS));
     StatefulRedisConnection<String, String> connection1 = connectionFuture.get();
     cleanup.deferCleanup(connection1);
+    cleanup.deferCleanup(testConnectionClient::shutdown);
 
     assertThat(connection1).isNotNull();
 
@@ -113,7 +115,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void testExceptionInsideTheConnectionFuture() {
+  void testConnectExceptionInsideTheConnectionFuture() {
     RedisClient testConnectionClient = RedisClient.create(dbUriNonExistent);
     testConnectionClient.setOptions(CLIENT_OPTIONS);
 
@@ -178,7 +180,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void testCommandChainedWithThenAccept() {
+  void testGetCommandChainedWithThenAccept() {
     CompletableFuture<String> future = new CompletableFuture<>();
     Consumer<String> consumer =
         res -> {
@@ -215,7 +217,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
   // still recording spans
   @Test
-  void getNonExistentKeyCommandWithHandleAsyncAndChainedWithThenApply() {
+  void testGetNonExistentKeyCommandWithHandleAsyncAndChainedWithThenApply() {
     CompletableFuture<String> future = new CompletableFuture<>();
 
     String successStr = "KEY MISSING";
@@ -406,7 +408,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void testCommandBeforeItFinished() {
+  void testCancelCommandBeforeItFinishes() {
     asyncCommands.setAutoFlushCommands(false);
     cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
 
@@ -451,11 +453,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   @Test
   void testDebugSegfaultCommandWithNoArgumentShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    RedisAsyncCommands<String, String> commands = newContainerCommands();
-    // 1 connect trace
-    testing.clearData();
-
-    commands.debugSegfault();
+    try (StatefulRedisConnection<String, String> statefulConnection = newContainerConnection()) {
+      RedisAsyncCommands<String, String> commands = statefulConnection.async();
+      commands.debugSegfault();
+    }
 
     testing.waitAndAssertTraces(
         trace ->
@@ -472,9 +473,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   @Test
   void testShutdownCommandShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    RedisAsyncCommands<String, String> commands = newContainerCommands();
-
-    commands.shutdown(false);
+    try (StatefulRedisConnection<String, String> statefulConnection = newContainerConnection()) {
+      RedisAsyncCommands<String, String> commands = statefulConnection.async();
+      commands.shutdown(false);
+    }
 
     testing.waitAndAssertTraces(
         trace ->
@@ -486,15 +488,5 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SHUTDOWN NOSAVE"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SHUTDOWN"))));
-  }
-
-  private static RedisAsyncCommands<String, String> newContainerCommands() {
-    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
-
-    RedisAsyncCommands<String, String> commands = statefulConnection.async();
-    // 1 connect trace
-    testing.waitForTraces(1);
-    testing.clearData();
-    return commands;
   }
 }

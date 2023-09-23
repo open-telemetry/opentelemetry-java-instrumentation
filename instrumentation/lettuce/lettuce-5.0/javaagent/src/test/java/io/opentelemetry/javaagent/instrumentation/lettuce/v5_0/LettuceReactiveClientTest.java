@@ -27,8 +27,7 @@ import org.junit.jupiter.api.Test;
 import reactor.core.scheduler.Schedulers;
 
 class LettuceReactiveClientTest extends AbstractLettuceClientTest {
-  static RedisReactiveCommands<String, String> reactiveCommands;
-  static RedisCommands<String, String> syncCommands;
+  private static RedisReactiveCommands<String, String> reactiveCommands;
 
   @BeforeAll
   static void setUp() {
@@ -43,7 +42,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
 
     connection = redisClient.connect();
     reactiveCommands = connection.reactive();
-    syncCommands = connection.sync();
+    RedisCommands<String, String> syncCommands = connection.sync();
 
     syncCommands.set("TESTKEY", "TESTVAL");
 
@@ -60,7 +59,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void testSetCommandWithSubscribeOnADefinedConsumer() {
+  void testSetCommandWithSubscribeOnDefinedConsumer() {
     CompletableFuture<String> future = new CompletableFuture<>();
 
     Consumer<String> consumer =
@@ -121,6 +120,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(SemanticAttributes.DB_OPERATION, "GET"))));
   }
 
+  // to make sure instrumentation's chained completion stages won't interfere with user's, while
+  // still recording spans
   @Test
   void testGetNonExistentKeyCommand() {
     CompletableFuture<String> future = new CompletableFuture<>();
@@ -239,9 +240,10 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   @Test
   void testDebugSegfaultCommandReturnsMonoVoidWithNoArgumentShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    RedisReactiveCommands<String, String> commands = newContainerCommands();
-
-    commands.debugSegfault().subscribe();
+    try (StatefulRedisConnection<String, String> statefulConnection = newContainerConnection()) {
+      RedisReactiveCommands<String, String> commands = statefulConnection.reactive();
+      commands.debugSegfault().subscribe();
+    }
 
     testing.waitAndAssertTraces(
         trace ->
@@ -258,9 +260,10 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   @Test
   void testShutdownCommandShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    RedisReactiveCommands<String, String> commands = newContainerCommands();
-
-    commands.shutdown(false).subscribe();
+    try (StatefulRedisConnection<String, String> statefulConnection = newContainerConnection()) {
+      RedisReactiveCommands<String, String> commands = statefulConnection.reactive();
+      commands.shutdown(false).subscribe();
+    }
 
     testing.waitAndAssertTraces(
         trace ->
@@ -361,15 +364,5 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "GET a"),
                             equalTo(SemanticAttributes.DB_OPERATION, "GET"))));
-  }
-
-  private static RedisReactiveCommands<String, String> newContainerCommands() {
-    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
-
-    RedisReactiveCommands<String, String> commands = statefulConnection.reactive();
-    // 1 connect trace
-    testing.waitForTraces(1);
-    testing.clearData();
-    return commands;
   }
 }

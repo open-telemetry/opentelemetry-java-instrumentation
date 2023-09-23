@@ -28,7 +28,6 @@ import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class LettuceSyncClientTest extends AbstractLettuceClientTest {
-
   private static int incorrectPort;
   private static String dbUriNonExistent;
 
@@ -38,12 +37,11 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
           "lastname", "Doe",
           "age", "53");
 
-  static RedisCommands<String, String> syncCommands;
+  private static RedisCommands<String, String> syncCommands;
 
   @BeforeAll
   static void setUp() {
     redisServer.start();
-
     host = redisServer.getHost();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
@@ -52,6 +50,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
     dbUriNonExistent = "redis://" + host + ":" + incorrectPort + "/" + DB_INDEX;
 
     redisClient = RedisClient.create(embeddedDbUri);
+    redisClient.setOptions(CLIENT_OPTIONS);
 
     connection = redisClient.connect();
     syncCommands = connection.sync();
@@ -67,6 +66,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
   @AfterAll
   static void cleanUp() {
     connection.close();
+    redisClient.shutdown();
     redisServer.stop();
   }
 
@@ -77,6 +77,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
 
     StatefulRedisConnection<String, String> testConnection = testConnectionClient.connect();
     cleanup.deferCleanup(testConnection);
+    cleanup.deferCleanup(testConnectionClient::shutdown);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -251,9 +252,10 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
   @Test
   void testDebugSegfaultCommandWithNoArgumentShouldProduceSpan() {
     // Test causes redis to crash therefore it needs its own container
-    RedisCommands<String, String> commands = newContainerCommands();
-
-    commands.debugSegfault();
+    try (StatefulRedisConnection<String, String> statefulConnection = newContainerConnection()) {
+      RedisCommands<String, String> commands = statefulConnection.sync();
+      commands.debugSegfault();
+    }
 
     testing.waitAndAssertTraces(
         trace ->
@@ -270,8 +272,10 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
   @Test
   void testShutdownCommandShouldProduceSpan() {
     // Test causes redis to crash therefore it needs its own container
-    RedisCommands<String, String> commands = newContainerCommands();
-    commands.shutdown(false);
+    try (StatefulRedisConnection<String, String> statefulConnection = newContainerConnection()) {
+      RedisCommands<String, String> commands = statefulConnection.sync();
+      commands.shutdown(false);
+    }
 
     testing.waitAndAssertTraces(
         trace ->
@@ -283,15 +287,5 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SHUTDOWN NOSAVE"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SHUTDOWN"))));
-  }
-
-  private static RedisCommands<String, String> newContainerCommands() {
-    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
-
-    RedisCommands<String, String> commands = statefulConnection.sync();
-    // 1 connect trace
-    testing.waitForTraces(1);
-    testing.clearData();
-    return commands;
   }
 }
