@@ -26,6 +26,13 @@ public class HibernateInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // uses SessionInfo class from hibernate common which is now in separate class loader for all
+    // instrumentations
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new ProcedureCallInstrumentation(), new SessionInstrumentation());
   }

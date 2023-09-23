@@ -19,6 +19,13 @@ public class RatpackInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // StartAdvice uses both @Advice.Argument(readOnly = false) and return value from an
+    // @OnMethodEnter advice
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ContinuationInstrumentation(),

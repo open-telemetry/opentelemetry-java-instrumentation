@@ -38,8 +38,7 @@ public class HttpServerExchangeInstrumentation implements TypeInstrumentation {
   public static class DispatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static PropagatedContext enterJobSubmit(
-        @Advice.Argument(value = 1, readOnly = false) Runnable task) {
+    public static PropagatedContext enterJobSubmit(@Advice.Argument(1) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         VirtualField<Runnable, PropagatedContext> virtualField =

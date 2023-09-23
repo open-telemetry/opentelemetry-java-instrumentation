@@ -54,6 +54,7 @@ public class IndyModuleRegistry {
     Cache<ClassLoader, WeakReference<InstrumentationModuleClassLoader>> cacheForModule =
         instrumentationClassloaders.computeIfAbsent(module, (k) -> Cache.weak());
 
+    instrumentedClassloader = maskNullClassLoader(instrumentedClassloader);
     WeakReference<InstrumentationModuleClassLoader> cached =
         cacheForModule.get(instrumentedClassloader);
     if (cached != null) {
@@ -68,6 +69,12 @@ public class IndyModuleRegistry {
         createInstrumentationModuleClassloader(module, instrumentedClassloader);
     cacheForModule.put(instrumentedClassloader, new WeakReference<>(created));
     return created;
+  }
+
+  private static final ClassLoader BOOT_LOADER = new ClassLoader() {};
+
+  private static ClassLoader maskNullClassLoader(ClassLoader classLoader) {
+    return classLoader == null ? BOOT_LOADER : classLoader;
   }
 
   private static InstrumentationModuleClassLoader createInstrumentationModuleClassloader(

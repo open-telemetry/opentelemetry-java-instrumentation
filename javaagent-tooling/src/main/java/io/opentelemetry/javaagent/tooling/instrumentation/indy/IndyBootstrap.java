@@ -63,8 +63,6 @@ public class IndyBootstrap {
 
   private static final Method indyBootstrapMethod;
 
-  private static final CallDepth callDepth = CallDepth.forClass(IndyBootstrap.class);
-
   static {
     try {
       indyBootstrapMethod =
@@ -120,6 +118,7 @@ public class IndyBootstrap {
       String adviceMethodName,
       MethodType adviceMethodType,
       Object[] args) {
+    CallDepth callDepth = CallDepth.forClass(IndyBootstrap.class);
     try {
       if (callDepth.getAndIncrement() > 0) {
         // avoid re-entrancy and stack overflow errors, which may happen when bootstrapping an

@@ -26,6 +26,14 @@ public class JerseyInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // net.bytebuddy.pool.TypePool$Resolution$NoSuchTypeException: Cannot resolve type description
+    // for
+    // io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.Servlet3SnippetInjectingResponseWrapper
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new JerseyRequestContextInstrumentation(),

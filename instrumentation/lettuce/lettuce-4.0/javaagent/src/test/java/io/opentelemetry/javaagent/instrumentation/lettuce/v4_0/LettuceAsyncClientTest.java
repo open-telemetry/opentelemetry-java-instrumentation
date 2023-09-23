@@ -103,12 +103,14 @@ class LettuceAsyncClientTest {
     syncCommands.set("TESTKEY", "TESTVAL");
 
     // 1 set + 1 connect trace
+    testing.waitForTraces(2);
     testing.clearData();
   }
 
   @AfterAll
   static void cleanUp() {
     connection.close();
+    redisClient.shutdown();
     redisServer.stop();
   }
 
@@ -121,6 +123,7 @@ class LettuceAsyncClientTest {
         testConnectionClient.connect(
             new Utf8StringCodec(), new RedisURI(host, port, 3, TimeUnit.SECONDS));
     cleanup.deferCleanup(connection1);
+    cleanup.deferCleanup(testConnectionClient::shutdown);
 
     assertThat(connection1).isNotNull();
 
@@ -140,6 +143,7 @@ class LettuceAsyncClientTest {
   void testExceptionInsideTheConnectionFuture() {
     RedisClient testConnectionClient = RedisClient.create(dbUriNonExistent);
     testConnectionClient.setOptions(CLIENT_OPTIONS);
+    cleanup.deferCleanup(testConnectionClient::shutdown);
 
     Exception exception =
         catchException(
@@ -460,11 +464,14 @@ class LettuceAsyncClientTest {
 
     long serverPort = server.getMappedPort(6379);
     RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
+    client.setOptions(CLIENT_OPTIONS);
     StatefulRedisConnection<String, String> connection1 = client.connect();
     cleanup.deferCleanup(connection1);
+    cleanup.deferCleanup(client::shutdown);
 
     RedisAsyncCommands<String, String> commands = connection1.async();
     // 1 connect trace
+    testing.waitForTraces(1);
     testing.clearData();
 
     commands.debugSegfault();
@@ -491,11 +498,14 @@ class LettuceAsyncClientTest {
 
     RedisClient client =
         RedisClient.create("redis://" + host + ":" + shutdownServerPort + "/" + DB_INDEX);
+    client.setOptions(CLIENT_OPTIONS);
     StatefulRedisConnection<String, String> connection1 = client.connect();
     cleanup.deferCleanup(connection1);
+    cleanup.deferCleanup(client::shutdown);
 
     RedisAsyncCommands<String, String> commands = connection1.async();
     // 1 connect trace
+    testing.waitForTraces(1);
     testing.clearData();
 
     commands.shutdown(false);

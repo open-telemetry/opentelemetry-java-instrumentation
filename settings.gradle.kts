@@ -1,7 +1,7 @@
 pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "2.5"
-    id("com.google.cloud.tools.jib") version "3.3.2"
+    id("com.google.cloud.tools.jib") version "3.4.0"
     id("com.gradle.plugin-publish") version "1.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
     id("org.jetbrains.kotlin.jvm") version "1.9.10"
@@ -20,7 +20,7 @@ plugins {
   // in particular, these commands are failing (reproducible locally):
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
-  id("com.bmuschko.docker-remote-api") version "9.3.2" apply false
+  id("com.bmuschko.docker-remote-api") version "9.3.3" apply false
 }
 
 dependencyResolutionManagement {

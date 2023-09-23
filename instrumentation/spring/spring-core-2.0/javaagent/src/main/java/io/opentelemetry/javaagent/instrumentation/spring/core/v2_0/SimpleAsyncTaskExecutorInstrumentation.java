@@ -44,8 +44,7 @@ public class SimpleAsyncTaskExecutorInstrumentation implements TypeInstrumentati
   public static class ExecuteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static PropagatedContext enterJobSubmit(
-        @Advice.Argument(value = 0, readOnly = false) Runnable task) {
+    public static PropagatedContext enterJobSubmit(@Advice.Argument(0) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         VirtualField<Runnable, PropagatedContext> virtualField =

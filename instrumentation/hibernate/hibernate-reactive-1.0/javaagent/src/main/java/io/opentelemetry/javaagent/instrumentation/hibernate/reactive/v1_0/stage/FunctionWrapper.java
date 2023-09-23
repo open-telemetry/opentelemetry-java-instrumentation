@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v1_0;
+package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v1_0.stage;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
