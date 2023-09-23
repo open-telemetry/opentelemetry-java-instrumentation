@@ -20,17 +20,22 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.SemanticAttributes;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class LettuceSyncClientTest {
+  private static final Logger logger = LoggerFactory.getLogger(LettuceSyncClientTest.class);
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -85,7 +90,8 @@ class LettuceSyncClientTest {
     syncCommands.hmset("TESTHM", testHashMap);
 
     // 2 sets + 1 connect trace
-    testing.waitForTraces(3);
+    List<List<SpanData>> traces = testing.waitForTraces(3);
+    logger.info("setUp traces {}", traces);
     testing.clearData();
   }
 
