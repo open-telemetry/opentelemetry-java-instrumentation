@@ -21,7 +21,7 @@ muzzle {
     versions.set("(,3.0.0)")
     assertInverse.set(true)
     // Could not find com.google.code.findbugs:jsr305:.
-    skip("4.0.2")
+    skip("3.0.2", "4.0.2")
   }
 }
 
