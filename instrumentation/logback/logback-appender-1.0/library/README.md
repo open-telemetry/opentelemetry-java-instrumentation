@@ -95,11 +95,12 @@ Settings can be configured in `logback.xml`, for example:
 The available settings are:
 
 | XML Element                     | Type    | Default | Description                                                                                                                                   |
-| ------------------------------- | ------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+|---------------------------------| ------- | ------- |-----------------------------------------------------------------------------------------------------------------------------------------------|
 | `captureExperimentalAttributes` | Boolean | `false` | Enable the capture of experimental span attributes `thread.name` and `thread.id`.                                                             |
 | `captureCodeAttributes`         | Boolean | `false` | Enable the capture of [source code attributes]. Note that capturing source code attributes at logging sites might add a performance overhead. |
 | `captureMarkerAttribute`        | Boolean | `false` | Enable the capture of Logback markers as attributes.                                                                                          |
 | `captureKeyValuePairAttributes` | Boolean | `false` | Enable the capture of Logback key value pairs as attributes.                                                                                  |
+| `captureLoggerContext`          | Boolean | `false` | Enable the capture of Logback logger context properties as attributes.                                                                        |
 | `captureMdcAttributes`          | String  |         | Comma separated list of MDC attributes to capture. Use the wildcard character `*` to capture all attributes.                                  |
 
 [source code attributes]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#source-code-attributes

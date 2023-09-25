@@ -25,6 +25,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureCodeAttributes = false;
   private boolean captureMarkerAttribute = false;
   private boolean captureKeyValuePairAttributes = false;
+  private boolean captureLoggerContext = false;
   private List<String> captureMdcAttributes = emptyList();
 
   private OpenTelemetry openTelemetry;
@@ -62,7 +63,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             captureMdcAttributes,
             captureCodeAttributes,
             captureMarkerAttribute,
-            captureKeyValuePairAttributes);
+            captureKeyValuePairAttributes,
+            captureLoggerContext);
     if (openTelemetry == null) {
       openTelemetry = OpenTelemetry.noop();
     }
@@ -98,7 +100,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   /**
    * Sets whether the marker attribute should be set to logs.
    *
-   * @param captureMarkerAttribute To enable or disable the marker attribute
+   * @param captureMarkerAttribute To enable or disable capturing the marker attribute
    */
   public void setCaptureMarkerAttribute(boolean captureMarkerAttribute) {
     this.captureMarkerAttribute = captureMarkerAttribute;
@@ -107,10 +109,19 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   /**
    * Sets whether the key value pair attributes should be set to logs.
    *
-   * @param captureKeyValuePairAttributes To enable or disable the marker attribute
+   * @param captureKeyValuePairAttributes To enable or disable capturing key value pairs
    */
   public void setCaptureKeyValuePairAttributes(boolean captureKeyValuePairAttributes) {
     this.captureKeyValuePairAttributes = captureKeyValuePairAttributes;
+  }
+
+  /**
+   * Sets whether the logger context properties should be set to logs.
+   *
+   * @param captureLoggerContext To enable or disable capturing logger context properties
+   */
+  public void setCaptureLoggerContext(boolean captureLoggerContext) {
+    this.captureLoggerContext = captureLoggerContext;
   }
 
   /** Configures the {@link MDC} attributes that will be copied to logs. */

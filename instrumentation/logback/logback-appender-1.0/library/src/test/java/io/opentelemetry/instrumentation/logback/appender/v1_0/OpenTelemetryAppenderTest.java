@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.core.ContextBase;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
@@ -21,9 +23,12 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.semconv.SemanticAttributes;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +62,30 @@ class OpenTelemetryAppenderTest {
         OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build();
 
     OpenTelemetryAppender.install(openTelemetrySdk);
+
+    // by default LoggerContext contains HOSTNAME property we clear it to start with empty context
+    resetLoggerContext();
+  }
+
+  private static void resetLoggerContext() {
+    try {
+      LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+      Field field = ContextBase.class.getDeclaredField("propertyMap");
+      field.setAccessible(true);
+      Map<?, ?> map = (Map<?, ?>) field.get(loggerContext);
+      map.clear();
+
+      Method method;
+      try {
+        method = LoggerContext.class.getDeclaredMethod("syncRemoteView");
+      } catch (NoSuchMethodException noSuchMethodException) {
+        method = LoggerContext.class.getDeclaredMethod("updateLoggerContextVO");
+      }
+      method.setAccessible(true);
+      method.invoke(loggerContext);
+    } catch (Exception exception) {
+      throw new IllegalStateException("Failed to reset logger context", exception);
+    }
   }
 
   @BeforeEach
@@ -169,5 +198,26 @@ class OpenTelemetryAppenderTest {
         .isEqualTo("val1");
     assertThat(logData.getAttributes().get(AttributeKey.stringKey("logback.mdc.key2")))
         .isEqualTo("val2");
+  }
+
+  @Test
+  void logLoggerContext() {
+    LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+    loggerContext.putProperty("test-property", "test-value");
+    try {
+      logger.info("log message 1");
+    } finally {
+      resetLoggerContext();
+    }
+
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
+    assertThat(logDataList).hasSize(1);
+    LogRecordData logData = logDataList.get(0);
+    assertThat(logData.getResource()).isEqualTo(resource);
+    assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
+    assertThat(logData.getBody().asString()).isEqualTo("log message 1");
+    assertThat(logData.getAttributes().size()).isEqualTo(1 + 4); // 4 code attributes
+    assertThat(logData.getAttributes().get(AttributeKey.stringKey("test-property")))
+        .isEqualTo("test-value");
   }
 }
