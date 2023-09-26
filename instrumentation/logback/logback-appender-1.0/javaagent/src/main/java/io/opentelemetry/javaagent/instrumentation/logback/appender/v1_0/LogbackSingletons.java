@@ -31,9 +31,10 @@ public final class LogbackSingletons {
         config.getBoolean(
             "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes",
             false);
-    boolean captureLoggerContext = config.getBoolean(
-        "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes",
-        false);
+    boolean captureLoggerContext =
+        config.getBoolean(
+            "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes",
+            false);
     List<String> captureMdcAttributes =
         config.getList(
             "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
