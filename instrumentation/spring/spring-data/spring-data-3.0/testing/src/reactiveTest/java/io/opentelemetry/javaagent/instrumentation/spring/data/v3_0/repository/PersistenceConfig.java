@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.data.v1_8.repository;
+package io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository;
 
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DRIVER;
@@ -27,7 +27,7 @@ import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator;
 import org.springframework.r2dbc.core.DatabaseClient;
 
 @EnableR2dbcRepositories(
-    basePackages = "io.opentelemetry.javaagent.instrumentation.spring.data.v1_8.repository")
+    basePackages = "io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository")
 public class PersistenceConfig {
 
   @Bean

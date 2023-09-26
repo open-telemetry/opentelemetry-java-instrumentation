@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.data.v1_8;
+package io.opentelemetry.javaagent.instrumentation.spring.data.v3_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_CONNECTION_STRING;
@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.instrumentation.spring.data.v1_8.repository.CustomerRepository;
-import io.opentelemetry.javaagent.instrumentation.spring.data.v1_8.repository.PersistenceConfig;
+import io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository.CustomerRepository;
+import io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository.PersistenceConfig;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterAll;
