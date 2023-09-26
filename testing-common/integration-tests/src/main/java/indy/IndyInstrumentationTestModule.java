@@ -14,6 +14,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collections;
 import java.util.List;
+import io.opentelemetry.javaagent.extension.instrumentation.injection.ClassInjector;
+import io.opentelemetry.javaagent.extension.instrumentation.injection.InjectionMode;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.asm.Advice.AssignReturned.ToFields.ToField;
@@ -40,6 +42,19 @@ public class IndyInstrumentationTestModule extends InstrumentationModule {
   @Override
   public boolean isHelperClass(String className) {
     return className.equals(LocalHelper.class.getName());
+  }
+
+  @Override
+  public List<String> getAdditionalHelperClassNames() {
+    //TODO: should not be needed as soon as we automatically add proxied classes to muzzle root set
+    return Collections.singletonList("indy.ProxyMe");
+  }
+
+  @Override
+  public void injectClasses(ClassInjector injector) {
+    injector
+        .proxyBuilder("indy.ProxyMe", "foo.bar.Proxy")
+        .inject(InjectionMode.CLASS_ONLY);
   }
 
   public static class Instrumentation implements TypeInstrumentation {
