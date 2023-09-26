@@ -19,7 +19,7 @@ import org.jboss.modules.ModuleSpec;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JBossClassloadingTest {
+class JbossClassloadingTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

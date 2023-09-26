@@ -15,7 +15,7 @@ class ClassLoadingTest {
 
   @Test
   void testDelegatesToBootstrapClassLoaderForAgentClasses() {
-    ClassLoader classLoader = new NonDelegatingURLClassLoader();
+    ClassLoader classLoader = new NonDelegatingUrlClassLoader();
     Class<?> clazz = null;
     try {
       clazz =
@@ -28,9 +28,9 @@ class ClassLoadingTest {
     assertThat(clazz.getClassLoader()).isNull();
   }
 
-  static class NonDelegatingURLClassLoader extends URLClassLoader {
+  static class NonDelegatingUrlClassLoader extends URLClassLoader {
 
-    NonDelegatingURLClassLoader() {
+    NonDelegatingUrlClassLoader() {
       super(new URL[0]);
     }
 
