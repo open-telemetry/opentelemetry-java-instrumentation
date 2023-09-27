@@ -23,7 +23,7 @@ import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstal
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.PatchByteCodeVersionTransformer;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.injection.ClassInjectorImpl;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.ClassInjectorImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
