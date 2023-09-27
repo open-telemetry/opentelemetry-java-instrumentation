@@ -1,7 +1,12 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package indy;
 
-import library.MyProxySuperclass;
 import java.util.concurrent.Callable;
+import library.MyProxySuperclass;
 
 public class ProxyMe extends MyProxySuperclass implements Callable<String> {
 
@@ -9,7 +14,6 @@ public class ProxyMe extends MyProxySuperclass implements Callable<String> {
   public String call() {
     return "Hi from ProxyMe";
   }
-
 
   public static String staticHello() {
     return "Hi from static";

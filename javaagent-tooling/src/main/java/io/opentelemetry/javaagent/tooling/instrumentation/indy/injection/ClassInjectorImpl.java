@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.tooling.instrumentation.indy.injection;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -7,24 +12,21 @@ import io.opentelemetry.javaagent.extension.instrumentation.injection.ProxyInjec
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyBootstrap;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleTypePool;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyProxyFactory;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.pool.TypePool;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.pool.TypePool;
 
-public class IndyClassInjector implements ClassInjector {
+public class ClassInjectorImpl implements ClassInjector {
 
-  /**
-   * The CL which loads the {@link io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule}.
-   */
   private final InstrumentationModule instrumentationModule;
 
   private final Map<String, Function<ClassLoader, byte[]>> classesToInject;
 
   private final IndyProxyFactory proxyFactory;
 
-  public IndyClassInjector(InstrumentationModule module) {
+  public ClassInjectorImpl(InstrumentationModule module) {
     instrumentationModule = module;
     classesToInject = new HashMap<>();
     proxyFactory = IndyBootstrap.getProxyFactory(module);
@@ -39,7 +41,6 @@ public class IndyClassInjector implements ClassInjector {
     return new ProxyBuilder(classToProxy, newProxyName);
   }
 
-
   private class ProxyBuilder implements ProxyInjectionBuilder {
 
     private final String classToProxy;
@@ -52,14 +53,16 @@ public class IndyClassInjector implements ClassInjector {
 
     @Override
     public void inject(InjectionMode mode) {
-      if(mode != InjectionMode.CLASS_ONLY) {
+      if (mode != InjectionMode.CLASS_ONLY) {
         throw new UnsupportedOperationException("Not yet implemented");
       }
-      classesToInject.put(proxyClassName, cl -> {
-        TypePool typePool = IndyModuleTypePool.get(cl, instrumentationModule);
-        TypeDescription proxiedType = typePool.describe(classToProxy).resolve();
-        return proxyFactory.generateProxy(proxiedType, proxyClassName).getBytes();
-      });
+      classesToInject.put(
+          proxyClassName,
+          cl -> {
+            TypePool typePool = IndyModuleTypePool.get(cl, instrumentationModule);
+            TypeDescription proxiedType = typePool.describe(classToProxy).resolve();
+            return proxyFactory.generateProxy(proxiedType, proxyClassName).getBytes();
+          });
     }
   }
 }

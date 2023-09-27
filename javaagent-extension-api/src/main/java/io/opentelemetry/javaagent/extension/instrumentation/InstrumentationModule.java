@@ -164,11 +164,11 @@ public abstract class InstrumentationModule implements Ordered {
   /**
    * Only functional for Modules where {@link #isIndyModule()} returns {@code true}.
    *
-   * Normally, helper and advice classes are loaded in a child classloader of the instrumented classloader.
-   * This method allows to inject classes directly into the instrumented classloader instead.
+   * <p>Normally, helper and advice classes are loaded in a child classloader of the instrumented
+   * classloader. This method allows to inject classes directly into the instrumented classloader
+   * instead.
    *
    * @param injector the builder for injecting classes
    */
-  public void injectClasses(ClassInjector injector) {
-  }
+  public void injectClasses(ClassInjector injector) {}
 }

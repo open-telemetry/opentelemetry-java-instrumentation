@@ -149,7 +149,8 @@ public class HelperInjector implements Transformer {
     for (DynamicType.Unloaded<?> helper : helpers) {
       bytes.put(helper.getTypeDescription().getName(), cl -> helper.getBytes());
     }
-    return new HelperInjector(requestingName, bytes, Collections.emptyList(), null, instrumentation);
+    return new HelperInjector(
+        requestingName, bytes, Collections.emptyList(), null, instrumentation);
   }
 
   public static void setHelperInjectorListener(HelperInjectorListener listener) {
@@ -176,11 +177,13 @@ public class HelperInjector implements Transformer {
             });
       }
     } else {
-      dynamicTypeMap.forEach((name, bytecodeGenerator) -> {
-        //Eagerly compute bytecode to not risk accidentally holding onto targetClassloader for too long
-        byte[] bytecode = bytecodeGenerator.apply(targetClassloader);
-        result.put(name, () -> bytecode);
-      });
+      dynamicTypeMap.forEach(
+          (name, bytecodeGenerator) -> {
+            // Eagerly compute bytecode to not risk accidentally holding onto targetClassloader for
+            // too long
+            byte[] bytecode = bytecodeGenerator.apply(targetClassloader);
+            result.put(name, () -> bytecode);
+          });
     }
 
     return result;

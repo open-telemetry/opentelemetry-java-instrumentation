@@ -55,11 +55,14 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   private volatile MethodHandles.Lookup cachedLookup;
 
   /**
-   * We only weakly reference the instrumented classloader to make sure that we don't prevent it from being GCed.
-   * This only works as long as this {@link InstrumentationModuleClassLoader} has not loaded any classes referencing types from the instrumentedCl yet:
-   * As soon as such a class is loaded, it will strongly reference the instrumentedCl.
+   * We only weakly reference the instrumented classloader to make sure that we don't prevent it
+   * from being GCed. This only works as long as this {@link InstrumentationModuleClassLoader} has
+   * not loaded any classes referencing types from the instrumentedCl yet: As soon as such a class
+   * is loaded, it will strongly reference the instrumentedCl.
    *
-   * For this reason, users of {@link InstrumentationModuleClassLoader} must make sure that they only weakly reference it if it is actually used for classloading and not for resource lookups (e.g. via {@link net.bytebuddy.pool.TypePool}s.
+   * <p>For this reason, users of {@link InstrumentationModuleClassLoader} must make sure that they
+   * only weakly reference it if it is actually used for classloading and not for resource lookups
+   * (e.g. via {@link net.bytebuddy.pool.TypePool}s.
    */
   private final WeakReference<ClassLoader> instrumentedClassloader;
 
@@ -76,8 +79,9 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
 
   private ClassLoader getInstrumentedClassloader() {
     ClassLoader classLoader = instrumentedClassloader.get();
-    if(classLoader == null) {
-      throw new IllegalStateException("The referenced instrumentated ClassLoader has already been GCed!");
+    if (classLoader == null) {
+      throw new IllegalStateException(
+          "The referenced instrumented ClassLoader has already been GCed!");
     }
     return classLoader;
   }

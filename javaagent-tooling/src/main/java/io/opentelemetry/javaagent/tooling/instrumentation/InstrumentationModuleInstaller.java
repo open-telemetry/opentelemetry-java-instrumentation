@@ -23,7 +23,7 @@ import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstal
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.PatchByteCodeVersionTransformer;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.injection.IndyClassInjector;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.injection.ClassInjectorImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
@@ -82,7 +82,7 @@ public final class InstrumentationModuleInstaller {
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
     instrumentationModule.registerHelperResources(helperResourceBuilder);
 
-    IndyClassInjector injectedClassesCollector = new IndyClassInjector(instrumentationModule);
+    ClassInjectorImpl injectedClassesCollector = new ClassInjectorImpl(instrumentationModule);
     instrumentationModule.injectClasses(injectedClassesCollector);
 
     AgentBuilder.Transformer helperInjector =

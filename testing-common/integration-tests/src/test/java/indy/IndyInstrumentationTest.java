@@ -8,10 +8,11 @@ package indy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.util.concurrent.Callable;
+import library.MyProxySuperclass;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({"unused", "MethodCanBeStatic"})
 public class IndyInstrumentationTest {
@@ -113,17 +114,18 @@ public class IndyInstrumentationTest {
     assertThat(globalHelper.getClassLoader().getClass().getName()).endsWith("AgentClassLoader");
   }
 
-
   @Test
   @SuppressWarnings("unchecked")
-  void testProxyInjection() throws Exception{
+  void testProxyInjection() throws Exception {
     Class<?> proxyClass = Class.forName("foo.bar.Proxy");
 
-    //create an instance and invoke static & non-static methods
-    //this verifies that our invokedynamic bootstrapping works for constructors, static and non-static methods
+    // create an instance and invoke static & non-static methods
+    // this verifies that our invokedynamic bootstrapping works for constructors, static and
+    // non-static methods
 
     Object proxyInstance = proxyClass.getConstructor().newInstance();
     assertThat(proxyInstance).isInstanceOf(Callable.class);
+    assertThat(proxyInstance).isInstanceOf(MyProxySuperclass.class);
 
     String invocResult = ((Callable<String>) proxyInstance).call();
     assertThat(invocResult).isEqualTo("Hi from ProxyMe");

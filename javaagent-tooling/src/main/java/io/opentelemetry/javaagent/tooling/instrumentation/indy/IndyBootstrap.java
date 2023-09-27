@@ -130,12 +130,19 @@ public class IndyBootstrap {
       switch (kind) {
         case BOOTSTRAP_KIND_ADVICE:
           // See the getAdviceBootstrapArguments method for the argument definitions
-          return bootstrapAdvice(lookup, adviceMethodName, adviceMethodType, (String) args[1], (String) args[2]);
+          return bootstrapAdvice(
+              lookup, adviceMethodName, adviceMethodType, (String) args[1], (String) args[2]);
         case BOOTSTRAP_KIND_PROXY:
-          //See getProxyFactory for the argument definitions
-          return bootstrapProxyMethod(lookup, adviceMethodName, adviceMethodType, (String) args[1], (String) args[2], (String) args[3]);
+          // See getProxyFactory for the argument definitions
+          return bootstrapProxyMethod(
+              lookup,
+              adviceMethodName,
+              adviceMethodType,
+              (String) args[1],
+              (String) args[2],
+              (String) args[3]);
         default:
-          throw new IllegalArgumentException("Unknown bootstrapping kind: "+kind);
+          throw new IllegalArgumentException("Unknown bootstrapping kind: " + kind);
       }
     } catch (Exception e) {
       logger.log(Level.SEVERE, e.getMessage(), e);
@@ -208,56 +215,63 @@ public class IndyBootstrap {
     MethodHandle target;
     switch (methodKind) {
       case PROXY_KIND_STATIC:
-        target = MethodHandles.publicLookup().findStatic(proxiedClass, proxyMethodName, expectedMethodType);
+        target =
+            MethodHandles.publicLookup()
+                .findStatic(proxiedClass, proxyMethodName, expectedMethodType);
         break;
       case PROXY_KIND_CONSTRUCTOR:
         target =
             MethodHandles.publicLookup()
                 .findConstructor(proxiedClass, expectedMethodType.changeReturnType(void.class))
-                .asType(expectedMethodType); //return type is the proxied class, but proxies expect Object
+                .asType(expectedMethodType); // return type is the proxied class, but proxies expect
+        // Object
         break;
       case PROXY_KIND_VIRTUAL:
         target =
             MethodHandles.publicLookup()
-                .findVirtual(proxiedClass, proxyMethodName, expectedMethodType.dropParameterTypes(0, 1))
-                .asType(expectedMethodType); //first argument type is the proxied class, but proxies expect Object
+                .findVirtual(
+                    proxiedClass, proxyMethodName, expectedMethodType.dropParameterTypes(0, 1))
+                .asType(
+                    expectedMethodType); // first argument type is the proxied class, but proxies
+        // expect Object
         break;
       default:
-        throw new IllegalStateException("unknown proxy method kind: "+methodKind);
+        throw new IllegalStateException("unknown proxy method kind: " + methodKind);
     }
     return new ConstantCallSite(target);
   }
 
   /**
-   * Creates a proxy factory for generating proxies for classes which are loaded by
-   * an {@link InstrumentationModuleClassLoader} for the provided {@link InstrumentationModule}.
+   * Creates a proxy factory for generating proxies for classes which are loaded by an {@link
+   * InstrumentationModuleClassLoader} for the provided {@link InstrumentationModule}.
    *
-   * @param instrumentationModule the isntrumentation module used to load the proxied target classes
-   * @return the factory
+   * @param instrumentationModule the instrumentation module used to load the proxied target classes
+   * @return a factory for generating proxy classes
    */
   public static IndyProxyFactory getProxyFactory(InstrumentationModule instrumentationModule) {
     String moduleName = instrumentationModule.getClass().getName();
-    return new IndyProxyFactory(getIndyBootstrapMethod(), (proxiedType, proxiedMethod) -> {
+    return new IndyProxyFactory(
+        getIndyBootstrapMethod(),
+        (proxiedType, proxiedMethod) -> {
+          String methodKind;
+          if (proxiedMethod.isConstructor()) {
+            methodKind = PROXY_KIND_CONSTRUCTOR;
+          } else if (proxiedMethod.isMethod()) {
+            if (proxiedMethod.isStatic()) {
+              methodKind = PROXY_KIND_STATIC;
+            } else {
+              methodKind = PROXY_KIND_VIRTUAL;
+            }
+          } else {
+            throw new IllegalArgumentException(
+                "Unknown type of method: " + proxiedMethod.getName());
+          }
 
-      String methodKind;
-      if(proxiedMethod.isConstructor()) {
-        methodKind = PROXY_KIND_CONSTRUCTOR;
-      } else if(proxiedMethod.isMethod()) {
-        if(proxiedMethod.isStatic()) {
-          methodKind = PROXY_KIND_STATIC;
-        } else {
-          methodKind = PROXY_KIND_VIRTUAL;
-        }
-      } else {
-        throw new IllegalArgumentException("Unknown type of method: "+proxiedMethod.getName());
-      }
-
-      return Arrays.asList(
-          JavaConstant.Simple.ofLoaded(BOOTSTRAP_KIND_PROXY),
-          JavaConstant.Simple.ofLoaded(moduleName),
-          JavaConstant.Simple.ofLoaded(proxiedType.getName()),
-          JavaConstant.Simple.ofLoaded(methodKind)
-          );
-    });
+          return Arrays.asList(
+              JavaConstant.Simple.ofLoaded(BOOTSTRAP_KIND_PROXY),
+              JavaConstant.Simple.ofLoaded(moduleName),
+              JavaConstant.Simple.ofLoaded(proxiedType.getName()),
+              JavaConstant.Simple.ofLoaded(methodKind));
+        });
   }
 }
