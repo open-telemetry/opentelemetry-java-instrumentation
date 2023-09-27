@@ -7,5 +7,18 @@ package io.opentelemetry.javaagent.extension.instrumentation.injection;
 
 public interface ClassInjector {
 
+  /**
+   * Create a builder for a proxy class which will be injected into the instrumented {@link
+   * ClassLoader}. The generated proxy will contain {@code INVOKEDYNAMIC} instructions to invoke the
+   * proxied class.
+   *
+   * <p>This removes the need for the proxied class and its dependencies to be visible (just like
+   * Advices) to the instrumented ClassLoader.
+   *
+   * @param classToProxy the fully qualified name of the class for which a proxy will be generated
+   * @param newProxyName the fully qualified name to use for the generated proxy
+   * @return a builder for further customizing the proxy. {@link
+   *     ProxyInjectionBuilder#inject(InjectionMode)} must be called to actually inject the proxy.
+   */
   ProxyInjectionBuilder proxyBuilder(String classToProxy, String newProxyName);
 }
