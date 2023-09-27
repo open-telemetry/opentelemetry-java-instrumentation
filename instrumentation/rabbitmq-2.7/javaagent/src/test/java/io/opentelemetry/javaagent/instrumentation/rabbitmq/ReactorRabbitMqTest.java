@@ -22,7 +22,7 @@ import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Sender;
 import reactor.rabbitmq.SenderOptions;
 
-public class ReactorRabbitMqTest extends AbstractRabbitMqTest {
+class ReactorRabbitMqTest extends AbstractRabbitMqTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
