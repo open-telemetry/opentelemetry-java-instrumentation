@@ -16,10 +16,10 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.events.EventEmitter;
 import io.opentelemetry.api.events.GlobalEventEmitterProvider;
-import io.opentelemetry.instrumentation.api.internal.GuardedBy;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import io.opentelemetry.sdk.common.Clock;
 import io.opentelemetry.sdk.internal.DaemonThreadFactory;
+import java.lang.instrument.ClassFileTransformer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -30,19 +30,18 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * {@link JarAnalyzer} processes the {@link ProtectionDomain} of each class loaded and emits an
- * event with metadata about each distinct archive location identified.
+ * {@link JarAnalyzer} is a {@link ClassFileTransformer} which processes the {@link
+ * ProtectionDomain} of each class loaded and emits an event with metadata about each distinct
+ * archive location identified.
  */
-final class JarAnalyzer {
+final class JarAnalyzer implements ClassFileTransformer {
 
   private static final Logger logger = Logger.getLogger(JarAnalyzer.class.getName());
 
-  private static final JarAnalyzer INSTANCE = new JarAnalyzer();
   private static final String JAR_EXTENSION = ".jar";
   private static final String WAR_EXTENSION = ".war";
   private static final String EVENT_DOMAIN_PACKAGE = "package";
@@ -51,48 +50,7 @@ final class JarAnalyzer {
   private final Set<URI> seenUris = new HashSet<>();
   private final BlockingQueue<URL> toProcess = new LinkedBlockingDeque<>();
 
-  /** {@link #handle(ProtectionDomain)} does nothing until {@link #configure(int)} is called. */
-  private Consumer<ProtectionDomain> handler = unused -> {};
-
-  @GuardedBy("this")
-  private Integer jarsPerSecond;
-
-  @GuardedBy("this")
-  private Worker worker;
-
-  private JarAnalyzer() {}
-
-  /** Get the {@link JarAnalyzer} singleton. */
-  public static JarAnalyzer getInstance() {
-    return INSTANCE;
-  }
-
-  /**
-   * Configure the {@link JarAnalyzer}. If not called, {@link #handle(ProtectionDomain)} is a noop.
-   *
-   * @throws IllegalStateException if called multiple times
-   */
-  public synchronized void configure(int jarsPerSecond) {
-    if (this.jarsPerSecond != null) {
-      throw new IllegalStateException("JarAnalyzer has already been configured");
-    }
-    this.jarsPerSecond = jarsPerSecond;
-    this.handler = this::handleInternal;
-  }
-
-  /**
-   * Install {@link OpenTelemetry} and start processing archives if {@link #configure(int)} was
-   * called.
-   *
-   * @throws IllegalStateException if called multiple times
-   */
-  public synchronized void maybeInstall(OpenTelemetry unused) {
-    if (worker != null) {
-      throw new IllegalStateException("JarAnalyzer has already been installed");
-    }
-    if (this.jarsPerSecond == null) {
-      return;
-    }
+  private JarAnalyzer(OpenTelemetry unused, int jarsPerSecond) {
     // TODO(jack-berg): Use OpenTelemetry to obtain EventEmitter when event API is stable
     EventEmitter eventEmitter =
         GlobalEventEmitterProvider.get()
@@ -100,24 +58,34 @@ final class JarAnalyzer {
             .setInstrumentationVersion(JmxRuntimeMetricsUtil.getInstrumentationVersion())
             .setEventDomain(EVENT_DOMAIN_PACKAGE)
             .build();
-    this.worker = new Worker(eventEmitter, toProcess, jarsPerSecond);
+    Worker worker = new Worker(eventEmitter, toProcess, jarsPerSecond);
     Thread workerThread =
         new DaemonThreadFactory(JarAnalyzer.class.getSimpleName() + "_WorkerThread")
             .newThread(worker);
     workerThread.start();
   }
 
+  /** Create {@link JarAnalyzer} and start the worker thread. */
+  public static JarAnalyzer create(OpenTelemetry unused, int jarsPerSecond) {
+    return new JarAnalyzer(unused, jarsPerSecond);
+  }
+
   /**
    * Identify the archive (JAR or WAR) associated with the {@code protectionDomain} and queue it to
    * be processed if its the first time we've seen it.
-   *
-   * <p>NOTE: does nothing if {@link #configure(int)} has not been called.
    */
-  void handle(ProtectionDomain protectionDomain) {
-    this.handler.accept(protectionDomain);
+  @Override
+  public byte[] transform(
+      ClassLoader loader,
+      String className,
+      Class<?> classBeingRedefined,
+      ProtectionDomain protectionDomain,
+      byte[] classfileBuffer) {
+    handle(protectionDomain);
+    return null;
   }
 
-  private void handleInternal(ProtectionDomain protectionDomain) {
+  private void handle(ProtectionDomain protectionDomain) {
     if (protectionDomain == null) {
       return;
     }
