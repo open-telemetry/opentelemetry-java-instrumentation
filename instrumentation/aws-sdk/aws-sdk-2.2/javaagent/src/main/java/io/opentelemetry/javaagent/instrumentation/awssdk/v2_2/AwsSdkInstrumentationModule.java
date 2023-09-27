@@ -10,6 +10,8 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecuti
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.injection.ClassInjector;
+import io.opentelemetry.javaagent.extension.instrumentation.injection.InjectionMode;
 
 @AutoService(InstrumentationModule.class)
 public class AwsSdkInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
@@ -24,6 +26,15 @@ public class AwsSdkInstrumentationModule extends AbstractAwsSdkInstrumentationMo
   @Override
   public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
     helperResourceBuilder.register("software/amazon/awssdk/global/handlers/execution.interceptors");
+  }
+
+  @Override
+  public void injectClasses(ClassInjector injector) {
+    injector
+        .proxyBuilder(
+            "io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor",
+            "io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor")
+        .inject(InjectionMode.CLASS_ONLY);
   }
 
   @Override
