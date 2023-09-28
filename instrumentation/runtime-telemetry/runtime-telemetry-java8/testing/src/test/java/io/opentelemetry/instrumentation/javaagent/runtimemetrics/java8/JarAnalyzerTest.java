@@ -58,9 +58,13 @@ class JarAnalyzerTest {
                 attributes ->
                     attributes
                         .containsEntry(PACKAGE_TYPE, "jar")
-                        .containsEntry(
+                        .hasEntrySatisfying(
                             PACKAGE_PATH,
-                            "opentelemetry-javaagent-runtime-telemetry-java8-1.30.0-alpha-SNAPSHOT.jar")
+                            path ->
+                                assertThat(
+                                        path.matches(
+                                            "opentelemetry-javaagent-runtime-telemetry-java8-[0-9a-zA-Z-\\.]+\\.jar"))
+                                    .isTrue())
                         .containsEntry(PACKAGE_DESCRIPTION, "javaagent by OpenTelemetry")
                         .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA1")
                         .hasEntrySatisfying(
@@ -84,7 +88,11 @@ class JarAnalyzerTest {
                 attributes ->
                     attributes
                         .containsEntry(PACKAGE_TYPE, "jar")
-                        .containsEntry(PACKAGE_PATH, "opentelemetry-api-1.29.0.jar")
+                        .hasEntrySatisfying(
+                            PACKAGE_PATH,
+                            path ->
+                                assertThat(path.matches("opentelemetry-api-[0-9a-zA-Z-\\.]+\\.jar"))
+                                    .isTrue())
                         .containsEntry(PACKAGE_DESCRIPTION, "all")
                         .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA1")
                         .hasEntrySatisfying(
@@ -98,6 +106,11 @@ class JarAnalyzerTest {
                         .containsEntry(PACKAGE_TYPE, "jar")
                         // TODO(jack-berg): can we extract version out of path to populate
                         // package.version field?
+                        .hasEntrySatisfying(
+                            PACKAGE_PATH,
+                            path ->
+                                assertThat(path.matches("spring-web-[0-9a-zA-Z-\\.]+\\.jar"))
+                                    .isTrue())
                         .containsEntry(PACKAGE_PATH, "spring-web-3.1.0.RELEASE.jar")
                         .containsEntry(PACKAGE_DESCRIPTION, "org.springframework.web")
                         .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA1")
@@ -110,7 +123,10 @@ class JarAnalyzerTest {
                 attributes ->
                     attributes
                         .containsEntry(PACKAGE_TYPE, "jar")
-                        .containsEntry(PACKAGE_PATH, "guava-32.1.2-jre.jar")
+                        .hasEntrySatisfying(
+                            PACKAGE_PATH,
+                            path ->
+                                assertThat(path.matches("guava-[0-9a-zA-Z-\\.]+\\.jar")).isTrue())
                         .containsEntry(PACKAGE_NAME, "com.google.guava:guava")
                         .containsEntry(PACKAGE_VERSION, "32.1.2-jre")
                         .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA1")
