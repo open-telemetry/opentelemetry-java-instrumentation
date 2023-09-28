@@ -49,22 +49,13 @@ class JarDetails {
               throw new IllegalStateException(e);
             }
           });
-  private static final ThreadLocal<MessageDigest> SHA512 =
-      ThreadLocal.withInitial(
-          () -> {
-            try {
-              return MessageDigest.getInstance("SHA-512");
-            } catch (NoSuchAlgorithmException e) {
-              throw new IllegalStateException(e);
-            }
-          });
 
   private final URL url;
   protected final JarFile jarFile;
   private final Properties pom;
   private final Manifest manifest;
 
-  private JarDetails(URL url, JarFile jarFile) {
+  private JarDetails(URL url, JarFile jarFile) throws IOException {
     this.url = url;
     this.jarFile = jarFile;
     this.pom = getPom();
@@ -110,6 +101,7 @@ class JarDetails {
     return null;
   }
 
+  /** Returns the maven package name in the format {@code groupId:artifactId}. */
   @Nullable
   String packageName() {
     if (pom == null) {
@@ -123,6 +115,7 @@ class JarDetails {
     return null;
   }
 
+  /** Returns the version from the pom file, or null if not found. */
   @Nullable
   String version() {
     if (pom == null) {
@@ -157,14 +150,10 @@ class JarDetails {
     return packageDescription;
   }
 
+  /** Returns the SHA1 hash of this file. */
   @Nullable
   String computeSha1() {
     return computeDigest(SHA1.get());
-  }
-
-  @Nullable
-  String computeSha512() {
-    return computeDigest(SHA512.get());
   }
 
   private String computeDigest(MessageDigest md) {
@@ -180,8 +169,8 @@ class JarDetails {
   }
 
   /**
-   * Open an input stream for the given url. If the url points to a jar within a jar, return an
-   * input stream starting at the embedded jar.
+   * Returns An open input stream for the associated url. It is the caller's responsibility to close
+   * the stream on completion.
    */
   protected InputStream getInputStream() throws IOException {
     return url.openStream();
@@ -201,24 +190,20 @@ class JarDetails {
    * are found or there is an error reading the file, return null.
    */
   @Nullable
-  protected Properties getPom() {
+  protected Properties getPom() throws IOException {
     Properties pom = null;
-    try {
-      for (Enumeration<JarEntry> entries = jarFile.entries(); entries.hasMoreElements(); ) {
-        JarEntry jarEntry = entries.nextElement();
-        if (jarEntry.getName().startsWith("META-INF/maven")
-            && jarEntry.getName().endsWith("pom.properties")) {
-          if (pom != null) {
-            // we've found multiple pom files. bail!
-            return null;
-          }
-          Properties props = new Properties();
-          props.load(jarFile.getInputStream(jarEntry));
-          pom = props;
+    for (Enumeration<JarEntry> entries = jarFile.entries(); entries.hasMoreElements(); ) {
+      JarEntry jarEntry = entries.nextElement();
+      if (jarEntry.getName().startsWith("META-INF/maven")
+          && jarEntry.getName().endsWith("pom.properties")) {
+        if (pom != null) {
+          // we've found multiple pom files. bail!
+          return null;
         }
+        Properties props = new Properties();
+        props.load(jarFile.getInputStream(jarEntry));
+        pom = props;
       }
-    } catch (IOException e) {
-      return null;
     }
     return pom;
   }
@@ -227,15 +212,11 @@ class JarDetails {
 
     private final JarEntry jarEntry;
 
-    private Embedded(URL url, JarFile jarFile, JarEntry jarEntry) {
+    private Embedded(URL url, JarFile jarFile, JarEntry jarEntry) throws IOException {
       super(url, jarFile);
       this.jarEntry = jarEntry;
     }
 
-    /**
-     * Open an input stream for the given url. If the url points to a jar within a jar, return an
-     * input stream starting at the embedded jar.
-     */
     @Override
     protected InputStream getInputStream() throws IOException {
       return jarFile.getInputStream(jarEntry);
@@ -250,13 +231,9 @@ class JarDetails {
       }
     }
 
-    /**
-     * Returns the values from pom.properties if this file is found. If multiple pom.properties
-     * files are found, return null.
-     */
     @Override
     @Nullable
-    protected Properties getPom() {
+    protected Properties getPom() throws IOException {
       Properties pom = null;
       // Need to navigate inside the embedded jar which can't be done via random access.
       try (JarInputStream jarFile = new JarInputStream(getInputStream())) {
@@ -275,8 +252,6 @@ class JarDetails {
           }
         }
         return pom;
-      } catch (IOException e) {
-        return null;
       }
     }
   }
