@@ -12,10 +12,16 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 abstract class AbstractLettuceClientTest {
+
+  protected static final Logger logger = LoggerFactory.getLogger(AbstractLettuceClientTest.class);
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -31,7 +37,10 @@ abstract class AbstractLettuceClientTest {
   static final DockerImageName containerImage = DockerImageName.parse("redis:6.2.3-alpine");
 
   protected static final GenericContainer<?> redisServer =
-      new GenericContainer<>(containerImage).withExposedPorts(6379);
+      new GenericContainer<>(containerImage)
+          .withExposedPorts(6379)
+          .withLogConsumer(new Slf4jLogConsumer(logger))
+          .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
 
   protected static RedisClient redisClient;
 
@@ -43,7 +52,11 @@ abstract class AbstractLettuceClientTest {
   protected static String embeddedDbUri;
 
   protected static StatefulRedisConnection<String, String> newContainerConnection() {
-    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
+    GenericContainer<?> server =
+        new GenericContainer<>(containerImage)
+            .withExposedPorts(6379)
+            .withLogConsumer(new Slf4jLogConsumer(logger))
+            .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
     server.start();
     cleanup.deferCleanup(server::stop);
 
