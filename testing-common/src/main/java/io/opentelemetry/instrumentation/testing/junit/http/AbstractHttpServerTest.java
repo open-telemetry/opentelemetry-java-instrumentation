@@ -572,14 +572,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             }
 
             int parentIndex = spanAssertions.size() - 2;
-            if (options.hasHandlerAsControllerParentSpan.test(endpoint)) {
-              parentIndex = parentIndex + 1;
-            }
-            int finalParentIndex = parentIndex;
             spanAssertions.add(
                 span ->
                     assertIndexedControllerSpan(span, requestId)
-                        .hasParent(trace.getSpan(finalParentIndex)));
+                        .hasParent(trace.getSpan(parentIndex)));
 
             trace.hasSpansSatisfyingExactly(spanAssertions);
           });
@@ -646,8 +642,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
             if (endpoint != NOT_FOUND) {
               int parentIndex = 0;
-              if (options.hasHandlerSpan.test(endpoint)
-                  && options.hasHandlerAsControllerParentSpan.test(endpoint)) {
+              if (options.hasHandlerSpan.test(endpoint)) {
                 parentIndex = spanAssertions.size() - 1;
               }
               int finalParentIndex = parentIndex;
