@@ -34,8 +34,11 @@ import javax.annotation.Nullable;
  * archive, this class provides methods which expose useful information about it.
  */
 class JarDetails {
+  static final String JAR_EXTENSION = "jar";
+  static final String WAR_EXTENSION = "war";
+  static final String EAR_EXTENSION = "ear";
   private static final Map<String, String> EMBEDDED_FORMAT_TO_EXTENSION =
-      Stream.of("ear", "war", "jar")
+      Stream.of(JAR_EXTENSION, WAR_EXTENSION, EAR_EXTENSION)
           .collect(
               collectingAndThen(
                   toMap(ext -> ('.' + ext + "!/"), identity()),
@@ -54,12 +57,14 @@ class JarDetails {
   protected final JarFile jarFile;
   private final Properties pom;
   private final Manifest manifest;
+  private final String sha1Checksum;
 
   private JarDetails(URL url, JarFile jarFile) throws IOException {
     this.url = url;
     this.jarFile = jarFile;
     this.pom = getPom();
     this.manifest = getManifest();
+    this.sha1Checksum = computeDigest(SHA1.get());
   }
 
   static JarDetails forUrl(URL url) throws IOException {
@@ -74,14 +79,18 @@ class JarDetails {
               new JarFile(
                   urlString.substring("jar:file:".length(), index + 1 + entry.getValue().length()));
           JarEntry jarEntry = jarFile.getJarEntry(targetEntry);
-          return new Embedded(url, jarFile, jarEntry);
+          return new EmbeddedJarDetails(url, jarFile, jarEntry);
         }
       }
     }
     return new JarDetails(url, new JarFile(url.getFile()));
   }
 
-  /** Returns the archive file name, e.g. {@code jackson-datatype-jsr310-2.15.2.jar}. */
+  /**
+   * Returns the archive file name, e.g. {@code jackson-datatype-jsr310-2.15.2.jar}. Returns null if
+   * unable to identify the file name from {@link #url}.
+   */
+  @Nullable
   String packagePath() {
     String path = url.getFile();
     int start = path.lastIndexOf(File.separator);
@@ -91,7 +100,11 @@ class JarDetails {
     return null;
   }
 
-  /** Returns the extension of the archive, e.g. {@code jar}. */
+  /**
+   * Returns the extension of the archive, e.g. {@code jar}. Returns null if unable to identify the
+   * extension from {@link #url}
+   */
+  @Nullable
   String packageType() {
     String path = url.getFile();
     int extensionStart = path.lastIndexOf(".");
@@ -101,7 +114,11 @@ class JarDetails {
     return null;
   }
 
-  /** Returns the maven package name in the format {@code groupId:artifactId}. */
+  /**
+   * Returns the maven package name in the format {@code groupId:artifactId}, e.g. {@code
+   * com.fasterxml.jackson.datatype:jackson-datatype-jsr310}. Returns null if {@link #pom} is not
+   * found, or is missing groupId or artifactId properties.
+   */
   @Nullable
   String packageName() {
     if (pom == null) {
@@ -115,7 +132,10 @@ class JarDetails {
     return null;
   }
 
-  /** Returns the version from the pom file, or null if not found. */
+  /**
+   * Returns the version from the pom file, e.g. {@code 2.15.2}. Returns null if {@link #pom} is not
+   * found or is missing version property.
+   */
   @Nullable
   String version() {
     if (pom == null) {
@@ -130,7 +150,8 @@ class JarDetails {
 
   /**
    * Returns the package description from the jar manifest "{Implementation-Title} by
-   * {Implementation-Vendor}", e.g. {@code Jackson datatype: JSR310 by FasterXML}.
+   * {Implementation-Vendor}", e.g. {@code Jackson datatype: JSR310 by FasterXML}. Returns null if
+   * {@link #manifest} is not found.
    */
   @Nullable
   String packageDescription() {
@@ -150,21 +171,18 @@ class JarDetails {
     return packageDescription;
   }
 
-  /** Returns the SHA1 hash of this file. */
-  @Nullable
+  /** Returns the SHA1 hash of this file, e.g. {@code 30d16ec2aef6d8094c5e2dce1d95034ca8b6cb42}. */
   String computeSha1() {
-    return computeDigest(SHA1.get());
+    return sha1Checksum;
   }
 
-  private String computeDigest(MessageDigest md) {
+  private String computeDigest(MessageDigest md) throws IOException {
     try (InputStream inputStream = getInputStream()) {
       DigestInputStream dis = new DigestInputStream(inputStream, md);
       byte[] buffer = new byte[8192];
       while (dis.read(buffer) != -1) {}
       byte[] digest = md.digest();
       return new BigInteger(1, digest).toString(16);
-    } catch (IOException e) {
-      return null;
     }
   }
 
@@ -208,11 +226,11 @@ class JarDetails {
     return pom;
   }
 
-  private static class Embedded extends JarDetails {
+  private static class EmbeddedJarDetails extends JarDetails {
 
     private final JarEntry jarEntry;
 
-    private Embedded(URL url, JarFile jarFile, JarEntry jarEntry) throws IOException {
+    private EmbeddedJarDetails(URL url, JarFile jarFile, JarEntry jarEntry) throws IOException {
       super(url, jarFile);
       this.jarEntry = jarEntry;
     }

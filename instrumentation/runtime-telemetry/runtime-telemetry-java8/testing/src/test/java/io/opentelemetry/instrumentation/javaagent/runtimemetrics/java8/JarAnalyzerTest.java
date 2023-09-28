@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8;
 
-import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.PACKAGE_CHECKSUM;
-import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.PACKAGE_CHECKSUM_ALGORITHM;
-import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.PACKAGE_DESCRIPTION;
-import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.PACKAGE_NAME;
-import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.PACKAGE_PATH;
-import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.PACKAGE_TYPE;
-import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzerUtil.PACKAGE_VERSION;
+import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzer.PACKAGE_CHECKSUM;
+import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzer.PACKAGE_CHECKSUM_ALGORITHM;
+import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzer.PACKAGE_DESCRIPTION;
+import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzer.PACKAGE_NAME;
+import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzer.PACKAGE_PATH;
+import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzer.PACKAGE_TYPE;
+import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzer.PACKAGE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;

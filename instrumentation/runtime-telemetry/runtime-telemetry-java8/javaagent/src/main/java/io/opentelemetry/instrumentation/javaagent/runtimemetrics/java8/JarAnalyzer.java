@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8;
 
+import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarDetails.EAR_EXTENSION;
+import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarDetails.JAR_EXTENSION;
+import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarDetails.WAR_EXTENSION;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -14,6 +18,7 @@ import io.opentelemetry.api.events.GlobalEventEmitterProvider;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import io.opentelemetry.sdk.common.Clock;
 import io.opentelemetry.sdk.internal.DaemonThreadFactory;
+import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -37,8 +42,6 @@ final class JarAnalyzer implements ClassFileTransformer {
 
   private static final Logger logger = Logger.getLogger(JarAnalyzer.class.getName());
 
-  private static final String JAR_EXTENSION = ".jar";
-  private static final String WAR_EXTENSION = ".war";
   private static final String EVENT_DOMAIN_PACKAGE = "package";
   private static final String EVENT_NAME_INFO = "info";
   static final AttributeKey<String> PACKAGE_NAME = AttributeKey.stringKey("package.name");
@@ -121,7 +124,9 @@ final class JarAnalyzer implements ClassFileTransformer {
       logger.log(Level.FINEST, "Skipping processing non-archive code location: {0}", archiveUrl);
       return;
     }
-    if (!file.endsWith(JAR_EXTENSION) && !file.endsWith(WAR_EXTENSION)) {
+    if (!file.endsWith(JAR_EXTENSION)
+        && !file.endsWith(WAR_EXTENSION)
+        && !file.endsWith(EAR_EXTENSION)) {
       logger.log(Level.INFO, "Skipping processing unrecognized code location: {0}", archiveUrl);
       return;
     }
@@ -164,8 +169,13 @@ final class JarAnalyzer implements ClassFileTransformer {
         if (archiveUrl == null) {
           continue;
         }
-        // TODO(jack-berg): add ability to optionally re-process urls periodically to re-emit events
-        processUrl(eventEmitter, archiveUrl);
+        try {
+          // TODO(jack-berg): add ability to optionally re-process urls periodically to re-emit
+          // events
+          processUrl(eventEmitter, archiveUrl);
+        } catch (Throwable e) {
+          logger.log(Level.WARNING, "Unexpected error processing archive URL: " + archiveUrl, e);
+        }
       }
       logger.warning("JarAnalyzer stopped");
     }
@@ -179,18 +189,39 @@ final class JarAnalyzer implements ClassFileTransformer {
     JarDetails jarDetails;
     try {
       jarDetails = JarDetails.forUrl(archiveUrl);
-    } catch (Exception e) {
-      logger.log(Level.WARNING, "Error reading package for archive URL: {0}" + archiveUrl, e);
+    } catch (IOException e) {
+      logger.log(Level.WARNING, "Error reading package for archive URL: " + archiveUrl, e);
       return;
     }
     AttributesBuilder builder = Attributes.builder();
 
-    builder.put(PACKAGE_PATH, jarDetails.packagePath());
-    builder.put(PACKAGE_TYPE, jarDetails.packageType());
-    builder.put(PACKAGE_NAME, jarDetails.packageName());
-    builder.put(PACKAGE_VERSION, jarDetails.version());
-    builder.put(PACKAGE_DESCRIPTION, jarDetails.packageDescription());
-    builder.put(PACKAGE_CHECKSUM, jarDetails.computeSha1());
+    String packagePath = jarDetails.packagePath();
+    if (packagePath != null) {
+      builder.put(PACKAGE_PATH, packagePath);
+    }
+
+    String packageType = jarDetails.packageType();
+    if (packageType != null) {
+      builder.put(PACKAGE_TYPE, packageType);
+    }
+
+    String packageName = jarDetails.packageName();
+    if (packageName != null) {
+      builder.put(PACKAGE_NAME, packageName);
+    }
+
+    String packageVersion = jarDetails.version();
+    if (packageVersion != null) {
+      builder.put(PACKAGE_VERSION, packageVersion);
+    }
+
+    String packageDescription = jarDetails.packageDescription();
+    if (packageDescription != null) {
+      builder.put(PACKAGE_DESCRIPTION, packageDescription);
+    }
+
+    String packageChecksum = jarDetails.computeSha1();
+    builder.put(PACKAGE_CHECKSUM, packageChecksum);
     builder.put(PACKAGE_CHECKSUM_ALGORITHM, "SHA1");
 
     eventEmitter.emit(EVENT_NAME_INFO, builder.build());
