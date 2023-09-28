@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import io.opentelemetry.javaagent.tooling.util.ByteArrayUrl;
+import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.utility.StreamDrainer;
 
 /**
@@ -15,7 +17,7 @@ import net.bytebuddy.utility.StreamDrainer;
  * implementation is based on {@link net.bytebuddy.dynamic.ClassFileLocator.ForClassLoader}, with
  * the difference that it preserves the original classfile resource URL.
  */
-abstract class ClassCopySource {
+public abstract class ClassCopySource {
 
   private ClassCopySource() {}
 
@@ -69,6 +71,30 @@ abstract class ClassCopySource {
    */
   public static ClassCopySource create(Class<?> loadedClass) {
     return create(loadedClass.getName(), loadedClass.getClassLoader());
+  }
+
+
+  /**
+   * Creates a {@link ClassCopySource} for a runtime-generated type.
+   * It will also provide an artificially generated {@link URL} pointing to the in-memory bytecode.
+   *
+   * @param className the name of the class represented by the provided bytecode
+   * @param bytecode the bytecode of the class
+   * @return the {@link ClassCopySource} referring to this dynamically generated class
+   */
+  public static ClassCopySource create(String className, byte[] bytecode) {
+    return new ForDynamicType(className, bytecode);
+  }
+
+  /**
+   * Invokes {@link #create(String, byte[])} for the provided dynamic type.
+   *
+   * @param dynamicType the type to generate the {@link ClassCopySource}
+   * @return the {@link ClassCopySource} referring to this dynamically generated type
+   */
+  public static ClassCopySource create(DynamicType.Unloaded<?> dynamicType) {
+    String className = dynamicType.getTypeDescription().getName();
+    return new ForDynamicType(className, dynamicType.getBytes());
   }
 
   private static class Lazy extends ClassCopySource {
@@ -132,4 +158,41 @@ abstract class ClassCopySource {
       return this;
     }
   }
+
+
+  private static class ForDynamicType extends ClassCopySource {
+
+    private final byte[] byteCode;
+    private final String className;
+    private volatile URL generatedUrl;
+
+
+    private ForDynamicType(String className, byte[] byteCode) {
+      this.byteCode = byteCode;
+      this.className = className;
+    }
+
+    @Override
+    public URL getUrl() {
+      if (generatedUrl == null) {
+        synchronized (this) {
+          if (generatedUrl == null) {
+            generatedUrl = ByteArrayUrl.create(className, byteCode);
+          }
+        }
+      }
+      return generatedUrl;
+    }
+
+    @Override
+    public byte[] getBytecode() {
+      return byteCode;
+    }
+
+    @Override
+    public ClassCopySource cached() {
+      return this; //this type already holds the bytecode in-memory
+    }
+  }
+
 }
