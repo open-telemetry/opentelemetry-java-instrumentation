@@ -290,7 +290,7 @@ public class SpringWebfluxTest {
                 },
                 span ->
                     span.hasName("tracedMethod")
-                        .hasParent(trace.getSpan(0))
+                        .hasParent(trace.getSpan(1))
                         .hasTotalAttributeCount(0)));
   }
 
@@ -410,7 +410,7 @@ public class SpringWebfluxTest {
                 },
                 span ->
                     span.hasName("tracedMethod")
-                        .hasParent(trace.getSpan(parameter.annotatedMethod != null ? 0 : 1))
+                        .hasParent(trace.getSpan(1))
                         .hasTotalAttributeCount(0)));
   }
 
