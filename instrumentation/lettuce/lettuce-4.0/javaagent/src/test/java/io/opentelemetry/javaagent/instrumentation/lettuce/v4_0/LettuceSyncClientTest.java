@@ -20,9 +20,7 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.SemanticAttributes;
-import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,6 +29,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
@@ -51,7 +51,10 @@ class LettuceSyncClientTest {
       new ClientOptions.Builder().autoReconnect(false).build();
 
   private static final GenericContainer<?> redisServer =
-      new GenericContainer<>(containerImage).withExposedPorts(6379);
+      new GenericContainer<>(containerImage)
+          .withExposedPorts(6379)
+          .withLogConsumer(new Slf4jLogConsumer(logger))
+          .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
 
   private static String host;
   private static int port;
@@ -90,8 +93,7 @@ class LettuceSyncClientTest {
     syncCommands.hmset("TESTHM", testHashMap);
 
     // 2 sets + 1 connect trace
-    List<List<SpanData>> traces = testing.waitForTraces(3);
-    logger.info("setUp traces {}", traces);
+    testing.waitForTraces(3);
     testing.clearData();
   }
 

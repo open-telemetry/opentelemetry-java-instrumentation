@@ -45,11 +45,16 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class LettuceAsyncClientTest {
+  private static final Logger logger = LoggerFactory.getLogger(LettuceAsyncClientTest.class);
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -65,7 +70,10 @@ class LettuceAsyncClientTest {
       new ClientOptions.Builder().autoReconnect(false).build();
 
   private static final GenericContainer<?> redisServer =
-      new GenericContainer<>(containerImage).withExposedPorts(6379);
+      new GenericContainer<>(containerImage)
+          .withExposedPorts(6379)
+          .withLogConsumer(new Slf4jLogConsumer(logger))
+          .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
 
   private static String host;
   private static int port;
