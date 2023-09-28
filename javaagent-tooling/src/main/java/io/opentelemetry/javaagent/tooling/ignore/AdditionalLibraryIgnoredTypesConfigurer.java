@@ -154,7 +154,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.core.task.")
         .allowClass("org.springframework.core.DecoratingClassLoader")
         .allowClass("org.springframework.core.OverridingClassLoader")
-        .allowClass("org.springframework.core.ReactiveAdapterRegistry$EmptyCompletableFuture");
+        .allowClass("org.springframework.core.ReactiveAdapterRegistry$EmptyCompletableFuture")
+        .allowClass("org.springframework.core.io.buffer.DataBufferUtils$");
 
     builder
         .ignoreClass("org.springframework.instrument.")
