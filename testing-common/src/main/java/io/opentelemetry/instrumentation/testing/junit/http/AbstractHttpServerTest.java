@@ -571,7 +571,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                   span -> assertHandlerSpan(span, "GET", endpoint).hasParent(trace.getSpan(1)));
             }
 
-            int parentIndex = spanAssertions.size() - 2;
+            int parentIndex = spanAssertions.size() - 1;
             spanAssertions.add(
                 span ->
                     assertIndexedControllerSpan(span, requestId)
