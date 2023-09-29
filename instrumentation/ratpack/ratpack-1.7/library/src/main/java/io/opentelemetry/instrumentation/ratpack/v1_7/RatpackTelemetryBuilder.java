@@ -19,7 +19,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +46,14 @@ public final class RatpackTelemetryBuilder {
   private final HttpServerAttributesExtractorBuilder<Request, Response>
       httpServerAttributesExtractorBuilder =
           HttpServerAttributesExtractor.builder(RatpackHttpAttributesGetter.INSTANCE);
+
+  private final HttpSpanNameExtractorBuilder<RequestSpec> httpClientSpanNameExtractorBuilder =
+      HttpSpanNameExtractor.builder(RatpackHttpClientAttributesGetter.INSTANCE);
+  private final HttpSpanNameExtractorBuilder<Request> httpServerSpanNameExtractorBuilder =
+      HttpSpanNameExtractor.builder(RatpackHttpAttributesGetter.INSTANCE);
+
+  private final HttpServerRouteBuilder<Request> httpServerRouteBuilder =
+      HttpServerRoute.builder(RatpackHttpAttributesGetter.INSTANCE);
 
   private final List<AttributesExtractor<? super RequestSpec, ? super HttpResponse>>
       additionalHttpClientExtractors = new ArrayList<>();
@@ -135,6 +145,9 @@ public final class RatpackTelemetryBuilder {
   public RatpackTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     httpClientAttributesExtractorBuilder.setKnownMethods(knownMethods);
     httpServerAttributesExtractorBuilder.setKnownMethods(knownMethods);
+    httpClientSpanNameExtractorBuilder.setKnownMethods(knownMethods);
+    httpServerSpanNameExtractorBuilder.setKnownMethods(knownMethods);
+    httpServerRouteBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -174,12 +187,12 @@ public final class RatpackTelemetryBuilder {
 
     InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(
-                openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributes))
+                openTelemetry, INSTRUMENTATION_NAME, httpServerSpanNameExtractorBuilder.build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
             .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpServerMetrics.get())
-            .addContextCustomizer(HttpServerRoute.create(httpAttributes));
+            .addContextCustomizer(httpServerRouteBuilder.build());
     if (emitExperimentalHttpServerMetrics) {
       builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
@@ -191,7 +204,7 @@ public final class RatpackTelemetryBuilder {
 
     InstrumenterBuilder<RequestSpec, HttpResponse> builder =
         Instrumenter.<RequestSpec, HttpResponse>builder(
-                openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributes))
+                openTelemetry, INSTRUMENTATION_NAME, httpClientSpanNameExtractorBuilder.build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
             .addAttributesExtractor(httpClientAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalHttpClientExtractors)

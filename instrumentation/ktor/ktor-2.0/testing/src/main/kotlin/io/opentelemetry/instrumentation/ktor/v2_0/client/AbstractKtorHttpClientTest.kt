@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import kotlinx.coroutines.*
 import java.net.URI
 
@@ -30,12 +30,11 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
 
   abstract fun HttpClientConfig<*>.installTracing()
 
-  override fun buildRequest(requestMethod: String, uri: URI, requestHeaders: MutableMap<String, String>) =
-    HttpRequestBuilder(uri.toURL()).apply {
-      method = HttpMethod.parse(requestMethod)
+  override fun buildRequest(requestMethod: String, uri: URI, requestHeaders: MutableMap<String, String>) = HttpRequestBuilder(uri.toURL()).apply {
+    method = HttpMethod.parse(requestMethod)
 
-      requestHeaders.forEach { (header, value) -> headers.append(header, value) }
-    }
+    requestHeaders.forEach { (header, value) -> headers.append(header, value) }
+  }
 
   override fun sendRequest(request: HttpRequestBuilder, method: String, uri: URI, headers: MutableMap<String, String>) = runBlocking {
     client.request(request).status.value
@@ -58,6 +57,7 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
     }
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   override fun configure(optionsBuilder: HttpClientTestOptions.Builder) {
     with(optionsBuilder) {
       disableTestReadTimeout()

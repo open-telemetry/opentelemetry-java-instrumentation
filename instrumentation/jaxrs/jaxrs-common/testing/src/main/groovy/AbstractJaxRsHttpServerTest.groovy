@@ -8,7 +8,7 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Unroll
 
 import java.util.concurrent.TimeUnit
@@ -229,7 +229,6 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
                   String traceID = null,
                   String parentID = null,
                   String method = "GET",
-                  Long responseContentLength = null,
                   ServerEndpoint endpoint = SUCCESS,
                   String spanID = null) {
     serverSpan(trace, index, traceID, parentID, spanID, method,

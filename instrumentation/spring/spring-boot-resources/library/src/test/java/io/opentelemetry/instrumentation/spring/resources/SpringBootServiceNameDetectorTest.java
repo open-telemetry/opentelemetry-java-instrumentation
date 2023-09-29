@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.resources;
 
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME;
+import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +22,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -31,7 +33,7 @@ class SpringBootServiceNameDetectorTest {
   static final String PROPS = "application.properties";
   static final String APPLICATION_YML = "application.yml";
   @Mock ConfigProperties config;
-  @Mock SpringBootServiceNameDetector.SystemHelper system;
+  @Mock SystemHelper system;
 
   @Test
   void findByEnvVar() {
@@ -66,18 +68,19 @@ class SpringBootServiceNameDetectorTest {
     }
   }
 
-  @Test
-  void classpathApplicationYaml() {
-    when(system.openClasspathResource(APPLICATION_YML))
-        .thenReturn(openClasspathResource(APPLICATION_YML));
+  @ParameterizedTest
+  @ValueSource(strings = {"application.yaml", APPLICATION_YML})
+  void classpathApplicationYaml(String fileName) {
+    when(system.openClasspathResource(fileName)).thenReturn(openClasspathResource(APPLICATION_YML));
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource result = guesser.createResource(config);
     expectServiceName(result, "cat-store");
   }
 
-  @Test
-  void classpathApplicationYamlContainingMultipleYamlDefinitions() {
-    when(system.openClasspathResource(APPLICATION_YML))
+  @ParameterizedTest
+  @ValueSource(strings = {"application.yaml", APPLICATION_YML})
+  void classpathApplicationYamlContainingMultipleYamlDefinitions(String fileName) {
+    when(system.openClasspathResource(fileName))
         .thenReturn(
             ClassLoader.getSystemClassLoader().getResourceAsStream("application-multi.yml"));
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
@@ -85,14 +88,15 @@ class SpringBootServiceNameDetectorTest {
     expectServiceName(result, "cat-store");
   }
 
-  @Test
-  void yamlFileInCurrentDir() throws Exception {
-    Path yamlPath = Paths.get(APPLICATION_YML);
+  @ParameterizedTest
+  @ValueSource(strings = {"application.yaml", APPLICATION_YML})
+  void yamlFileInCurrentDir(String fileName) throws Exception {
+    Path yamlPath = Paths.get(fileName);
     try {
       URL url = getClass().getClassLoader().getResource(APPLICATION_YML);
       String content = readString(Paths.get(url.toURI()));
       writeString(yamlPath, content);
-      when(system.openFile(APPLICATION_YML)).thenCallRealMethod();
+      when(system.openFile(fileName)).thenCallRealMethod();
       SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
       Resource result = guesser.createResource(config);
       expectServiceName(result, "cat-store");
@@ -117,7 +121,7 @@ class SpringBootServiceNameDetectorTest {
   }
 
   @Test
-  void getFromCommandlineArgsWithSystemProperty() throws Exception {
+  void getFromCommandlineArgsWithSystemProperty() {
     when(system.getProperty("sun.java.command"))
         .thenReturn("/bin/java sweet-spring.jar --spring.application.name=bullpen --quiet=never");
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);

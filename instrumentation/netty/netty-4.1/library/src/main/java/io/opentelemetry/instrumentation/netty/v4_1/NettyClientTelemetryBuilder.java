@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
@@ -29,6 +30,8 @@ public final class NettyClientTelemetryBuilder {
 
   private Consumer<HttpClientAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse>>
       extractorConfigurer = builder -> {};
+  private Consumer<HttpSpanNameExtractorBuilder<HttpRequestAndChannel>>
+      spanNameExtractorConfigurer = builder -> {};
   private boolean emitExperimentalHttpClientMetrics = false;
 
   NettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -91,6 +94,8 @@ public final class NettyClientTelemetryBuilder {
   public NettyClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     extractorConfigurer =
         extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
+    spanNameExtractorConfigurer =
+        spanNameExtractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
     return this;
   }
 
@@ -117,6 +122,7 @@ public final class NettyClientTelemetryBuilder {
                 NettyConnectionInstrumentationFlag.DISABLED,
                 PeerServiceResolver.create(Collections.emptyMap()),
                 emitExperimentalHttpClientMetrics)
-            .createHttpInstrumenter(extractorConfigurer, additionalAttributesExtractors));
+            .createHttpInstrumenter(
+                extractorConfigurer, spanNameExtractorConfigurer, additionalAttributesExtractors));
   }
 }

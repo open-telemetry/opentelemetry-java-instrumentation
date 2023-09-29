@@ -12,7 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
@@ -61,9 +61,9 @@ class ServerAttributesExtractorInetSocketAddressTest {
     extractor.onEnd(endAttributes, Context.root(), address, null, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(NetworkAttributes.SERVER_SOCKET_DOMAIN, "api.github.com"),
-            entry(NetworkAttributes.SERVER_SOCKET_ADDRESS, address.getAddress().getHostAddress()),
-            entry(NetworkAttributes.SERVER_SOCKET_PORT, 456L));
+            entry(SemanticAttributes.SERVER_SOCKET_DOMAIN, "api.github.com"),
+            entry(SemanticAttributes.SERVER_SOCKET_ADDRESS, address.getAddress().getHostAddress()),
+            entry(SemanticAttributes.SERVER_SOCKET_PORT, 456L));
   }
 
   @Test

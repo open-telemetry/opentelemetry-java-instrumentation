@@ -5,7 +5,7 @@
 
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 import java.util.concurrent.CountDownLatch

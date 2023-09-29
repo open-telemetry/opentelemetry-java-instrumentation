@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 /**
@@ -31,13 +31,16 @@ public final class HttpServerRoute {
    */
   public static <REQUEST> ContextCustomizer<REQUEST> create(
       HttpServerAttributesGetter<REQUEST, ?> getter) {
-    return (context, request, startAttributes) -> {
-      if (HttpRouteState.fromContextOrNull(context) != null) {
-        return context;
-      }
-      String method = getter.getHttpRequestMethod(request);
-      return context.with(HttpRouteState.create(method, null, 0));
-    };
+    return builder(getter).build();
+  }
+
+  /**
+   * Returns a new {@link HttpServerRouteBuilder} that can be used to configure the {@link
+   * HttpServerRoute}.
+   */
+  public static <REQUEST> HttpServerRouteBuilder<REQUEST> builder(
+      HttpServerAttributesGetter<REQUEST, ?> getter) {
+    return new HttpServerRouteBuilder<>(getter);
   }
 
   private HttpServerRoute() {}
@@ -147,11 +150,8 @@ public final class HttpServerRoute {
 
   private static void updateSpanName(Span serverSpan, HttpRouteState httpRouteState, String route) {
     String method = httpRouteState.getMethod();
-    // method should never really be null - but in case it for some reason is, we'll rely on the
-    // span name extractor behavior
-    if (method != null) {
-      serverSpan.updateName(method + " " + route);
-    }
+    // method should never really be null
+    serverSpan.updateName(method + " " + route);
   }
 
   /**

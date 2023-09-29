@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
 /**
@@ -36,7 +37,7 @@ import javax.annotation.Nullable;
  * <p>In addition, this classloader ensures that the lookup of corresponding .class resources follow
  * the same delegation strategy, so that bytecode inspection tools work correctly.
  */
-class InstrumentationModuleClassLoader extends ClassLoader {
+public class InstrumentationModuleClassLoader extends ClassLoader {
 
   static {
     ClassLoader.registerAsParallelCapable();
@@ -83,6 +84,8 @@ class InstrumentationModuleClassLoader extends ClassLoader {
     return cachedLookup;
   }
 
+  public static final Map<String, byte[]> bytecodeOverride = new ConcurrentHashMap<>();
+
   @Override
   @SuppressWarnings("removal") // AccessController is deprecated for removal
   protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
@@ -93,7 +96,10 @@ class InstrumentationModuleClassLoader extends ClassLoader {
       if (result == null) {
         ClassCopySource injected = getInjectedClass(name);
         if (injected != null) {
-          byte[] bytecode = injected.getBytecode();
+          byte[] bytecode =
+              bytecodeOverride.get(name) != null
+                  ? bytecodeOverride.get(name)
+                  : injected.getBytecode();
           if (System.getSecurityManager() == null) {
             result = defineClassWithPackage(name, bytecode);
           } else {

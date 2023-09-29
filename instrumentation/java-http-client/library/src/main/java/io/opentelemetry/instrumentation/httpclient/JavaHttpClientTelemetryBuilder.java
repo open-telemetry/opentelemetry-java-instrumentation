@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
 import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstrumenterFactory;
 import java.net.http.HttpRequest;
@@ -25,9 +26,10 @@ public final class JavaHttpClientTelemetryBuilder {
 
   private final List<AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>>>
       additionalExtractors = new ArrayList<>();
-
   private Consumer<HttpClientAttributesExtractorBuilder<HttpRequest, HttpResponse<?>>>
       extractorConfigurer = builder -> {};
+  private Consumer<HttpSpanNameExtractorBuilder<HttpRequest>> spanNameExtractorConfigurer =
+      builder -> {};
   private boolean emitExperimentalHttpClientMetrics = false;
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -86,6 +88,8 @@ public final class JavaHttpClientTelemetryBuilder {
   public JavaHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     extractorConfigurer =
         extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
+    spanNameExtractorConfigurer =
+        spanNameExtractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
     return this;
   }
 
@@ -107,6 +111,7 @@ public final class JavaHttpClientTelemetryBuilder {
         JavaHttpClientInstrumenterFactory.createInstrumenter(
             openTelemetry,
             extractorConfigurer,
+            spanNameExtractorConfigurer,
             additionalExtractors,
             emitExperimentalHttpClientMetrics);
 

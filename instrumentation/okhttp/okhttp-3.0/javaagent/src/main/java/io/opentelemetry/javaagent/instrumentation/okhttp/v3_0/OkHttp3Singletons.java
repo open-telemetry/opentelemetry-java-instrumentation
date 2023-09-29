@@ -33,6 +33,7 @@ public final class OkHttp3Singletons {
                   .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                   .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                   .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
+          builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
           singletonList(
               HttpClientPeerServiceAttributesExtractor.create(
                   OkHttpAttributesGetter.INSTANCE, CommonConfig.get().getPeerServiceResolver())),

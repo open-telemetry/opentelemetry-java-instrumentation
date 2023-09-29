@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import java.util.HashSet;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -17,18 +19,29 @@ import javax.annotation.Nullable;
 public final class HttpSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQUEST> {
 
   /**
-   * Returns a {@link SpanNameExtractor} which should be used for HTTP requests. HTTP attributes
-   * will be examined to determine the name of the span.
+   * Returns a {@link SpanNameExtractor} which should be used for HTTP requests with default
+   * configuration. HTTP attributes will be examined to determine the name of the span.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       HttpCommonAttributesGetter<REQUEST, ?> getter) {
-    return new HttpSpanNameExtractor<>(getter);
+    return builder(getter).build();
+  }
+
+  /**
+   * Returns a new {@link HttpSpanNameExtractorBuilder} that can be used to configure the HTTP span
+   * name extractor.
+   */
+  public static <REQUEST> HttpSpanNameExtractorBuilder<REQUEST> builder(
+      HttpCommonAttributesGetter<REQUEST, ?> getter) {
+    return new HttpSpanNameExtractorBuilder<>(getter);
   }
 
   private final HttpCommonAttributesGetter<REQUEST, ?> getter;
+  private final Set<String> knownMethods;
 
-  private HttpSpanNameExtractor(HttpCommonAttributesGetter<REQUEST, ?> getter) {
-    this.getter = getter;
+  HttpSpanNameExtractor(HttpSpanNameExtractorBuilder<REQUEST> builder) {
+    this.getter = builder.httpAttributesGetter;
+    this.knownMethods = new HashSet<>(builder.knownMethods);
   }
 
   @Override
@@ -36,6 +49,9 @@ public final class HttpSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
     String method = getter.getHttpRequestMethod(request);
     String route = extractRoute(request);
     if (method != null) {
+      if (!knownMethods.contains(method)) {
+        method = "HTTP";
+      }
       return route == null ? method : method + " " + route;
     }
     return "HTTP";

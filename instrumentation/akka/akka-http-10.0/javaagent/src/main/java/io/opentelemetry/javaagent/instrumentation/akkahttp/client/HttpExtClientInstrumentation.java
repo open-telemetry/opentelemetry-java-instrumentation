@@ -9,8 +9,10 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.client.AkkaHttpClientSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.client.AkkaHttpClientSingletons.setter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import akka.actor.ActorSystem;
 import akka.http.scaladsl.HttpExt;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
@@ -31,13 +33,9 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // This is mainly for compatibility with 10.0
+    // singleRequestImpl is only present in 10.1.x
     transformer.applyAdviceToMethod(
-        named("singleRequest").and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
-        this.getClass().getName() + "$SingleRequestAdvice");
-    // This is for 10.1+
-    transformer.applyAdviceToMethod(
-        named("singleRequestImpl")
+        namedOneOf("singleRequest", "singleRequestImpl")
             .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
         this.getClass().getName() + "$SingleRequestAdvice");
   }
@@ -80,15 +78,19 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
+      ActorSystem actorSystem = AkkaHttpClientUtil.getActorSystem(thiz);
+      if (actorSystem == null) {
+        return;
+      }
       if (throwable == null) {
         responseFuture.onComplete(
-            new OnCompleteHandler(context, request), thiz.system().dispatcher());
+            new OnCompleteHandler(context, request), actorSystem.dispatcher());
       } else {
         instrumenter().end(context, request, null, throwable);
       }
       if (responseFuture != null) {
         responseFuture =
-            FutureWrapper.wrap(responseFuture, thiz.system().dispatcher(), currentContext());
+            FutureWrapper.wrap(responseFuture, actorSystem.dispatcher(), currentContext());
       }
     }
   }

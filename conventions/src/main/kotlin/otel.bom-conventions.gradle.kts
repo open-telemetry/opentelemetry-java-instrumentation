@@ -31,4 +31,30 @@ afterEvaluate {
       }
     }
   }
+  otelBom.additionalDependencies.forEach { dependency ->
+    dependencies {
+      constraints {
+        api(dependency)
+      }
+    }
+  }
+}
+
+// this applies version numbers to the SDK bom and SDK alpha bom which are dependencies of the instrumentation boms
+evaluationDependsOn(":dependencyManagement")
+val dependencyManagementConf = configurations.create("dependencyManagement") {
+  isCanBeConsumed = false
+  isCanBeResolved = false
+  isVisible = false
+}
+afterEvaluate {
+  configurations.configureEach {
+    if (isCanBeResolved && !isCanBeConsumed) {
+      extendsFrom(dependencyManagementConf)
+    }
+  }
+}
+
+dependencies {
+  add(dependencyManagementConf.name, platform(project(":dependencyManagement")))
 }

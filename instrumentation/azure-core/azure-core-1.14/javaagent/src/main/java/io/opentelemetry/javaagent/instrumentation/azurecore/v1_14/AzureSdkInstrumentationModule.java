@@ -36,6 +36,11 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    return false;
+  }
+
+  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed("com.azure.core.util.tracing.Tracer")
         // this is needed to prevent this instrumentation from being applied to azure-core 1.19+

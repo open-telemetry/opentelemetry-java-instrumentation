@@ -31,7 +31,9 @@ public final class UndertowSingletons {
         Instrumenter.<HttpServerExchange, HttpServerExchange>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
                 HttpServerAttributesExtractor.builder(httpAttributesGetter)
@@ -39,7 +41,10 @@ public final class UndertowSingletons {
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
-            .addContextCustomizer(HttpServerRoute.create(httpAttributesGetter))
+            .addContextCustomizer(
+                HttpServerRoute.builder(httpAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build())
             .addContextCustomizer(
                 (context, request, attributes) -> {
                   // span is ended when counter reaches 0, we start from 2 which accounts for the

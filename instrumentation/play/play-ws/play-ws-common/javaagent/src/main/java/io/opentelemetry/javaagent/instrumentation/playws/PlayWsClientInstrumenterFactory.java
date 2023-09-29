@@ -27,7 +27,9 @@ public final class PlayWsClientInstrumenterFactory {
         Instrumenter.<Request, Response>builder(
                 GlobalOpenTelemetry.get(),
                 instrumentationName,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
                 HttpClientAttributesExtractor.builder(httpAttributesGetter)

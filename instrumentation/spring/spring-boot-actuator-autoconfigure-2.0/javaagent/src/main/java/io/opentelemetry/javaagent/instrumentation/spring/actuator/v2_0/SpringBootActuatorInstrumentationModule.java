@@ -44,6 +44,12 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
   }
 
   @Override
+  public boolean isIndyModule() {
+    // can not access OpenTelemetryMeterRegistryAutoConfiguration
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new AutoConfigurationImportSelectorInstrumentation());
   }

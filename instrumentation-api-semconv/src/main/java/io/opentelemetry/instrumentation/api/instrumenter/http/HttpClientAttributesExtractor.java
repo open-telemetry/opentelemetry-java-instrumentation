@@ -13,11 +13,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.function.ToIntFunction;
 import javax.annotation.Nullable;
 
@@ -101,6 +100,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
@@ -108,10 +108,15 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
     String fullUrl = stripSensitiveData(getter.getUrlFull(request));
     if (SemconvStability.emitStableHttpSemconv()) {
-      internalSet(attributes, UrlAttributes.URL_FULL, fullUrl);
+      internalSet(attributes, SemanticAttributes.URL_FULL, fullUrl);
     }
     if (SemconvStability.emitOldHttpSemconv()) {
       internalSet(attributes, SemanticAttributes.HTTP_URL, fullUrl);
+    }
+
+    int resendCount = resendCountIncrementer.applyAsInt(parentContext);
+    if (resendCount > 0) {
+      attributes.put(SemanticAttributes.HTTP_RESEND_COUNT, resendCount);
     }
   }
 
@@ -127,11 +132,6 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     internalNetExtractor.onEnd(attributes, request, response);
     internalNetworkExtractor.onEnd(attributes, request, response);
     internalServerExtractor.onEnd(attributes, request, response);
-
-    int resendCount = resendCountIncrementer.applyAsInt(context);
-    if (resendCount > 0) {
-      attributes.put(SemanticAttributes.HTTP_RESEND_COUNT, resendCount);
-    }
   }
 
   /**

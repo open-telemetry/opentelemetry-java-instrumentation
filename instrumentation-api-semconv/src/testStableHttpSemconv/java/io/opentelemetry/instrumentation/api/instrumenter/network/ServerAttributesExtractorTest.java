@@ -13,7 +13,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -73,16 +73,16 @@ class ServerAttributesExtractorTest {
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(NetworkAttributes.SERVER_ADDRESS, "opentelemetry.io"),
-            entry(NetworkAttributes.SERVER_PORT, 80L));
+            entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"),
+            entry(SemanticAttributes.SERVER_PORT, 80L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(NetworkAttributes.SERVER_SOCKET_DOMAIN, "proxy.opentelemetry.io"),
-            entry(NetworkAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4"),
-            entry(NetworkAttributes.SERVER_SOCKET_PORT, 8080L));
+            entry(SemanticAttributes.SERVER_SOCKET_DOMAIN, "proxy.opentelemetry.io"),
+            entry(SemanticAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4"),
+            entry(SemanticAttributes.SERVER_SOCKET_PORT, 8080L));
   }
 
   @Test
@@ -113,12 +113,12 @@ class ServerAttributesExtractorTest {
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
-        .containsOnly(entry(NetworkAttributes.SERVER_ADDRESS, "opentelemetry.io"));
+        .containsOnly(entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
     assertThat(endAttributes.build())
-        .containsOnly(entry(NetworkAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4"));
+        .containsOnly(entry(SemanticAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4"));
   }
 
   @Test
@@ -137,8 +137,8 @@ class ServerAttributesExtractorTest {
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(NetworkAttributes.SERVER_ADDRESS, "1.2.3.4"),
-            entry(NetworkAttributes.SERVER_PORT, 80L));
+            entry(SemanticAttributes.SERVER_ADDRESS, "1.2.3.4"),
+            entry(SemanticAttributes.SERVER_PORT, 80L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, null, null);

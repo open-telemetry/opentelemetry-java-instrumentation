@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8
 
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.base.BaseConf
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer
 import org.apache.rocketmq.client.producer.DefaultMQProducer
 import org.apache.rocketmq.client.producer.SendCallback

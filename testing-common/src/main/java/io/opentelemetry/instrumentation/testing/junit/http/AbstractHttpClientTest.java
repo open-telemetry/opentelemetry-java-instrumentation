@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.Assume.assumeFalse;
@@ -17,8 +17,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -27,7 +25,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -137,7 +135,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 span ->
                     assertClientSpan(span, uri, HttpConstants._OTHER, responseCode, null)
                         .hasNoParent()
-                        .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
+                        .hasAttribute(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
   }
 
   @ParameterizedTest
@@ -980,6 +978,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   }
 
   // Visible for spock bridge.
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   SpanDataAssert assertClientSpan(
       SpanDataAssert span,
       URI uri,
@@ -998,12 +997,12 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 assertThat(attrs).containsEntry(SemanticAttributes.NET_TRANSPORT, IP_TCP);
               }
               if (SemconvStability.emitStableHttpSemconv()
-                  && attrs.get(NetworkAttributes.NETWORK_TRANSPORT) != null) {
-                assertThat(attrs).containsEntry(NetworkAttributes.NETWORK_TRANSPORT, "tcp");
+                  && attrs.get(SemanticAttributes.NETWORK_TRANSPORT) != null) {
+                assertThat(attrs).containsEntry(SemanticAttributes.NETWORK_TRANSPORT, "tcp");
               }
               if (SemconvStability.emitStableHttpSemconv()
-                  && attrs.get(NetworkAttributes.NETWORK_TYPE) != null) {
-                assertThat(attrs).containsEntry(NetworkAttributes.NETWORK_TYPE, "ipv4");
+                  && attrs.get(SemanticAttributes.NETWORK_TYPE) != null) {
+                assertThat(attrs).containsEntry(SemanticAttributes.NETWORK_TYPE, "ipv4");
               }
               AttributeKey<String> netProtocolKey =
                   getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME);

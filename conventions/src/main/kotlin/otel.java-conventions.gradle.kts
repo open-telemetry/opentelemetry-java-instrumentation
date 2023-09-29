@@ -122,7 +122,8 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.97.Final", false)
+          // netty 4.1.98 does not run correctly on MacOS
+          belongsTo("io.netty:netty-bom:4.1.99.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -412,6 +413,7 @@ configurations.configureEach {
       substitute(module("io.opentelemetry.javaagent:opentelemetry-agent-for-testing")).using(project(":testing:agent-for-testing"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-testing-common")).using(project(":testing-common"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-muzzle")).using(project(":muzzle"))
+      substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent")).using(project(":javaagent"))
     }
 
     // The above substitutions ensure dependencies managed by this BOM for external projects refer to this repo's projects here.
