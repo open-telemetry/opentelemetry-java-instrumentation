@@ -10,6 +10,7 @@ muzzle {
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
+
     excludeInstrumentationName("aws-sdk-2.2-sqs")
     excludeInstrumentationName("aws-sdk-2.2-sns")
 
@@ -95,6 +96,7 @@ testing {
         } else {
           implementation("software.amazon.awssdk:s3:2.10.12")
         }
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
       }
     }
   }
@@ -115,6 +117,7 @@ tasks {
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
   }
 
   withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>().configureEach {
