@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.vertx.core.Vertx;
 import java.time.Duration;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -119,7 +119,7 @@ class HibernateReactiveTest {
 
   @Test
   void testStage() throws Exception {
-    CountDownLatch latch = new CountDownLatch(1);
+    CompletableFuture<Object> result = new CompletableFuture<>();
     testing.runWithSpan(
         "parent",
         () ->
@@ -136,15 +136,15 @@ class HibernateReactiveTest {
                                   .find(Value.class, 1L)
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .thenAccept(unused -> latch.countDown())));
-    latch.await(30, TimeUnit.SECONDS);
+                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+    result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
   }
 
   @Test
   void testStageWithStatelessSession() throws Exception {
-    CountDownLatch latch = new CountDownLatch(1);
+    CompletableFuture<Object> result = new CompletableFuture<>();
     testing.runWithSpan(
         "parent",
         () ->
@@ -161,15 +161,15 @@ class HibernateReactiveTest {
                                   .get(Value.class, 1L)
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .thenAccept(unused -> latch.countDown())));
-    latch.await(30, TimeUnit.SECONDS);
+                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+    result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
   }
 
   @Test
   void testStageSessionWithTransaction() throws Exception {
-    CountDownLatch latch = new CountDownLatch(1);
+    CompletableFuture<Object> result = new CompletableFuture<>();
     testing.runWithSpan(
         "parent",
         () ->
@@ -186,15 +186,15 @@ class HibernateReactiveTest {
                                   .withTransaction(transaction -> session.find(Value.class, 1L))
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .thenAccept(unused -> latch.countDown())));
-    latch.await(30, TimeUnit.SECONDS);
+                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+    result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
   }
 
   @Test
   void testStageStatelessSessionWithTransaction() throws Exception {
-    CountDownLatch latch = new CountDownLatch(1);
+    CompletableFuture<Object> result = new CompletableFuture<>();
     testing.runWithSpan(
         "parent",
         () ->
@@ -211,15 +211,15 @@ class HibernateReactiveTest {
                                   .withTransaction(transaction -> session.get(Value.class, 1L))
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .thenAccept(unused -> latch.countDown())));
-    latch.await(30, TimeUnit.SECONDS);
+                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+    result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
   }
 
   @Test
   void testStageOpenSession() throws Exception {
-    CountDownLatch latch = new CountDownLatch(1);
+    CompletableFuture<Object> result = new CompletableFuture<>();
     testing.runWithSpan(
         "parent",
         () ->
@@ -237,15 +237,15 @@ class HibernateReactiveTest {
                                   .find(Value.class, 1L)
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .thenAccept(unused -> latch.countDown())));
-    latch.await(30, TimeUnit.SECONDS);
+                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+    result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
   }
 
   @Test
   void testStageOpenStatelessSession() throws Exception {
-    CountDownLatch latch = new CountDownLatch(1);
+    CompletableFuture<Object> result = new CompletableFuture<>();
     testing.runWithSpan(
         "parent",
         () ->
@@ -263,14 +263,23 @@ class HibernateReactiveTest {
                                   .get(Value.class, 1L)
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .thenAccept(unused -> latch.countDown())));
-    latch.await(30, TimeUnit.SECONDS);
+                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+    result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
   }
 
   private static void runWithVertx(Runnable runnable) {
     Vertx.vertx().getOrCreateContext().runOnContext(event -> runnable.run());
+  }
+
+  private static void complete(
+      CompletableFuture<Object> completableFuture, Object result, Throwable throwable) {
+    if (throwable != null) {
+      completableFuture.completeExceptionally(throwable);
+    } else {
+      completableFuture.complete(result);
+    }
   }
 
   @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0

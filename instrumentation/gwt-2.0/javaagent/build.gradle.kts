@@ -62,13 +62,15 @@ val launcher = javaToolchains.launcherFor {
 
 class CompilerArgumentsProvider : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
-    "test.gwt.Greeting", // gwt module
+    // gwt module
+    "test.gwt.Greeting",
     "-war", layout.buildDirectory.dir("testapp/war").get().asFile.absolutePath,
     "-logLevel", "INFO",
     "-localWorkers", "2",
     "-compileReport",
     "-extra", layout.buildDirectory.dir("testapp/extra").get().asFile.absolutePath,
-    "-draftCompile", // makes compile a bit faster
+    // makes compile a bit faster
+    "-draftCompile",
   )
 }
 
