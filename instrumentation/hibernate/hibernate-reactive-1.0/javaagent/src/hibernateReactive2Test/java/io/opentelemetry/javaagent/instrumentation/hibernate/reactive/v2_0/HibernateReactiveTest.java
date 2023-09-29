@@ -22,7 +22,7 @@ import io.vertx.core.Vertx;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import java.time.Duration;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.hibernate.reactive.stage.Stage;
@@ -211,7 +211,7 @@ class HibernateReactiveTest {
 
   @Test
   void testStageOpenSession() throws Exception {
-    CountDownLatch latch = new CountDownLatch(1);
+    CompletableFuture<Object> result = new CompletableFuture<>();
     testing.runWithSpan(
         "parent",
         () ->
@@ -229,15 +229,15 @@ class HibernateReactiveTest {
                                   .find(Value.class, 1L)
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .thenAccept(unused -> latch.countDown())));
-    latch.await(30, TimeUnit.SECONDS);
+                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+    result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
   }
 
   @Test
   void testStageOpenStatelessSession() throws Exception {
-    CountDownLatch latch = new CountDownLatch(1);
+    CompletableFuture<Object> result = new CompletableFuture<>();
     testing.runWithSpan(
         "parent",
         () ->
@@ -255,14 +255,23 @@ class HibernateReactiveTest {
                                   .get(Value.class, 1L)
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .thenAccept(unused -> latch.countDown())));
-    latch.await(30, TimeUnit.SECONDS);
+                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+    result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
   }
 
   private static void runWithVertx(Runnable runnable) {
     Vertx.vertx().getOrCreateContext().runOnContext(event -> runnable.run());
+  }
+
+  private static void complete(
+      CompletableFuture<Object> completableFuture, Object result, Throwable throwable) {
+    if (throwable != null) {
+      completableFuture.completeExceptionally(throwable);
+    } else {
+      completableFuture.complete(result);
+    }
   }
 
   @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0

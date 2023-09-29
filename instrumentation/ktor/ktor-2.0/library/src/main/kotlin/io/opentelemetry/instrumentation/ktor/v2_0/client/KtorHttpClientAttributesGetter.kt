@@ -11,23 +11,17 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 
 internal object KtorHttpClientAttributesGetter : HttpClientAttributesGetter<HttpRequestData, HttpResponse> {
 
-  override fun getUrlFull(request: HttpRequestData) =
-    request.url.toString()
+  override fun getUrlFull(request: HttpRequestData) = request.url.toString()
 
-  override fun getHttpRequestMethod(request: HttpRequestData) =
-    request.method.value
+  override fun getHttpRequestMethod(request: HttpRequestData) = request.method.value
 
-  override fun getHttpRequestHeader(request: HttpRequestData, name: String) =
-    request.headers.getAll(name).orEmpty()
+  override fun getHttpRequestHeader(request: HttpRequestData, name: String) = request.headers.getAll(name).orEmpty()
 
-  override fun getHttpResponseStatusCode(request: HttpRequestData, response: HttpResponse, error: Throwable?) =
-    response.status.value
+  override fun getHttpResponseStatusCode(request: HttpRequestData, response: HttpResponse, error: Throwable?) = response.status.value
 
-  override fun getHttpResponseHeader(request: HttpRequestData, response: HttpResponse, name: String) =
-    response.headers.getAll(name).orEmpty()
+  override fun getHttpResponseHeader(request: HttpRequestData, response: HttpResponse, name: String) = response.headers.getAll(name).orEmpty()
 
-  override fun getNetworkProtocolName(request: HttpRequestData?, response: HttpResponse?): String? =
-    response?.version?.name
+  override fun getNetworkProtocolName(request: HttpRequestData?, response: HttpResponse?): String? = response?.version?.name
 
   override fun getNetworkProtocolVersion(request: HttpRequestData?, response: HttpResponse?): String? {
     val version = response?.version ?: return null

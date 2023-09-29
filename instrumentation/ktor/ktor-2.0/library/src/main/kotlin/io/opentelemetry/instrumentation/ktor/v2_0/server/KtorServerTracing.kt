@@ -59,9 +59,7 @@ class KtorServerTracing private constructor(
       this.statusExtractor = extractor
     }
 
-    fun setSpanKindExtractor(
-      extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>
-    ) {
+    fun setSpanKindExtractor(extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>) {
       this.spanKindExtractor = extractor
     }
 
