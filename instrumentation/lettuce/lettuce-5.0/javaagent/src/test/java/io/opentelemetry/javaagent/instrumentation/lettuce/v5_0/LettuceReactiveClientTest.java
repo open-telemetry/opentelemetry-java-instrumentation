@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
@@ -19,6 +18,9 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import org.assertj.core.api.AbstractBooleanAssert;
 import org.junit.jupiter.api.AfterAll;
@@ -59,7 +61,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void testSetCommandWithSubscribeOnDefinedConsumer() {
+  void testSetCommandWithSubscribeOnDefinedConsumer()
+      throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<String> future = new CompletableFuture<>();
 
     Consumer<String> consumer =
@@ -74,7 +77,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     testing.runWithSpan(
         "parent", () -> reactiveCommands.set("TESTSETKEY", "TESTSETVAL").subscribe(consumer));
 
-    await().untilAsserted(() -> assertThat(future).isCompletedWithValue("OK"));
+    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("OK");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -95,7 +98,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void testGetCommandWithLambdaFunction() {
+  void testGetCommandWithLambdaFunction()
+      throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<String> future = new CompletableFuture<>();
 
     reactiveCommands
@@ -106,7 +110,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
               future.complete(res);
             });
 
-    await().untilAsserted(() -> assertThat(future).isCompletedWithValue("TESTVAL"));
+    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("TESTVAL");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -123,7 +127,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
   // still recording spans
   @Test
-  void testGetNonExistentKeyCommand() {
+  void testGetNonExistentKeyCommand()
+      throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<String> future = new CompletableFuture<>();
     String defaultVal = "NOT THIS VALUE";
 
@@ -134,17 +139,16 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
               .get("NON_EXISTENT_KEY")
               .defaultIfEmpty(defaultVal)
               .subscribe(
-                  res -> {
-                    testing.runWithSpan(
-                        "callback",
-                        () -> {
-                          assertThat(res).isEqualTo(defaultVal);
-                          future.complete(res);
-                        });
-                  });
+                  res ->
+                      testing.runWithSpan(
+                          "callback",
+                          () -> {
+                            assertThat(res).isEqualTo(defaultVal);
+                            future.complete(res);
+                          }));
         });
 
-    await().untilAsserted(() -> assertThat(future).isCompletedWithValue(defaultVal));
+    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo(defaultVal);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -164,7 +168,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void testCommandWithNoArguments() {
+  void testCommandWithNoArguments()
+      throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<String> future = new CompletableFuture<>();
 
     reactiveCommands
@@ -175,7 +180,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
               future.complete(res);
             });
 
-    await().untilAsserted(() -> assertThat(future).isCompletedWithValue("TESTKEY"));
+    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("TESTKEY");
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(

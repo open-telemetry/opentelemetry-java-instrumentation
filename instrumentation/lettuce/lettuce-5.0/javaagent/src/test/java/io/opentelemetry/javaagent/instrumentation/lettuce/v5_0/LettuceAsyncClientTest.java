@@ -180,7 +180,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void testGetCommandChainedWithThenAccept() {
+  void testGetCommandChainedWithThenAccept()
+      throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<String> future = new CompletableFuture<>();
     Consumer<String> consumer =
         res -> {
@@ -195,7 +196,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           redisFuture.thenAccept(consumer);
         });
 
-    await().untilAsserted(() -> assertThat(future).isCompletedWithValue("TESTVAL"));
+    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("TESTVAL");
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -217,7 +218,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
   // still recording spans
   @Test
-  void testGetNonExistentKeyCommandWithHandleAsyncAndChainedWithThenApply() {
+  void testGetNonExistentKeyCommandWithHandleAsyncAndChainedWithThenApply()
+      throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<String> future = new CompletableFuture<>();
 
     String successStr = "KEY MISSING";
@@ -250,7 +252,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           redisFuture.handle(firstStage).thenApply(secondStage);
         });
 
-    await().untilAsserted(() -> assertThat(future).isCompletedWithValue(successStr));
+    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo(successStr);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -275,7 +277,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void testCommandWithNoArgumentsUsingBiconsumer() {
+  void testCommandWithNoArgumentsUsingBiconsumer()
+      throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<String> future = new CompletableFuture<>();
     BiConsumer<String, Throwable> biConsumer =
         (keyRetrieved, error) ->
@@ -293,7 +296,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           redisFuture.whenCompleteAsync(biConsumer);
         });
 
-    await().untilAsserted(() -> assertThat(future).isCompleted());
+    assertThat(future.get(10, TimeUnit.SECONDS)).isNotNull();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -313,7 +316,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void testHashSetAndThenNestApplyToHashGetall() {
+  void testHashSetAndThenNestApplyToHashGetall()
+      throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<Map<String, String>> future = new CompletableFuture<>();
 
     RedisFuture<String> hmsetFuture = asyncCommands.hmset("TESTHM", testHashMap);
@@ -339,7 +343,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           return null;
         });
 
-    await().untilAsserted(() -> assertThat(future).isCompletedWithValue(testHashMap));
+    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo(testHashMap);
 
     testing.waitAndAssertTraces(
         trace ->
