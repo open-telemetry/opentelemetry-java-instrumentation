@@ -26,7 +26,9 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.springframework.web.reactive.HandlerResult;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
 public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
@@ -86,6 +88,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
+        @Advice.Return(readOnly = false) Mono<HandlerResult> mono,
         @Advice.Argument(0) ServerWebExchange exchange,
         @Advice.Argument(1) Object handler,
         @Advice.Thrown Throwable throwable,
@@ -99,6 +102,8 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       if (throwable != null) {
         instrumenter().end(context, handler, null, throwable);
       } else {
+        mono = AdviceUtils.wrapMono(mono, context);
+        exchange.getAttributes().put(AdviceUtils.CONTEXT, context);
         AdviceUtils.registerOnSpanEnd(exchange, context, handler);
         // span finished by wrapped Mono in DispatcherHandlerInstrumentation
         // the Mono is already wrapped at this point, but doesn't read the ON_SPAN_END until

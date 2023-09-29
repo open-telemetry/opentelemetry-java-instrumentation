@@ -5,7 +5,6 @@
 
 package server.base;
 
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.time.Duration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -57,11 +56,5 @@ public class DelayedHandlerSpringWebFluxServerTest extends HandlerSpringWebFluxS
                         return original;
                       }));
     }
-  }
-
-  @Override
-  protected void configure(HttpServerTestOptions options) {
-    super.configure(options);
-    options.setHasHandlerAsControllerParentSpan(unused -> false);
   }
 }
