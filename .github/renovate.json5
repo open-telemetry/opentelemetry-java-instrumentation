@@ -30,7 +30,7 @@
       "groupName": "armeria packages"
     },
     {
-      "matchPackagePrefixes": ["com.diffplug.spotless:"],
+      "matchPackagePrefixes": ["com.diffplug.spotless"],
       "groupName": "spotless packages"
     },
     {
