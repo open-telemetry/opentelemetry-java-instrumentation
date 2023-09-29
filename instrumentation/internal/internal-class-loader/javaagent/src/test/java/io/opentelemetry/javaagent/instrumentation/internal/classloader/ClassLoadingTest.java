@@ -14,16 +14,22 @@ import org.junit.jupiter.api.Test;
 class ClassLoadingTest {
 
   @Test
-  void testDelegatesToBootstrapClassLoaderForAgentClasses() {
-    ClassLoader classLoader = new NonDelegatingUrlClassLoader();
-    Class<?> clazz = null;
-    try {
-      clazz =
-          Class.forName(
-              "io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge", false, classLoader);
-    } catch (ClassNotFoundException ignored) {
-    }
+  void testDelegatesToBootstrapClassLoaderForAgentClasses() throws ClassNotFoundException {
+    NonDelegatingUrlClassLoader classLoader = new NonDelegatingUrlClassLoader();
+    Class<?> clazz =
+        Class.forName(
+            "io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge", false, classLoader);
 
+    assertThat(clazz).isNotNull();
+    assertThat(clazz.getClassLoader()).isNull();
+  }
+
+  @Test
+  void testDelegatesToBootstrapClassLoaderForAgentClassesTwoArguments()
+      throws ClassNotFoundException {
+    NonDelegatingUrlClassLoader classLoader = new NonDelegatingUrlClassLoader();
+    Class<?> clazz =
+        classLoader.loadClass("io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge", false);
     assertThat(clazz).isNotNull();
     assertThat(clazz.getClassLoader()).isNull();
   }

@@ -25,7 +25,8 @@ class JbossClassloadingTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  void testDelegatesToBootstrapClassLoaderForAgentClasses() throws ModuleLoadException {
+  void testDelegatesToBootstrapClassLoaderForAgentClasses()
+      throws ModuleLoadException, ClassNotFoundException {
     ModuleFinder[] moduleFinders = new ModuleFinder[1];
     moduleFinders[0] = (identifier, delegateLoader) -> ModuleSpec.build(identifier).create();
 
@@ -34,13 +35,9 @@ class JbossClassloadingTest {
     Module testModule = moduleLoader.loadModule(moduleId);
     ModuleClassLoader classLoader = testModule.getClassLoader();
 
-    Class<?> clazz = null;
-    try {
-      clazz =
-          Class.forName(
-              "io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge", false, classLoader);
-    } catch (ClassNotFoundException ignored) {
-    }
+    Class<?> clazz =
+        Class.forName(
+            "io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge", false, classLoader);
 
     assertThat(clazz).isNotNull();
     assertThat(clazz.getClassLoader()).isNull();
