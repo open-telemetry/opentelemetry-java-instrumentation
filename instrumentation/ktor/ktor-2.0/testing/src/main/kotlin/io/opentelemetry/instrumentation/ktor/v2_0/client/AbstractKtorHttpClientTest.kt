@@ -30,12 +30,11 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
 
   abstract fun HttpClientConfig<*>.installTracing()
 
-  override fun buildRequest(requestMethod: String, uri: URI, requestHeaders: MutableMap<String, String>) =
-    HttpRequestBuilder(uri.toURL()).apply {
-      method = HttpMethod.parse(requestMethod)
+  override fun buildRequest(requestMethod: String, uri: URI, requestHeaders: MutableMap<String, String>) = HttpRequestBuilder(uri.toURL()).apply {
+    method = HttpMethod.parse(requestMethod)
 
-      requestHeaders.forEach { (header, value) -> headers.append(header, value) }
-    }
+    requestHeaders.forEach { (header, value) -> headers.append(header, value) }
+  }
 
   override fun sendRequest(request: HttpRequestBuilder, method: String, uri: URI, headers: MutableMap<String, String>) = runBlocking {
     client.request(request).status.value
