@@ -11,14 +11,11 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Locale;
-import java.util.stream.Stream;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.EnumSource;
 
 /** This test verifies that Otel supports various 3rd-party trace annotations */
 class TraceProvidersTest {
@@ -26,44 +23,46 @@ class TraceProvidersTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @ParameterizedTest
-  @MethodSource("provideArguments")
-  void testShouldSupportProvider(String provider)
-      throws ClassNotFoundException,
-          NoSuchMethodException,
-          InstantiationException,
-          IllegalAccessException,
-          InvocationTargetException {
-
-    Class<?> cls =
-        Class.forName("io.opentelemetry.javaagent.instrumentation.extannotations.SayTracedHello");
-    Method method = cls.getMethod(provider.toLowerCase(Locale.ROOT));
-    Object obj = cls.getDeclaredConstructor().newInstance();
-    method.invoke(obj);
+  @EnumSource(TraceProvider.class)
+  void testShouldSupportProvider(TraceProvider provider) {
+    provider.test();
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SayTracedHello." + provider.toLowerCase(Locale.ROOT))
+                    span.hasName("SayTracedHello." + provider.testMethodName())
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 SemanticAttributes.CODE_NAMESPACE, SayTracedHello.class.getName()),
-                            equalTo(
-                                SemanticAttributes.CODE_FUNCTION,
-                                provider.toLowerCase(Locale.ROOT)),
-                            equalTo(stringKey("providerAttr"), provider))));
+                            equalTo(SemanticAttributes.CODE_FUNCTION, provider.testMethodName()),
+                            equalTo(stringKey("providerAttr"), provider.name()))));
   }
 
-  private static Stream<Arguments> provideArguments() {
-    return Stream.of(
-        Arguments.of("AppOptics"),
-        Arguments.of("Datadog"),
-        Arguments.of("Dropwizard"),
-        Arguments.of("KamonOld"),
-        Arguments.of("KamonNew"),
-        Arguments.of("NewRelic"),
-        Arguments.of("SignalFx"),
-        Arguments.of("Sleuth"),
-        Arguments.of("Tracelytics"));
+  @SuppressWarnings("ImmutableEnumChecker")
+  private enum TraceProvider {
+    AppOptics((sayTracedHello) -> sayTracedHello.appoptics()),
+    Datadog((sayTracedHello) -> sayTracedHello.datadog()),
+    Dropwizard((sayTracedHello) -> sayTracedHello.dropwizard()),
+    KamonOld((sayTracedHello) -> sayTracedHello.kamonold()),
+    KamonNew((sayTracedHello) -> sayTracedHello.kamonnew()),
+    NewRelic((sayTracedHello) -> sayTracedHello.newrelic()),
+    SignalFx((sayTracedHello) -> sayTracedHello.signalfx()),
+    Sleuth((sayTracedHello) -> sayTracedHello.sleuth()),
+    Tracelytics((sayTracedHello) -> sayTracedHello.tracelytics());
+
+    final Consumer<SayTracedHello> test;
+
+    TraceProvider(Consumer<SayTracedHello> test) {
+      this.test = test;
+    }
+
+    void test() {
+      test.accept(new SayTracedHello());
+    }
+
+    String testMethodName() {
+      return name().toLowerCase(Locale.ROOT);
+    }
   }
 }
