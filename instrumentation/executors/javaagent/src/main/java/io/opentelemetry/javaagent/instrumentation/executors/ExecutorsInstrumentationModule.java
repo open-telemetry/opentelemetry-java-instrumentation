@@ -16,10 +16,12 @@ import java.util.List;
 public class ExecutorsInstrumentationModule extends InstrumentationModule {
 
   public ExecutorsInstrumentationModule() {
-    super(
-        "executors",
-        // TODO: remove that after release 1.26.0
-        "executor");
+    super("executors");
+  }
+
+  @Override
+  public boolean isIndyModule() {
+    return false;
   }
 
   @Override
@@ -29,6 +31,7 @@ public class ExecutorsInstrumentationModule extends InstrumentationModule {
         new FutureInstrumentation(),
         new JavaExecutorInstrumentation(),
         new JavaForkJoinTaskInstrumentation(),
-        new RunnableInstrumentation());
+        new RunnableInstrumentation(),
+        new ThreadPoolExtendingExecutorInstrumentation());
   }
 }

@@ -9,12 +9,14 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
@@ -30,6 +32,15 @@ import net.bytebuddy.matcher.ElementMatcher;
  * java.util.ServiceLoader} for more details.
  */
 public abstract class InstrumentationModule implements Ordered {
+  private static final Logger logger = Logger.getLogger(InstrumentationModule.class.getName());
+  private static final boolean indyEnabled;
+
+  static {
+    indyEnabled = ExperimentalConfig.get().indyEnabled();
+    if (indyEnabled) {
+      logger.info("Enabled indy for instrumentation modules");
+    }
+  }
 
   private final Set<String> instrumentationNames;
 
@@ -98,6 +109,19 @@ public abstract class InstrumentationModule implements Ordered {
    */
   public boolean isHelperClass(String className) {
     return false;
+  }
+
+  /**
+   * Note this is an experimental feature until phase 1 of <a
+   * href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8999">
+   * implementing the invokedynamic based instrumentation mechanism</a> is complete. Instrumentation
+   * modules that override this to true (recommended) must use the inline=false Invoke Dynamic style
+   * of Byte Buddy advices which calls out to helper classes in their own classloader, thus enabling
+   * better isolation, best practice code development, avoids shading and enables standard debugging
+   * techniques. The non-inlining of advice will be enforced by muzzle (TODO)
+   */
+  public boolean isIndyModule() {
+    return indyEnabled;
   }
 
   /** Register resource names to inject into the user's class loader. */

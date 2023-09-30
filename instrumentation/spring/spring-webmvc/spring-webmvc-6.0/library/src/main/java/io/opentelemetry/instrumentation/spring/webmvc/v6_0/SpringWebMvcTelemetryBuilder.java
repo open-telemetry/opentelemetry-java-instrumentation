@@ -9,12 +9,16 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,12 +39,18 @@ public final class SpringWebMvcTelemetryBuilder {
   private final HttpServerAttributesExtractorBuilder<HttpServletRequest, HttpServletResponse>
       httpAttributesExtractorBuilder =
           HttpServerAttributesExtractor.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
+  private final HttpSpanNameExtractorBuilder<HttpServletRequest> httpSpanNameExtractorBuilder =
+      HttpSpanNameExtractor.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
+  private final HttpServerRouteBuilder<HttpServletRequest> httpServerRouteBuilder =
+      HttpServerRoute.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
 
   @Nullable
   private Function<
           SpanNameExtractor<HttpServletRequest>,
           ? extends SpanNameExtractor<? super HttpServletRequest>>
       spanNameExtractorTransformer;
+
+  private boolean emitExperimentalHttpServerMetrics = false;
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -106,6 +116,21 @@ public final class SpringWebMvcTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
+    httpSpanNameExtractorBuilder.setKnownMethods(knownMethods);
+    httpServerRouteBuilder.setKnownMethods(knownMethods);
+    return this;
+  }
+
+  /**
+   * Configures the instrumentation to emit experimental HTTP server metrics.
+   *
+   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public SpringWebMvcTelemetryBuilder setEmitExperimentalHttpServerMetrics(
+      boolean emitExperimentalHttpServerMetrics) {
+    this.emitExperimentalHttpServerMetrics = emitExperimentalHttpServerMetrics;
     return this;
   }
 
@@ -118,22 +143,25 @@ public final class SpringWebMvcTelemetryBuilder {
         SpringWebMvcHttpAttributesGetter.INSTANCE;
 
     SpanNameExtractor<HttpServletRequest> originalSpanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesGetter);
+        httpSpanNameExtractorBuilder.build();
     SpanNameExtractor<? super HttpServletRequest> spanNameExtractor = originalSpanNameExtractor;
     if (spanNameExtractorTransformer != null) {
       spanNameExtractor = spanNameExtractorTransformer.apply(originalSpanNameExtractor);
     }
 
-    Instrumenter<HttpServletRequest, HttpServletResponse> instrumenter =
+    InstrumenterBuilder<HttpServletRequest, HttpServletResponse> builder =
         Instrumenter.<HttpServletRequest, HttpServletResponse>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
-            .addOperationMetrics(HttpServerMetrics.get())
-            .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
-            .buildServerInstrumenter(JakartaHttpServletRequestGetter.INSTANCE);
+            .addContextCustomizer(httpServerRouteBuilder.build())
+            .addOperationMetrics(HttpServerMetrics.get());
+    if (emitExperimentalHttpServerMetrics) {
+      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+    }
 
-    return new SpringWebMvcTelemetry(instrumenter);
+    return new SpringWebMvcTelemetry(
+        builder.buildServerInstrumenter(JakartaHttpServletRequestGetter.INSTANCE));
   }
 }

@@ -14,7 +14,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.AfterAll;
@@ -61,6 +61,7 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
   }
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void restComponentServerAndClientCallWithJettyBackend() {
     CamelContext camelContext = appContext.getBean(CamelContext.class);
     ProducerTemplate template = camelContext.createProducerTemplate();

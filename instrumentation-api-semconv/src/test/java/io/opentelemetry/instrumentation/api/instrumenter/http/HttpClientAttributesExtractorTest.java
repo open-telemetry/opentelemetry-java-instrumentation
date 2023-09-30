@@ -17,7 +17,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +31,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class HttpClientAttributesExtractorTest {
 
   static class TestHttpClientAttributesGetter
@@ -38,7 +39,7 @@ class HttpClientAttributesExtractorTest {
 
     @Override
     public String getUrlFull(Map<String, String> request) {
-      return request.get("url");
+      return request.get("urlFull");
     }
 
     @Override
@@ -69,14 +70,14 @@ class HttpClientAttributesExtractorTest {
     @Override
     public String getNetworkTransport(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("transport");
+      return request.get("networkTransport");
     }
 
     @Nullable
     @Override
     public String getNetworkType(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("type");
+      return request.get("networkType");
     }
 
     @Nullable
@@ -96,13 +97,13 @@ class HttpClientAttributesExtractorTest {
     @Nullable
     @Override
     public String getServerAddress(Map<String, String> request) {
-      return request.get("peerName");
+      return request.get("serverAddress");
     }
 
     @Nullable
     @Override
     public Integer getServerPort(Map<String, String> request) {
-      String statusCode = request.get("peerPort");
+      String statusCode = request.get("serverPort");
       return statusCode == null ? null : Integer.parseInt(statusCode);
     }
   }
@@ -111,16 +112,16 @@ class HttpClientAttributesExtractorTest {
   void normal() {
     Map<String, String> request = new HashMap<>();
     request.put("method", "POST");
-    request.put("url", "http://github.com");
+    request.put("urlFull", "http://github.com");
     request.put("header.content-length", "10");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.custom-request-header", "123,456");
-    request.put("transport", "tcp");
-    request.put("type", "ipv4");
+    request.put("networkTransport", "tcp");
+    request.put("networkType", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "1.1");
-    request.put("peerName", "github.com");
-    request.put("peerPort", "123");
+    request.put("serverAddress", "github.com");
+    request.put("serverPort", "123");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
@@ -147,7 +148,8 @@ class HttpClientAttributesExtractorTest {
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")),
             entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
-            entry(SemanticAttributes.NET_PEER_PORT, 123L));
+            entry(SemanticAttributes.NET_PEER_PORT, 123L),
+            entry(SemanticAttributes.HTTP_RESEND_COUNT, 2L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
@@ -156,7 +158,6 @@ class HttpClientAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
-            entry(SemanticAttributes.HTTP_RESEND_COUNT, 2L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")),
@@ -168,7 +169,7 @@ class HttpClientAttributesExtractorTest {
   @ArgumentsSource(StripUrlArgumentSource.class)
   void stripBasicAuthTest(String url, String expectedResult) {
     Map<String, String> request = new HashMap<>();
-    request.put("url", url);
+    request.put("urlFull", url);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
@@ -243,8 +244,8 @@ class HttpClientAttributesExtractorTest {
   void extractNetHostAndPortFromNetAttributesGetter() {
     Map<String, String> request = new HashMap<>();
     request.put("header.host", "notthehost:77777"); // this should have lower precedence
-    request.put("peerName", "thehost");
-    request.put("peerPort", "777");
+    request.put("serverAddress", "thehost");
+    request.put("serverPort", "777");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
@@ -262,8 +263,8 @@ class HttpClientAttributesExtractorTest {
   @ArgumentsSource(DefaultPeerPortArgumentSource.class)
   void defaultPeerPort(int peerPort, String url) {
     Map<String, String> request = new HashMap<>();
-    request.put("url", url);
-    request.put("peerPort", String.valueOf(peerPort));
+    request.put("urlFull", url);
+    request.put("serverPort", String.valueOf(peerPort));
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());

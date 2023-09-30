@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
@@ -17,9 +16,13 @@ import javax.annotation.Nullable;
  * library/framework. It will be used by the {@link HttpClientAttributesExtractor} to obtain the
  * various HTTP client attributes in a type-generic way.
  */
+@SuppressWarnings(
+    "deprecation") // implementing the NetClientAttributesGetter for the old->stable semconv story;
+// will be removed in 2.0
 public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
     extends HttpCommonAttributesGetter<REQUEST, RESPONSE>,
-        NetClientAttributesGetter<REQUEST, RESPONSE>,
+        io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter<
+            REQUEST, RESPONSE>,
         NetworkAttributesGetter<REQUEST, RESPONSE>,
         ServerAttributesGetter<REQUEST, RESPONSE> {
 
@@ -31,4 +34,14 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
    */
   @Nullable
   String getUrlFull(REQUEST request);
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  String getServerAddress(REQUEST request);
+
+  /** {@inheritDoc} */
+  @Nullable
+  @Override
+  Integer getServerPort(REQUEST request);
 }

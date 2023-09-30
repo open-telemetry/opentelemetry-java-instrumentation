@@ -98,6 +98,9 @@ public final class JdbcUtils {
      * connection will be stored with the DEFAULT DBInfo as the value in the connectionInfo map to
      * avoid retry overhead.
      */
+    if (connection == null) {
+      return DbInfo.DEFAULT;
+    }
     try {
       DatabaseMetaData metaData = connection.getMetaData();
       String url = metaData.getURL();

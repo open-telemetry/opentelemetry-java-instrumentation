@@ -65,8 +65,22 @@ configurations.testRuntimeClasspath {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", latestDepTest)
+
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

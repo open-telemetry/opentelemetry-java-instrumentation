@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import com.google.auto.service.AutoService;
@@ -12,12 +13,18 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.SnsAdviceBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class SnsInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public SnsInstrumentationModule() {
     super("aws-sdk-2.2-sns");
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    return hasClassesNamed("software.amazon.awssdk.services.sns.SnsClient");
   }
 
   @Override

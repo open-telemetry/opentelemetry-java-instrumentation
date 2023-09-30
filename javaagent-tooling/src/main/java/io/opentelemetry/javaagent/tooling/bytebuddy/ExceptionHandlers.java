@@ -75,6 +75,9 @@ public final class ExceptionHandlers {
               mv.visitLabel(handlerExit);
               if (frames) {
                 mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+                // there may be at most one frame at given code location, we need to add an extra
+                // NOP instruction to ensure that there isn't a duplicate frame
+                mv.visitInsn(Opcodes.NOP);
               }
 
               return size;

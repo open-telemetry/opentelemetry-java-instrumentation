@@ -13,7 +13,7 @@ jobs:
   publishLinux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -25,7 +25,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Login to GitHub package registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -48,7 +48,7 @@ jobs:
       - name: Support long paths
         run: git config --system core.longpaths true
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3

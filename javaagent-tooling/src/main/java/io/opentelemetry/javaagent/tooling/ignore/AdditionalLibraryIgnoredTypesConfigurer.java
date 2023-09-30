@@ -154,7 +154,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.core.task.")
         .allowClass("org.springframework.core.DecoratingClassLoader")
         .allowClass("org.springframework.core.OverridingClassLoader")
-        .allowClass("org.springframework.core.ReactiveAdapterRegistry$EmptyCompletableFuture");
+        .allowClass("org.springframework.core.ReactiveAdapterRegistry$EmptyCompletableFuture")
+        .allowClass("org.springframework.core.io.buffer.DataBufferUtils$");
 
     builder
         .ignoreClass("org.springframework.instrument.")
@@ -271,6 +272,6 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("com.fasterxml.jackson.databind.util.internal.PrivateMaxEntriesMap$AddTask");
 
     // kotlin, note we do not ignore kotlinx because we instrument coroutines code
-    builder.ignoreClass("kotlin.").allowClass("kotlin.coroutines.jvm.internal.DebugProbesKt");
+    builder.ignoreClass("kotlin.");
   }
 }

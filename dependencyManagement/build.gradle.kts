@@ -1,9 +1,5 @@
-import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
-
 plugins {
   `java-platform`
-
-  id("com.github.ben-manes.versions")
 }
 
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
@@ -12,11 +8,11 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.28.0"
+val otelSdkVersion = "1.30.1"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.13"
+val groovyVersion = "4.0.15"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -31,25 +27,27 @@ val groovyVersion = "4.0.13"
 
 val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.15.2",
+  "com.squareup.okio:okio-bom:3.5.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
   "com.google.guava:guava-bom:32.1.2-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
   "org.junit:junit-bom:5.10.0",
-  "org.testcontainers:testcontainers-bom:1.18.3",
+  "org.testcontainers:testcontainers-bom:1.19.0",
   "org.spockframework:spock-bom:2.4-M1-groovy-4.0"
 )
 
 val autoServiceVersion = "1.1.1"
-val autoValueVersion = "1.10.2"
-val errorProneVersion = "2.21.0"
-val byteBuddyVersion = "1.14.5"
+val autoValueVersion = "1.10.4"
+val errorProneVersion = "2.22.0"
+val byteBuddyVersion = "1.14.8"
 val asmVersion = "9.5"
-val jmhVersion = "1.36"
+val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
-val slf4jVersion = "2.0.7"
+val slf4jVersion = "2.0.9"
 
 val CORE_DEPENDENCIES = listOf(
+  "io.opentelemetry.semconv:opentelemetry-semconv:1.21.0-alpha",
   "com.google.auto.service:auto-service:${autoServiceVersion}",
   "com.google.auto.service:auto-service-annotations:${autoServiceVersion}",
   "com.google.auto.value:auto-value:${autoValueVersion}",
@@ -64,6 +62,7 @@ val CORE_DEPENDENCIES = listOf(
   "net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}",
   "org.ow2.asm:asm:${asmVersion}",
   "org.ow2.asm:asm-tree:${asmVersion}",
+  "org.ow2.asm:asm-util:${asmVersion}",
   "org.openjdk.jmh:jmh-core:${jmhVersion}",
   "org.openjdk.jmh:jmh-generator-bytecode:${jmhVersion}",
   "org.mockito:mockito-core:${mockitoVersion}",
@@ -80,11 +79,12 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
+  "io.r2dbc:r2dbc-proxy:1.1.2.RELEASE",
   "ch.qos.logback:logback-classic:1.3.8", // 1.4+ requires Java 11+
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
-  "uk.org.webcompere:system-stubs-jupiter:2.0.2",
-  "com.uber.nullaway:nullaway:0.10.11",
+  "uk.org.webcompere:system-stubs-jupiter:2.0.3",
+  "com.uber.nullaway:nullaway:0.10.14",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
   "commons-codec:commons-codec:1.16.0",
@@ -108,9 +108,9 @@ val DEPENDENCIES = listOf(
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.3",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
-  "org.springframework.boot:spring-boot-dependencies:2.7.14",
+  "org.springframework.boot:spring-boot-dependencies:2.7.16",
   "javax.validation:validation-api:2.0.1.Final",
-  "org.snakeyaml:snakeyaml-engine:2.6"
+  "org.snakeyaml:snakeyaml-engine:2.7"
 )
 
 javaPlatform {
@@ -133,25 +133,6 @@ dependencies {
       api(dependency)
       val split = dependency.split(':')
       dependencyVersions[split[0]] = split[2]
-    }
-  }
-}
-
-fun isNonStable(version: String): Boolean {
-  val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.uppercase().contains(it) }
-  val regex = "^[0-9,.v-]+(-r)?$".toRegex()
-  val isGuava = version.endsWith("-jre")
-  val isStable = stableKeyword || regex.matches(version) || isGuava
-  return isStable.not()
-}
-
-tasks {
-  named<DependencyUpdatesTask>("dependencyUpdates") {
-    revision = "release"
-    checkConstraints = true
-
-    rejectVersionIf {
-      isNonStable(candidate.version)
     }
   }
 }

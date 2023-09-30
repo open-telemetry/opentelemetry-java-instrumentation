@@ -21,7 +21,7 @@ import static java.util.stream.Collectors.toSet
 class SpringBootSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20230321.4484174638"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20230920.6251727205"
   }
 
   @Override
@@ -93,6 +93,13 @@ class SpringBootSmokeTest extends SmokeTest {
       .findAny()
     serviceName.isPresent()
     serviceName.get() == "otel-spring-test-app"
+
+    then: "service version is autodetected"
+    def serviceVersion = findResourceAttribute(traces, "service.version")
+        .map { it.stringValue }
+        .findAny()
+    serviceVersion.isPresent()
+    serviceVersion.get() == "1.31.0-alpha-SNAPSHOT"
 
     cleanup:
     stopTarget()

@@ -17,12 +17,13 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.util.ClassInfo;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashSet;
@@ -81,6 +82,7 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
   protected abstract HttpResponse sendRequest(HttpRequest request) throws Exception;
 
   @Test
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void errorTracesWhenExceptionIsNotThrown() throws Exception {
     URI uri = resolveAddress("/error");
 
@@ -95,18 +97,21 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
                     span.hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            satisfies(SemanticAttributes.NET_PEER_PORT, port -> port.isPositive()),
-                            equalTo(SemanticAttributes.HTTP_URL, uri.toString()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 500),
+                            equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
                             satisfies(
-                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                getAttributeKey(SemanticAttributes.NET_PEER_PORT),
+                                port -> port.isPositive()),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), uri.toString()),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET"),
+                            equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), 500),
+                            satisfies(
+                                getAttributeKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH),
                                 length -> length.isPositive())),
                 span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(0))));
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     // executeAsync does not actually allow asynchronous execution since it returns a standard
     // Future which cannot have callbacks attached. We instrument execute and executeAsync
@@ -117,13 +122,18 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
     // Circular redirects don't throw an exception with Google Http Client
     optionsBuilder.disableTestCircularRedirects();
 
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
-          return attributes;
-        });
+    // can only use supported method
+    optionsBuilder.disableTestNonStandardHttpMethod();
+
+    if (SemconvStability.emitOldHttpSemconv()) {
+      optionsBuilder.setHttpAttributes(
+          uri -> {
+            Set<AttributeKey<?>> attributes =
+                new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+            attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
+            attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+            return attributes;
+          });
+    }
   }
 }

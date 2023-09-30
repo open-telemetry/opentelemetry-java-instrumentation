@@ -36,6 +36,11 @@ public class TestInstrumentationModule extends InstrumentationModule {
         "test-resources/test-resource.txt", "test-resources/test-resource-2.txt");
   }
 
+  @Override
+  public boolean isIndyModule() {
+    return false;
+  }
+
   public static class TestTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {

@@ -45,3 +45,17 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
     }
   }
 }
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    filter {
+      excludeTestsMatching("RatpackRoutesTest")
+    }
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}

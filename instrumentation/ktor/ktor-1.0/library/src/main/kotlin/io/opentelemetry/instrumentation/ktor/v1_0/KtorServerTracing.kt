@@ -18,10 +18,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
@@ -37,6 +37,10 @@ class KtorServerTracing private constructor(
     internal val additionalExtractors = mutableListOf<AttributesExtractor<in ApplicationRequest, in ApplicationResponse>>()
 
     internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE)
+
+    internal val httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE)
+
+    internal val httpServerRouteBuilder = HttpServerRoute.builder(KtorHttpServerAttributesGetter.INSTANCE)
 
     internal var statusExtractor:
       (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse> = { a -> a }
@@ -54,9 +58,7 @@ class KtorServerTracing private constructor(
       this.statusExtractor = extractor
     }
 
-    fun setSpanKindExtractor(
-      extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>
-    ) {
+    fun setSpanKindExtractor(extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>) {
       this.spanKindExtractor = extractor
     }
 
@@ -74,6 +76,8 @@ class KtorServerTracing private constructor(
 
     fun setKnownMethods(knownMethods: Set<String>) {
       httpAttributesExtractorBuilder.setKnownMethods(knownMethods)
+      httpSpanNameExtractorBuilder.setKnownMethods(knownMethods)
+      httpServerRouteBuilder.setKnownMethods(knownMethods)
     }
 
     internal fun isOpenTelemetryInitialized(): Boolean = this::openTelemetry.isInitialized
@@ -112,7 +116,7 @@ class KtorServerTracing private constructor(
       val instrumenterBuilder = Instrumenter.builder<ApplicationRequest, ApplicationResponse>(
         configuration.openTelemetry,
         INSTRUMENTATION_NAME,
-        HttpSpanNameExtractor.create(httpAttributesGetter),
+        configuration.httpSpanNameExtractorBuilder.build()
       )
 
       configuration.additionalExtractors.forEach { instrumenterBuilder.addAttributesExtractor(it) }
@@ -121,7 +125,7 @@ class KtorServerTracing private constructor(
         setSpanStatusExtractor(configuration.statusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter)))
         addAttributesExtractor(configuration.httpAttributesExtractorBuilder.build())
         addOperationMetrics(HttpServerMetrics.get())
-        addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
+        addContextCustomizer(configuration.httpServerRouteBuilder.build())
       }
 
       val instrumenter = InstrumenterUtil.buildUpstreamInstrumenter(
@@ -175,7 +179,7 @@ class KtorServerTracing private constructor(
       pipeline.environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
         val context = call.attributes.getOrNull(contextKey)
         if (context != null) {
-          HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.SERVLET, { _, arg -> arg.route.parent.toString() }, call)
+          HttpServerRoute.update(context, HttpServerRouteSource.SERVER, { _, arg -> arg.route.parent.toString() }, call)
         }
       }
 

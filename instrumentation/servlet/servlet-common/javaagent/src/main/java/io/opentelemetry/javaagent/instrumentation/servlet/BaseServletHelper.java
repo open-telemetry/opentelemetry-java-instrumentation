@@ -5,19 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.FILTER;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.SERVLET;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource.SERVER;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource.SERVER_FILTER;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.security.Principal;
 import java.util.function.Function;
 
@@ -86,8 +86,8 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
       Context context, REQUEST request, MappingResolver mappingResolver, boolean servlet) {
     Context result = addServletContextPath(context, request);
     if (mappingResolver != null) {
-      HttpRouteHolder.updateHttpRoute(
-          result, servlet ? SERVLET : FILTER, spanNameProvider, mappingResolver, request);
+      HttpServerRoute.update(
+          result, servlet ? SERVER : SERVER_FILTER, spanNameProvider, mappingResolver, request);
     }
 
     return result;

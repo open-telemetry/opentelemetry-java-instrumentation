@@ -52,7 +52,7 @@ final class Vertx4HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
       case HTTP_1_1:
         return "1.1";
       case HTTP_2:
-        return "2.0";
+        return "2";
     }
     return null;
   }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tapestry;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -58,7 +58,7 @@ public class InitializeActivePageNameInstrumentation implements TypeInstrumentat
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) ComponentEventRequestParameters parameters) {
-      HttpRouteHolder.updateHttpRoute(
+      HttpServerRoute.update(
           currentContext(),
           CONTROLLER,
           TapestryServerSpanNaming.SERVER_SPAN_NAME,
@@ -71,7 +71,7 @@ public class InitializeActivePageNameInstrumentation implements TypeInstrumentat
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) PageRenderRequestParameters parameters) {
-      HttpRouteHolder.updateHttpRoute(
+      HttpServerRoute.update(
           currentContext(),
           CONTROLLER,
           TapestryServerSpanNaming.SERVER_SPAN_NAME,

@@ -40,6 +40,11 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue
 @Unroll
 abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {
 
+  static final ServerEndpoint ACCESS_LOG_SUCCESS = new ServerEndpoint("ACCESS_LOG_SUCCESS",
+    "success?access-log=true", SUCCESS.status, SUCCESS.body, false)
+  static final ServerEndpoint ACCESS_LOG_ERROR = new ServerEndpoint("ACCESS_LOG_ERROR",
+      "error-status?access-log=true", ERROR.status, ERROR.body, false)
+
   @Override
   Throwable expectedException() {
     new ServletException(EXCEPTION.body)
@@ -101,7 +106,6 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
 
   def setup() {
     accessLogValue.loggedIds.clear()
-    accessLogValue.disable()
   }
 
   @Override
@@ -123,10 +127,8 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
   }
 
   def "access log has ids for #count requests"() {
-    accessLogValue.enable()
-
     given:
-    def request = request(SUCCESS, method)
+    def request = request(ACCESS_LOG_SUCCESS, method)
 
     when:
     List<AggregatedHttpResponse> responses = (1..count).collect {
@@ -135,8 +137,8 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
 
     then:
     responses.each { response ->
-      assert response.status().code() == SUCCESS.status
-      assert response.contentUtf8() == SUCCESS.body
+      assert response.status().code() == ACCESS_LOG_SUCCESS.status
+      assert response.contentUtf8() == ACCESS_LOG_SUCCESS.body
     }
 
     and:
@@ -148,7 +150,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
 
       (0..count - 1).each {
         trace(it, 2) {
-          serverSpan(it, 0, null, null, "GET", SUCCESS.body.length())
+          serverSpan(it, 0, null, null, "GET", ACCESS_LOG_SUCCESS)
           controllerSpan(it, 1, span(0))
         }
 
@@ -165,14 +167,13 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
   def "access log has ids for error request"() {
     setup:
     assumeTrue(testError())
-    accessLogValue.enable()
 
-    def request = request(ERROR, method)
+    def request = request(ACCESS_LOG_ERROR, method)
     def response = client.execute(request).aggregate().join()
 
     expect:
-    response.status().code() == ERROR.status
-    response.contentUtf8() == ERROR.body
+    response.status().code() == ACCESS_LOG_ERROR.status
+    response.contentUtf8() == ACCESS_LOG_ERROR.body
 
     and:
     def spanCount = 2
@@ -181,7 +182,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     }
     assertTraces(1) {
       trace(0, spanCount) {
-        serverSpan(it, 0, null, null, method, response.content().length(), ERROR)
+        serverSpan(it, 0, null, null, method, ACCESS_LOG_ERROR)
         def spanIndex = 1
         controllerSpan(it, spanIndex, span(spanIndex - 1))
         spanIndex++
@@ -251,22 +252,13 @@ class ErrorHandlerValve extends ErrorReportValve {
 
 class TestAccessLogValve extends ValveBase implements AccessLog {
   final List<Tuple2<String, String>> loggedIds = []
-  volatile boolean enabled = false
 
   TestAccessLogValve() {
     super(true)
   }
 
-  void disable() {
-    enabled = false
-  }
-
-  void enable() {
-    enabled = true
-  }
-
   void log(Request request, Response response, long time) {
-    if (!enabled) {
+    if (request.getParameter("access-log") == null) {
       return
     }
 

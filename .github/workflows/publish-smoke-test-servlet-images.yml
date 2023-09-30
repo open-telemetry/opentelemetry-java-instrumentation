@@ -47,7 +47,7 @@ jobs:
         run: git config --system core.longpaths true
         if: matrix.os == 'windows-latest'
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Free disk space
         if: matrix.os != 'windows-latest'
@@ -60,7 +60,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Login to GitHub package registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}

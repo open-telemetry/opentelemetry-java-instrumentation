@@ -3,7 +3,8 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":testing-common:library-for-integration-tests"))
+  compileOnly(project(":testing-common:library-for-integration-tests"))
+  testImplementation(project(":testing-common:library-for-integration-tests"))
 
   testCompileOnly(project(":instrumentation-api"))
   testCompileOnly(project(":javaagent-tooling"))
@@ -45,10 +46,27 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
+  val testIndyModuleOldBytecodeInstrumentation by registering(Test::class) {
+    filter {
+      includeTestsMatching("InstrumentOldBytecode")
+    }
+    include("**/InstrumentOldBytecode.*")
+    jvmArgs("-Dotel.instrumentation.inline-ibm-resource-level.enabled=false")
+  }
+
+  val testInlineModuleOldBytecodeInstrumentation by registering(Test::class) {
+    filter {
+      includeTestsMatching("InstrumentOldBytecode")
+    }
+    include("**/InstrumentOldBytecode.*")
+    jvmArgs("-Dotel.instrumentation.indy-ibm-resource-level.enabled=false")
+  }
+
   test {
     filter {
       excludeTestsMatching("context.FieldInjectionDisabledTest")
       excludeTestsMatching("context.FieldBackedImplementationTest")
+      excludeTestsMatching("InstrumentOldBytecode")
     }
     // this is needed for AgentInstrumentationSpecificationTest
     jvmArgs("-Dotel.javaagent.exclude-classes=config.exclude.packagename.*,config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")

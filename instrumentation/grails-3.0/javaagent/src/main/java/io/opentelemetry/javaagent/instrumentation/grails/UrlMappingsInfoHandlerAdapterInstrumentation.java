@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.grails;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -13,7 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -48,9 +48,9 @@ public class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrum
       if (handler instanceof GrailsControllerUrlMappingInfo) {
         Context parentContext = Java8BytecodeBridge.currentContext();
 
-        HttpRouteHolder.updateHttpRoute(
+        HttpServerRoute.update(
             parentContext,
-            CONTROLLER,
+            HttpServerRouteSource.CONTROLLER,
             GrailsServerSpanNaming.SERVER_SPAN_NAME,
             (GrailsControllerUrlMappingInfo) handler);
       }

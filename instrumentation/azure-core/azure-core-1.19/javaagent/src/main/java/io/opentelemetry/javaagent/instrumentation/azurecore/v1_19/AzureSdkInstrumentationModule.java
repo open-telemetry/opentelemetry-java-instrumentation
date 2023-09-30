@@ -36,6 +36,11 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    return false;
+  }
+
+  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // this class was introduced in azure-core 1.19
     return hasClassesNamed("com.azure.core.util.tracing.StartSpanOptions")

@@ -48,7 +48,7 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -59,6 +59,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
@@ -72,6 +73,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public abstract class AbstractGrpcTest {
   protected static final String CLIENT_REQUEST_METADATA_KEY = "some-client-key";
 
@@ -1467,6 +1469,70 @@ public abstract class AbstractGrpcTest {
     clientCallDone.await(10, TimeUnit.SECONDS);
 
     assertThat(error).hasValue(null);
+  }
+
+  // Regression test for
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8923
+  @Test
+  void cancelListenerCalled() throws Exception {
+    CountDownLatch startLatch = new CountDownLatch(1);
+    CountDownLatch cancelLatch = new CountDownLatch(1);
+    AtomicBoolean cancelCalled = new AtomicBoolean();
+
+    Server server =
+        configureServer(
+                ServerBuilder.forPort(0)
+                    .addService(
+                        new GreeterGrpc.GreeterImplBase() {
+                          @Override
+                          public void sayHello(
+                              Helloworld.Request request,
+                              StreamObserver<Helloworld.Response> responseObserver) {
+                            startLatch.countDown();
+
+                            io.grpc.Context context = io.grpc.Context.current();
+                            context.addListener(
+                                context1 -> cancelCalled.set(true), MoreExecutors.directExecutor());
+                            try {
+                              cancelLatch.await(10, TimeUnit.SECONDS);
+                            } catch (InterruptedException e) {
+                              Thread.currentThread().interrupt();
+                            }
+                            responseObserver.onNext(
+                                Helloworld.Response.newBuilder()
+                                    .setMessage(request.getName())
+                                    .build());
+                            responseObserver.onCompleted();
+                          }
+                        }))
+            .build()
+            .start();
+    ManagedChannel channel = createChannel(server);
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    GreeterGrpc.GreeterFutureStub client = GreeterGrpc.newFutureStub(channel);
+    ListenableFuture<Helloworld.Response> future =
+        client.sayHello(Helloworld.Request.newBuilder().setName("test").build());
+
+    startLatch.await(10, TimeUnit.SECONDS);
+    future.cancel(false);
+    cancelLatch.countDown();
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("example.Greeter/SayHello")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent(),
+                    span ->
+                        span.hasName("example.Greeter/SayHello")
+                            .hasKind(SpanKind.SERVER)
+                            .hasParent(trace.getSpan(0))));
+
+    assertThat(cancelCalled.get()).isEqualTo(true);
   }
 
   @Test

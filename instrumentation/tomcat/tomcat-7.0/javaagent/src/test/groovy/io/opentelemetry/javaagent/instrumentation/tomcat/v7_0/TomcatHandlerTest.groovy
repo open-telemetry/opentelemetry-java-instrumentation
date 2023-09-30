@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -52,6 +53,14 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
   @Override
   boolean testCapturedRequestParameters() {
     true
+  }
+
+  @Override
+  String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    if (method == HttpConstants._OTHER) {
+      return getContextPath() + endpoint.path
+    }
+    return super.expectedHttpRoute(endpoint, method)
   }
 
   @Override

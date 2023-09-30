@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.kafka.internal;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceiveRequest, Void> {
@@ -25,12 +25,7 @@ enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceive
 
     String clientId = request.getClientId();
     if (clientId != null) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID, clientId);
-    }
-
-    String consumerId = request.getConsumerId();
-    if (consumerId != null) {
-      attributes.put(SemanticAttributes.MESSAGING_CONSUMER_ID, consumerId);
+      attributes.put(SemanticAttributes.MESSAGING_CLIENT_ID, clientId);
     }
   }
 

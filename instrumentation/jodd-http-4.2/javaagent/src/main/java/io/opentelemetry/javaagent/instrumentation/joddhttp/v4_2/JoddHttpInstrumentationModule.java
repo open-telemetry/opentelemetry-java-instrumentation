@@ -19,6 +19,13 @@ public class JoddHttpInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // JoddHttpHttpAttributesGetterTest is not an agent test, with indy it can't access
+    // JoddHttpHttpAttributesGetter
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Collections.singletonList(new JoddHttpInstrumentation());
   }

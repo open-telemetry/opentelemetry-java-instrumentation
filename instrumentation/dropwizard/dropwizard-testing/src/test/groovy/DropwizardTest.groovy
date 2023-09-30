@@ -83,14 +83,14 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
   }
 
   @Override
-  String expectedHttpRoute(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     switch (endpoint) {
       case NOT_FOUND:
         return getContextPath() + "/*"
       case PATH_PARAM:
         return getContextPath() + "/path/{id}/param"
       default:
-        return super.expectedHttpRoute(endpoint)
+        return super.expectedHttpRoute(endpoint, method)
     }
   }
 

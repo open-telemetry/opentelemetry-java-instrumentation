@@ -13,12 +13,13 @@ import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.internal.http.HttpMethod;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashSet;
@@ -92,6 +93,7 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestCircularRedirects();
 
@@ -100,13 +102,15 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
 
-          // protocol is extracted from the response, and those URLs cause exceptions (= null
-          // response)
-          if ("http://localhost:61/".equals(uri.toString())
-              || "https://192.0.2.1/".equals(uri.toString())
-              || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+          if (SemconvStability.emitOldHttpSemconv()) {
+            // protocol is extracted from the response, and those URLs cause exceptions (= null
+            // response)
+            if ("http://localhost:61/".equals(uri.toString())
+                || "https://192.0.2.1/".equals(uri.toString())
+                || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
+              attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
+              attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+            }
           }
 
           return attributes;

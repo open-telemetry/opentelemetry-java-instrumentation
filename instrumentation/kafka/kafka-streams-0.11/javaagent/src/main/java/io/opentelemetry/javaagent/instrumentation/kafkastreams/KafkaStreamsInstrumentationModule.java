@@ -19,6 +19,13 @@ public class KafkaStreamsInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // java.lang.NoClassDefFoundError:
+    // io/opentelemetry/javaagent/instrumentation/kafkastreams/StateHolder
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new PartitionGroupInstrumentation(),

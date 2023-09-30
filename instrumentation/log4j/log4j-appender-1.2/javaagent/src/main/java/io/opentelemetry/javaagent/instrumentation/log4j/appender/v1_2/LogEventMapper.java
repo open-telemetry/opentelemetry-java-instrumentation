@@ -16,9 +16,10 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.Instant;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +108,7 @@ public final class LogEventMapper {
     // span context
     builder.setContext(Context.current());
 
+    builder.setTimestamp(Instant.now());
     builder.emit();
   }
 

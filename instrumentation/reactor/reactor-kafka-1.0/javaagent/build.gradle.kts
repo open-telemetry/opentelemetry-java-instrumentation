@@ -22,9 +22,9 @@ dependencies {
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common:library"))
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
-  // using 1.3.0 to be able to implement several new KafkaReceiver methods added in 1.3.3
+  // using 1.3 to be able to implement several new KafkaReceiver methods added in 1.3.3 and 1.3.21
   // @NoMuzzle is used to ensure that this does not break muzzle checks
-  compileOnly("io.projectreactor.kafka:reactor-kafka:1.3.3")
+  compileOnly("io.projectreactor.kafka:reactor-kafka:1.3.21")
 
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
@@ -55,7 +55,28 @@ testing {
       targets {
         all {
           testTask.configure {
-            systemProperty("hasConsumerGroupAndId", true)
+            systemProperty("hasConsumerGroup", true)
+          }
+        }
+      }
+    }
+
+    val testV1_3_21 by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
+
+        if (testLatestDeps) {
+          implementation("io.projectreactor.kafka:reactor-kafka:+")
+          implementation("io.projectreactor:reactor-core:3.4.+")
+        } else {
+          implementation("io.projectreactor.kafka:reactor-kafka:1.3.21")
+        }
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            systemProperty("hasConsumerGroup", true)
           }
         }
       }
@@ -72,7 +93,7 @@ tasks {
   }
 
   test {
-    systemProperty("hasConsumerGroupAndId", testLatestDeps)
+    systemProperty("hasConsumerGroup", testLatestDeps)
   }
 
   check {

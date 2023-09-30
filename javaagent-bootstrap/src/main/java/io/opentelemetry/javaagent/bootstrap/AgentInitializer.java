@@ -81,13 +81,13 @@ public final class AgentInitializer {
         });
   }
 
-  @SuppressWarnings({"deprecation", "removal"}) // AccessController is deprecated
+  @SuppressWarnings("removal") // AccessController is deprecated for removal
   private static <T> T doPrivilegedExceptionAction(PrivilegedExceptionAction<T> action)
       throws Exception {
     return java.security.AccessController.doPrivileged(action);
   }
 
-  @SuppressWarnings({"deprecation", "removal"}) // AccessController is deprecated
+  @SuppressWarnings("removal") // AccessController is deprecated for removal
   private static <T> T doPrivileged(PrivilegedAction<T> action) {
     return java.security.AccessController.doPrivileged(action);
   }

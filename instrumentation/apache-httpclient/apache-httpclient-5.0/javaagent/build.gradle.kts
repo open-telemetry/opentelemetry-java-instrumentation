@@ -13,3 +13,13 @@ muzzle {
 dependencies {
   library("org.apache.httpcomponents.client5:httpclient5:5.0")
 }
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}

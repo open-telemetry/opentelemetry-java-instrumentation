@@ -19,14 +19,16 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.springframework.web.reactive.HandlerResult;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
 public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
@@ -69,8 +71,8 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       // using the last portion of the nested path.
       // HttpRouteSource.NESTED_CONTROLLER has useFirst false, and it will make http.route updated
       // twice: 1st using the last portion of the nested path, 2nd time using the full nested path.
-      HttpRouteHolder.updateHttpRoute(
-          parentContext, HttpRouteSource.NESTED_CONTROLLER, httpRouteGetter(), exchange);
+      HttpServerRoute.update(
+          parentContext, HttpServerRouteSource.NESTED_CONTROLLER, httpRouteGetter(), exchange);
 
       if (handler == null) {
         return;
@@ -86,6 +88,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
+        @Advice.Return(readOnly = false) Mono<HandlerResult> mono,
         @Advice.Argument(0) ServerWebExchange exchange,
         @Advice.Argument(1) Object handler,
         @Advice.Thrown Throwable throwable,
@@ -99,6 +102,8 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       if (throwable != null) {
         instrumenter().end(context, handler, null, throwable);
       } else {
+        mono = AdviceUtils.wrapMono(mono, context);
+        exchange.getAttributes().put(AdviceUtils.CONTEXT, context);
         AdviceUtils.registerOnSpanEnd(exchange, context, handler);
         // span finished by wrapped Mono in DispatcherHandlerInstrumentation
         // the Mono is already wrapped at this point, but doesn't read the ON_SPAN_END until

@@ -17,6 +17,7 @@ dependencies {
 
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
+  testImplementation(project(":instrumentation:ktor:ktor-2.0:testing"))
   testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
   testLibrary("io.ktor:ktor-server-netty:$ktorVersion")

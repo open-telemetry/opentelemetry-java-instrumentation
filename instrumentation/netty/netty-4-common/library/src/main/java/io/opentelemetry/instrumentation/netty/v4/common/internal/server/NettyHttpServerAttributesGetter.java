@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.netty.v4.common.internal.server;
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_UDP;
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_UDP;
 
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.handler.codec.http.HttpResponse;
@@ -85,6 +85,9 @@ final class NettyHttpServerAttributesGetter
   public String getNetworkProtocolVersion(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     HttpVersion version = requestAndChannel.request().getProtocolVersion();
+    if (version.minorVersion() == 0) {
+      return Integer.toString(version.majorVersion());
+    }
     return version.majorVersion() + "." + version.minorVersion();
   }
 

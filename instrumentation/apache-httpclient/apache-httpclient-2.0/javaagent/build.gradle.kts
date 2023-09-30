@@ -17,7 +17,15 @@ dependencies {
 }
 
 tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
+
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }

@@ -36,5 +36,11 @@ tasks {
     jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
     jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.client.request=some-client-key")
     jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.server.request=some-server-key")
+
+    // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
+    // breaks the tests
+    classpath = classpath.filter {
+      !it.absolutePath.contains("opentelemetry-grpc-1.6")
+    }
   }
 }

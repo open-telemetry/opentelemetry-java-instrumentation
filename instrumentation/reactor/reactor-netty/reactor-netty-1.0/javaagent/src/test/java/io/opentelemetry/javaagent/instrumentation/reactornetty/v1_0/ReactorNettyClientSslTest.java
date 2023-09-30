@@ -12,7 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.Abstr
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.handler.ssl.SslContextBuilder;
@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 import javax.net.ssl.SSLException;
@@ -36,6 +36,7 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientResponse;
 import reactor.netty.tcp.SslProvider;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class ReactorNettyClientSslTest {
 
   @RegisterExtension

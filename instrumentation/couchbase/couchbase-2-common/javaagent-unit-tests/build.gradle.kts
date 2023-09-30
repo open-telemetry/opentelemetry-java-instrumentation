@@ -3,9 +3,6 @@ plugins {
 }
 
 dependencies {
-  testImplementation("org.apache.groovy:groovy")
-  testImplementation("org.spockframework:spock-core")
-
   testImplementation(project(":instrumentation-api-semconv"))
   testImplementation(project(":javaagent-extension-api"))
   testImplementation(project(":instrumentation:couchbase:couchbase-2-common:javaagent"))

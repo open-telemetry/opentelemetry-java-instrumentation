@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.MiddleServiceImpl
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.apache.dubbo.common.utils.NetUtils
 import org.apache.dubbo.config.ApplicationConfig
 import org.apache.dubbo.config.ProtocolConfig
@@ -140,6 +140,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.RPC_METHOD" "\$invoke"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == null || it instanceof String}
           }
         }
         span(2) {
@@ -166,9 +167,9 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.RPC_METHOD" "\$invoke"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" Long
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == null || String }
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" { it == null || Long }
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" { it == null || String }
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == null || it instanceof String }
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" { it == null || it instanceof Long }
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" { it == null || it instanceof String }
           }
         }
         span(4) {
@@ -255,6 +256,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.RPC_METHOD" "\$invoke"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == null || it instanceof String}
           }
         }
         span(2) {

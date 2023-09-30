@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.appender.v1_1
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -16,7 +17,8 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
+import java.time.Instant;
 import java.util.stream.Stream;
 import org.jboss.logmanager.Level;
 import org.jboss.logmanager.LogContext;
@@ -108,6 +110,8 @@ class JbossLogmanagerTest {
       String expectedSeverityText)
       throws InterruptedException {
 
+    Instant start = Instant.now();
+
     // when
     if (withParent) {
       testing.runWithSpan(
@@ -128,6 +132,11 @@ class JbossLogmanagerTest {
           .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
           .hasSeverity(expectedSeverity)
           .hasSeverityText(expectedSeverityText);
+
+      assertThat(log.getTimestampEpochNanos())
+          .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
+          .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
+
       if (logException) {
         assertThat(log)
             .hasAttributesSatisfyingExactly(

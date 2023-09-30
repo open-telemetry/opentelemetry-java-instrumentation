@@ -15,10 +15,9 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
@@ -35,25 +34,25 @@ class HttpClientExperimentalMetricsStableSemconvTest {
 
     Attributes requestAttributes =
         Attributes.builder()
-            .put(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
-            .put(UrlAttributes.URL_FULL, "https://localhost:1234/")
-            .put(UrlAttributes.URL_SCHEME, "https")
-            .put(UrlAttributes.URL_PATH, "/")
-            .put(UrlAttributes.URL_QUERY, "q=a")
-            .put(NetworkAttributes.SERVER_ADDRESS, "localhost")
-            .put(NetworkAttributes.SERVER_PORT, 1234)
+            .put(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
+            .put(SemanticAttributes.URL_FULL, "https://localhost:1234/")
+            .put(SemanticAttributes.URL_SCHEME, "https")
+            .put(SemanticAttributes.URL_PATH, "/")
+            .put(SemanticAttributes.URL_QUERY, "q=a")
+            .put(SemanticAttributes.SERVER_ADDRESS, "localhost")
+            .put(SemanticAttributes.SERVER_PORT, 1234)
             .build();
 
     Attributes responseAttributes =
         Attributes.builder()
-            .put(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
-            .put(HttpAttributes.HTTP_REQUEST_BODY_SIZE, 100)
-            .put(HttpAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
-            .put(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http")
-            .put(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
-            .put(NetworkAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4")
-            .put(NetworkAttributes.SERVER_SOCKET_DOMAIN, "somehost20")
-            .put(NetworkAttributes.SERVER_SOCKET_PORT, 8080)
+            .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
+            .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
+            .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
+            .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
+            .put(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
+            .put(SemanticAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4")
+            .put(SemanticAttributes.SERVER_SOCKET_DOMAIN, "somehost20")
+            .put(SemanticAttributes.SERVER_SOCKET_PORT, 8080)
             .build();
 
     Context parent =
@@ -89,16 +88,18 @@ class HttpClientExperimentalMetricsStableSemconvTest {
                                     point
                                         .hasSum(100 /* bytes */)
                                         .hasAttributesSatisfying(
-                                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(
-                                                NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
+                                                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(
-                                                NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(NetworkAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(NetworkAttributes.SERVER_PORT, 1234),
+                                                SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
-                                                NetworkAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4"))
+                                                SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+                                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                            equalTo(SemanticAttributes.SERVER_PORT, 1234),
+                                            equalTo(
+                                                SemanticAttributes.SERVER_SOCKET_ADDRESS,
+                                                "1.2.3.4"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -115,16 +116,18 @@ class HttpClientExperimentalMetricsStableSemconvTest {
                                     point
                                         .hasSum(200 /* bytes */)
                                         .hasAttributesSatisfying(
-                                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(
-                                                NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
+                                                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(
-                                                NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(NetworkAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(NetworkAttributes.SERVER_PORT, 1234),
+                                                SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
-                                                NetworkAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4"))
+                                                SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+                                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                            equalTo(SemanticAttributes.SERVER_PORT, 1234),
+                                            equalTo(
+                                                SemanticAttributes.SERVER_SOCKET_ADDRESS,
+                                                "1.2.3.4"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar

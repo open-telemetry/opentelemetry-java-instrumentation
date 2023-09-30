@@ -136,7 +136,7 @@ fun configureImage(
   isWindows: Boolean
 ): String {
   // Using separate build directory for different image
-  val dockerWorkingDir = file("$buildDir/docker-$server-$version-jdk$jdk-$vm-$warProject")
+  val dockerWorkingDir = layout.buildDirectory.dir("docker-$server-$version-jdk$jdk-$vm-$warProject")
   val dockerFileName = "$dockerfile.${if (isWindows) "windows." else ""}dockerfile"
   val platformSuffix = if (isWindows) "-windows" else ""
 
@@ -167,7 +167,6 @@ fun configureImage(
   } else if (vm == "openj9") {
     if (isWindows) {
       // ibm-semeru-runtimes doesn't publish windows images
-      // adoptopenjdk doesn't publish Windows 2022 images (and is deprecated)
       throw GradleException("Unexpected vm: $vm")
     } else {
       "ibm-semeru-runtimes:open-$jdk-jdk"
@@ -201,7 +200,7 @@ fun configureImage(
 
     inputDir.set(dockerWorkingDir)
     images.add(image)
-    dockerFile.set(File(dockerWorkingDir, dockerFileName))
+    dockerFile.set(File(dockerWorkingDir.get().asFile, dockerFileName))
     buildArgs.set(extraArgs + mapOf("jdk" to jdk, "vm" to vm, "version" to version, "jdkImage" to jdkImage))
     doLast {
       matrix.add(image)
@@ -232,7 +231,6 @@ fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean) {
         for (vm in entry.vm) {
           if (vm == "openj9" && isWindows) {
             // ibm-semeru-runtimes doesn't publish windows images
-            // adoptopenjdk is deprecated and doesn't publish Windows 2022 images
             continue
           }
           for (jdk in entry.jdk) {

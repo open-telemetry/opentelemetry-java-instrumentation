@@ -45,6 +45,7 @@ final class ApplicationLoggerFactory extends ApplicationLoggerBridge
     while (inMemoryLogStore.currentSize() > 0) {
       inMemoryLogStore.flush(applicationLoggerFactory);
     }
+    inMemoryLogStore.setApplicationLoggerFactory(applicationLoggerFactory);
 
     // actually install the application logger - from this point, everything will be logged
     // directly through the application logging system

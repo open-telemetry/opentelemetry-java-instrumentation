@@ -6,16 +6,17 @@
 package io.opentelemetry.instrumentation.elasticsearch.rest.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
+import java.util.HashSet;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.Response;
@@ -31,12 +32,19 @@ public class ElasticsearchClientAttributeExtractor
 
   private static final Cache<String, AttributeKey<String>> pathPartKeysCache = Cache.bounded(64);
 
+  private final Set<String> knownMethods;
+
+  ElasticsearchClientAttributeExtractor(Set<String> knownMethods) {
+    this.knownMethods = new HashSet<>(knownMethods);
+  }
+
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static void setServerAttributes(AttributesBuilder attributes, Response response) {
     HttpHost host = response.getHost();
     if (host != null) {
       if (SemconvStability.emitStableHttpSemconv()) {
-        internalSet(attributes, NetworkAttributes.SERVER_ADDRESS, host.getHostName());
-        internalSet(attributes, NetworkAttributes.SERVER_PORT, (long) host.getPort());
+        internalSet(attributes, SemanticAttributes.SERVER_ADDRESS, host.getHostName());
+        internalSet(attributes, SemanticAttributes.SERVER_PORT, (long) host.getPort());
       }
       if (SemconvStability.emitOldHttpSemconv()) {
         internalSet(attributes, SemanticAttributes.NET_PEER_NAME, host.getHostName());
@@ -45,13 +53,14 @@ public class ElasticsearchClientAttributeExtractor
     }
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static void setUrlAttribute(AttributesBuilder attributes, Response response) {
     String uri = response.getRequestLine().getUri();
     uri = uri.startsWith("/") ? uri : "/" + uri;
     String fullUrl = response.getHost().toURI() + uri;
 
     if (SemconvStability.emitStableHttpSemconv()) {
-      internalSet(attributes, UrlAttributes.URL_FULL, fullUrl);
+      internalSet(attributes, SemanticAttributes.URL_FULL, fullUrl);
     }
 
     if (SemconvStability.emitOldHttpSemconv()) {
@@ -77,9 +86,21 @@ public class ElasticsearchClientAttributeExtractor
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ElasticsearchRestRequest request) {
-    internalSet(attributes, SemanticAttributes.HTTP_METHOD, request.getMethod());
+    String method = request.getMethod();
+    if (SemconvStability.emitStableHttpSemconv()) {
+      if (method == null || knownMethods.contains(method)) {
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
+      } else {
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      }
+    }
+    if (SemconvStability.emitOldHttpSemconv()) {
+      internalSet(attributes, SemanticAttributes.HTTP_METHOD, method);
+    }
     setPathPartsAttributes(attributes, request);
   }
 

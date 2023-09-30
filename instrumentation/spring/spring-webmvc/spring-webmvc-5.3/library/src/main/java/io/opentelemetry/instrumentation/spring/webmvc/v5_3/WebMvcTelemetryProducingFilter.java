@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource.CONTROLLER;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -61,8 +61,7 @@ final class WebMvcTelemetryProducingFilter extends OncePerRequestFilter implemen
       throw t;
     } finally {
       if (httpRouteSupport.hasMappings()) {
-        HttpRouteHolder.updateHttpRoute(
-            context, CONTROLLER, httpRouteSupport::getHttpRoute, request);
+        HttpServerRoute.update(context, CONTROLLER, httpRouteSupport::getHttpRoute, request);
       }
       instrumenter.end(context, request, response, error);
     }

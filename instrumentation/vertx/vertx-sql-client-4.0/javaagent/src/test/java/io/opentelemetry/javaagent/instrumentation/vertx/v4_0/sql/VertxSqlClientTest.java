@@ -7,17 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_NAME;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_USER;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_EVENT_NAME;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_PEER_NAME;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_PEER_PORT;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_SQL_TABLE;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_USER;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.SemanticAttributes.NET_PEER_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.NET_PEER_PORT;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class VertxSqlClientTest {
   private static final Logger logger = LoggerFactory.getLogger(VertxSqlClientTest.class);
 
@@ -202,6 +203,10 @@ class VertxSqlClientTest {
         .toCompletableFuture()
         .get(30, TimeUnit.SECONDS);
 
+    assertPreparedSelect();
+  }
+
+  private static void assertPreparedSelect() {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -248,5 +253,39 @@ class VertxSqlClientTest {
                             equalTo(DB_SQL_TABLE, "test"),
                             equalTo(NET_PEER_NAME, "localhost"),
                             equalTo(NET_PEER_PORT, port))));
+  }
+
+  @Test
+  void testWithTransaction() throws Exception {
+    testing
+        .runWithSpan(
+            "parent",
+            () ->
+                pool.withTransaction(
+                    conn ->
+                        conn.preparedQuery("select * from test where id = $1")
+                            .execute(Tuple.of(1))))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, TimeUnit.SECONDS);
+
+    assertPreparedSelect();
+  }
+
+  @Test
+  void testWithConnection() throws Exception {
+    testing
+        .runWithSpan(
+            "parent",
+            () ->
+                pool.withConnection(
+                    conn ->
+                        conn.preparedQuery("select * from test where id = $1")
+                            .execute(Tuple.of(1))))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, TimeUnit.SECONDS);
+
+    assertPreparedSelect();
   }
 }

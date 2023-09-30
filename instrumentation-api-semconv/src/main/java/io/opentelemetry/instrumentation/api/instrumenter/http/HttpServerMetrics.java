@@ -5,25 +5,22 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpRequestBodySize;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpResponseBodySize;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createDurationHistogram;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.nanosToUnit;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerDurationAndSizeView;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createStableDurationHistogramBuilder;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.LongHistogram;
-import io.opentelemetry.api.metrics.LongUpDownCounter;
+import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * {@link OperationListener} which keeps track of <a
@@ -32,8 +29,11 @@ import java.util.logging.Logger;
  */
 public final class HttpServerMetrics implements OperationListener {
 
-  private static final ContextKey<State> HTTP_SERVER_REQUEST_METRICS_STATE =
-      ContextKey.named("http-server-request-metrics-state");
+  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
+  private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
+
+  private static final ContextKey<State> HTTP_SERVER_METRICS_STATE =
+      ContextKey.named("http-server-metrics-state");
 
   private static final Logger logger = Logger.getLogger(HttpServerMetrics.class.getName());
 
@@ -46,49 +46,42 @@ public final class HttpServerMetrics implements OperationListener {
     return HttpServerMetrics::new;
   }
 
-  private final LongUpDownCounter activeRequests;
-  private final DoubleHistogram duration;
-  private final LongHistogram requestSize;
-  private final LongHistogram responseSize;
+  @Nullable private final DoubleHistogram stableDuration;
+  @Nullable private final DoubleHistogram oldDuration;
 
   private HttpServerMetrics(Meter meter) {
-    activeRequests =
-        meter
-            .upDownCounterBuilder("http.server.active_requests")
-            .setUnit("{requests}")
-            .setDescription("The number of concurrent HTTP requests that are currently in-flight")
-            .build();
-    duration =
-        createDurationHistogram(
-            meter, "http.server.duration", "The duration of the inbound HTTP request");
-    requestSize =
-        meter
-            .histogramBuilder("http.server.request.size")
-            .setUnit("By")
-            .setDescription("The size of HTTP request messages")
-            .ofLongs()
-            .build();
-    responseSize =
-        meter
-            .histogramBuilder("http.server.response.size")
-            .setUnit("By")
-            .setDescription("The size of HTTP response messages")
-            .ofLongs()
-            .build();
+    if (SemconvStability.emitStableHttpSemconv()) {
+      DoubleHistogramBuilder stableDurationBuilder =
+          createStableDurationHistogramBuilder(
+              meter, "http.server.request.duration", "The duration of the inbound HTTP request");
+      HttpMetricsAdvice.applyStableServerDurationAdvice(stableDurationBuilder);
+      stableDuration = stableDurationBuilder.build();
+    } else {
+      stableDuration = null;
+    }
+    if (SemconvStability.emitOldHttpSemconv()) {
+      DoubleHistogramBuilder oldDurationBuilder =
+          meter
+              .histogramBuilder("http.server.duration")
+              .setUnit("ms")
+              .setDescription("The duration of the inbound HTTP request");
+      HttpMetricsAdvice.applyOldServerDurationAdvice(oldDurationBuilder);
+      oldDuration = oldDurationBuilder.build();
+    } else {
+      oldDuration = null;
+    }
   }
 
   @Override
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-    activeRequests.add(1, applyActiveRequestsView(startAttributes), context);
-
     return context.with(
-        HTTP_SERVER_REQUEST_METRICS_STATE,
+        HTTP_SERVER_METRICS_STATE,
         new AutoValue_HttpServerMetrics_State(startAttributes, startNanos));
   }
 
   @Override
   public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-    State state = context.get(HTTP_SERVER_REQUEST_METRICS_STATE);
+    State state = context.get(HTTP_SERVER_METRICS_STATE);
     if (state == null) {
       logger.log(
           FINE,
@@ -96,23 +89,15 @@ public final class HttpServerMetrics implements OperationListener {
           context);
       return;
     }
-    // it's important to use exactly the same attributes that were used when incrementing the active
-    // request count (otherwise it will split the timeseries)
-    activeRequests.add(-1, applyActiveRequestsView(state.startAttributes()), context);
 
-    Attributes durationAndSizeAttributes =
-        applyServerDurationAndSizeView(state.startAttributes(), endAttributes);
-    duration.record(
-        nanosToUnit(endNanos - state.startTimeNanos()), durationAndSizeAttributes, context);
+    Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
 
-    Long requestBodySize = getHttpRequestBodySize(endAttributes, state.startAttributes());
-    if (requestBodySize != null) {
-      requestSize.record(requestBodySize, durationAndSizeAttributes, context);
+    if (stableDuration != null) {
+      stableDuration.record((endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
     }
 
-    Long responseBodySize = getHttpResponseBodySize(endAttributes, state.startAttributes());
-    if (responseBodySize != null) {
-      responseSize.record(responseBodySize, durationAndSizeAttributes, context);
+    if (oldDuration != null) {
+      oldDuration.record((endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
     }
   }
 

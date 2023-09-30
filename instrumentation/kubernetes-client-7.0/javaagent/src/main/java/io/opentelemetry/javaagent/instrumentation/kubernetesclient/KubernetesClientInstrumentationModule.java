@@ -20,6 +20,12 @@ public class KubernetesClientInstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  public boolean isIndyModule() {
+    // conflict with bundled okhttp, BuildRequestAdvice uses okhttp3.Request
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ApiClientInstrumentation());
   }

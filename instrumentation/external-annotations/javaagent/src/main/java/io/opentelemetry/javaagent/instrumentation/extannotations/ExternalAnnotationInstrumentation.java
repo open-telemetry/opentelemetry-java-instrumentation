@@ -52,7 +52,8 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
           + PACKAGE_CLASS_NAME_REGEX
           + "\\s*;?\\s*";
 
-  private static final List<String> DEFAULT_ANNOTATIONS =
+  // visible for testing
+  static final List<String> DEFAULT_ANNOTATIONS =
       Arrays.asList(
           "com.appoptics.api.ext.LogMethod",
           "com.newrelic.api.agent.Trace",
@@ -111,7 +112,8 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
         ExternalAnnotationInstrumentation.class.getName() + "$ExternalAnnotationAdvice");
   }
 
-  private static Set<String> configureAdditionalTraceAnnotations(InstrumentationConfig config) {
+  // visible for testing
+  static Set<String> configureAdditionalTraceAnnotations(InstrumentationConfig config) {
     String configString = config.getString(TRACE_ANNOTATIONS_CONFIG);
     if (configString == null) {
       return Collections.unmodifiableSet(new HashSet<>(DEFAULT_ANNOTATIONS));

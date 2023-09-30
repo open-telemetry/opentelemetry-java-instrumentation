@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
@@ -18,7 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.internal.Intern
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -52,7 +51,9 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   @Deprecated
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
+      io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
+              REQUEST, RESPONSE>
+          netAttributesGetter) {
     return builder(httpAttributesGetter, netAttributesGetter).build();
   }
 
@@ -76,7 +77,9 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   @Deprecated
   public static <REQUEST, RESPONSE> HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      NetServerAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
+      io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
+              REQUEST, RESPONSE>
+          netAttributesGetter) {
     return new HttpServerAttributesExtractorBuilder<>(httpAttributesGetter, netAttributesGetter);
   }
 

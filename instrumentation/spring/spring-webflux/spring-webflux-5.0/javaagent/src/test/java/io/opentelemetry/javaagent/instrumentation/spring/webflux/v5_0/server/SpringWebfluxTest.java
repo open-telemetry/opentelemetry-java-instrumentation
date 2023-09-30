@@ -9,27 +9,27 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_EVENT_NAME;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_ROUTE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_SCHEME;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_TARGET;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_HOST_NAME;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_HOST_PORT;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_PROTOCOL_NAME;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_PROTOCOL_VERSION;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_HOST_ADDR;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_PEER_ADDR;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_PEER_PORT;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_TRANSPORT;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.USER_AGENT_ORIGINAL;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_METHOD;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_SCHEME;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_STATUS_CODE;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_TARGET;
+import static io.opentelemetry.semconv.SemanticAttributes.NET_HOST_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.NET_HOST_PORT;
+import static io.opentelemetry.semconv.SemanticAttributes.NET_PROTOCOL_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.NET_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_HOST_ADDR;
+import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_ADDR;
+import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_PORT;
+import static io.opentelemetry.semconv.SemanticAttributes.NET_TRANSPORT;
+import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
+import static io.opentelemetry.semconv.SemanticAttributes.USER_AGENT_ORIGINAL;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -40,12 +40,15 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -71,6 +74,7 @@ import server.TestController;
       SpringWebFluxTestApplication.class,
       SpringWebfluxTest.ForceNettyAutoConfiguration.class
     })
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public class SpringWebfluxTest {
   @TestConfiguration
   static class ForceNettyAutoConfiguration {
@@ -286,7 +290,7 @@ public class SpringWebfluxTest {
                 },
                 span ->
                     span.hasName("tracedMethod")
-                        .hasParent(trace.getSpan(0))
+                        .hasParent(trace.getSpan(1))
                         .hasTotalAttributeCount(0)));
   }
 
@@ -406,7 +410,7 @@ public class SpringWebfluxTest {
                 },
                 span ->
                     span.hasName("tracedMethod")
-                        .hasParent(trace.getSpan(parameter.annotatedMethod != null ? 0 : 1))
+                        .hasParent(trace.getSpan(1))
                         .hasTotalAttributeCount(0)));
   }
 
@@ -829,6 +833,69 @@ public class SpringWebfluxTest {
                     "/foo-delayed",
                     "getFooDelayed",
                     new FooModel(3L, "delayed").toString()))));
+  }
+
+  @Test
+  void cancelRequestTest() throws Exception {
+    // fails with SingleThreadedSpringWebfluxTest
+    Assumptions.assumeTrue(this.getClass() == SpringWebfluxTest.class);
+
+    WebClient client =
+        WebClient.builder("h1c://localhost:" + port)
+            .responseTimeout(Duration.ofSeconds(1))
+            .followRedirects()
+            .build();
+    try {
+      client.get("/slow").aggregate().get();
+    } catch (ExecutionException ignore) {
+      // ignore
+    }
+    SpringWebFluxTestApplication.resumeSlowRequest();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /slow")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NET_TRANSPORT, IP_TCP),
+                            equalTo(NET_PROTOCOL_NAME, "http"),
+                            equalTo(NET_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                            equalTo(NET_HOST_NAME, "localhost"),
+                            satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(HTTP_TARGET, "/slow"),
+                            equalTo(HTTP_METHOD, "GET"),
+                            equalTo(HTTP_SCHEME, "http"),
+                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                            equalTo(HTTP_ROUTE, "/slow"),
+                            satisfies(
+                                HTTP_REQUEST_CONTENT_LENGTH,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isInstanceOf(Long.class),
+                                        v -> assertThat(v).isNull())),
+                            satisfies(
+                                HTTP_RESPONSE_CONTENT_LENGTH,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isInstanceOf(Long.class),
+                                        v -> assertThat(v).isNull()))),
+                span ->
+                    span.hasName("SpringWebFluxTestApplication$$Lambda$.handle")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                stringKey("spring-webflux.handler.type"),
+                                value ->
+                                    value.startsWith(
+                                        "server.SpringWebFluxTestApplication$$Lambda$")))));
   }
 
   private static class Parameter {

@@ -9,6 +9,8 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.server.NettyServerInstrumenterFactory;
 import java.util.List;
@@ -19,8 +21,14 @@ import java.util.function.Consumer;
 public final class NettyServerTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
+
   private Consumer<HttpServerAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse>>
       extractorConfigurer = builder -> {};
+  private Consumer<HttpSpanNameExtractorBuilder<HttpRequestAndChannel>>
+      spanNameExtractorConfigurer = builder -> {};
+  private Consumer<HttpServerRouteBuilder<HttpRequestAndChannel>> httpServerRouteConfigurer =
+      builder -> {};
+  private boolean emitExperimentalHttpServerMetrics = false;
 
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -71,6 +79,23 @@ public final class NettyServerTelemetryBuilder {
   public NettyServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     extractorConfigurer =
         extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
+    spanNameExtractorConfigurer =
+        spanNameExtractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
+    httpServerRouteConfigurer =
+        httpServerRouteConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
+    return this;
+  }
+
+  /**
+   * Configures the instrumentation to emit experimental HTTP server metrics.
+   *
+   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public NettyServerTelemetryBuilder setEmitExperimentalHttpServerMetrics(
+      boolean emitExperimentalHttpServerMetrics) {
+    this.emitExperimentalHttpServerMetrics = emitExperimentalHttpServerMetrics;
     return this;
   }
 
@@ -78,6 +103,11 @@ public final class NettyServerTelemetryBuilder {
   public NettyServerTelemetry build() {
     return new NettyServerTelemetry(
         NettyServerInstrumenterFactory.create(
-            openTelemetry, "io.opentelemetry.netty-4.1", extractorConfigurer));
+            openTelemetry,
+            "io.opentelemetry.netty-4.1",
+            extractorConfigurer,
+            spanNameExtractorConfigurer,
+            httpServerRouteConfigurer,
+            emitExperimentalHttpServerMetrics));
   }
 }

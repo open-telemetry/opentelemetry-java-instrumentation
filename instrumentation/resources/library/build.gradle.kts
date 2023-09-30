@@ -6,8 +6,8 @@ val mrJarVersions = listOf(9, 11)
 
 dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-common")
-  implementation("io.opentelemetry:opentelemetry-semconv")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
+  implementation("io.opentelemetry.semconv:opentelemetry-semconv")
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
@@ -50,9 +50,17 @@ for (version in mrJarVersions) {
 
 tasks {
   withType(Jar::class) {
+    val sourcePathProvider = if (name == "jar") {
+      { ss: SourceSet? -> ss?.output }
+    } else if (name == "sourcesJar") {
+      { ss: SourceSet? -> ss?.java }
+    } else {
+      { project.objects.fileCollection() }
+    }
+
     for (version in mrJarVersions) {
       into("META-INF/versions/$version") {
-        from(sourceSets["java$version"].output)
+        from(sourcePathProvider(sourceSets["java$version"]))
       }
     }
     manifest.attributes(

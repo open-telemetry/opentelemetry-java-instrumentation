@@ -7,9 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.undertow;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
@@ -25,11 +27,13 @@ public final class UndertowSingletons {
   static {
     UndertowHttpAttributesGetter httpAttributesGetter = new UndertowHttpAttributesGetter();
 
-    INSTRUMENTER =
+    InstrumenterBuilder<HttpServerExchange, HttpServerExchange> builder =
         Instrumenter.<HttpServerExchange, HttpServerExchange>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
                 HttpServerAttributesExtractor.builder(httpAttributesGetter)
@@ -37,7 +41,10 @@ public final class UndertowSingletons {
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
-            .addContextCustomizer(HttpRouteHolder.create(httpAttributesGetter))
+            .addContextCustomizer(
+                HttpServerRoute.builder(httpAttributesGetter)
+                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .build())
             .addContextCustomizer(
                 (context, request, attributes) -> {
                   // span is ended when counter reaches 0, we start from 2 which accounts for the
@@ -49,8 +56,11 @@ public final class UndertowSingletons {
                       .recordException()
                       .init(context);
                 })
-            .addOperationMetrics(HttpServerMetrics.get())
-            .buildServerInstrumenter(UndertowExchangeGetter.INSTANCE);
+            .addOperationMetrics(HttpServerMetrics.get());
+    if (CommonConfig.get().shouldEmitExperimentalHttpServerMetrics()) {
+      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+    }
+    INSTRUMENTER = builder.buildServerInstrumenter(UndertowExchangeGetter.INSTANCE);
   }
 
   private static final UndertowHelper HELPER = new UndertowHelper(INSTRUMENTER);

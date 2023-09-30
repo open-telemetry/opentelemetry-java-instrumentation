@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.elasticsearch.rest.internal;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;

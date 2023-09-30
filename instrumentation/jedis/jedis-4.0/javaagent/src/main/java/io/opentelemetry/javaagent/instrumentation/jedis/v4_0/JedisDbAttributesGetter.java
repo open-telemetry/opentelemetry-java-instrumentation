@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest> {

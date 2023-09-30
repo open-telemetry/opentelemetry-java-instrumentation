@@ -12,9 +12,9 @@ import spock.lang.Unroll
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OS_TYPE
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OsTypeValues.LINUX
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OsTypeValues.WINDOWS
+import static io.opentelemetry.semconv.ResourceAttributes.OS_TYPE
+import static io.opentelemetry.semconv.ResourceAttributes.OsTypeValues.LINUX
+import static io.opentelemetry.semconv.ResourceAttributes.OsTypeValues.WINDOWS
 import static org.junit.Assume.assumeFalse
 import static org.junit.Assume.assumeTrue
 
@@ -54,7 +54,7 @@ abstract class AppServerTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
     String platformSuffix = windows ? "-windows" : ""
-    String extraTag = "20230614.5268785245"
+    String extraTag = "20230822.5936895750"
     String fullSuffix = "${serverVersion}-jdk$jdk$platformSuffix-$extraTag"
     return getTargetImagePrefix() + ":" + fullSuffix
   }

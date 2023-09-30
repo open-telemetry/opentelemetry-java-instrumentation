@@ -11,7 +11,7 @@ plugins {
 group = "io.opentelemetry.instrumentation"
 
 dependencies {
-  api("io.opentelemetry:opentelemetry-semconv")
+  api("io.opentelemetry.semconv:opentelemetry-semconv")
   api(project(":instrumentation-api"))
   implementation("io.opentelemetry:opentelemetry-extension-incubator")
 

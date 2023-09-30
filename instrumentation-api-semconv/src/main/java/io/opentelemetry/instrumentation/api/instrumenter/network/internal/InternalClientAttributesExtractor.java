@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 /**
@@ -34,13 +34,14 @@ public final class InternalClientAttributesExtractor<REQUEST, RESPONSE> {
     this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onStart(AttributesBuilder attributes, REQUEST request) {
     AddressAndPort clientAddressAndPort = extractClientAddressAndPort(request);
 
     if (emitStableUrlAttributes) {
-      internalSet(attributes, NetworkAttributes.CLIENT_ADDRESS, clientAddressAndPort.address);
+      internalSet(attributes, SemanticAttributes.CLIENT_ADDRESS, clientAddressAndPort.address);
       if (clientAddressAndPort.port != null && clientAddressAndPort.port > 0) {
-        internalSet(attributes, NetworkAttributes.CLIENT_PORT, (long) clientAddressAndPort.port);
+        internalSet(attributes, SemanticAttributes.CLIENT_PORT, (long) clientAddressAndPort.port);
       }
     }
     if (emitOldHttpAttributes) {
@@ -48,6 +49,7 @@ public final class InternalClientAttributesExtractor<REQUEST, RESPONSE> {
     }
   }
 
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onEnd(AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
     AddressAndPort clientAddressAndPort = extractClientAddressAndPort(request);
     String clientSocketAddress = getter.getClientSocketAddress(request, response);
@@ -55,7 +57,7 @@ public final class InternalClientAttributesExtractor<REQUEST, RESPONSE> {
 
     if (clientSocketAddress != null && !clientSocketAddress.equals(clientAddressAndPort.address)) {
       if (emitStableUrlAttributes) {
-        internalSet(attributes, NetworkAttributes.CLIENT_SOCKET_ADDRESS, clientSocketAddress);
+        internalSet(attributes, SemanticAttributes.CLIENT_SOCKET_ADDRESS, clientSocketAddress);
       }
       if (emitOldHttpAttributes) {
         internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_ADDR, clientSocketAddress);
@@ -64,7 +66,7 @@ public final class InternalClientAttributesExtractor<REQUEST, RESPONSE> {
     if (clientSocketPort != null && clientSocketPort > 0) {
       if (emitStableUrlAttributes) {
         if (!clientSocketPort.equals(clientAddressAndPort.port)) {
-          internalSet(attributes, NetworkAttributes.CLIENT_SOCKET_PORT, (long) clientSocketPort);
+          internalSet(attributes, SemanticAttributes.CLIENT_SOCKET_PORT, (long) clientSocketPort);
         }
       }
       if (emitOldHttpAttributes) {

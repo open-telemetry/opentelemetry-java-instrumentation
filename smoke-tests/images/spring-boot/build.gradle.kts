@@ -5,12 +5,12 @@ plugins {
   id("otel.java-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("org.springframework.boot") version "2.7.14"
+  id("org.springframework.boot") version "2.7.16"
 }
 
 dependencies {
   implementation(platform("io.opentelemetry:opentelemetry-bom:1.0.0"))
-  implementation(platform("org.springframework.boot:spring-boot-dependencies:2.7.14"))
+  implementation(platform("org.springframework.boot:spring-boot-dependencies:2.7.16"))
 
   implementation("io.opentelemetry:opentelemetry-api")
   implementation(project(":instrumentation-annotations"))
@@ -35,6 +35,11 @@ java {
   // for jdk9+ jib uses an entrypoint that doesn't work with jdk8
   sourceCompatibility = JavaVersion.VERSION_1_8
   targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+springBoot {
+  buildInfo {
+  }
 }
 
 jib {

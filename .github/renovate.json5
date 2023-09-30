@@ -14,12 +14,39 @@
       "groupName": "guava packages"
     },
     {
+      "matchPackageNames": ["io.quarkus", "io.quarkus:quarkus-bom"],
+      "groupName": "quarkus packages"
+    },
+    {
       "matchPackagePrefixes": ["com.gradle.enterprise"],
       "groupName": "gradle enterprise packages"
     },
     {
       "matchPackagePrefixes": ["org.eclipse.jetty:"],
       "groupName": "jetty packages"
+    },
+    {
+      "matchPackagePrefixes": ["com.linecorp.armeria:"],
+      "groupName": "armeria packages"
+    },
+    {
+      "matchPackagePrefixes": ["com.diffplug.spotless"],
+      "groupName": "spotless packages"
+    },
+    {
+      // prevent update to 2.4-groovy-4.0-SNAPSHOT
+      "matchPackageNames": ["org.spockframework:spock-bom"],
+      "allowedVersions": "!/\\-SNAPSHOT$/"
+    },
+    {
+      // prevent 3.0.1u2 -> 3.0.1
+      "matchPackageNames": ["com.google.code.findbugs:annotations"],
+      "allowedVersions": "!/3\\.0\\.1$/"
+    },
+    {
+      // OpenTelemetry SDK updates are handled by auto-update-otel-sdk.yml
+      "matchPackagePrefixes": ["io.opentelemetry:"],
+      "enabled": false
     },
     {
       // junit-pioneer 2+ requires Java 11+
@@ -34,9 +61,15 @@
       "enabled": false
     },
     {
+      // system-stubs-jupiter 2.1+ requires Java 11+
+      "matchPackageNames": ["uk.org.webcompere:system-stubs-jupiter"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
+    },
+    {
       // intentionally using Spring Boot 2 in this smoke tests
       "matchFileNames": ["smoke-tests/images/spring-boot/build.gradle.kts"],
-      "matchPackageNames": ["org.springframework.boot"],
+      "matchPackageNames": ["org.springframework.boot", "org.springframework.boot:spring-boot-dependencies"],
       "matchUpdateTypes": ["major"],
       "enabled": false,
     },
@@ -82,8 +115,14 @@
     },
     {
       // pinned version for compatibility
-      "matchPackageNames": ["io.opentelemetry:opentelemetry-bom"],
-      "matchCurrentVersion": "1.0.0",
+      "matchPackageNames": ["javax.servlet:javax.servlet-api"],
+      "matchCurrentVersion": "3.0.1",
+      "enabled": false
+    },
+    {
+      // pinned version for compatibility
+      "matchPackageNames": ["jakarta.servlet:jakarta.servlet-api"],
+      "matchCurrentVersion": "5.0.0",
       "enabled": false
     },
     {
@@ -91,6 +130,13 @@
       "matchFileNames": ["dependencyManagement/build.gradle.kts"],
       "matchPackagePrefixes": ["ch.qos.logback:"],
       "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
+    },
+    {
+      // intentionally using Spring Boot 2 in dependency management (for Java 8 support)
+      "matchFileNames": ["dependencyManagement/build.gradle.kts"],
+      "matchPackagePrefixes": ["org.springframework.boot:spring-boot-dependencies"],
+      "matchUpdateTypes": ["major"],
       "enabled": false
     },
     {

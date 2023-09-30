@@ -5,22 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.NESTED_CONTROLLER;
-
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.annotation.Nullable;
 
-public final class ResteasySpanName implements HttpRouteGetter<String> {
+public final class ResteasySpanName implements HttpServerRouteGetter<String> {
 
   public static final ResteasySpanName INSTANCE = new ResteasySpanName();
 
   public void updateServerSpanName(Context context, String name) {
     if (name != null) {
-      HttpRouteHolder.updateHttpRoute(context, NESTED_CONTROLLER, this, name);
+      HttpServerRoute.update(context, HttpServerRouteSource.NESTED_CONTROLLER, this, name);
     }
   }
 

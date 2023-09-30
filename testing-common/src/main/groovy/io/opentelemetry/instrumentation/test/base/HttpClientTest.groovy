@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.test.base
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanId
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
+import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
@@ -146,6 +148,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
       optionsBuilder.setTestCallbackWithParent(HttpClientTest.this.testCallbackWithParent())
       optionsBuilder.setTestCallbackWithImplicitParent(HttpClientTest.this.testCallbackWithImplicitParent())
       optionsBuilder.setTestErrorWithCallback(HttpClientTest.this.testErrorWithCallback())
+      optionsBuilder.setTestNonStandardHttpMethod(HttpClientTest.this.testNonStandardHttpMethod())
     }
   }
 
@@ -181,6 +184,13 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     where:
     path << ["/success", "/success?with=params"]
+  }
+
+  def "request with non-standard http method"() {
+    assumeTrue(SemconvStability.emitStableHttpSemconv())
+    assumeTrue(testNonStandardHttpMethod())
+    expect:
+    junitTest.requestWithNonStandardHttpMethod()
   }
 
   def "basic #method request with parent"() {
@@ -322,6 +332,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     junitTest.httpsRequest()
   }
 
+  def "http client metrics"() {
+    expect:
+    junitTest.httpClientMetrics()
+  }
+
   /**
    * This test fires a large number of concurrent requests.
    * Each request first hits a HTTP server and then makes another client request.
@@ -359,7 +374,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   protected String expectedClientSpanName(URI uri, String method) {
-    return method
+    return HttpConstants._OTHER == method ? "HTTP" : method
   }
 
   Integer responseCodeOnRedirectError() {
@@ -441,6 +456,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   boolean testErrorWithCallback() {
     return true
+  }
+
+  boolean testNonStandardHttpMethod() {
+    true
   }
 
   Throwable clientSpanError(URI uri, Throwable exception) {

@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;

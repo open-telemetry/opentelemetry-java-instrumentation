@@ -9,6 +9,8 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
+import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
@@ -17,9 +19,8 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
-import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -49,12 +50,19 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   }
 
   String expectedServerSpanName(ServerEndpoint endpoint, String method, @Nullable String route) {
+    if (method == HttpConstants._OTHER) {
+      method = "HTTP"
+    }
     return route == null ? method : method + " " + route
   }
 
-  String expectedHttpRoute(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     // no need to compute route if we're not expecting it
     if (!httpAttributes(endpoint).contains(SemanticAttributes.HTTP_ROUTE)) {
+      return null
+    }
+
+    if (method == HttpConstants._OTHER) {
       return null
     }
 
@@ -94,6 +102,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   int getErrorPageSpansCount(ServerEndpoint endpoint) {
     1
+  }
+
+  int getResponseCodeOnNonStandardHttpMethod() {
+    SUCCESS.status
   }
 
   boolean hasErrorPageSpans(ServerEndpoint endpoint) {
@@ -148,8 +160,16 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     true
   }
 
+  boolean testNonStandardHttpMethod() {
+    true
+  }
+
   boolean verifyServerSpanEndTime() {
     return true
+  }
+
+  String getMetricsInstrumentationName() {
+    null
   }
 
   /** A list of additional HTTP server span attributes extracted by the instrumentation per URI. */
@@ -195,8 +215,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       options.expectedServerSpanNameMapper = { endpoint, method, route ->
         HttpServerTest.this.expectedServerSpanName(endpoint, method, route)
       }
-      options.expectedHttpRoute = { endpoint ->
-        HttpServerTest.this.expectedHttpRoute(endpoint)
+      options.expectedHttpRoute = { endpoint, method ->
+        HttpServerTest.this.expectedHttpRoute(endpoint, method)
       }
       options.contextPath = getContextPath()
       options.httpAttributes = { endpoint ->
@@ -212,6 +232,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       options.sockPeerAddr = { endpoint ->
         HttpServerTest.this.sockPeerAddr(endpoint)
       }
+      options.metricsInstrumentationName = {
+        HttpServerTest.this.getMetricsInstrumentationName()
+      }
+      options.responseCodeOnNonStandardHttpMethod = getResponseCodeOnNonStandardHttpMethod()
 
       options.testRedirect = testRedirect()
       options.testError = testError()
@@ -222,6 +246,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       options.testCaptureHttpHeaders = testCapturedHttpHeaders()
       options.testCaptureRequestParameters = testCapturedRequestParameters()
       options.testHttpPipelining = testHttpPipelining()
+      if (!testNonStandardHttpMethod()) {
+        options.disableTestNonStandardHttpMethod()
+      }
     }
 
     // Override trace assertion method. We can call java assertions from groovy but not the other
@@ -234,9 +261,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       String parentId,
       String spanId,
       String method,
-      ServerEndpoint endpoint,
-      AggregatedHttpResponse response) {
-      HttpServerTest.this.assertTheTraces(size, traceId, parentId, spanId, method, endpoint, response)
+      ServerEndpoint endpoint) {
+      HttpServerTest.this.assertTheTraces(size, traceId, parentId, spanId, method, endpoint)
     }
 
     @Override
@@ -314,6 +340,11 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     junitTest.captureRequestParameters()
   }
 
+  def "http server metrics"() {
+    expect:
+    junitTest.httpServerMetrics()
+  }
+
   def "high concurrency test"() {
     expect:
     junitTest.highConcurrency()
@@ -323,6 +354,13 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     assumeTrue(testHttpPipelining())
     expect:
     junitTest.httpPipelining()
+  }
+
+  def "non standard http method"() {
+    assumeTrue(SemconvStability.emitStableHttpSemconv())
+    assumeTrue(testNonStandardHttpMethod())
+    expect:
+    junitTest.requestWithNonStandardHttpMethod()
   }
 
   void assertHighConcurrency(int count) {
@@ -360,7 +398,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   //FIXME: add tests for POST with large/chunked data
 
-  void assertTheTraces(int size, String traceID = null, String parentID = null, String spanID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, AggregatedHttpResponse response = null) {
+  void assertTheTraces(int size, String traceID = null, String parentID = null, String spanID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     def spanCount = 1 // server span
     if (hasResponseSpan(endpoint)) {
       spanCount++
@@ -386,7 +424,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
               assert it.span(0).endEpochNanos - it.span(index).endEpochNanos >= 0
             }
           }
-          serverSpan(it, spanIndex++, traceID, parentID, method, response?.content()?.length(), endpoint, spanID)
+          this.serverSpan(it, spanIndex++, traceID, parentID, method, endpoint, spanID)
           if (hasHandlerSpan(endpoint)) {
             handlerSpan(it, spanIndex++, span(0), method, endpoint)
           }
@@ -459,10 +497,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     }
   }
 
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS, String spanID = null) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String spanID = null) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
-    def assertion = junitTest.assertServerSpan(OpenTelemetryAssertions.assertThat(spanData), method, endpoint)
+    def assertion = junitTest.assertServerSpan(OpenTelemetryAssertions.assertThat(spanData), method, endpoint, endpoint.status)
     if (parentID == null) {
       assertion.hasParentSpanId(SpanId.invalid)
     } else {

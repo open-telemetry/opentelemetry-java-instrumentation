@@ -4,12 +4,13 @@
  */
 
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.eclipse.jetty.server.Response
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
@@ -83,6 +84,9 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint, String method, @Nullable String route) {
+    if (method == HttpConstants._OTHER) {
+      return "HTTP " + endpoint.resolvePath(address).path
+    }
     switch (endpoint) {
       case NOT_FOUND:
         return method

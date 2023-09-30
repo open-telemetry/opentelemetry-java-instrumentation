@@ -46,12 +46,14 @@ public class AwsSdkTelemetry {
   private final boolean captureExperimentalSpanAttributes;
   @Nullable private final TextMapPropagator messagingPropagator;
   private final boolean useXrayPropagator;
+  private final boolean recordIndividualHttpError;
 
   AwsSdkTelemetry(
       OpenTelemetry openTelemetry,
       boolean captureExperimentalSpanAttributes,
       boolean useMessagingPropagator,
-      boolean useXrayPropagator) {
+      boolean useXrayPropagator,
+      boolean recordIndividualHttpError) {
     this.useXrayPropagator = useXrayPropagator;
     this.requestInstrumenter =
         AwsSdkInstrumenterFactory.requestInstrumenter(
@@ -62,6 +64,7 @@ public class AwsSdkTelemetry {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingPropagator =
         useMessagingPropagator ? openTelemetry.getPropagators().getTextMapPropagator() : null;
+    this.recordIndividualHttpError = recordIndividualHttpError;
   }
 
   /**
@@ -74,6 +77,7 @@ public class AwsSdkTelemetry {
         consumerInstrumenter,
         captureExperimentalSpanAttributes,
         messagingPropagator,
-        useXrayPropagator);
+        useXrayPropagator,
+        recordIndividualHttpError);
   }
 }

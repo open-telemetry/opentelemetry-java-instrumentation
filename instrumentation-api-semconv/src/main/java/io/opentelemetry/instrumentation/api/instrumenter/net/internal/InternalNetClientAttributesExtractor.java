@@ -8,24 +8,28 @@ package io.opentelemetry.instrumentation.api.instrumenter.net.internal;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPort;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
+@SuppressWarnings("deprecation") // this class will be removed in the 2.0 version
 public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
 
-  private final NetClientAttributesGetter<REQUEST, RESPONSE> getter;
+  private final io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter<
+          REQUEST, RESPONSE>
+      getter;
   private final FallbackAddressPortExtractor<REQUEST> fallbackAddressPortExtractor;
   private final boolean emitOldHttpAttributes;
 
   public InternalNetClientAttributesExtractor(
-      NetClientAttributesGetter<REQUEST, RESPONSE> getter,
+      io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter<
+              REQUEST, RESPONSE>
+          getter,
       FallbackAddressPortExtractor<REQUEST> fallbackAddressPortExtractor,
       boolean emitOldHttpAttributes) {
     this.getter = getter;

@@ -23,14 +23,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
@@ -39,6 +45,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
 
   private static final String POST_METHOD = "POST";
   private static final String GET_METHOD = "GET";
+  private static final Set<String> knownMethods = CommonConfig.get().getKnownHttpRequestMethods();
 
   protected String getProtocol() {
     return "http";
@@ -82,6 +89,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void pre(
       AttributesBuilder attributes,
       Exchange exchange,
@@ -91,10 +99,27 @@ class HttpSpanDecorator extends BaseSpanDecorator {
 
     String httpUrl = getHttpUrl(exchange, endpoint);
     if (httpUrl != null) {
-      attributes.put(SemanticAttributes.HTTP_URL, httpUrl);
+      if (SemconvStability.emitStableHttpSemconv()) {
+        internalSet(attributes, SemanticAttributes.URL_FULL, httpUrl);
+      }
+
+      if (SemconvStability.emitOldHttpSemconv()) {
+        internalSet(attributes, SemanticAttributes.HTTP_URL, httpUrl);
+      }
     }
 
-    attributes.put(SemanticAttributes.HTTP_METHOD, getHttpMethod(exchange, endpoint));
+    String method = getHttpMethod(exchange, endpoint);
+    if (SemconvStability.emitStableHttpSemconv()) {
+      if (method == null || knownMethods.contains(method)) {
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
+      } else {
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      }
+    }
+    if (SemconvStability.emitOldHttpSemconv()) {
+      internalSet(attributes, SemanticAttributes.HTTP_METHOD, method);
+    }
   }
 
   private static boolean shouldAppendHttpRoute(CamelDirection camelDirection) {
@@ -122,9 +147,9 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     if (!shouldAppendHttpRoute(camelDirection)) {
       return;
     }
-    HttpRouteHolder.updateHttpRoute(
+    HttpServerRoute.update(
         context,
-        HttpRouteSource.CONTROLLER,
+        HttpServerRouteSource.CONTROLLER,
         (c, exchange, endpoint) -> getPath(exchange, endpoint),
         camelExchange,
         camelEndpoint);
@@ -150,13 +175,19 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void post(AttributesBuilder attributes, Exchange exchange, Endpoint endpoint) {
     super.post(attributes, exchange, endpoint);
 
     if (exchange.hasOut()) {
       Object responseCode = exchange.getOut().getHeader(Exchange.HTTP_RESPONSE_CODE);
       if (responseCode instanceof Integer) {
-        attributes.put(SemanticAttributes.HTTP_STATUS_CODE, (Integer) responseCode);
+        if (SemconvStability.emitStableHttpSemconv()) {
+          attributes.put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, (Integer) responseCode);
+        }
+        if (SemconvStability.emitOldHttpSemconv()) {
+          attributes.put(SemanticAttributes.HTTP_STATUS_CODE, (Integer) responseCode);
+        }
       }
     }
   }

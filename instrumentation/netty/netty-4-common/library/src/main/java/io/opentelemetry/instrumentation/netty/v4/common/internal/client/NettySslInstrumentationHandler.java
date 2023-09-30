@@ -94,7 +94,8 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
     promise.addListener(
         future -> {
           // there won't be any SSL handshake if the channel fails to connect
-          if (!future.isSuccess()) {
+          // give up when channelRegistered wasn't called and parentContext is null
+          if (!future.isSuccess() || parentContext == null) {
             return;
           }
           request = NettySslRequest.create(ctx.channel());

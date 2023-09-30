@@ -18,9 +18,11 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -101,6 +103,9 @@ class PeerServiceAttributesExtractorTest {
 
   @Test
   void shouldSetSockPeerNameIfItMatchesAndNoPeerNameProvided() {
+
+    Assumptions.assumeTrue(SemconvStability.emitOldHttpSemconv());
+
     // given
     Map<String, String> peerServiceMapping = new HashMap<>();
     peerServiceMapping.put("example.com", "myService");

@@ -26,9 +26,9 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
+import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
@@ -38,8 +38,8 @@ import javax.annotation.Nullable;
 
 final class OpenTelemetryTracing implements Tracing {
 
-  private static final AttributesExtractor<OpenTelemetryEndpoint, Void> netAttributesExtractor =
-      NetClientAttributesExtractor.create(new LettuceNetAttributesGetter());
+  private static final AttributesExtractor<OpenTelemetryEndpoint, Void> serverAttributesExtractor =
+      ServerAttributesExtractor.create(new LettuceNetworkAttributesGetter());
   private final TracerProvider tracerProvider;
 
   OpenTelemetryTracing(io.opentelemetry.api.trace.Tracer tracer, RedisCommandSanitizer sanitizer) {
@@ -204,7 +204,7 @@ final class OpenTelemetryTracing implements Tracing {
     private void fillEndpoint(OpenTelemetryEndpoint endpoint) {
       AttributesBuilder attributesBuilder = Attributes.builder();
       Context currentContext = span == null ? context : context.with(span);
-      netAttributesExtractor.onEnd(attributesBuilder, currentContext, endpoint, null, null);
+      serverAttributesExtractor.onEnd(attributesBuilder, currentContext, endpoint, null, null);
       if (span != null) {
         span.setAllAttributes(attributesBuilder.build());
       } else {

@@ -11,7 +11,7 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
+import io.opentelemetry.semconv.SemanticAttributes.DbSystemValues;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -863,11 +863,15 @@ public enum JdbcConnectionUrlParser {
     // Make this easier and ignore case.
     connectionUrl = connectionUrl.toLowerCase(Locale.ROOT);
 
-    if (!connectionUrl.startsWith("jdbc:")) {
+    String jdbcUrl;
+    if (connectionUrl.startsWith("jdbc:")) {
+      jdbcUrl = connectionUrl.substring("jdbc:".length());
+    } else if (connectionUrl.startsWith("jdbc-secretsmanager:")) {
+      jdbcUrl = connectionUrl.substring("jdbc-secretsmanager:".length());
+    } else {
       return DEFAULT;
     }
 
-    String jdbcUrl = connectionUrl.substring("jdbc:".length());
     int typeLoc = jdbcUrl.indexOf(':');
 
     if (typeLoc < 1) {

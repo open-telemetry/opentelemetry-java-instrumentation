@@ -23,21 +23,20 @@ class KtorClientTracingBuilder {
   private var openTelemetry: OpenTelemetry? = null
   private val additionalExtractors = mutableListOf<AttributesExtractor<in HttpRequestData, in HttpResponse>>()
   private val httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(KtorHttpClientAttributesGetter)
+  private val httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(KtorHttpClientAttributesGetter)
   private var emitExperimentalHttpClientMetrics = false
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
     this.openTelemetry = openTelemetry
   }
 
-  fun setCapturedRequestHeaders(vararg headers: String) =
-    setCapturedRequestHeaders(headers.asList())
+  fun setCapturedRequestHeaders(vararg headers: String) = setCapturedRequestHeaders(headers.asList())
 
   fun setCapturedRequestHeaders(headers: List<String>) {
     httpAttributesExtractorBuilder.setCapturedRequestHeaders(headers)
   }
 
-  fun setCapturedResponseHeaders(vararg headers: String) =
-    setCapturedResponseHeaders(headers.asList())
+  fun setCapturedResponseHeaders(vararg headers: String) = setCapturedResponseHeaders(headers.asList())
 
   fun setCapturedResponseHeaders(headers: List<String>) {
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(headers)
@@ -45,10 +44,10 @@ class KtorClientTracingBuilder {
 
   fun setKnownMethods(knownMethods: Set<String>) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods)
+    httpSpanNameExtractorBuilder.setKnownMethods(knownMethods)
   }
 
-  fun addAttributesExtractors(vararg extractors: AttributesExtractor<in HttpRequestData, in HttpResponse>) =
-    addAttributesExtractors(extractors.asList())
+  fun addAttributesExtractors(vararg extractors: AttributesExtractor<in HttpRequestData, in HttpResponse>) = addAttributesExtractors(extractors.asList())
 
   fun addAttributesExtractors(extractors: Iterable<AttributesExtractor<in HttpRequestData, in HttpResponse>>) {
     additionalExtractors += extractors
@@ -59,9 +58,7 @@ class KtorClientTracingBuilder {
    *
    * @param emitExperimentalHttpClientMetrics `true` if the experimental HTTP client metrics are to be emitted.
    */
-  fun setEmitExperimentalHttpClientMetrics(
-    emitExperimentalHttpClientMetrics: Boolean
-  ) {
+  fun setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics: Boolean) {
     this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics
   }
 
@@ -72,7 +69,7 @@ class KtorClientTracingBuilder {
     val instrumenterBuilder = Instrumenter.builder<HttpRequestData, HttpResponse>(
       initializedOpenTelemetry,
       INSTRUMENTATION_NAME,
-      HttpSpanNameExtractor.create(KtorHttpClientAttributesGetter),
+      httpSpanNameExtractorBuilder.build()
     )
       .setSpanStatusExtractor(HttpSpanStatusExtractor.create(KtorHttpClientAttributesGetter))
       .addAttributesExtractor(httpAttributesExtractorBuilder.build())

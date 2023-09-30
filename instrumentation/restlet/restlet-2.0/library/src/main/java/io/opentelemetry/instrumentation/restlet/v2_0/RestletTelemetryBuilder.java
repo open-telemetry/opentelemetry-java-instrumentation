@@ -11,6 +11,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHttpAttributesGetter;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletInstrumenterFactory;
 import java.util.ArrayList;
@@ -28,6 +32,12 @@ public final class RestletTelemetryBuilder {
   private final HttpServerAttributesExtractorBuilder<Request, Response>
       httpAttributesExtractorBuilder =
           HttpServerAttributesExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
+  private final HttpSpanNameExtractorBuilder<Request> httpSpanNameExtractorBuilder =
+      HttpSpanNameExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
+  private final HttpServerRouteBuilder<Request> httpServerRouteBuilder =
+      HttpServerRoute.builder(RestletHttpAttributesGetter.INSTANCE);
+
+  private boolean emitExperimentalHttpServerMetrics = false;
 
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -82,6 +92,21 @@ public final class RestletTelemetryBuilder {
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
+    httpSpanNameExtractorBuilder.setKnownMethods(knownMethods);
+    httpServerRouteBuilder.setKnownMethods(knownMethods);
+    return this;
+  }
+
+  /**
+   * Configures the instrumentation to emit experimental HTTP server metrics.
+   *
+   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
+   *     are to be emitted.
+   */
+  @CanIgnoreReturnValue
+  public RestletTelemetryBuilder setEmitExperimentalHttpServerMetrics(
+      boolean emitExperimentalHttpServerMetrics) {
+    this.emitExperimentalHttpServerMetrics = emitExperimentalHttpServerMetrics;
     return this;
   }
 
@@ -92,7 +117,12 @@ public final class RestletTelemetryBuilder {
   public RestletTelemetry build() {
     Instrumenter<Request, Response> serverInstrumenter =
         RestletInstrumenterFactory.newServerInstrumenter(
-            openTelemetry, httpAttributesExtractorBuilder.build(), additionalExtractors);
+            openTelemetry,
+            httpAttributesExtractorBuilder.build(),
+            httpSpanNameExtractorBuilder.build(),
+            httpServerRouteBuilder.build(),
+            additionalExtractors,
+            emitExperimentalHttpServerMetrics);
 
     return new RestletTelemetry(serverInstrumenter);
   }

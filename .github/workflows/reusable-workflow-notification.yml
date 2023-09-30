@@ -13,13 +13,14 @@ jobs:
   workflow-notification:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Open issue or add comment if issue already open
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          number=$(gh issue list --search "Workflow failed: $GITHUB_WORKFLOW" --limit 1 --json number -q .[].number)
+          # TODO (trask) search doesn't support exact phrases, so it's possible that this could grab the wrong issue
+          number=$(gh issue list --search "in:title Workflow failed: $GITHUB_WORKFLOW" --limit 1 --json number -q .[].number)
 
           echo $number
           echo ${{ inputs.success }}

@@ -47,6 +47,10 @@ public final class ExperimentalConfig {
         "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false);
   }
 
+  public boolean indyEnabled() {
+    return config.getBoolean("otel.javaagent.experimental.indy", false);
+  }
+
   public List<String> getMessagingHeaders() {
     return messagingHeaders;
   }

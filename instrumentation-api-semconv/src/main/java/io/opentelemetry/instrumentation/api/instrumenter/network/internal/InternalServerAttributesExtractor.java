@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.function.BiPredicate;
 import javax.annotation.Nullable;
 
@@ -49,7 +49,7 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
     AddressAndPort serverAddressAndPort = extractServerAddressAndPort(request);
 
     if (emitStableUrlAttributes) {
-      internalSet(attributes, NetworkAttributes.SERVER_ADDRESS, serverAddressAndPort.address);
+      internalSet(attributes, SemanticAttributes.SERVER_ADDRESS, serverAddressAndPort.address);
     }
     if (emitOldHttpAttributes) {
       internalSet(attributes, oldSemconvMode.address, serverAddressAndPort.address);
@@ -59,7 +59,7 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
         && serverAddressAndPort.port > 0
         && captureServerPortCondition.test(serverAddressAndPort.port, request)) {
       if (emitStableUrlAttributes) {
-        internalSet(attributes, NetworkAttributes.SERVER_PORT, (long) serverAddressAndPort.port);
+        internalSet(attributes, SemanticAttributes.SERVER_PORT, (long) serverAddressAndPort.port);
       }
       if (emitOldHttpAttributes) {
         internalSet(attributes, oldSemconvMode.port, (long) serverAddressAndPort.port);
@@ -73,7 +73,7 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
     String serverSocketAddress = getter.getServerSocketAddress(request, response);
     if (serverSocketAddress != null && !serverSocketAddress.equals(serverAddressAndPort.address)) {
       if (emitStableUrlAttributes && captureServerSocketAttributes) {
-        internalSet(attributes, NetworkAttributes.SERVER_SOCKET_ADDRESS, serverSocketAddress);
+        internalSet(attributes, SemanticAttributes.SERVER_SOCKET_ADDRESS, serverSocketAddress);
       }
       if (emitOldHttpAttributes) {
         internalSet(attributes, oldSemconvMode.socketAddress, serverSocketAddress);
@@ -85,7 +85,7 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
         && serverSocketPort > 0
         && !serverSocketPort.equals(serverAddressAndPort.port)) {
       if (emitStableUrlAttributes && captureServerSocketAttributes) {
-        internalSet(attributes, NetworkAttributes.SERVER_SOCKET_PORT, (long) serverSocketPort);
+        internalSet(attributes, SemanticAttributes.SERVER_SOCKET_PORT, (long) serverSocketPort);
       }
       if (emitOldHttpAttributes) {
         internalSet(attributes, oldSemconvMode.socketPort, (long) serverSocketPort);
@@ -95,7 +95,7 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
     String serverSocketDomain = getter.getServerSocketDomain(request, response);
     if (serverSocketDomain != null && !serverSocketDomain.equals(serverAddressAndPort.address)) {
       if (emitStableUrlAttributes && captureServerSocketAttributes) {
-        internalSet(attributes, NetworkAttributes.SERVER_SOCKET_DOMAIN, serverSocketDomain);
+        internalSet(attributes, SemanticAttributes.SERVER_SOCKET_DOMAIN, serverSocketDomain);
       }
       if (emitOldHttpAttributes && oldSemconvMode.socketDomain != null) {
         internalSet(attributes, oldSemconvMode.socketDomain, serverSocketDomain);
@@ -117,7 +117,10 @@ public final class InternalServerAttributesExtractor<REQUEST, RESPONSE> {
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
-  @SuppressWarnings("ImmutableEnumChecker")
+  @SuppressWarnings({
+    "ImmutableEnumChecker",
+    "deprecation"
+  }) // until old http semconv are dropped in 2.0
   public enum Mode {
     PEER(
         SemanticAttributes.NET_PEER_NAME,

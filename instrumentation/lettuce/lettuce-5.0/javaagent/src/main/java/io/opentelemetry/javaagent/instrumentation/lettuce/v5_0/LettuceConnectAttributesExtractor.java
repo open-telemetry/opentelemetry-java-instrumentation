@@ -9,7 +9,7 @@ import io.lettuce.core.RedisURI;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 final class LettuceConnectAttributesExtractor implements AttributesExtractor<RedisURI, Void> {

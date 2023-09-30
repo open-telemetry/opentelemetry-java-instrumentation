@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.appender.v1_1;
 
 import static java.util.Collections.emptyList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -16,7 +17,7 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
@@ -99,6 +100,7 @@ public final class LoggingEventMapper {
 
     builder.setContext(Context.current());
 
+    builder.setTimestamp(record.getMillis(), MILLISECONDS);
     builder.emit();
   }
 

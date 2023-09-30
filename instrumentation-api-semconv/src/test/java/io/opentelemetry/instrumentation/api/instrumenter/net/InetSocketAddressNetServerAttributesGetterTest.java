@@ -12,13 +12,14 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+@SuppressWarnings("deprecation") // testing deprecated class
 @ExtendWith(MockitoExtension.class)
 class InetSocketAddressNetServerAttributesGetterTest {
 
@@ -59,6 +60,7 @@ class InetSocketAddressNetServerAttributesGetterTest {
   }
 
   @Test
+  @SuppressWarnings("AddressSelection")
   void fullAddress() {
     // given
     Addresses request =

@@ -18,10 +18,8 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -49,19 +47,19 @@ class HttpServerAttributesExtractorStableSemconvTest {
 
     @Override
     public String getUrlScheme(Map<String, String> request) {
-      return request.get("scheme");
+      return request.get("urlScheme");
     }
 
     @Nullable
     @Override
     public String getUrlPath(Map<String, String> request) {
-      return request.get("path");
+      return request.get("urlPath");
     }
 
     @Nullable
     @Override
     public String getUrlQuery(Map<String, String> request) {
-      return request.get("query");
+      return request.get("urlQuery");
     }
 
     @Override
@@ -93,14 +91,14 @@ class HttpServerAttributesExtractorStableSemconvTest {
     @Override
     public String getNetworkTransport(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("transport");
+      return request.get("networkTransport");
     }
 
     @Nullable
     @Override
     public String getNetworkType(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("type");
+      return request.get("networkType");
     }
 
     @Nullable
@@ -120,13 +118,13 @@ class HttpServerAttributesExtractorStableSemconvTest {
     @Nullable
     @Override
     public String getServerAddress(Map<String, String> request) {
-      return request.get("hostName");
+      return request.get("serverAddress");
     }
 
     @Nullable
     @Override
     public Integer getServerPort(Map<String, String> request) {
-      String value = request.get("hostPort");
+      String value = request.get("serverPort");
       return value == null ? null : Integer.parseInt(value);
     }
 
@@ -150,18 +148,18 @@ class HttpServerAttributesExtractorStableSemconvTest {
   void normal() {
     Map<String, String> request = new HashMap<>();
     request.put("method", "POST");
-    request.put("url", "http://github.com");
-    request.put("path", "/repositories/1");
-    request.put("query", "details=true");
-    request.put("scheme", "http");
+    request.put("urlFull", "http://github.com");
+    request.put("urlPath", "/repositories/1");
+    request.put("urlQuery", "details=true");
+    request.put("urlScheme", "http");
     request.put("header.content-length", "10");
     request.put("route", "/repositories/{id}");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.host", "github.com");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
-    request.put("transport", "udp");
-    request.put("type", "ipv4");
+    request.put("networkTransport", "udp");
+    request.put("networkType", "ipv4");
     request.put("protocolName", "http");
     request.put("protocolVersion", "2.0");
     request.put("serverSocketAddress", "1.2.3.4");
@@ -185,14 +183,14 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(NetworkAttributes.SERVER_ADDRESS, "github.com"),
-            entry(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-            entry(UrlAttributes.URL_SCHEME, "http"),
-            entry(UrlAttributes.URL_PATH, "/repositories/1"),
-            entry(UrlAttributes.URL_QUERY, "details=true"),
+            entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
+            entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
+            entry(SemanticAttributes.URL_SCHEME, "http"),
+            entry(SemanticAttributes.URL_PATH, "/repositories/1"),
+            entry(SemanticAttributes.URL_QUERY, "details=true"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
-            entry(NetworkAttributes.CLIENT_ADDRESS, "1.1.1.1"),
+            entry(SemanticAttributes.CLIENT_ADDRESS, "1.1.1.1"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")));
@@ -201,14 +199,14 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(NetworkAttributes.NETWORK_TRANSPORT, "udp"),
-            entry(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-            entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
-            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+            entry(SemanticAttributes.NETWORK_TRANSPORT, "udp"),
+            entry(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
-            entry(HttpAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
-            entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
-            entry(HttpAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
+            entry(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
+            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
+            entry(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")));
@@ -224,7 +222,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     Map<String, String> request = new HashMap<>();
     request.put("protocolName", observedProtocolName);
     request.put("protocolVersion", observedProtocolVersion);
-    request.put("transport", observedTransport);
+    request.put("networkTransport", observedTransport);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
@@ -235,9 +233,9 @@ class HttpServerAttributesExtractorStableSemconvTest {
 
     if (extractedTransport != null) {
       assertThat(attributes.build())
-          .containsEntry(NetworkAttributes.NETWORK_TRANSPORT, extractedTransport);
+          .containsEntry(SemanticAttributes.NETWORK_TRANSPORT, extractedTransport);
     } else {
-      assertThat(attributes.build()).doesNotContainKey(NetworkAttributes.NETWORK_TRANSPORT);
+      assertThat(attributes.build()).doesNotContainKey(SemanticAttributes.NETWORK_TRANSPORT);
     }
   }
 
@@ -271,8 +269,8 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, requestMethod)
-        .doesNotContainKey(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
+        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, requestMethod)
+        .doesNotContainKey(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
   }
 
   @ParameterizedTest
@@ -289,8 +287,8 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
-        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 
   @ParameterizedTest
@@ -307,8 +305,8 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
-        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 
   @ParameterizedTest
@@ -327,8 +325,8 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, requestMethod)
-        .doesNotContainKey(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
+        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, requestMethod)
+        .doesNotContainKey(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
   }
 
   @ParameterizedTest
@@ -347,7 +345,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
-        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 }

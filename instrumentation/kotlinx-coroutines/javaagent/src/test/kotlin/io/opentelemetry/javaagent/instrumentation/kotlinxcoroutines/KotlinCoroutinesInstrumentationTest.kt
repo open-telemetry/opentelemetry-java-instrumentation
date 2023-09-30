@@ -5,15 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines
 
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
 import io.opentelemetry.context.Scope
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.extension.kotlin.getOpenTelemetryContext
+import io.opentelemetry.instrumentation.annotations.SpanAttribute
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
+import io.opentelemetry.semconv.SemanticAttributes
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -454,20 +460,20 @@ class KotlinCoroutinesInstrumentationTest {
     )
   }
 
-  private val ANIMAL: ContextKey<String> = ContextKey.named("animal")
+  private val animalKey: ContextKey<String> = ContextKey.named("animal")
 
   @ParameterizedTest
   @ArgumentsSource(DispatchersSource::class)
   fun `context contains expected value`(dispatcher: DispatcherWrapper) {
     runTest(dispatcher) {
-      val context1 = Context.current().with(ANIMAL, "cat")
+      val context1 = Context.current().with(animalKey, "cat")
       runBlocking(context1.asContextElement()) {
-        assertThat(Context.current().get(ANIMAL)).isEqualTo("cat")
-        assertThat(coroutineContext.getOpenTelemetryContext().get(ANIMAL)).isEqualTo("cat")
+        assertThat(Context.current().get(animalKey)).isEqualTo("cat")
+        assertThat(coroutineContext.getOpenTelemetryContext().get(animalKey)).isEqualTo("cat")
         tracedChild("nested1")
-        withContext(context1.with(ANIMAL, "dog").asContextElement()) {
-          assertThat(Context.current().get(ANIMAL)).isEqualTo("dog")
-          assertThat(coroutineContext.getOpenTelemetryContext().get(ANIMAL)).isEqualTo("dog")
+        withContext(context1.with(animalKey, "dog").asContextElement()) {
+          assertThat(Context.current().get(animalKey)).isEqualTo("dog")
+          assertThat(coroutineContext.getOpenTelemetryContext().get(animalKey)).isEqualTo("dog")
           tracedChild("nested2")
         }
       }
@@ -490,6 +496,90 @@ class KotlinCoroutinesInstrumentationTest {
           },
         )
       },
+    )
+  }
+
+  @Test
+  fun `test WithSpan annotation`() {
+    runBlocking {
+      annotated1()
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          {
+            it.hasName("a1")
+              .hasNoParent()
+              .hasAttributesSatisfyingExactly(
+                equalTo(SemanticAttributes.CODE_NAMESPACE, this.javaClass.name),
+                equalTo(SemanticAttributes.CODE_FUNCTION, "annotated1")
+              )
+          },
+          {
+            it.hasName("KotlinCoroutinesInstrumentationTest.annotated2")
+              .hasParent(trace.getSpan(0))
+              .hasAttributesSatisfyingExactly(
+                equalTo(SemanticAttributes.CODE_NAMESPACE, this.javaClass.name),
+                equalTo(SemanticAttributes.CODE_FUNCTION, "annotated2"),
+                equalTo(AttributeKey.longKey("byteValue"), 1),
+                equalTo(AttributeKey.longKey("intValue"), 4),
+                equalTo(AttributeKey.longKey("longValue"), 5),
+                equalTo(AttributeKey.longKey("shortValue"), 6),
+                equalTo(AttributeKey.doubleKey("doubleValue"), 2.0),
+                equalTo(AttributeKey.doubleKey("floatValue"), 3.0),
+                equalTo(AttributeKey.booleanKey("booleanValue"), true),
+                equalTo(AttributeKey.stringKey("charValue"), "a"),
+                equalTo(AttributeKey.stringKey("stringValue"), "test")
+              )
+          }
+        )
+      }
+    )
+  }
+
+  @WithSpan(value = "a1", kind = SpanKind.CLIENT)
+  private suspend fun annotated1() {
+    delay(10)
+    annotated2(1, true, 'a', 2.0, 3.0f, 4, 5, 6, "test")
+  }
+
+  @WithSpan
+  private suspend fun annotated2(
+    @SpanAttribute byteValue: Byte,
+    @SpanAttribute booleanValue: Boolean,
+    @SpanAttribute charValue: Char,
+    @SpanAttribute doubleValue: Double,
+    @SpanAttribute floatValue: Float,
+    @SpanAttribute intValue: Int,
+    @SpanAttribute longValue: Long,
+    @SpanAttribute shortValue: Short,
+    @SpanAttribute("stringValue") s: String
+  ) {
+    delay(10)
+  }
+
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/9312
+  @Test
+  fun `test class with default constructor argument`() {
+    runBlocking {
+      val classDefaultConstructorArguments = ClazzWithDefaultConstructorArguments()
+      classDefaultConstructorArguments.sayHello()
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          {
+            it.hasName("ClazzWithDefaultConstructorArguments.sayHello")
+              .hasNoParent()
+              .hasAttributesSatisfyingExactly(
+                equalTo(SemanticAttributes.CODE_NAMESPACE, ClazzWithDefaultConstructorArguments::class.qualifiedName),
+                equalTo(SemanticAttributes.CODE_FUNCTION, "sayHello")
+              )
+          }
+        )
+      }
     )
   }
 
@@ -551,16 +641,15 @@ class KotlinCoroutinesInstrumentationTest {
   }
 
   class DispatchersSource : ArgumentsProvider {
-    override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> =
-      Stream.of(
-        // Wrap dispatchers since it seems that ParameterizedTest tries to automatically close
-        // Closeable arguments with no way to avoid it.
-        arguments(DispatcherWrapper(Dispatchers.Default)),
-        arguments(DispatcherWrapper(Dispatchers.IO)),
-        arguments(DispatcherWrapper(Dispatchers.Unconfined)),
-        arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
-        arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
-      )
+    override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> = Stream.of(
+      // Wrap dispatchers since it seems that ParameterizedTest tries to automatically close
+      // Closeable arguments with no way to avoid it.
+      arguments(DispatcherWrapper(Dispatchers.Default)),
+      arguments(DispatcherWrapper(Dispatchers.IO)),
+      arguments(DispatcherWrapper(Dispatchers.Unconfined)),
+      arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
+      arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
+    )
   }
 
   class DispatcherWrapper(val dispatcher: CoroutineDispatcher) {

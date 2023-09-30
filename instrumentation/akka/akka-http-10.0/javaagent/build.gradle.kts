@@ -42,14 +42,24 @@ dependencies {
   latestDepTestLibrary("com.typesafe.akka:akka-stream_2.13:+")
 }
 
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  }
 
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
+  withType<Test>().configureEach {
+    // required on jdk17
+    jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
+
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }
 
 if (findProperty("testLatestDeps") as Boolean) {
