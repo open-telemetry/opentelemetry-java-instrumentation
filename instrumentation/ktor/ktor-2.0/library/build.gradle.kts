@@ -6,9 +6,6 @@ plugins {
   id("org.jetbrains.kotlin.jvm")
 }
 
-// module name
-val moduleName: String by extra("io.opentelemetry.instrumentation.ktor.v2_0")
-
 val ktorVersion = "2.0.0"
 
 dependencies {

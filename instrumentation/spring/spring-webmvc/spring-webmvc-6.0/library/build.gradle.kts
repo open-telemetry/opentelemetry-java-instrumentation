@@ -2,9 +2,6 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-// module name
-val moduleName: String by extra("io.opentelemetry.instrumentation.spring.webmvc.v6_0")
-
 dependencies {
   compileOnly("org.springframework:spring-webmvc:6.0.0")
   compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")

@@ -2,9 +2,6 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
-// module name
-val moduleName: String by extra("io.opentelemetry.instrumentation.log4j.mdc")
-
 muzzle {
   pass {
     group.set("log4j")

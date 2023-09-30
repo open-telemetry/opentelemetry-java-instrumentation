@@ -2,9 +2,6 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-// module name
-val moduleName: String by extra("io.opentelemetry.instrumentation.log4j.contextdata.v2_17")
-
 base.archivesName.set("${base.archivesName.get()}-autoconfigure")
 
 dependencies {

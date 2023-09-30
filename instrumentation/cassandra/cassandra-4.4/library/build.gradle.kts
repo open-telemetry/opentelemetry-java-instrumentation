@@ -2,9 +2,6 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-// module name
-val moduleName: String by extra("io.opentelemetry.instrumentation.cassandra.v4_4")
-
 dependencies {
   library("com.datastax.oss:java-driver-core:4.4.0")
 

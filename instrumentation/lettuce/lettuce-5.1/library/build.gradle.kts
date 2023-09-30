@@ -3,9 +3,6 @@ plugins {
   id("otel.nullaway-conventions")
 }
 
-// module name
-val moduleName: String by extra("io.opentelemetry.instrumentation.lettuce.v5_1")
-
 dependencies {
   library("io.lettuce:lettuce-core:5.1.0.RELEASE")
 

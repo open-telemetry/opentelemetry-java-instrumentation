@@ -3,9 +3,6 @@ plugins {
   id("otel.nullaway-conventions")
 }
 
-// module name
-val moduleName: String by extra("io.opentelemetry.instrumentation.oracleucp.v11_2")
-
 dependencies {
   library("com.oracle.database.jdbc:ucp:11.2.0.4")
 

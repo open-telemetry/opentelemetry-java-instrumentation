@@ -2,9 +2,6 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-// module name
-val moduleName: String by extra("io.opentelemetry.instrumentation.ratpack.v1_7")
-
 dependencies {
   library("io.ratpack:ratpack-core:1.7.0")
 

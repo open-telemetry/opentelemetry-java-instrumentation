@@ -186,9 +186,6 @@ testing {
   }
 }
 
-// module name
-val moduleName: String? by extra
-
 tasks {
   named<Jar>("jar") {
     // By default Gradle Jar task can put multiple files with the same name
@@ -207,10 +204,6 @@ tasks {
         "Implementation-Vendor" to "OpenTelemetry",
         "Implementation-URL" to "https://github.com/open-telemetry/opentelemetry-java-instrumentation"
       )
-
-      if (moduleName != null) {
-        attributes["Automatic-Module-Name"] = moduleName
-      }
     }
   }
 

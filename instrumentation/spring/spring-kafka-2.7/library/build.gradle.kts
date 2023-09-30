@@ -2,9 +2,6 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-// module name
-val moduleName: String by extra("io.opentelemetry.instrumentation.spring.kafka.v2_7")
-
 dependencies {
   compileOnly(project(":muzzle"))
 

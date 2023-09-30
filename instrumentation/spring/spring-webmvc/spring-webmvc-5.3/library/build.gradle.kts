@@ -2,9 +2,6 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-// module name
-val moduleName: String by extra("io.opentelemetry.instrumentation.spring.webmvc.v5_3")
-
 val versions: Map<String, String> by project
 val springBootVersion = versions["org.springframework.boot"]
 

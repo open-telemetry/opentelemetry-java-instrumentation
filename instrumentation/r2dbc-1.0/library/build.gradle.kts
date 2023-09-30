@@ -2,9 +2,6 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-// module name
-val moduleName: String by extra("io.opentelemetry.instrumentation.r2dbc.v1_0")
-
 dependencies {
   library("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
   implementation("io.r2dbc:r2dbc-proxy:1.0.1.RELEASE")

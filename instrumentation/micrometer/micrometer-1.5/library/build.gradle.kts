@@ -2,9 +2,6 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-// module name
-val moduleName: String by extra("io.opentelemetry.instrumentation.micrometer.v1_5")
-
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-extension-incubator")
 

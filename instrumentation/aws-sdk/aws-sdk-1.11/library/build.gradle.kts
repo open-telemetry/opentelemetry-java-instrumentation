@@ -2,9 +2,6 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-// module name
-val moduleName: String by extra("io.opentelemetry.instrumentation.awssdk.v1_11")
-
 dependencies {
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
