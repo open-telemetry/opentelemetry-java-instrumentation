@@ -194,6 +194,8 @@ testing {
   }
 }
 
+var javaModuleName = "io.opentelemetry" + project.path.replace(".", "_").replace("-", "_").replace(":", ".")
+
 tasks {
   named<Jar>("jar") {
     // By default Gradle Jar task can put multiple files with the same name
@@ -210,7 +212,8 @@ tasks {
         "Implementation-Title" to project.name,
         "Implementation-Version" to project.version,
         "Implementation-Vendor" to "OpenTelemetry",
-        "Implementation-URL" to "https://github.com/open-telemetry/opentelemetry-java-instrumentation"
+        "Implementation-URL" to "https://github.com/open-telemetry/opentelemetry-java-instrumentation",
+        "Automatic-Module-Name" to javaModuleName
       )
     }
   }
