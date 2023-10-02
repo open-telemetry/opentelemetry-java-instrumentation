@@ -122,8 +122,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          // netty 4.1.98 does not run correctly on MacOS
-          belongsTo("io.netty:netty-bom:4.1.97.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.99.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -367,7 +366,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "10.12.3"
+  toolVersion = "10.12.4"
   maxWarnings = 0
 }
 

@@ -460,20 +460,20 @@ class KotlinCoroutinesInstrumentationTest {
     )
   }
 
-  private val ANIMAL: ContextKey<String> = ContextKey.named("animal")
+  private val animalKey: ContextKey<String> = ContextKey.named("animal")
 
   @ParameterizedTest
   @ArgumentsSource(DispatchersSource::class)
   fun `context contains expected value`(dispatcher: DispatcherWrapper) {
     runTest(dispatcher) {
-      val context1 = Context.current().with(ANIMAL, "cat")
+      val context1 = Context.current().with(animalKey, "cat")
       runBlocking(context1.asContextElement()) {
-        assertThat(Context.current().get(ANIMAL)).isEqualTo("cat")
-        assertThat(coroutineContext.getOpenTelemetryContext().get(ANIMAL)).isEqualTo("cat")
+        assertThat(Context.current().get(animalKey)).isEqualTo("cat")
+        assertThat(coroutineContext.getOpenTelemetryContext().get(animalKey)).isEqualTo("cat")
         tracedChild("nested1")
-        withContext(context1.with(ANIMAL, "dog").asContextElement()) {
-          assertThat(Context.current().get(ANIMAL)).isEqualTo("dog")
-          assertThat(coroutineContext.getOpenTelemetryContext().get(ANIMAL)).isEqualTo("dog")
+        withContext(context1.with(animalKey, "dog").asContextElement()) {
+          assertThat(Context.current().get(animalKey)).isEqualTo("dog")
+          assertThat(coroutineContext.getOpenTelemetryContext().get(animalKey)).isEqualTo("dog")
           tracedChild("nested2")
         }
       }
@@ -641,16 +641,15 @@ class KotlinCoroutinesInstrumentationTest {
   }
 
   class DispatchersSource : ArgumentsProvider {
-    override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> =
-      Stream.of(
-        // Wrap dispatchers since it seems that ParameterizedTest tries to automatically close
-        // Closeable arguments with no way to avoid it.
-        arguments(DispatcherWrapper(Dispatchers.Default)),
-        arguments(DispatcherWrapper(Dispatchers.IO)),
-        arguments(DispatcherWrapper(Dispatchers.Unconfined)),
-        arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
-        arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
-      )
+    override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> = Stream.of(
+      // Wrap dispatchers since it seems that ParameterizedTest tries to automatically close
+      // Closeable arguments with no way to avoid it.
+      arguments(DispatcherWrapper(Dispatchers.Default)),
+      arguments(DispatcherWrapper(Dispatchers.IO)),
+      arguments(DispatcherWrapper(Dispatchers.Unconfined)),
+      arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
+      arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
+    )
   }
 
   class DispatcherWrapper(val dispatcher: CoroutineDispatcher) {

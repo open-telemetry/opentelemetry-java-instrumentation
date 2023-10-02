@@ -59,6 +59,7 @@ public abstract class InstrumentationExtension
 
   @Override
   public void afterAll(ExtensionContext extensionContext) throws Exception {
+    testRunner.clearAllExportedData();
     testRunner.afterTestClass();
   }
 
