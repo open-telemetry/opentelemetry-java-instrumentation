@@ -48,8 +48,7 @@ public class NettyChannelPipelineInstrumentation
 
   /**
    * When certain handlers are added to the pipeline, we want to add our corresponding tracing
-   * handlers. If those handlers are later removed, we may want to remove our handlers. That is not
-   * currently implemented.
+   * handlers. If those handlers are later removed, we may want to remove our handlers.
    */
   @SuppressWarnings("unused")
   public static class ChannelPipelineAddAdvice {
