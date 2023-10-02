@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.injection.InjectionMode;
-import io.opentelemetry.javaagent.extension.instrumentation.injection.ProxyInjectionBuilder;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ProxyInjectionBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;

@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ExtendedInstrumentationModule;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
@@ -83,7 +84,10 @@ public final class InstrumentationModuleInstaller {
     instrumentationModule.registerHelperResources(helperResourceBuilder);
 
     ClassInjectorImpl injectedClassesCollector = new ClassInjectorImpl(instrumentationModule);
-    instrumentationModule.injectClasses(injectedClassesCollector);
+    if (instrumentationModule instanceof ExtendedInstrumentationModule) {
+      ((ExtendedInstrumentationModule) instrumentationModule)
+          .injectClasses(injectedClassesCollector);
+    }
 
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(

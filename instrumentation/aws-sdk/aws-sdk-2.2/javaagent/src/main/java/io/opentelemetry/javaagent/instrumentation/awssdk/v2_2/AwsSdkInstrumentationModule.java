@@ -10,11 +10,13 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecuti
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.extension.instrumentation.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.injection.InjectionMode;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ExtendedInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 
 @AutoService(InstrumentationModule.class)
-public class AwsSdkInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
+public class AwsSdkInstrumentationModule extends AbstractAwsSdkInstrumentationModule
+    implements ExtendedInstrumentationModule {
   public AwsSdkInstrumentationModule() {
     super("aws-sdk-2.2-core");
   }
