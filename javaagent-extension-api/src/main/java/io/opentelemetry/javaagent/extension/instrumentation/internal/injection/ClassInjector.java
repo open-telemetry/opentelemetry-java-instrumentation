@@ -13,8 +13,8 @@ public interface ClassInjector {
 
   /**
    * Create a builder for a proxy class which will be injected into the instrumented {@link
-   * ClassLoader}. The generated proxy will contain {@code INVOKEDYNAMIC} instructions to invoke the
-   * proxied class.
+   * ClassLoader}. The generated proxy will delegate to the original class, which is loaded in a
+   * separate classloader.
    *
    * <p>This removes the need for the proxied class and its dependencies to be visible (just like
    * Advices) to the instrumented ClassLoader.
