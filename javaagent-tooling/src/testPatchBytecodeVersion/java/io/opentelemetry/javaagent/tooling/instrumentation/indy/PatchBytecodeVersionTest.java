@@ -155,8 +155,7 @@ class PatchBytecodeVersionTest {
 
   private static ClassFileVersion getBytecodeVersion(Path file) {
     try {
-      byte[] bytecode = Files.readAllBytes(file);
-      return ClassFileVersion.ofMinorMajor((bytecode[5] << 16) | (bytecode[7] & 0xFF));
+      return ClassFileVersion.ofClassFile(Files.readAllBytes(file));
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
