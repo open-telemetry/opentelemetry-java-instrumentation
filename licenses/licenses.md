@@ -1,7 +1,7 @@
 
 # javaagent
 ## Dependency License Report
-_2023-10-01 14:03:06 EEST_
+_2023-10-02 08:38:13 EEST_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -54,7 +54,7 @@ _2023-10-01 14:03:06 EEST_
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [okhttp-4.11.0.jar/okhttp3/internal/publicsuffix/NOTICE](okhttp-4.11.0.jar/okhttp3/internal/publicsuffix/NOTICE)
 
-**9** **Group:** `com.squareup.okio` **Name:** `okio-jvm` **Version:** `3.5.0`
+**9** **Group:** `com.squareup.okio` **Name:** `okio-jvm` **Version:** `3.6.0`
 > - **POM Project URL**: [https://github.com/square/okio/](https://github.com/square/okio/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
@@ -301,4 +301,4 @@ _2023-10-01 14:03:06 EEST_
 
 ## Unknown
 
-**59** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.5.0`
+**59** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.6.0`
