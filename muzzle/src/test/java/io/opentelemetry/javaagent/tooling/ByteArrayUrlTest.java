@@ -1,5 +1,6 @@
-package io.opentelemetry.javaagent.tooling.util;
+package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.javaagent.tooling.ByteArrayUrl;
 import org.junit.jupiter.api.Test;
 import java.net.URL;
 import java.net.URLConnection;

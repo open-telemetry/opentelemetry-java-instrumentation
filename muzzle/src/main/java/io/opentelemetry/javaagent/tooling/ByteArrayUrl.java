@@ -1,4 +1,4 @@
-package io.opentelemetry.javaagent.tooling.util;
+package io.opentelemetry.javaagent.tooling;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
