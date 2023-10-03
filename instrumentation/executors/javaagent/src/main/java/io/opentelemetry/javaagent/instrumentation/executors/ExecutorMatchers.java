@@ -78,6 +78,13 @@ final class ExecutorMatchers {
                 "java.util.concurrent.ForkJoinPool",
                 "java.util.concurrent.ScheduledThreadPoolExecutor",
                 "java.util.concurrent.ThreadPoolExecutor",
+                "org.apache.pekko.dispatch.BalancingDispatcher",
+                "org.apache.pekko.dispatch.Dispatcher",
+                "org.apache.pekko.dispatch.Dispatcher$LazyExecutorServiceDelegate",
+                "org.apache.pekko.dispatch.ExecutionContexts$sameThreadExecutionContext$",
+                "org.apache.pekko.dispatch.ForkJoinExecutorConfigurator$PekkoForkJoinPool",
+                "org.apache.pekko.dispatch.MessageDispatcher",
+                "org.apache.pekko.dispatch.PinnedDispatcher",
                 "org.apache.tomcat.util.threads.ThreadPoolExecutor",
                 "org.eclipse.jetty.util.thread.QueuedThreadPool", // dispatch() covered in the jetty
                 // module
