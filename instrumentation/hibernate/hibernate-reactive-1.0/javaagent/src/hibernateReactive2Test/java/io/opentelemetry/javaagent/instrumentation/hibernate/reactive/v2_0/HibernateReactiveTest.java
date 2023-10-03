@@ -45,6 +45,7 @@ class HibernateReactiveTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  private static final Vertx vertx = Vertx.vertx();
   private static GenericContainer<?> container;
   private static int port;
   private static EntityManagerFactory entityManagerFactory;
@@ -52,7 +53,7 @@ class HibernateReactiveTest {
   private static Stage.SessionFactory stageSessionFactory;
 
   @BeforeAll
-  static void setUp() {
+  static void setUp() throws Exception {
     container =
         new GenericContainer<>("postgres:9.6.8")
             .withEnv("POSTGRES_USER", USER_DB)
@@ -66,7 +67,14 @@ class HibernateReactiveTest {
     port = container.getMappedPort(5432);
     System.setProperty("db.port", String.valueOf(port));
 
-    entityManagerFactory = Persistence.createEntityManagerFactory("test-pu");
+    entityManagerFactory =
+        vertx
+            .getOrCreateContext()
+            .<EntityManagerFactory>executeBlocking(
+                promise -> promise.complete(Persistence.createEntityManagerFactory("test-pu")))
+            .toCompletionStage()
+            .toCompletableFuture()
+            .get(30, TimeUnit.SECONDS);
 
     Value value = new Value("name");
     value.setId(1L);
@@ -91,6 +99,7 @@ class HibernateReactiveTest {
     if (stageSessionFactory != null) {
       stageSessionFactory.close();
     }
+    vertx.close();
     container.stop();
   }
 
@@ -262,7 +271,7 @@ class HibernateReactiveTest {
   }
 
   private static void runWithVertx(Runnable runnable) {
-    Vertx.vertx().getOrCreateContext().runOnContext(event -> runnable.run());
+    vertx.getOrCreateContext().runOnContext(event -> runnable.run());
   }
 
   private static void complete(
