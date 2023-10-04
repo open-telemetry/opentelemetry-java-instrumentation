@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 
 final class GraphqlAttributesExtractor
     implements AttributesExtractor<InstrumentationExecutionParameters, ExecutionResult> {
-  // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/instrumentation/graphql.md
+  // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/graphql.md
   private static final AttributeKey<String> OPERATION_NAME =
       AttributeKey.stringKey("graphql.operation.name");
   private static final AttributeKey<String> OPERATION_TYPE =

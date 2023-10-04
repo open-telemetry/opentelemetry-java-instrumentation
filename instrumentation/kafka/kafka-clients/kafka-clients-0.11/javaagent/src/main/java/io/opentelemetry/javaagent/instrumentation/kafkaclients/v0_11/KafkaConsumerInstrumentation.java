@@ -116,7 +116,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
         // we're storing the context of the receive span so that process spans can use it as
         // parent context even though the span has ended
         // this is the suggested behavior according to the spec batch receive scenario:
-        // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#batch-receiving
+        // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#batch-receiving
         // we're attaching the consumer to the records to be able to retrieve things like consumer
         // group or clientId later
         KafkaConsumerContextUtil.set(records, context, consumer);

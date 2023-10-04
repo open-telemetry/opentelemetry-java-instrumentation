@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 
 /**
  * Extractor of <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/rpc.md">RPC
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md">RPC
  * client attributes</a>.
  *
  * <p>This class delegates to a type-specific {@link RpcAttributesGetter} for individual attribute

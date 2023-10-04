@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#http-server">HTTP
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-server">HTTP
  * server attributes</a>. Instrumentation of HTTP server frameworks should extend this class,
  * defining {@link REQUEST} and {@link RESPONSE} with the actual request / response types of the
  * instrumented library. If an attribute is not available in this library, it is appropriate to
