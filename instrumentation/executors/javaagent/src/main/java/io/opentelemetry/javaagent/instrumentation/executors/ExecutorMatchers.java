@@ -78,6 +78,7 @@ final class ExecutorMatchers {
                 "java.util.concurrent.ForkJoinPool",
                 "java.util.concurrent.ScheduledThreadPoolExecutor",
                 "java.util.concurrent.ThreadPoolExecutor",
+                "java.util.concurrent.ThreadPerTaskExecutor",
                 "org.apache.tomcat.util.threads.ThreadPoolExecutor",
                 "org.eclipse.jetty.util.thread.QueuedThreadPool", // dispatch() covered in the jetty
                 // module

@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.executors;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -24,6 +26,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 abstract class ExecutorInstrumentationTest<T extends ExecutorService>
@@ -47,6 +51,23 @@ abstract class ExecutorInstrumentationTest<T extends ExecutorService>
     }
   }
 
+  @EnabledForJreRange(min = JRE.JAVA_21)
+  static class VirtualThreadExecutorTest extends ExecutorInstrumentationTest<ExecutorService> {
+    VirtualThreadExecutorTest() {
+      super(newVirtualThreadPerAskExecutor());
+    }
+
+    private static ExecutorService newVirtualThreadPerAskExecutor() {
+      Method newVirtualThreadPerTaskExecutor;
+      try {
+        newVirtualThreadPerTaskExecutor = Executors.class.getMethod("newVirtualThreadPerTaskExecutor");
+        ExecutorService executor = (ExecutorService) newVirtualThreadPerTaskExecutor.invoke(null);
+        return executor;
+      } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+        throw new IllegalStateException("Should not happen on Java 21+", e);
+      }
+    }
+  }
   static class WorkStealingPoolTest extends ExecutorInstrumentationTest<ExecutorService> {
     public WorkStealingPoolTest() {
       super(Executors.newWorkStealingPool(2));
