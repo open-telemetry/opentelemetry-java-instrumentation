@@ -100,4 +100,4 @@ The available settings are:
 | `captureMarkerAttribute;`       | Boolean | `false` | Enable the capture of Log4j markers as attributes.                                                                    |
 | `captureContextDataAttributes`  | String  |         | Comma separated list of context data attributes to capture. Use the wildcard character `*` to capture all attributes. |
 
-[source code attributes]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#source-code-attributes
+[source code attributes]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes

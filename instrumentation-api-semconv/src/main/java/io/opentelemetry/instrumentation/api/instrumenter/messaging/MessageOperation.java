@@ -9,7 +9,7 @@ import java.util.Locale;
 
 /**
  * Represents type of <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#operation-names">operations</a>
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#operation-names">operations</a>
  * that may be used in a messaging system.
  */
 public enum MessageOperation {
@@ -19,7 +19,7 @@ public enum MessageOperation {
 
   /**
    * Returns the operation name as defined in <a
-   * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#operation-names">the
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#operation-names">the
    * specification</a>.
    */
   String operationName() {

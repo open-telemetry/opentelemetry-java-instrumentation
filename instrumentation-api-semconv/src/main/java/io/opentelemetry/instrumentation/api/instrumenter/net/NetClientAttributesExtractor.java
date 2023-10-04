@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-network-connection-attributes">Network
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#server-client-and-shared-network-attributes">Network
  * attributes</a>.
  *
  * <p>This class delegates to a type-specific {@link NetClientAttributesGetter} for individual

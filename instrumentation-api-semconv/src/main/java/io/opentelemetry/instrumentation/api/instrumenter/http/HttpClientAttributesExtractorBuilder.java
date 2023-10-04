@@ -50,7 +50,7 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   /**
    * Configures the HTTP request headers that will be captured as span attributes as described in <a
-   * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#http-request-and-response-headers">HTTP
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#common-attributes">HTTP
    * semantic conventions</a>.
    *
    * <p>The HTTP request header values will be captured under the {@code http.request.header.<name>}
@@ -69,7 +69,7 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   /**
    * Configures the HTTP response headers that will be captured as span attributes as described in
    * <a
-   * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#http-request-and-response-headers">HTTP
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#common-attributes">HTTP
    * semantic conventions</a>.
    *
    * <p>The HTTP response header values will be captured under the {@code
