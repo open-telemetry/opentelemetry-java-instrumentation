@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.TypeUtils;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -39,7 +40,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     Channel channel = ctx.channel();
     Deque<ServerContext> serverContexts = getOrCreate(channel, AttributeKeys.SERVER_CONTEXT);
 
-    if (!(msg instanceof HttpRequest)) {
+    if (! TypeUtils.isHttpRequest(msg)) {
       ServerContext serverContext = serverContexts.peekLast();
       if (serverContext == null) {
         super.channelRead(ctx, msg);

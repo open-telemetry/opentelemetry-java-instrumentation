@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.TypeUtils;
 import java.util.Deque;
 import javax.annotation.Nullable;
 
@@ -57,7 +58,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
 
     ChannelPromise writePromise;
 
-    if (msg instanceof LastHttpContent) {
+    if (TypeUtils.isLastHttpContent(msg)) {
       if (prm.isVoid()) {
         // Some frameworks don't actually listen for response completion and optimize for
         // allocations by using a singleton, unnotifiable promise. Hopefully these frameworks don't
@@ -68,7 +69,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       }
 
       // Going to finish the span after the write of the last content finishes.
-      if (msg instanceof FullHttpResponse) {
+      if (TypeUtils.isFullHttpResponse(msg)) {
         // Headers and body all sent together, we have the response information in the msg.
         beforeCommitHandler.handle(serverContext.context(), (HttpResponse) msg);
         serverContexts.removeFirst();
@@ -91,7 +92,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       }
     } else {
       writePromise = prm;
-      if (msg instanceof HttpResponse) {
+      if (TypeUtils.isHttpResponse(msg)) {
         // Headers before body has been sent, store them to use when finishing the span.
         beforeCommitHandler.handle(serverContext.context(), (HttpResponse) msg);
         ctx.channel().attr(HTTP_SERVER_RESPONSE).set((HttpResponse) msg);

@@ -17,6 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.TypeUtils;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -36,7 +37,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) throws Exception {
-    if (!(msg instanceof HttpRequest)) {
+    if (!TypeUtils.isHttpRequest(msg)) {
       super.write(ctx, msg, prm);
       return;
     }
