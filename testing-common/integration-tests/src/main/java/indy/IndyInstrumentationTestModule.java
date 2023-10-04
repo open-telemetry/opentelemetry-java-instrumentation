@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ExtendedInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.Collections;
 import java.util.List;
@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class IndyInstrumentationTestModule extends InstrumentationModule
-    implements ExtendedInstrumentationModule {
+    implements ExperimentalInstrumentationModule {
 
   public IndyInstrumentationTestModule() {
     super("indy-test");

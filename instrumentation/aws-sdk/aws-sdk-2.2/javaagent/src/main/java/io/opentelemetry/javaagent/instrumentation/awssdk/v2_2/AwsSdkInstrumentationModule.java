@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilde
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ExtendedInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,7 +19,7 @@ import java.util.List;
 
 @AutoService(InstrumentationModule.class)
 public class AwsSdkInstrumentationModule extends AbstractAwsSdkInstrumentationModule
-    implements ExtendedInstrumentationModule {
+    implements ExperimentalInstrumentationModule {
   public AwsSdkInstrumentationModule() {
     super("aws-sdk-2.2-core");
   }
