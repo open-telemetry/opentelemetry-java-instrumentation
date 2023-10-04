@@ -25,4 +25,15 @@ public interface ClassInjector {
    *     ProxyInjectionBuilder#inject(InjectionMode)} must be called to actually inject the proxy.
    */
   ProxyInjectionBuilder proxyBuilder(String classToProxy, String newProxyName);
+
+  /**
+   * Same as invoking {@link #proxyBuilder(String, String)}, but the resulting proxy will have the
+   * same name as the proxied class.
+   *
+   * @param classToProxy the fully qualified name of the class for which a proxy will be generated
+   * @return a builder for further customizing and injecting the proxy
+   */
+  default ProxyInjectionBuilder proxyBuilder(String classToProxy) {
+    return proxyBuilder(classToProxy, classToProxy);
+  }
 }
