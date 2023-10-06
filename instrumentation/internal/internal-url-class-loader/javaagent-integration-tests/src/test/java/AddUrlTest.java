@@ -6,7 +6,6 @@
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import org.apache.commons.io.IOUtils;
@@ -16,11 +15,7 @@ import org.junit.jupiter.api.Test;
 class AddUrlTest {
 
   @Test
-  void testShouldInstrumentClassAfterItIsLoadedViaAddUrl()
-      throws ClassNotFoundException,
-          NoSuchMethodException,
-          InvocationTargetException,
-          IllegalAccessException {
+  void testShouldInstrumentClassAfterItIsLoadedViaAddUrl() throws Exception {
     TestUrlClassLoader loader = new TestUrlClassLoader();
 
     // this is just to verify the assumption that TestURLClassLoader is not finding SystemUtils via
