@@ -14,15 +14,10 @@ import org.springframework.web.server.ServerWebExchange;
 
 public final class ServerWebExchangeHelper {
 
-  /**
-   * Route info key.
-   */
+  /** Route info key. */
   public static final String ROUTE_INFO_ATTRIBUTES = "ROUTE_INFO";
 
-
-  private ServerWebExchangeHelper() {
-
-  }
+  private ServerWebExchangeHelper() {}
 
   public static void extractAttributes(ServerWebExchange exchange, Context context) {
     // Record route info
@@ -34,7 +29,6 @@ public final class ServerWebExchangeHelper {
     }
   }
 
-
   public static String extractServerRoute(ServerWebExchange exchange) {
     Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
     if (route != null) {
@@ -42,5 +36,4 @@ public final class ServerWebExchangeHelper {
     }
     return null;
   }
-
 }

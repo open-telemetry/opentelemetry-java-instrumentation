@@ -1,7 +1,16 @@
-package io.opentelemetry.javaagent.instrumentation.spring.gateway;/*
+/*
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
+package io.opentelemetry.javaagent.instrumentation.spring.gateway; /*
+                                                                    * Copyright The OpenTelemetry Authors
+                                                                    * SPDX-License-Identifier: Apache-2.0
+                                                                    */
+
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -20,16 +29,12 @@ import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static org.assertj.core.api.Assertions.assertThat;
-
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = {
-        GatewayTestApplication.class,
-        GatewayRouteMappingTest.ForceNettyAutoConfiguration.class
+      GatewayTestApplication.class,
+      GatewayRouteMappingTest.ForceNettyAutoConfiguration.class
     })
 public class GatewayRouteMappingTest {
 
@@ -61,16 +66,17 @@ public class GatewayRouteMappingTest {
     AggregatedHttpResponse response = client.post("/gateway/echo", requestBody).aggregate().join();
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo(requestBody);
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasAttribute(
-                equalTo(SemanticAttributes.HTTP_ROUTE, expectRoute)),
-            span -> span.hasAttributesSatisfying(
-                satisfies(AttributeKey.stringKey(ServerWebExchangeHelper.ROUTE_INFO_ATTRIBUTES),
-                    s -> s.contains("id='path_route'")),
-                satisfies(AttributeKey.stringKey(ServerWebExchangeHelper.ROUTE_INFO_ATTRIBUTES),
-                    s -> s.contains("uri=h1c://mock.response")
-                )
-            )));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasAttribute(equalTo(SemanticAttributes.HTTP_ROUTE, expectRoute)),
+                span ->
+                    span.hasAttributesSatisfying(
+                        satisfies(
+                            AttributeKey.stringKey(ServerWebExchangeHelper.ROUTE_INFO_ATTRIBUTES),
+                            s -> s.contains("id='path_route'")),
+                        satisfies(
+                            AttributeKey.stringKey(ServerWebExchangeHelper.ROUTE_INFO_ATTRIBUTES),
+                            s -> s.contains("uri=h1c://mock.response")))));
   }
 }

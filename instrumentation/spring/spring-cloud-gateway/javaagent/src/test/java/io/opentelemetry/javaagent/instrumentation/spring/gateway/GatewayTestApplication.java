@@ -16,9 +16,20 @@ public class GatewayTestApplication {
   @Bean
   public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
     // A simple echo gateway.
-    return builder.routes()
-        .route("path_route", r -> r.path("/gateway/**").filters(f -> f.filter(
-            (exchange, chain) -> exchange.getResponse().writeWith(exchange.getRequest().getBody()))).uri("h1c://mock.response"))
+    return builder
+        .routes()
+        .route(
+            "path_route",
+            r ->
+                r.path("/gateway/**")
+                    .filters(
+                        f ->
+                            f.filter(
+                                (exchange, chain) ->
+                                    exchange
+                                        .getResponse()
+                                        .writeWith(exchange.getRequest().getBody())))
+                    .uri("h1c://mock.response"))
         .build();
   }
 }
