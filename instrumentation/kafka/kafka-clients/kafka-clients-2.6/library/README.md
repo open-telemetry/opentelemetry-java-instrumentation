@@ -73,7 +73,7 @@ Then use the `tracingConsumer` as usual for receiving messages from the Kafka cl
 
 The Kafka client exposes metrics via `org.apache.kafka.common.metrics.MetricsReporter` interface.
 OpenTelemetry provides an implementation that bridges the metrics into OpenTelemetry. There are two
-options for capturing metrics, manually instrumenting or configuring MBeans, both described below.
+options for capturing metrics, manually instrumenting or configuring JMX Metrics, both described below.
 
 #### Manual instrumentation
 
@@ -81,9 +81,9 @@ To use, merge the config properties
 from `KafkaTelemetry.create(OpenTelemetry).metricConfigProperties()`
 with the configuration used when creating your producer or consumer.
 
-#### Configuring MBeans
+#### Configuring JMX Metrics
 
-the `kafka.consumer` and `kafka.producer` MBeans can be configured as described
+the `kafka.consumer` and `kafka.producer` JMX Metrics can be configured as described
 in [opentelemetry-java-instrumentation](https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/jmx-metrics/javaagent#configuration-files),
 e.g.
 
