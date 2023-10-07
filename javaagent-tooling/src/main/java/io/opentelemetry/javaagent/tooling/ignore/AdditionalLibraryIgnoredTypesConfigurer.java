@@ -143,7 +143,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         // More runnables to deal with
         .allowClass("org.springframework.context.support.AbstractApplicationContext$")
         .allowClass("org.springframework.context.support.ContextTypeMatchClassLoader")
-        .allowClass("org.springframework.context.support.DefaultLifecycleProcessor$$Lambda$")
+        .allowClass("org.springframework.context.support.DefaultLifecycleProcessor$$Lambda")
         // Allow instrumenting ApplicationContext implementations - to inject beans
         .allowClass("org.springframework.context.annotation.AnnotationConfigApplicationContext")
         .allowClass("org.springframework.context.support.AbstractApplicationContext")
@@ -164,9 +164,9 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.http.")
-        .allowClass("org.springframework.http.client.reactive.AbstractClientHttpRequest$$Lambda$")
-        .allowClass("org.springframework.http.client.reactive.ReactorClientHttpConnector$$Lambda$")
-        .allowClass("org.springframework.http.codec.multipart.FileStorage$TempFileStorage$$Lambda$")
+        .allowClass("org.springframework.http.client.reactive.AbstractClientHttpRequest$$Lambda")
+        .allowClass("org.springframework.http.client.reactive.ReactorClientHttpConnector$$Lambda")
+        .allowClass("org.springframework.http.codec.multipart.FileStorage$TempFileStorage$$Lambda")
         // There are some Mono implementation that get instrumented
         .allowClass("org.springframework.http.server.reactive.");
 
@@ -240,7 +240,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("com.google.common.")
         .allowClass("com.google.common.util.concurrent.")
         .allowClass("com.google.common.base.internal.Finalizer")
-        .allowClass("com.google.common.base.Java8Usage$$Lambda$");
+        .allowClass("com.google.common.base.Java8Usage$$Lambda");
 
     builder
         .ignoreClass("com.google.inject.")
