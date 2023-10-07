@@ -47,7 +47,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.apache.tartarus.")
         .ignoreClass("org.json.simple.")
         .ignoreClass("org.yaml.snakeyaml.")
-        .allowClass("org.apache.lucene.util.bkd.BKDWriter$OneDimensionBKDWriter$$Lambda$");
+        .allowClass("org.apache.lucene.util.bkd.BKDWriter$OneDimensionBKDWriter$$Lambda");
 
     builder.ignoreClass("net.sf.cglib.").allowClass("net.sf.cglib.core.internal.LoadingCache$2");
 
@@ -84,12 +84,12 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.data.convert.ClassGeneratingEntityInstantiator$")
         .allowClass("org.springframework.data.jpa.repository.config.InspectionClassLoader")
         .allowClass(
-            "org.springframework.data.jpa.repository.query.QueryParameterSetter$NamedOrIndexedQueryParameterSetter$$Lambda$");
+            "org.springframework.data.jpa.repository.query.QueryParameterSetter$NamedOrIndexedQueryParameterSetter$$Lambda");
 
     builder
         .ignoreClass("org.springframework.amqp.")
         .allowClass("org.springframework.amqp.rabbit.connection.")
-        .allowClass("org.springframework.amqp.rabbit.core.RabbitTemplate$$Lambda$")
+        .allowClass("org.springframework.amqp.rabbit.core.RabbitTemplate$$Lambda")
         .allowClass("org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer");
 
     builder
@@ -105,14 +105,14 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.boot.web.servlet.")
         .allowClass("org.springframework.boot.autoconfigure.BackgroundPreinitializer$")
         .allowClass(
-            "org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration$$Lambda$")
+            "org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration$$Lambda")
         .allowClass("org.springframework.boot.autoconfigure.condition.OnClassCondition$")
         .allowClass(
-            "org.springframework.boot.autoconfigure.web.ResourceProperties$Cache$Cachecontrol$$Lambda$")
+            "org.springframework.boot.autoconfigure.web.ResourceProperties$Cache$Cachecontrol$$Lambda")
         .allowClass(
-            "org.springframework.boot.autoconfigure.web.WebProperties$Resources$Cache$Cachecontrol$$Lambda$")
+            "org.springframework.boot.autoconfigure.web.WebProperties$Resources$Cache$Cachecontrol$$Lambda")
         .allowClass("org.springframework.boot.web.embedded.netty.NettyWebServer$")
-        .allowClass("org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedContext$$Lambda$")
+        .allowClass("org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedContext$$Lambda")
         .allowClass(
             "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer$")
         .allowClass(
