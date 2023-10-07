@@ -28,7 +28,7 @@ final class HttpMetricsUtil {
     // don't set custom buckets if milliseconds are still used
     if (durationBuilder instanceof ExtendedDoubleHistogramBuilder) {
       ((ExtendedDoubleHistogramBuilder) durationBuilder)
-          .setAdvice(advice -> advice.setExplicitBucketBoundaries(DURATION_SECONDS_BUCKETS));
+          .setExplicitBucketBoundariesAdvice(DURATION_SECONDS_BUCKETS);
     }
     return durationBuilder;
   }
