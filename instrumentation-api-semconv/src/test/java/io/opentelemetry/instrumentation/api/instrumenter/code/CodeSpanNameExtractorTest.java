@@ -68,7 +68,7 @@ class CodeSpanNameExtractorTest {
     String spanName = underTest.extract(request);
 
     // then
-    assertEquals(getClass().getSimpleName() + "$$Lambda$.doSomething", spanName);
+    assertEquals(getClass().getSimpleName() + "$$Lambda.doSomething", spanName);
   }
 
   static class TestClass {}
