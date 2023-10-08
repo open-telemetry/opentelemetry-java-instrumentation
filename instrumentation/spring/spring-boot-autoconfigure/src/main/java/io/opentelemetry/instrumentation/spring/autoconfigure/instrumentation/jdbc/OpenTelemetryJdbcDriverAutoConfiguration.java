@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public class OpenTelemetryJdbcDriverAutoConfiguration {
   @Bean
-  OpenTelemetryInjector injectOTelIntoJdbcDriver() {
+  OpenTelemetryInjector injectOtelIntoJdbcDriver() {
     return openTelemetry -> OpenTelemetryDriver.install(openTelemetry);
   }
 
