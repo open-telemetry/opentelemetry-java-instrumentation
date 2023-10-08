@@ -21,10 +21,14 @@
 package io.opentelemetry.instrumentation.jdbc;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcSingletons.statementInstrumenter;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Connection;
@@ -47,6 +51,10 @@ public final class OpenTelemetryDriver implements Driver {
 
   // visible for testing
   static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
+
+  // Hikari can instance several JDBC drivers. So, OpenTelemetry can be installed at
+  // the class level and each OpenTelemetryDriver can know OpenTelemetry from the static field.
+  private static OpenTelemetry openTelemetry;
 
   private static final int MAJOR_VERSION;
   private static final int MINOR_VERSION;
@@ -192,6 +200,10 @@ public final class OpenTelemetryDriver implements Driver {
     return new int[] {0, 0};
   }
 
+  public static void install(OpenTelemetry otel) {
+    openTelemetry = otel;
+  }
+
   @Nullable
   @Override
   public Connection connect(String url, Properties info) throws SQLException {
@@ -212,7 +224,17 @@ public final class OpenTelemetryDriver implements Driver {
 
     DbInfo dbInfo = JdbcConnectionUrlParser.parse(realUrl, info);
 
-    return new OpenTelemetryConnection(connection, dbInfo, statementInstrumenter());
+    OpenTelemetry otel = getOpenTelemetry();
+    Instrumenter<DbRequest, Void> statementInstrumenter =
+        JdbcInstrumenterFactory.createStatementInstrumenter(otel);
+    return new OpenTelemetryConnection(connection, dbInfo, statementInstrumenter);
+  }
+
+  private static OpenTelemetry getOpenTelemetry() {
+    if (openTelemetry == null) {
+      return GlobalOpenTelemetry.get();
+    }
+    return openTelemetry;
   }
 
   @Override

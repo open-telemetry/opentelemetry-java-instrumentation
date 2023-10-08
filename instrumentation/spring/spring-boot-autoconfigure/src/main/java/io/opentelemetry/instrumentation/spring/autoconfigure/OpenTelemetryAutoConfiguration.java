@@ -132,20 +132,30 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Bean
+    // If you change the bean name, also change it in the OpenTelemetryJdbcDriverAutoConfiguration
+    // class
     public OpenTelemetry openTelemetry(
         ObjectProvider<ContextPropagators> propagatorsProvider,
         SdkTracerProvider tracerProvider,
         SdkMeterProvider meterProvider,
-        SdkLoggerProvider loggerProvider) {
+        SdkLoggerProvider loggerProvider,
+        ObjectProvider<List<OpenTelemetryInjector>> openTelemetryConsumerProvider) {
 
       ContextPropagators propagators = propagatorsProvider.getIfAvailable(ContextPropagators::noop);
 
-      return OpenTelemetrySdk.builder()
-          .setTracerProvider(tracerProvider)
-          .setMeterProvider(meterProvider)
-          .setLoggerProvider(loggerProvider)
-          .setPropagators(propagators)
-          .build();
+      OpenTelemetrySdk openTelemetry =
+          OpenTelemetrySdk.builder()
+              .setTracerProvider(tracerProvider)
+              .setMeterProvider(meterProvider)
+              .setLoggerProvider(loggerProvider)
+              .setPropagators(propagators)
+              .build();
+
+      List<OpenTelemetryInjector> openTelemetryInjectors =
+          openTelemetryConsumerProvider.getIfAvailable(() -> Collections.emptyList());
+      openTelemetryInjectors.forEach(consumer -> consumer.accept(openTelemetry));
+
+      return openTelemetry;
     }
   }
 
