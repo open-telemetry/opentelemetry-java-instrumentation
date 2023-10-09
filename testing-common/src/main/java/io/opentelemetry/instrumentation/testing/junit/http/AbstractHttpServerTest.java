@@ -346,6 +346,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         SemconvStability.emitStableHttpSemconv()
             ? "http.server.request.duration"
             : "http.server.duration";
+    String durationInstrumentDescription =
+        SemconvStability.emitStableHttpSemconv()
+            ? "Duration of HTTP server requests."
+            : "The duration of the inbound HTTP request";
 
     String metricsInstrumentationName = options.metricsInstrumentationName.get();
     if (metricsInstrumentationName == null) {
@@ -358,7 +362,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
-                        .hasDescription("The duration of the inbound HTTP request")
+                        .hasDescription(durationInstrumentDescription)
                         .hasUnit(SemconvStability.emitStableHttpSemconv() ? "s" : "ms")
                         .hasHistogramSatisfying(
                             histogram ->
