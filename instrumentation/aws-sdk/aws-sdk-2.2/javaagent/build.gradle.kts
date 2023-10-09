@@ -72,8 +72,9 @@ dependencies {
 
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
   // Make sure these don't add HTTP headers
-  testImplementation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
-  testImplementation(project(":instrumentation:netty:netty-4.1:javaagent"))
+  testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent"))
+  testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
   testLibrary("software.amazon.awssdk:dynamodb:2.2.0")
   testLibrary("software.amazon.awssdk:ec2:2.2.0")
