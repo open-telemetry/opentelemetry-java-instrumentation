@@ -72,7 +72,6 @@ tasks {
       exclude("io.opentelemetry:opentelemetry-api")
       exclude("io.opentelemetry:opentelemetry-api-events")
       exclude("io.opentelemetry:opentelemetry-context")
-      exclude("io.opentelemetry:opentelemetry-semconv")
       // metrics advice API
       exclude("io.opentelemetry:opentelemetry-extension-incubator")
     }
