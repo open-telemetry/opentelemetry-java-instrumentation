@@ -1,7 +1,7 @@
 
 # javaagent
 ## Dependency License Report
-_2023-10-07 13:08:49 EEST_
+_2023-10-09 15:54:27 EEST_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -180,10 +180,10 @@ _2023-10-07 13:08:49 EEST_
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-2.23.2.jar/META-INF/LICENSE](zipkin-2.23.2.jar/META-INF/LICENSE)
 
-**39** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.14.8`
+**39** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.14.9`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [byte-buddy-dep-1.14.8.jar/META-INF/LICENSE](byte-buddy-dep-1.14.8.jar/META-INF/LICENSE)
-    - [byte-buddy-dep-1.14.8.jar/META-INF/NOTICE](byte-buddy-dep-1.14.8.jar/META-INF/NOTICE)
+> - **Embedded license files**: [byte-buddy-dep-1.14.9.jar/META-INF/LICENSE](byte-buddy-dep-1.14.9.jar/META-INF/LICENSE)
+    - [byte-buddy-dep-1.14.9.jar/META-INF/NOTICE](byte-buddy-dep-1.14.9.jar/META-INF/NOTICE)
 
 **40** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)
@@ -219,7 +219,7 @@ _2023-10-07 13:08:49 EEST_
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**47** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.5`
+**47** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.6`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
@@ -278,7 +278,7 @@ _2023-10-07 13:08:49 EEST_
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**56** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.5`
+**56** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.6`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
