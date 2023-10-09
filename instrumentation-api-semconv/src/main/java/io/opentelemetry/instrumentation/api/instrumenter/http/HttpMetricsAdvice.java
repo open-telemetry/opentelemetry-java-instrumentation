@@ -29,8 +29,7 @@ final class HttpMetricsAdvice {
                 SemanticAttributes.NETWORK_PROTOCOL_NAME,
                 SemanticAttributes.NETWORK_PROTOCOL_VERSION,
                 SemanticAttributes.SERVER_ADDRESS,
-                SemanticAttributes.SERVER_PORT,
-                SemanticAttributes.SERVER_SOCKET_ADDRESS));
+                SemanticAttributes.SERVER_PORT));
   }
 
   @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
@@ -65,7 +64,6 @@ final class HttpMetricsAdvice {
                 SemanticAttributes.NETWORK_PROTOCOL_VERSION,
                 SemanticAttributes.SERVER_ADDRESS,
                 SemanticAttributes.SERVER_PORT,
-                SemanticAttributes.SERVER_SOCKET_ADDRESS,
                 // old attributes
                 SemanticAttributes.HTTP_METHOD,
                 SemanticAttributes.HTTP_STATUS_CODE,
