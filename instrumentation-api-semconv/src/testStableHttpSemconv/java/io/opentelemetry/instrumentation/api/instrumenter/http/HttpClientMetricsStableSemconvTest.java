@@ -83,6 +83,7 @@ class HttpClientMetricsStableSemconvTest {
                 assertThat(metric)
                     .hasName("http.client.request.duration")
                     .hasUnit("s")
+                    .hasDescription("Duration of HTTP client requests.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
