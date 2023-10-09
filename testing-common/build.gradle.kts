@@ -34,8 +34,6 @@ dependencies {
   api("org.junit.jupiter:junit-jupiter-params")
 
   api("io.opentelemetry:opentelemetry-api")
-  // last release of the semconv in old location
-  api("io.opentelemetry:opentelemetry-semconv:1.30.1-alpha")
   api("io.opentelemetry:opentelemetry-sdk")
   api("io.opentelemetry:opentelemetry-sdk-testing")
   api(project(":instrumentation-api"))
