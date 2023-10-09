@@ -22,7 +22,7 @@ import jdk.jfr.consumer.RecordedEvent;
 public final class ClassesLoadedHandler implements RecordedEventHandler {
   /**
    * process.runtime.jvm.classes.loaded is the total number of classes loaded since JVM start. See:
-   * https://github.com/open-telemetry/semantic-conventions/blob/main/docs/jvm/jvm-metrics.md
+   * https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md
    */
   private static final String METRIC_NAME_LOADED = "process.runtime.jvm.classes.loaded";
 
