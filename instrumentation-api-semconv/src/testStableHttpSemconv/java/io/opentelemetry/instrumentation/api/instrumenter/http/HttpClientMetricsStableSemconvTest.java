@@ -99,10 +99,7 @@ class HttpClientMetricsStableSemconvTest {
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(SemanticAttributes.SERVER_PORT, 1234),
-                                            equalTo(
-                                                SemanticAttributes.SERVER_SOCKET_ADDRESS,
-                                                "1.2.3.4"))
+                                            equalTo(SemanticAttributes.SERVER_PORT, 1234))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar

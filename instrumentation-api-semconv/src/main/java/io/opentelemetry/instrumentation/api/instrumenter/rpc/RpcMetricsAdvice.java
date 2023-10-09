@@ -34,8 +34,6 @@ final class RpcMetricsAdvice {
       attributes.add(SemanticAttributes.NETWORK_TRANSPORT);
       attributes.add(SemanticAttributes.SERVER_ADDRESS);
       attributes.add(SemanticAttributes.SERVER_PORT);
-      attributes.add(SemanticAttributes.SERVER_SOCKET_ADDRESS);
-      attributes.add(SemanticAttributes.SERVER_SOCKET_PORT);
     }
     if (SemconvStability.emitOldHttpSemconv()) {
       attributes.add(SemanticAttributes.NET_PEER_NAME);
@@ -65,8 +63,6 @@ final class RpcMetricsAdvice {
       attributes.add(SemanticAttributes.NETWORK_TRANSPORT);
       attributes.add(SemanticAttributes.SERVER_ADDRESS);
       attributes.add(SemanticAttributes.SERVER_PORT);
-      attributes.add(SemanticAttributes.SERVER_SOCKET_ADDRESS);
-      attributes.add(SemanticAttributes.SERVER_SOCKET_PORT);
     }
     if (SemconvStability.emitOldHttpSemconv()) {
       attributes.add(SemanticAttributes.NET_HOST_NAME);
