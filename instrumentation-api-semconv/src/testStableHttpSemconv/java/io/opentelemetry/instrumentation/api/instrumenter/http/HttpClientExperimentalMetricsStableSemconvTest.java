@@ -81,6 +81,7 @@ class HttpClientExperimentalMetricsStableSemconvTest {
                 assertThat(metric)
                     .hasName("http.client.request.size")
                     .hasUnit("By")
+                    .hasDescription("Size of HTTP client request bodies.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -109,6 +110,7 @@ class HttpClientExperimentalMetricsStableSemconvTest {
                 assertThat(metric)
                     .hasName("http.client.response.size")
                     .hasUnit("By")
+                    .hasDescription("Size of HTTP client response bodies.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(

@@ -53,7 +53,7 @@ public final class HttpClientMetrics implements OperationListener {
     if (SemconvStability.emitStableHttpSemconv()) {
       DoubleHistogramBuilder stableDurationBuilder =
           createStableDurationHistogramBuilder(
-              meter, "http.client.request.duration", "The duration of the outbound HTTP request");
+              meter, "http.client.request.duration", "Duration of HTTP client requests.");
       HttpMetricsAdvice.applyStableClientDurationAdvice(stableDurationBuilder);
       stableDuration = stableDurationBuilder.build();
     } else {

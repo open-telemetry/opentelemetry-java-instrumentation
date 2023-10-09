@@ -78,9 +78,8 @@ class HttpServerExperimentalMetricsStableSemconvTest {
             metric ->
                 assertThat(metric)
                     .hasName("http.server.active_requests")
-                    .hasDescription(
-                        "The number of concurrent HTTP requests that are currently in-flight")
                     .hasUnit("{requests}")
+                    .hasDescription("Number of active HTTP server requests.")
                     .hasLongSumSatisfying(
                         sum ->
                             sum.hasPointsSatisfying(
@@ -144,6 +143,7 @@ class HttpServerExperimentalMetricsStableSemconvTest {
                 assertThat(metric)
                     .hasName("http.server.request.size")
                     .hasUnit("By")
+                    .hasDescription("Size of HTTP server request bodies.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -168,6 +168,7 @@ class HttpServerExperimentalMetricsStableSemconvTest {
                 assertThat(metric)
                     .hasName("http.server.response.size")
                     .hasUnit("By")
+                    .hasDescription("Size of HTTP server response bodies.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(

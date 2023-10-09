@@ -731,6 +731,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         SemconvStability.emitStableHttpSemconv()
             ? "http.client.request.duration"
             : "http.client.duration";
+    String durationInstrumentDescription =
+        SemconvStability.emitStableHttpSemconv()
+            ? "Duration of HTTP client requests."
+            : "The duration of the outbound HTTP request";
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
@@ -739,7 +743,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
-                        .hasDescription("The duration of the outbound HTTP request")
+                        .hasDescription(durationInstrumentDescription)
                         .hasUnit(SemconvStability.emitStableHttpSemconv() ? "s" : "ms")
                         .hasHistogramSatisfying(
                             histogram ->
