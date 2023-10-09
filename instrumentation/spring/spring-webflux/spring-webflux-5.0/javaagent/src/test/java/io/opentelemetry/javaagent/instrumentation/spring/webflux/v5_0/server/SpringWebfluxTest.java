@@ -688,13 +688,13 @@ public class SpringWebfluxTest {
                                         v -> assertThat(v).isInstanceOf(Long.class),
                                         v -> assertThat(v).isNull()))),
                 span ->
-                    span.hasName("RedirectComponent$$Lambda$.handle")
+                    span.hasName("RedirectComponent$$Lambda.handle")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             satisfies(
                                 stringKey("spring-webflux.handler.type"),
-                                val -> val.startsWith("server.RedirectComponent$$Lambda$")))),
+                                val -> val.startsWith("server.RedirectComponent$$Lambda")))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -887,7 +887,7 @@ public class SpringWebfluxTest {
                                         v -> assertThat(v).isInstanceOf(Long.class),
                                         v -> assertThat(v).isNull()))),
                 span ->
-                    span.hasName("SpringWebFluxTestApplication$$Lambda$.handle")
+                    span.hasName("SpringWebFluxTestApplication$$Lambda.handle")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -895,7 +895,7 @@ public class SpringWebfluxTest {
                                 stringKey("spring-webflux.handler.type"),
                                 value ->
                                     value.startsWith(
-                                        "server.SpringWebFluxTestApplication$$Lambda$")))));
+                                        "server.SpringWebFluxTestApplication$$Lambda")))));
   }
 
   private static class Parameter {

@@ -30,7 +30,7 @@ class ClassNamesTest {
   @Test
   void testLambda() {
     Runnable x = () -> {};
-    assertThat(ClassNames.simpleName(x.getClass())).startsWith("ClassNamesTest$$Lambda$");
+    assertThat(ClassNames.simpleName(x.getClass())).startsWith("ClassNamesTest$$Lambda");
   }
 
   static class Outer {
