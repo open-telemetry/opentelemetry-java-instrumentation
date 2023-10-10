@@ -18,8 +18,10 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.SemanticAttributes;
+import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -109,6 +111,15 @@ class HttpClientAttributesExtractorStableSemconvTest {
     public Integer getServerPort(Map<String, String> request) {
       String value = request.get("serverPort");
       return value == null ? null : Integer.parseInt(value);
+    }
+
+    @Nullable
+    @Override
+    public String getErrorType(
+        Map<String, String> request,
+        @Nullable Map<String, String> respobse,
+        @Nullable Throwable error) {
+      return request.get("errorType");
     }
   }
 
@@ -306,5 +317,63 @@ class HttpClientAttributesExtractorStableSemconvTest {
     assertThat(attributes.build())
         .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
         .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+  }
+
+  @Test
+  void shouldExtractErrorType_httpStatusCode() {
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "400");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), emptyMap());
+    extractor.onEnd(attributes, Context.root(), emptyMap(), response, null);
+
+    assertThat(attributes.build())
+        .containsEntry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 400)
+        .containsEntry(HttpAttributes.ERROR_TYPE, "400");
+  }
+
+  @Test
+  void shouldExtractErrorType_getter() {
+    Map<String, String> request = new HashMap<>();
+    request.put("statusCode", "0");
+    request.put("errorType", "custom error type");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), emptyMap());
+    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+
+    assertThat(attributes.build()).containsEntry(HttpAttributes.ERROR_TYPE, "custom error type");
+  }
+
+  @Test
+  void shouldExtractErrorType_exceptionClassName() {
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), emptyMap());
+    extractor.onEnd(attributes, Context.root(), emptyMap(), emptyMap(), new ConnectException());
+
+    assertThat(attributes.build())
+        .containsEntry(HttpAttributes.ERROR_TYPE, "java.net.ConnectException");
+  }
+
+  @Test
+  void shouldExtractErrorType_other() {
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), emptyMap());
+    extractor.onEnd(attributes, Context.root(), emptyMap(), emptyMap(), null);
+
+    assertThat(attributes.build()).containsEntry(HttpAttributes.ERROR_TYPE, HttpConstants._OTHER);
   }
 }

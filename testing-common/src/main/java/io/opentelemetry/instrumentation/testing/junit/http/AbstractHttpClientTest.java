@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -17,6 +18,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -1107,8 +1109,16 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                   getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE);
               if (responseCode != null) {
                 assertThat(attrs).containsEntry(httpResponseStatusKey, (long) responseCode);
+                if (responseCode >= 400 && SemconvStability.emitStableHttpSemconv()) {
+                  assertThat(attrs)
+                      .containsEntry(HttpAttributes.ERROR_TYPE, String.valueOf(responseCode));
+                }
               } else {
                 assertThat(attrs).doesNotContainKey(httpResponseStatusKey);
+                if (SemconvStability.emitStableHttpSemconv()) {
+                  // TODO: add more detailed assertions, per url
+                  assertThat(attrs).containsKey(stringKey("error.type"));
+                }
               }
 
               if (resendCount != null) {

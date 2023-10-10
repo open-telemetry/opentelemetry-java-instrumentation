@@ -27,6 +27,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
@@ -796,8 +797,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                     SemanticAttributes.CLIENT_PORT, port -> assertThat(port).isGreaterThan(0));
           }
           assertThat(attrs).containsEntry(getAttributeKey(SemanticAttributes.HTTP_METHOD), method);
+
           assertThat(attrs)
               .containsEntry(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), statusCode);
+          if (statusCode >= 500 && SemconvStability.emitStableHttpSemconv()) {
+            assertThat(attrs).containsEntry(HttpAttributes.ERROR_TYPE, String.valueOf(statusCode));
+          }
 
           AttributeKey<String> netProtocolKey =
               getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME);
