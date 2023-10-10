@@ -60,14 +60,15 @@ abstract class ExecutorInstrumentationTest<T extends ExecutorService>
     private static ExecutorService newVirtualThreadPerAskExecutor() {
       Method newVirtualThreadPerTaskExecutor;
       try {
-        newVirtualThreadPerTaskExecutor = Executors.class.getMethod("newVirtualThreadPerTaskExecutor");
-        ExecutorService executor = (ExecutorService) newVirtualThreadPerTaskExecutor.invoke(null);
-        return executor;
+        newVirtualThreadPerTaskExecutor =
+            Executors.class.getMethod("newVirtualThreadPerTaskExecutor");
+        return (ExecutorService) newVirtualThreadPerTaskExecutor.invoke(null);
       } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
         throw new IllegalStateException("Should not happen on Java 21+", e);
       }
     }
   }
+
   static class WorkStealingPoolTest extends ExecutorInstrumentationTest<ExecutorService> {
     public WorkStealingPoolTest() {
       super(Executors.newWorkStealingPool(2));
