@@ -40,7 +40,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     Channel channel = ctx.channel();
     Deque<ServerContext> serverContexts = getOrCreate(channel, AttributeKeys.SERVER_CONTEXT);
 
-    if (! TypeUtils.isHttpRequest(msg)) {
+    if (!TypeUtils.isHttpRequest(msg)) {
       ServerContext serverContext = serverContexts.peekLast();
       if (serverContext == null) {
         super.channelRead(ctx, msg);

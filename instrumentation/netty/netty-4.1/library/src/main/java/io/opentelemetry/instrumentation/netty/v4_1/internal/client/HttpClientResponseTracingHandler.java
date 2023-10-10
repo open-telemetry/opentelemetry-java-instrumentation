@@ -9,9 +9,7 @@ import static io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpCl
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
