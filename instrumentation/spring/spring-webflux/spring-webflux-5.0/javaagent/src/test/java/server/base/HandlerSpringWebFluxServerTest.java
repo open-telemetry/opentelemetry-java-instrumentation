@@ -25,7 +25,7 @@ public abstract class HandlerSpringWebFluxServerTest extends SpringWebFluxServer
   @Override
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    String handlerSpanName = ServerTestRouteFactory.class.getSimpleName() + "$$Lambda$.handle";
+    String handlerSpanName = ServerTestRouteFactory.class.getSimpleName() + "$$Lambda.handle";
     if (endpoint == NOT_FOUND) {
       handlerSpanName = "ResourceWebHandler.handle";
     }

@@ -147,7 +147,7 @@ A `SpanNameExtractor` is a simple functional interface that accepts the `REQUEST
 the span name. For more detailed guidelines on span naming please take a look at
 the [`Span` specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md#span)
 and the
-tracing [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/README.md).
+tracing [semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/trace.md).
 
 Consider the following example:
 
@@ -453,6 +453,6 @@ class MySpanKindExtractor implements SpanKindExtractor<Request> {
 The example `SpanKindExtractor` above decides whether to use `PRODUCER` or `CLIENT` based on how the
 request is going to be processed. This example reflects a real-life scenario: you might find
 similar code in a messaging library instrumentation, since according to
-the [OpenTelemetry messaging semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#span-kind)
+the [OpenTelemetry messaging semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#span-kind)
 the span kind should be set to `CLIENT` if sending the message is completely synchronous and waits
 for the response.

@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of the <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#status">HTTP
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#status">HTTP
  * span status</a>. Instrumentation of HTTP server or client frameworks should use this class to
  * comply with OpenTelemetry HTTP semantic conventions.
  */

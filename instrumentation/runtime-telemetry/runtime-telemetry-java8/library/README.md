@@ -1,6 +1,6 @@
 # JVM Runtime Metrics
 
-This module provides JVM runtime metrics as documented in the [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/runtime-environment-metrics.md#jvm-metrics).
+This module provides JVM runtime metrics as documented in the [semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md).
 
 ## Quickstart
 

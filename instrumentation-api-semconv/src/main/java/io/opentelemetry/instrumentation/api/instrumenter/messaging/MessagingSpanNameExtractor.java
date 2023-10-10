@@ -11,7 +11,7 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
 
   /**
    * Returns a {@link SpanNameExtractor} that constructs the span name according to <a
-   * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#span-name">
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#span-name">
    * messaging semantic conventions</a>: {@code <destination name> <operation name>}.
    *
    * @see MessagingAttributesGetter#getDestination(Object) used to extract {@code <destination

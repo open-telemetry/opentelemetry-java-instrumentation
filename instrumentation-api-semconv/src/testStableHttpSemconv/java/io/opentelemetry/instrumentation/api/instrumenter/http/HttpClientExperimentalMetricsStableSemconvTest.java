@@ -81,6 +81,7 @@ class HttpClientExperimentalMetricsStableSemconvTest {
                 assertThat(metric)
                     .hasName("http.client.request.size")
                     .hasUnit("By")
+                    .hasDescription("Size of HTTP client request bodies.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -96,10 +97,7 @@ class HttpClientExperimentalMetricsStableSemconvTest {
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(SemanticAttributes.SERVER_PORT, 1234),
-                                            equalTo(
-                                                SemanticAttributes.SERVER_SOCKET_ADDRESS,
-                                                "1.2.3.4"))
+                                            equalTo(SemanticAttributes.SERVER_PORT, 1234))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -109,6 +107,7 @@ class HttpClientExperimentalMetricsStableSemconvTest {
                 assertThat(metric)
                     .hasName("http.client.response.size")
                     .hasUnit("By")
+                    .hasDescription("Size of HTTP client response bodies.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -124,10 +123,7 @@ class HttpClientExperimentalMetricsStableSemconvTest {
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(SemanticAttributes.SERVER_PORT, 1234),
-                                            equalTo(
-                                                SemanticAttributes.SERVER_SOCKET_ADDRESS,
-                                                "1.2.3.4"))
+                                            equalTo(SemanticAttributes.SERVER_PORT, 1234))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar

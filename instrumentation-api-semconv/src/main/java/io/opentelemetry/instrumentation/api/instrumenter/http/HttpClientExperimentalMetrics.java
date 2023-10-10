@@ -53,7 +53,7 @@ public final class HttpClientExperimentalMetrics implements OperationListener {
         meter
             .histogramBuilder("http.client.request.size")
             .setUnit("By")
-            .setDescription("The size of HTTP request messages")
+            .setDescription("Size of HTTP client request bodies.")
             .ofLongs();
     HttpMetricsAdvice.applyClientRequestSizeAdvice(requestSizeBuilder);
     requestSize = requestSizeBuilder.build();
@@ -61,7 +61,7 @@ public final class HttpClientExperimentalMetrics implements OperationListener {
         meter
             .histogramBuilder("http.client.response.size")
             .setUnit("By")
-            .setDescription("The size of HTTP response messages")
+            .setDescription("Size of HTTP client response bodies.")
             .ofLongs();
     HttpMetricsAdvice.applyClientRequestSizeAdvice(responseSizeBuilder);
     responseSize = responseSizeBuilder.build();
