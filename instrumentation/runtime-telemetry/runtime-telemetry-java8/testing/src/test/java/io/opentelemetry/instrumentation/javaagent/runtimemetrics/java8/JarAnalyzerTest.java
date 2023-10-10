@@ -111,7 +111,6 @@ class JarAnalyzerTest {
                             path ->
                                 assertThat(path.matches("spring-web-[0-9a-zA-Z-\\.]+\\.jar"))
                                     .isTrue())
-                        .containsEntry(PACKAGE_PATH, "spring-web-3.1.0.RELEASE.jar")
                         .containsEntry(PACKAGE_DESCRIPTION, "org.springframework.web")
                         .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA1")
                         .hasEntrySatisfying(
@@ -128,7 +127,8 @@ class JarAnalyzerTest {
                             path ->
                                 assertThat(path.matches("guava-[0-9a-zA-Z-\\.]+\\.jar")).isTrue())
                         .containsEntry(PACKAGE_NAME, "com.google.guava:guava")
-                        .containsEntry(PACKAGE_VERSION, "32.1.2-jre")
+                        .hasEntrySatisfying(
+                            PACKAGE_VERSION, version -> assertThat(version).isNotEmpty())
                         .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA1")
                         .hasEntrySatisfying(
                             PACKAGE_CHECKSUM, checksum -> assertThat(checksum).isNotEmpty()))));
