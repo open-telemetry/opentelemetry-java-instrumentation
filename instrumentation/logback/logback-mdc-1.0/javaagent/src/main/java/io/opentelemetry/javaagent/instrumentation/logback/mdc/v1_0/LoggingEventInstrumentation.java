@@ -23,6 +23,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
+import io.opentelemetry.javaagent.bootstrap.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -79,6 +80,8 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         spanContextData.put(TRACE_ID, spanContext.getTraceId());
         spanContextData.put(SPAN_ID, spanContext.getSpanId());
         spanContextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
+
+        spanContextData.putAll(ConfiguredResourceAttributesHolder.getResourceAttribute());
       }
 
       if (LogbackSingletons.addBaggage()) {

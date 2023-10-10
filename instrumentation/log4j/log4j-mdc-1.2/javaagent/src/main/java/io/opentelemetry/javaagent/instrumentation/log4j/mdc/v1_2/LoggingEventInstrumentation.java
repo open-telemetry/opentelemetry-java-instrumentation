@@ -17,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -78,6 +79,10 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
             break;
           default:
             // do nothing
+        }
+      } else if (ConfiguredResourceAttributesHolder.getAttributeValue(key) != null) {
+        if (value == null) {
+          value = ConfiguredResourceAttributesHolder.getAttributeValue(key);
         }
       }
     }
