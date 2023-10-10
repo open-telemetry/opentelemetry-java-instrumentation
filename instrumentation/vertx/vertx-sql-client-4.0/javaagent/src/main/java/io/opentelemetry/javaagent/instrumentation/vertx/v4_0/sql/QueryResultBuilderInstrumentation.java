@@ -13,8 +13,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.Promise;
-import io.vertx.core.impl.ContextInternal;
-import io.vertx.core.impl.future.PromiseInternal;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -40,12 +38,7 @@ public class QueryResultBuilderInstrumentation implements TypeInstrumentation {
   public static class CompleteAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope onEnter(@Advice.FieldValue("handler") Promise<?> promise) {
-      if (!(promise instanceof PromiseInternal)) {
-        return null;
-      }
-      PromiseInternal<?> promiseInternal = (PromiseInternal<?>) promise;
-      ContextInternal contextInternal = promiseInternal.context();
-      return endQuerySpan(contextInternal.localContextData(), null);
+      return endQuerySpan(promise, null);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -61,12 +54,7 @@ public class QueryResultBuilderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope onEnter(
         @Advice.Argument(0) Throwable throwable, @Advice.FieldValue("handler") Promise<?> promise) {
-      if (!(promise instanceof PromiseInternal)) {
-        return null;
-      }
-      PromiseInternal<?> promiseInternal = (PromiseInternal<?>) promise;
-      ContextInternal contextInternal = promiseInternal.context();
-      return endQuerySpan(contextInternal.localContextData(), throwable);
+      return endQuerySpan(promise, throwable);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
