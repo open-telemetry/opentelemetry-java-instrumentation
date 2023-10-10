@@ -34,6 +34,7 @@ import io.vertx.sqlclient.Tuple;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -311,8 +312,7 @@ class VertxSqlClientTest {
       resultList.add(
           future.whenComplete((rows, throwable) -> testing.runWithSpan("callback", () -> {})));
     }
-    for (int i = 0; i < count; i++) {
-      CompletableFuture<Object> future = futureList.get(i);
+    for (CompletableFuture<Object> future : futureList) {
       testing.runWithSpan(
           "parent",
           () ->
@@ -328,34 +328,32 @@ class VertxSqlClientTest {
                       }));
     }
     latch.await(30, TimeUnit.SECONDS);
-    for (int i = 0; i < count; i++) {
-      CompletableFuture<Object> result = resultList.get(i);
+    for (CompletableFuture<Object> result : resultList) {
       result.get(10, TimeUnit.SECONDS);
     }
 
-    List<Consumer<TraceAssert>> assertions = new ArrayList<>();
-    for (int i = 0; i < count; i++) {
-      assertions.add(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                  span ->
-                      span.hasName("SELECT tempdb.test")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(DB_NAME, DB),
-                              equalTo(DB_USER, USER_DB),
-                              equalTo(DB_STATEMENT, "select * from test"),
-                              equalTo(DB_OPERATION, "SELECT"),
-                              equalTo(DB_SQL_TABLE, "test"),
-                              equalTo(NET_PEER_NAME, "localhost"),
-                              equalTo(NET_PEER_PORT, port)),
-                  span ->
-                      span.hasName("callback")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0))));
-    }
+    List<Consumer<TraceAssert>> assertions =
+        Collections.nCopies(
+            count,
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                    span ->
+                        span.hasName("SELECT tempdb.test")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_NAME, DB),
+                                equalTo(DB_USER, USER_DB),
+                                equalTo(DB_STATEMENT, "select * from test"),
+                                equalTo(DB_OPERATION, "SELECT"),
+                                equalTo(DB_SQL_TABLE, "test"),
+                                equalTo(NET_PEER_NAME, "localhost"),
+                                equalTo(NET_PEER_PORT, port)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
     testing.waitAndAssertTraces(assertions);
   }
 
@@ -373,8 +371,7 @@ class VertxSqlClientTest {
     }
     ExecutorService executorService = Executors.newFixedThreadPool(4);
     cleanup.deferCleanup(() -> executorService.shutdown());
-    for (int i = 0; i < count; i++) {
-      CompletableFuture<Object> future = futureList.get(i);
+    for (CompletableFuture<Object> future : futureList) {
       executorService.submit(
           () -> {
             testing
@@ -397,34 +394,32 @@ class VertxSqlClientTest {
           });
     }
     latch.await(30, TimeUnit.SECONDS);
-    for (int i = 0; i < count; i++) {
-      CompletableFuture<Object> result = resultList.get(i);
+    for (CompletableFuture<Object> result : resultList) {
       result.get(10, TimeUnit.SECONDS);
     }
 
-    List<Consumer<TraceAssert>> assertions = new ArrayList<>();
-    for (int i = 0; i < count; i++) {
-      assertions.add(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                  span ->
-                      span.hasName("SELECT tempdb.test")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(DB_NAME, DB),
-                              equalTo(DB_USER, USER_DB),
-                              equalTo(DB_STATEMENT, "select * from test where id = $?"),
-                              equalTo(DB_OPERATION, "SELECT"),
-                              equalTo(DB_SQL_TABLE, "test"),
-                              equalTo(NET_PEER_NAME, "localhost"),
-                              equalTo(NET_PEER_PORT, port)),
-                  span ->
-                      span.hasName("callback")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0))));
-    }
+    List<Consumer<TraceAssert>> assertions =
+        Collections.nCopies(
+            count,
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                    span ->
+                        span.hasName("SELECT tempdb.test")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_NAME, DB),
+                                equalTo(DB_USER, USER_DB),
+                                equalTo(DB_STATEMENT, "select * from test where id = $?"),
+                                equalTo(DB_OPERATION, "SELECT"),
+                                equalTo(DB_SQL_TABLE, "test"),
+                                equalTo(NET_PEER_NAME, "localhost"),
+                                equalTo(NET_PEER_PORT, port)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
     testing.waitAndAssertTraces(assertions);
   }
 }
