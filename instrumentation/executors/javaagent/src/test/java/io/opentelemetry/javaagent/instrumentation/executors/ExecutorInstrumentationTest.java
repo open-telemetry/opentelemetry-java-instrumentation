@@ -54,10 +54,10 @@ abstract class ExecutorInstrumentationTest<T extends ExecutorService>
   @EnabledForJreRange(min = JRE.JAVA_21)
   static class VirtualThreadExecutorTest extends ExecutorInstrumentationTest<ExecutorService> {
     VirtualThreadExecutorTest() {
-      super(newVirtualThreadPerAskExecutor());
+      super(newVirtualThreadPerTaskExecutor());
     }
 
-    private static ExecutorService newVirtualThreadPerAskExecutor() {
+    private static ExecutorService newVirtualThreadPerTaskExecutor() {
       Method newVirtualThreadPerTaskExecutor;
       try {
         newVirtualThreadPerTaskExecutor =
