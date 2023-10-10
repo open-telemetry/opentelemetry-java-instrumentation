@@ -15,7 +15,13 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.LastHttpContent;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class TypeUtils {
+
+  private TypeUtils() {}
 
   public static boolean isLastHttpContent(Object obj) {
     Class<?> objClass = obj.getClass();
