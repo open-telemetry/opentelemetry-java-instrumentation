@@ -604,6 +604,7 @@ public abstract class AbstractGrpcTest {
               assertThat(t.getStatus().getDescription()).isEqualTo(status.getDescription());
             });
 
+    boolean isServerError = status.getCode() != Status.Code.NOT_FOUND;
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -635,7 +636,7 @@ public abstract class AbstractGrpcTest {
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(0))
-                            .hasStatus(StatusData.error())
+                            .hasStatus(isServerError ? StatusData.error() : StatusData.unset())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
@@ -868,12 +869,14 @@ public abstract class AbstractGrpcTest {
           arguments(Status.INTERNAL.withCause(new RuntimeException("some error"))),
           arguments(Status.UNAVAILABLE.withCause(new RuntimeException("some error"))),
           arguments(Status.DATA_LOSS.withCause(new RuntimeException("some error"))),
+          arguments(Status.NOT_FOUND.withCause(new RuntimeException("some error"))),
           arguments(Status.UNKNOWN.withDescription("some description")),
           arguments(Status.DEADLINE_EXCEEDED.withDescription("some description")),
           arguments(Status.UNIMPLEMENTED.withDescription("some description")),
           arguments(Status.INTERNAL.withDescription("some description")),
           arguments(Status.UNAVAILABLE.withDescription("some description")),
-          arguments(Status.DATA_LOSS.withDescription("some description")));
+          arguments(Status.DATA_LOSS.withDescription("some description")),
+          arguments(Status.NOT_FOUND.withDescription("some description")));
     }
   }
 
