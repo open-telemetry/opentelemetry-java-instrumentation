@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.T
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggerContextVO;
-import ch.qos.logback.classic.spi.LoggingEventVO;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
@@ -21,8 +20,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Proxy;
+import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.BaseLoggingEventDelegate;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -66,9 +64,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       Baggage baggage = Baggage.fromContext(context);
       baggage.forEach(
           (key, value) ->
-              contextData.put(
-                  // prefix all baggage values to avoid clashes with existing context
-                  "baggage." + key, value.getValue()));
+              // prefix all baggage values to avoid clashes with existing context
+              contextData.put("baggage." + key, value.getValue()));
     }
 
     if (eventContext == null) {
@@ -76,34 +73,13 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     } else {
       eventContext = new UnionMap<>(eventContext, contextData);
     }
-    Map<String, String> eventContextMap = eventContext;
     LoggerContextVO oldVo = event.getLoggerContextVO();
     LoggerContextVO vo =
         oldVo != null
-            ? new LoggerContextVO(oldVo.getName(), eventContextMap, oldVo.getBirthTime())
+            ? new LoggerContextVO(oldVo.getName(), eventContext, oldVo.getBirthTime())
             : null;
 
-    ILoggingEvent wrappedEvent =
-        (ILoggingEvent)
-            Proxy.newProxyInstance(
-                ILoggingEvent.class.getClassLoader(),
-                new Class<?>[] {ILoggingEvent.class},
-                (proxy, method, args) -> {
-                  if ("getMDCPropertyMap".equals(method.getName())) {
-                    return eventContextMap;
-                  } else if ("getLoggerContextVO".equals(method.getName())) {
-                    return vo;
-                  }
-                  try {
-                    return method.invoke(event, args);
-                  } catch (InvocationTargetException exception) {
-                    throw exception.getCause();
-                  }
-                });
-    // https://github.com/qos-ch/logback/blob/9e833ec858953a2296afdc3292f8542fc08f2a45/logback-classic/src/main/java/ch/qos/logback/classic/net/LoggingEventPreSerializationTransformer.java#L29
-    // LoggingEventPreSerializationTransformer accepts only subclasses of LoggingEvent and
-    // LoggingEventVO, here we transform our wrapped event into a LoggingEventVO
-    return LoggingEventVO.build(wrappedEvent);
+    return new WrappedLoggingEvent(event, eventContext, vo);
   }
 
   @Override
@@ -144,5 +120,33 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   @Override
   public boolean detachAppender(String name) {
     return aai.detachAppender(name);
+  }
+
+  /**
+   * Wraps another logging event, overriding MDC & LoggerContextVO.
+   */
+  private static class WrappedLoggingEvent extends BaseLoggingEventDelegate {
+    private final Map<String, String> mdc;
+    private final LoggerContextVO contextViewOnly;
+
+    public WrappedLoggingEvent(
+        ILoggingEvent event,
+        Map<String, String> mdc,
+        LoggerContextVO contextViewOnly
+    ) {
+      super(event);
+      this.mdc = mdc;
+      this.contextViewOnly = contextViewOnly;
+    }
+
+    @Override
+    public Map<String, String> getMDCPropertyMap() {
+      return mdc;
+    }
+
+    @Override
+    public LoggerContextVO getLoggerContextVO() {
+      return contextViewOnly;
+    }
   }
 }
