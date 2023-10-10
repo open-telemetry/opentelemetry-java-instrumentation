@@ -863,11 +863,17 @@ public abstract class AbstractGrpcTest {
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
           arguments(Status.UNKNOWN.withCause(new RuntimeException("some error"))),
-          arguments(Status.PERMISSION_DENIED.withCause(new RuntimeException("some error"))),
+          arguments(Status.DEADLINE_EXCEEDED.withCause(new RuntimeException("some error"))),
           arguments(Status.UNIMPLEMENTED.withCause(new RuntimeException("some error"))),
+          arguments(Status.INTERNAL.withCause(new RuntimeException("some error"))),
+          arguments(Status.UNAVAILABLE.withCause(new RuntimeException("some error"))),
+          arguments(Status.DATA_LOSS.withCause(new RuntimeException("some error"))),
           arguments(Status.UNKNOWN.withDescription("some description")),
-          arguments(Status.PERMISSION_DENIED.withDescription("some description")),
-          arguments(Status.UNIMPLEMENTED.withDescription("some description")));
+          arguments(Status.DEADLINE_EXCEEDED.withDescription("some description")),
+          arguments(Status.UNIMPLEMENTED.withDescription("some description")),
+          arguments(Status.INTERNAL.withDescription("some description")),
+          arguments(Status.UNAVAILABLE.withDescription("some description")),
+          arguments(Status.DATA_LOSS.withDescription("some description")));
     }
   }
 
