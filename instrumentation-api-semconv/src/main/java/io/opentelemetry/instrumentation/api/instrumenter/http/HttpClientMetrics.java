@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createStableDurationHistogramBuilder;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.mergeClientAttributes;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
@@ -90,7 +91,7 @@ public final class HttpClientMetrics implements OperationListener {
       return;
     }
 
-    Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
+    Attributes attributes = mergeClientAttributes(state.startAttributes(), endAttributes);
 
     if (stableDuration != null) {
       stableDuration.record((endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
