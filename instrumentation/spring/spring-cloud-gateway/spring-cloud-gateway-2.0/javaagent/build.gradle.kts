@@ -2,6 +2,14 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
+muzzle {
+  pass {
+    group.set("org.springframework.cloud")
+    module.set("spring-cloud-starter-gateway")
+    versions.set("[2.0.0.RELEASE,]")
+  }
+}
+
 dependencies {
   compileOnly("org.springframework.cloud:spring-cloud-starter-gateway:2.0.0.RELEASE")
 

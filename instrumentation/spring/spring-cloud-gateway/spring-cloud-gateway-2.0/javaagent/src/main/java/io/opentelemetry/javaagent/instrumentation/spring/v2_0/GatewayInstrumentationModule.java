@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.gateway;
+package io.opentelemetry.javaagent.instrumentation.spring.v2_0;
 
 import static java.util.Arrays.asList;
 
