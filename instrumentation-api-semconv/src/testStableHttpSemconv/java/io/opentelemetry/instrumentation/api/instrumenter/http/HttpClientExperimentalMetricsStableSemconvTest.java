@@ -36,7 +36,6 @@ class HttpClientExperimentalMetricsStableSemconvTest {
         Attributes.builder()
             .put(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
             .put(SemanticAttributes.URL_FULL, "https://localhost:1234/")
-            .put(SemanticAttributes.URL_SCHEME, "https")
             .put(SemanticAttributes.URL_PATH, "/")
             .put(SemanticAttributes.URL_QUERY, "q=a")
             .put(SemanticAttributes.SERVER_ADDRESS, "localhost")
@@ -97,7 +96,8 @@ class HttpClientExperimentalMetricsStableSemconvTest {
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(SemanticAttributes.SERVER_PORT, 1234))
+                                            equalTo(SemanticAttributes.SERVER_PORT, 1234),
+                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -123,7 +123,8 @@ class HttpClientExperimentalMetricsStableSemconvTest {
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(SemanticAttributes.SERVER_PORT, 1234))
+                                            equalTo(SemanticAttributes.SERVER_PORT, 1234),
+                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
