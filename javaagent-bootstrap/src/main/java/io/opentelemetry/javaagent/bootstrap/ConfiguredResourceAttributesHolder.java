@@ -15,10 +15,10 @@ import javax.annotation.Nullable;
 
 public final class ConfiguredResourceAttributesHolder {
 
-  private static final Map<String, String> resourceAttribute = new HashMap<>();
+  private static final Map<String, String> resourceAttributes = new HashMap<>();
 
-  public static Map<String, String> getResourceAttribute() {
-    return resourceAttribute;
+  public static Map<String, String> getResourceAttributes() {
+    return resourceAttributes;
   }
 
   public static void initialize(Attributes resourceAttribute) {
@@ -27,8 +27,7 @@ public final class ConfiguredResourceAttributesHolder {
     for (String key : mdcResourceAttributes) {
       String value = resourceAttribute.get(stringKey(key));
       if (value != null) {
-        ConfiguredResourceAttributesHolder.resourceAttribute.put(
-            String.format("otel.resource.%s", key), value);
+        ConfiguredResourceAttributesHolder.resourceAttributes.put(key, value);
       }
     }
   }
@@ -44,7 +43,7 @@ public final class ConfiguredResourceAttributesHolder {
 
   @Nullable
   public static String getAttributeValue(String key) {
-    return resourceAttribute.get(String.format("otel.resource.%s", key));
+    return resourceAttributes.get(key);
   }
 
   private ConfiguredResourceAttributesHolder() {}

@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -22,11 +21,14 @@ class ConfiguredResourceAttributesHolderTest {
       key = "otel.instrumentation.mdc.resource-attributes",
       value = "service.name,runtime")
   void testGetAttributeValue() {
-    Attributes attributes = Attributes.builder().put("service.name", "test-service").build();
+    Attributes attributes =
+        Attributes.builder().put("service.name", "test-service").put("runtime", "JVM").build();
 
     ConfiguredResourceAttributesHolder.initialize(attributes);
-    assertEquals(
-        "test-service", ConfiguredResourceAttributesHolder.getAttributeValue("service.name"));
+
+    assertThat(ConfiguredResourceAttributesHolder.getAttributeValue("service.name"))
+        .isEqualTo("test-service");
+    assertThat(ConfiguredResourceAttributesHolder.getAttributeValue("runtime")).isEqualTo("JVM");
   }
 
   @Test
@@ -38,7 +40,7 @@ class ConfiguredResourceAttributesHolderTest {
             .build();
 
     ConfiguredResourceAttributesHolder.initialize(attributes);
-    assertNull(ConfiguredResourceAttributesHolder.getAttributeValue("items"));
+    assertThat(ConfiguredResourceAttributesHolder.getAttributeValue("items")).isNull();
   }
 
   @Test
@@ -48,6 +50,6 @@ class ConfiguredResourceAttributesHolderTest {
         Attributes.builder().put(AttributeKey.stringArrayKey("don't care"), "won't care").build();
 
     ConfiguredResourceAttributesHolder.initialize(attributes);
-    assertNull(ConfiguredResourceAttributesHolder.getAttributeValue("dc-wc"));
+    assertThat(ConfiguredResourceAttributesHolder.getAttributeValue("dc-wc")).isNull();
   }
 }

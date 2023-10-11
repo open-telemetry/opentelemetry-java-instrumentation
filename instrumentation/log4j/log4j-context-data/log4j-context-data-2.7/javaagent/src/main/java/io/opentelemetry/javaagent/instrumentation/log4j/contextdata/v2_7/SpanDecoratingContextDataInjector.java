@@ -14,6 +14,7 @@ import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.bootstrap.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,11 @@ public final class SpanDecoratingContextDataInjector implements ContextDataInjec
     newContextData.putValue(TRACE_ID, currentContext.getTraceId());
     newContextData.putValue(SPAN_ID, currentContext.getSpanId());
     newContextData.putValue(TRACE_FLAGS, currentContext.getTraceFlags().asHex());
+
+    for (Map.Entry<String, String> entry :
+        ConfiguredResourceAttributesHolder.getResourceAttributes().entrySet()) {
+      newContextData.putValue(entry.getKey(), entry.getValue());
+    }
 
     if (BAGGAGE_ENABLED) {
       Baggage baggage = Baggage.fromContext(context);

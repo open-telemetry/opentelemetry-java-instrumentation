@@ -81,7 +81,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         spanContextData.put(SPAN_ID, spanContext.getSpanId());
         spanContextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
 
-        spanContextData.putAll(ConfiguredResourceAttributesHolder.getResourceAttribute());
+        spanContextData.putAll(ConfiguredResourceAttributesHolder.getResourceAttributes());
       }
 
       if (LogbackSingletons.addBaggage()) {
