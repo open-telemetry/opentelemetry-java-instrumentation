@@ -15,12 +15,14 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -43,16 +45,18 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
   // instrumentation, and won't conflict with usage outside javaagent instrumentation
-  static final ExecutionAttribute<io.opentelemetry.context.Context> CONTEXT_ATTRIBUTE =
+  private static final ExecutionAttribute<io.opentelemetry.context.Context> CONTEXT_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Context");
-  static final ExecutionAttribute<Scope> SCOPE_ATTRIBUTE =
+  private static final ExecutionAttribute<Scope> SCOPE_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Scope");
-  static final ExecutionAttribute<AwsSdkRequest> AWS_SDK_REQUEST_ATTRIBUTE =
+  private static final ExecutionAttribute<AwsSdkRequest> AWS_SDK_REQUEST_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".AwsSdkRequest");
   static final ExecutionAttribute<SdkHttpRequest> SDK_HTTP_REQUEST_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".SdkHttpRequest");
   static final ExecutionAttribute<SdkRequest> SDK_REQUEST_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".SdkRequest");
+  private static final ExecutionAttribute<RequestSpanFinisher> REQUEST_FINISHER_ATTRIBUTE =
+      new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".RequestFinisher");
 
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter;
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter;
@@ -120,9 +124,40 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       return request;
     }
 
-    io.opentelemetry.context.Context otelContext =
-        requestInstrumenter.start(parentOtelContext, executionAttributes);
+    RequestSpanFinisher requestFinisher;
+    io.opentelemetry.context.Context otelContext;
+    Instant requestStart = Instant.now();
+    // Skip creating request span for SqsClient.receiveMessage if there is no parent span and also
+    // suppress the span from the underlying http client. Request/http client span appears in a
+    // separate trace from message producer/consumer spans if there is no parent span just having
+    // a trace with only the request/http client span isn't useful.
+    if (parentOtelContext == io.opentelemetry.context.Context.root()
+        && "software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest"
+            .equals(request.getClass().getName())) {
+      otelContext =
+          InstrumenterUtil.suppressSpan(
+              requestInstrumenter, parentOtelContext, executionAttributes);
+      requestFinisher =
+          (otelContext12, executionAttributes12, response, exception) -> {
+            // generate request span when there was an error
+            if (exception != null) {
+              InstrumenterUtil.startAndEnd(
+                  requestInstrumenter,
+                  parentOtelContext,
+                  executionAttributes12,
+                  response,
+                  exception,
+                  requestStart,
+                  Instant.now());
+            }
+          };
+    } else {
+      otelContext = requestInstrumenter.start(parentOtelContext, executionAttributes);
+      requestFinisher = requestInstrumenter::end;
+    }
+
     executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, otelContext);
+    executionAttributes.putAttribute(REQUEST_FINISHER_ATTRIBUTE, requestFinisher);
     if (executionAttributes
         .getAttribute(SdkExecutionAttribute.CLIENT_TYPE)
         .equals(ClientType.SYNC)) {
@@ -140,7 +175,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
         populateRequestAttributes(span, awsSdkRequest, context.request(), executionAttributes);
       }
     } catch (Throwable throwable) {
-      requestInstrumenter.end(otelContext, executionAttributes, null, throwable);
+      requestFinisher.finish(otelContext, executionAttributes, null, throwable);
       clearAttributes(executionAttributes);
       throw throwable;
     }
@@ -290,7 +325,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
       onHttpResponseAvailable(
           executionAttributes, otelContext, Span.fromContext(otelContext), httpResponse);
-      requestInstrumenter.end(otelContext, executionAttributes, httpResponse, null);
+      RequestSpanFinisher finisher = executionAttributes.getAttribute(REQUEST_FINISHER_ATTRIBUTE);
+      finisher.finish(otelContext, executionAttributes, httpResponse, null);
     }
     clearAttributes(executionAttributes);
   }
@@ -353,7 +389,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Context.FailedExecution context, ExecutionAttributes executionAttributes) {
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     if (otelContext != null) {
-      requestInstrumenter.end(otelContext, executionAttributes, null, context.exception());
+      RequestSpanFinisher finisher = executionAttributes.getAttribute(REQUEST_FINISHER_ATTRIBUTE);
+      finisher.finish(otelContext, executionAttributes, null, context.exception());
     }
     clearAttributes(executionAttributes);
   }
@@ -366,6 +403,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, null);
     executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, null);
     executionAttributes.putAttribute(SDK_HTTP_REQUEST_ATTRIBUTE, null);
+    executionAttributes.putAttribute(REQUEST_FINISHER_ATTRIBUTE, null);
   }
 
   /**
@@ -374,5 +412,13 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
    */
   static io.opentelemetry.context.Context getContext(ExecutionAttributes attributes) {
     return attributes.getAttribute(CONTEXT_ATTRIBUTE);
+  }
+
+  private interface RequestSpanFinisher {
+    void finish(
+        io.opentelemetry.context.Context otelContext,
+        ExecutionAttributes executionAttributes,
+        SdkHttpResponse response,
+        Throwable exception);
   }
 }

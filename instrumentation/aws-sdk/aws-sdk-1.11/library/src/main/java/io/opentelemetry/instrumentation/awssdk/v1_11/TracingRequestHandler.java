@@ -12,8 +12,11 @@ import com.amazonaws.handlers.HandlerContextKey;
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import java.time.Instant;
 import javax.annotation.Nullable;
 
 /** Tracing Request Handler. */
@@ -21,6 +24,10 @@ final class TracingRequestHandler extends RequestHandler2 {
 
   static final HandlerContextKey<Context> CONTEXT =
       new HandlerContextKey<>(Context.class.getName());
+  private static final ContextKey<Instant> REQUEST_START_KEY =
+      ContextKey.named(TracingRequestHandler.class.getName() + ".RequestStart");
+  private static final ContextKey<Context> PARENT_CONTEXT_KEY =
+      ContextKey.named(TracingRequestHandler.class.getName() + ".ParentContext");
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> consumerInstrumenter;
@@ -47,6 +54,21 @@ final class TracingRequestHandler extends RequestHandler2 {
     if (!requestInstrumenter.shouldStart(parentContext, request)) {
       return;
     }
+
+    // Skip creating request span for AmazonSQSClient.receiveMessage if there is no parent span and
+    // also suppress the span from the underlying http client. Request/http client span appears in a
+    // separate trace from message producer/consumer spans if there is no parent span just having
+    // a trace with only the request/http client span isn't useful.
+    if (Context.root() == parentContext
+        && "com.amazonaws.services.sqs.model.ReceiveMessageRequest"
+            .equals(request.getOriginalRequest().getClass().getName())) {
+      Context context = InstrumenterUtil.suppressSpan(requestInstrumenter, parentContext, request);
+      context = context.with(REQUEST_START_KEY, Instant.now());
+      context = context.with(PARENT_CONTEXT_KEY, parentContext);
+      request.addHandlerContext(CONTEXT, context);
+      return;
+    }
+
     Context context = requestInstrumenter.start(parentContext, request);
 
     AwsXrayPropagator.getInstance().inject(context, request, HeaderSetter.INSTANCE);
@@ -81,6 +103,25 @@ final class TracingRequestHandler extends RequestHandler2 {
       return;
     }
     request.addHandlerContext(CONTEXT, null);
+
+    // see beforeRequest, requestStart is only set when we skip creating request span for sqs
+    // AmazonSQSClient.receiveMessage calls
+    Instant requestStart = context.get(REQUEST_START_KEY);
+    if (requestStart != null) {
+      // create request span if there was an error
+      if (error != null) {
+        InstrumenterUtil.startAndEnd(
+            requestInstrumenter,
+            context.get(PARENT_CONTEXT_KEY),
+            request,
+            response,
+            error,
+            requestStart,
+            Instant.now());
+      }
+      return;
+    }
+
     requestInstrumenter.end(context, request, response, error);
   }
 }

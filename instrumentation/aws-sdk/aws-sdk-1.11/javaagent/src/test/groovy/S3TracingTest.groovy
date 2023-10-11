@@ -42,7 +42,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
     awsConnector.purgeQueue(queueUrl)
 
     then:
-    assertTraces(12) {
+    assertTraces(10) {
       trace(0, 1) {
 
         span(0) {
@@ -168,31 +168,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(5, 1) {
-        span(0) {
-          name "SQS.ReceiveMessage"
-          kind CLIENT
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "rpc.method" "ReceiveMessage"
-            "aws.queue.url" queueUrl
-            "rpc.system" "aws-api"
-            "rpc.service" "AmazonSQS"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
-          }
-        }
-      }
-      trace(6, 2) {
+      trace(5, 2) {
         span(0) {
           name "S3.PutObject"
           kind CLIENT
@@ -239,36 +215,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-
-      /**
-       * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
-       * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
-       */
-      trace(7, 1) {
-        span(0) {
-          name "SQS.ReceiveMessage"
-          kind CLIENT
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "rpc.method" "ReceiveMessage"
-            "aws.queue.url" queueUrl
-            "rpc.system" "aws-api"
-            "rpc.service" "AmazonSQS"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
-          }
-        }
-      }
-      trace(8, 1) {
+      trace(6, 1) {
         span(0) {
           name "S3.ListObjects"
           kind CLIENT
@@ -292,7 +239,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(9, 1) {
+      trace(7, 1) {
         span(0) {
           name "S3.DeleteObject"
           kind CLIENT
@@ -316,7 +263,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(10, 1) {
+      trace(8, 1) {
         span(0) {
           name "S3.DeleteBucket"
           kind CLIENT
@@ -340,7 +287,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(11, 1) {
+      trace(9, 1) {
         span(0) {
           name "SQS.PurgeQueue"
           kind CLIENT
@@ -393,7 +340,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
     awsConnector.purgeQueue(queueUrl)
 
     then:
-    assertTraces(16) {
+    assertTraces(14) {
       trace(0, 1) {
         span(0) {
           name "SQS.CreateQueue"
@@ -583,32 +530,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      // test even receive
       trace(8, 1) {
-        span(0) {
-          name "SQS.ReceiveMessage"
-          kind CLIENT
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "rpc.method" "ReceiveMessage"
-            "aws.queue.url" queueUrl
-            "rpc.system" "aws-api"
-            "rpc.service" "AmazonSQS"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
-          }
-        }
-      }
-      trace(9, 1) {
         span(0) {
           name "S3.PutObject"
           kind CLIENT
@@ -632,35 +554,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      /**
-       * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
-       * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
-       */
-      trace(10, 1) {
-        span(0) {
-          name "SQS.ReceiveMessage"
-          kind CLIENT
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "rpc.method" "ReceiveMessage"
-            "aws.queue.url" queueUrl
-            "rpc.system" "aws-api"
-            "rpc.service" "AmazonSQS"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
-          }
-        }
-      }
-      trace(11, 1) {
+      trace(9, 1) {
         span(0) {
           name "SQS.ReceiveMessage"
           kind CONSUMER
@@ -685,7 +579,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(12, 1) {
+      trace(10, 1) {
         span(0) {
           name "S3.ListObjects"
           kind CLIENT
@@ -709,7 +603,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(13, 1) {
+      trace(11, 1) {
         span(0) {
           name "S3.DeleteObject"
           kind CLIENT
@@ -733,7 +627,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(14, 1) {
+      trace(12, 1) {
         span(0) {
           name "S3.DeleteBucket"
           kind CLIENT
@@ -757,7 +651,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(15, 1) {
+      trace(13, 1) {
         span(0) {
           name "SQS.PurgeQueue"
           kind CLIENT

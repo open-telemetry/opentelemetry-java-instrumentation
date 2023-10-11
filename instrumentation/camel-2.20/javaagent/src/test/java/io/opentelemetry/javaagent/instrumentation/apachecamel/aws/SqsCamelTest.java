@@ -66,9 +66,6 @@ class SqsCamelTest {
                     CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(2))),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl).hasNoParent()),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
                 span -> AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl).hasNoParent()));
     camelApp.stop();
   }
@@ -104,13 +101,7 @@ class SqsCamelTest {
                     CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(0))),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl).hasNoParent()),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl).hasNoParent()),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl).hasNoParent()));
+                span -> AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl).hasNoParent()));
     camelApp.stop();
   }
 
@@ -142,14 +133,7 @@ class SqsCamelTest {
                 span ->
                     AwsSpanAssertions.sqs(
                             span, "SQS.ReceiveMessage", queueUrl, null, SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(2))),
-        /*
-         * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
-         * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
-         */
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl).hasNoParent()));
+                        .hasParent(trace.getSpan(2))));
     camelApp.stop();
   }
 }

@@ -45,6 +45,11 @@ public final class InstrumenterUtil {
         instrumenter, parentContext, request, response, error, startTime, endTime);
   }
 
+  public static <REQUEST, RESPONSE> Context suppressSpan(
+      Instrumenter<REQUEST, RESPONSE> instrumenter, Context parentContext, REQUEST request) {
+    return instrumenterAccess.suppressSpan(instrumenter, parentContext, request);
+  }
+
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> buildUpstreamInstrumenter(
       InstrumenterBuilder<REQUEST, RESPONSE> builder,
       TextMapGetter<REQUEST> getter,

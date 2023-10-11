@@ -110,8 +110,8 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
     }
   }
 
-  void assertSqsTraces() {
-    assertTraces(3) {
+  void assertSqsTraces(withParent = false) {
+    assertTraces(2 + (withParent ? 1 : 0)) {
       trace(0, 1) {
 
         span(0) {
@@ -179,31 +179,37 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
           }
         }
       }
-      /**
-       * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
-       * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
-       */
-      trace(2, 1) {
-        span(0) {
-          name "Sqs.ReceiveMessage"
-          kind CLIENT
-          hasNoParent()
-          hasNoLinks()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.requestId" "00000000-0000-0000-0000-000000000000"
-            "rpc.method" "ReceiveMessage"
-            "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "rpc.system" "aws-api"
-            "rpc.service" "Sqs"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+      if (withParent) {
+        /**
+         * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
+         * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
+         */
+        trace(2, 2) {
+          span(0) {
+            name "parent"
+            hasNoParent()
+          }
+          span(1) {
+            name "Sqs.ReceiveMessage"
+            kind CLIENT
+            childOf span(0)
+            hasNoLinks()
+            attributes {
+              "aws.agent" "java-aws-sdk"
+              "aws.requestId" "00000000-0000-0000-0000-000000000000"
+              "rpc.method" "ReceiveMessage"
+              "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
+              "rpc.system" "aws-api"
+              "rpc.service" "Sqs"
+              "http.method" "POST"
+              "http.status_code" 200
+              "http.url" { it.startsWith("http://localhost:$sqsPort") }
+              "$SemanticAttributes.USER_AGENT_ORIGINAL" String
+              "net.peer.name" "localhost"
+              "net.peer.port" sqsPort
+              "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+              "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            }
           }
         }
       }
@@ -226,6 +232,26 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
     then:
     resp.messages().size() == 1
     assertSqsTraces()
+  }
+
+  def "simple sqs producer-consumer services with parent: sync"() {
+    setup:
+    def builder = SqsClient.builder()
+    configureSdkClient(builder)
+    def client = builder.build()
+
+    client.createQueue(createQueueRequest)
+
+    when:
+    client.sendMessage(sendMessageRequest)
+
+    def resp = runWithSpan("parent") {
+      client.receiveMessage(receiveMessageRequest)
+    }
+
+    then:
+    resp.messages().size() == 1
+    assertSqsTraces(true)
   }
 
   def "simple sqs producer-consumer services: async"() {
@@ -266,7 +292,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
     // +2: 3 messages, 2x traceparent, 1x not injected due to too many attrs
     totalAttrs == 18 + (sqsAttributeInjectionEnabled ? 2 : 0)
 
-    assertTraces(xrayInjectionEnabled ? 3 : 4) {
+    assertTraces(xrayInjectionEnabled ? 2 : 3) {
       trace(0, 1) {
 
         span(0) {
@@ -320,35 +346,8 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
           }
         }
       }
-      /**
-       * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
-       * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
-       */
-      trace(2, 1) {
-        span(0) {
-          name "Sqs.ReceiveMessage"
-          kind CLIENT
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.requestId" "00000000-0000-0000-0000-000000000000"
-            "rpc.method" "ReceiveMessage"
-            "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "rpc.system" "aws-api"
-            "rpc.service" "Sqs"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
-          }
-        }
-      }
       if (!xrayInjectionEnabled) {
-        trace(3, 1) {
+        trace(2, 1) {
           span(0) {
             name "Sqs.ReceiveMessage"
             kind CONSUMER
