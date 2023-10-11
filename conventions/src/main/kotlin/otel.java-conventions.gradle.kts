@@ -198,7 +198,21 @@ var path = project.path
 if (path.startsWith(":instrumentation:")) {
   // remove segments that are a prefix of the next segment
   // for example :instrumentation:log4j:log4j-context-data:log4j-context-data-2.17 is transformed to log4j-context-data-2.17
-  val segments = path.substring(":instrumentation:".length).split(':')
+  var tmpPath = path
+  val suffix = tmpPath.substringAfterLast(':')
+  var prefix = ":instrumentation:"
+  if (suffix == "library") {
+    // strip ":library" suffix
+    tmpPath = tmpPath.substringBeforeLast(':')
+  } else if (suffix == "library-autoconfigure") {
+    // replace ":library-autoconfigure" with "-autoconfigure"
+    tmpPath = tmpPath.substringBeforeLast(':') + "-autoconfigure"
+  } else if (suffix == "javaagent") {
+    // strip ":javaagent" suffix and add it to prefix
+    prefix += "javaagent:"
+    tmpPath = tmpPath.substringBeforeLast(':')
+  }
+  val segments = tmpPath.substring(":instrumentation:".length).split(':')
   var newPath = ""
   var done = false
   for (s in segments) {
@@ -210,7 +224,7 @@ if (path.startsWith(":instrumentation:")) {
     }
   }
   if (newPath.isNotEmpty()) {
-    path = ":instrumentation:$newPath"
+    path = prefix + newPath
   }
 }
 var javaModuleName = "io.opentelemetry" + path.replace(".", "_").replace("-", "_").replace(":", ".")
