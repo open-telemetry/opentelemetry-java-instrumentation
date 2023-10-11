@@ -58,7 +58,8 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
   public static class ConstructorMapAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(value = 0, readOnly = false) Map<String, Object> config) {
+    public static void onEnter(
+        @Advice.Argument(value = 0, readOnly = false) Map<String, Object> config) {
       // ensure config is a mutable map
       if (config.getClass() != HashMap.class) {
         config = new HashMap<>(config);
