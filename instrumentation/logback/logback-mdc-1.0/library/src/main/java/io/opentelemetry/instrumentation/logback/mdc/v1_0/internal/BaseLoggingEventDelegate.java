@@ -1,11 +1,16 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.logback.mdc.v1_0.internal;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.LoggerContextVO;
-import org.slf4j.Marker;
 import java.util.Map;
+import org.slf4j.Marker;
 
 /**
  * A convenience class that wraps a logging event and delegates all method calls to it. A subclass

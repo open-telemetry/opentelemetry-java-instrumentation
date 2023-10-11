@@ -19,8 +19,8 @@ import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
 import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.BaseLoggingEventDelegate;
+import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -122,18 +122,13 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     return aai.detachAppender(name);
   }
 
-  /**
-   * Wraps another logging event, overriding MDC & LoggerContextVO.
-   */
+  /** Wraps another logging event, overriding MDC & LoggerContextVO. */
   private static class WrappedLoggingEvent extends BaseLoggingEventDelegate {
     private final Map<String, String> mdc;
     private final LoggerContextVO contextViewOnly;
 
     public WrappedLoggingEvent(
-        ILoggingEvent event,
-        Map<String, String> mdc,
-        LoggerContextVO contextViewOnly
-    ) {
+        ILoggingEvent event, Map<String, String> mdc, LoggerContextVO contextViewOnly) {
       super(event);
       this.mdc = mdc;
       this.contextViewOnly = contextViewOnly;
