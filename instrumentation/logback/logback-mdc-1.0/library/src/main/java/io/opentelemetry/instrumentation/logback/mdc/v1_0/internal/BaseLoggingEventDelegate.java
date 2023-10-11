@@ -15,9 +15,9 @@ import org.slf4j.Marker;
 /**
  * A convenience class that wraps a logging event and delegates all method calls to it. A subclass
  * can then override only what it needs.
- * <p>
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public abstract class BaseLoggingEventDelegate implements ILoggingEvent {
   protected ILoggingEvent wrappedEvent;
