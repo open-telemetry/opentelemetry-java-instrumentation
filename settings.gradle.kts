@@ -460,6 +460,7 @@ include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:javaagent
 include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:testing")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:javaagent")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library")
+include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:testing")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java17:javaagent")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library")
 include(":instrumentation:rxjava:rxjava-1.0:library")
