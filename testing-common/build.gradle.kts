@@ -46,6 +46,7 @@ dependencies {
   api("org.slf4j:slf4j-api")
 
   compileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
+  compileOnly(project(":javaagent-bootstrap"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")

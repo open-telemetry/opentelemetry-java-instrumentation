@@ -71,7 +71,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
-        pipeline.remove(ourHandler);
+        if (pipeline.context(ourHandler) != null) {
+          pipeline.remove(ourHandler);
+        }
         virtualField.set(handler, null);
       }
     }
@@ -92,7 +94,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
-        pipeline.remove(ourHandler);
+        if (pipeline.context(ourHandler) != null) {
+          pipeline.remove(ourHandler);
+        }
         virtualField.set(handler, null);
       }
     }
@@ -114,7 +118,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
-        pipeline.remove(ourHandler);
+        if (pipeline.context(ourHandler) != null) {
+          pipeline.remove(ourHandler);
+        }
         virtualField.set(handler, null);
       }
     }
@@ -130,7 +136,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
-        pipeline.remove(ourHandler);
+        if (pipeline.context(ourHandler) != null) {
+          pipeline.remove(ourHandler);
+        }
         virtualField.set(handler, null);
       }
     }
