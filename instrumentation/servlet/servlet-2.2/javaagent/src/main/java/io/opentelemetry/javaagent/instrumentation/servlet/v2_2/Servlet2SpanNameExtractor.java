@@ -32,7 +32,7 @@ public class Servlet2SpanNameExtractor<REQUEST, RESPONSE>
     if (!knownMethods.contains(method)) {
       method = "HTTP";
     }
-    if (servletPath.isEmpty()) {
+    if (servletPath == null || servletPath.isEmpty()) {
       return method;
     }
     String contextPath = accessor.getRequestContextPath(request);

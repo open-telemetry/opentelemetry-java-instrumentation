@@ -19,7 +19,6 @@ dependencies {
   library("com.amazonaws:aws-lambda-java-core:1.0.0")
 
   testImplementation(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:testing"))
-  testInstrumentation(project(":instrumentation:aws-lambda:aws-lambda-events-2.2:javaagent"))
 }
 
 tasks.withType<Test>().configureEach {
