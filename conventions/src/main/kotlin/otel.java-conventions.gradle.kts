@@ -194,7 +194,26 @@ testing {
   }
 }
 
-var javaModuleName = "io.opentelemetry" + project.path.replace(".", "_").replace("-", "_").replace(":", ".")
+var path = project.path
+if (path.startsWith(":instrumentation:")) {
+  // remove segments that are a prefix of the next segment
+  // for example :instrumentation:log4j:log4j-context-data:log4j-context-data-2.17 is transformed to log4j-context-data-2.17
+  val segments = path.substring(":instrumentation:".length).split(':')
+  var newPath = ""
+  var done = false
+  for (s in segments) {
+    if (!done && (newPath.isEmpty() || s.startsWith(newPath))) {
+      newPath = s
+    } else {
+      newPath += ":$s"
+      done = true
+    }
+  }
+  if (newPath.isNotEmpty()) {
+    path = ":instrumentation:$newPath"
+  }
+}
+var javaModuleName = "io.opentelemetry" + path.replace(".", "_").replace("-", "_").replace(":", ".")
 
 tasks {
   named<Jar>("jar") {
