@@ -28,4 +28,10 @@ tasks {
       jvmTarget = "1.8"
     }
   }
+
+  compileKotlin {
+    kotlinOptions {
+      languageVersion = "1.4"
+    }
+  }
 }
