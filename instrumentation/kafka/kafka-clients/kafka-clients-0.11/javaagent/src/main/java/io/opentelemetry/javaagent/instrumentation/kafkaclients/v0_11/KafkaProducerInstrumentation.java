@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.kafka.internal.KafkaPropagation;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import net.bytebuddy.asm.Advice;
@@ -57,7 +58,12 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
   public static class ConstructorMapAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(0) Map<String, Object> config) {
+    public static void onEnter(
+        @Advice.Argument(value = 0, readOnly = false) Map<String, Object> config) {
+      // ensure config is a mutable map
+      if (config.getClass() != HashMap.class) {
+        config = new HashMap<>(config);
+      }
       enhanceConfig(config);
     }
   }

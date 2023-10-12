@@ -36,10 +36,15 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
       ConfigPropertiesUtil.getBoolean(
           "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
 
+  private static final boolean RECORD_INDIVIDUAL_HTTP_ERROR =
+      ConfigPropertiesUtil.getBoolean(
+          "otel.instrumentation.aws-sdk.experimental-record-individual-http-error", false);
+
   private final ExecutionInterceptor delegate =
       AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureExperimentalSpanAttributes(CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES)
           .setUseConfiguredPropagatorForMessaging(USE_MESSAGING_PROPAGATOR)
+          .setRecordIndividualHttpError(RECORD_INDIVIDUAL_HTTP_ERROR)
           .build()
           .newExecutionInterceptor();
 

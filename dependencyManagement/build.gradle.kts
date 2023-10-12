@@ -8,7 +8,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.30.1"
+val otelSdkVersion = "1.31.0"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -27,21 +27,21 @@ val groovyVersion = "4.0.15"
 
 val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.15.2",
-  "com.squareup.okio:okio-bom:3.5.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
-  "com.google.guava:guava-bom:32.1.2-jre",
+  "com.squareup.okio:okio-bom:3.6.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
+  "com.google.guava:guava-bom:32.1.3-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
   "org.junit:junit-bom:5.10.0",
-  "org.testcontainers:testcontainers-bom:1.19.0",
+  "org.testcontainers:testcontainers-bom:1.19.1",
   "org.spockframework:spock-bom:2.4-M1-groovy-4.0"
 )
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.10.4"
 val errorProneVersion = "2.22.0"
-val byteBuddyVersion = "1.14.8"
-val asmVersion = "9.5"
+val byteBuddyVersion = "1.14.9"
+val asmVersion = "9.6"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.9"
@@ -91,7 +91,7 @@ val DEPENDENCIES = listOf(
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.5",
-  "commons-io:commons-io:2.13.0",
+  "commons-io:commons-io:2.14.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",

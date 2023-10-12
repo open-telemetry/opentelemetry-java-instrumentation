@@ -29,7 +29,7 @@ public class IgnoredTypesMatcher extends ElementMatcher.Junction.AbstractBase<Ty
     }
 
     // bytecode proxies typically have $$ in their name
-    if (name.contains("$$") && !name.contains("$$Lambda$")) {
+    if (name.contains("$$") && !name.contains("$$Lambda$") && !name.endsWith("$$Lambda")) {
       // allow scala anonymous classes
       return !name.contains("$$anon$");
     }

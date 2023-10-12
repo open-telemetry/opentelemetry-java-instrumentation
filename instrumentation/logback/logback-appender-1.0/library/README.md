@@ -20,7 +20,6 @@ For Maven, add to your `pom.xml` dependencies:
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-logback-appender-1.0</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
-    <scope>runtime</scope>
   </dependency>
 </dependencies>
 ```
@@ -28,7 +27,7 @@ For Maven, add to your `pom.xml` dependencies:
 For Gradle, add to your dependencies:
 
 ```groovy
-runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:OPENTELEMETRY_VERSION")
 ```
 
 ### Usage
@@ -102,4 +101,4 @@ The available settings are:
 | `captureKeyValuePairAttributes` | Boolean | `false` | Enable the capture of Logback key value pairs as attributes.                                                                                  |
 | `captureMdcAttributes`          | String  |         | Comma separated list of MDC attributes to capture. Use the wildcard character `*` to capture all attributes.                                  |
 
-[source code attributes]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#source-code-attributes
+[source code attributes]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes

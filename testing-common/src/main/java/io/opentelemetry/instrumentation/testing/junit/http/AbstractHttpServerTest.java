@@ -27,6 +27,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
@@ -346,6 +347,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         SemconvStability.emitStableHttpSemconv()
             ? "http.server.request.duration"
             : "http.server.duration";
+    String durationInstrumentDescription =
+        SemconvStability.emitStableHttpSemconv()
+            ? "Duration of HTTP server requests."
+            : "The duration of the inbound HTTP request";
 
     String metricsInstrumentationName = options.metricsInstrumentationName.get();
     if (metricsInstrumentationName == null) {
@@ -358,7 +363,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
-                        .hasDescription("The duration of the inbound HTTP request")
+                        .hasDescription(durationInstrumentDescription)
                         .hasUnit(SemconvStability.emitStableHttpSemconv() ? "s" : "ms")
                         .hasHistogramSatisfying(
                             histogram ->
@@ -792,8 +797,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                     SemanticAttributes.CLIENT_PORT, port -> assertThat(port).isGreaterThan(0));
           }
           assertThat(attrs).containsEntry(getAttributeKey(SemanticAttributes.HTTP_METHOD), method);
+
           assertThat(attrs)
               .containsEntry(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), statusCode);
+          if (statusCode >= 500 && SemconvStability.emitStableHttpSemconv()) {
+            assertThat(attrs).containsEntry(HttpAttributes.ERROR_TYPE, String.valueOf(statusCode));
+          }
 
           AttributeKey<String> netProtocolKey =
               getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME);

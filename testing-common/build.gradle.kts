@@ -34,7 +34,6 @@ dependencies {
   api("org.junit.jupiter:junit-jupiter-params")
 
   api("io.opentelemetry:opentelemetry-api")
-  api("io.opentelemetry:opentelemetry-semconv")
   api("io.opentelemetry:opentelemetry-sdk")
   api("io.opentelemetry:opentelemetry-sdk-testing")
   api(project(":instrumentation-api"))
@@ -47,6 +46,7 @@ dependencies {
   api("org.slf4j:slf4j-api")
 
   compileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
+  compileOnly(project(":javaagent-bootstrap"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")

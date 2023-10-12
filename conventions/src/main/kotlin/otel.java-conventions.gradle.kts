@@ -122,8 +122,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          // netty 4.1.98 does not run correctly on MacOS
-          belongsTo("io.netty:netty-bom:4.1.99.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.100.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -195,6 +194,41 @@ testing {
   }
 }
 
+var path = project.path
+if (path.startsWith(":instrumentation:")) {
+  // remove segments that are a prefix of the next segment
+  // for example :instrumentation:log4j:log4j-context-data:log4j-context-data-2.17 is transformed to log4j-context-data-2.17
+  var tmpPath = path
+  val suffix = tmpPath.substringAfterLast(':')
+  var prefix = ":instrumentation:"
+  if (suffix == "library") {
+    // strip ":library" suffix
+    tmpPath = tmpPath.substringBeforeLast(':')
+  } else if (suffix == "library-autoconfigure") {
+    // replace ":library-autoconfigure" with "-autoconfigure"
+    tmpPath = tmpPath.substringBeforeLast(':') + "-autoconfigure"
+  } else if (suffix == "javaagent") {
+    // strip ":javaagent" suffix and add it to prefix
+    prefix += "javaagent:"
+    tmpPath = tmpPath.substringBeforeLast(':')
+  }
+  val segments = tmpPath.substring(":instrumentation:".length).split(':')
+  var newPath = ""
+  var done = false
+  for (s in segments) {
+    if (!done && (newPath.isEmpty() || s.startsWith(newPath))) {
+      newPath = s
+    } else {
+      newPath += ":$s"
+      done = true
+    }
+  }
+  if (newPath.isNotEmpty()) {
+    path = prefix + newPath
+  }
+}
+var javaModuleName = "io.opentelemetry" + path.replace(".", "_").replace("-", "_").replace(":", ".")
+
 tasks {
   named<Jar>("jar") {
     // By default Gradle Jar task can put multiple files with the same name
@@ -211,7 +245,8 @@ tasks {
         "Implementation-Title" to project.name,
         "Implementation-Version" to project.version,
         "Implementation-Vendor" to "OpenTelemetry",
-        "Implementation-URL" to "https://github.com/open-telemetry/opentelemetry-java-instrumentation"
+        "Implementation-URL" to "https://github.com/open-telemetry/opentelemetry-java-instrumentation",
+        "Automatic-Module-Name" to javaModuleName
       )
     }
   }
@@ -367,7 +402,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "10.12.3"
+  toolVersion = "10.12.4"
   maxWarnings = 0
 }
 

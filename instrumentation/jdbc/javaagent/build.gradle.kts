@@ -40,6 +40,7 @@ dependencies {
   testImplementation("org.scala-lang:scala-library:2.11.12")
   testImplementation("com.typesafe.slick:slick_2.11:3.2.0")
   testImplementation("com.h2database:h2:1.4.197")
+  latestDepTestLibrary("org.apache.tomcat:tomcat-jdbc:10.1.13")
 }
 
 sourceSets {

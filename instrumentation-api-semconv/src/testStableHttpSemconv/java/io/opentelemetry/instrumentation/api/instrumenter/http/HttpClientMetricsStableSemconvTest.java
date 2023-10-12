@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -38,7 +39,6 @@ class HttpClientMetricsStableSemconvTest {
         Attributes.builder()
             .put(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
             .put(SemanticAttributes.URL_FULL, "https://localhost:1234/")
-            .put(SemanticAttributes.URL_SCHEME, "https")
             .put(SemanticAttributes.URL_PATH, "/")
             .put(SemanticAttributes.URL_QUERY, "q=a")
             .put(SemanticAttributes.SERVER_ADDRESS, "localhost")
@@ -48,6 +48,7 @@ class HttpClientMetricsStableSemconvTest {
     Attributes responseAttributes =
         Attributes.builder()
             .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
+            .put(HttpAttributes.ERROR_TYPE, "400")
             .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
             .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
             .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
@@ -83,6 +84,7 @@ class HttpClientMetricsStableSemconvTest {
                 assertThat(metric)
                     .hasName("http.client.request.duration")
                     .hasUnit("s")
+                    .hasDescription("Duration of HTTP client requests.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -93,15 +95,14 @@ class HttpClientMetricsStableSemconvTest {
                                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(HttpAttributes.ERROR_TYPE, "400"),
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                             equalTo(SemanticAttributes.SERVER_PORT, 1234),
-                                            equalTo(
-                                                SemanticAttributes.SERVER_SOCKET_ADDRESS,
-                                                "1.2.3.4"))
+                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar

@@ -55,15 +55,15 @@ dependencies {
 
   // When updating, update above in plugins too
   implementation("com.diffplug.spotless:spotless-plugin-gradle:6.22.0")
-  implementation("com.google.guava:guava:32.1.2-jre")
+  implementation("com.google.guava:guava:32.1.3-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("com.github.johnrengelman:shadow:8.1.1")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.enterprise:com.gradle.enterprise.gradle.plugin:3.15")
+  implementation("com.gradle.enterprise:com.gradle.enterprise.gradle.plugin:3.15.1")
   implementation("org.owasp:dependency-check-gradle:8.4.0")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.1")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.14.8")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.14.9")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.0")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.1")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:3.1.0")

@@ -15,11 +15,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.DataOutputStream;
@@ -29,6 +32,8 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -337,6 +342,19 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                       connection.getInputStream();
                     }));
 
+    List<AttributeAssertion> attributes =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), "http"),
+                equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
+                equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
+                equalTo(getAttributeKey(SemanticAttributes.NET_PEER_PORT), PortUtils.UNUSABLE_PORT),
+                equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), uri),
+                equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET")));
+    if (SemconvStability.emitStableHttpSemconv()) {
+      attributes.add(equalTo(HttpAttributes.ERROR_TYPE, "java.net.ConnectException"));
+    }
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -352,15 +370,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), "http"),
-                            equalTo(
-                                getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
-                            equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
-                            equalTo(
-                                getAttributeKey(SemanticAttributes.NET_PEER_PORT),
-                                PortUtils.UNUSABLE_PORT),
-                            equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), uri),
-                            equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET"))));
+                        .hasAttributesSatisfyingExactly(attributes)));
   }
 }

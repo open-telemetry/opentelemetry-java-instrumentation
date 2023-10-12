@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.DYNAMODB;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -15,7 +16,14 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.SemanticAttributes;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.auth.signer.AwsSignerExecutionAttribute;
 import software.amazon.awssdk.awscore.AwsResponse;
@@ -50,6 +58,10 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
 
+  static final AttributeKey<String> HTTP_ERROR_MSG =
+      AttributeKey.stringKey("aws.http.error_message");
+  static final String HTTP_FAILURE_EVENT = "HTTP request failure";
+
   Instrumenter<ExecutionAttributes, SdkHttpResponse> getConsumerInstrumenter() {
     return consumerInstrumenter;
   }
@@ -65,6 +77,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   @Nullable private final TextMapPropagator messagingPropagator;
   private final boolean useXrayPropagator;
+  private final boolean recordIndividualHttpError;
   private final FieldMapper fieldMapper;
 
   TracingExecutionInterceptor(
@@ -72,12 +85,14 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter,
       boolean captureExperimentalSpanAttributes,
       TextMapPropagator messagingPropagator,
-      boolean useXrayPropagator) {
+      boolean useXrayPropagator,
+      boolean recordIndividualHttpError) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerInstrumenter = consumerInstrumenter;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingPropagator = messagingPropagator;
     this.useXrayPropagator = useXrayPropagator;
+    this.recordIndividualHttpError = recordIndividualHttpError;
     this.fieldMapper = new FieldMapper();
   }
 
@@ -222,6 +237,19 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     return builder.build();
   }
 
+  @Override
+  public Optional<InputStream> modifyHttpResponseContent(
+      Context.ModifyHttpResponse context, ExecutionAttributes executionAttributes) {
+    Optional<InputStream> responseBody = context.responseBody();
+    if (recordIndividualHttpError) {
+      String errorMsg = extractHttpErrorAsEvent(context, executionAttributes);
+      if (errorMsg != null) {
+        return Optional.of(new ByteArrayInputStream(errorMsg.getBytes(Charset.defaultCharset())));
+      }
+    }
+    return responseBody;
+  }
+
   private void populateRequestAttributes(
       Span span,
       AwsSdkRequest awsSdkRequest,
@@ -287,6 +315,37 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
         fieldMapper.mapToAttributes(response, sdkRequest, span);
       }
     }
+  }
+
+  private static String extractHttpErrorAsEvent(
+      Context.AfterTransmission context, ExecutionAttributes executionAttributes) {
+    io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
+    if (otelContext != null) {
+      Span span = Span.fromContext(otelContext);
+      SdkHttpResponse response = context.httpResponse();
+
+      if (response != null && !response.isSuccessful()) {
+        int errorCode = response.statusCode();
+        // we want to record the error message from http response
+        Optional<InputStream> responseBody = context.responseBody();
+        if (responseBody.isPresent()) {
+          String errorMsg =
+              new BufferedReader(
+                      new InputStreamReader(responseBody.get(), Charset.defaultCharset()))
+                  .lines()
+                  .collect(Collectors.joining("\n"));
+          Attributes attributes =
+              Attributes.of(
+                  SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
+                  Long.valueOf(errorCode),
+                  HTTP_ERROR_MSG,
+                  errorMsg);
+          span.addEvent(HTTP_FAILURE_EVENT, attributes);
+          return errorMsg;
+        }
+      }
+    }
+    return null;
   }
 
   @Override

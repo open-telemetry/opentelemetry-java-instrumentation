@@ -123,10 +123,12 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
     channelPipeline.last().getClass().simpleName == "HttpClientTracingHandler"
 
     when:
-    channelPipeline.removeLast()
+    def removed = channelPipeline.removeLast()
 
     then: "there is no handler in pipeline"
     channelPipeline.size() == 0
+    // removing tracing handler also removes the http handler and returns it
+    removed == httpHandler
   }
 
   private static class NoopChannelHandler extends ChannelHandlerAdapter {

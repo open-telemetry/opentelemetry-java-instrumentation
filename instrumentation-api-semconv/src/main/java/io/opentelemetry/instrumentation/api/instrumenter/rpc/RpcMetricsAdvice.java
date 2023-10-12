@@ -34,8 +34,6 @@ final class RpcMetricsAdvice {
       attributes.add(SemanticAttributes.NETWORK_TRANSPORT);
       attributes.add(SemanticAttributes.SERVER_ADDRESS);
       attributes.add(SemanticAttributes.SERVER_PORT);
-      attributes.add(SemanticAttributes.SERVER_SOCKET_ADDRESS);
-      attributes.add(SemanticAttributes.SERVER_SOCKET_PORT);
     }
     if (SemconvStability.emitOldHttpSemconv()) {
       attributes.add(SemanticAttributes.NET_PEER_NAME);
@@ -43,8 +41,7 @@ final class RpcMetricsAdvice {
       attributes.add(SemanticAttributes.NET_TRANSPORT);
     }
 
-    ((ExtendedDoubleHistogramBuilder) builder)
-        .setAdvice(advice -> advice.setAttributes(attributes));
+    ((ExtendedDoubleHistogramBuilder) builder).setAttributesAdvice(attributes);
   }
 
   @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
@@ -66,8 +63,6 @@ final class RpcMetricsAdvice {
       attributes.add(SemanticAttributes.NETWORK_TRANSPORT);
       attributes.add(SemanticAttributes.SERVER_ADDRESS);
       attributes.add(SemanticAttributes.SERVER_PORT);
-      attributes.add(SemanticAttributes.SERVER_SOCKET_ADDRESS);
-      attributes.add(SemanticAttributes.SERVER_SOCKET_PORT);
     }
     if (SemconvStability.emitOldHttpSemconv()) {
       attributes.add(SemanticAttributes.NET_HOST_NAME);
@@ -75,8 +70,7 @@ final class RpcMetricsAdvice {
       attributes.add(SemanticAttributes.NET_TRANSPORT);
     }
 
-    ((ExtendedDoubleHistogramBuilder) builder)
-        .setAdvice(advice -> advice.setAttributes(attributes));
+    ((ExtendedDoubleHistogramBuilder) builder).setAttributesAdvice(attributes);
   }
 
   private RpcMetricsAdvice() {}

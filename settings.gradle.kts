@@ -12,15 +12,15 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.15"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.11.2"
+  id("com.gradle.enterprise") version "3.15.1"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.11.3"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
   // in particular, these commands are failing (reproducible locally):
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
-  id("com.bmuschko.docker-remote-api") version "9.3.3" apply false
+  id("com.bmuschko.docker-remote-api") version "9.3.4" apply false
 }
 
 dependencyResolutionManagement {
@@ -409,6 +409,8 @@ include(":instrumentation:oshi:javaagent")
 include(":instrumentation:oshi:library")
 include(":instrumentation:oshi:testing")
 include(":instrumentation:payara:javaagent")
+include(":instrumentation:pekko-actor-1.0:javaagent")
+include(":instrumentation:pekko-http-1.0:javaagent")
 include(":instrumentation:play:play-mvc:play-mvc-2.4:javaagent")
 include(":instrumentation:play:play-mvc:play-mvc-2.6:javaagent")
 include(":instrumentation:play:play-ws:play-ws-1.0:javaagent")
@@ -458,6 +460,7 @@ include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:javaagent
 include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:testing")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:javaagent")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library")
+include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:testing")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java17:javaagent")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library")
 include(":instrumentation:rxjava:rxjava-1.0:library")

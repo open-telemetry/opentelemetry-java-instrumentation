@@ -34,15 +34,15 @@ class HttpSpanStatusExtractorTest {
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 500, 501, 600, 601})
   void hasServerStatus(int statusCode) {
-    StatusCode expectedStatusCode = HttpStatusConverter.SERVER.statusFromHttpStatus(statusCode);
+    boolean isError = HttpStatusCodeConverter.SERVER.isError(statusCode);
     when(serverGetter.getHttpResponseStatusCode(anyMap(), anyMap(), isNull()))
         .thenReturn(statusCode);
 
     HttpSpanStatusExtractor.create(serverGetter)
         .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
 
-    if (expectedStatusCode != StatusCode.UNSET) {
-      verify(spanStatusBuilder).setStatus(expectedStatusCode);
+    if (isError) {
+      verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
     } else {
       verifyNoInteractions(spanStatusBuilder);
     }
@@ -51,15 +51,15 @@ class HttpSpanStatusExtractorTest {
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasClientStatus(int statusCode) {
-    StatusCode expectedStatusCode = HttpStatusConverter.CLIENT.statusFromHttpStatus(statusCode);
+    boolean isError = HttpStatusCodeConverter.CLIENT.isError(statusCode);
     when(clientGetter.getHttpResponseStatusCode(anyMap(), anyMap(), isNull()))
         .thenReturn(statusCode);
 
     HttpSpanStatusExtractor.create(clientGetter)
         .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
 
-    if (expectedStatusCode != StatusCode.UNSET) {
-      verify(spanStatusBuilder).setStatus(expectedStatusCode);
+    if (isError) {
+      verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
     } else {
       verifyNoInteractions(spanStatusBuilder);
     }

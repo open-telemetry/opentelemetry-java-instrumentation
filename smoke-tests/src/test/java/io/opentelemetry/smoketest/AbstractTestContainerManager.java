@@ -40,6 +40,7 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
     }
     environment.put("OTEL_JAVAAGENT_DEBUG", "true");
     environment.put("OTEL_EXPERIMENTAL_JAVASCRIPT_SNIPPET", "<script>console.log(hi)</script>");
+    environment.put("OTEL_INSTRUMENTATION_RUNTIME_TELEMETRY_PACKAGE_EMITTER_ENABLED", "true");
     return environment;
   }
 
