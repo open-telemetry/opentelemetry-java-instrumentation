@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.31.0 (2023-10-12)
+
 ### 🌟 New javaagent instrumentation
 
 - Apache Pekko
