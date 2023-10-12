@@ -2,6 +2,67 @@
 
 ## Unreleased
 
+### 🌟 New javaagent instrumentation
+
+- Apache Pekko
+  ([#9527](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9527))
+
+### 📈 Enhancements
+
+- Add instrumentation for vert.x sql client withTransaction method
+  ([#9462](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9462))
+- Improve hibernate reactive instrumentation
+  ([#9486](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9486))
+- Support application.yaml files in SpringBootServiceNameDetector
+  ([#9515](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9515))
+- Add Spring Boot service version finder / ResourceProvider
+  ([#9480](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9480))
+- Split hibernate reactive instrumentation
+  ([#9531](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9531))
+- Rework reactor netty context tracking
+  ([#9286](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9286))
+- Improve spring data reactive instrumentation
+  ([#9561](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9561))
+- Support akka http latest version
+  ([#9573](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9573))
+- Enhance AWS SDK Instrumentation with Detailed HTTP Error Information
+  ([#9448](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9448))
+- Update HTTP metrics' descriptions
+  ([#9635](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9635))
+- Remove server.socket.address from HTTP/RPC metrics
+  ([#9633](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9633))
+- Remove 0 bucket from stable HTTP metrics
+  ([#9631](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9631))
+- Suppress nested http client spans in aws2 instrumentation
+  ([#9634](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9634))
+- Implement spec changes for grpc server span error status
+  ([#9641](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9641))
+- Improve vertx-sql client context propagation
+  ([#9640](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9640))
+- Add url.scheme to HTTP client metrics
+  ([#9642](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9642))
+- Add support for newVirtualThreadPerTaskExecutor
+  ([#9616](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9616))
+- Implement error.type attribute in HTTP semconv
+  ([#9466](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9466))
+- Emit package events
+  ([#9301](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9301))
+- Added Automatic-Module-Name header to MANIFEST.MF in instrumentation libraries
+  ([#9140](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9140))
+- Support paths in `peer.service` mappings
+  ([#9061](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9061))
+- Compile ktor library instrumentation for earlier kotlin version
+  ([#9661](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9661))
+
+### 🛠️ Bug fixes
+
+- Fix NPE happening when .headersWhen() is used (reactor-netty)
+  ([#9511](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9511))
+- Spring webflux: add user spans as children of the controller span
+  ([#9572](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9572))
+- Make netty ChannelPipeline removeLast return user handler
+  ([#9584](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9584))
+
 ## Version 1.30.0 (2023-09-14)
 
 ### Migration notes
