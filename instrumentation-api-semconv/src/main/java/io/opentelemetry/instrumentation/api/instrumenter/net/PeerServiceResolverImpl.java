@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.url.UrlParser;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 class PeerServiceResolverImpl implements PeerServiceResolver {
@@ -45,13 +46,13 @@ class PeerServiceResolverImpl implements PeerServiceResolver {
 
   @Override
   @Nullable
-  public String resolveService(String host, @Nullable Integer port, @Nullable String path) {
+  public String resolveService(String host, @Nullable Integer port, @Nullable Supplier<String> pathSupplier) {
     Map<ServiceMatcher, String> matchers = mapping.get(host);
     if (matchers == null) {
       return null;
     }
     return matchers.entrySet().stream()
-        .filter(entry -> entry.getKey().matches(port, path))
+        .filter(entry -> entry.getKey().matches(port, pathSupplier))
         .max((o1, o2) -> matcherComparator.compare(o1.getKey(), o2.getKey()))
         .map(Map.Entry::getValue)
         .orElse(null);
@@ -70,13 +71,17 @@ class PeerServiceResolverImpl implements PeerServiceResolver {
     @Nullable
     abstract String getPath();
 
-    public boolean matches(Integer port, String path) {
+    public boolean matches(Integer port, Supplier<String> pathSupplier) {
       if (this.getPort() != null) {
         if (!this.getPort().equals(port)) {
           return false;
         }
       }
       if (this.getPath() != null && this.getPath().length() > 0) {
+        if (pathSupplier == null) {
+          return false;
+        }
+        String path = pathSupplier.get();
         if (path == null) {
           return false;
         }
