@@ -11,8 +11,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.url.UrlParser;
 import io.opentelemetry.semconv.SemanticAttributes;
-import javax.annotation.Nullable;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
 /**
  * Extractor of the {@code peer.service} span attribute, described in <a
