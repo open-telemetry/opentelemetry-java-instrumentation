@@ -49,6 +49,8 @@
   ([#9301](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9301))
 - Added Automatic-Module-Name header to MANIFEST.MF in instrumentation libraries
   ([#9140](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9140))
+- Support paths in `peer.service` mappings
+  ([#9061](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9061))
 
 ### 🛠️ Bug fixes
 
