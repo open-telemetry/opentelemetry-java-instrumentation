@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -23,24 +22,24 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   private final ServerAttributesGetter<REQUEST, RESPONSE> attributesGetter;
-  private final Map<String, String> peerServiceMapping;
+  private final PeerServiceResolver peerServiceResolver;
 
   // visible for tests
   PeerServiceAttributesExtractor(
       ServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      Map<String, String> peerServiceMapping) {
+      PeerServiceResolver peerServiceResolver) {
     this.attributesGetter = attributesGetter;
-    this.peerServiceMapping = peerServiceMapping;
+    this.peerServiceResolver = peerServiceResolver;
   }
 
   /**
    * Returns a new {@link PeerServiceAttributesExtractor} that will use the passed {@code
-   * netAttributesExtractor} instance to determine the value of the {@code peer.service} attribute.
+   * attributesGetter} instance to determine the value of the {@code peer.service} attribute.
    */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       ServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      Map<String, String> peerServiceMapping) {
-    return new PeerServiceAttributesExtractor<>(attributesGetter, peerServiceMapping);
+      PeerServiceResolver peerServiceResolver) {
+    return new PeerServiceAttributesExtractor<>(attributesGetter, peerServiceResolver);
   }
 
   @Override
@@ -54,16 +53,18 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
 
-    if (peerServiceMapping.isEmpty()) {
+    if (peerServiceResolver.isEmpty()) {
       // optimization for common case
       return;
     }
 
     String serverAddress = attributesGetter.getServerAddress(request);
-    String peerService = mapToPeerService(serverAddress);
+    Integer serverPort = attributesGetter.getServerPort(request);
+    String peerService = mapToPeerService(serverAddress, serverPort);
     if (peerService == null && SemconvStability.emitOldHttpSemconv()) {
       String serverSocketDomain = attributesGetter.getServerSocketDomain(request, response);
-      peerService = mapToPeerService(serverSocketDomain);
+      Integer serverSocketPort = attributesGetter.getServerSocketPort(request, response);
+      peerService = mapToPeerService(serverSocketDomain, serverSocketPort);
     }
     if (peerService != null) {
       attributes.put(SemanticAttributes.PEER_SERVICE, peerService);
@@ -71,10 +72,10 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Nullable
-  private String mapToPeerService(@Nullable String endpoint) {
-    if (endpoint == null) {
+  private String mapToPeerService(@Nullable String host, @Nullable Integer port) {
+    if (host == null) {
       return null;
     }
-    return peerServiceMapping.get(endpoint);
+    return peerServiceResolver.resolveService(host, port, null);
   }
 }

@@ -32,7 +32,7 @@ public final class JedisSingletons {
             .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    netAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
