@@ -51,6 +51,8 @@
   ([#9140](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9140))
 - Support paths in `peer.service` mappings
   ([#9061](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9061))
+- Compile ktor library instrumentation for earlier kotlin version
+  ([#9661](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9661))
 
 ### 🛠️ Bug fixes
 
