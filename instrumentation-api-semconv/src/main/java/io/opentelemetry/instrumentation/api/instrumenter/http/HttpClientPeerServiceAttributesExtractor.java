@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceResolver
 import io.opentelemetry.instrumentation.api.instrumenter.url.UrlParser;
 import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
+import java.util.function.Supplier;
 
 /**
  * Extractor of the {@code peer.service} span attribute, described in <a
@@ -61,8 +62,8 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
 
     String serverAddress = attributesGetter.getServerAddress(request);
     Integer serverPort = attributesGetter.getServerPort(request);
-    String path = getUrlPath(attributesGetter, request);
-    String peerService = mapToPeerService(serverAddress, serverPort, path);
+    Supplier<String> pathSupplier = () -> getUrlPath(attributesGetter, request);
+    String peerService = mapToPeerService(serverAddress, serverPort, pathSupplier);
     if (peerService == null) {
       String serverSocketDomain = attributesGetter.getServerSocketDomain(request, response);
       Integer serverSocketPort = attributesGetter.getServerSocketPort(request, response);
@@ -75,11 +76,11 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
 
   @Nullable
   private String mapToPeerService(
-      @Nullable String host, @Nullable Integer port, @Nullable String path) {
+      @Nullable String host, @Nullable Integer port, @Nullable Supplier<String> pathSupplier) {
     if (host == null) {
       return null;
     }
-    return peerServiceResolver.resolveService(host, port, path);
+    return peerServiceResolver.resolveService(host, port, pathSupplier);
   }
 
   @Nullable
