@@ -25,12 +25,12 @@ class PeerServiceResolverTest {
     PeerServiceResolver peerServiceResolver = PeerServiceResolver.create(peerServiceMapping);
 
     assertEquals("myServiceBase", peerServiceResolver.resolveService("example.com", null, null));
-    assertEquals("myService", peerServiceResolver.resolveService("example.com", 8080, "/"));
+    assertEquals("myService", peerServiceResolver.resolveService("example.com", 8080, () -> "/"));
     assertEquals(
-        "someOtherService8080", peerServiceResolver.resolveService("1.2.3.4", 8080, "/api"));
-    assertEquals("someOtherService", peerServiceResolver.resolveService("1.2.3.4", 9000, "/api"));
-    assertEquals("someOtherService", peerServiceResolver.resolveService("1.2.3.4", 8080, null));
+        "someOtherService8080", peerServiceResolver.resolveService("1.2.3.4", 8080, () -> "/api"));
+    assertEquals("someOtherService", peerServiceResolver.resolveService("1.2.3.4", 9000, () -> "/api"));
+    assertEquals("someOtherService", peerServiceResolver.resolveService("1.2.3.4", 8080, ()-> null));
     assertEquals(
-        "someOtherServiceAPI", peerServiceResolver.resolveService("1.2.3.4", null, "/api"));
+        "someOtherServiceAPI", peerServiceResolver.resolveService("1.2.3.4", null, () -> "/api"));
   }
 }
