@@ -46,7 +46,8 @@ class PeerServiceResolverImpl implements PeerServiceResolver {
 
   @Override
   @Nullable
-  public String resolveService(String host, @Nullable Integer port, @Nullable Supplier<String> pathSupplier) {
+  public String resolveService(
+      String host, @Nullable Integer port, @Nullable Supplier<String> pathSupplier) {
     Map<ServiceMatcher, String> matchers = mapping.get(host);
     if (matchers == null) {
       return null;
