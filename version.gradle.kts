@@ -1,5 +1,5 @@
-val stableVersion = "1.31.0-SNAPSHOT"
-val alphaVersion = "1.31.0-alpha-SNAPSHOT"
+val stableVersion = "1.32.0-SNAPSHOT"
+val alphaVersion = "1.32.0-alpha-SNAPSHOT"
 
 allprojects {
   if (findProperty("otel.stable") != "true") {
