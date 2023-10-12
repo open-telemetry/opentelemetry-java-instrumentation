@@ -8,11 +8,18 @@ package indy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings({"unused", "MethodCanBeStatic"})
 public class IndyInstrumentationTest {
+
+  @RegisterExtension
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private String privateField;
 
@@ -92,6 +99,7 @@ public class IndyInstrumentationTest {
   @Test
   void testSuppressException() {
     assertThat(noExceptionPlease("foo")).isEqualTo("foo_no_exception");
+    assertThat(TestAgentListenerAccess.getAndResetAdviceFailureCount()).isEqualTo(2);
   }
 
   @Test

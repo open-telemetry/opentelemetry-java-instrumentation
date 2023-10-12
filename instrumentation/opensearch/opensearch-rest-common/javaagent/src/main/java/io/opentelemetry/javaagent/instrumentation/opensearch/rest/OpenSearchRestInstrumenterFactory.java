@@ -32,7 +32,7 @@ public final class OpenSearchRestInstrumenterFactory {
                 .create(netAttributesGetter))
         .addAttributesExtractor(
             PeerServiceAttributesExtractor.create(
-                netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                netAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

@@ -47,7 +47,7 @@ public final class VertxSqlClientSingletons {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     VertxSqlClientNetAttributesGetter.INSTANCE,
-                    CommonConfig.get().getPeerServiceMapping()));
+                    CommonConfig.get().getPeerServiceResolver()));
 
     INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
