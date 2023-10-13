@@ -38,6 +38,14 @@
       "groupName": "byte buddy packages"
     },
     {
+      "matchPackagePrefixes": ["com.fasterxml.jackson"],
+      "groupName": "jackson packages"
+    },
+    {
+      "matchPackagePrefixes": ["io.quarkus"],
+      "groupName": "quarkus packages"
+    },
+    {
       // prevent update to 2.4-groovy-4.0-SNAPSHOT
       "matchPackageNames": ["org.spockframework:spock-bom"],
       "allowedVersions": "!/\\-SNAPSHOT$/"
