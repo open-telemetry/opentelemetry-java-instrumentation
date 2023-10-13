@@ -13,6 +13,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,6 +48,32 @@ class NetworkAttributesExtractorTest {
     public String getNetworkProtocolVersion(Map<String, String> request, @Nullable Void response) {
       return request.get("protocolVersion");
     }
+
+    @Nullable
+    @Override
+    public String getNetworkLocalAddress(Map<String, String> request, @Nullable Void response) {
+      return request.get("localAddress");
+    }
+
+    @Nullable
+    @Override
+    public Integer getNetworkLocalPort(Map<String, String> request, @Nullable Void response) {
+      String value = request.get("localPort");
+      return value == null ? null : Integer.parseInt(value);
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkPeerAddress(Map<String, String> request, @Nullable Void response) {
+      return request.get("peerAddress");
+    }
+
+    @Nullable
+    @Override
+    public Integer getNetworkPeerPort(Map<String, String> request, @Nullable Void response) {
+      String value = request.get("peerPort");
+      return value == null ? null : Integer.parseInt(value);
+    }
   }
 
   @Test
@@ -56,6 +83,10 @@ class NetworkAttributesExtractorTest {
     request.put("type", "IPv4");
     request.put("protocolName", "Http");
     request.put("protocolVersion", "1.1");
+    request.put("localAddress", "1.2.3.4");
+    request.put("localPort", "8080");
+    request.put("peerAddress", "4.3.2.1");
+    request.put("peerPort", "9090");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
         NetworkAttributesExtractor.create(new TestNetworkAttributesGetter());
@@ -71,7 +102,11 @@ class NetworkAttributesExtractorTest {
             entry(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
             entry(SemanticAttributes.NETWORK_TYPE, "ipv4"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"));
+            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+            entry(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "1.2.3.4"),
+            entry(NetworkAttributes.NETWORK_LOCAL_PORT, 8080L),
+            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),
+            entry(NetworkAttributes.NETWORK_PEER_PORT, 9090L));
   }
 
   @Test
@@ -86,5 +121,28 @@ class NetworkAttributesExtractorTest {
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), emptyMap(), null, null);
     assertThat(endAttributes.build()).isEmpty();
+  }
+
+  @Test
+  void doesNotSetNegativePortValues() {
+    Map<String, String> request = new HashMap<>();
+    request.put("localAddress", "1.2.3.4");
+    request.put("localPort", "-12");
+    request.put("peerAddress", "4.3.2.1");
+    request.put("peerPort", "-42");
+
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        NetworkAttributesExtractor.create(new TestNetworkAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build()).isEmpty();
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, null, null);
+    assertThat(endAttributes.build())
+        .containsOnly(
+            entry(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "1.2.3.4"),
+            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"));
   }
 }

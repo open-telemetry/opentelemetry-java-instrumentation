@@ -39,6 +39,8 @@ public interface ServerAttributesGetter<REQUEST, RESPONSE> {
     return null;
   }
 
+  // TODO deprecate
+
   /**
    * Returns an {@link InetSocketAddress} object representing the server socket address.
    *

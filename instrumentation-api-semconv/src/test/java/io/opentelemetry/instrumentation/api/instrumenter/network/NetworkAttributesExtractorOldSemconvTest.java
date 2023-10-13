@@ -48,6 +48,32 @@ class NetworkAttributesExtractorOldSemconvTest {
     public String getNetworkProtocolVersion(Map<String, String> request, @Nullable Void response) {
       return request.get("protocolVersion");
     }
+
+    @Nullable
+    @Override
+    public String getNetworkLocalAddress(Map<String, String> request, @Nullable Void response) {
+      return request.get("localAddress");
+    }
+
+    @Nullable
+    @Override
+    public Integer getNetworkLocalPort(Map<String, String> request, @Nullable Void response) {
+      String value = request.get("localPort");
+      return value == null ? null : Integer.parseInt(value);
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkPeerAddress(Map<String, String> request, @Nullable Void response) {
+      return request.get("peerAddress");
+    }
+
+    @Nullable
+    @Override
+    public Integer getNetworkPeerPort(Map<String, String> request, @Nullable Void response) {
+      String value = request.get("peerPort");
+      return value == null ? null : Integer.parseInt(value);
+    }
   }
 
   @Test
@@ -57,6 +83,10 @@ class NetworkAttributesExtractorOldSemconvTest {
     request.put("type", "IPv4");
     request.put("protocolName", "Http");
     request.put("protocolVersion", "1.1");
+    request.put("localAddress", "1.2.3.4");
+    request.put("localPort", "8080");
+    request.put("peerAddress", "4.3.2.1");
+    request.put("peerPort", "9090");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
         NetworkAttributesExtractor.create(new TestNetworkAttributesGetter());
@@ -71,7 +101,11 @@ class NetworkAttributesExtractorOldSemconvTest {
         .containsOnly(
             // the NetworkAttributesExtractor can't emit old net.transport & net.sock.family
             entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"));
+            entry(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
+            entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "1.2.3.4"),
+            entry(SemanticAttributes.NET_SOCK_HOST_PORT, 8080L),
+            entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "4.3.2.1"),
+            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 9090L));
   }
 
   @Test

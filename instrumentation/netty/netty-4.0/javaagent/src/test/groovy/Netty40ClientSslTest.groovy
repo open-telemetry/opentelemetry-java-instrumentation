@@ -18,7 +18,7 @@ import io.netty.handler.codec.http.HttpHeaders
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
 import io.netty.handler.ssl.SslHandler
-
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
@@ -102,9 +102,8 @@ class Netty40ClientSslTest extends AgentInstrumentationSpecification {
             attributes {
               "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
               "$SemanticAttributes.NETWORK_TYPE" "ipv4"
-              "$SemanticAttributes.SERVER_ADDRESS" uri.host
-              "$SemanticAttributes.SERVER_PORT" uri.port
-              "$SemanticAttributes.SERVER_SOCKET_ADDRESS" "127.0.0.1"
+              "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
+              "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             }
           }
         }
@@ -127,9 +126,8 @@ class Netty40ClientSslTest extends AgentInstrumentationSpecification {
             attributes {
               "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
               "$SemanticAttributes.NETWORK_TYPE" "ipv4"
-              "$SemanticAttributes.SERVER_SOCKET_DOMAIN" uri.host
-              "$SemanticAttributes.SERVER_SOCKET_PORT" uri.port
-              "$SemanticAttributes.SERVER_SOCKET_ADDRESS" "127.0.0.1"
+              "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
+              "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             }
           }
         }
@@ -180,9 +178,8 @@ class Netty40ClientSslTest extends AgentInstrumentationSpecification {
             attributes {
               "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
               "$SemanticAttributes.NETWORK_TYPE" "ipv4"
-              "$SemanticAttributes.SERVER_ADDRESS" uri.host
-              "$SemanticAttributes.SERVER_PORT" uri.port
-              "$SemanticAttributes.SERVER_SOCKET_ADDRESS" "127.0.0.1"
+              "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
+              "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             }
           }
         }
@@ -202,9 +199,8 @@ class Netty40ClientSslTest extends AgentInstrumentationSpecification {
             attributes {
               "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
               "$SemanticAttributes.NETWORK_TYPE" "ipv4"
-              "$SemanticAttributes.SERVER_SOCKET_DOMAIN" uri.host
-              "$SemanticAttributes.SERVER_SOCKET_PORT" uri.port
-              "$SemanticAttributes.SERVER_SOCKET_ADDRESS" "127.0.0.1"
+              "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
+              "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             }
           }
         }

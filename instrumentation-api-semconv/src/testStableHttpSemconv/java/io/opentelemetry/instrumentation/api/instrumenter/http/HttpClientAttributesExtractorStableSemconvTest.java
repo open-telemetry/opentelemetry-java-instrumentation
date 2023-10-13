@@ -19,6 +19,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.ConnectException;
@@ -90,14 +91,29 @@ class HttpClientAttributesExtractorStableSemconvTest {
     @Override
     public String getNetworkProtocolName(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("protocolName");
+      return request.get("networkProtocolName");
     }
 
     @Nullable
     @Override
     public String getNetworkProtocolVersion(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("protocolVersion");
+      return request.get("networkProtocolVersion");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkPeerAddress(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("networkPeerAddress");
+    }
+
+    @Nullable
+    @Override
+    public Integer getNetworkPeerPort(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      String value = request.get("networkPeerPort");
+      return value == null ? null : Integer.parseInt(value);
     }
 
     @Nullable
@@ -133,8 +149,10 @@ class HttpClientAttributesExtractorStableSemconvTest {
     request.put("header.custom-request-header", "123,456");
     request.put("networkTransport", "udp");
     request.put("networkType", "ipv4");
-    request.put("protocolName", "http");
-    request.put("protocolVersion", "1.1");
+    request.put("networkProtocolName", "http");
+    request.put("networkProtocolVersion", "1.1");
+    request.put("networkPeerAddress", "4.3.2.1");
+    request.put("networkPeerPort", "456");
     request.put("serverAddress", "github.com");
     request.put("serverPort", "123");
 
@@ -179,7 +197,9 @@ class HttpClientAttributesExtractorStableSemconvTest {
             entry(SemanticAttributes.NETWORK_TRANSPORT, "udp"),
             entry(SemanticAttributes.NETWORK_TYPE, "ipv4"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"));
+            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),
+            entry(NetworkAttributes.NETWORK_PEER_PORT, 456L));
   }
 
   @ParameterizedTest
@@ -190,8 +210,8 @@ class HttpClientAttributesExtractorStableSemconvTest {
       String observedTransport,
       @Nullable String extractedTransport) {
     Map<String, String> request = new HashMap<>();
-    request.put("protocolName", observedProtocolName);
-    request.put("protocolVersion", observedProtocolVersion);
+    request.put("networkProtocolName", observedProtocolName);
+    request.put("networkProtocolVersion", observedProtocolVersion);
     request.put("networkTransport", observedTransport);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
@@ -375,5 +395,56 @@ class HttpClientAttributesExtractorStableSemconvTest {
     extractor.onEnd(attributes, Context.root(), emptyMap(), emptyMap(), null);
 
     assertThat(attributes.build()).containsEntry(HttpAttributes.ERROR_TYPE, HttpConstants._OTHER);
+  }
+
+  @Test
+  void shouldExtractServerAddressAndPortFromHostHeader() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.host", "github.com:123");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "200");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
+            entry(SemanticAttributes.SERVER_PORT, 123L));
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+  }
+
+  @Test
+  void shouldNotExtractDuplicatePeerAddress() {
+    Map<String, String> request = new HashMap<>();
+    request.put("networkPeerAddress", "1.2.3.4");
+    request.put("networkPeerPort", "456");
+    request.put("serverAddress", "1.2.3.4");
+    request.put("serverPort", "123");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "200");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.SERVER_ADDRESS, "1.2.3.4"),
+            entry(SemanticAttributes.SERVER_PORT, 123L));
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
   }
 }

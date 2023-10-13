@@ -37,19 +37,6 @@ class ClientAttributesExtractorOldSemconvTest {
       String value = request.get("port");
       return value == null ? null : Integer.parseInt(value);
     }
-
-    @Nullable
-    @Override
-    public String getClientSocketAddress(Map<String, String> request, @Nullable Void response) {
-      return request.get("socketAddress");
-    }
-
-    @Nullable
-    @Override
-    public Integer getClientSocketPort(Map<String, String> request, @Nullable Void response) {
-      String value = request.get("socketPort");
-      return value == null ? null : Integer.parseInt(value);
-    }
   }
 
   @Test
@@ -57,8 +44,6 @@ class ClientAttributesExtractorOldSemconvTest {
     Map<String, String> request = new HashMap<>();
     request.put("address", "opentelemetry.io");
     request.put("port", "80");
-    request.put("socketAddress", "1.2.3.4");
-    request.put("socketPort", "8080");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
         ClientAttributesExtractor.create(new TestClientAttributesGetter());
@@ -70,10 +55,7 @@ class ClientAttributesExtractorOldSemconvTest {
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
-    assertThat(endAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"),
-            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 8080L));
+    assertThat(endAttributes.build()).isEmpty();
   }
 
   @Test

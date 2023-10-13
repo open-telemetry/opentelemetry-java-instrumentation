@@ -56,4 +56,23 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE>
     return InetSocketAddressUtil.getNetworkType(
         getServerInetSocketAddress(request, response), null);
   }
+
+  @Nullable
+  @Override
+  default InetSocketAddress getNetworkPeerInetSocketAddress(
+      REQUEST request, @Nullable RESPONSE response) {
+    return getServerInetSocketAddress(request, response);
+  }
+
+  @Nullable
+  @Override
+  default String getNetworkPeerAddress(REQUEST request, @Nullable RESPONSE response) {
+    return getServerSocketAddress(request, response);
+  }
+
+  @Nullable
+  @Override
+  default Integer getNetworkPeerPort(REQUEST request, @Nullable RESPONSE response) {
+    return getServerSocketPort(request, response);
+  }
 }

@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class AddressAndPort implements FallbackAddressPortExtractor.AddressPortSink {
+public final class AddressAndPort implements AddressAndPortExtractor.AddressPortSink {
 
   @Nullable String address;
   @Nullable Integer port;
@@ -22,7 +22,7 @@ public final class AddressAndPort implements FallbackAddressPortExtractor.Addres
   }
 
   @Override
-  public void setPort(int port) {
+  public void setPort(Integer port) {
     this.port = port;
   }
 

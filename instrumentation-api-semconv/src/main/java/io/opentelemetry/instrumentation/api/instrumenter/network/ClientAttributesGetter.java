@@ -38,6 +38,8 @@ public interface ClientAttributesGetter<REQUEST, RESPONSE> {
     return null;
   }
 
+  // TODO deprecate
+
   /**
    * Returns an {@link InetSocketAddress} object representing the immediate client socket address.
    *

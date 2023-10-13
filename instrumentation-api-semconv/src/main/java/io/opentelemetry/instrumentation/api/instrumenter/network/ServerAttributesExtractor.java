@@ -8,8 +8,9 @@ package io.opentelemetry.instrumentation.api.instrumenter.network;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ServerAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 
@@ -45,7 +46,7 @@ public final class ServerAttributesExtractor<REQUEST, RESPONSE>
     return new ServerAttributesExtractor<>(getter, InternalServerAttributesExtractor.Mode.HOST);
   }
 
-  private final InternalServerAttributesExtractor<REQUEST, RESPONSE> internalExtractor;
+  private final InternalServerAttributesExtractor<REQUEST> internalExtractor;
 
   ServerAttributesExtractor(
       ServerAttributesGetter<REQUEST, RESPONSE> getter,
@@ -53,13 +54,11 @@ public final class ServerAttributesExtractor<REQUEST, RESPONSE>
     // the ServerAttributesExtractor will always emit new semconv
     internalExtractor =
         new InternalServerAttributesExtractor<>(
-            getter,
             (port, request) -> true,
-            FallbackAddressPortExtractor.noop(),
+            new ServerAddressAndPortExtractor<>(getter, AddressAndPortExtractor.noop()),
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
-            mode,
-            /* captureServerSocketAttributes= */ true);
+            mode);
   }
 
   @Override
@@ -73,7 +72,5 @@ public final class ServerAttributesExtractor<REQUEST, RESPONSE>
       Context context,
       REQUEST request,
       @Nullable RESPONSE response,
-      @Nullable Throwable error) {
-    internalExtractor.onEnd(attributes, request, response);
-  }
+      @Nullable Throwable error) {}
 }

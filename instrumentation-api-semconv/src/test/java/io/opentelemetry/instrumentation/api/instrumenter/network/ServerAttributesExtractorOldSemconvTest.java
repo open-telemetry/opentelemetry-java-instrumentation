@@ -37,25 +37,6 @@ class ServerAttributesExtractorOldSemconvTest {
       String port = request.get("port");
       return port == null ? null : Integer.parseInt(port);
     }
-
-    @Nullable
-    @Override
-    public String getServerSocketDomain(Map<String, String> request, @Nullable Void response) {
-      return request.get("socketDomain");
-    }
-
-    @Nullable
-    @Override
-    public String getServerSocketAddress(Map<String, String> request, @Nullable Void response) {
-      return request.get("socketAddress");
-    }
-
-    @Nullable
-    @Override
-    public Integer getServerSocketPort(Map<String, String> request, @Nullable Void response) {
-      String port = request.get("socketPort");
-      return port == null ? null : Integer.parseInt(port);
-    }
   }
 
   @Test
@@ -63,9 +44,6 @@ class ServerAttributesExtractorOldSemconvTest {
     Map<String, String> request = new HashMap<>();
     request.put("address", "opentelemetry.io");
     request.put("port", "80");
-    request.put("socketDomain", "proxy.opentelemetry.io");
-    request.put("socketAddress", "1.2.3.4");
-    request.put("socketPort", "8080");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
         ServerAttributesExtractor.create(new TestServerAttributesGetter());
@@ -79,11 +57,7 @@ class ServerAttributesExtractorOldSemconvTest {
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
-    assertThat(endAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_SOCK_PEER_NAME, "proxy.opentelemetry.io"),
-            entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"),
-            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 8080L));
+    assertThat(endAttributes.build()).isEmpty();
   }
 
   @SuppressWarnings("deprecation") // need to test the old semconv too
@@ -92,9 +66,6 @@ class ServerAttributesExtractorOldSemconvTest {
     Map<String, String> request = new HashMap<>();
     request.put("address", "opentelemetry.io");
     request.put("port", "80");
-    request.put("socketDomain", "proxy.opentelemetry.io");
-    request.put("socketAddress", "1.2.3.4");
-    request.put("socketPort", "8080");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
         ServerAttributesExtractor.createForServerSide(new TestServerAttributesGetter());
@@ -108,10 +79,7 @@ class ServerAttributesExtractorOldSemconvTest {
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
-    assertThat(endAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "1.2.3.4"),
-            entry(SemanticAttributes.NET_SOCK_HOST_PORT, 8080L));
+    assertThat(endAttributes.build()).isEmpty();
   }
 
   @Test

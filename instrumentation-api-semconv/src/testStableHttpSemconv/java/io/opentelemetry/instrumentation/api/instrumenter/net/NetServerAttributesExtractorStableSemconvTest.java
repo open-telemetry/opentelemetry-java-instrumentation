@@ -13,6 +13,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -139,9 +140,9 @@ class NetServerAttributesExtractorStableSemconvTest {
             entry(SemanticAttributes.NETWORK_TYPE, "ipv6"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-            entry(SemanticAttributes.SERVER_SOCKET_ADDRESS, "4:3:2:1::"),
-            entry(SemanticAttributes.SERVER_SOCKET_PORT, 8080L),
-            entry(SemanticAttributes.CLIENT_SOCKET_ADDRESS, "1:2:3:4::"),
-            entry(SemanticAttributes.CLIENT_SOCKET_PORT, 42L));
+            entry(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "4:3:2:1::"),
+            entry(NetworkAttributes.NETWORK_LOCAL_PORT, 8080L),
+            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "1:2:3:4::"),
+            entry(NetworkAttributes.NETWORK_PEER_PORT, 42L));
   }
 }

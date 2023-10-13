@@ -85,7 +85,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
   private final InternalNetClientAttributesExtractor<REQUEST, RESPONSE> internalNetExtractor;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
-  private final InternalServerAttributesExtractor<REQUEST, RESPONSE> internalServerExtractor;
+  private final InternalServerAttributesExtractor<REQUEST> internalServerExtractor;
   private final ToIntFunction<Context> resendCountIncrementer;
 
   HttpClientAttributesExtractor(HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder) {
@@ -133,7 +133,6 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
     internalNetExtractor.onEnd(attributes, request, response);
     internalNetworkExtractor.onEnd(attributes, request, response);
-    internalServerExtractor.onEnd(attributes, request, response);
   }
 
   /**
