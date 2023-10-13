@@ -32,4 +32,14 @@ public class JedisInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new JedisConnectionInstrumentation(), new JedisInstrumentation());
   }
+
+  @Override
+  public boolean isIndyModule() {
+    // java.lang.NoClassDefFoundError:
+    //      io/opentelemetry/javaagent/instrumentation/jedis/JedisRequestContext
+    //  at redis.clients.jedis.Jedis.flushAll(Jedis.java:367)
+    //  at io.opentelemetry.javaagent.instrumentation.jedis.v1_4
+    //          .JedisClientTest.setup(JedisClientTest.java:49)
+    return false;
+  }
 }
