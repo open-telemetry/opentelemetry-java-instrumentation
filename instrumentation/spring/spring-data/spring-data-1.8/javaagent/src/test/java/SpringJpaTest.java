@@ -10,7 +10,7 @@ import spring.jpa.JpaCustomer;
 import spring.jpa.JpaCustomerRepository;
 import spring.jpa.JpaPersistenceConfig;
 
-public class SprintJpaTest extends AbstractSpringJpaTest<JpaCustomer, JpaCustomerRepository> {
+public class SpringJpaTest extends AbstractSpringJpaTest<JpaCustomer, JpaCustomerRepository> {
 
   @Override
   JpaCustomer newCustomer(String firstName, String lastName) {
