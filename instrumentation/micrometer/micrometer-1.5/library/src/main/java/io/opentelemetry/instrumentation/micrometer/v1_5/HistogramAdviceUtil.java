@@ -33,8 +33,7 @@ final class HistogramAdviceUtil {
     }
     NavigableSet<Double> buckets = config.getHistogramBuckets(false);
     ExtendedDoubleHistogramBuilder extendedBuilder = (ExtendedDoubleHistogramBuilder) builder;
-    extendedBuilder.setAdvice(
-        advice -> advice.setExplicitBucketBoundaries(computeBuckets(buckets, timeUnit)));
+    extendedBuilder.setExplicitBucketBoundariesAdvice(computeBuckets(buckets, timeUnit));
   }
 
   private static List<Double> computeBuckets(

@@ -53,4 +53,25 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    * returned instead.
    */
   List<String> getHttpResponseHeader(REQUEST request, RESPONSE response, String name);
+
+  /**
+   * Returns a description of a class of error the operation ended with.
+   *
+   * <p>This method is only called if the request failed before response status code was sent or
+   * received.
+   *
+   * <p>If this method is not implemented, or if it returns {@code null}, the exception class name
+   * (if any was caught) or the value {@code _OTHER} will be used as error type.
+   *
+   * <p>The cardinality of the error type should be low. The instrumentations implementing this
+   * method are recommended to document the custom values they support.
+   *
+   * <p>Examples: {@code Bad Request}, {@code java.net.UnknownHostException}, {@code request
+   * cancelled}, {@code _OTHER}.
+   */
+  @Nullable
+  default String getErrorType(
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable throwable) {
+    return null;
+  }
 }

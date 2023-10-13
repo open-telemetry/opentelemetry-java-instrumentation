@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -49,6 +50,7 @@ class HttpServerExperimentalMetricsStableSemconvTest {
     Attributes responseAttributes =
         Attributes.builder()
             .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
+            .put(HttpAttributes.ERROR_TYPE, "500")
             .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
             .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
             .put(SemanticAttributes.CLIENT_SOCKET_ADDRESS, "1.2.3.4")
@@ -78,9 +80,8 @@ class HttpServerExperimentalMetricsStableSemconvTest {
             metric ->
                 assertThat(metric)
                     .hasName("http.server.active_requests")
-                    .hasDescription(
-                        "The number of concurrent HTTP requests that are currently in-flight")
                     .hasUnit("{requests}")
+                    .hasDescription("Number of active HTTP server requests.")
                     .hasLongSumSatisfying(
                         sum ->
                             sum.hasPointsSatisfying(
@@ -144,6 +145,7 @@ class HttpServerExperimentalMetricsStableSemconvTest {
                 assertThat(metric)
                     .hasName("http.server.request.size")
                     .hasUnit("By")
+                    .hasDescription("Size of HTTP server request bodies.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -154,6 +156,7 @@ class HttpServerExperimentalMetricsStableSemconvTest {
                                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(HttpAttributes.ERROR_TYPE, "500"),
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
@@ -168,6 +171,7 @@ class HttpServerExperimentalMetricsStableSemconvTest {
                 assertThat(metric)
                     .hasName("http.server.response.size")
                     .hasUnit("By")
+                    .hasDescription("Size of HTTP server response bodies.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -178,6 +182,7 @@ class HttpServerExperimentalMetricsStableSemconvTest {
                                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(HttpAttributes.ERROR_TYPE, "500"),
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(

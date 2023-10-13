@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of the <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#status">HTTP
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#status">HTTP
  * span status</a>. Instrumentation of HTTP server or client frameworks should use this class to
  * comply with OpenTelemetry HTTP semantic conventions.
  */
@@ -26,7 +26,7 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
    */
   public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<? super REQUEST, ? super RESPONSE> getter) {
-    return new HttpSpanStatusExtractor<>(getter, HttpStatusConverter.CLIENT);
+    return new HttpSpanStatusExtractor<>(getter, HttpStatusCodeConverter.CLIENT);
   }
 
   /**
@@ -36,17 +36,17 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
    */
   public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
       HttpServerAttributesGetter<? super REQUEST, ? super RESPONSE> getter) {
-    return new HttpSpanStatusExtractor<>(getter, HttpStatusConverter.SERVER);
+    return new HttpSpanStatusExtractor<>(getter, HttpStatusCodeConverter.SERVER);
   }
 
   private final HttpCommonAttributesGetter<? super REQUEST, ? super RESPONSE> getter;
-  private final HttpStatusConverter statusConverter;
+  private final HttpStatusCodeConverter statusCodeConverter;
 
   private HttpSpanStatusExtractor(
       HttpCommonAttributesGetter<? super REQUEST, ? super RESPONSE> getter,
-      HttpStatusConverter statusConverter) {
+      HttpStatusCodeConverter statusCodeConverter) {
     this.getter = getter;
-    this.statusConverter = statusConverter;
+    this.statusCodeConverter = statusCodeConverter;
   }
 
   @Override
@@ -59,9 +59,8 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
     if (response != null) {
       Integer statusCode = getter.getHttpResponseStatusCode(request, response, error);
       if (statusCode != null) {
-        StatusCode statusCodeObj = statusConverter.statusFromHttpStatus(statusCode);
-        if (statusCodeObj == StatusCode.ERROR) {
-          spanStatusBuilder.setStatus(statusCodeObj);
+        if (statusCodeConverter.isError(statusCode)) {
+          spanStatusBuilder.setStatus(StatusCode.ERROR);
           return;
         }
       }

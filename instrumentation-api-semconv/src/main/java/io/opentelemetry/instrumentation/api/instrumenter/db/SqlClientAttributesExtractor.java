@@ -17,7 +17,7 @@ import io.opentelemetry.semconv.SemanticAttributes;
 
 /**
  * Extractor of <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/database.md">database
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md">database
  * attributes</a>. This class is designed with SQL (or SQL-like) database clients in mind.
  *
  * <p>It sets the same set of attributes as {@link DbClientAttributesExtractor} plus an additional

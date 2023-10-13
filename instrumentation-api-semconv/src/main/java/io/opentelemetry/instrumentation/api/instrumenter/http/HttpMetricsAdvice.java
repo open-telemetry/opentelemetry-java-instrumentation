@@ -13,6 +13,7 @@ import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedLongUpDownCounterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 
 final class HttpMetricsAdvice {
@@ -22,17 +23,16 @@ final class HttpMetricsAdvice {
       return;
     }
     ((ExtendedDoubleHistogramBuilder) builder)
-        .setAdvice(
-            advice ->
-                advice.setAttributes(
-                    asList(
-                        SemanticAttributes.HTTP_REQUEST_METHOD,
-                        SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
-                        SemanticAttributes.NETWORK_PROTOCOL_NAME,
-                        SemanticAttributes.NETWORK_PROTOCOL_VERSION,
-                        SemanticAttributes.SERVER_ADDRESS,
-                        SemanticAttributes.SERVER_PORT,
-                        SemanticAttributes.SERVER_SOCKET_ADDRESS)));
+        .setAttributesAdvice(
+            asList(
+                SemanticAttributes.HTTP_REQUEST_METHOD,
+                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
+                HttpAttributes.ERROR_TYPE,
+                SemanticAttributes.NETWORK_PROTOCOL_NAME,
+                SemanticAttributes.NETWORK_PROTOCOL_VERSION,
+                SemanticAttributes.SERVER_ADDRESS,
+                SemanticAttributes.SERVER_PORT,
+                SemanticAttributes.URL_SCHEME));
   }
 
   @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
@@ -41,17 +41,15 @@ final class HttpMetricsAdvice {
       return;
     }
     ((ExtendedDoubleHistogramBuilder) builder)
-        .setAdvice(
-            advice ->
-                advice.setAttributes(
-                    asList(
-                        SemanticAttributes.HTTP_METHOD,
-                        SemanticAttributes.HTTP_STATUS_CODE,
-                        SemanticAttributes.NET_PEER_NAME,
-                        SemanticAttributes.NET_PEER_PORT,
-                        SemanticAttributes.NET_PROTOCOL_NAME,
-                        SemanticAttributes.NET_PROTOCOL_VERSION,
-                        SemanticAttributes.NET_SOCK_PEER_ADDR)));
+        .setAttributesAdvice(
+            asList(
+                SemanticAttributes.HTTP_METHOD,
+                SemanticAttributes.HTTP_STATUS_CODE,
+                SemanticAttributes.NET_PEER_NAME,
+                SemanticAttributes.NET_PEER_PORT,
+                SemanticAttributes.NET_PROTOCOL_NAME,
+                SemanticAttributes.NET_PROTOCOL_VERSION,
+                SemanticAttributes.NET_SOCK_PEER_ADDR));
   }
 
   @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
@@ -60,26 +58,25 @@ final class HttpMetricsAdvice {
       return;
     }
     ((ExtendedLongHistogramBuilder) builder)
-        .setAdvice(
-            advice ->
-                advice.setAttributes(
-                    asList(
-                        // stable attributes
-                        SemanticAttributes.HTTP_REQUEST_METHOD,
-                        SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
-                        SemanticAttributes.NETWORK_PROTOCOL_NAME,
-                        SemanticAttributes.NETWORK_PROTOCOL_VERSION,
-                        SemanticAttributes.SERVER_ADDRESS,
-                        SemanticAttributes.SERVER_PORT,
-                        SemanticAttributes.SERVER_SOCKET_ADDRESS,
-                        // old attributes
-                        SemanticAttributes.HTTP_METHOD,
-                        SemanticAttributes.HTTP_STATUS_CODE,
-                        SemanticAttributes.NET_PEER_NAME,
-                        SemanticAttributes.NET_PEER_PORT,
-                        SemanticAttributes.NET_PROTOCOL_NAME,
-                        SemanticAttributes.NET_PROTOCOL_VERSION,
-                        SemanticAttributes.NET_SOCK_PEER_ADDR)));
+        .setAttributesAdvice(
+            asList(
+                // stable attributes
+                SemanticAttributes.HTTP_REQUEST_METHOD,
+                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
+                HttpAttributes.ERROR_TYPE,
+                SemanticAttributes.NETWORK_PROTOCOL_NAME,
+                SemanticAttributes.NETWORK_PROTOCOL_VERSION,
+                SemanticAttributes.SERVER_ADDRESS,
+                SemanticAttributes.SERVER_PORT,
+                SemanticAttributes.URL_SCHEME,
+                // old attributes
+                SemanticAttributes.HTTP_METHOD,
+                SemanticAttributes.HTTP_STATUS_CODE,
+                SemanticAttributes.NET_PEER_NAME,
+                SemanticAttributes.NET_PEER_PORT,
+                SemanticAttributes.NET_PROTOCOL_NAME,
+                SemanticAttributes.NET_PROTOCOL_VERSION,
+                SemanticAttributes.NET_SOCK_PEER_ADDR));
   }
 
   static void applyStableServerDurationAdvice(DoubleHistogramBuilder builder) {
@@ -87,16 +84,15 @@ final class HttpMetricsAdvice {
       return;
     }
     ((ExtendedDoubleHistogramBuilder) builder)
-        .setAdvice(
-            advice ->
-                advice.setAttributes(
-                    asList(
-                        SemanticAttributes.HTTP_ROUTE,
-                        SemanticAttributes.HTTP_REQUEST_METHOD,
-                        SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
-                        SemanticAttributes.NETWORK_PROTOCOL_NAME,
-                        SemanticAttributes.NETWORK_PROTOCOL_VERSION,
-                        SemanticAttributes.URL_SCHEME)));
+        .setAttributesAdvice(
+            asList(
+                SemanticAttributes.HTTP_ROUTE,
+                SemanticAttributes.HTTP_REQUEST_METHOD,
+                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
+                HttpAttributes.ERROR_TYPE,
+                SemanticAttributes.NETWORK_PROTOCOL_NAME,
+                SemanticAttributes.NETWORK_PROTOCOL_VERSION,
+                SemanticAttributes.URL_SCHEME));
   }
 
   @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
@@ -105,18 +101,16 @@ final class HttpMetricsAdvice {
       return;
     }
     ((ExtendedDoubleHistogramBuilder) builder)
-        .setAdvice(
-            advice ->
-                advice.setAttributes(
-                    asList(
-                        SemanticAttributes.HTTP_SCHEME,
-                        SemanticAttributes.HTTP_ROUTE,
-                        SemanticAttributes.HTTP_METHOD,
-                        SemanticAttributes.HTTP_STATUS_CODE,
-                        SemanticAttributes.NET_HOST_NAME,
-                        SemanticAttributes.NET_HOST_PORT,
-                        SemanticAttributes.NET_PROTOCOL_NAME,
-                        SemanticAttributes.NET_PROTOCOL_VERSION)));
+        .setAttributesAdvice(
+            asList(
+                SemanticAttributes.HTTP_SCHEME,
+                SemanticAttributes.HTTP_ROUTE,
+                SemanticAttributes.HTTP_METHOD,
+                SemanticAttributes.HTTP_STATUS_CODE,
+                SemanticAttributes.NET_HOST_NAME,
+                SemanticAttributes.NET_HOST_PORT,
+                SemanticAttributes.NET_PROTOCOL_NAME,
+                SemanticAttributes.NET_PROTOCOL_VERSION));
   }
 
   @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
@@ -125,26 +119,25 @@ final class HttpMetricsAdvice {
       return;
     }
     ((ExtendedLongHistogramBuilder) builder)
-        .setAdvice(
-            advice ->
-                advice.setAttributes(
-                    asList(
-                        // stable attributes
-                        SemanticAttributes.HTTP_ROUTE,
-                        SemanticAttributes.HTTP_REQUEST_METHOD,
-                        SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
-                        SemanticAttributes.NETWORK_PROTOCOL_NAME,
-                        SemanticAttributes.NETWORK_PROTOCOL_VERSION,
-                        SemanticAttributes.URL_SCHEME,
-                        // old attributes
-                        SemanticAttributes.HTTP_SCHEME,
-                        SemanticAttributes.HTTP_ROUTE,
-                        SemanticAttributes.HTTP_METHOD,
-                        SemanticAttributes.HTTP_STATUS_CODE,
-                        SemanticAttributes.NET_HOST_NAME,
-                        SemanticAttributes.NET_HOST_PORT,
-                        SemanticAttributes.NET_PROTOCOL_NAME,
-                        SemanticAttributes.NET_PROTOCOL_VERSION)));
+        .setAttributesAdvice(
+            asList(
+                // stable attributes
+                SemanticAttributes.HTTP_ROUTE,
+                SemanticAttributes.HTTP_REQUEST_METHOD,
+                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
+                HttpAttributes.ERROR_TYPE,
+                SemanticAttributes.NETWORK_PROTOCOL_NAME,
+                SemanticAttributes.NETWORK_PROTOCOL_VERSION,
+                SemanticAttributes.URL_SCHEME,
+                // old attributes
+                SemanticAttributes.HTTP_SCHEME,
+                SemanticAttributes.HTTP_ROUTE,
+                SemanticAttributes.HTTP_METHOD,
+                SemanticAttributes.HTTP_STATUS_CODE,
+                SemanticAttributes.NET_HOST_NAME,
+                SemanticAttributes.NET_HOST_PORT,
+                SemanticAttributes.NET_PROTOCOL_NAME,
+                SemanticAttributes.NET_PROTOCOL_VERSION));
   }
 
   @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
@@ -153,18 +146,16 @@ final class HttpMetricsAdvice {
       return;
     }
     ((ExtendedLongUpDownCounterBuilder) builder)
-        .setAdvice(
-            advice ->
-                advice.setAttributes(
-                    asList(
-                        // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/metrics/semantic_conventions/http-metrics.md#metric-httpserveractive_requests
-                        SemanticAttributes.HTTP_METHOD,
-                        SemanticAttributes.HTTP_SCHEME,
-                        SemanticAttributes.NET_HOST_NAME,
-                        SemanticAttributes.NET_HOST_PORT,
-                        // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserveractive_requests
-                        SemanticAttributes.HTTP_REQUEST_METHOD,
-                        SemanticAttributes.URL_SCHEME)));
+        .setAttributesAdvice(
+            asList(
+                // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/metrics/semantic_conventions/http-metrics.md#metric-httpserveractive_requests
+                SemanticAttributes.HTTP_METHOD,
+                SemanticAttributes.HTTP_SCHEME,
+                SemanticAttributes.NET_HOST_NAME,
+                SemanticAttributes.NET_HOST_PORT,
+                // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserveractive_requests
+                SemanticAttributes.HTTP_REQUEST_METHOD,
+                SemanticAttributes.URL_SCHEME));
   }
 
   private HttpMetricsAdvice() {}

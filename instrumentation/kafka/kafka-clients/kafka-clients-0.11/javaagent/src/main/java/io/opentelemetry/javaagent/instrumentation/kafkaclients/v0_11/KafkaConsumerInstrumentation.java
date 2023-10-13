@@ -24,6 +24,7 @@ import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTra
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import net.bytebuddy.asm.Advice;
@@ -61,7 +62,12 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
   public static class ConstructorMapAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(0) Map<String, Object> config) {
+    public static void onEnter(
+        @Advice.Argument(value = 0, readOnly = false) Map<String, Object> config) {
+      // ensure config is a mutable map
+      if (config.getClass() != HashMap.class) {
+        config = new HashMap<>(config);
+      }
       enhanceConfig(config);
     }
   }
@@ -116,7 +122,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
         // we're storing the context of the receive span so that process spans can use it as
         // parent context even though the span has ended
         // this is the suggested behavior according to the spec batch receive scenario:
-        // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#batch-receiving
+        // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#batch-receiving
         // we're attaching the consumer to the records to be able to retrieve things like consumer
         // group or clientId later
         KafkaConsumerContextUtil.set(records, context, consumer);

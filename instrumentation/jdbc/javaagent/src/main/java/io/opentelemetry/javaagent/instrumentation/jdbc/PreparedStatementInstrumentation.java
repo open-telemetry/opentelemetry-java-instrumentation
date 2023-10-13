@@ -92,7 +92,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") DbRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (callDepth.decrementAndGet() > 0) {
+      if (callDepth == null || callDepth.decrementAndGet() > 0) {
         return;
       }
 

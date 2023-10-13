@@ -35,10 +35,11 @@ class PeerServiceAttributesExtractorTest {
   @Test
   void shouldNotSetAnyValueIfNetExtractorReturnsNulls() {
     // given
-    Map<String, String> peerServiceMapping = singletonMap("1.2.3.4", "myService");
+    PeerServiceResolver peerServiceResolver =
+        PeerServiceResolver.create(singletonMap("1.2.3.4", "myService"));
 
     PeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
+        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceResolver);
 
     Context context = Context.root();
 
@@ -54,10 +55,11 @@ class PeerServiceAttributesExtractorTest {
   @Test
   void shouldNotSetAnyValueIfPeerNameDoesNotMatch() {
     // given
-    Map<String, String> peerServiceMapping = singletonMap("example.com", "myService");
+    PeerServiceResolver peerServiceResolver =
+        PeerServiceResolver.create(singletonMap("example.com", "myService"));
 
     PeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
+        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceResolver);
 
     when(netAttributesExtractor.getServerAddress(any())).thenReturn("example2.com");
 
@@ -81,8 +83,10 @@ class PeerServiceAttributesExtractorTest {
     peerServiceMapping.put("example.com", "myService");
     peerServiceMapping.put("1.2.3.4", "someOtherService");
 
+    PeerServiceResolver peerServiceResolver = PeerServiceResolver.create(peerServiceMapping);
+
     PeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
+        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceResolver);
 
     when(netAttributesExtractor.getServerAddress(any())).thenReturn("example.com");
 
@@ -111,8 +115,10 @@ class PeerServiceAttributesExtractorTest {
     peerServiceMapping.put("example.com", "myService");
     peerServiceMapping.put("1.2.3.4", "someOtherService");
 
+    PeerServiceResolver peerServiceResolver = PeerServiceResolver.create(peerServiceMapping);
+
     PeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
+        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceResolver);
 
     when(netAttributesExtractor.getServerSocketDomain(any(), any())).thenReturn("example.com");
 

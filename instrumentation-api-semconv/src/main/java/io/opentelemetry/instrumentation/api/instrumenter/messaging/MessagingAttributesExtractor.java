@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md">messaging
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md">messaging
  * attributes</a>.
  *
  * <p>This class delegates to a type-specific {@link MessagingAttributesGetter} for individual

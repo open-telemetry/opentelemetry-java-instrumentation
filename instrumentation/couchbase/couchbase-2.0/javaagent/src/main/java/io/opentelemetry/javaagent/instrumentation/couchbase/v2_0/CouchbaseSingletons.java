@@ -36,7 +36,7 @@ public final class CouchbaseSingletons {
             .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    netAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
             .addContextCustomizer(
                 (context, couchbaseRequest, startAttributes) ->
                     CouchbaseRequestInfo.init(context, couchbaseRequest));

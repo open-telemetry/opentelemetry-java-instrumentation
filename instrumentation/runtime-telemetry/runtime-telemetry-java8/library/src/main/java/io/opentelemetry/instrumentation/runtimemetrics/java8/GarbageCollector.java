@@ -103,8 +103,7 @@ public final class GarbageCollector {
       // that shouldn't really happen
       return;
     }
-    ((ExtendedDoubleHistogramBuilder) builder)
-        .setAdvice(advice -> advice.setExplicitBucketBoundaries(emptyList()));
+    ((ExtendedDoubleHistogramBuilder) builder).setExplicitBucketBoundariesAdvice(emptyList());
   }
 
   private static final class GcNotificationListener implements NotificationListener {

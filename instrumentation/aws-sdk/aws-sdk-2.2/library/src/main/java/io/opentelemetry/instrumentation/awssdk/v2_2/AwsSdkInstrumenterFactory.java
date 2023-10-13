@@ -29,14 +29,22 @@ final class AwsSdkInstrumenterFactory {
   static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse> httpAttributesExtractor =
       HttpClientAttributesExtractor.create(httpAttributesGetter);
 
+  private static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse>
+      httpClientSuppressionAttributesExtractor =
+          new AwsSdkHttpClientSuppressionAttributesExtractor();
+
   private static final AwsSdkSpanKindExtractor spanKindExtractor = new AwsSdkSpanKindExtractor();
 
   private static final List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>>
-      defaultAttributesExtractors = Arrays.asList(rpcAttributesExtractor);
+      defaultAttributesExtractors =
+          Arrays.asList(rpcAttributesExtractor, httpClientSuppressionAttributesExtractor);
 
   private static final List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>>
       extendedAttributesExtractors =
-          Arrays.asList(rpcAttributesExtractor, experimentalAttributesExtractor);
+          Arrays.asList(
+              rpcAttributesExtractor,
+              experimentalAttributesExtractor,
+              httpClientSuppressionAttributesExtractor);
 
   private static final List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>>
       defaultConsumerAttributesExtractors =

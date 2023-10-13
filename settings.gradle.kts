@@ -12,7 +12,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.15"
+  id("com.gradle.enterprise") version "3.15.1"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "1.11.3"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0"
   // this can't live in pluginManagement currently due to
@@ -460,6 +460,7 @@ include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:javaagent
 include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:testing")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:javaagent")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library")
+include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:testing")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java17:javaagent")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library")
 include(":instrumentation:rxjava:rxjava-1.0:library")
