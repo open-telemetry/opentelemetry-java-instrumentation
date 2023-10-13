@@ -33,7 +33,7 @@ public class JedisInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean isIndyModule() {
-    //java.lang.NoClassDefFoundError: 
+    // java.lang.NoClassDefFoundError:
     //      io/opentelemetry/javaagent/instrumentation/jedis/JedisRequestContext
     // at redis.clients.jedis.Jedis.set(Jedis.java:4613)
     // at io.opentelemetry.javaagent.instrumentation.jedis
