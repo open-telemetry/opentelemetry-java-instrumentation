@@ -9,7 +9,8 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
 
-public class JdbcTelemetryBuilder {
+/** A builder of {@link JdbcTelemetry}. */
+public final class JdbcTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
   private boolean dataSourceInstrumenterEnabled = true;
