@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import javax.sql.DataSource;
 
 /** Entrypoint for instrumenting a JDBC DataSources. */
-public class JdbcTelemetry {
+public final class JdbcTelemetry {
 
   /** Returns a new {@link JdbcTelemetry} configured with the given {@link OpenTelemetry}. */
   public static JdbcTelemetry create(OpenTelemetry openTelemetry) {
@@ -27,14 +27,14 @@ public class JdbcTelemetry {
   private final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter;
   private final Instrumenter<DbRequest, Void> statementInstrumenter;
 
-  protected JdbcTelemetry(
+  JdbcTelemetry(
       Instrumenter<DataSource, DbInfo> dataSourceInstrumenter,
       Instrumenter<DbRequest, Void> statementInstrumenter) {
     this.dataSourceInstrumenter = dataSourceInstrumenter;
     this.statementInstrumenter = statementInstrumenter;
   }
 
-  public OpenTelemetryDataSource wrap(DataSource dataSource) {
+  public DataSource wrap(DataSource dataSource) {
     return new OpenTelemetryDataSource(
         dataSource, this.dataSourceInstrumenter, this.statementInstrumenter);
   }

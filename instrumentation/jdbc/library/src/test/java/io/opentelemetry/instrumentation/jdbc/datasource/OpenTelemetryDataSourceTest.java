@@ -36,7 +36,7 @@ class OpenTelemetryDataSourceTest {
   @ArgumentsSource(GetConnectionMethods.class)
   void shouldEmitGetConnectionSpans(GetConnectionFunction getConnection) throws SQLException {
     JdbcTelemetry telemetry = JdbcTelemetry.create(testing.getOpenTelemetry());
-    OpenTelemetryDataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.wrap(new TestDataSource());
 
     Connection connection = testing.runWithSpan("parent", () -> getConnection.call(dataSource));
 
@@ -68,7 +68,7 @@ class OpenTelemetryDataSourceTest {
   void shouldNotEmitGetConnectionSpansWithoutParentSpan(GetConnectionFunction getConnection)
       throws SQLException {
     JdbcTelemetry telemetry = JdbcTelemetry.create(testing.getOpenTelemetry());
-    OpenTelemetryDataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.wrap(new TestDataSource());
 
     Connection connection = getConnection.call(dataSource);
 

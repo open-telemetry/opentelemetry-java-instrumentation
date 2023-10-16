@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.sql.SQLException;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -22,7 +23,7 @@ class JdbcTelemetryTest {
   @Test
   void buildWithDefaults() throws SQLException {
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
-    OpenTelemetryDataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.wrap(new TestDataSource());
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
@@ -45,7 +46,7 @@ class JdbcTelemetryTest {
             .setStatementInstrumenterEnabled(false)
             .build();
 
-    OpenTelemetryDataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.wrap(new TestDataSource());
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
@@ -61,7 +62,7 @@ class JdbcTelemetryTest {
             .setDataSourceInstrumenterEnabled(false)
             .build();
 
-    OpenTelemetryDataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.wrap(new TestDataSource());
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
@@ -79,7 +80,7 @@ class JdbcTelemetryTest {
             .setStatementInstrumenterEnabled(false)
             .build();
 
-    OpenTelemetryDataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.wrap(new TestDataSource());
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
@@ -98,7 +99,7 @@ class JdbcTelemetryTest {
             .setStatementSanitizationEnabled(false)
             .build();
 
-    OpenTelemetryDataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.wrap(new TestDataSource());
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));

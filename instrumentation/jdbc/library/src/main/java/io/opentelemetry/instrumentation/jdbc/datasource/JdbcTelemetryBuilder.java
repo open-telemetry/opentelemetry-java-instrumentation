@@ -16,7 +16,7 @@ public class JdbcTelemetryBuilder {
   private boolean statementInstrumenterEnabled = true;
   private boolean statementSanitizationEnabled = true;
 
-  protected JdbcTelemetryBuilder(OpenTelemetry openTelemetry) {
+  JdbcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
 
