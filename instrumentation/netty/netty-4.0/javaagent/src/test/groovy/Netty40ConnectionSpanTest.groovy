@@ -119,6 +119,8 @@ class Netty40ConnectionSpanTest extends InstrumentationSpecification implements 
             attributes {
               "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
               "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+              "$SemanticAttributes.SERVER_ADDRESS" uri.host
+              "$SemanticAttributes.SERVER_PORT" uri.port
               "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
               "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             }
@@ -178,6 +180,8 @@ class Netty40ConnectionSpanTest extends InstrumentationSpecification implements 
             attributes {
               "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
               "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == null }
+              "$SemanticAttributes.SERVER_ADDRESS" uri.host
+              "$SemanticAttributes.SERVER_PORT" uri.port
               "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == null }
               "$NetworkAttributes.NETWORK_PEER_PORT" { it == uri.port || it == null }
             }
