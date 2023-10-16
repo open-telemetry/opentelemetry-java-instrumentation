@@ -116,8 +116,8 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_SERVICE" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
             "$SemanticAttributes.RPC_METHOD" "hello"
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" String
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" String
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
-            "$SemanticAttributes.NET_SOCK_HOST_PORT" Long
             "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
           }
         }
@@ -191,8 +191,8 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_SERVICE" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
             "$SemanticAttributes.RPC_METHOD" "hello"
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" String
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" String
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
-            "$SemanticAttributes.NET_SOCK_HOST_PORT" Long
             "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
           }
         }
