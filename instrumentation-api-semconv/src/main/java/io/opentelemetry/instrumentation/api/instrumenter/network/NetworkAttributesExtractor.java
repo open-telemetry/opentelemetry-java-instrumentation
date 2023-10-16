@@ -41,7 +41,8 @@ public final class NetworkAttributesExtractor<REQUEST, RESPONSE>
             AddressAndPortExtractor.noop(),
             AddressAndPortExtractor.noop(),
             /* captureLocalSocketAttributes= */ true,
-            /* captureOldPeerDomainAttribute= */ false,
+            // capture the old net.sock.peer.name attr for backwards compatibility
+            /* captureOldPeerDomainAttribute= */ true,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
   }

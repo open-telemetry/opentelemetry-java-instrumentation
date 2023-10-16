@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientMetrics;
@@ -177,6 +177,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractors(additionalExtractors)
         .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
+        .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
         .addAttributesExtractor(
             new GrpcAttributesExtractor(
@@ -188,7 +189,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(
             ServerAttributesExtractor.createForServerSide(netServerAttributesGetter))
-        .addAttributesExtractor(ClientAttributesExtractor.create(netServerAttributesGetter))
+        .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(
             new GrpcAttributesExtractor(
                 GrpcRpcAttributesGetter.INSTANCE, capturedServerRequestMetadata))

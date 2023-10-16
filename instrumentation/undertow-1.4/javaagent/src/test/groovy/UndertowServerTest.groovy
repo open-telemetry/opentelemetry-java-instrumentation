@@ -160,6 +160,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
               "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
               "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
               "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
+              "$SemanticAttributes.NET_SOCK_HOST_PORT" Long
             }
           }
           if (SemconvStability.emitStableHttpSemconv()) {
@@ -232,6 +233,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
               "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
               "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
               "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
+              "$SemanticAttributes.NET_SOCK_HOST_PORT" Long
             }
           }
           if (SemconvStability.emitStableHttpSemconv()) {

@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesExtractor;
@@ -72,7 +72,7 @@ public final class DubboTelemetryBuilder {
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(
                 ServerAttributesExtractor.createForServerSide(netServerAttributesGetter))
-            .addAttributesExtractor(ClientAttributesExtractor.create(netServerAttributesGetter))
+            .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
             .addAttributesExtractors(attributesExtractors);
 
     InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
@@ -80,6 +80,7 @@ public final class DubboTelemetryBuilder {
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
+            .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractors(attributesExtractors);
 
     if (peerService != null) {

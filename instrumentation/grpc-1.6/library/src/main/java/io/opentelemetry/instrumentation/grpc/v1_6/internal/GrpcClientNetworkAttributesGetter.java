@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 
 import io.grpc.Status;
+import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcRequest;
 import java.net.InetSocketAddress;
@@ -17,7 +18,8 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class GrpcClientNetworkAttributesGetter
-    implements ServerAttributesGetter<GrpcRequest, Status> {
+    implements ServerAttributesGetter<GrpcRequest, Status>,
+        NetworkAttributesGetter<GrpcRequest, Status> {
 
   @Nullable
   @Override
@@ -32,7 +34,7 @@ public final class GrpcClientNetworkAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       GrpcRequest request, @Nullable Status response) {
     SocketAddress address = request.getPeerSocketAddress();
     if (address instanceof InetSocketAddress) {
