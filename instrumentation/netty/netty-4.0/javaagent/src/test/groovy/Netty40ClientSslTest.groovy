@@ -96,6 +96,7 @@ class Netty40ClientSslTest extends AgentInstrumentationSpecification {
               "$SemanticAttributes.NET_PEER_NAME" uri.host
               "$SemanticAttributes.NET_PEER_PORT" uri.port
               "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
+              "$SemanticAttributes.NET_SOCK_PEER_PORT" {it instanceof Long || it == null }
             }
           }
           if (SemconvStability.emitStableHttpSemconv()) {
@@ -172,6 +173,7 @@ class Netty40ClientSslTest extends AgentInstrumentationSpecification {
               "$SemanticAttributes.NET_PEER_NAME" uri.host
               "$SemanticAttributes.NET_PEER_PORT" uri.port
               "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
+              "$SemanticAttributes.NET_SOCK_PEER_PORT" {it instanceof Long || it == null }
             }
           }
           if (SemconvStability.emitStableHttpSemconv()) {
