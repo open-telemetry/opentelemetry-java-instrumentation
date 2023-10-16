@@ -26,6 +26,19 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
  * #supplyContextData()} is called when a log entry is created.
  */
 public class OpenTelemetryContextDataProvider implements ContextDataProvider {
+
+  private boolean configuredResourceAttributeAccessible;
+
+  public OpenTelemetryContextDataProvider() {
+    try {
+      Class.forName("io.opentelemetry.javaagent.bootstrap.ConfiguredResourceAttributesHolder");
+      this.configuredResourceAttributeAccessible = true;
+
+    } catch (ClassNotFoundException ok) {
+      this.configuredResourceAttributeAccessible = false;
+    }
+  }
+
   private static final boolean BAGGAGE_ENABLED =
       ConfigPropertiesUtil.getBoolean("otel.instrumentation.log4j-context-data.add-baggage", false);
 
@@ -48,7 +61,10 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
     contextData.put(TRACE_ID, spanContext.getTraceId());
     contextData.put(SPAN_ID, spanContext.getSpanId());
     contextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
-    contextData.putAll(ConfiguredResourceAttributesHolder.getResourceAttributes());
+
+    if (configuredResourceAttributeAccessible) {
+      contextData.putAll(ConfiguredResourceAttributesHolder.getResourceAttributes());
+    }
 
     if (BAGGAGE_ENABLED) {
       Baggage baggage = Baggage.fromContext(context);

@@ -5,7 +5,7 @@ plugins {
 base.archivesName.set("${base.archivesName.get()}-autoconfigure")
 
 dependencies {
-  implementation(project(":javaagent-bootstrap"))
+  compileOnly(project(":javaagent-bootstrap"))
   library("org.apache.logging.log4j:log4j-core:2.17.0")
 
   testImplementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
