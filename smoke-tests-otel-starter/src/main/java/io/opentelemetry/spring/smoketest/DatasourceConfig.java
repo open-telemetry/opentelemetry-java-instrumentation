@@ -6,7 +6,7 @@
 package io.opentelemetry.spring.smoketest;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.jdbc.datasource.OpenTelemetryDataSource;
+import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
 import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +22,6 @@ public class DatasourceConfig {
     dataSource.setUrl("jdbc:h2:mem:db");
     dataSource.setUsername("username");
     dataSource.setPassword("pwd");
-    return new OpenTelemetryDataSource(dataSource, openTelemetry);
+    return JdbcTelemetry.create(openTelemetry).wrap(dataSource);
   }
 }

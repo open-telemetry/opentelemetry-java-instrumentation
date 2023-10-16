@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.DataSourceInstrumenterFactory.createDataSourceInstrumenter;
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createDataSourceInstrumenter;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -27,7 +27,7 @@ public final class JdbcSingletons {
 
   private static final Instrumenter<DbRequest, Void> STATEMENT_INSTRUMENTER;
   public static final Instrumenter<DataSource, DbInfo> DATASOURCE_INSTRUMENTER =
-      createDataSourceInstrumenter(GlobalOpenTelemetry.get());
+      createDataSourceInstrumenter(GlobalOpenTelemetry.get(), true);
 
   static {
     JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
