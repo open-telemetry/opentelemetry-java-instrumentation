@@ -24,7 +24,7 @@ import server.SpringWebFluxTestApplication;
       SpringWebFluxTestApplication.class,
       SpringThreadedSpringWebfluxTest.ForceSingleThreadedNettyAutoConfiguration.class
     })
-public class SpringThreadedSpringWebfluxTest extends SpringWebfluxTest {
+class SpringThreadedSpringWebfluxTest extends SpringWebfluxTest {
 
   @TestConfiguration
   static class ForceSingleThreadedNettyAutoConfiguration {
