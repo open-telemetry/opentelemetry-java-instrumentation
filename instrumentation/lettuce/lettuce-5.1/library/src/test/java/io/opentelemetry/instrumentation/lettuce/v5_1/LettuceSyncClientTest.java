@@ -14,11 +14,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class LettuceSyncClientTest extends AbstractLettuceSyncClientTest {
 
   @RegisterExtension
-  static InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  static InstrumentationExtension agentTesting = LibraryInstrumentationExtension.create();
 
   @Override
   public InstrumentationExtension getInstrumentationExtension() {
-    return testing;
+    return agentTesting;
   }
 
   @Override

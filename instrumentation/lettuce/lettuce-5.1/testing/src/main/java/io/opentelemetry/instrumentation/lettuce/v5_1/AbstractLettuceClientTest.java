@@ -23,7 +23,7 @@ abstract class AbstractLettuceClientTest {
   protected static final Logger logger = LoggerFactory.getLogger(AbstractLettuceClientTest.class);
 
   @RegisterExtension
-  static InstrumentationExtension agentTesting = AgentInstrumentationExtension.create();
+  public static InstrumentationExtension agentTesting = AgentInstrumentationExtension.create();
 
   public InstrumentationExtension getInstrumentationExtension() {
     return agentTesting;
@@ -49,7 +49,7 @@ abstract class AbstractLettuceClientTest {
   protected static int port;
   protected static String embeddedDbUri;
 
-  protected static ContainerConnection newContainerConnection() {
+  protected ContainerConnection newContainerConnection() {
     GenericContainer<?> server =
         new GenericContainer<>("redis:6.2.3-alpine")
             .withExposedPorts(6379)
@@ -60,7 +60,7 @@ abstract class AbstractLettuceClientTest {
 
     long serverPort = server.getMappedPort(6379);
 
-    RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
+    RedisClient client = createClient("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
     client.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
     cleanup.deferCleanup(client::shutdown);
 
