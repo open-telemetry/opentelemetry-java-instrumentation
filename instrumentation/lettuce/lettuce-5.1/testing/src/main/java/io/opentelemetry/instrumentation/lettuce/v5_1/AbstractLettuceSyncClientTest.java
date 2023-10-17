@@ -56,7 +56,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     dbUriNonExistent = "redis://" + host + ":" + incorrectPort + "/" + DB_INDEX;
 
     redisClient = createClient(embeddedDbUri);
-    redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
+    redisClient.setOptions(LettuceTestClientUtil.CLIENT_OPTIONS);
 
     connection = redisClient.connect();
     syncCommands = connection.sync();
@@ -93,7 +93,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
   @Test
   void testConnectException() {
     RedisClient testConnectionClient = RedisClient.create(dbUriNonExistent);
-    testConnectionClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
+    testConnectionClient.setOptions(LettuceTestClientUtil.CLIENT_OPTIONS);
     cleanup.deferCleanup(testConnectionClient::shutdown);
 
     Throwable thrown = catchThrowable(testConnectionClient::connect);
@@ -132,7 +132,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
   @Test
   void testSetCommandLocalhost() {
     RedisClient testConnectionClient = createClient(embeddedDbLocalhostUri);
-    testConnectionClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
+    testConnectionClient.setOptions(LettuceTestClientUtil.CLIENT_OPTIONS);
     cleanup.deferCleanup(testConnectionClient::shutdown);
 
     StatefulRedisConnection<String, String> testConnection = testConnectionClient.connect();

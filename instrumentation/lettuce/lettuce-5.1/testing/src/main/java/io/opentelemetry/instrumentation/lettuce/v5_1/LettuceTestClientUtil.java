@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import io.lettuce.core.ClientOptions;
 
-final class LettuceTestUtil {
+final class LettuceTestClientUtil {
   static final ClientOptions CLIENT_OPTIONS;
 
   static {
@@ -22,5 +22,5 @@ final class LettuceTestUtil {
     CLIENT_OPTIONS = options.build();
   }
 
-  private LettuceTestUtil() {}
+  private LettuceTestClientUtil() {}
 }
