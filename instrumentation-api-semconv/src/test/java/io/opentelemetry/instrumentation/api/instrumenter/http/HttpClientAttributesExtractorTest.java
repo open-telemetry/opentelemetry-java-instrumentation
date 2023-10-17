@@ -17,6 +17,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -149,7 +150,7 @@ class HttpClientAttributesExtractorTest {
                 asList("123", "456")),
             entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
             entry(SemanticAttributes.NET_PEER_PORT, 123L),
-            entry(SemanticAttributes.HTTP_RESEND_COUNT, 2L));
+            entry(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, 2L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);

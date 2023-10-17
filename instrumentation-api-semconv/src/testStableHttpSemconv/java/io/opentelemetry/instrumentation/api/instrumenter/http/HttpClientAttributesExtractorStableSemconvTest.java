@@ -164,7 +164,7 @@ class HttpClientAttributesExtractorStableSemconvTest {
                 asList("123", "456")),
             entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
             entry(SemanticAttributes.SERVER_PORT, 123L),
-            entry(SemanticAttributes.HTTP_RESEND_COUNT, 2L));
+            entry(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, 2L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);

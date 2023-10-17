@@ -279,7 +279,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -319,7 +319,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -378,7 +378,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           IntStream.range(0, options.getMaxRedirects())
               .mapToObj(i -> makeCircularRedirectAssertForLolLevelTrace(uri, method, i))
               .collect(Collectors.toList()));
@@ -425,7 +425,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -1123,9 +1123,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
               if (resendCount != null) {
                 assertThat(attrs)
-                    .containsEntry(SemanticAttributes.HTTP_RESEND_COUNT, (long) resendCount);
+                    .containsEntry(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, (long) resendCount);
               } else {
-                assertThat(attrs).doesNotContainKey(SemanticAttributes.HTTP_RESEND_COUNT);
+                assertThat(attrs).doesNotContainKey(HttpAttributes.HTTP_REQUEST_RESEND_COUNT);
               }
             });
   }

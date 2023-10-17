@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -19,6 +20,9 @@ public final class HttpAttributes {
   // released
 
   public static final AttributeKey<String> ERROR_TYPE = stringKey("error.type");
+
+  public static final AttributeKey<Long> HTTP_REQUEST_RESEND_COUNT =
+      longKey("http.request.resend_count");
 
   private HttpAttributes() {}
 }
