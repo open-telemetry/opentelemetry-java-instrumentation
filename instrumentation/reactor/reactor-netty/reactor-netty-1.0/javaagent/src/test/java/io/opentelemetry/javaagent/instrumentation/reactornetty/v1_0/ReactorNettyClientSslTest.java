@@ -111,7 +111,10 @@ class ReactorNettyClientSslTest {
                             equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort()),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            satisfies(
+                                SemanticAttributes.NET_SOCK_PEER_PORT,
+                                AbstractLongAssert::isNotNegative)),
                 span ->
                     span.hasName("SSL handshake")
                         .hasKind(INTERNAL)
@@ -165,7 +168,10 @@ class ReactorNettyClientSslTest {
                             equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort()),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            satisfies(
+                                SemanticAttributes.NET_SOCK_PEER_PORT,
+                                AbstractLongAssert::isNotNegative)),
                 span ->
                     span.hasName("SSL handshake")
                         .hasKind(INTERNAL)
@@ -192,7 +198,10 @@ class ReactorNettyClientSslTest {
                                 AbstractLongAssert::isNotNegative),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort()),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            satisfies(
+                                SemanticAttributes.NET_SOCK_PEER_PORT,
+                                AbstractLongAssert::isNotNegative)),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(4))));
   }

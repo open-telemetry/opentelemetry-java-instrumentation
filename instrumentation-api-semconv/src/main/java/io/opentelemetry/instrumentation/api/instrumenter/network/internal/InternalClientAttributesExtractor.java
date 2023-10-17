@@ -20,7 +20,6 @@ public final class InternalClientAttributesExtractor<REQUEST> {
   private final boolean emitStableUrlAttributes;
   private final boolean emitOldHttpAttributes;
 
-  // todo rework constructor
   public InternalClientAttributesExtractor(
       AddressAndPortExtractor<REQUEST> addressAndPortExtractor,
       boolean emitStableUrlAttributes,
