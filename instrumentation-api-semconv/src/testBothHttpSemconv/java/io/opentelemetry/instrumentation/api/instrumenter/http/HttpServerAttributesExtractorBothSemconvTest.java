@@ -122,10 +122,10 @@ class HttpServerAttributesExtractorBothSemconvTest {
   void normal() {
     Map<String, Object> request = new HashMap<>();
     request.put("method", "POST");
-    request.put("urlFull", "http://github.com");
+    request.put("urlFull", "https://github.com");
     request.put("urlPath", "/repositories/1");
     request.put("urlQuery", "details=true");
-    request.put("urlScheme", "http");
+    request.put("urlScheme", "https");
     request.put("header.content-length", "10");
     request.put("route", "/repositories/{id}");
     request.put("header.user-agent", "okhttp 3.x");
@@ -159,9 +159,9 @@ class HttpServerAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-            entry(SemanticAttributes.HTTP_SCHEME, "http"),
+            entry(SemanticAttributes.HTTP_SCHEME, "https"),
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1?details=true"),
-            entry(SemanticAttributes.URL_SCHEME, "http"),
+            entry(SemanticAttributes.URL_SCHEME, "https"),
             entry(SemanticAttributes.URL_PATH, "/repositories/1"),
             entry(SemanticAttributes.URL_QUERY, "details=true"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),

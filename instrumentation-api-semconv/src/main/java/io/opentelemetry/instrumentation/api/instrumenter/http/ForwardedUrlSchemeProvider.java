@@ -5,32 +5,20 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.util.Locale;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-final class AlternateUrlSchemeProvider<REQUEST> implements Function<REQUEST, String> {
-
-  // if set to true, the instrumentation will prefer the scheme from Forwarded/X-Forwarded-Proto
-  // headers over the one extracted from the URL
-  private static final boolean PREFER_FORWARDED_URL_SCHEME =
-      ConfigPropertiesUtil.getBoolean(
-          "otel.instrumentation.http.prefer-forwarded-url-scheme", false);
+final class ForwardedUrlSchemeProvider<REQUEST> implements Function<REQUEST, String> {
 
   private final HttpServerAttributesGetter<REQUEST, ?> getter;
 
-  AlternateUrlSchemeProvider(HttpServerAttributesGetter<REQUEST, ?> getter) {
+  ForwardedUrlSchemeProvider(HttpServerAttributesGetter<REQUEST, ?> getter) {
     this.getter = getter;
   }
 
   @Override
   public String apply(REQUEST request) {
-    if (!PREFER_FORWARDED_URL_SCHEME) {
-      // don't parse headers, extract scheme from the URL
-      return null;
-    }
-
     // try Forwarded
     for (String forwarded : getter.getHttpRequestHeader(request, "forwarded")) {
       String proto = extractProtoFromForwardedHeader(forwarded);

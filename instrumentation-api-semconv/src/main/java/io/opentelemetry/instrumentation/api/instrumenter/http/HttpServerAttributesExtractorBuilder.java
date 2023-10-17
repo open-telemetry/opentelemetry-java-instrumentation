@@ -128,7 +128,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   InternalUrlAttributesExtractor<REQUEST> buildUrlExtractor() {
     return new InternalUrlAttributesExtractor<>(
         httpAttributesGetter,
-        new AlternateUrlSchemeProvider<>(httpAttributesGetter),
+        new ForwardedUrlSchemeProvider<>(httpAttributesGetter),
         SemconvStability.emitStableHttpSemconv(),
         SemconvStability.emitOldHttpSemconv());
   }

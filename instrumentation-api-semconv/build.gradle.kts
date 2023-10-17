@@ -75,10 +75,6 @@ tasks {
     dependsOn("generateJflex")
   }
 
-  test {
-    jvmArgs("-Dotel.instrumentation.http.prefer-forwarded-url-scheme=true")
-  }
-
   check {
     dependsOn(testing.suites)
   }
