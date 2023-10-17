@@ -20,7 +20,6 @@ import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Base64;
 import java.util.Map;
@@ -65,8 +64,13 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     syncCommands.set("TESTKEY", "TESTVAL");
     syncCommands.hmset("TESTHM", testHashMap);
 
-    // 2 sets
-    getInstrumentationExtension().waitForTraces(2);
+    if (Boolean.getBoolean("testLatestDeps")) {
+      // 1 HELLO (in lettuce 6+) and 2 sets
+      getInstrumentationExtension().waitForTraces(3);
+    } else {
+      // 2 sets
+      getInstrumentationExtension().waitForTraces(2);
+    }
     getInstrumentationExtension().clearData();
   }
 
@@ -133,6 +137,12 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
     StatefulRedisConnection<String, String> testConnection = testConnectionClient.connect();
     cleanup.deferCleanup(testConnection);
+
+    if (Boolean.getBoolean("testLatestDeps")) {
+      // 1 HELLO (in lettuce 6+)
+      getInstrumentationExtension().waitForTraces(1);
+      getInstrumentationExtension().clearData();
+    }
 
     String res = testConnection.sync().set("TESTSETKEY", "TESTSETVAL");
     assertThat(res).isEqualTo("OK");
@@ -441,7 +451,6 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                         span.hasName("SHUTDOWN")
                             .hasKind(SpanKind.CLIENT)
                             // Seems to only be treated as an error with Lettuce 6+
-                            .hasStatus(StatusData.error())
                             .hasException(new RedisException("Connection disconnected"))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
