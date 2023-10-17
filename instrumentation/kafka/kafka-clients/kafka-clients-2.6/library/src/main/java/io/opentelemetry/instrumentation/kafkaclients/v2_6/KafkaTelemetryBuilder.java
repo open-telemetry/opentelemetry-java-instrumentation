@@ -30,6 +30,7 @@ public final class KafkaTelemetryBuilder {
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
+  private boolean messagingReceiveInstrumentationEnabled = false;
 
   KafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = Objects.requireNonNull(openTelemetry);
@@ -85,11 +86,25 @@ public final class KafkaTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Set whether to capture the consumer message receive telemetry in messaging instrumentation.
+   *
+   * <p>Note that this will cause the consumer side to start a new trace, with only a span link
+   * connecting it to the producer trace.
+   */
+  @CanIgnoreReturnValue
+  public KafkaTelemetryBuilder setMessagingReceiveInstrumentationEnabled(
+      boolean messagingReceiveInstrumentationEnabled) {
+    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
+    return this;
+  }
+
   public KafkaTelemetry build() {
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
             .setCapturedHeaders(capturedHeaders)
-            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes);
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
+            .setMessagingReceiveInstrumentationEnabled(messagingReceiveInstrumentationEnabled);
 
     return new KafkaTelemetry(
         openTelemetry,
