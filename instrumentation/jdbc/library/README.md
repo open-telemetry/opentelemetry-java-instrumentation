@@ -57,7 +57,7 @@ public class DataSourceConfig {
     dataSource.setUrl("jdbc:postgresql://127.0.0.1:5432/example");
     dataSource.setUsername("postgres");
     dataSource.setPassword("root");
-    return new OpenTelemetryDataSource(dataSource);
+    return JdbcTelemetry.create(openTelemetry).wrap(dataSource);
   }
 
 }
