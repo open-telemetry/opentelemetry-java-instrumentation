@@ -80,7 +80,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
    * @param dataSourceInstrumenter the DataSource Instrumenter to use
    * @param statementInstrumenter the Statement Instrumenter to use
    */
-  public OpenTelemetryDataSource(
+  OpenTelemetryDataSource(
       DataSource delegate,
       Instrumenter<DataSource, DbInfo> dataSourceInstrumenter,
       Instrumenter<DbRequest, Void> statementInstrumenter) {
