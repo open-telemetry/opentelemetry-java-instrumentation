@@ -159,10 +159,10 @@ class HttpServerAttributesExtractorStableSemconvTest {
   void normal() {
     Map<String, String> request = new HashMap<>();
     request.put("method", "POST");
-    request.put("urlFull", "http://github.com");
+    request.put("urlFull", "https://github.com");
     request.put("urlPath", "/repositories/1");
     request.put("urlQuery", "details=true");
-    request.put("urlScheme", "http");
+    request.put("urlScheme", "https");
     request.put("header.content-length", "10");
     request.put("route", "/repositories/{id}");
     request.put("header.user-agent", "okhttp 3.x");
@@ -196,7 +196,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
         .containsOnly(
             entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
             entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-            entry(SemanticAttributes.URL_SCHEME, "http"),
+            entry(SemanticAttributes.URL_SCHEME, "https"),
             entry(SemanticAttributes.URL_PATH, "/repositories/1"),
             entry(SemanticAttributes.URL_QUERY, "details=true"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
@@ -416,5 +416,27 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onEnd(attributes, Context.root(), emptyMap(), emptyMap(), null);
 
     assertThat(attributes.build()).containsEntry(HttpAttributes.ERROR_TYPE, HttpConstants._OTHER);
+  }
+
+  @Test
+  void shouldPreferUrlSchemeFromForwardedHeader() {
+    Map<String, String> request = new HashMap<>();
+    request.put("urlScheme", "http");
+    request.put("header.forwarded", "proto=https");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "202");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build()).containsOnly(entry(SemanticAttributes.URL_SCHEME, "https"));
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L));
   }
 }
