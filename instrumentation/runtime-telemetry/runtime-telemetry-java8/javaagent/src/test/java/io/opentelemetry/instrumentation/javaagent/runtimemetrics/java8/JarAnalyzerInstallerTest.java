@@ -14,8 +14,10 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import java.util.List;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.containers.GenericContainer;
 
 class JarAnalyzerInstallerTest {
 
@@ -23,19 +25,35 @@ class JarAnalyzerInstallerTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
+  @SuppressWarnings("ReturnValueIgnored")
   void jarAnalyzerEnabled() throws InterruptedException {
-    Thread.sleep(5000);
+    // We clear exported data before running tests. Here we load a class from testcontainers with
+    // the assumption that no testcontainers classes have been loaded yet, and we'll have at least
+    // the testcontainers jar show up in jar analyzer events.
+    GenericContainer.class.getName();
 
-    List<LogRecordData> logRecordData = testing.logRecords();
     List<LogRecordData> events =
-        logRecordData.stream()
-            .filter(
-                record -> {
-                  Attributes attributes = record.getAttributes();
-                  return "package".equals(attributes.get(AttributeKey.stringKey("event.domain")))
-                      && "info".equals(attributes.get(AttributeKey.stringKey("event.name")));
-                })
-            .collect(toList());
+        Awaitility.await()
+            .until(
+                () -> {
+                  List<LogRecordData> logRecordData = testing.logRecords();
+                  List<LogRecordData> eventList =
+                      logRecordData.stream()
+                          .filter(
+                              record -> {
+                                Attributes attributes = record.getAttributes();
+                                return "package"
+                                        .equals(
+                                            attributes.get(AttributeKey.stringKey("event.domain")))
+                                    && "info"
+                                        .equals(
+                                            attributes.get(AttributeKey.stringKey("event.name")));
+                              })
+                          .collect(toList());
+                  return eventList;
+                },
+                (eventList) -> !eventList.isEmpty());
+
     assertThat(events)
         .hasSizeGreaterThan(0)
         .allSatisfy(
