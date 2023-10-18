@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
@@ -54,17 +53,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   private final ClassLoader agentOrExtensionCl;
   private volatile MethodHandles.Lookup cachedLookup;
 
-  /**
-   * We only weakly reference the instrumented classloader to make sure that we don't prevent it
-   * from being GCed. This only works as long as this {@link InstrumentationModuleClassLoader} has
-   * not loaded any classes referencing types from the instrumentedCl yet: As soon as such a class
-   * is loaded, it will strongly reference the instrumentedCl.
-   *
-   * <p>For this reason, users of {@link InstrumentationModuleClassLoader} must make sure that they
-   * only weakly reference it if it is actually used for classloading and not for resource lookups
-   * (e.g. via {@link net.bytebuddy.pool.TypePool}s.
-   */
-  private final WeakReference<ClassLoader> instrumentedClassloader;
+  private final ClassLoader instrumentedCl;
 
   public InstrumentationModuleClassLoader(
       ClassLoader instrumentedCl,
@@ -74,16 +63,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     super(agentOrExtensionCl);
     additionalInjectedClasses = injectedClasses;
     this.agentOrExtensionCl = agentOrExtensionCl;
-    this.instrumentedClassloader = new WeakReference<>(instrumentedCl);
-  }
-
-  private ClassLoader getInstrumentedClassloader() {
-    ClassLoader classLoader = instrumentedClassloader.get();
-    if (classLoader == null) {
-      throw new IllegalStateException(
-          "The referenced instrumented ClassLoader has already been GCed!");
-    }
-    return classLoader;
+    this.instrumentedCl = instrumentedCl;
   }
 
   /**
@@ -110,7 +90,6 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   @Override
   @SuppressWarnings("removal") // AccessController is deprecated for removal
   protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-    ClassLoader instrumentedCl = getInstrumentedClassloader();
     synchronized (getClassLoadingLock(name)) {
       Class<?> result = findLoadedClass(name);
 
@@ -159,7 +138,6 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
 
   @Override
   public URL getResource(String resourceName) {
-    ClassLoader instrumentedCl = getInstrumentedClassloader();
     String className = resourceToClassName(resourceName);
     if (className == null) {
       // delegate to just the default parent (the agent classloader)
