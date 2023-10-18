@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import io.lettuce.core.ClientOptions;
+import io.lettuce.core.protocol.ProtocolVersion;
 
 final class LettuceTestClientUtil {
   static final ClientOptions CLIENT_OPTIONS;
@@ -17,7 +18,7 @@ final class LettuceTestClientUtil {
             .autoReconnect(false);
     if (Boolean.getBoolean("testLatestDeps")) {
       // Force RESP2 on 6+ for consistency in tests
-      options.pingBeforeActivateConnection(false);
+      options.pingBeforeActivateConnection(false).protocolVersion(ProtocolVersion.RESP2);
     }
     CLIENT_OPTIONS = options.build();
   }

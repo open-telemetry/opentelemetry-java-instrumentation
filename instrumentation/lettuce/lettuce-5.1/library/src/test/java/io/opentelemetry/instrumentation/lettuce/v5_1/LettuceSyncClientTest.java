@@ -12,13 +12,12 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class LettuceSyncClientTest extends AbstractLettuceSyncClientTest {
-
   @RegisterExtension
-  static final InstrumentationExtension agentTesting = LibraryInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
   public InstrumentationExtension getInstrumentationExtension() {
-    return agentTesting;
+    return testing;
   }
 
   @Override

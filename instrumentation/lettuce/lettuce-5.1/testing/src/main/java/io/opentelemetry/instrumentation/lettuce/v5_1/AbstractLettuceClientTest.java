@@ -23,11 +23,10 @@ abstract class AbstractLettuceClientTest {
   protected static final Logger logger = LoggerFactory.getLogger(AbstractLettuceClientTest.class);
 
   @RegisterExtension
-  protected static final InstrumentationExtension agentTesting =
-      AgentInstrumentationExtension.create();
+  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   public InstrumentationExtension getInstrumentationExtension() {
-    return agentTesting;
+    return testing;
   }
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
@@ -68,11 +67,6 @@ abstract class AbstractLettuceClientTest {
     StatefulRedisConnection<String, String> statefulConnection = client.connect();
     cleanup.deferCleanup(statefulConnection);
 
-    if (Boolean.getBoolean("testLatestDeps")) {
-      // 1 HELLO (in lettuce 6+)
-      getInstrumentationExtension().waitForTraces(1);
-    }
-    getInstrumentationExtension().clearData();
     return new ContainerConnection(statefulConnection, serverPort);
   }
 

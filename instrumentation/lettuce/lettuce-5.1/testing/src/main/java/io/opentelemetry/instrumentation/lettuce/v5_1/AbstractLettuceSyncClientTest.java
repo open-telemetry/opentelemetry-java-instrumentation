@@ -64,13 +64,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     syncCommands.set("TESTKEY", "TESTVAL");
     syncCommands.hmset("TESTHM", testHashMap);
 
-    if (Boolean.getBoolean("testLatestDeps")) {
-      // 1 HELLO (in lettuce 6+) and 2 sets
-      getInstrumentationExtension().waitForTraces(3);
-    } else {
-      // 2 sets
-      getInstrumentationExtension().waitForTraces(2);
-    }
+    // 2 sets
+    getInstrumentationExtension().waitForTraces(2);
     getInstrumentationExtension().clearData();
   }
 
@@ -137,12 +132,6 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
     StatefulRedisConnection<String, String> testConnection = testConnectionClient.connect();
     cleanup.deferCleanup(testConnection);
-
-    if (Boolean.getBoolean("testLatestDeps")) {
-      // 1 HELLO (in lettuce 6+)
-      getInstrumentationExtension().waitForTraces(1);
-      getInstrumentationExtension().clearData();
-    }
 
     String res = testConnection.sync().set("TESTSETKEY", "TESTSETVAL");
     assertThat(res).isEqualTo("OK");
@@ -244,7 +233,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
   @Test
   void testListCommand() {
-    // Needs its own container or inconsistent command count
+    // Needs its own container or flaky from inconsistent command count
     ContainerConnection containerConnection = newContainerConnection();
     RedisCommands<String, String> commands = containerConnection.connection.sync();
 
