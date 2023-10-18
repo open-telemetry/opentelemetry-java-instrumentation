@@ -24,7 +24,7 @@ public class IndyModuleTypePool {
    * @return the type pool, must not be cached!
    */
   public static TypePool get(ClassLoader instrumentedCl, InstrumentationModule module) {
-    // TODO: this implementation doesn't allow caching the returned bool and its types
+    // TODO: this implementation doesn't allow caching the returned pool and its types
     // This could be improved by implementing a custom TypePool instead, which delegates to parent
     // TypePools and mirrors the delegation model of the InstrumentationModuleClassLoader
     InstrumentationModuleClassLoader dummyCl =
