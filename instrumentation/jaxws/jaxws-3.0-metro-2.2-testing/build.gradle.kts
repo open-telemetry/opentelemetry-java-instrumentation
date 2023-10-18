@@ -14,6 +14,10 @@ dependencies {
   testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
 tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-exports=java.xml/com.sun.org.apache.xerces.internal.dom=ALL-UNNAMED")
