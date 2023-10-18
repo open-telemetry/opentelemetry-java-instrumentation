@@ -58,7 +58,7 @@ final class MetroServerSpanNameUpdater {
    */
   private void registerHttpServletRequestAdapter(
       String name, String key, String httpServletRequestClassName) {
-    final HttpServletRequestAdapter adapter;
+    HttpServletRequestAdapter adapter;
     try {
       adapter =
           new HttpServletRequestAdapter(
