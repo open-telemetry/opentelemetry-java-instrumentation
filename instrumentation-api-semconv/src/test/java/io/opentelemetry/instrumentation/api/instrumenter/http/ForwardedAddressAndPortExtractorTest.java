@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.doReturn;
 
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -27,11 +27,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class ClientAddressAndPortExtractorTest {
+class ForwardedAddressAndPortExtractorTest {
 
   @Mock HttpServerAttributesGetter<String, String> getter;
 
-  @InjectMocks ClientAddressAndPortExtractor<String> underTest;
+  @InjectMocks ForwardedAddressAndPortExtractor<String> underTest;
 
   @ParameterizedTest
   @ArgumentsSource(ForwardedArgs.class)
@@ -148,7 +148,7 @@ class ClientAddressAndPortExtractorTest {
     }
   }
 
-  static final class AddressAndPort implements FallbackAddressPortExtractor.AddressPortSink {
+  static final class AddressAndPort implements AddressAndPortExtractor.AddressPortSink {
 
     @Nullable String address = null;
     @Nullable Integer port = null;
@@ -159,7 +159,7 @@ class ClientAddressAndPortExtractorTest {
     }
 
     @Override
-    public void setPort(int port) {
+    public void setPort(Integer port) {
       this.port = port;
     }
   }

@@ -9,10 +9,11 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkTransportFilter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ServerAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 
@@ -33,7 +34,7 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
 
   private final InternalNetClientAttributesExtractor<REQUEST, RESPONSE> internalExtractor;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
-  private final InternalServerAttributesExtractor<REQUEST, RESPONSE> internalServerExtractor;
+  private final InternalServerAttributesExtractor<REQUEST> internalServerExtractor;
 
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       NetClientAttributesGetter<REQUEST, RESPONSE> getter) {
@@ -41,24 +42,29 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private NetClientAttributesExtractor(NetClientAttributesGetter<REQUEST, RESPONSE> getter) {
+    ServerAddressAndPortExtractor<REQUEST> serverAddressAndPortExtractor =
+        new ServerAddressAndPortExtractor<>(getter, AddressAndPortExtractor.noop());
+
     internalExtractor =
         new InternalNetClientAttributesExtractor<>(
-            getter, FallbackAddressPortExtractor.noop(), SemconvStability.emitOldHttpSemconv());
+            getter, AddressAndPortExtractor.noop(), SemconvStability.emitOldHttpSemconv());
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,
             NetworkTransportFilter.alwaysTrue(),
+            AddressAndPortExtractor.noop(),
+            serverAddressAndPortExtractor,
+            /* captureLocalSocketAttributes= */ false,
+            /* captureOldPeerDomainAttribute= */ true,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
     internalServerExtractor =
         new InternalServerAttributesExtractor<>(
-            getter,
             (port, request) -> true,
-            FallbackAddressPortExtractor.noop(),
+            serverAddressAndPortExtractor,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
-            InternalServerAttributesExtractor.Mode.PEER,
-            /* captureServerSocketAttributes= */ true);
+            InternalServerAttributesExtractor.Mode.PEER);
   }
 
   @Override
@@ -75,6 +81,5 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     internalExtractor.onEnd(attributes, request, response);
     internalNetworkExtractor.onEnd(attributes, request, response);
-    internalServerExtractor.onEnd(attributes, request, response);
   }
 }

@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.api.instrumenter.net.internal;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPort;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ServerAddressAndPortExtractor;
 import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
@@ -23,17 +23,18 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
   private final io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter<
           REQUEST, RESPONSE>
       getter;
-  private final FallbackAddressPortExtractor<REQUEST> fallbackAddressPortExtractor;
+  private final AddressAndPortExtractor<REQUEST> logicalAddressAndPortExtractor;
   private final boolean emitOldHttpAttributes;
 
   public InternalNetClientAttributesExtractor(
       io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter<
               REQUEST, RESPONSE>
           getter,
-      FallbackAddressPortExtractor<REQUEST> fallbackAddressPortExtractor,
+      AddressAndPortExtractor<REQUEST> fallbackAddressAndPortExtractor,
       boolean emitOldHttpAttributes) {
     this.getter = getter;
-    this.fallbackAddressPortExtractor = fallbackAddressPortExtractor;
+    this.logicalAddressAndPortExtractor =
+        new ServerAddressAndPortExtractor<>(getter, fallbackAddressAndPortExtractor);
     this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
 
@@ -43,7 +44,7 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
       internalSet(
           attributes, SemanticAttributes.NET_TRANSPORT, getter.getTransport(request, response));
 
-      String peerName = extractPeerName(request);
+      String peerName = logicalAddressAndPortExtractor.extract(request).getAddress();
       String sockPeerAddr = getter.getServerSocketAddress(request, response);
       if (sockPeerAddr != null && !sockPeerAddr.equals(peerName)) {
         String sockFamily = getter.getSockFamily(request, response);
@@ -52,15 +53,5 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
         }
       }
     }
-  }
-
-  private String extractPeerName(REQUEST request) {
-    String serverAddress = getter.getServerAddress(request);
-    if (serverAddress != null) {
-      return serverAddress;
-    }
-    AddressAndPort addressAndPort = new AddressAndPort();
-    fallbackAddressPortExtractor.extract(addressAndPort, request);
-    return addressAndPort.getAddress();
   }
 }

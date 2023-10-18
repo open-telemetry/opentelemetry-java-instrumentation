@@ -13,6 +13,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -139,10 +140,8 @@ class NetClientAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
             entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"),
             entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
-            entry(SemanticAttributes.NET_SOCK_PEER_NAME, "proxy.opentelemetry.io"),
             entry(SemanticAttributes.NET_SOCK_PEER_PORT, 123L),
-            entry(SemanticAttributes.SERVER_SOCKET_DOMAIN, "proxy.opentelemetry.io"),
-            entry(SemanticAttributes.SERVER_SOCKET_ADDRESS, "1:2:3:4::"),
-            entry(SemanticAttributes.SERVER_SOCKET_PORT, 123L));
+            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "1:2:3:4::"),
+            entry(NetworkAttributes.NETWORK_PEER_PORT, 123L));
   }
 }

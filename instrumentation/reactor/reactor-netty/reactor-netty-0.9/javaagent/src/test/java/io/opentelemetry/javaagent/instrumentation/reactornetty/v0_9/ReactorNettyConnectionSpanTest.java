@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SemanticAttributes;
+import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -88,7 +89,10 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, server.httpPort()),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            satisfies(
+                                SemanticAttributes.NET_SOCK_PEER_PORT,
+                                AbstractLongAssert::isNotNegative)),
                 span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(3))));
@@ -149,6 +153,9 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(SemanticAttributes.NET_PEER_PORT, PortUtils.UNUSABLE_PORT),
                             satisfies(
                                 SemanticAttributes.NET_SOCK_PEER_ADDR,
-                                val -> val.isIn(null, "127.0.0.1")))));
+                                val -> val.isIn(null, "127.0.0.1")),
+                            satisfies(
+                                SemanticAttributes.NET_SOCK_PEER_PORT,
+                                val -> val.isIn(null, (long) PortUtils.UNUSABLE_PORT)))));
   }
 }

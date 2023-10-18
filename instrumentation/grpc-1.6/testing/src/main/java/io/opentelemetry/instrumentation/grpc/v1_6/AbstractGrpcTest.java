@@ -171,6 +171,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                                 satisfies(
+                                    SemanticAttributes.NET_SOCK_PEER_NAME,
+                                    val -> assertThat(val).isNotNull()),
+                                satisfies(
                                     SemanticAttributes.NET_SOCK_PEER_PORT,
                                     val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
@@ -331,6 +334,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                satisfies(
+                                    SemanticAttributes.NET_SOCK_PEER_NAME,
+                                    val -> assertThat(val).isNotNull()),
                                 satisfies(
                                     SemanticAttributes.NET_SOCK_PEER_PORT,
                                     val -> assertThat(val).isNotNull()))
@@ -505,6 +511,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                                 satisfies(
+                                    SemanticAttributes.NET_SOCK_PEER_NAME,
+                                    val -> assertThat(val).isNotNull()),
+                                satisfies(
                                     SemanticAttributes.NET_SOCK_PEER_PORT,
                                     val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
@@ -647,6 +656,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                satisfies(
+                                    SemanticAttributes.NET_SOCK_PEER_NAME,
+                                    val -> assertThat(val).isNotNull()),
                                 satisfies(
                                     SemanticAttributes.NET_SOCK_PEER_PORT,
                                     val -> assertThat(val).isNotNull()))
@@ -793,6 +805,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                satisfies(
+                                    SemanticAttributes.NET_SOCK_PEER_NAME,
+                                    val -> assertThat(val).isNotNull()),
                                 satisfies(
                                     SemanticAttributes.NET_SOCK_PEER_PORT,
                                     val -> assertThat(val).isNotNull()))
@@ -1044,6 +1059,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                                 satisfies(
+                                    SemanticAttributes.NET_SOCK_PEER_NAME,
+                                    val -> assertThat(val).isNotNull()),
+                                satisfies(
                                     SemanticAttributes.NET_SOCK_PEER_PORT,
                                     val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
@@ -1163,6 +1181,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                                 satisfies(
+                                    SemanticAttributes.NET_SOCK_PEER_NAME,
+                                    val -> assertThat(val).isNotNull()),
+                                satisfies(
                                     SemanticAttributes.NET_SOCK_PEER_PORT,
                                     val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
@@ -1281,6 +1302,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                                 satisfies(
+                                    SemanticAttributes.NET_SOCK_PEER_NAME,
+                                    val -> assertThat(val).isNotNull()),
+                                satisfies(
                                     SemanticAttributes.NET_SOCK_PEER_PORT,
                                     val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
@@ -1381,6 +1405,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                satisfies(
+                                    SemanticAttributes.NET_SOCK_PEER_NAME,
+                                    val -> assertThat(val).isNotNull()),
                                 satisfies(
                                     SemanticAttributes.NET_SOCK_PEER_PORT,
                                     val -> assertThat(val).isNotNull()))
@@ -1638,6 +1665,10 @@ public abstract class AbstractGrpcTest {
     result.addAll(Arrays.asList(assertions));
     if (Boolean.getBoolean("testLatestDeps")) {
       result.add(equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"));
+      result.add(
+          satisfies(SemanticAttributes.NET_SOCK_PEER_NAME, val -> assertThat(val).isNotNull()));
+      result.add(
+          satisfies(SemanticAttributes.NET_SOCK_PEER_PORT, val -> assertThat(val).isNotNull()));
     }
     return result;
   }

@@ -121,7 +121,10 @@ class ReactorNettyBaseUrlOnlyTest {
                             equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, server.httpPort()),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            satisfies(
+                                SemanticAttributes.NET_SOCK_PEER_PORT,
+                                AbstractLongAssert::isNotNegative)),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
   }

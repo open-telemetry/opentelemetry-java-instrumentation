@@ -285,6 +285,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
         "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
         "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
+        "$SemanticAttributes.NET_SOCK_HOST_PORT" { it instanceof Long || it == null }
         "$SemanticAttributes.HTTP_SCHEME" fullUrl.getScheme()
         "$SemanticAttributes.HTTP_TARGET" fullUrl.getPath() + (fullUrl.getQuery() != null ? "?" + fullUrl.getQuery() : "")
         "$SemanticAttributes.HTTP_METHOD" method

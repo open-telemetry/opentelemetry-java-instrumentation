@@ -86,8 +86,8 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   private final InternalUrlAttributesExtractor<REQUEST> internalUrlExtractor;
   private final InternalNetServerAttributesExtractor<REQUEST, RESPONSE> internalNetExtractor;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
-  private final InternalServerAttributesExtractor<REQUEST, RESPONSE> internalServerExtractor;
-  private final InternalClientAttributesExtractor<REQUEST, RESPONSE> internalClientExtractor;
+  private final InternalServerAttributesExtractor<REQUEST> internalServerExtractor;
+  private final InternalClientAttributesExtractor<REQUEST> internalClientExtractor;
   private final Function<Context, String> httpRouteGetter;
 
   HttpServerAttributesExtractor(HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder) {
@@ -128,8 +128,6 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     super.onEnd(attributes, context, request, response, error);
 
     internalNetworkExtractor.onEnd(attributes, request, response);
-    internalServerExtractor.onEnd(attributes, request, response);
-    internalClientExtractor.onEnd(attributes, request, response);
 
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteGetter.apply(context));
   }

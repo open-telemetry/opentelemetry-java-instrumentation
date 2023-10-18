@@ -16,6 +16,7 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -53,10 +54,10 @@ class HttpServerExperimentalMetricsStableSemconvTest {
             .put(HttpAttributes.ERROR_TYPE, "500")
             .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
             .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
-            .put(SemanticAttributes.CLIENT_SOCKET_ADDRESS, "1.2.3.4")
-            .put(SemanticAttributes.CLIENT_SOCKET_PORT, 8080)
-            .put(SemanticAttributes.SERVER_SOCKET_ADDRESS, "4.3.2.1")
-            .put(SemanticAttributes.SERVER_SOCKET_PORT, 9090)
+            .put(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4")
+            .put(NetworkAttributes.NETWORK_PEER_PORT, 8080)
+            .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "4.3.2.1")
+            .put(NetworkAttributes.NETWORK_LOCAL_PORT, 9090)
             .build();
 
     SpanContext spanContext1 =

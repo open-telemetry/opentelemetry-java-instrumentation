@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPort;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.semconv.SemanticAttributes;
 
 /**
@@ -22,17 +22,17 @@ public final class InternalNetServerAttributesExtractor<REQUEST, RESPONSE> {
   private final io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
           REQUEST, RESPONSE>
       getter;
-  private final FallbackAddressPortExtractor<REQUEST> fallbackAddressPortExtractor;
+  private final AddressAndPortExtractor<REQUEST> fallbackAddressAndPortExtractor;
   private final boolean emitOldHttpAttributes;
 
   public InternalNetServerAttributesExtractor(
       io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
               REQUEST, RESPONSE>
           getter,
-      FallbackAddressPortExtractor<REQUEST> fallbackAddressPortExtractor,
+      AddressAndPortExtractor<REQUEST> fallbackAddressAndPortExtractor,
       boolean emitOldHttpAttributes) {
     this.getter = getter;
-    this.fallbackAddressPortExtractor = fallbackAddressPortExtractor;
+    this.fallbackAddressAndPortExtractor = fallbackAddressAndPortExtractor;
     this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
 
@@ -69,7 +69,7 @@ public final class InternalNetServerAttributesExtractor<REQUEST, RESPONSE> {
       return serverAddress;
     }
     AddressAndPort addressAndPort = new AddressAndPort();
-    fallbackAddressPortExtractor.extract(addressAndPort, request);
+    fallbackAddressAndPortExtractor.extract(addressAndPort, request);
     return addressAndPort.getAddress();
   }
 }

@@ -16,6 +16,7 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -51,9 +52,8 @@ class HttpClientExperimentalMetricsStableSemconvTest {
             .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
             .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
             .put(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
-            .put(SemanticAttributes.SERVER_SOCKET_ADDRESS, "1.2.3.4")
-            .put(SemanticAttributes.SERVER_SOCKET_DOMAIN, "somehost20")
-            .put(SemanticAttributes.SERVER_SOCKET_PORT, 8080)
+            .put(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4")
+            .put(NetworkAttributes.NETWORK_PEER_PORT, 8080)
             .build();
 
     Context parent =

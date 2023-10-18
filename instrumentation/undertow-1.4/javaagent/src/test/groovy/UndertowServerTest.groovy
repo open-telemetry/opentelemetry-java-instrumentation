@@ -7,7 +7,7 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
-
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -160,6 +160,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
               "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
               "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
               "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
+              "$SemanticAttributes.NET_SOCK_HOST_PORT" Long
             }
           }
           if (SemconvStability.emitStableHttpSemconv()) {
@@ -176,8 +177,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
               "$SemanticAttributes.NETWORK_TYPE" "ipv4"
               "$SemanticAttributes.SERVER_ADDRESS" uri.host
               "$SemanticAttributes.SERVER_PORT" uri.port
-              "$SemanticAttributes.CLIENT_SOCKET_ADDRESS" "127.0.0.1"
-              "$SemanticAttributes.CLIENT_SOCKET_PORT" Long
+              "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
+              "$NetworkAttributes.NETWORK_PEER_PORT" Long
             }
           }
         }
@@ -232,6 +233,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
               "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
               "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
               "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
+              "$SemanticAttributes.NET_SOCK_HOST_PORT" Long
             }
           }
           if (SemconvStability.emitStableHttpSemconv()) {
@@ -248,8 +250,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
               "$SemanticAttributes.NETWORK_TYPE" "ipv4"
               "$SemanticAttributes.SERVER_ADDRESS" uri.host
               "$SemanticAttributes.SERVER_PORT" uri.port
-              "$SemanticAttributes.CLIENT_SOCKET_ADDRESS" "127.0.0.1"
-              "$SemanticAttributes.CLIENT_SOCKET_PORT" Long
+              "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
+              "$NetworkAttributes.NETWORK_PEER_PORT" Long
             }
           }
         }

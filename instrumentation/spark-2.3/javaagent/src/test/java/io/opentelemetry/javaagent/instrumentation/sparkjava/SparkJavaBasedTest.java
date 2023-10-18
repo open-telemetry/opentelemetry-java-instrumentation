@@ -76,6 +76,9 @@ public class SparkJavaBasedTest {
                                 satisfies(
                                     SemanticAttributes.NET_SOCK_PEER_PORT,
                                     val -> val.isInstanceOf(Long.class)),
-                                equalTo(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1"))));
+                                equalTo(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                                satisfies(
+                                    SemanticAttributes.NET_SOCK_HOST_PORT,
+                                    val -> val.isInstanceOf(Long.class)))));
   }
 }
