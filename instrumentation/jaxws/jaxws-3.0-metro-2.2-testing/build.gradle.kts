@@ -15,7 +15,7 @@ dependencies {
 }
 
 otelJava {
-  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
 tasks.withType<Test>().configureEach {
