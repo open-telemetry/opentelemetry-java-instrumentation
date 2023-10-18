@@ -18,13 +18,16 @@ public final class MetroHelper {
   private static final String SCOPE_KEY = MetroHelper.class.getName() + ".Scope";
   private static final String THROWABLE_KEY = MetroHelper.class.getName() + ".Throwable";
 
+  private static final MetroServerSpanNameUpdater SPAN_NAME_UPDATER =
+      new MetroServerSpanNameUpdater();
+
   private MetroHelper() {}
 
   public static void start(WSEndpoint<?> endpoint, Packet packet) {
     Context parentContext = Context.current();
 
     MetroRequest request = new MetroRequest(endpoint, packet);
-    MetroServerSpanNaming.updateServerSpanName(parentContext, request);
+    SPAN_NAME_UPDATER.updateServerSpanName(parentContext, request);
 
     if (!instrumenter().shouldStart(parentContext, request)) {
       return;
