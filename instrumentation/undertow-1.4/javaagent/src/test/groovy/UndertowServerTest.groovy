@@ -174,7 +174,6 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
               "$SemanticAttributes.HTTP_RESPONSE_BODY_SIZE" Long
               "$SemanticAttributes.NETWORK_PROTOCOL_NAME" "http"
               "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-              "$SemanticAttributes.NETWORK_TYPE" "ipv4"
               "$SemanticAttributes.SERVER_ADDRESS" uri.host
               "$SemanticAttributes.SERVER_PORT" uri.port
               "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
@@ -247,7 +246,6 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
               "$SemanticAttributes.HTTP_RESPONSE_BODY_SIZE" Long
               "$SemanticAttributes.NETWORK_PROTOCOL_NAME" "http"
               "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-              "$SemanticAttributes.NETWORK_TYPE" "ipv4"
               "$SemanticAttributes.SERVER_ADDRESS" uri.host
               "$SemanticAttributes.SERVER_PORT" uri.port
               "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
