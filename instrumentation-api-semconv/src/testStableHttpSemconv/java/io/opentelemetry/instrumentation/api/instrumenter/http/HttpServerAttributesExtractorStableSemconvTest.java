@@ -491,7 +491,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
   }
 
   @Test
-  void shouldExtractServerAddressAndPortFromXForwardedHostHeader() {
+  void shouldExtractServerAddressAndPortFromForwardedHostHeader() {
     Map<String, String> request = new HashMap<>();
     request.put("header.x-forwarded-host", "opentelemetry.io:987");
     request.put("header.host", "github.com:123");
