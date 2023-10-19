@@ -30,4 +30,9 @@ public final class AddressAndPort implements AddressAndPortExtractor.AddressPort
   public String getAddress() {
     return address;
   }
+
+  @Nullable
+  public Integer getPort() {
+    return port;
+  }
 }

@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.doReturn;
 
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPort;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -27,11 +27,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class ForwardedAddressAndPortExtractorTest {
+class ForwardedForAddressAndPortExtractorTest {
 
   @Mock HttpServerAttributesGetter<String, String> getter;
 
-  @InjectMocks ForwardedAddressAndPortExtractor<String> underTest;
+  @InjectMocks ForwardedForAddressAndPortExtractor<String> underTest;
 
   @ParameterizedTest
   @ArgumentsSource(ForwardedArgs.class)
@@ -42,8 +42,8 @@ class ForwardedAddressAndPortExtractorTest {
     AddressAndPort sink = new AddressAndPort();
     underTest.extract(sink, "request");
 
-    assertThat(sink.address).isEqualTo(expectedAddress);
-    assertThat(sink.port).isEqualTo(expectedPort);
+    assertThat(sink.getAddress()).isEqualTo(expectedAddress);
+    assertThat(sink.getPort()).isEqualTo(expectedPort);
   }
 
   static final class ForwardedArgs implements ArgumentsProvider {
@@ -100,8 +100,8 @@ class ForwardedAddressAndPortExtractorTest {
     AddressAndPort sink = new AddressAndPort();
     underTest.extract(sink, "request");
 
-    assertThat(sink.address).isEqualTo(expectedAddress);
-    assertThat(sink.port).isEqualTo(expectedPort);
+    assertThat(sink.getAddress()).isEqualTo(expectedAddress);
+    assertThat(sink.getPort()).isEqualTo(expectedPort);
   }
 
   static final class ForwardedForArgs implements ArgumentsProvider {
@@ -145,22 +145,6 @@ class ForwardedAddressAndPortExtractorTest {
 
           // multiple headers
           arguments(asList("1.2.3.4", "::1"), "1.2.3.4", null));
-    }
-  }
-
-  static final class AddressAndPort implements AddressAndPortExtractor.AddressPortSink {
-
-    @Nullable String address = null;
-    @Nullable Integer port = null;
-
-    @Override
-    public void setAddress(String address) {
-      this.address = address;
-    }
-
-    @Override
-    public void setPort(Integer port) {
-      this.port = port;
     }
   }
 }
