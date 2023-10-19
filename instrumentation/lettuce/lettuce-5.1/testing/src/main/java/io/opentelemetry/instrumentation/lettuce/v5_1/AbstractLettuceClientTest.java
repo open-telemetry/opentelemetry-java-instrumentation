@@ -61,7 +61,7 @@ abstract class AbstractLettuceClientTest {
     long serverPort = server.getMappedPort(6379);
 
     RedisClient client = createClient("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
-    client.setOptions(LettuceTestClientUtil.CLIENT_OPTIONS);
+    client.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
     cleanup.deferCleanup(client::shutdown);
 
     StatefulRedisConnection<String, String> statefulConnection = client.connect();
