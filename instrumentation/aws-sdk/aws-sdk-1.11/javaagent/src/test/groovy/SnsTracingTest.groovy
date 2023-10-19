@@ -176,7 +176,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           }
         }
         span(1) {
-          name "SQS.ReceiveMessage"
+          name "snsToSqsTestQueue receive"
           kind CONSUMER
           childOf span(0)
           attributes {
@@ -194,6 +194,9 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "snsToSqsTestQueue"
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }

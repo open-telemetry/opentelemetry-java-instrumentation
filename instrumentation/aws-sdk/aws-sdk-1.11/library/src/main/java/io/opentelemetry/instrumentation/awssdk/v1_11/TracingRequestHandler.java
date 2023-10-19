@@ -31,12 +31,15 @@ final class TracingRequestHandler extends RequestHandler2 {
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> consumerInstrumenter;
+  private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
 
   TracingRequestHandler(
       Instrumenter<Request<?>, Response<?>> requestInstrumenter,
-      Instrumenter<Request<?>, Response<?>> consumerInstrumenter) {
+      Instrumenter<Request<?>, Response<?>> consumerInstrumenter,
+      Instrumenter<Request<?>, Response<?>> producerInstrumenter) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerInstrumenter = consumerInstrumenter;
+    this.producerInstrumenter = producerInstrumenter;
   }
 
   @Override
@@ -50,8 +53,10 @@ final class TracingRequestHandler extends RequestHandler2 {
       return;
     }
 
+    Instrumenter<Request<?>, Response<?>> instrumenter = getInstrumenter(request);
+
     Context parentContext = Context.current();
-    if (!requestInstrumenter.shouldStart(parentContext, request)) {
+    if (!instrumenter.shouldStart(parentContext, request)) {
       return;
     }
 
@@ -62,14 +67,14 @@ final class TracingRequestHandler extends RequestHandler2 {
     if (Context.root() == parentContext
         && "com.amazonaws.services.sqs.model.ReceiveMessageRequest"
             .equals(request.getOriginalRequest().getClass().getName())) {
-      Context context = InstrumenterUtil.suppressSpan(requestInstrumenter, parentContext, request);
+      Context context = InstrumenterUtil.suppressSpan(instrumenter, parentContext, request);
       context = context.with(REQUEST_START_KEY, Instant.now());
       context = context.with(PARENT_CONTEXT_KEY, parentContext);
       request.addHandlerContext(CONTEXT, context);
       return;
     }
 
-    Context context = requestInstrumenter.start(parentContext, request);
+    Context context = instrumenter.start(parentContext, request);
 
     AwsXrayPropagator.getInstance().inject(context, request, HeaderSetter.INSTANCE);
 
@@ -104,6 +109,8 @@ final class TracingRequestHandler extends RequestHandler2 {
     }
     request.addHandlerContext(CONTEXT, null);
 
+    Instrumenter<Request<?>, Response<?>> instrumenter = getInstrumenter(request);
+
     // see beforeRequest, requestStart is only set when we skip creating request span for sqs
     // AmazonSQSClient.receiveMessage calls
     Instant requestStart = context.get(REQUEST_START_KEY);
@@ -111,7 +118,7 @@ final class TracingRequestHandler extends RequestHandler2 {
       // create request span if there was an error
       if (error != null) {
         InstrumenterUtil.startAndEnd(
-            requestInstrumenter,
+            instrumenter,
             context.get(PARENT_CONTEXT_KEY),
             request,
             response,
@@ -122,6 +129,13 @@ final class TracingRequestHandler extends RequestHandler2 {
       return;
     }
 
-    requestInstrumenter.end(context, request, response, error);
+    instrumenter.end(context, request, response, error);
+  }
+
+  private Instrumenter<Request<?>, Response<?>> getInstrumenter(Request<?> request) {
+    boolean isSqsProducer =
+        "com.amazonaws.services.sqs.model.SendMessageRequest"
+            .equals(request.getOriginalRequest().getClass().getName());
+    return isSqsProducer ? producerInstrumenter : requestInstrumenter;
   }
 }

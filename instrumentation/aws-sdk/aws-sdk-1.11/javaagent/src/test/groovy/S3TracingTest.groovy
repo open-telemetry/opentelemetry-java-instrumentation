@@ -192,7 +192,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
         span(1) {
-          name "SQS.ReceiveMessage"
+          name "s3ToSqsTestQueue receive"
           kind CONSUMER
           childOf span(0)
           attributes {
@@ -210,6 +210,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "s3ToSqsTestQueue"
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
@@ -556,7 +559,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
       }
       trace(9, 1) {
         span(0) {
-          name "SQS.ReceiveMessage"
+          name "s3ToSnsToSqsTestQueue receive"
           kind CONSUMER
           hasNoParent()
           attributes {
@@ -574,6 +577,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "s3ToSnsToSqsTestQueue"
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }

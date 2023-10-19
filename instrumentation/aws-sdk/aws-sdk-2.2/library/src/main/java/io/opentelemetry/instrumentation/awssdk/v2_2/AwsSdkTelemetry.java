@@ -12,7 +12,6 @@ import javax.annotation.Nullable;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
-import software.amazon.awssdk.http.SdkHttpResponse;
 
 /**
  * Entrypoint to OpenTelemetry instrumentation of the AWS SDK. Register the {@link
@@ -41,8 +40,9 @@ public class AwsSdkTelemetry {
     return new AwsSdkTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter;
-  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> requestInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> consumerInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
   @Nullable private final TextMapPropagator messagingPropagator;
   private final boolean useXrayPropagator;
@@ -61,6 +61,9 @@ public class AwsSdkTelemetry {
     this.consumerInstrumenter =
         AwsSdkInstrumenterFactory.consumerInstrumenter(
             openTelemetry, captureExperimentalSpanAttributes);
+    this.producerInstrumenter =
+        AwsSdkInstrumenterFactory.producerInstrumenter(
+            openTelemetry, captureExperimentalSpanAttributes);
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingPropagator =
         useMessagingPropagator ? openTelemetry.getPropagators().getTextMapPropagator() : null;
@@ -75,6 +78,7 @@ public class AwsSdkTelemetry {
     return new TracingExecutionInterceptor(
         requestInstrumenter,
         consumerInstrumenter,
+        producerInstrumenter,
         captureExperimentalSpanAttributes,
         messagingPropagator,
         useXrayPropagator,

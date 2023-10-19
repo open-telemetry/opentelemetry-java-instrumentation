@@ -12,10 +12,9 @@ import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.http.SdkHttpRequest;
-import software.amazon.awssdk.http.SdkHttpResponse;
 
 class AwsSdkHttpAttributesGetter
-    implements HttpClientAttributesGetter<ExecutionAttributes, SdkHttpResponse> {
+    implements HttpClientAttributesGetter<ExecutionAttributes, Response> {
 
   @Override
   public String getUrlFull(ExecutionAttributes request) {
@@ -41,14 +40,14 @@ class AwsSdkHttpAttributesGetter
 
   @Override
   public Integer getHttpResponseStatusCode(
-      ExecutionAttributes request, SdkHttpResponse response, @Nullable Throwable error) {
-    return response.statusCode();
+      ExecutionAttributes request, Response response, @Nullable Throwable error) {
+    return response.getSdkHttpResponse().statusCode();
   }
 
   @Override
   public List<String> getHttpResponseHeader(
-      ExecutionAttributes request, SdkHttpResponse response, String name) {
-    List<String> value = response.headers().get(name);
+      ExecutionAttributes request, Response response, String name) {
+    List<String> value = response.getSdkHttpResponse().headers().get(name);
     return value == null ? emptyList() : value;
   }
 

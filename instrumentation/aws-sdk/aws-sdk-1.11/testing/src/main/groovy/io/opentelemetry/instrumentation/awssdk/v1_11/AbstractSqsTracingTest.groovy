@@ -87,7 +87,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
       }
       trace(1, 2) {
         span(0) {
-          name "SQS.SendMessage"
+          name "testSdkSqs publish"
           kind PRODUCER
           hasNoParent()
           attributes {
@@ -102,13 +102,15 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.url" "http://localhost:$sqsPort"
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
         span(1) {
-          name "SQS.ReceiveMessage"
+          name "testSdkSqs receive"
           kind CONSUMER
           childOf span(0)
           attributes {
@@ -124,6 +126,9 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
@@ -172,7 +177,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
       }
       trace(1, 2) {
         span(0) {
-          name "SQS.SendMessage"
+          name "testSdkSqs publish"
           kind PRODUCER
           hasNoParent()
           attributes {
@@ -187,13 +192,15 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.url" "http://localhost:$sqsPort"
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
         span(1) {
-          name "SQS.ReceiveMessage"
+          name "testSdkSqs receive"
           kind CONSUMER
           childOf span(0)
           attributes {
@@ -209,6 +216,9 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long

@@ -10,10 +10,15 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.Message;
+import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 final class SqsImpl {
   static {
@@ -66,5 +71,20 @@ final class SqsImpl {
       return true;
     }
     return false;
+  }
+
+  static Map<String, String> getMessageAttributes(Request<?> request) {
+    if (request instanceof SendMessageRequest) {
+      Map<String, MessageAttributeValue> map =
+          ((SendMessageRequest) request).getMessageAttributes();
+      if (!map.isEmpty()) {
+        Map<String, String> result = new HashMap<>();
+        for (Map.Entry<String, MessageAttributeValue> entry : map.entrySet()) {
+          result.put(entry.getKey(), entry.getValue().getStringValue());
+        }
+        return result;
+      }
+    }
+    return Collections.emptyMap();
   }
 }
