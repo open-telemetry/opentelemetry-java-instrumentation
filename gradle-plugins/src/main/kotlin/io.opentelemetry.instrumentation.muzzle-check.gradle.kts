@@ -230,8 +230,8 @@ fun newRepositorySystem(): RepositorySystem {
 }
 
 fun newRepositorySystemSession(system: RepositorySystem): RepositorySystemSession {
-  val muzzleRepo = file("${buildDir}/muzzleRepo")
-  val localRepo = LocalRepository(muzzleRepo)
+  val muzzleRepo = layout.buildDirectory.dir("muzzleRepo")
+  val localRepo = LocalRepository(muzzleRepo.get().asFile)
   return MavenRepositorySystemUtils.newSession().apply {
     localRepositoryManager = system.newLocalRepositoryManager(this, localRepo)
   }
