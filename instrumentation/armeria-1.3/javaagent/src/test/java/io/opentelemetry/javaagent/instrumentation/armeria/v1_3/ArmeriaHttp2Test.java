@@ -35,18 +35,18 @@ class ArmeriaHttp2Test {
       new ServerExtension() {
         @Override
         protected void configure(ServerBuilder sb) {
-          sb.service("/", (ctx, req) -> webClient(server1).execute(req));
+          sb.service("/", (ctx, req) -> createWebClient(server1).execute(req));
         }
       };
 
-  private static WebClient webClient(ServerExtension server) {
+  private static WebClient createWebClient(ServerExtension server) {
     return WebClient.builder(server.httpUri()).build();
   }
 
   @Test
   void testHello() throws Exception {
     // verify that spans are created and context is propagated
-    AggregatedHttpResponse result = webClient(server2).get("/").aggregate().get();
+    AggregatedHttpResponse result = createWebClient(server2).get("/").aggregate().get();
     assertThat(result.contentAscii()).isEqualTo("hello");
 
     testing.waitAndAssertTraces(
