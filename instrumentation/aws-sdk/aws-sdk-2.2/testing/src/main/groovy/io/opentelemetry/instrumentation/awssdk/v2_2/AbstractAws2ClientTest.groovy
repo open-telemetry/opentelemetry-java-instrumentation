@@ -44,7 +44,7 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 @Unroll
 abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
-  private static final String QUEUE_URL = "http://xxx/somequeue"
+  static final String QUEUE_URL = "http://xxx/somequeue"
 
   void assumeSupportedConfig(service, operation) {
     Assumptions.assumeFalse(
