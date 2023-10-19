@@ -103,14 +103,14 @@ enum ArmeriaHttpServerAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getClientInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       RequestContext ctx, @Nullable RequestLog requestLog) {
     return RequestContextAccess.remoteAddress(ctx);
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkLocalInetSocketAddress(
       RequestContext ctx, @Nullable RequestLog log) {
     return RequestContextAccess.localAddress(ctx);
   }

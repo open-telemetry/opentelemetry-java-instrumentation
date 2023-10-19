@@ -89,24 +89,24 @@ public class LibertyDispatcherHttpAttributesGetter
 
   @Override
   @Nullable
-  public String getClientSocketAddress(LibertyRequest request, @Nullable LibertyResponse response) {
+  public String getNetworkPeerAddress(LibertyRequest request, @Nullable LibertyResponse response) {
     return request.getClientSocketAddress();
   }
 
   @Override
-  public Integer getClientSocketPort(LibertyRequest request, @Nullable LibertyResponse response) {
+  public Integer getNetworkPeerPort(LibertyRequest request, @Nullable LibertyResponse response) {
     return request.getClientSocketPort();
   }
 
   @Nullable
   @Override
-  public String getServerSocketAddress(LibertyRequest request, @Nullable LibertyResponse response) {
+  public String getNetworkLocalAddress(LibertyRequest request, @Nullable LibertyResponse response) {
     return request.getServerSocketAddress();
   }
 
   @Nullable
   @Override
-  public Integer getServerSocketPort(LibertyRequest request, @Nullable LibertyResponse response) {
+  public Integer getNetworkLocalPort(LibertyRequest request, @Nullable LibertyResponse response) {
     return request.getServerSocketPort();
   }
 }

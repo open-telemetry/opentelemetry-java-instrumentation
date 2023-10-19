@@ -97,14 +97,14 @@ public class UndertowHttpAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getClientInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
     return exchange.getConnection().getPeerAddress(InetSocketAddress.class);
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkLocalInetSocketAddress(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
     return exchange.getConnection().getLocalAddress(InetSocketAddress.class);
   }

@@ -86,7 +86,7 @@ enum NettyConnectHttpAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       NettyConnectionRequest request, @Nullable Channel channel) {
     if (channel == null) {
       return null;

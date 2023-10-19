@@ -116,26 +116,26 @@ enum SpringWebMvcHttpAttributesGetter
 
   @Override
   @Nullable
-  public String getClientSocketAddress(
+  public String getNetworkPeerAddress(
       HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getRemoteAddr();
   }
 
   @Override
-  public Integer getClientSocketPort(
+  public Integer getNetworkPeerPort(
       HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getRemotePort();
   }
 
   @Nullable
   @Override
-  public String getServerSocketAddress(
+  public String getNetworkLocalAddress(
       HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getLocalAddr();
   }
 
   @Override
-  public Integer getServerSocketPort(
+  public Integer getNetworkLocalPort(
       HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getLocalPort();
   }

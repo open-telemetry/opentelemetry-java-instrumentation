@@ -76,6 +76,7 @@ class HttpClientPeerServiceAttributesExtractorTest {
     assertTrue(endAttributes.build().isEmpty());
   }
 
+  @SuppressWarnings("deprecation") // old semconv
   @Test
   void shouldSetPeerNameIfItMatches() {
     // given
@@ -106,6 +107,7 @@ class HttpClientPeerServiceAttributesExtractorTest {
     verify(httpAttributesExtractor, never()).getServerSocketDomain(any(), any());
   }
 
+  @SuppressWarnings("deprecation") // old semconv
   @Test
   void shouldSetSockPeerNameIfItMatchesAndNoPeerNameProvided() {
     // given

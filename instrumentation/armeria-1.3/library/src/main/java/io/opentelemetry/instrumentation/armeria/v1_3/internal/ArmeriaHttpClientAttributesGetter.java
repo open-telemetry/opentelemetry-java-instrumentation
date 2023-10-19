@@ -110,7 +110,7 @@ public enum ArmeriaHttpClientAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       RequestContext ctx, @Nullable RequestLog requestLog) {
     return RequestContextAccess.remoteAddress(ctx);
   }

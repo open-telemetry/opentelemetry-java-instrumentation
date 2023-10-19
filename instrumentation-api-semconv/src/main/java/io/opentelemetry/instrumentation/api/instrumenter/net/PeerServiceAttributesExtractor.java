@@ -45,6 +45,7 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {}
 
+  @SuppressWarnings("deprecation") // old semconv
   @Override
   public void onEnd(
       AttributesBuilder attributes,

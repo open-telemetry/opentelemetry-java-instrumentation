@@ -39,12 +39,14 @@ class InetSocketAddressNetServerAttributesGetterTest {
     }
 
     @Override
-    public InetSocketAddress getClientInetSocketAddress(Addresses request, Addresses response) {
+    public InetSocketAddress getNetworkPeerInetSocketAddress(
+        Addresses request, Addresses response) {
       return request.peer;
     }
 
     @Override
-    public InetSocketAddress getServerInetSocketAddress(Addresses request, Addresses response) {
+    public InetSocketAddress getNetworkLocalInetSocketAddress(
+        Addresses request, Addresses response) {
       return request.host;
     }
   }

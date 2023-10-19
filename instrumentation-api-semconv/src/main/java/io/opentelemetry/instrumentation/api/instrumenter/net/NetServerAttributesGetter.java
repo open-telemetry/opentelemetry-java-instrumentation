@@ -65,39 +65,39 @@ public interface NetServerAttributesGetter<REQUEST, RESPONSE>
 
   @Nullable
   @Override
-  default InetSocketAddress getNetworkLocalInetSocketAddress(
+  default InetSocketAddress getServerInetSocketAddress(
       REQUEST request, @Nullable RESPONSE response) {
-    return getServerInetSocketAddress(request, response);
+    return getNetworkLocalInetSocketAddress(request, response);
   }
 
   @Nullable
   @Override
-  default String getNetworkLocalAddress(REQUEST request, @Nullable RESPONSE response) {
-    return getServerSocketAddress(request, response);
+  default String getServerSocketAddress(REQUEST request, @Nullable RESPONSE response) {
+    return getNetworkLocalAddress(request, response);
   }
 
   @Nullable
   @Override
-  default Integer getNetworkLocalPort(REQUEST request, @Nullable RESPONSE response) {
-    return getServerSocketPort(request, response);
+  default Integer getServerSocketPort(REQUEST request, @Nullable RESPONSE response) {
+    return getNetworkLocalPort(request, response);
   }
 
   @Nullable
   @Override
-  default InetSocketAddress getNetworkPeerInetSocketAddress(
+  default InetSocketAddress getClientInetSocketAddress(
       REQUEST request, @Nullable RESPONSE response) {
-    return getClientInetSocketAddress(request, response);
+    return getNetworkPeerInetSocketAddress(request, response);
   }
 
   @Nullable
   @Override
-  default String getNetworkPeerAddress(REQUEST request, @Nullable RESPONSE response) {
-    return getClientSocketAddress(request, response);
+  default String getClientSocketAddress(REQUEST request, @Nullable RESPONSE response) {
+    return getNetworkPeerAddress(request, response);
   }
 
   @Nullable
   @Override
-  default Integer getNetworkPeerPort(REQUEST request, @Nullable RESPONSE response) {
-    return getClientSocketPort(request, response);
+  default Integer getClientSocketPort(REQUEST request, @Nullable RESPONSE response) {
+    return getNetworkPeerPort(request, response);
   }
 }

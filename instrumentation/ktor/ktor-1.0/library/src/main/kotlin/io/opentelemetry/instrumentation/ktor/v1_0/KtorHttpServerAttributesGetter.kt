@@ -49,7 +49,7 @@ internal enum class KtorHttpServerAttributesGetter :
   override fun getNetworkProtocolVersion(request: ApplicationRequest, response: ApplicationResponse?): String? =
     if (request.httpVersion.startsWith("HTTP/")) request.httpVersion.substring("HTTP/".length) else null
 
-  override fun getClientSocketAddress(request: ApplicationRequest, response: ApplicationResponse?): String? {
+  override fun getNetworkPeerAddress(request: ApplicationRequest, response: ApplicationResponse?): String? {
     val remote = request.local.remoteHost
     if ("unknown" != remote && isIpAddress(remote)) {
       return remote

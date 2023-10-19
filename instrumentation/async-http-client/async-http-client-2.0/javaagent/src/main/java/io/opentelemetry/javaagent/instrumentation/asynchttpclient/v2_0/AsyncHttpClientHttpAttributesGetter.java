@@ -93,7 +93,7 @@ final class AsyncHttpClientHttpAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       RequestContext request, @Nullable Response response) {
     if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) response.getRemoteAddress();

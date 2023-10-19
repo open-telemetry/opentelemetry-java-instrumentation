@@ -110,7 +110,7 @@ final class NettyHttpClientAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     SocketAddress address = requestAndChannel.remoteAddress();
     if (address instanceof InetSocketAddress) {

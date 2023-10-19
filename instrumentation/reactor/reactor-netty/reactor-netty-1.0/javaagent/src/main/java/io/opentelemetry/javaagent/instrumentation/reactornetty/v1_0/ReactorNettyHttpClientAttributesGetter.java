@@ -83,7 +83,7 @@ final class ReactorNettyHttpClientAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       HttpClientRequest request, @Nullable HttpClientResponse response) {
 
     // we're making use of the fact that HttpClientOperations is both a Connection and an

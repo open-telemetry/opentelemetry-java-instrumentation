@@ -55,7 +55,7 @@ final class OpenSearchRestNetResponseAttributesGetter
 
   @Override
   @Nullable
-  public String getServerSocketAddress(OpenSearchRestRequest request, @Nullable Response response) {
+  public String getNetworkPeerAddress(OpenSearchRestRequest request, @Nullable Response response) {
     if (response != null && response.getHost().getAddress() != null) {
       return response.getHost().getAddress().getHostAddress();
     }

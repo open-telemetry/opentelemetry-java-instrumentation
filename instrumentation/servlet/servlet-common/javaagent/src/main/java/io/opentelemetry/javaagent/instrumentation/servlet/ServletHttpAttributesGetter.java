@@ -120,7 +120,7 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public String getClientSocketAddress(
+  public String getNetworkPeerAddress(
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> response) {
     return accessor.getRequestRemoteAddr(requestContext.request());
@@ -128,7 +128,7 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public Integer getClientSocketPort(
+  public Integer getNetworkPeerPort(
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> response) {
     return accessor.getRequestRemotePort(requestContext.request());
@@ -136,7 +136,7 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Nullable
   @Override
-  public String getServerSocketAddress(
+  public String getNetworkLocalAddress(
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> response) {
     return accessor.getRequestLocalAddr(requestContext.request());
@@ -144,7 +144,7 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Nullable
   @Override
-  public Integer getServerSocketPort(
+  public Integer getNetworkLocalPort(
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> response) {
     return accessor.getRequestLocalPort(requestContext.request());
