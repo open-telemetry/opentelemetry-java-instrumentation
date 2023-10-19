@@ -135,9 +135,9 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   InternalNetworkAttributesExtractor<REQUEST, RESPONSE> buildNetworkExtractor() {
     return new InternalNetworkAttributesExtractor<>(
         netAttributesGetter,
-        HttpNetworkTransportFilter.INSTANCE,
         AddressAndPortExtractor.noop(),
         serverAddressAndPortExtractor,
+        /* captureNetworkTransportAndType= */ false,
         /* captureLocalSocketAttributes= */ false,
         /* captureOldPeerDomainAttribute= */ true,
         SemconvStability.emitStableHttpSemconv(),

@@ -22,9 +22,9 @@ import javax.annotation.Nullable;
 public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
 
   private final NetworkAttributesGetter<REQUEST, RESPONSE> getter;
-  private final NetworkTransportFilter networkTransportFilter;
   private final AddressAndPortExtractor<REQUEST> logicalLocalAddressAndPortExtractor;
   private final AddressAndPortExtractor<REQUEST> logicalPeerAddressAndPortExtractor;
+  private final boolean captureNetworkTransportAndType;
   private final boolean captureLocalSocketAttributes;
   private final boolean captureOldPeerDomainAttribute;
   private final boolean emitStableUrlAttributes;
@@ -32,17 +32,17 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
 
   public InternalNetworkAttributesExtractor(
       NetworkAttributesGetter<REQUEST, RESPONSE> getter,
-      NetworkTransportFilter networkTransportFilter,
       AddressAndPortExtractor<REQUEST> logicalLocalAddressAndPortExtractor,
       AddressAndPortExtractor<REQUEST> logicalPeerAddressAndPortExtractor,
+      boolean captureNetworkTransportAndType,
       boolean captureLocalSocketAttributes,
       boolean captureOldPeerDomainAttribute,
       boolean emitStableUrlAttributes,
       boolean emitOldHttpAttributes) {
     this.getter = getter;
-    this.networkTransportFilter = networkTransportFilter;
     this.logicalLocalAddressAndPortExtractor = logicalLocalAddressAndPortExtractor;
     this.logicalPeerAddressAndPortExtractor = logicalPeerAddressAndPortExtractor;
+    this.captureNetworkTransportAndType = captureNetworkTransportAndType;
     this.captureLocalSocketAttributes = captureLocalSocketAttributes;
     this.captureOldPeerDomainAttribute = captureOldPeerDomainAttribute;
     this.emitStableUrlAttributes = emitStableUrlAttributes;
@@ -56,14 +56,13 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
 
     if (emitStableUrlAttributes) {
       String transport = lowercase(getter.getNetworkTransport(request, response));
-      if (networkTransportFilter.shouldAddNetworkTransport(
-          protocolName, protocolVersion, transport)) {
+      if (captureNetworkTransportAndType) {
         internalSet(attributes, SemanticAttributes.NETWORK_TRANSPORT, transport);
+        internalSet(
+            attributes,
+            SemanticAttributes.NETWORK_TYPE,
+            lowercase(getter.getNetworkType(request, response)));
       }
-      internalSet(
-          attributes,
-          SemanticAttributes.NETWORK_TYPE,
-          lowercase(getter.getNetworkType(request, response)));
       internalSet(attributes, SemanticAttributes.NETWORK_PROTOCOL_NAME, protocolName);
       internalSet(attributes, SemanticAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
     }

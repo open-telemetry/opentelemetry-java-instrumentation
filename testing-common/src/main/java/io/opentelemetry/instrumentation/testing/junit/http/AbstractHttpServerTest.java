@@ -742,13 +742,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
               && attrs.get(SemanticAttributes.NET_TRANSPORT) != null) {
             assertThat(attrs).containsEntry(SemanticAttributes.NET_TRANSPORT, IP_TCP);
           }
-          if (SemconvStability.emitStableHttpSemconv()
-              && attrs.get(SemanticAttributes.NETWORK_TRANSPORT) != null) {
-            assertThat(attrs).containsEntry(SemanticAttributes.NETWORK_TRANSPORT, "tcp");
-          }
-          if (SemconvStability.emitStableHttpSemconv()
-              && attrs.get(SemanticAttributes.NETWORK_TYPE) != null) {
-            assertThat(attrs).containsEntry(SemanticAttributes.NETWORK_TYPE, "ipv4");
+          if (SemconvStability.emitStableHttpSemconv()) {
+            // we're opting out of these attributes in the new semconv
+            assertThat(attrs)
+                .doesNotContainKey(SemanticAttributes.NETWORK_TRANSPORT)
+                .doesNotContainKey(SemanticAttributes.NETWORK_TYPE);
           }
 
           assertThat(attrs)

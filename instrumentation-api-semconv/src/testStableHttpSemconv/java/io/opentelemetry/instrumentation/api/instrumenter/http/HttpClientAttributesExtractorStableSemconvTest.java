@@ -11,7 +11,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -28,13 +27,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.ToIntFunction;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -194,55 +189,10 @@ class HttpClientAttributesExtractorStableSemconvTest {
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")),
-            entry(SemanticAttributes.NETWORK_TRANSPORT, "udp"),
-            entry(SemanticAttributes.NETWORK_TYPE, "ipv4"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
             entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),
             entry(NetworkAttributes.NETWORK_PEER_PORT, 456L));
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(NetworkTransportAndProtocolProvider.class)
-  void skipNetworkTransportIfDefaultForProtocol(
-      String observedProtocolName,
-      String observedProtocolVersion,
-      String observedTransport,
-      @Nullable String extractedTransport) {
-    Map<String, String> request = new HashMap<>();
-    request.put("networkProtocolName", observedProtocolName);
-    request.put("networkProtocolVersion", observedProtocolVersion);
-    request.put("networkTransport", observedTransport);
-
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), request);
-    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
-
-    if (extractedTransport != null) {
-      assertThat(attributes.build())
-          .containsEntry(SemanticAttributes.NETWORK_TRANSPORT, extractedTransport);
-    } else {
-      assertThat(attributes.build()).doesNotContainKey(SemanticAttributes.NETWORK_TRANSPORT);
-    }
-  }
-
-  static final class NetworkTransportAndProtocolProvider implements ArgumentsProvider {
-
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          arguments("http", "1.0", "tcp", null),
-          arguments("http", "1.1", "tcp", null),
-          arguments("http", "2.0", "tcp", null),
-          arguments("http", "3.0", "udp", null),
-          arguments("http", "1.1", "udp", "udp"),
-          arguments("ftp", "2.0", "tcp", "tcp"),
-          arguments("http", "3.0", "tcp", "tcp"),
-          arguments("http", "42", "tcp", "tcp"));
-    }
   }
 
   @ParameterizedTest
