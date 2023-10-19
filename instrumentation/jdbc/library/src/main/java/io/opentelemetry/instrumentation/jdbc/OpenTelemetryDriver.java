@@ -39,6 +39,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -52,9 +53,7 @@ public final class OpenTelemetryDriver implements Driver {
   // visible for testing
   static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
 
-  // Hikari can instance several JDBC drivers. So, OpenTelemetry can be installed at
-  // the class level and each OpenTelemetryDriver can know OpenTelemetry from the static field.
-  private static OpenTelemetry openTelemetry;
+  private OpenTelemetry openTelemetry;
 
   private static final int MAJOR_VERSION;
   private static final int MINOR_VERSION;
@@ -200,8 +199,24 @@ public final class OpenTelemetryDriver implements Driver {
     return new int[] {0, 0};
   }
 
-  public static void install(OpenTelemetry otel) {
-    openTelemetry = otel;
+  /** Installs the {@link OpenTelemetry} instance on the {@code OpenTelemetryDriver}. */
+  public static void install(OpenTelemetry openTelemetry) {
+    Enumeration<Driver> drivers = DriverManager.getDrivers();
+    while (drivers.hasMoreElements()) {
+      Driver driver = drivers.nextElement();
+      if (driver instanceof io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver) {
+        OpenTelemetryDriver openTelemetryDriver = (OpenTelemetryDriver) driver;
+        openTelemetryDriver.setOpenTelemetry(openTelemetry);
+      }
+    }
+  }
+
+  /**
+   * Configures the {@link OpenTelemetry}. See {@link #install(OpenTelemetry)} for simple
+   * installation option.
+   */
+  public void setOpenTelemetry(OpenTelemetry openTelemetry) {
+    this.openTelemetry = openTelemetry;
   }
 
   @Nullable
@@ -230,7 +245,7 @@ public final class OpenTelemetryDriver implements Driver {
     return new OpenTelemetryConnection(connection, dbInfo, statementInstrumenter);
   }
 
-  private static OpenTelemetry getOpenTelemetry() {
+  private OpenTelemetry getOpenTelemetry() {
     if (openTelemetry == null) {
       return GlobalOpenTelemetry.get();
     }
