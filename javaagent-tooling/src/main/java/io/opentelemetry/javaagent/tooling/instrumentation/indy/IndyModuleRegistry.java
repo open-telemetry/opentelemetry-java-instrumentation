@@ -77,7 +77,7 @@ public class IndyModuleRegistry {
     return classLoader == null ? BOOT_LOADER : classLoader;
   }
 
-  private static InstrumentationModuleClassLoader createInstrumentationModuleClassloader(
+  static InstrumentationModuleClassLoader createInstrumentationModuleClassloader(
       InstrumentationModule module, ClassLoader instrumentedClassloader) {
 
     Set<String> toInject = new HashSet<>(InstrumentationModuleMuzzle.getHelperClassNames(module));

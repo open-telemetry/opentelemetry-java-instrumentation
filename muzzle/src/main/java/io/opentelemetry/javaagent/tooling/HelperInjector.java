@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder.Transformer;
@@ -94,7 +95,7 @@ public class HelperInjector implements Transformer {
   private final List<HelperResource> helperResources;
   @Nullable private final ClassLoader helpersSource;
   @Nullable private final Instrumentation instrumentation;
-  private final Map<String, Supplier<byte[]>> dynamicTypeMap = new LinkedHashMap<>();
+  private final Map<String, Function<ClassLoader, byte[]>> dynamicTypeMap = new LinkedHashMap<>();
 
   private final Cache<ClassLoader, Boolean> injectedClassLoaders = Cache.weak();
   private final Cache<ClassLoader, Boolean> resourcesInjectedClassLoaders = Cache.weak();
@@ -124,17 +125,19 @@ public class HelperInjector implements Transformer {
     this.instrumentation = instrumentation;
   }
 
-  private HelperInjector(
+  public HelperInjector(
       String requestingName,
-      Map<String, Supplier<byte[]>> helperMap,
+      Map<String, Function<ClassLoader, byte[]>> helperMap,
+      List<HelperResource> helperResources,
+      ClassLoader helpersSource,
       Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
     this.helperClassNames = helperMap.keySet();
     this.dynamicTypeMap.putAll(helperMap);
 
-    this.helperResources = Collections.emptyList();
-    this.helpersSource = null;
+    this.helperResources = helperResources;
+    this.helpersSource = helpersSource;
     this.instrumentation = instrumentation;
   }
 
@@ -142,20 +145,21 @@ public class HelperInjector implements Transformer {
       String requestingName,
       Collection<DynamicType.Unloaded<?>> helpers,
       Instrumentation instrumentation) {
-    Map<String, Supplier<byte[]>> bytes = new HashMap<>(helpers.size());
+    Map<String, Function<ClassLoader, byte[]>> bytes = new HashMap<>(helpers.size());
     for (DynamicType.Unloaded<?> helper : helpers) {
-      bytes.put(helper.getTypeDescription().getName(), helper::getBytes);
+      bytes.put(helper.getTypeDescription().getName(), cl -> helper.getBytes());
     }
-    return new HelperInjector(requestingName, bytes, instrumentation);
+    return new HelperInjector(
+        requestingName, bytes, Collections.emptyList(), null, instrumentation);
   }
 
   public static void setHelperInjectorListener(HelperInjectorListener listener) {
     helperInjectorListener = listener;
   }
 
-  private Map<String, Supplier<byte[]>> getHelperMap() {
+  private Map<String, Supplier<byte[]>> getHelperMap(ClassLoader targetClassloader) {
+    Map<String, Supplier<byte[]>> result = new LinkedHashMap<>();
     if (dynamicTypeMap.isEmpty()) {
-      Map<String, Supplier<byte[]>> result = new LinkedHashMap<>();
 
       for (String helperClassName : helperClassNames) {
         result.put(
@@ -172,11 +176,17 @@ public class HelperInjector implements Transformer {
               }
             });
       }
-
-      return result;
     } else {
-      return dynamicTypeMap;
+      dynamicTypeMap.forEach(
+          (name, bytecodeGenerator) -> {
+            // Eagerly compute bytecode to not risk accidentally holding onto targetClassloader for
+            // too long
+            byte[] bytecode = bytecodeGenerator.apply(targetClassloader);
+            result.put(name, () -> bytecode);
+          });
     }
+
+    return result;
   }
 
   @Override
@@ -265,7 +275,7 @@ public class HelperInjector implements Transformer {
                   new Object[] {cl, helperClassNames});
             }
 
-            Map<String, Supplier<byte[]>> classnameToBytes = getHelperMap();
+            Map<String, Supplier<byte[]>> classnameToBytes = getHelperMap(cl);
             Map<String, HelperClassInjector> map =
                 helperInjectors.computeIfAbsent(cl, (unused) -> new ConcurrentHashMap<>());
             for (Map.Entry<String, Supplier<byte[]>> entry : classnameToBytes.entrySet()) {

@@ -63,6 +63,13 @@ public class IndyBootstrap {
 
   private static final Method indyBootstrapMethod;
 
+  private static final String BOOTSTRAP_KIND_ADVICE = "advice";
+  private static final String BOOTSTRAP_KIND_PROXY = "proxy";
+
+  private static final String PROXY_KIND_STATIC = "static";
+  private static final String PROXY_KIND_CONSTRUCTOR = "constructor";
+  private static final String PROXY_KIND_VIRTUAL = "virtual";
+
   static {
     try {
       indyBootstrapMethod =
@@ -118,6 +125,38 @@ public class IndyBootstrap {
       String adviceMethodName,
       MethodType adviceMethodType,
       Object[] args) {
+    try {
+      String kind = (String) args[0];
+      switch (kind) {
+        case BOOTSTRAP_KIND_ADVICE:
+          // See the getAdviceBootstrapArguments method for the argument definitions
+          return bootstrapAdvice(
+              lookup, adviceMethodName, adviceMethodType, (String) args[1], (String) args[2]);
+        case BOOTSTRAP_KIND_PROXY:
+          // See getProxyFactory for the argument definitions
+          return bootstrapProxyMethod(
+              lookup,
+              adviceMethodName,
+              adviceMethodType,
+              (String) args[1],
+              (String) args[2],
+              (String) args[3]);
+        default:
+          throw new IllegalArgumentException("Unknown bootstrapping kind: " + kind);
+      }
+    } catch (Exception e) {
+      logger.log(Level.SEVERE, e.getMessage(), e);
+      return null;
+    }
+  }
+
+  private static ConstantCallSite bootstrapAdvice(
+      MethodHandles.Lookup lookup,
+      String adviceMethodName,
+      MethodType adviceMethodType,
+      String moduleClassName,
+      String adviceClassName)
+      throws NoSuchMethodException, IllegalAccessException, ClassNotFoundException {
     CallDepth callDepth = CallDepth.forClass(IndyBootstrap.class);
     try {
       if (callDepth.getAndIncrement() > 0) {
@@ -130,9 +169,6 @@ public class IndyBootstrap {
             new Throwable());
         return null;
       }
-      // See the getAdviceBootstrapArguments method for where these arguments come from
-      String moduleClassName = (String) args[0];
-      String adviceClassName = (String) args[1];
 
       InstrumentationModuleClassLoader instrumentationClassloader =
           IndyModuleRegistry.getInstrumentationClassloader(
@@ -146,9 +182,6 @@ public class IndyBootstrap {
               .getLookup()
               .findStatic(adviceClass, adviceMethodName, adviceMethodType);
       return new ConstantCallSite(methodHandle);
-    } catch (Exception e) {
-      logger.log(Level.SEVERE, e.getMessage(), e);
-      return null;
     } finally {
       callDepth.decrementAndGet();
     }
@@ -160,7 +193,85 @@ public class IndyBootstrap {
     return (adviceMethod, exit) ->
         (instrumentedType, instrumentedMethod) ->
             Arrays.asList(
+                JavaConstant.Simple.ofLoaded(BOOTSTRAP_KIND_ADVICE),
                 JavaConstant.Simple.ofLoaded(moduleName),
                 JavaConstant.Simple.ofLoaded(adviceMethod.getDeclaringType().getName()));
+  }
+
+  private static ConstantCallSite bootstrapProxyMethod(
+      MethodHandles.Lookup lookup,
+      String proxyMethodName,
+      MethodType expectedMethodType,
+      String moduleClassName,
+      String proxyClassName,
+      String methodKind)
+      throws NoSuchMethodException, IllegalAccessException, ClassNotFoundException {
+    InstrumentationModuleClassLoader instrumentationClassloader =
+        IndyModuleRegistry.getInstrumentationClassloader(
+            moduleClassName, lookup.lookupClass().getClassLoader());
+
+    Class<?> proxiedClass = instrumentationClassloader.loadClass(proxyClassName);
+
+    MethodHandle target;
+    switch (methodKind) {
+      case PROXY_KIND_STATIC:
+        target =
+            MethodHandles.publicLookup()
+                .findStatic(proxiedClass, proxyMethodName, expectedMethodType);
+        break;
+      case PROXY_KIND_CONSTRUCTOR:
+        target =
+            MethodHandles.publicLookup()
+                .findConstructor(proxiedClass, expectedMethodType.changeReturnType(void.class))
+                .asType(expectedMethodType); // return type is the proxied class, but proxies expect
+        // Object
+        break;
+      case PROXY_KIND_VIRTUAL:
+        target =
+            MethodHandles.publicLookup()
+                .findVirtual(
+                    proxiedClass, proxyMethodName, expectedMethodType.dropParameterTypes(0, 1))
+                .asType(
+                    expectedMethodType); // first argument type is the proxied class, but proxies
+        // expect Object
+        break;
+      default:
+        throw new IllegalStateException("unknown proxy method kind: " + methodKind);
+    }
+    return new ConstantCallSite(target);
+  }
+
+  /**
+   * Creates a proxy factory for generating proxies for classes which are loaded by an {@link
+   * InstrumentationModuleClassLoader} for the provided {@link InstrumentationModule}.
+   *
+   * @param instrumentationModule the instrumentation module used to load the proxied target classes
+   * @return a factory for generating proxy classes
+   */
+  public static IndyProxyFactory getProxyFactory(InstrumentationModule instrumentationModule) {
+    String moduleName = instrumentationModule.getClass().getName();
+    return new IndyProxyFactory(
+        getIndyBootstrapMethod(),
+        (proxiedType, proxiedMethod) -> {
+          String methodKind;
+          if (proxiedMethod.isConstructor()) {
+            methodKind = PROXY_KIND_CONSTRUCTOR;
+          } else if (proxiedMethod.isMethod()) {
+            if (proxiedMethod.isStatic()) {
+              methodKind = PROXY_KIND_STATIC;
+            } else {
+              methodKind = PROXY_KIND_VIRTUAL;
+            }
+          } else {
+            throw new IllegalArgumentException(
+                "Unknown type of method: " + proxiedMethod.getName());
+          }
+
+          return Arrays.asList(
+              JavaConstant.Simple.ofLoaded(BOOTSTRAP_KIND_PROXY),
+              JavaConstant.Simple.ofLoaded(moduleName),
+              JavaConstant.Simple.ofLoaded(proxiedType.getName()),
+              JavaConstant.Simple.ofLoaded(methodKind));
+        });
   }
 }

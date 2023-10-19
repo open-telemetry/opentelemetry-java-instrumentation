@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
@@ -20,6 +21,7 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.ClassInjectorImpl;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.PatchByteCodeVersionTransformer;
@@ -78,8 +80,25 @@ public final class InstrumentationModuleInstaller {
 
     IndyModuleRegistry.registerIndyModule(instrumentationModule);
 
+    HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
+    instrumentationModule.registerHelperResources(helperResourceBuilder);
+
+    ClassInjectorImpl injectedClassesCollector = new ClassInjectorImpl(instrumentationModule);
+    if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
+      ((ExperimentalInstrumentationModule) instrumentationModule)
+          .injectClasses(injectedClassesCollector);
+    }
+
+    AgentBuilder.Transformer helperInjector =
+        new HelperInjector(
+            instrumentationModule.instrumentationName(),
+            injectedClassesCollector.getClassesToInject(),
+            helperResourceBuilder.getResources(),
+            instrumentationModule.getClass().getClassLoader(),
+            instrumentation);
+
     // TODO (Jonas): Adapt MuzzleMatcher to use the same type lookup strategy as the
-    // InstrumentationModuleClassLoader
+    // InstrumentationModuleClassLoader (see IndyModuleTypePool)
     // MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
     VirtualFieldImplementationInstaller contextProvider =
         virtualFieldInstallerFactory.create(instrumentationModule);
@@ -88,7 +107,8 @@ public final class InstrumentationModuleInstaller {
     for (TypeInstrumentation typeInstrumentation : instrumentationModule.typeInstrumentations()) {
       AgentBuilder.Identified.Extendable extendableAgentBuilder =
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
-              .transform(new PatchByteCodeVersionTransformer());
+              .transform(new PatchByteCodeVersionTransformer())
+              .transform(helperInjector);
 
       // TODO (Jonas): we are not calling
       // contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder) anymore

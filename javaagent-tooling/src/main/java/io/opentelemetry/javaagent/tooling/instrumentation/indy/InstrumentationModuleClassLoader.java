@@ -51,8 +51,9 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
 
   private final Map<String, ClassCopySource> additionalInjectedClasses;
   private final ClassLoader agentOrExtensionCl;
-  private final ClassLoader instrumentedCl;
   private volatile MethodHandles.Lookup cachedLookup;
+
+  private final ClassLoader instrumentedCl;
 
   public InstrumentationModuleClassLoader(
       ClassLoader instrumentedCl,
