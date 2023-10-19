@@ -25,6 +25,7 @@ import static io.opentelemetry.semconv.SemanticAttributes.NET_HOST_PORT;
 import static io.opentelemetry.semconv.SemanticAttributes.NET_PROTOCOL_NAME;
 import static io.opentelemetry.semconv.SemanticAttributes.NET_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_HOST_ADDR;
+import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_HOST_PORT;
 import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_ADDR;
 import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_PORT;
 import static io.opentelemetry.semconv.SemanticAttributes.NET_TRANSPORT;
@@ -124,6 +125,7 @@ public class SpringWebfluxTest {
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_HOST_NAME, "localhost"),
                             satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(HTTP_TARGET, parameter.urlPath),
@@ -249,6 +251,7 @@ public class SpringWebfluxTest {
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_HOST_NAME, "localhost"),
                             satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(HTTP_TARGET, parameter.urlPath),
@@ -369,6 +372,7 @@ public class SpringWebfluxTest {
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_HOST_NAME, "localhost"),
                             satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(HTTP_TARGET, parameter.urlPath),
@@ -454,6 +458,7 @@ public class SpringWebfluxTest {
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_HOST_NAME, "localhost"),
                             satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(HTTP_TARGET, "/notfoundgreet"),
@@ -522,6 +527,7 @@ public class SpringWebfluxTest {
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_HOST_NAME, "localhost"),
                             satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(HTTP_TARGET, "/echo"),
@@ -575,6 +581,7 @@ public class SpringWebfluxTest {
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_HOST_NAME, "localhost"),
                             satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(HTTP_TARGET, parameter.urlPath),
@@ -667,6 +674,7 @@ public class SpringWebfluxTest {
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_HOST_NAME, "localhost"),
                             satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(HTTP_TARGET, "/double-greet-redirect"),
@@ -708,6 +716,7 @@ public class SpringWebfluxTest {
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_HOST_NAME, "localhost"),
                             satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(HTTP_TARGET, "/double-greet"),
@@ -772,6 +781,7 @@ public class SpringWebfluxTest {
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_HOST_NAME, "localhost"),
                             satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(HTTP_TARGET, parameter.urlPath),
@@ -867,6 +877,7 @@ public class SpringWebfluxTest {
                             equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NET_HOST_NAME, "localhost"),
                             satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(HTTP_TARGET, "/slow"),

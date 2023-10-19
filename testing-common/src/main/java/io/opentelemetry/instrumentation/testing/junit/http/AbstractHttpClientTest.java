@@ -279,7 +279,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -319,7 +319,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -378,7 +378,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           IntStream.range(0, options.getMaxRedirects())
               .mapToObj(i -> makeCircularRedirectAssertForLolLevelTrace(uri, method, i))
               .collect(Collectors.toList()));
@@ -425,7 +425,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -1040,12 +1040,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (uri.getPort() == PortUtils.UNUSABLE_PORT || uri.getHost().equals("192.0.2.1")) {
                 // In these cases the peer connection is not established, so the HTTP client should
                 // not report any socket-level attributes
-                assertThat(attrs)
-                    .doesNotContainKey("net.sock.family")
-                    // TODO netty sometimes reports net.sock.peer.addr in connection error test
-                    // .doesNotContainKey("net.sock.peer.addr")
-                    .doesNotContainKey("net.sock.peer.name")
-                    .doesNotContainKey("net.sock.peer.port");
+                assertThat(attrs).doesNotContainKey("net.sock.family");
+                // TODO netty sometimes reports net.sock.peer.* in connection error test
+                // .doesNotContainKey("net.sock.peer.addr")
+                // .doesNotContainKey("net.sock.peer.name")
+                // .doesNotContainKey("net.sock.peer.port");
 
               } else {
                 // TODO: Move to test knob rather than always treating as optional
@@ -1123,9 +1122,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
               if (resendCount != null) {
                 assertThat(attrs)
-                    .containsEntry(SemanticAttributes.HTTP_RESEND_COUNT, (long) resendCount);
+                    .containsEntry(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, (long) resendCount);
               } else {
-                assertThat(attrs).doesNotContainKey(SemanticAttributes.HTTP_RESEND_COUNT);
+                assertThat(attrs).doesNotContainKey(HttpAttributes.HTTP_REQUEST_RESEND_COUNT);
               }
             });
   }

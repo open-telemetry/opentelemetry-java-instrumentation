@@ -9,11 +9,13 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ClientAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkTransportFilter;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ServerAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 
@@ -36,32 +38,38 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
 
   private final InternalNetServerAttributesExtractor<REQUEST, RESPONSE> internalExtractor;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
-  private final InternalServerAttributesExtractor<REQUEST, RESPONSE> internalServerExtractor;
-  private final InternalClientAttributesExtractor<REQUEST, RESPONSE> internalClientExtractor;
+  private final InternalServerAttributesExtractor<REQUEST> internalServerExtractor;
+  private final InternalClientAttributesExtractor<REQUEST> internalClientExtractor;
 
   private NetServerAttributesExtractor(NetServerAttributesGetter<REQUEST, RESPONSE> getter) {
+    ServerAddressAndPortExtractor<REQUEST> serverAddressAndPortExtractor =
+        new ServerAddressAndPortExtractor<>(getter, AddressAndPortExtractor.noop());
+    ClientAddressAndPortExtractor<REQUEST> clientAddressAndPortExtractor =
+        new ClientAddressAndPortExtractor<>(getter, AddressAndPortExtractor.noop());
+
     internalExtractor =
         new InternalNetServerAttributesExtractor<>(
-            getter, FallbackAddressPortExtractor.noop(), SemconvStability.emitOldHttpSemconv());
+            getter, AddressAndPortExtractor.noop(), SemconvStability.emitOldHttpSemconv());
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,
             NetworkTransportFilter.alwaysTrue(),
+            serverAddressAndPortExtractor,
+            clientAddressAndPortExtractor,
+            /* captureLocalSocketAttributes= */ true,
+            /* captureOldPeerDomainAttribute= */ false,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
     internalServerExtractor =
         new InternalServerAttributesExtractor<>(
-            getter,
             (port, request) -> true,
-            FallbackAddressPortExtractor.noop(),
+            serverAddressAndPortExtractor,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
-            InternalServerAttributesExtractor.Mode.HOST,
-            /* captureServerSocketAttributes= */ true);
+            InternalServerAttributesExtractor.Mode.HOST);
     internalClientExtractor =
         new InternalClientAttributesExtractor<>(
-            getter,
-            FallbackAddressPortExtractor.noop(),
+            clientAddressAndPortExtractor,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
   }
@@ -81,7 +89,5 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     internalNetworkExtractor.onEnd(attributes, request, response);
-    internalServerExtractor.onEnd(attributes, request, response);
-    internalClientExtractor.onEnd(attributes, request, response);
   }
 }

@@ -24,4 +24,7 @@ public interface InstrumenterAccess {
       @Nullable Throwable error,
       Instant startTime,
       Instant endTime);
+
+  <REQUEST, RESPONSE> Context suppressSpan(
+      Instrumenter<REQUEST, RESPONSE> instrumenter, Context parentContext, REQUEST request);
 }

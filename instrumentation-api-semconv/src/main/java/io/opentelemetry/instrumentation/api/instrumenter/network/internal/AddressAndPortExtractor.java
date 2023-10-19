@@ -9,11 +9,17 @@ package io.opentelemetry.instrumentation.api.instrumenter.network.internal;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public interface FallbackAddressPortExtractor<REQUEST> {
+public interface AddressAndPortExtractor<REQUEST> {
+
+  default AddressAndPort extract(REQUEST request) {
+    AddressAndPort addressAndPort = new AddressAndPort();
+    extract(addressAndPort, request);
+    return addressAndPort;
+  }
 
   void extract(AddressPortSink sink, REQUEST request);
 
-  static <REQUEST> FallbackAddressPortExtractor<REQUEST> noop() {
+  static <REQUEST> AddressAndPortExtractor<REQUEST> noop() {
     return (sink, request) -> {};
   }
 
@@ -25,6 +31,6 @@ public interface FallbackAddressPortExtractor<REQUEST> {
 
     void setAddress(String address);
 
-    void setPort(int port);
+    void setPort(Integer port);
   }
 }

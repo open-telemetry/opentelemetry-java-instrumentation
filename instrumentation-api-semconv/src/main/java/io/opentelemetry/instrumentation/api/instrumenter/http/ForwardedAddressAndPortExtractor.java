@@ -5,15 +5,14 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import java.util.Locale;
 
-final class ClientAddressAndPortExtractor<REQUEST>
-    implements FallbackAddressPortExtractor<REQUEST> {
+final class ForwardedAddressAndPortExtractor<REQUEST> implements AddressAndPortExtractor<REQUEST> {
 
   private final HttpServerAttributesGetter<REQUEST, ?> getter;
 
-  ClientAddressAndPortExtractor(HttpServerAttributesGetter<REQUEST, ?> getter) {
+  ForwardedAddressAndPortExtractor(HttpServerAttributesGetter<REQUEST, ?> getter) {
     this.getter = getter;
   }
 

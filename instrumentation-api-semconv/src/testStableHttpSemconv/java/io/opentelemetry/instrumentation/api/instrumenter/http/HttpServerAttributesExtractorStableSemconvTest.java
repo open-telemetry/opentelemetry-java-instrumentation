@@ -19,6 +19,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.ConnectException;
@@ -107,14 +108,44 @@ class HttpServerAttributesExtractorStableSemconvTest {
     @Override
     public String getNetworkProtocolName(
         Map<String, String> request, Map<String, String> response) {
-      return request.get("protocolName");
+      return request.get("networkProtocolName");
     }
 
     @Nullable
     @Override
     public String getNetworkProtocolVersion(
         Map<String, String> request, Map<String, String> response) {
-      return request.get("protocolVersion");
+      return request.get("networkProtocolVersion");
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkLocalAddress(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("networkLocalAddress");
+    }
+
+    @Nullable
+    @Override
+    public Integer getNetworkLocalPort(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      String value = request.get("networkLocalPort");
+      return value == null ? null : Integer.parseInt(value);
+    }
+
+    @Nullable
+    @Override
+    public String getNetworkPeerAddress(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      return request.get("networkPeerAddress");
+    }
+
+    @Nullable
+    @Override
+    public Integer getNetworkPeerPort(
+        Map<String, String> request, @Nullable Map<String, String> response) {
+      String value = request.get("networkPeerPort");
+      return value == null ? null : Integer.parseInt(value);
     }
 
     @Nullable
@@ -132,21 +163,6 @@ class HttpServerAttributesExtractorStableSemconvTest {
 
     @Nullable
     @Override
-    public String getServerSocketAddress(
-        Map<String, String> request, @Nullable Map<String, String> response) {
-      return request.get("serverSocketAddress");
-    }
-
-    @Nullable
-    @Override
-    public Integer getServerSocketPort(
-        Map<String, String> request, @Nullable Map<String, String> response) {
-      String value = request.get("serverSocketPort");
-      return value == null ? null : Integer.parseInt(value);
-    }
-
-    @Nullable
-    @Override
     public String getErrorType(
         Map<String, String> request,
         @Nullable Map<String, String> respobse,
@@ -159,22 +175,26 @@ class HttpServerAttributesExtractorStableSemconvTest {
   void normal() {
     Map<String, String> request = new HashMap<>();
     request.put("method", "POST");
-    request.put("urlFull", "http://github.com");
+    request.put("urlFull", "https://github.com");
     request.put("urlPath", "/repositories/1");
     request.put("urlQuery", "details=true");
-    request.put("urlScheme", "http");
+    request.put("urlScheme", "https");
     request.put("header.content-length", "10");
     request.put("route", "/repositories/{id}");
     request.put("header.user-agent", "okhttp 3.x");
-    request.put("header.host", "github.com");
+    request.put("header.host", "www.github.com:456");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
     request.put("networkTransport", "udp");
     request.put("networkType", "ipv4");
-    request.put("protocolName", "http");
-    request.put("protocolVersion", "2.0");
-    request.put("serverSocketAddress", "1.2.3.4");
-    request.put("serverSocketPort", "42");
+    request.put("networkProtocolName", "http");
+    request.put("networkProtocolVersion", "2.0");
+    request.put("networkLocalAddress", "1.2.3.4");
+    request.put("networkLocalPort", "42");
+    request.put("networkPeerAddress", "4.3.2.1");
+    request.put("networkPeerPort", "456");
+    request.put("serverAddress", "github.com");
+    request.put("serverPort", "123");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
@@ -195,8 +215,9 @@ class HttpServerAttributesExtractorStableSemconvTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
+            entry(SemanticAttributes.SERVER_PORT, 123L),
             entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-            entry(SemanticAttributes.URL_SCHEME, "http"),
+            entry(SemanticAttributes.URL_SCHEME, "https"),
             entry(SemanticAttributes.URL_PATH, "/repositories/1"),
             entry(SemanticAttributes.URL_QUERY, "details=true"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
@@ -214,6 +235,8 @@ class HttpServerAttributesExtractorStableSemconvTest {
             entry(SemanticAttributes.NETWORK_TYPE, "ipv4"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),
+            entry(NetworkAttributes.NETWORK_PEER_PORT, 456L),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
             entry(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
             entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
@@ -231,8 +254,8 @@ class HttpServerAttributesExtractorStableSemconvTest {
       String observedTransport,
       @Nullable String extractedTransport) {
     Map<String, String> request = new HashMap<>();
-    request.put("protocolName", observedProtocolName);
-    request.put("protocolVersion", observedProtocolVersion);
+    request.put("networkProtocolName", observedProtocolName);
+    request.put("networkProtocolVersion", observedProtocolVersion);
     request.put("networkTransport", observedTransport);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
@@ -416,5 +439,78 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onEnd(attributes, Context.root(), emptyMap(), emptyMap(), null);
 
     assertThat(attributes.build()).containsEntry(HttpAttributes.ERROR_TYPE, HttpConstants._OTHER);
+  }
+
+  @Test
+  void shouldPreferUrlSchemeFromForwardedHeader() {
+    Map<String, String> request = new HashMap<>();
+    request.put("urlScheme", "http");
+    request.put("header.forwarded", "proto=https");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "202");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build()).containsOnly(entry(SemanticAttributes.URL_SCHEME, "https"));
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L));
+  }
+
+  @Test
+  void shouldExtractServerAddressAndPortFromHostHeader() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.host", "github.com:123");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "200");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
+            entry(SemanticAttributes.SERVER_PORT, 123L));
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+  }
+
+  @Test
+  void shouldNotExtractDuplicatePeerAddress() {
+    Map<String, String> request = new HashMap<>();
+    request.put("networkPeerAddress", "1.2.3.4");
+    request.put("networkPeerPort", "456");
+    request.put("header.forwarded", "for=1.2.3.4:123");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "200");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.CLIENT_ADDRESS, "1.2.3.4"),
+            entry(SemanticAttributes.CLIENT_PORT, 123L));
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
   }
 }

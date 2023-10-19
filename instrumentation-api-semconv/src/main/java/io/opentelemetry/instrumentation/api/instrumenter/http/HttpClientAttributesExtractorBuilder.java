@@ -11,8 +11,10 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ServerAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.ArrayList;
@@ -31,11 +33,11 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
           REQUEST, RESPONSE>
       netAttributesGetter;
 
-  final HttpAddressPortExtractor<REQUEST> addressPortExtractor;
+  final AddressAndPortExtractor<REQUEST> serverAddressAndPortExtractor;
   List<String> capturedRequestHeaders = emptyList();
   List<String> capturedResponseHeaders = emptyList();
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
-  ToIntFunction<Context> resendCountIncrementer = HttpClientResendCount::getAndIncrement;
+  ToIntFunction<Context> resendCountIncrementer = HttpClientRequestResendCount::getAndIncrement;
 
   HttpClientAttributesExtractorBuilder(
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
@@ -45,7 +47,9 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
               netAttributesGetter) {
     this.httpAttributesGetter = httpAttributesGetter;
     this.netAttributesGetter = netAttributesGetter;
-    addressPortExtractor = new HttpAddressPortExtractor<>(httpAttributesGetter);
+    serverAddressAndPortExtractor =
+        new ServerAddressAndPortExtractor<>(
+            netAttributesGetter, new HostAddressAndPortExtractor<>(httpAttributesGetter));
   }
 
   /**
@@ -125,25 +129,27 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   InternalNetClientAttributesExtractor<REQUEST, RESPONSE> buildNetExtractor() {
     return new InternalNetClientAttributesExtractor<>(
-        netAttributesGetter, addressPortExtractor, SemconvStability.emitOldHttpSemconv());
+        netAttributesGetter, serverAddressAndPortExtractor, SemconvStability.emitOldHttpSemconv());
   }
 
   InternalNetworkAttributesExtractor<REQUEST, RESPONSE> buildNetworkExtractor() {
     return new InternalNetworkAttributesExtractor<>(
         netAttributesGetter,
         HttpNetworkTransportFilter.INSTANCE,
+        AddressAndPortExtractor.noop(),
+        serverAddressAndPortExtractor,
+        /* captureLocalSocketAttributes= */ false,
+        /* captureOldPeerDomainAttribute= */ true,
         SemconvStability.emitStableHttpSemconv(),
         SemconvStability.emitOldHttpSemconv());
   }
 
-  InternalServerAttributesExtractor<REQUEST, RESPONSE> buildServerExtractor() {
+  InternalServerAttributesExtractor<REQUEST> buildServerExtractor() {
     return new InternalServerAttributesExtractor<>(
-        netAttributesGetter,
         new ClientSideServerPortCondition<>(httpAttributesGetter),
-        addressPortExtractor,
+        serverAddressAndPortExtractor,
         SemconvStability.emitStableHttpSemconv(),
         SemconvStability.emitOldHttpSemconv(),
-        InternalServerAttributesExtractor.Mode.PEER,
-        /* captureServerSocketAttributes= */ true);
+        InternalServerAttributesExtractor.Mode.PEER);
   }
 }

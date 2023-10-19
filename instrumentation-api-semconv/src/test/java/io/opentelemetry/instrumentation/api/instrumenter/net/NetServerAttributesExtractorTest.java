@@ -18,7 +18,6 @@ import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // testing deprecated class
@@ -165,9 +164,7 @@ class NetServerAttributesExtractorTest {
   }
 
   @Test
-  @DisplayName(
-      "does not set those net.sock.host.* attributes that duplicate corresponding net.host.* attributes")
-  void doesNotSetDuplicates1() {
+  void doesNotSetDuplicatesSocketAddress() {
     // given
     Map<String, String> map = new HashMap<>();
     map.put("netTransport", IP_TCP);
@@ -193,42 +190,7 @@ class NetServerAttributesExtractorTest {
             entry(SemanticAttributes.NET_HOST_NAME, "4:3:2:1::"),
             entry(SemanticAttributes.NET_HOST_PORT, 80L));
 
-    assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.NET_SOCK_HOST_PORT, 8080L));
-  }
-
-  @Test
-  @DisplayName(
-      "does not set net.sock.host.* attributes when they duplicate related net.host.* attributes")
-  void doesNotSetDuplicates2() {
-    // given
-    Map<String, String> map = new HashMap<>();
-    map.put("netTransport", IP_TCP);
-    map.put("hostName", "opentelemetry.io");
-    map.put("hostPort", "80");
-    map.put("sockFamily", "inet6");
-    map.put("sockHostAddr", "4:3:2:1::");
-    map.put("sockHostPort", "80");
-
-    Context context = Context.root();
-
-    // when
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, context, map);
-
-    AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, null, null);
-
-    // then
-    assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-            entry(SemanticAttributes.NET_HOST_NAME, "opentelemetry.io"),
-            entry(SemanticAttributes.NET_HOST_PORT, 80L),
-            entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"));
-
-    assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"));
+    assertThat(endAttributes.build()).isEmpty();
   }
 
   @Test

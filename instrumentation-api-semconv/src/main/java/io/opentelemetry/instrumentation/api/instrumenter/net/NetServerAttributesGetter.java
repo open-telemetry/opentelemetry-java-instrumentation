@@ -62,4 +62,42 @@ public interface NetServerAttributesGetter<REQUEST, RESPONSE>
         getClientInetSocketAddress(request, response),
         getServerInetSocketAddress(request, response));
   }
+
+  @Nullable
+  @Override
+  default InetSocketAddress getNetworkLocalInetSocketAddress(
+      REQUEST request, @Nullable RESPONSE response) {
+    return getServerInetSocketAddress(request, response);
+  }
+
+  @Nullable
+  @Override
+  default String getNetworkLocalAddress(REQUEST request, @Nullable RESPONSE response) {
+    return getServerSocketAddress(request, response);
+  }
+
+  @Nullable
+  @Override
+  default Integer getNetworkLocalPort(REQUEST request, @Nullable RESPONSE response) {
+    return getServerSocketPort(request, response);
+  }
+
+  @Nullable
+  @Override
+  default InetSocketAddress getNetworkPeerInetSocketAddress(
+      REQUEST request, @Nullable RESPONSE response) {
+    return getClientInetSocketAddress(request, response);
+  }
+
+  @Nullable
+  @Override
+  default String getNetworkPeerAddress(REQUEST request, @Nullable RESPONSE response) {
+    return getClientSocketAddress(request, response);
+  }
+
+  @Nullable
+  @Override
+  default Integer getNetworkPeerPort(REQUEST request, @Nullable RESPONSE response) {
+    return getClientSocketPort(request, response);
+  }
 }

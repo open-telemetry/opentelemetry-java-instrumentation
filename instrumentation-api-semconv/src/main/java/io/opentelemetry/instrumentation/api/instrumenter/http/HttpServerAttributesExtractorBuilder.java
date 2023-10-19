@@ -11,9 +11,12 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ClientAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ServerAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -33,7 +36,8 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
           REQUEST, RESPONSE>
       netAttributesGetter;
 
-  final HttpAddressPortExtractor<REQUEST> addressPortExtractor;
+  final AddressAndPortExtractor<REQUEST> clientAddressPortExtractor;
+  final AddressAndPortExtractor<REQUEST> serverAddressPortExtractor;
   List<String> capturedRequestHeaders = emptyList();
   List<String> capturedResponseHeaders = emptyList();
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
@@ -47,7 +51,13 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
               netAttributesGetter) {
     this.httpAttributesGetter = httpAttributesGetter;
     this.netAttributesGetter = netAttributesGetter;
-    addressPortExtractor = new HttpAddressPortExtractor<>(httpAttributesGetter);
+
+    clientAddressPortExtractor =
+        new ClientAddressAndPortExtractor<>(
+            netAttributesGetter, new ForwardedAddressAndPortExtractor<>(httpAttributesGetter));
+    serverAddressPortExtractor =
+        new ServerAddressAndPortExtractor<>(
+            netAttributesGetter, new HostAddressAndPortExtractor<>(httpAttributesGetter));
   }
 
   /**
@@ -128,39 +138,40 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   InternalUrlAttributesExtractor<REQUEST> buildUrlExtractor() {
     return new InternalUrlAttributesExtractor<>(
         httpAttributesGetter,
-        new AlternateUrlSchemeProvider<>(httpAttributesGetter),
+        new ForwardedUrlSchemeProvider<>(httpAttributesGetter),
         SemconvStability.emitStableHttpSemconv(),
         SemconvStability.emitOldHttpSemconv());
   }
 
   InternalNetServerAttributesExtractor<REQUEST, RESPONSE> buildNetExtractor() {
     return new InternalNetServerAttributesExtractor<>(
-        netAttributesGetter, addressPortExtractor, SemconvStability.emitOldHttpSemconv());
+        netAttributesGetter, serverAddressPortExtractor, SemconvStability.emitOldHttpSemconv());
   }
 
   InternalNetworkAttributesExtractor<REQUEST, RESPONSE> buildNetworkExtractor() {
     return new InternalNetworkAttributesExtractor<>(
         netAttributesGetter,
         HttpNetworkTransportFilter.INSTANCE,
+        serverAddressPortExtractor,
+        clientAddressPortExtractor,
+        /* captureLocalSocketAttributes= */ false,
+        /* captureOldPeerDomainAttribute= */ false,
         SemconvStability.emitStableHttpSemconv(),
         SemconvStability.emitOldHttpSemconv());
   }
 
-  InternalServerAttributesExtractor<REQUEST, RESPONSE> buildServerExtractor() {
+  InternalServerAttributesExtractor<REQUEST> buildServerExtractor() {
     return new InternalServerAttributesExtractor<>(
-        netAttributesGetter,
         new ServerSideServerPortCondition<>(httpAttributesGetter),
-        addressPortExtractor,
+        serverAddressPortExtractor,
         SemconvStability.emitStableHttpSemconv(),
         SemconvStability.emitOldHttpSemconv(),
-        InternalServerAttributesExtractor.Mode.HOST,
-        /* captureServerSocketAttributes= */ false);
+        InternalServerAttributesExtractor.Mode.HOST);
   }
 
-  InternalClientAttributesExtractor<REQUEST, RESPONSE> buildClientExtractor() {
+  InternalClientAttributesExtractor<REQUEST> buildClientExtractor() {
     return new InternalClientAttributesExtractor<>(
-        netAttributesGetter,
-        new ClientAddressAndPortExtractor<>(httpAttributesGetter),
+        clientAddressPortExtractor,
         SemconvStability.emitStableHttpSemconv(),
         SemconvStability.emitOldHttpSemconv());
   }

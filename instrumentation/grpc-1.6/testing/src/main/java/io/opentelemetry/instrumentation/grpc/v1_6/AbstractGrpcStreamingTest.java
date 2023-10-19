@@ -203,6 +203,9 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                                 satisfies(
+                                    SemanticAttributes.NET_SOCK_PEER_NAME,
+                                    val -> assertThat(val).isNotNull()),
+                                satisfies(
                                     SemanticAttributes.NET_SOCK_PEER_PORT,
                                     val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(events.toArray(new Consumer[0]))));

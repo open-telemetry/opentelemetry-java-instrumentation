@@ -8,7 +8,8 @@ package io.opentelemetry.instrumentation.api.instrumenter.network;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ClientAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
@@ -30,13 +31,12 @@ public final class ClientAttributesExtractor<REQUEST, RESPONSE>
     return new ClientAttributesExtractor<>(getter);
   }
 
-  private final InternalClientAttributesExtractor<REQUEST, RESPONSE> internalExtractor;
+  private final InternalClientAttributesExtractor<REQUEST> internalExtractor;
 
   ClientAttributesExtractor(ClientAttributesGetter<REQUEST, RESPONSE> getter) {
     internalExtractor =
         new InternalClientAttributesExtractor<>(
-            getter,
-            FallbackAddressPortExtractor.noop(),
+            new ClientAddressAndPortExtractor<>(getter, AddressAndPortExtractor.noop()),
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
   }
@@ -52,7 +52,5 @@ public final class ClientAttributesExtractor<REQUEST, RESPONSE>
       Context context,
       REQUEST request,
       @Nullable RESPONSE response,
-      @Nullable Throwable error) {
-    internalExtractor.onEnd(attributes, request, response);
-  }
+      @Nullable Throwable error) {}
 }

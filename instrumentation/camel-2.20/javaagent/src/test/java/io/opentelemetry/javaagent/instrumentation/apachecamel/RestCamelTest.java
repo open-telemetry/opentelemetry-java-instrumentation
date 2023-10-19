@@ -115,6 +115,9 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                                 val -> val.isInstanceOf(String.class)),
                             satisfies(
                                 SemanticAttributes.NET_SOCK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class)),
+                            satisfies(
+                                SemanticAttributes.NET_SOCK_HOST_PORT,
                                 val -> val.isInstanceOf(Long.class))),
                 span ->
                     span.hasName("GET /api/{module}/unit/{unitId}")

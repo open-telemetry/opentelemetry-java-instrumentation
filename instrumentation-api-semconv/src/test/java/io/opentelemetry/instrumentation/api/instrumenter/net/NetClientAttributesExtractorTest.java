@@ -18,7 +18,6 @@ import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // testing deprecated class
@@ -78,7 +77,9 @@ class NetClientAttributesExtractorTest {
 
     @Override
     public String getServerSocketDomain(Map<String, String> request, Map<String, String> response) {
-      return response.get("sockPeerName");
+      // we only support the InetSocketAddress case here; nearly no instrumentations override this
+      // method anyway
+      return null;
     }
 
     @Override
@@ -110,7 +111,6 @@ class NetClientAttributesExtractorTest {
     map.put("peerPort", "42");
     map.put("sockFamily", "inet6");
     map.put("sockPeerAddr", "1:2:3:4::");
-    map.put("sockPeerName", "proxy.opentelemetry.io");
     map.put("sockPeerPort", "123");
 
     Context context = Context.root();
@@ -135,7 +135,6 @@ class NetClientAttributesExtractorTest {
             entry(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
             entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"),
             entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
-            entry(SemanticAttributes.NET_SOCK_PEER_NAME, "proxy.opentelemetry.io"),
             entry(SemanticAttributes.NET_SOCK_PEER_PORT, 123L));
   }
 
@@ -157,9 +156,7 @@ class NetClientAttributesExtractorTest {
   }
 
   @Test
-  @DisplayName(
-      "does not set those net.sock.peer.* attributes that duplicate corresponding net.peer.* attributes")
-  void doesNotSetDuplicates1() {
+  void doesNotSetDuplicateSocketAddress() {
     // given
     Map<String, String> map = new HashMap<>();
     map.put("netTransport", IP_TCP);
@@ -185,47 +182,7 @@ class NetClientAttributesExtractorTest {
             entry(SemanticAttributes.NET_PEER_NAME, "1:2:3:4::"),
             entry(SemanticAttributes.NET_PEER_PORT, 42L));
 
-    assertThat(endAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-            entry(SemanticAttributes.NET_SOCK_PEER_NAME, "proxy.opentelemetry.io"),
-            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 123L));
-  }
-
-  @Test
-  @DisplayName(
-      "does not set net.sock.* attributes when they duplicate related net.peer.* attributes")
-  void doesNotSetDuplicates2() {
-    // given
-    Map<String, String> map = new HashMap<>();
-    map.put("netTransport", IP_TCP);
-    map.put("peerName", "opentelemetry.io");
-    map.put("peerPort", "42");
-    map.put("sockFamily", "inet6");
-    map.put("sockPeerAddr", "1:2:3:4::");
-    map.put("sockPeerName", "opentelemetry.io");
-    map.put("sockPeerPort", "42");
-
-    Context context = Context.root();
-
-    // when
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, context, map);
-
-    AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, map, null);
-
-    // then
-    assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_PEER_NAME, "opentelemetry.io"),
-            entry(SemanticAttributes.NET_PEER_PORT, 42L));
-
-    assertThat(endAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-            entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"),
-            entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"));
+    assertThat(endAttributes.build()).containsOnly(entry(SemanticAttributes.NET_TRANSPORT, IP_TCP));
   }
 
   @Test

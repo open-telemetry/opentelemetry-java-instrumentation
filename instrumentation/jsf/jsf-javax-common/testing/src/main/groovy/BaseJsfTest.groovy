@@ -104,6 +104,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_HOST_PORT" Long
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_TARGET" "/jetty-context/" + path

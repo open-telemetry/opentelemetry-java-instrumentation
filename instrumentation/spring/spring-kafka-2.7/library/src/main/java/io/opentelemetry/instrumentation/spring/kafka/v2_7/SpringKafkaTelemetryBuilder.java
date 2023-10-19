@@ -50,6 +50,12 @@ public final class SpringKafkaTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Set whether to capture the consumer message receive telemetry in messaging instrumentation.
+   *
+   * <p>Note that this will cause the consumer side to start a new trace, with only a span link
+   * connecting it to the producer trace.
+   */
   @CanIgnoreReturnValue
   public SpringKafkaTelemetryBuilder setMessagingReceiveInstrumentationEnabled(
       boolean messagingReceiveInstrumentationEnabled) {

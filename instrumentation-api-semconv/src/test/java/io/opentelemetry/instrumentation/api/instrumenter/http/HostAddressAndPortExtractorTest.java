@@ -12,7 +12,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,14 +20,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class HttpAddressPortExtractorTest {
+class HostAddressAndPortExtractorTest {
 
   private static final String REQUEST = "request";
 
   @Mock HttpCommonAttributesGetter<String, String> getter;
-  @Mock FallbackAddressPortExtractor.AddressPortSink sink;
+  @Mock AddressAndPortExtractor.AddressPortSink sink;
 
-  @InjectMocks HttpAddressPortExtractor<String> underTest;
+  @InjectMocks HostAddressAndPortExtractor<String> underTest;
 
   @Test
   void noHostHeader() {

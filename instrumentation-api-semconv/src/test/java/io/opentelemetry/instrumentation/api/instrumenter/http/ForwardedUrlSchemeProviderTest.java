@@ -28,13 +28,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class AlternateUrlSchemeProviderTest {
+class ForwardedUrlSchemeProviderTest {
 
   private static final String REQUEST = "request";
 
   @Mock HttpServerAttributesGetter<String, String> getter;
 
-  @InjectMocks AlternateUrlSchemeProvider<String> underTest;
+  @InjectMocks ForwardedUrlSchemeProvider<String> underTest;
 
   @Test
   void noHeaders() {

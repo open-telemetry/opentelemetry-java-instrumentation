@@ -8,16 +8,16 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpCommonAttributesExtractor.firstHeaderValue;
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.FallbackAddressPortExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import java.util.logging.Logger;
 
-final class HttpAddressPortExtractor<REQUEST> implements FallbackAddressPortExtractor<REQUEST> {
+final class HostAddressAndPortExtractor<REQUEST> implements AddressAndPortExtractor<REQUEST> {
 
   private static final Logger logger = Logger.getLogger(HttpCommonAttributesGetter.class.getName());
 
   private final HttpCommonAttributesGetter<REQUEST, ?> getter;
 
-  HttpAddressPortExtractor(HttpCommonAttributesGetter<REQUEST, ?> getter) {
+  HostAddressAndPortExtractor(HttpCommonAttributesGetter<REQUEST, ?> getter) {
     this.getter = getter;
   }
 

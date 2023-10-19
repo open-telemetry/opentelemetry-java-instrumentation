@@ -35,7 +35,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
     awsConnector.receiveMessage(queueUrl)
 
     then:
-    assertTraces(7) {
+    assertTraces(6) {
       trace(0, 1) {
 
         span(0) {
@@ -190,33 +190,6 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
-          }
-        }
-      }
-      /**
-       * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
-       * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
-       */
-      trace(6, 1) {
-        span(0) {
-          name "SQS.ReceiveMessage"
-          kind CLIENT
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "aws.queue.url" queueUrl
-            "rpc.system" "aws-api"
-            "rpc.service" "AmazonSQS"
-            "rpc.method" "ReceiveMessage"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
             "net.peer.name" String
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"

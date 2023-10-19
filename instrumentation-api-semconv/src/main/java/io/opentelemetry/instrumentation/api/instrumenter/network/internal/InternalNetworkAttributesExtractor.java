@@ -8,8 +8,10 @@ package io.opentelemetry.instrumentation.api.instrumenter.network.internal;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InetSocketAddressUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
+import java.net.InetSocketAddress;
 import java.util.Locale;
 import javax.annotation.Nullable;
 
@@ -21,16 +23,28 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
 
   private final NetworkAttributesGetter<REQUEST, RESPONSE> getter;
   private final NetworkTransportFilter networkTransportFilter;
+  private final AddressAndPortExtractor<REQUEST> logicalLocalAddressAndPortExtractor;
+  private final AddressAndPortExtractor<REQUEST> logicalPeerAddressAndPortExtractor;
+  private final boolean captureLocalSocketAttributes;
+  private final boolean captureOldPeerDomainAttribute;
   private final boolean emitStableUrlAttributes;
   private final boolean emitOldHttpAttributes;
 
   public InternalNetworkAttributesExtractor(
       NetworkAttributesGetter<REQUEST, RESPONSE> getter,
       NetworkTransportFilter networkTransportFilter,
+      AddressAndPortExtractor<REQUEST> logicalLocalAddressAndPortExtractor,
+      AddressAndPortExtractor<REQUEST> logicalPeerAddressAndPortExtractor,
+      boolean captureLocalSocketAttributes,
+      boolean captureOldPeerDomainAttribute,
       boolean emitStableUrlAttributes,
       boolean emitOldHttpAttributes) {
     this.getter = getter;
     this.networkTransportFilter = networkTransportFilter;
+    this.logicalLocalAddressAndPortExtractor = logicalLocalAddressAndPortExtractor;
+    this.logicalPeerAddressAndPortExtractor = logicalPeerAddressAndPortExtractor;
+    this.captureLocalSocketAttributes = captureLocalSocketAttributes;
+    this.captureOldPeerDomainAttribute = captureOldPeerDomainAttribute;
     this.emitStableUrlAttributes = emitStableUrlAttributes;
     this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
@@ -58,6 +72,59 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
       // network.type; they must be handled separately in the old net.* extractors
       internalSet(attributes, SemanticAttributes.NET_PROTOCOL_NAME, protocolName);
       internalSet(attributes, SemanticAttributes.NET_PROTOCOL_VERSION, protocolVersion);
+    }
+
+    String localAddress = getter.getNetworkLocalAddress(request, response);
+    String logicalLocalAddress = logicalLocalAddressAndPortExtractor.extract(request).address;
+    if (localAddress != null && !localAddress.equals(logicalLocalAddress)) {
+      if (emitStableUrlAttributes && captureLocalSocketAttributes) {
+        internalSet(attributes, NetworkAttributes.NETWORK_LOCAL_ADDRESS, localAddress);
+      }
+      if (emitOldHttpAttributes) {
+        internalSet(attributes, SemanticAttributes.NET_SOCK_HOST_ADDR, localAddress);
+      }
+
+      Integer localPort = getter.getNetworkLocalPort(request, response);
+      if (localPort != null && localPort > 0) {
+        if (emitStableUrlAttributes && captureLocalSocketAttributes) {
+          internalSet(attributes, NetworkAttributes.NETWORK_LOCAL_PORT, (long) localPort);
+        }
+        if (emitOldHttpAttributes) {
+          internalSet(attributes, SemanticAttributes.NET_SOCK_HOST_PORT, (long) localPort);
+        }
+      }
+    }
+
+    String peerAddress = getter.getNetworkPeerAddress(request, response);
+    String logicalPeerAddress = logicalPeerAddressAndPortExtractor.extract(request).address;
+    if (peerAddress != null && !peerAddress.equals(logicalPeerAddress)) {
+      if (emitStableUrlAttributes) {
+        internalSet(attributes, NetworkAttributes.NETWORK_PEER_ADDRESS, peerAddress);
+      }
+      if (emitOldHttpAttributes) {
+        internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_ADDR, peerAddress);
+      }
+
+      Integer peerPort = getter.getNetworkPeerPort(request, response);
+      if (peerPort != null && peerPort > 0) {
+        if (emitStableUrlAttributes) {
+          internalSet(attributes, NetworkAttributes.NETWORK_PEER_PORT, (long) peerPort);
+        }
+        if (emitOldHttpAttributes) {
+          internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_PORT, (long) peerPort);
+        }
+      }
+
+      if (emitOldHttpAttributes && captureOldPeerDomainAttribute) {
+        InetSocketAddress peerSocketAddress =
+            getter.getNetworkPeerInetSocketAddress(request, response);
+        if (peerSocketAddress != null) {
+          String peerSocketDomain = InetSocketAddressUtil.getDomainName(peerSocketAddress);
+          if (peerSocketDomain != null && !peerSocketDomain.equals(logicalPeerAddress)) {
+            internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_NAME, peerSocketDomain);
+          }
+        }
+      }
     }
   }
 

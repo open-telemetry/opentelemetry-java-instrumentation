@@ -16,7 +16,7 @@ import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
-
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.netty.v4_1.ClientHandler
 import io.opentelemetry.instrumentation.test.AgentTestTrait
@@ -133,6 +133,7 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
               "$SemanticAttributes.NET_PEER_NAME" uri.host
               "$SemanticAttributes.NET_PEER_PORT" uri.port
               "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+              "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             }
           }
           if (SemconvStability.emitStableHttpSemconv()) {
@@ -141,7 +142,8 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
               "$SemanticAttributes.NETWORK_TYPE" "ipv4"
               "$SemanticAttributes.SERVER_ADDRESS" uri.host
               "$SemanticAttributes.SERVER_PORT" uri.port
-              "$SemanticAttributes.SERVER_SOCKET_ADDRESS" "127.0.0.1"
+              "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
+              "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             }
           }
         }
@@ -212,6 +214,7 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
               "$SemanticAttributes.NET_PEER_NAME" uri.host
               "$SemanticAttributes.NET_PEER_PORT" uri.port
               "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
+              "$SemanticAttributes.NET_SOCK_PEER_PORT" { it instanceof Long || it == null }
             }
           }
           if (SemconvStability.emitStableHttpSemconv()) {
@@ -220,7 +223,8 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
               "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == null }
               "$SemanticAttributes.SERVER_ADDRESS" uri.host
               "$SemanticAttributes.SERVER_PORT" uri.port
-              "$SemanticAttributes.SERVER_SOCKET_ADDRESS" { it == "127.0.0.1" || it == null }
+              "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == null }
+              "$NetworkAttributes.NETWORK_PEER_PORT" { it == uri.port || it == null }
             }
           }
         }
