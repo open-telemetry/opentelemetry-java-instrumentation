@@ -41,7 +41,7 @@ public final class AwsLambdaSqsInstrumenterFactory {
   private static String spanName(SQSEvent event) {
     String source = "multiple_sources";
     List<SQSMessage> records = event.getRecords();
-    if ((records != null) && !records.isEmpty()) {
+    if (records != null && !records.isEmpty()) {
       String messageSource = records.get(0).getEventSource();
       for (int i = 1; i < records.size(); i++) {
         SQSMessage message = records.get(i);
