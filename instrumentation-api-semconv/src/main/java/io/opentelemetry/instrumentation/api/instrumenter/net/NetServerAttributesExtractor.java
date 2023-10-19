@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.internal.Client
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkTransportFilter;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ServerAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
@@ -53,9 +52,9 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,
-            NetworkTransportFilter.alwaysTrue(),
             serverAddressAndPortExtractor,
             clientAddressAndPortExtractor,
+            /* captureNetworkTransportAndType= */ true,
             /* captureLocalSocketAttributes= */ true,
             /* captureOldPeerDomainAttribute= */ false,
             SemconvStability.emitStableHttpSemconv(),

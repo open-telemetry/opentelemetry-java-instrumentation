@@ -178,8 +178,6 @@ class HttpServerAttributesExtractorBothSemconvTest {
         .containsOnly(
             entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0"),
-            entry(SemanticAttributes.NETWORK_TRANSPORT, "udp"),
-            entry(SemanticAttributes.NETWORK_TYPE, "ipv4"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),

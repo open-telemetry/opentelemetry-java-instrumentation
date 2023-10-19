@@ -10,7 +10,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkTransportFilter;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 
@@ -37,9 +36,9 @@ public final class NetworkAttributesExtractor<REQUEST, RESPONSE>
     internalExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,
-            NetworkTransportFilter.alwaysTrue(),
             AddressAndPortExtractor.noop(),
             AddressAndPortExtractor.noop(),
+            /* captureNetworkTransportAndType= */ true,
             /* captureLocalSocketAttributes= */ true,
             // capture the old net.sock.peer.name attr for backwards compatibility
             /* captureOldPeerDomainAttribute= */ true,
