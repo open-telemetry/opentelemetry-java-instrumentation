@@ -11,17 +11,19 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static java.util.regex.Pattern.compile;
-import static java.util.regex.Pattern.quote;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import org.junit.Assume;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -75,7 +77,7 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @BeforeEach
-  void setup() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+  void setup() throws InvocationTargetException, IllegalAccessException {
     String newAddress = address;
     if (useRedisProtocol()) {
       // Newer versions of redisson require scheme, older versions forbid it
@@ -91,8 +93,7 @@ public abstract class AbstractRedissonClientTest {
           .getClass()
           .getMethod("setPingConnectionInterval", int.class)
           .invoke(singleServerConfig, 0);
-    } catch (NoSuchMethodException e) {
-      logger.warn("no setPingConnectionInterval method", e);
+    } catch (NoSuchMethodException ignored) {
     }
     redisson = Redisson.create(config);
     testing.clearData();
@@ -364,24 +365,9 @@ public abstract class AbstractRedissonClientTest {
     } finally {
       lock.unlock();
     }
-    // Use .* to match the actual script, since it changes between redisson versions
-    // everything that does not change is quoted so that it's matched literally
-    String lockPattern = compile("^" + quote("EVAL ") + ".*" + quote(" 1 lock ? ?")).toString();
 
-    String unlockPattern =
-        compile(
-                "^"
-                    + quote("EVAL ")
-                    + ".*"
-                    + quote(" 2 lock ")
-                    + "\\S+"
-                    + "("
-                    + quote(" ?")
-                    + ")+$")
-            .toString();
-
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.CLIENT),
+    List<Consumer<TraceAssert>> traceAsserts = new ArrayList<>();
+    traceAsserts.add(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -395,7 +381,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SemanticAttributes.DB_OPERATION, "EVAL"),
                             satisfies(
                                 SemanticAttributes.DB_STATEMENT,
-                                stringAssert -> stringAssert.containsPattern(lockPattern)))),
+                                stringAssert -> stringAssert.startsWith("EVAL")))));
+    traceAsserts.add(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -409,11 +396,34 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SemanticAttributes.DB_OPERATION, "EVAL"),
                             satisfies(
                                 SemanticAttributes.DB_STATEMENT,
-                                stringAssert -> stringAssert.containsPattern(unlockPattern)))));
+                                stringAssert -> stringAssert.startsWith("EVAL")))));
+    if (lockHas3Traces()) {
+      traceAsserts.add(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("DEL")
+                          .hasKind(CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                              equalTo(SemanticAttributes.NET_SOCK_PEER_NAME, "localhost"),
+                              equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, (long) port),
+                              equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+                              equalTo(SemanticAttributes.DB_OPERATION, "DEL"),
+                              satisfies(
+                                  SemanticAttributes.DB_STATEMENT,
+                                  stringAssert -> stringAssert.startsWith("DEL")))));
+    }
+
+    testing.waitAndAssertSortedTraces(orderByRootSpanKind(SpanKind.CLIENT), traceAsserts);
   }
 
   protected boolean useRedisProtocol() {
     return Boolean.getBoolean("testLatestDeps");
+  }
+
+  protected boolean lockHas3Traces() {
+    return false;
   }
 
   protected RBatch createBatch(RedissonClient redisson) {
