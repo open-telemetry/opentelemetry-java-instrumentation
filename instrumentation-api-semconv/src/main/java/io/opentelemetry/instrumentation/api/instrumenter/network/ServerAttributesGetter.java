@@ -47,7 +47,12 @@ public interface ServerAttributesGetter<REQUEST, RESPONSE> {
    * <p>Implementing this method is equivalent to implementing all of {@link
    * #getServerSocketDomain(Object, Object)}, {@link #getServerSocketAddress(Object, Object)} and
    * {@link #getServerSocketPort(Object, Object)}.
+   *
+   * @deprecated Implement {@link NetworkAttributesGetter#getNetworkPeerInetSocketAddress(Object,
+   *     Object)} or {@link NetworkAttributesGetter#getNetworkLocalInetSocketAddress(Object,
+   *     Object)} instead.
    */
+  @Deprecated
   @Nullable
   default InetSocketAddress getServerInetSocketAddress(
       REQUEST request, @Nullable RESPONSE response) {
@@ -64,7 +69,10 @@ public interface ServerAttributesGetter<REQUEST, RESPONSE> {
    * simply return {@code null}. If the instrumented library does not expose {@link
    * InetSocketAddress} in its API, you might want to implement this method instead of {@link
    * #getServerInetSocketAddress(Object, Object)}.
+   *
+   * @deprecated This method is deprecated and will be removed without replacement.
    */
+  @Deprecated
   @Nullable
   default String getServerSocketDomain(REQUEST request, @Nullable RESPONSE response) {
     return InetSocketAddressUtil.getDomainName(getServerInetSocketAddress(request, response));
@@ -80,7 +88,11 @@ public interface ServerAttributesGetter<REQUEST, RESPONSE> {
    * simply return {@code null}. If the instrumented library does not expose {@link
    * InetSocketAddress} in its API, you might want to implement this method instead of {@link
    * #getServerInetSocketAddress(Object, Object)}.
+   *
+   * @deprecated Implement {@link NetworkAttributesGetter#getNetworkPeerAddress(Object, Object)} or
+   *     {@link NetworkAttributesGetter#getNetworkLocalAddress(Object, Object)} instead.
    */
+  @Deprecated
   @Nullable
   default String getServerSocketAddress(REQUEST request, @Nullable RESPONSE response) {
     return InetSocketAddressUtil.getIpAddress(getServerInetSocketAddress(request, response));
@@ -96,7 +108,11 @@ public interface ServerAttributesGetter<REQUEST, RESPONSE> {
    * simply return {@code null}. If the instrumented library does not expose {@link
    * InetSocketAddress} in its API, you might want to implement this method instead of {@link
    * #getServerInetSocketAddress(Object, Object)}.
+   *
+   * @deprecated Implement {@link NetworkAttributesGetter#getNetworkPeerPort(Object, Object)} or
+   *     {@link NetworkAttributesGetter#getNetworkLocalPort(Object, Object)} instead.
    */
+  @Deprecated
   @Nullable
   default Integer getServerSocketPort(REQUEST request, @Nullable RESPONSE response) {
     return InetSocketAddressUtil.getPort(getServerInetSocketAddress(request, response));

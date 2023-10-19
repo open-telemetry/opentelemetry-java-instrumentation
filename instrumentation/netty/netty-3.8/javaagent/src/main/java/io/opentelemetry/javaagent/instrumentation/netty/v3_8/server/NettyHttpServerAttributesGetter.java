@@ -105,7 +105,7 @@ final class NettyHttpServerAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getClientInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     SocketAddress address = requestAndChannel.channel().getRemoteAddress();
     if (address instanceof InetSocketAddress) {
@@ -116,7 +116,7 @@ final class NettyHttpServerAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkLocalInetSocketAddress(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     SocketAddress address = requestAndChannel.channel().getLocalAddress();
     if (address instanceof InetSocketAddress) {

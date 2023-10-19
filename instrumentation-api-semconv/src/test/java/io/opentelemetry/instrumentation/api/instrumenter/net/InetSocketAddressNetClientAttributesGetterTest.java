@@ -38,7 +38,7 @@ class InetSocketAddressNetClientAttributesGetterTest {
     }
 
     @Override
-    public InetSocketAddress getServerInetSocketAddress(
+    public InetSocketAddress getNetworkPeerInetSocketAddress(
         InetSocketAddress request, InetSocketAddress response) {
       return response;
     }

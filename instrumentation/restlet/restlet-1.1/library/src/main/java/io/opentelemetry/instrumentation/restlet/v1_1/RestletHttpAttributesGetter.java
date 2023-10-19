@@ -122,18 +122,18 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
 
   @Override
   @Nullable
-  public String getClientSocketAddress(Request request, @Nullable Response response) {
+  public String getNetworkPeerAddress(Request request, @Nullable Response response) {
     return request.getClientInfo().getAddress();
   }
 
   @Override
-  public Integer getClientSocketPort(Request request, @Nullable Response response) {
+  public Integer getNetworkPeerPort(Request request, @Nullable Response response) {
     return request.getClientInfo().getPort();
   }
 
   @Nullable
   @Override
-  public String getServerSocketAddress(Request request, @Nullable Response response) {
+  public String getNetworkLocalAddress(Request request, @Nullable Response response) {
     HttpCall call = httpCall(request);
     return call == null ? null : call.getServerAddress();
   }

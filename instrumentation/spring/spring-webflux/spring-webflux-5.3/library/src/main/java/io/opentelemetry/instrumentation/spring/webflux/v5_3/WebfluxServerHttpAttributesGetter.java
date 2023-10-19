@@ -94,14 +94,14 @@ enum WebfluxServerHttpAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getClientInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       ServerWebExchange request, @Nullable ServerWebExchange response) {
     return request.getRequest().getRemoteAddress();
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkLocalInetSocketAddress(
       ServerWebExchange request, @Nullable ServerWebExchange response) {
     return request.getRequest().getLocalAddress();
   }

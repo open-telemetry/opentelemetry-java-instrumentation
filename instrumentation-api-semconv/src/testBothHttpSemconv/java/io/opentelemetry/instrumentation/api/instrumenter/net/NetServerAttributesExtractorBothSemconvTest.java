@@ -75,25 +75,25 @@ class NetServerAttributesExtractorBothSemconvTest {
     }
 
     @Override
-    public String getClientSocketAddress(Map<String, String> request, Void response) {
+    public String getNetworkPeerAddress(Map<String, String> request, Void response) {
       return request.get("sockPeerAddr");
     }
 
     @Override
-    public Integer getClientSocketPort(Map<String, String> request, Void response) {
+    public Integer getNetworkPeerPort(Map<String, String> request, Void response) {
       String sockPeerPort = request.get("sockPeerPort");
       return sockPeerPort == null ? null : Integer.valueOf(sockPeerPort);
     }
 
     @Nullable
     @Override
-    public String getServerSocketAddress(Map<String, String> request, Void response) {
+    public String getNetworkLocalAddress(Map<String, String> request, Void response) {
       return request.get("sockHostAddr");
     }
 
     @Nullable
     @Override
-    public Integer getServerSocketPort(Map<String, String> request, Void response) {
+    public Integer getNetworkLocalPort(Map<String, String> request, Void response) {
       String sockHostPort = request.get("sockHostPort");
       return sockHostPort == null ? null : Integer.valueOf(sockHostPort);
     }

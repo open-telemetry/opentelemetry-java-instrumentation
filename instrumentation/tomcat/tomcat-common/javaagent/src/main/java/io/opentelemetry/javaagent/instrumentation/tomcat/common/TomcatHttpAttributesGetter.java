@@ -92,28 +92,28 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
 
   @Override
   @Nullable
-  public String getClientSocketAddress(Request request, @Nullable Response response) {
+  public String getNetworkPeerAddress(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_HOST_ADDR_ATTRIBUTE, request);
     return messageBytesToString(request.remoteAddr());
   }
 
   @Override
   @Nullable
-  public Integer getClientSocketPort(Request request, @Nullable Response response) {
+  public Integer getNetworkPeerPort(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_REMOTEPORT_ATTRIBUTE, request);
     return request.getRemotePort();
   }
 
   @Nullable
   @Override
-  public String getServerSocketAddress(Request request, @Nullable Response response) {
+  public String getNetworkLocalAddress(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_LOCAL_ADDR_ATTRIBUTE, request);
     return messageBytesToString(request.localAddr());
   }
 
   @Nullable
   @Override
-  public Integer getServerSocketPort(Request request, @Nullable Response response) {
+  public Integer getNetworkLocalPort(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_LOCALPORT_ATTRIBUTE, request);
     return request.getLocalPort();
   }

@@ -77,6 +77,7 @@ class PeerServiceAttributesExtractorTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // old semconv
   void shouldSetPeerNameIfItMatches() {
     // given
     Map<String, String> peerServiceMapping = new HashMap<>();
@@ -105,6 +106,7 @@ class PeerServiceAttributesExtractorTest {
     verify(netAttributesExtractor, never()).getServerSocketDomain(any(), any());
   }
 
+  @SuppressWarnings("deprecation") // old semconv
   @Test
   void shouldSetSockPeerNameIfItMatchesAndNoPeerNameProvided() {
 

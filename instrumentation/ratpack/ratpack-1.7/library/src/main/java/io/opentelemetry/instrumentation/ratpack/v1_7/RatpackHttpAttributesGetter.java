@@ -106,7 +106,7 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   }
 
   @Override
-  public Integer getClientSocketPort(Request request, @Nullable Response response) {
+  public Integer getNetworkPeerPort(Request request, @Nullable Response response) {
     return request.getRemoteAddress().getPort();
   }
 }

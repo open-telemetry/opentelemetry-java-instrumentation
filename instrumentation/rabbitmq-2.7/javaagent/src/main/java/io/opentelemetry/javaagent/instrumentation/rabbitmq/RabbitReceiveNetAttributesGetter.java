@@ -51,13 +51,13 @@ public class RabbitReceiveNetAttributesGetter
 
   @Nullable
   @Override
-  public String getServerSocketAddress(ReceiveRequest request, @Nullable GetResponse response) {
+  public String getNetworkPeerAddress(ReceiveRequest request, @Nullable GetResponse response) {
     return request.getConnection().getAddress().getHostAddress();
   }
 
   @Nullable
   @Override
-  public Integer getServerSocketPort(ReceiveRequest request, @Nullable GetResponse response) {
+  public Integer getNetworkPeerPort(ReceiveRequest request, @Nullable GetResponse response) {
     return request.getConnection().getPort();
   }
 }

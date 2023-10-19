@@ -10,6 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.url.UrlParser;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -47,6 +48,7 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {}
 
+  @SuppressWarnings("deprecation") // old semconv
   @Override
   public void onEnd(
       AttributesBuilder attributes,
@@ -64,7 +66,7 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
     Integer serverPort = attributesGetter.getServerPort(request);
     Supplier<String> pathSupplier = () -> getUrlPath(attributesGetter, request);
     String peerService = mapToPeerService(serverAddress, serverPort, pathSupplier);
-    if (peerService == null) {
+    if (peerService == null && SemconvStability.emitOldHttpSemconv()) {
       String serverSocketDomain = attributesGetter.getServerSocketDomain(request, response);
       Integer serverSocketPort = attributesGetter.getServerSocketPort(request, response);
       peerService = mapToPeerService(serverSocketDomain, serverSocketPort, null);

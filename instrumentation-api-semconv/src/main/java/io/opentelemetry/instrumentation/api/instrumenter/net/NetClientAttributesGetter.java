@@ -59,20 +59,20 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE>
 
   @Nullable
   @Override
-  default InetSocketAddress getNetworkPeerInetSocketAddress(
+  default InetSocketAddress getServerInetSocketAddress(
       REQUEST request, @Nullable RESPONSE response) {
-    return getServerInetSocketAddress(request, response);
+    return getNetworkPeerInetSocketAddress(request, response);
   }
 
   @Nullable
   @Override
-  default String getNetworkPeerAddress(REQUEST request, @Nullable RESPONSE response) {
-    return getServerSocketAddress(request, response);
+  default String getServerSocketAddress(REQUEST request, @Nullable RESPONSE response) {
+    return getNetworkPeerAddress(request, response);
   }
 
   @Nullable
   @Override
-  default Integer getNetworkPeerPort(REQUEST request, @Nullable RESPONSE response) {
-    return getServerSocketPort(request, response);
+  default Integer getServerSocketPort(REQUEST request, @Nullable RESPONSE response) {
+    return getNetworkPeerPort(request, response);
   }
 }

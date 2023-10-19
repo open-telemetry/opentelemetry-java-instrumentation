@@ -76,18 +76,12 @@ class NetClientAttributesExtractorBothSemconvTest {
     }
 
     @Override
-    public String getServerSocketDomain(Map<String, String> request, Map<String, String> response) {
-      return response.get("sockPeerName");
-    }
-
-    @Override
-    public String getServerSocketAddress(
-        Map<String, String> request, Map<String, String> response) {
+    public String getNetworkPeerAddress(Map<String, String> request, Map<String, String> response) {
       return response.get("sockPeerAddr");
     }
 
     @Override
-    public Integer getServerSocketPort(Map<String, String> request, Map<String, String> response) {
+    public Integer getNetworkPeerPort(Map<String, String> request, Map<String, String> response) {
       String sockPeerPort = response.get("sockPeerPort");
       return sockPeerPort == null ? null : Integer.valueOf(sockPeerPort);
     }

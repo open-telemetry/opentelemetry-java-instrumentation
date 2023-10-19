@@ -42,7 +42,7 @@ final class NettySslNetAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       NettySslRequest request, @Nullable Void unused) {
     if (request.remoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) request.remoteAddress();
