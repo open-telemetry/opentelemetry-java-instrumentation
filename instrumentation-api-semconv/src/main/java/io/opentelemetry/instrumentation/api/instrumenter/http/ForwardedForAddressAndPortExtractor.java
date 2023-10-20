@@ -5,14 +5,18 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HeaderParsingHelper.notFound;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HeaderParsingHelper.setPort;
+
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import java.util.Locale;
 
-final class ForwardedAddressAndPortExtractor<REQUEST> implements AddressAndPortExtractor<REQUEST> {
+final class ForwardedForAddressAndPortExtractor<REQUEST>
+    implements AddressAndPortExtractor<REQUEST> {
 
   private final HttpServerAttributesGetter<REQUEST, ?> getter;
 
-  ForwardedAddressAndPortExtractor(HttpServerAttributesGetter<REQUEST, ?> getter) {
+  ForwardedForAddressAndPortExtractor(HttpServerAttributesGetter<REQUEST, ?> getter) {
     this.getter = getter;
   }
 
@@ -38,7 +42,7 @@ final class ForwardedAddressAndPortExtractor<REQUEST> implements AddressAndPortE
     if (start < 0) {
       return false;
     }
-    start += 4; // start is now the index after for=
+    start += "for=".length(); // start is now the index after for=
     if (start >= forwarded.length() - 1) { // the value after for= must not be empty
       return false;
     }
@@ -132,26 +136,11 @@ final class ForwardedAddressAndPortExtractor<REQUEST> implements AddressAndPortE
     return true;
   }
 
-  private static boolean notFound(int pos, int end) {
-    return pos < 0 || pos >= end;
-  }
-
   private static int findPortEnd(String header, int start, int end) {
     int numberEnd = start;
     while (numberEnd < end && Character.isDigit(header.charAt(numberEnd))) {
       ++numberEnd;
     }
     return numberEnd;
-  }
-
-  private static void setPort(AddressPortSink sink, String header, int start, int end) {
-    if (start == end) {
-      return;
-    }
-    try {
-      sink.setPort(Integer.parseInt(header.substring(start, end)));
-    } catch (NumberFormatException ignored) {
-      // malformed port, ignoring
-    }
   }
 }

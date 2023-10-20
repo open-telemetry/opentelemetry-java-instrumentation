@@ -54,10 +54,10 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
     clientAddressPortExtractor =
         new ClientAddressAndPortExtractor<>(
-            netAttributesGetter, new ForwardedAddressAndPortExtractor<>(httpAttributesGetter));
+            netAttributesGetter, new ForwardedForAddressAndPortExtractor<>(httpAttributesGetter));
     serverAddressPortExtractor =
         new ServerAddressAndPortExtractor<>(
-            netAttributesGetter, new HostAddressAndPortExtractor<>(httpAttributesGetter));
+            netAttributesGetter, new ForwardedHostAddressAndPortExtractor<>(httpAttributesGetter));
   }
 
   /**

@@ -414,6 +414,59 @@ class HttpServerAttributesExtractorStableSemconvTest {
   }
 
   @Test
+  void shouldExtractServerAddressAndPortFromForwardedHeader() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.forwarded", "host=example.com:42");
+    request.put("header.x-forwarded-host", "opentelemetry.io:987");
+    request.put("header.host", "github.com:123");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "200");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.SERVER_ADDRESS, "example.com"),
+            entry(SemanticAttributes.SERVER_PORT, 42L));
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+  }
+
+  @Test
+  void shouldExtractServerAddressAndPortFromForwardedHostHeader() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.x-forwarded-host", "opentelemetry.io:987");
+    request.put("header.host", "github.com:123");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "200");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"),
+            entry(SemanticAttributes.SERVER_PORT, 987L));
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+  }
+
+  @Test
   void shouldExtractServerAddressAndPortFromHostHeader() {
     Map<String, String> request = new HashMap<>();
     request.put("header.host", "github.com:123");

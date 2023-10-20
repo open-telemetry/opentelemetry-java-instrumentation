@@ -5,15 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HeaderParsingHelper.setPort;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpCommonAttributesExtractor.firstHeaderValue;
-import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
-import java.util.logging.Logger;
 
 final class HostAddressAndPortExtractor<REQUEST> implements AddressAndPortExtractor<REQUEST> {
-
-  private static final Logger logger = Logger.getLogger(HttpCommonAttributesGetter.class.getName());
 
   private final HttpCommonAttributesGetter<REQUEST, ?> getter;
 
@@ -31,14 +28,9 @@ final class HostAddressAndPortExtractor<REQUEST> implements AddressAndPortExtrac
     int hostHeaderSeparator = host.indexOf(':');
     if (hostHeaderSeparator == -1) {
       sink.setAddress(host);
-      return;
-    }
-
-    sink.setAddress(host.substring(0, hostHeaderSeparator));
-    try {
-      sink.setPort(Integer.parseInt(host.substring(hostHeaderSeparator + 1)));
-    } catch (NumberFormatException e) {
-      logger.log(FINE, e.getMessage(), e);
+    } else {
+      sink.setAddress(host.substring(0, hostHeaderSeparator));
+      setPort(sink, host, hostHeaderSeparator + 1, host.length());
     }
   }
 }
