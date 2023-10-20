@@ -10,7 +10,7 @@ import static java.util.Comparator.naturalOrder;
 import static java.util.Comparator.nullsFirst;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.instrumenter.url.UrlParser;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.UrlParser;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;

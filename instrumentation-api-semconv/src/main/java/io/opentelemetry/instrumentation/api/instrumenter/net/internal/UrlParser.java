@@ -3,12 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter.url;
+package io.opentelemetry.instrumentation.api.instrumenter.net.internal;
 
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
-public class UrlParser {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class UrlParser {
 
   @Nullable
   public static String getHost(String url) {
