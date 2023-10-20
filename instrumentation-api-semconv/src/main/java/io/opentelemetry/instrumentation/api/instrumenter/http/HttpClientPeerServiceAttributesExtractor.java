@@ -9,7 +9,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceResolver;
-import io.opentelemetry.instrumentation.api.instrumenter.url.UrlParser;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.function.Supplier;
