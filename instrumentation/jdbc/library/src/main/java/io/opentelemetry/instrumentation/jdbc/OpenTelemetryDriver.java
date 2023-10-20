@@ -198,7 +198,10 @@ public final class OpenTelemetryDriver implements Driver {
     return new int[] {0, 0};
   }
 
-  /** Installs the {@link OpenTelemetry} instance on the {@code OpenTelemetryDriver}. */
+  /**
+   * Installs the {@link OpenTelemetry} instance on the {@code OpenTelemetryDriver}. OpenTelemetry
+   * has to be set before the initialization of the database connection pool.
+   */
   public static void install(OpenTelemetry openTelemetry) {
     Enumeration<Driver> drivers = DriverManager.getDrivers();
     while (drivers.hasMoreElements()) {
@@ -212,7 +215,8 @@ public final class OpenTelemetryDriver implements Driver {
 
   /**
    * Configures the {@link OpenTelemetry}. See {@link #install(OpenTelemetry)} for simple
-   * installation option.
+   * installation option. OpenTelemetry has to be set before the initialization of the database
+   * connection pool.
    */
   public void setOpenTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
