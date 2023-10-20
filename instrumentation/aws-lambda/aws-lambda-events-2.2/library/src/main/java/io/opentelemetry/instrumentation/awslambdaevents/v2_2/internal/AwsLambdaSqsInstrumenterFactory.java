@@ -10,6 +10,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import java.util.List;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -39,10 +40,11 @@ public final class AwsLambdaSqsInstrumenterFactory {
 
   private static String spanName(SQSEvent event) {
     String source = "multiple_sources";
-    if (!event.getRecords().isEmpty()) {
-      String messageSource = event.getRecords().get(0).getEventSource();
-      for (int i = 1; i < event.getRecords().size(); i++) {
-        SQSMessage message = event.getRecords().get(i);
+    List<SQSMessage> records = event.getRecords();
+    if (records != null && !records.isEmpty()) {
+      String messageSource = records.get(0).getEventSource();
+      for (int i = 1; i < records.size(); i++) {
+        SQSMessage message = records.get(i);
         if (!message.getEventSource().equals(messageSource)) {
           messageSource = null;
           break;
