@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter.url;
+package io.opentelemetry.instrumentation.api.instrumenter.net.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
