@@ -167,7 +167,7 @@ public class ExtensionClassLoader extends URLClassLoader {
     try {
       // skip shading extension classes if opentelemetry-api is not shaded (happens when using
       // disableShadowRelocate=true)
-      if (Context.class.getName().contains("shaded")) {
+      if (Context.class.getName().contains(".shaded.")) {
         URL wrappedUrl = new URL("otel", null, -1, "/", new RemappingUrlStreamHandler(file));
         result.add(wrappedUrl);
       } else {
