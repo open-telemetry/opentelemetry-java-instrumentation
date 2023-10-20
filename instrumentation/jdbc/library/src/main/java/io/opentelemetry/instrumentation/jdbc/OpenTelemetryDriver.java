@@ -22,7 +22,6 @@ package io.opentelemetry.instrumentation.jdbc;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.INSTRUMENTATION_NAME;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
@@ -53,7 +52,7 @@ public final class OpenTelemetryDriver implements Driver {
   // visible for testing
   static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
 
-  private OpenTelemetry openTelemetry;
+  private OpenTelemetry openTelemetry = OpenTelemetry.noop();
 
   private static final int MAJOR_VERSION;
   private static final int MINOR_VERSION;
@@ -239,17 +238,9 @@ public final class OpenTelemetryDriver implements Driver {
 
     DbInfo dbInfo = JdbcConnectionUrlParser.parse(realUrl, info);
 
-    OpenTelemetry otel = getOpenTelemetry();
     Instrumenter<DbRequest, Void> statementInstrumenter =
-        JdbcInstrumenterFactory.createStatementInstrumenter(otel);
+        JdbcInstrumenterFactory.createStatementInstrumenter(openTelemetry);
     return new OpenTelemetryConnection(connection, dbInfo, statementInstrumenter);
-  }
-
-  private OpenTelemetry getOpenTelemetry() {
-    if (openTelemetry == null) {
-      return GlobalOpenTelemetry.get();
-    }
-    return openTelemetry;
   }
 
   @Override
