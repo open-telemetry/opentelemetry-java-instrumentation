@@ -323,7 +323,12 @@ tasks.withType<Test>().configureEach {
   // propagation.
   jvmArgs("-Dio.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
   // TODO(anuraaga): Have agent map unshaded to shaded.
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
+  if (project.findProperty("disableShadowRelocate") != "true") {
+    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
+  } else {
+    jvmArgs("-Dotel.instrumentation.opentelemetry-api.enabled=false")
+    jvmArgs("-Dotel.instrumentation.opentelemetry-instrumentation-api.enabled=false")
+  }
 
   // Disable default resource providers since they cause lots of output we don't need.
   jvmArgs("-Dotel.java.disabled.resource.providers=$resourceClassesCsv")
