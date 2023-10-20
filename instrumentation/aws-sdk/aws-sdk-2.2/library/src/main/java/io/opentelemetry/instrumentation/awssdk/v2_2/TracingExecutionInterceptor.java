@@ -143,7 +143,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       requestFinisher =
           (finisherOtelContext, finisherExecutionAttributes, response, exception) -> {
             // generate request span when there was an error
-            if (exception != null) {
+            if (exception != null
+                && instrumenter.shouldStart(finisherOtelContext, finisherExecutionAttributes)) {
               InstrumenterUtil.startAndEnd(
                   instrumenter,
                   finisherOtelContext,

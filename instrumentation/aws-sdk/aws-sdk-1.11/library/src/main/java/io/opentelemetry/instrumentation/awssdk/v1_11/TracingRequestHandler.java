@@ -115,16 +115,11 @@ final class TracingRequestHandler extends RequestHandler2 {
     // AmazonSQSClient.receiveMessage calls
     Instant requestStart = context.get(REQUEST_START_KEY);
     if (requestStart != null) {
+      Context parentContext = context.get(PARENT_CONTEXT_KEY);
       // create request span if there was an error
-      if (error != null) {
+      if (error != null && requestInstrumenter.shouldStart(parentContext, request)) {
         InstrumenterUtil.startAndEnd(
-            instrumenter,
-            context.get(PARENT_CONTEXT_KEY),
-            request,
-            response,
-            error,
-            requestStart,
-            Instant.now());
+            instrumenter, parentContext, request, response, error, requestStart, Instant.now());
       }
       return;
     }
