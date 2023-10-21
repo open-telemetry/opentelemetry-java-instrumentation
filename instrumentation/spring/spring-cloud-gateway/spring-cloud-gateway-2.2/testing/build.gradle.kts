@@ -1,25 +1,16 @@
 plugins {
-  id("otel.javaagent-instrumentation")
-}
-
-muzzle {
-  pass {
-    group.set("org.springframework.cloud")
-    module.set("spring-cloud-starter-gateway")
-    versions.set("[2.0.0.RELEASE,]")
-  }
+  id("otel.javaagent-testing")
 }
 
 dependencies {
-  compileOnly("org.springframework.cloud:spring-cloud-starter-gateway:2.0.0.RELEASE")
-
+  testInstrumentation(project(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent"))
 
-  testLibrary("org.springframework.cloud:spring-cloud-starter-gateway:2.0.0.RELEASE")
-  testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
+  testLibrary("org.springframework.cloud:spring-cloud-starter-gateway:2.2.0.RELEASE")
+  testLibrary("org.springframework.boot:spring-boot-starter-test:2.2.0.RELEASE")
 }
 
 tasks.withType<Test>().configureEach {

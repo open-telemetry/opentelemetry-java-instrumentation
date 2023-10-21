@@ -1,0 +1,7 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - uri: h1c://mock.response
+          predicates:
+            - Path=/gateway/echo
