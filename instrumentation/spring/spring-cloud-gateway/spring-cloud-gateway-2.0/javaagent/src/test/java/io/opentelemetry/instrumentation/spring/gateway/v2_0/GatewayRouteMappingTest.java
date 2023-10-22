@@ -79,7 +79,7 @@ class GatewayRouteMappingTest {
   }
 
   @Test
-  void gatewayRandomUUIDRouteMappingTest() {
+  void gatewayRandomUuidRouteMappingTest() {
     String requestBody = "gateway";
     AggregatedHttpResponse response = client.post("/uuid/echo", requestBody).aggregate().join();
     assertThat(response.status().code()).isEqualTo(200);
@@ -94,7 +94,7 @@ class GatewayRouteMappingTest {
   }
 
   @Test
-  void gatewayFakeUUIDRouteMappingTest() {
+  void gatewayFakeUuidRouteMappingTest() {
     String requestBody = "gateway";
     AggregatedHttpResponse response = client.post("/fake/echo", requestBody).aggregate().join();
     assertThat(response.status().code()).isEqualTo(200);
