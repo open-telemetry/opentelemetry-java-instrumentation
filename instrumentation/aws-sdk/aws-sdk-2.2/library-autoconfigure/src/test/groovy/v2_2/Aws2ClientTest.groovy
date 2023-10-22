@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.gateway.v2_2
+package v2_2
 
 import io.opentelemetry.instrumentation.awssdk.v2_2.AbstractAws2ClientTest
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
