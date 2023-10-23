@@ -33,14 +33,16 @@ public final class InternalClientAttributesExtractor<REQUEST> {
   public void onStart(AttributesBuilder attributes, REQUEST request) {
     AddressAndPort clientAddressAndPort = addressAndPortExtractor.extract(request);
 
-    if (emitStableUrlAttributes) {
-      internalSet(attributes, SemanticAttributes.CLIENT_ADDRESS, clientAddressAndPort.address);
-      if (clientAddressAndPort.port != null && clientAddressAndPort.port > 0) {
-        internalSet(attributes, SemanticAttributes.CLIENT_PORT, (long) clientAddressAndPort.port);
+    if (clientAddressAndPort.address != null) {
+      if (emitStableUrlAttributes) {
+        internalSet(attributes, SemanticAttributes.CLIENT_ADDRESS, clientAddressAndPort.address);
+        if (clientAddressAndPort.port != null && clientAddressAndPort.port > 0) {
+          internalSet(attributes, SemanticAttributes.CLIENT_PORT, (long) clientAddressAndPort.port);
+        }
       }
-    }
-    if (emitOldHttpAttributes) {
-      internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientAddressAndPort.address);
+      if (emitOldHttpAttributes) {
+        internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientAddressAndPort.address);
+      }
     }
   }
 }
