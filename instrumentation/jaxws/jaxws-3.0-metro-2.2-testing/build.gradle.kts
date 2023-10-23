@@ -3,9 +3,9 @@ plugins {
 }
 
 dependencies {
-  testImplementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
-  testImplementation("com.sun.xml.ws:jaxws-rt:3.0.0")
+  testLibrary("com.sun.xml.ws:jaxws-rt:3.0.0")
 
+  testImplementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
   testImplementation(project(":instrumentation:jaxws:jaxws-3.0-common-testing"))
 
   testInstrumentation(project(":instrumentation:jaxws:jaxws-metro-2.2:javaagent"))

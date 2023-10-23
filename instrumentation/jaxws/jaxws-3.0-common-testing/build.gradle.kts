@@ -14,10 +14,6 @@ dependencies {
   api("jakarta.xml.ws:jakarta.xml.ws-api:3.0.0")
   api("jakarta.jws:jakarta.jws-api:3.0.0")
 
-  api("ch.qos.logback:logback-classic")
-  api("org.slf4j:log4j-over-slf4j")
-  api("org.slf4j:jcl-over-slf4j")
-  api("org.slf4j:jul-to-slf4j")
   api("org.eclipse.jetty:jetty-webapp:11.0.17")
   api("org.springframework.ws:spring-ws-core:4.0.0")
 
