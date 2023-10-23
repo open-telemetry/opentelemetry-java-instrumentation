@@ -89,9 +89,12 @@ final class SpanSuppressors {
 
   static class ByContextKey implements SpanSuppressor {
     private final SpanSuppressor delegate;
-    private static final ContextKey<Boolean> SUPPRESS_INSTRUMENTATION = ContextKey.named("suppress_instrumentation");
+    private static final ContextKey<Boolean> SUPPRESS_INSTRUMENTATION =
+        ContextKey.named("suppress_instrumentation");
 
-    ByContextKey(SpanSuppressor delegate) {this.delegate = delegate;}
+    ByContextKey(SpanSuppressor delegate) {
+      this.delegate = delegate;
+    }
 
     @Override
     public Context storeInContext(Context context, SpanKind spanKind, Span span) {
@@ -100,7 +103,7 @@ final class SpanSuppressors {
 
     @Override
     public boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
-      if(Boolean.TRUE.equals(parentContext.get(SUPPRESS_INSTRUMENTATION))) {
+      if (Boolean.TRUE.equals(parentContext.get(SUPPRESS_INSTRUMENTATION))) {
         return true;
       }
       return delegate.shouldSuppress(parentContext, spanKind);
