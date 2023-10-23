@@ -91,7 +91,8 @@ final class SpanSuppressors {
   static class ByContextKey implements SpanSuppressor {
     private final SpanSuppressor delegate;
     static final ContextKey<Boolean> SUPPRESS_INSTRUMENTATION =
-        ContextKey.named("suppress_instrumentation");//todo must use the key defined in the Java SDK.
+        ContextKey.named(
+            "suppress_instrumentation"); // todo must use the key defined in the Java SDK.
 
     ByContextKey(SpanSuppressor delegate) {
       this.delegate = delegate;
