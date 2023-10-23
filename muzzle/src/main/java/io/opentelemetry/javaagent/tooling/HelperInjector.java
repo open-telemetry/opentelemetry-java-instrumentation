@@ -127,15 +127,13 @@ public class HelperInjector implements Transformer {
 
   public HelperInjector(
       String requestingName,
-      List<String> helperClassNames,
       Map<String, Function<ClassLoader, byte[]>> helperMap,
       List<HelperResource> helperResources,
       ClassLoader helpersSource,
       Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
-    this.helperClassNames = new LinkedHashSet<>(helperClassNames);
-    this.helperClassNames.addAll(helperMap.keySet());
+    this.helperClassNames = helperMap.keySet();
     this.dynamicTypeMap.putAll(helperMap);
 
     this.helperResources = helperResources;
@@ -152,12 +150,7 @@ public class HelperInjector implements Transformer {
       bytes.put(helper.getTypeDescription().getName(), cl -> helper.getBytes());
     }
     return new HelperInjector(
-        requestingName,
-        Collections.emptyList(),
-        bytes,
-        Collections.emptyList(),
-        null,
-        instrumentation);
+        requestingName, bytes, Collections.emptyList(), null, instrumentation);
   }
 
   public static void setHelperInjectorListener(HelperInjectorListener listener) {
@@ -167,7 +160,6 @@ public class HelperInjector implements Transformer {
   private Map<String, Supplier<byte[]>> getHelperMap(ClassLoader targetClassloader) {
     Map<String, Supplier<byte[]>> result = new LinkedHashMap<>();
     if (dynamicTypeMap.isEmpty()) {
-
       for (String helperClassName : helperClassNames) {
         result.put(
             helperClassName,

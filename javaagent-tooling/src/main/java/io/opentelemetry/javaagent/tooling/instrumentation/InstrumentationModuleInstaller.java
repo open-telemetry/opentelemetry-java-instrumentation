@@ -31,14 +31,12 @@ import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
 import io.opentelemetry.javaagent.tooling.util.NamedMatcher;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
-import java.security.ProtectionDomain;
 import java.util.Collections;
 import java.util.List;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.utility.JavaModule;
 
 public final class InstrumentationModuleInstaller {
 
@@ -103,7 +101,6 @@ public final class InstrumentationModuleInstaller {
       ExperimentalInstrumentationModule experimentalInstrumentationModule =
           (ExperimentalInstrumentationModule) instrumentationModule;
       injectedHelperClassNames = experimentalInstrumentationModule.injectedClassNames();
-      helperClassNames.removeAll(injectedHelperClassNames);
     }
 
     IndyModuleRegistry.registerIndyModule(instrumentationModule);
@@ -114,34 +111,20 @@ public final class InstrumentationModuleInstaller {
           .injectClasses(injectedClassesCollector);
     }
 
-    // TODO (Jonas): Adapt MuzzleMatcher to use the same type lookup strategy as the
-    // InstrumentationModuleClassLoader (see IndyModuleTypePool)
-    MuzzleMatcher muzzleMatcher =
-        new MuzzleMatcher(logger, instrumentationModule, config) {
-          @Override
-          public boolean matches(
-              TypeDescription typeDescription,
-              ClassLoader classLoader,
-              JavaModule module,
-              Class<?> classBeingRedefined,
-              ProtectionDomain protectionDomain) {
-            ClassLoader instrumentationClassLoader =
-                IndyModuleRegistry.getInstrumentationClassloader(
-                    instrumentationModule.getClass().getName(), classLoader);
-            return super.matches(
-                typeDescription,
-                instrumentationClassLoader,
-                module,
-                classBeingRedefined,
-                protectionDomain);
-          }
-        };
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
+
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
             injectedHelperClassNames,
-            injectedClassesCollector.getClassesToInject(),
             helperResourceBuilder.getResources(),
+            instrumentationModule.getClass().getClassLoader(),
+            instrumentation);
+    AgentBuilder.Transformer indyHelperInjector =
+        new HelperInjector(
+            instrumentationModule.instrumentationName(),
+            injectedClassesCollector.getClassesToInject(),
+            Collections.emptyList(),
             instrumentationModule.getClass().getClassLoader(),
             instrumentation);
 
@@ -154,7 +137,8 @@ public final class InstrumentationModuleInstaller {
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
               .and(muzzleMatcher)
               .transform(new PatchByteCodeVersionTransformer())
-              .transform(helperInjector);
+              .transform(helperInjector)
+              .transform(indyHelperInjector);
 
       // TODO (Jonas): we are not calling
       // contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder) anymore
