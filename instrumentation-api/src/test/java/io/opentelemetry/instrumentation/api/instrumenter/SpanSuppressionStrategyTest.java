@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressors.ByContextKey.SUPPRESS_INSTRUMENTATION;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -156,5 +157,32 @@ class SpanSuppressionStrategyTest {
             SpanKey.DB_CLIENT.storeInContext(Context.root(), span), span);
 
     assertFalse(suppressor.shouldSuppress(context, SpanKind.SERVER));
+  }
+
+  @Test
+  void context_shouldSuppressWhenKeyIsAvailableAndTrue() {
+    Context context = Context.current().with(SUPPRESS_INSTRUMENTATION, true);
+    SpanSuppressor suppressor =
+        new SpanSuppressors.ByContextKey(SpanSuppressionStrategy.NONE.create(emptySet()));
+
+    assertTrue(suppressor.shouldSuppress(context, SpanKind.CLIENT));
+  }
+
+  @Test
+  void context_shouldNotSuppressWhenKeyIsAvailableAndFalse() {
+    Context context = Context.current().with(SUPPRESS_INSTRUMENTATION, false);
+    SpanSuppressor suppressor =
+        new SpanSuppressors.ByContextKey(SpanSuppressionStrategy.NONE.create(emptySet()));
+
+    assertFalse(suppressor.shouldSuppress(context, SpanKind.CLIENT));
+  }
+
+  @Test
+  void context_shouldNotSuppressWhenKeyIsNotAvailable() {
+    Context context = Context.current();
+    SpanSuppressor suppressor =
+        new SpanSuppressors.ByContextKey(SpanSuppressionStrategy.NONE.create(emptySet()));
+
+    assertFalse(suppressor.shouldSuppress(context, SpanKind.CLIENT));
   }
 }

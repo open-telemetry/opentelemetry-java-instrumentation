@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 final class SpanSuppressors {
@@ -89,8 +90,8 @@ final class SpanSuppressors {
 
   static class ByContextKey implements SpanSuppressor {
     private final SpanSuppressor delegate;
-    private static final ContextKey<Boolean> SUPPRESS_INSTRUMENTATION =
-        ContextKey.named("suppress_instrumentation");
+    static final ContextKey<Boolean> SUPPRESS_INSTRUMENTATION =
+        ContextKey.named("suppress_instrumentation");//todo must use the key defined in the Java SDK.
 
     ByContextKey(SpanSuppressor delegate) {
       this.delegate = delegate;
@@ -103,7 +104,7 @@ final class SpanSuppressors {
 
     @Override
     public boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
-      if (Boolean.TRUE.equals(parentContext.get(SUPPRESS_INSTRUMENTATION))) {
+      if (Objects.equals(parentContext.get(SUPPRESS_INSTRUMENTATION), true)) {
         return true;
       }
       return delegate.shouldSuppress(parentContext, spanKind);
