@@ -21,10 +21,13 @@
 package io.opentelemetry.instrumentation.jdbc;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcSingletons.statementInstrumenter;
 
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Connection;
@@ -35,6 +38,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -47,6 +51,8 @@ public final class OpenTelemetryDriver implements Driver {
 
   // visible for testing
   static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
+
+  private volatile OpenTelemetry openTelemetry = OpenTelemetry.noop();
 
   private static final int MAJOR_VERSION;
   private static final int MINOR_VERSION;
@@ -192,6 +198,30 @@ public final class OpenTelemetryDriver implements Driver {
     return new int[] {0, 0};
   }
 
+  /**
+   * Installs the {@link OpenTelemetry} instance on the {@code OpenTelemetryDriver}. OpenTelemetry
+   * has to be set before the initialization of the database connection pool.
+   */
+  public static void install(OpenTelemetry openTelemetry) {
+    Enumeration<Driver> drivers = DriverManager.getDrivers();
+    while (drivers.hasMoreElements()) {
+      Driver driver = drivers.nextElement();
+      if (driver instanceof io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver) {
+        OpenTelemetryDriver openTelemetryDriver = (OpenTelemetryDriver) driver;
+        openTelemetryDriver.setOpenTelemetry(openTelemetry);
+      }
+    }
+  }
+
+  /**
+   * Configures the {@link OpenTelemetry}. See {@link #install(OpenTelemetry)} for simple
+   * installation option. OpenTelemetry has to be set before the initialization of the database
+   * connection pool.
+   */
+  public void setOpenTelemetry(OpenTelemetry openTelemetry) {
+    this.openTelemetry = openTelemetry;
+  }
+
   @Nullable
   @Override
   public Connection connect(String url, Properties info) throws SQLException {
@@ -212,7 +242,9 @@ public final class OpenTelemetryDriver implements Driver {
 
     DbInfo dbInfo = JdbcConnectionUrlParser.parse(realUrl, info);
 
-    return new OpenTelemetryConnection(connection, dbInfo, statementInstrumenter());
+    Instrumenter<DbRequest, Void> statementInstrumenter =
+        JdbcInstrumenterFactory.createStatementInstrumenter(openTelemetry);
+    return new OpenTelemetryConnection(connection, dbInfo, statementInstrumenter);
   }
 
   @Override
