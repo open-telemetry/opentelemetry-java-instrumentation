@@ -27,7 +27,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureKeyValuePairAttributes = false;
   private List<String> captureMdcAttributes = emptyList();
 
-  private OpenTelemetry openTelemetry;
+  private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
 
   public OpenTelemetryAppender() {}
