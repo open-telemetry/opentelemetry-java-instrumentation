@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressors.*;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.WARNING;
 
@@ -354,7 +355,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   SpanSuppressor buildSpanSuppressor() {
-    return spanSuppressionStrategy.create(getSpanKeysFromAttributesExtractors());
+    return new ByContextKey(spanSuppressionStrategy.create(getSpanKeysFromAttributesExtractors()));
   }
 
   private Set<SpanKey> getSpanKeysFromAttributesExtractors() {

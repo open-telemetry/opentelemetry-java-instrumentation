@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressors.ByContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressors.BySpanKey;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressors.DelegateBySpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressors.Noop;
@@ -45,7 +44,7 @@ enum SpanSuppressionStrategy {
       delegates.put(SpanKind.CLIENT, new BySpanKey(singleton(SpanKey.KIND_CLIENT)));
       delegates.put(SpanKind.CONSUMER, new BySpanKey(singleton(SpanKey.KIND_CONSUMER)));
       delegates.put(SpanKind.PRODUCER, new BySpanKey(singleton(SpanKey.KIND_PRODUCER)));
-      strategy = new ByContextKey(new DelegateBySpanKind(delegates));
+      strategy = new DelegateBySpanKind(delegates);
     }
 
     @Override
@@ -66,9 +65,10 @@ enum SpanSuppressionStrategy {
   SEMCONV {
     @Override
     SpanSuppressor create(Set<SpanKey> spanKeys) {
-      SpanSuppressor instance = (spanKeys.isEmpty()) ? Noop.INSTANCE : new BySpanKey(spanKeys);
-
-      return new ByContextKey(instance);
+      if (spanKeys.isEmpty()) {
+        return Noop.INSTANCE;
+      }
+      return new BySpanKey(spanKeys);
     }
   };
 
