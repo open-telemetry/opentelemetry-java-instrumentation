@@ -48,9 +48,7 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
     }
     KafkaConsumerContext consumerContext =
         KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId);
-    telemetry.addTracing(records, consumerContext);
-
-    return records;
+    return telemetry.addTracing(records, consumerContext);
   }
 
   @Override

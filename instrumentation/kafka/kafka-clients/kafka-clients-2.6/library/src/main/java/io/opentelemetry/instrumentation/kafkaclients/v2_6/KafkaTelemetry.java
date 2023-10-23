@@ -25,11 +25,11 @@ import io.opentelemetry.instrumentation.kafka.internal.KafkaUtil;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
 import io.opentelemetry.instrumentation.kafka.internal.TracingList;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -143,45 +143,27 @@ public final class KafkaTelemetry {
                 }
                 KafkaConsumerContext consumerContext =
                     KafkaConsumerContextUtil.create(receiveContext, consumer);
-                addTracing(consumerRecords, consumerContext);
+                result = addTracing(consumerRecords, consumerContext);
               }
               return result;
             });
   }
 
-  private static final Field recordsField = getRecordsField();
-
-  private static Field getRecordsField() {
-    try {
-      Field recordsField = ConsumerRecords.class.getDeclaredField("records");
-      recordsField.setAccessible(true);
-      return recordsField;
-    } catch (Exception exception) {
-      return null;
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  public <K, V> void addTracing(
+  public <K, V> ConsumerRecords<K, V> addTracing(
       ConsumerRecords<K, V> consumerRecords, KafkaConsumerContext consumerContext) {
-    if (recordsField == null || consumerRecords.isEmpty()) {
-      return;
+    if (consumerRecords.isEmpty()) {
+      return consumerRecords;
     }
 
-    try {
-      Map<TopicPartition, List<ConsumerRecord<K, V>>> map =
-          (Map<TopicPartition, List<ConsumerRecord<K, V>>>) recordsField.get(consumerRecords);
-      for (Map.Entry<TopicPartition, List<ConsumerRecord<K, V>>> entry : map.entrySet()) {
-        List<ConsumerRecord<K, V>> records = entry.getValue();
-        if (records != null && !records.isEmpty()) {
-          entry.setValue(
-              TracingList.wrap(records, consumerProcessInstrumenter, () -> true, consumerContext));
-        }
+    Map<TopicPartition, List<ConsumerRecord<K, V>>> records = new LinkedHashMap<>();
+    for (TopicPartition partition : consumerRecords.partitions()) {
+      List<ConsumerRecord<K, V>> list = consumerRecords.records(partition);
+      if (list != null && !list.isEmpty()) {
+        list = TracingList.wrap(list, consumerProcessInstrumenter, () -> true, consumerContext);
       }
-    } catch (IllegalAccessException exception) {
-      // should not happen, we make recordsField accessible
-      throw new IllegalStateException(exception);
+      records.put(partition, list);
     }
+    return new ConsumerRecords<>(records);
   }
 
   /**
