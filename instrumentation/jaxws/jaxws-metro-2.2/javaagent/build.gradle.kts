@@ -24,11 +24,3 @@ dependencies {
   compileOnly("javax.xml.ws:jaxws-api:2.0")
   compileOnly("jakarta.xml.ws:jakarta.xml.ws-api:3.0.0")
 }
-
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-exports=java.xml/com.sun.org.apache.xerces.internal.dom=ALL-UNNAMED")
-  jvmArgs("--add-exports=java.xml/com.sun.org.apache.xerces.internal.jaxp=ALL-UNNAMED")
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-}
