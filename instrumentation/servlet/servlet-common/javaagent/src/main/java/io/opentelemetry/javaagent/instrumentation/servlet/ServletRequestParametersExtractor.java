@@ -77,7 +77,7 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     // normalize parameter name similarly as is done with header names when header values are
     // captured as span attributes
     parameterName = parameterName.toLowerCase(Locale.ROOT);
-    String key = "servlet.request.parameter." + parameterName.replace('-', '_');
+    String key = "servlet.request.parameter." + parameterName;
     return AttributeKey.stringArrayKey(key);
   }
 }

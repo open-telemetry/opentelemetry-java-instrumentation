@@ -862,7 +862,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
           if (endpoint == CAPTURE_PARAMETERS) {
             assertThat(attrs)
                 .containsEntry(
-                    "servlet.request.parameter.test_parameter", new String[] {"test value õäöü"});
+                    "servlet.request.parameter.test-parameter", new String[] {"test value õäöü"});
           }
         });
 
