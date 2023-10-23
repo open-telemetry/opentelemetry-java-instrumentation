@@ -87,4 +87,21 @@ class ServerAttributesExtractorTest {
     assertThat(startAttributes.build())
         .containsOnly(entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"));
   }
+
+  @Test
+  void portWithoutAddress() {
+    Map<String, String> request = new HashMap<>();
+    request.put("port", "80");
+
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        ServerAttributesExtractor.create(new TestServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build()).isEmpty();
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, null, null);
+    assertThat(endAttributes.build()).isEmpty();
+  }
 }

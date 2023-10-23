@@ -89,4 +89,21 @@ class ClientAttributesExtractorTest {
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
     assertThat(endAttributes.build()).isEmpty();
   }
+
+  @Test
+  void portWithoutAddress() {
+    Map<String, String> request = new HashMap<>();
+    request.put("port", "80");
+
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        ClientAttributesExtractor.create(new TestClientAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build()).isEmpty();
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, null, null);
+    assertThat(endAttributes.build()).isEmpty();
+  }
 }

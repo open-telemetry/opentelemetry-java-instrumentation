@@ -40,21 +40,23 @@ public final class InternalServerAttributesExtractor<REQUEST> {
   public void onStart(AttributesBuilder attributes, REQUEST request) {
     AddressAndPort serverAddressAndPort = addressAndPortExtractor.extract(request);
 
-    if (emitStableUrlAttributes) {
-      internalSet(attributes, SemanticAttributes.SERVER_ADDRESS, serverAddressAndPort.address);
-    }
-    if (emitOldHttpAttributes) {
-      internalSet(attributes, oldSemconvMode.address, serverAddressAndPort.address);
-    }
-
-    if (serverAddressAndPort.port != null
-        && serverAddressAndPort.port > 0
-        && captureServerPortCondition.test(serverAddressAndPort.port, request)) {
+    if (serverAddressAndPort.address != null) {
       if (emitStableUrlAttributes) {
-        internalSet(attributes, SemanticAttributes.SERVER_PORT, (long) serverAddressAndPort.port);
+        internalSet(attributes, SemanticAttributes.SERVER_ADDRESS, serverAddressAndPort.address);
       }
       if (emitOldHttpAttributes) {
-        internalSet(attributes, oldSemconvMode.port, (long) serverAddressAndPort.port);
+        internalSet(attributes, oldSemconvMode.address, serverAddressAndPort.address);
+      }
+
+      if (serverAddressAndPort.port != null
+          && serverAddressAndPort.port > 0
+          && captureServerPortCondition.test(serverAddressAndPort.port, request)) {
+        if (emitStableUrlAttributes) {
+          internalSet(attributes, SemanticAttributes.SERVER_PORT, (long) serverAddressAndPort.port);
+        }
+        if (emitOldHttpAttributes) {
+          internalSet(attributes, oldSemconvMode.port, (long) serverAddressAndPort.port);
+        }
       }
     }
   }
