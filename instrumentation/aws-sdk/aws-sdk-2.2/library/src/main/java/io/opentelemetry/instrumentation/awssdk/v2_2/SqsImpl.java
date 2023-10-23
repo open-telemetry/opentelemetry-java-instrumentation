@@ -25,6 +25,7 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
+import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 
 // this class is only used from SqsAccess from method with @NoMuzzle annotation
 final class SqsImpl {
@@ -75,7 +76,7 @@ final class SqsImpl {
       parentContext = SqsParentContext.ofSystemAttributes(message.attributesAsStrings());
     }
 
-    Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter =
+    Instrumenter<ExecutionAttributes, Response> consumerInstrumenter =
         config.getConsumerInstrumenter();
     if (consumerInstrumenter.shouldStart(parentContext, executionAttributes)) {
       io.opentelemetry.context.Context context =
@@ -85,7 +86,7 @@ final class SqsImpl {
       //  per-message?
       // TODO: Should we really create root spans if we can't extract anything, or should we attach
       //  to the current context?
-      consumerInstrumenter.end(context, executionAttributes, httpResponse, null);
+      consumerInstrumenter.end(context, executionAttributes, new Response(httpResponse), null);
     }
   }
 
@@ -199,5 +200,27 @@ final class SqsImpl {
       builder.messageAttributeNames(messageAttributeNames);
     }
     return builder.build();
+  }
+
+  static boolean isSqsProducerRequest(SdkRequest request) {
+    return request instanceof SendMessageRequest || request instanceof SendMessageBatchRequest;
+  }
+
+  static String getQueueUrl(SdkRequest request) {
+    if (request instanceof SendMessageRequest) {
+      return ((SendMessageRequest) request).queueUrl();
+    } else if (request instanceof SendMessageBatchRequest) {
+      return ((SendMessageBatchRequest) request).queueUrl();
+    } else if (request instanceof ReceiveMessageRequest) {
+      return ((ReceiveMessageRequest) request).queueUrl();
+    }
+    return null;
+  }
+
+  static String getMessageId(SdkResponse response) {
+    if (response instanceof SendMessageResponse) {
+      return ((SendMessageResponse) response).messageId();
+    }
+    return null;
   }
 }

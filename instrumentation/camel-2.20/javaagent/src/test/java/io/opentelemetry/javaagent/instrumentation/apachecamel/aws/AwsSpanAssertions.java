@@ -13,8 +13,12 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.semconv.SemanticAttributes;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 class AwsSpanAssertions {
 
@@ -37,9 +41,20 @@ class AwsSpanAssertions {
   static SpanDataAssert sqs(
       SpanDataAssert span, String spanName, String queueUrl, String queueName, SpanKind spanKind) {
 
-    return span.hasName(spanName)
-        .hasKind(spanKind)
-        .hasAttributesSatisfyingExactly(
+    String rpcMethod;
+    if (spanName.startsWith("SQS.")) {
+      rpcMethod = spanName.substring(4);
+    } else if (spanName.endsWith("receive")) {
+      rpcMethod = "ReceiveMessage";
+    } else if (spanName.endsWith("publish")) {
+      rpcMethod = "SendMessage";
+    } else {
+      throw new IllegalStateException("can't get rpc method from span name " + spanName);
+    }
+
+    List<AttributeAssertion> attributeAssertions = new ArrayList<>();
+    attributeAssertions.addAll(
+        Arrays.asList(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             satisfies(stringKey("aws.endpoint"), val -> val.isInstanceOf(String.class)),
             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
@@ -83,10 +98,22 @@ class AwsSpanAssertions {
             equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
             equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
             equalTo(stringKey("rpc.system"), "aws-api"),
-            satisfies(
-                stringKey("rpc.method"),
-                stringAssert -> stringAssert.isEqualTo(spanName.substring(4))),
-            equalTo(stringKey("rpc.service"), "AmazonSQS"));
+            satisfies(stringKey("rpc.method"), stringAssert -> stringAssert.isEqualTo(rpcMethod)),
+            equalTo(stringKey("rpc.service"), "AmazonSQS")));
+
+    if (spanName.endsWith("receive") || spanName.endsWith("publish")) {
+      attributeAssertions.addAll(
+          Arrays.asList(
+              equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, queueName),
+              equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")));
+      if (spanName.endsWith("receive")) {
+        attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"));
+      }
+    }
+
+    return span.hasName(spanName)
+        .hasKind(spanKind)
+        .hasAttributesSatisfyingExactly(attributeAssertions);
   }
 
   @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0

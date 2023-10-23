@@ -10,6 +10,8 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import java.util.Collections;
+import java.util.Map;
 
 final class SqsAccess {
   private SqsAccess() {}
@@ -27,5 +29,10 @@ final class SqsAccess {
   @NoMuzzle
   static boolean beforeMarshalling(AmazonWebServiceRequest request) {
     return enabled && SqsImpl.beforeMarshalling(request);
+  }
+
+  @NoMuzzle
+  static Map<String, String> getMessageAttributes(Request<?> request) {
+    return enabled ? SqsImpl.getMessageAttributes(request) : Collections.emptyMap();
   }
 }

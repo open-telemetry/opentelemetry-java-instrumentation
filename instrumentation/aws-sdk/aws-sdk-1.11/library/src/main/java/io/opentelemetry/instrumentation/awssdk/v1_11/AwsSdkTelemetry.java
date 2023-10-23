@@ -46,6 +46,7 @@ public class AwsSdkTelemetry {
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> consumerInstrumenter;
+  private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
 
   AwsSdkTelemetry(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
     requestInstrumenter =
@@ -54,6 +55,9 @@ public class AwsSdkTelemetry {
     consumerInstrumenter =
         AwsSdkInstrumenterFactory.consumerInstrumenter(
             openTelemetry, captureExperimentalSpanAttributes);
+    producerInstrumenter =
+        AwsSdkInstrumenterFactory.producerInstrumenter(
+            openTelemetry, captureExperimentalSpanAttributes);
   }
 
   /**
@@ -61,6 +65,7 @@ public class AwsSdkTelemetry {
    * withRequestHandlers}.
    */
   public RequestHandler2 newRequestHandler() {
-    return new TracingRequestHandler(requestInstrumenter, consumerInstrumenter);
+    return new TracingRequestHandler(
+        requestInstrumenter, consumerInstrumenter, producerInstrumenter);
   }
 }

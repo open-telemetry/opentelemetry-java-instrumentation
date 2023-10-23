@@ -138,7 +138,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
       }
       trace(1, 2) {
         span(0) {
-          name "Sqs.SendMessage"
+          name "testSdkSqs publish"
           kind PRODUCER
           hasNoParent()
           attributes {
@@ -154,12 +154,15 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         span(1) {
-          name "Sqs.ReceiveMessage"
+          name "testSdkSqs receive"
           kind CONSUMER
           childOf span(0)
           hasNoLinks() // TODO: Link to receive operation?
@@ -174,6 +177,9 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
@@ -302,8 +308,8 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
       }
       trace(1, xrayInjectionEnabled ? 4 : 3) {
         span(0) {
-          name "Sqs.SendMessageBatch"
-          kind CLIENT // TODO: Probably this should be producer, but that would be a breaking change
+          name "testSdkSqs publish"
+          kind PRODUCER
           hasNoParent()
           attributes {
             "aws.agent" "java-aws-sdk"
@@ -318,13 +324,15 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         for (int i: 1..(xrayInjectionEnabled ? 3 : 2)) {
           span(i) {
-            name "Sqs.ReceiveMessage"
+            name "testSdkSqs receive"
             kind CONSUMER
             childOf span(0)
             hasNoLinks() // TODO: Link to receive operation?
@@ -340,6 +348,9 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "$SemanticAttributes.USER_AGENT_ORIGINAL" String
               "net.peer.name" "localhost"
               "net.peer.port" sqsPort
+              "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+              "$SemanticAttributes.MESSAGING_OPERATION" "receive"
               "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
               "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             }
@@ -349,7 +360,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
       if (!xrayInjectionEnabled) {
         trace(2, 1) {
           span(0) {
-            name "Sqs.ReceiveMessage"
+            name "testSdkSqs receive"
             kind CONSUMER
 
             // TODO This is not nice at all, and can also happen if producer is not instrumented
@@ -367,6 +378,9 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "net.peer.name" "localhost"
               "$SemanticAttributes.USER_AGENT_ORIGINAL" String
               "net.peer.port" sqsPort
+              "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+              "$SemanticAttributes.MESSAGING_OPERATION" "receive"
               "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
               "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             }

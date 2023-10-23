@@ -58,15 +58,16 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private static final ExecutionAttribute<RequestSpanFinisher> REQUEST_FINISHER_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".RequestFinisher");
 
-  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter;
-  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> requestInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> consumerInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
 
   static final AttributeKey<String> HTTP_ERROR_MSG =
       AttributeKey.stringKey("aws.http.error_message");
   static final String HTTP_FAILURE_EVENT = "HTTP request failure";
 
-  Instrumenter<ExecutionAttributes, SdkHttpResponse> getConsumerInstrumenter() {
+  Instrumenter<ExecutionAttributes, Response> getConsumerInstrumenter() {
     return consumerInstrumenter;
   }
 
@@ -85,14 +86,16 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final FieldMapper fieldMapper;
 
   TracingExecutionInterceptor(
-      Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter,
-      Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter,
+      Instrumenter<ExecutionAttributes, Response> requestInstrumenter,
+      Instrumenter<ExecutionAttributes, Response> consumerInstrumenter,
+      Instrumenter<ExecutionAttributes, Response> producerInstrumenter,
       boolean captureExperimentalSpanAttributes,
       TextMapPropagator messagingPropagator,
       boolean useXrayPropagator,
       boolean recordIndividualHttpError) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerInstrumenter = consumerInstrumenter;
+    this.producerInstrumenter = producerInstrumenter;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingPropagator = messagingPropagator;
     this.useXrayPropagator = useXrayPropagator;
@@ -118,8 +121,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
 
     executionAttributes.putAttribute(SDK_REQUEST_ATTRIBUTE, request);
+    Instrumenter<ExecutionAttributes, Response> instrumenter = getInstrumenter(request);
 
-    if (!requestInstrumenter.shouldStart(parentOtelContext, executionAttributes)) {
+    if (!instrumenter.shouldStart(parentOtelContext, executionAttributes)) {
       // NB: We also skip injection in case we don't start.
       return request;
     }
@@ -135,16 +139,16 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
         && "software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest"
             .equals(request.getClass().getName())) {
       otelContext =
-          InstrumenterUtil.suppressSpan(
-              requestInstrumenter, parentOtelContext, executionAttributes);
+          InstrumenterUtil.suppressSpan(instrumenter, parentOtelContext, executionAttributes);
       requestFinisher =
-          (otelContext12, executionAttributes12, response, exception) -> {
+          (finisherOtelContext, finisherExecutionAttributes, response, exception) -> {
             // generate request span when there was an error
-            if (exception != null) {
+            if (exception != null
+                && instrumenter.shouldStart(finisherOtelContext, finisherExecutionAttributes)) {
               InstrumenterUtil.startAndEnd(
-                  requestInstrumenter,
-                  parentOtelContext,
-                  executionAttributes12,
+                  instrumenter,
+                  finisherOtelContext,
+                  finisherExecutionAttributes,
                   response,
                   exception,
                   requestStart,
@@ -152,8 +156,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
             }
           };
     } else {
-      otelContext = requestInstrumenter.start(parentOtelContext, executionAttributes);
-      requestFinisher = requestInstrumenter::end;
+      otelContext = instrumenter.start(parentOtelContext, executionAttributes);
+      requestFinisher = instrumenter::end;
     }
 
     executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, otelContext);
@@ -237,7 +241,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     // For the httpAttributesExtractor dance, see afterMarshalling
     AttributesBuilder builder = Attributes.builder(); // NB: UnsafeAttributes are package-private
     AwsSdkInstrumenterFactory.httpAttributesExtractor.onEnd(
-        builder, otelContext, executionAttributes, httpResponse, null);
+        builder, otelContext, executionAttributes, new Response(httpResponse), null);
     span.setAllAttributes(builder.build());
   }
 
@@ -326,7 +330,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       onHttpResponseAvailable(
           executionAttributes, otelContext, Span.fromContext(otelContext), httpResponse);
       RequestSpanFinisher finisher = executionAttributes.getAttribute(REQUEST_FINISHER_ATTRIBUTE);
-      finisher.finish(otelContext, executionAttributes, httpResponse, null);
+      finisher.finish(
+          otelContext, executionAttributes, new Response(httpResponse, context.response()), null);
     }
     clearAttributes(executionAttributes);
   }
@@ -414,11 +419,15 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     return attributes.getAttribute(CONTEXT_ATTRIBUTE);
   }
 
+  private Instrumenter<ExecutionAttributes, Response> getInstrumenter(SdkRequest request) {
+    return SqsAccess.isSqsProducerRequest(request) ? producerInstrumenter : requestInstrumenter;
+  }
+
   private interface RequestSpanFinisher {
     void finish(
         io.opentelemetry.context.Context otelContext,
         ExecutionAttributes executionAttributes,
-        SdkHttpResponse response,
+        Response response,
         Throwable exception);
   }
 }
