@@ -22,7 +22,9 @@ public class KafkaProcessRequest extends AbstractKafkaConsumerRequest {
 
   public static KafkaProcessRequest create(
       KafkaConsumerContext consumerContext, ConsumerRecord<?, ?> record) {
-    return create(record, consumerContext != null ? consumerContext.getConsumer() : null);
+    String consumerGroup = consumerContext != null ? consumerContext.getConsumerGroup() : null;
+    String clientId = consumerContext != null ? consumerContext.getClientId() : null;
+    return create(record, consumerGroup, clientId);
   }
 
   public static KafkaProcessRequest create(

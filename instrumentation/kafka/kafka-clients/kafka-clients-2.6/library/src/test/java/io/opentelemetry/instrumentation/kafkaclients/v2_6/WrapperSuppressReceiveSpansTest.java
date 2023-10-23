@@ -19,11 +19,11 @@ import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractLongAssert;
 
-class WrapperTest extends AbstractWrapperTest {
+class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
 
   @Override
   void configure(KafkaTelemetryBuilder builder) {
-    builder.setMessagingReceiveInstrumentationEnabled(true);
+    builder.setMessagingReceiveInstrumentationEnabled(false);
   }
 
   @Override
@@ -38,25 +38,18 @@ class WrapperTest extends AbstractWrapperTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(sendAttributes(testHeaders)),
                 span ->
-                    span.hasName("producer callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(SHARED_TOPIC + " receive")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(receiveAttributes(greeting, testHeaders)),
-                span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(processAttributes(greeting, testHeaders)),
                 span ->
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(1))));
+                        .hasParent(trace.getSpan(2)),
+                span ->
+                    span.hasName("producer callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   protected static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
@@ -123,6 +116,18 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
+                equalTo(
+                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                    greeting.getBytes(StandardCharsets.UTF_8).length),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
+                    AbstractLongAssert::isNotNegative),
+                satisfies(
+                    SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
+                    AbstractLongAssert::isNotNegative),
+                satisfies(
+                    AttributeKey.longKey("kafka.record.queue_time_ms"),
+                    AbstractLongAssert::isNotNegative),
                 equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(
                     SemanticAttributes.MESSAGING_CLIENT_ID,

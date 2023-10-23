@@ -3,22 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
-
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerProcessInstrumenter;
+package io.opentelemetry.instrumentation.kafka.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Iterator;
+import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
 
   private final Iterator<ConsumerRecord<K, V>> delegateIterator;
+  private final Instrumenter<KafkaProcessRequest, Void> instrumenter;
+  private final BooleanSupplier wrappingEnabled;
   private final Context parentContext;
   private final KafkaConsumerContext consumerContext;
 
@@ -31,8 +34,13 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
   @Nullable private Scope currentScope;
 
   private TracingIterator(
-      Iterator<ConsumerRecord<K, V>> delegateIterator, KafkaConsumerContext consumerContext) {
+      Iterator<ConsumerRecord<K, V>> delegateIterator,
+      Instrumenter<KafkaProcessRequest, Void> instrumenter,
+      BooleanSupplier wrappingEnabled,
+      KafkaConsumerContext consumerContext) {
     this.delegateIterator = delegateIterator;
+    this.instrumenter = instrumenter;
+    this.wrappingEnabled = wrappingEnabled;
 
     Context receiveContext = consumerContext.getContext();
     // use the receive CONSUMER as parent if it's available
@@ -41,9 +49,13 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
   }
 
   public static <K, V> Iterator<ConsumerRecord<K, V>> wrap(
-      Iterator<ConsumerRecord<K, V>> delegateIterator, KafkaConsumerContext consumerContext) {
-    if (KafkaClientsConsumerProcessTracing.wrappingEnabled()) {
-      return new TracingIterator<>(delegateIterator, consumerContext);
+      Iterator<ConsumerRecord<K, V>> delegateIterator,
+      Instrumenter<KafkaProcessRequest, Void> instrumenter,
+      BooleanSupplier wrappingEnabled,
+      KafkaConsumerContext consumerContext) {
+    if (wrappingEnabled.getAsBoolean()) {
+      return new TracingIterator<>(
+          delegateIterator, instrumenter, wrappingEnabled, consumerContext);
     }
     return delegateIterator;
   }
@@ -65,9 +77,9 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
     // suppressing the correct span
     // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
     ConsumerRecord<K, V> next = delegateIterator.next();
-    if (next != null && KafkaClientsConsumerProcessTracing.wrappingEnabled()) {
+    if (next != null && wrappingEnabled.getAsBoolean()) {
       currentRequest = KafkaProcessRequest.create(consumerContext, next);
-      currentContext = consumerProcessInstrumenter().start(parentContext, currentRequest);
+      currentContext = instrumenter.start(parentContext, currentRequest);
       currentScope = currentContext.makeCurrent();
     }
     return next;
@@ -76,7 +88,7 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
   private void closeScopeAndEndSpan() {
     if (currentScope != null) {
       currentScope.close();
-      consumerProcessInstrumenter().end(currentContext, currentRequest, null, null);
+      instrumenter.end(currentContext, currentRequest, null, null);
       currentScope = null;
       currentRequest = null;
       currentContext = null;

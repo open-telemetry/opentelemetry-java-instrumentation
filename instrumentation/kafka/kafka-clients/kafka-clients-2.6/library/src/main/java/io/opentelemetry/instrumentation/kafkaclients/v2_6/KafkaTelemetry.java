@@ -13,16 +13,24 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaHeadersSetter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaProducerRequest;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaUtil;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
+import io.opentelemetry.instrumentation.kafka.internal.TracingList;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.function.BiFunction;
@@ -37,6 +45,7 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.metrics.MetricsReporter;
 
@@ -47,16 +56,19 @@ public final class KafkaTelemetry {
 
   private final OpenTelemetry openTelemetry;
   private final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
+  private final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
   private final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
   private final boolean producerPropagationEnabled;
 
   KafkaTelemetry(
       OpenTelemetry openTelemetry,
       Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter,
+      Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
       Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
       boolean producerPropagationEnabled) {
     this.openTelemetry = openTelemetry;
     this.producerInstrumenter = producerInstrumenter;
+    this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
     this.producerPropagationEnabled = producerPropagationEnabled;
   }
@@ -115,6 +127,7 @@ public final class KafkaTelemetry {
             new Class<?>[] {Consumer.class},
             (proxy, method, args) -> {
               Object result;
+              Timer timer = "poll".equals(method.getName()) ? Timer.start() : null;
               try {
                 result = method.invoke(consumer, args);
               } catch (InvocationTargetException exception) {
@@ -123,10 +136,52 @@ public final class KafkaTelemetry {
               // ConsumerRecords<K, V> poll(long timeout)
               // ConsumerRecords<K, V> poll(Duration duration)
               if ("poll".equals(method.getName()) && result instanceof ConsumerRecords) {
-                buildAndFinishSpan((ConsumerRecords) result, consumer);
+                ConsumerRecords<K, V> consumerRecords = (ConsumerRecords<K, V>) result;
+                Context receiveContext = buildAndFinishSpan(consumerRecords, consumer, timer);
+                if (receiveContext == null) {
+                  receiveContext = Context.current();
+                }
+                KafkaConsumerContext consumerContext =
+                    KafkaConsumerContextUtil.create(receiveContext, consumer);
+                addTracing(consumerRecords, consumerContext);
               }
               return result;
             });
+  }
+
+  private static final Field recordsField = getRecordsField();
+
+  private static Field getRecordsField() {
+    try {
+      Field recordsField = ConsumerRecords.class.getDeclaredField("records");
+      recordsField.setAccessible(true);
+      return recordsField;
+    } catch (Exception exception) {
+      return null;
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public <K, V> void addTracing(
+      ConsumerRecords<K, V> consumerRecords, KafkaConsumerContext consumerContext) {
+    if (recordsField == null || consumerRecords.isEmpty()) {
+      return;
+    }
+
+    try {
+      Map<TopicPartition, List<ConsumerRecord<K, V>>> map =
+          (Map<TopicPartition, List<ConsumerRecord<K, V>>>) recordsField.get(consumerRecords);
+      for (Map.Entry<TopicPartition, List<ConsumerRecord<K, V>>> entry : map.entrySet()) {
+        List<ConsumerRecord<K, V>> records = entry.getValue();
+        if (records != null && !records.isEmpty()) {
+          entry.setValue(
+              TracingList.wrap(records, consumerProcessInstrumenter, () -> true, consumerContext));
+        }
+      }
+    } catch (IllegalAccessException exception) {
+      // should not happen, we make recordsField accessible
+      throw new IllegalStateException(exception);
+    }
   }
 
   /**
@@ -221,23 +276,37 @@ public final class KafkaTelemetry {
     }
   }
 
-  private <K, V> void buildAndFinishSpan(ConsumerRecords<K, V> records, Consumer<K, V> consumer) {
-    buildAndFinishSpan(
-        records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
+  private <K, V> Context buildAndFinishSpan(
+      ConsumerRecords<K, V> records, Consumer<K, V> consumer, Timer timer) {
+    return buildAndFinishSpan(
+        records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer), timer);
   }
 
-  <K, V> void buildAndFinishSpan(
-      ConsumerRecords<K, V> records, String consumerGroup, String clientId) {
-    Context parentContext = Context.current();
-    for (ConsumerRecord<K, V> record : records) {
-      KafkaProcessRequest request = KafkaProcessRequest.create(record, consumerGroup, clientId);
-      if (!consumerProcessInstrumenter.shouldStart(parentContext, request)) {
-        continue;
-      }
-
-      Context context = consumerProcessInstrumenter.start(parentContext, request);
-      consumerProcessInstrumenter.end(context, request, null, null);
+  <K, V> Context buildAndFinishSpan(
+      ConsumerRecords<K, V> records, String consumerGroup, String clientId, Timer timer) {
+    if (records.isEmpty()) {
+      return null;
     }
+    Context parentContext = Context.current();
+    KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
+    Context context = null;
+    if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
+      context =
+          InstrumenterUtil.startAndEnd(
+              consumerReceiveInstrumenter,
+              parentContext,
+              request,
+              null,
+              null,
+              timer.startTime(),
+              timer.now());
+    }
+
+    // we're returning the context of the receive span so that process spans can use it as
+    // parent context even though the span has ended
+    // this is the suggested behavior according to the spec batch receive scenario:
+    // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#batch-receiving
+    return context;
   }
 
   private class ProducerCallback implements Callback {

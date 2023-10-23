@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
-import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
@@ -14,12 +13,11 @@ import io.opentelemetry.semconv.SemanticAttributes;
 import java.nio.charset.StandardCharsets;
 import org.assertj.core.api.AbstractLongAssert;
 
-class InterceptorsTest extends AbstractInterceptorsTest {
+class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
 
   @Override
   void assertTraces() {
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("parent", SHARED_TOPIC + " receive", "producer callback"),
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -32,25 +30,11 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             satisfies(
                                 SemanticAttributes.MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("producer")))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(SHARED_TOPIC + " receive")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
-                            equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer"))),
+                                stringAssert -> stringAssert.startsWith("producer"))),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
@@ -71,7 +55,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                 span ->
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(1))),
+                        .hasParent(trace.getSpan(2))),
         // ideally we'd want producer callback to be part of the main trace, we just aren't able to
         // instrument that
         trace ->
