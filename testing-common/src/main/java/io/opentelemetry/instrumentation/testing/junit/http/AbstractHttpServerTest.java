@@ -855,9 +855,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
           if (endpoint == CAPTURE_HEADERS) {
             assertThat(attrs)
-                .containsEntry("http.request.header.x_test_request", new String[] {"test"});
+                .containsEntry("http.request.header.x-test-request", new String[] {"test"});
             assertThat(attrs)
-                .containsEntry("http.response.header.x_test_response", new String[] {"test"});
+                .containsEntry("http.response.header.x-test-response", new String[] {"test"});
           }
           if (endpoint == CAPTURE_PARAMETERS) {
             assertThat(attrs)

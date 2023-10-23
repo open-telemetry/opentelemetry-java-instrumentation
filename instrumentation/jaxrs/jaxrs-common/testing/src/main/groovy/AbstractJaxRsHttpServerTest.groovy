@@ -296,8 +296,8 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
         "$SemanticAttributes.HTTP_ROUTE" path
         if (fullUrl.getPath().endsWith(ServerEndpoint.CAPTURE_HEADERS.getPath())) {
-          "http.request.header.x_test_request" { it == ["test"] }
-          "http.response.header.x_test_response" { it == ["test"] }
+          "http.request.header.x-test-request" { it == ["test"] }
+          "http.response.header.x-test-response" { it == ["test"] }
         }
       }
     }

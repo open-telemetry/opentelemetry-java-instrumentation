@@ -540,10 +540,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 assertClientSpan(span, uri, method, responseCode, null).hasNoParent();
                 span.hasAttributesSatisfying(
                     equalTo(
-                        AttributeKey.stringArrayKey("http.request.header.x_test_request"),
+                        AttributeKey.stringArrayKey("http.request.header.x-test-request"),
                         singletonList("test")),
                     equalTo(
-                        AttributeKey.stringArrayKey("http.response.header.x_test_response"),
+                        AttributeKey.stringArrayKey("http.response.header.x-test-response"),
                         singletonList("test")));
               },
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));

@@ -169,7 +169,7 @@ class HttpServerAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
             entry(SemanticAttributes.CLIENT_ADDRESS, "1.1.1.1"),
             entry(
-                AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
+                AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
                 asList("123", "456")));
 
     AttributesBuilder endAttributes = Attributes.builder();
@@ -188,7 +188,7 @@ class HttpServerAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
             entry(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
             entry(
-                AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
+                AttributeKey.stringArrayKey("http.response.header.custom-response-header"),
                 asList("654", "321")));
   }
 }
