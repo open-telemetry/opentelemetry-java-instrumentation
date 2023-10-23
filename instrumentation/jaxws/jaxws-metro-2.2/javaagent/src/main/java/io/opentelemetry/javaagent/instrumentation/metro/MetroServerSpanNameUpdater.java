@@ -62,7 +62,7 @@ final class MetroServerSpanNameUpdater {
     try {
       adapter =
           new HttpServletRequestAdapter(
-              Class.forName(httpServletRequestClassName, true, getClass().getClassLoader()));
+              Class.forName(httpServletRequestClassName));
     } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException e) {
       // Ignore.  Don't register
       return;
