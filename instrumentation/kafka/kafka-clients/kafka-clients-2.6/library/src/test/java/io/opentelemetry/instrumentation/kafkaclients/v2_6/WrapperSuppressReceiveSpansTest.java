@@ -107,37 +107,4 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
     }
     return assertions;
   }
-
-  @SuppressWarnings("unused")
-  private static List<AttributeAssertion> receiveAttributes(String greeting, boolean testHeaders) {
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
-                equalTo(
-                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
-                    greeting.getBytes(StandardCharsets.UTF_8).length),
-                satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                    AbstractLongAssert::isNotNegative),
-                satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
-                    AbstractLongAssert::isNotNegative),
-                satisfies(
-                    AttributeKey.longKey("kafka.record.queue_time_ms"),
-                    AbstractLongAssert::isNotNegative),
-                equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                satisfies(
-                    SemanticAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("consumer"))));
-    if (testHeaders) {
-      assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
-              Collections.singletonList("test")));
-    }
-    return assertions;
-  }
 }
