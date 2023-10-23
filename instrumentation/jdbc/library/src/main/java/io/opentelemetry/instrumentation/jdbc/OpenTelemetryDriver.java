@@ -52,7 +52,7 @@ public final class OpenTelemetryDriver implements Driver {
   // visible for testing
   static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
 
-  private OpenTelemetry openTelemetry = OpenTelemetry.noop();
+  private volatile OpenTelemetry openTelemetry = OpenTelemetry.noop();
 
   private static final int MAJOR_VERSION;
   private static final int MINOR_VERSION;
