@@ -32,7 +32,7 @@ tasks {
   test {
     filter {
       excludeTestsMatching("InterceptorsSuppressReceiveSpansTest")
-      excludeTestsMatching("InterceptorsSuppressReceiveSpansTest")
+      excludeTestsMatching("WrapperSuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
