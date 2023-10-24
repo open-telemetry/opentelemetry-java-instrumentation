@@ -106,10 +106,10 @@ public final class InstrumentationModuleInstaller {
           (ExperimentalInstrumentationModule) instrumentationModule;
       injectedHelperClassNames = experimentalInstrumentationModule.injectedClassNames();
     } else {
-        injectedHelperClassNames = Collections.emptyList();
+      injectedHelperClassNames = Collections.emptyList();
     }
 
-      IndyModuleRegistry.registerIndyModule(instrumentationModule);
+    IndyModuleRegistry.registerIndyModule(instrumentationModule);
 
     ClassInjectorImpl injectedClassesCollector = new ClassInjectorImpl(instrumentationModule);
     if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
@@ -119,17 +119,19 @@ public final class InstrumentationModuleInstaller {
 
     MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
 
-    Function<ClassLoader, List<HelperClassDefinition>> helperGenerator = cl -> {
-      List<HelperClassDefinition> helpers = new ArrayList<>(injectedClassesCollector.getClassesToInject(cl));
-      for(String helperName : injectedHelperClassNames) {
-        helpers.add(HelperClassDefinition.create(
-            helperName,
-            instrumentationModule.getClass().getClassLoader(),
-            InjectionMode.CLASS_ONLY
-          ));
-      }
-      return helpers;
-    };
+    Function<ClassLoader, List<HelperClassDefinition>> helperGenerator =
+        cl -> {
+          List<HelperClassDefinition> helpers =
+              new ArrayList<>(injectedClassesCollector.getClassesToInject(cl));
+          for (String helperName : injectedHelperClassNames) {
+            helpers.add(
+                HelperClassDefinition.create(
+                    helperName,
+                    instrumentationModule.getClass().getClassLoader(),
+                    InjectionMode.CLASS_ONLY));
+          }
+          return helpers;
+        };
 
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(

@@ -16,6 +16,7 @@ public enum InjectionMode {
 
   private final boolean injectClass;
   private final boolean injectResource;
+
   InjectionMode(boolean injectClass, boolean injectResource) {
     this.injectClass = injectClass;
     this.injectResource = injectResource;
@@ -28,5 +29,4 @@ public enum InjectionMode {
   public boolean shouldInjectResource() {
     return injectResource;
   }
-
 }

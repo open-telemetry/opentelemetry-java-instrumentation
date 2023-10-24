@@ -9,11 +9,11 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ProxyInjectionBuilder;
+import io.opentelemetry.javaagent.tooling.HelperClassDefinition;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import io.opentelemetry.javaagent.tooling.HelperClassDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.pool.TypePool;
@@ -32,7 +32,7 @@ public class ClassInjectorImpl implements ClassInjector {
     proxyFactory = IndyBootstrap.getProxyFactory(module);
   }
 
-  public List<HelperClassDefinition>getClassesToInject(ClassLoader instrumentedCl) {
+  public List<HelperClassDefinition> getClassesToInject(ClassLoader instrumentedCl) {
     return classesToInject.stream()
         .map(generator -> generator.apply(instrumentedCl))
         .collect(Collectors.toList());

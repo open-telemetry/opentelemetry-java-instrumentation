@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.tooling;
 
 import java.io.ByteArrayInputStream;
@@ -14,16 +19,19 @@ import java.security.PrivilegedAction;
 
 public class ByteArrayUrl {
 
-  private ByteArrayUrl(){};
+  private ByteArrayUrl() {}
+  ;
 
   private static final String URL_SCHEMA = "x-otel-binary";
 
   @SuppressWarnings("removal")
   public static URL create(String uniqueName, byte[] data) {
     if (System.getSecurityManager() != null) {
-      return java.security.AccessController.doPrivileged((PrivilegedAction<URL>) () -> {
-        return doCreate(uniqueName, data);
-      });
+      return java.security.AccessController.doPrivileged(
+          (PrivilegedAction<URL>)
+              () -> {
+                return doCreate(uniqueName, data);
+              });
     } else {
       return doCreate(uniqueName, data);
     }
@@ -41,13 +49,12 @@ public class ByteArrayUrl {
   }
 
   /**
-   * This class has been copied from ByteBuddy ({@link net.bytebuddy.dynamic.loading.ByteArrayClassLoader.PersistenceHandler}).
+   * This class has been copied from ByteBuddy ({@link
+   * net.bytebuddy.dynamic.loading.ByteArrayClassLoader.PersistenceHandler}).
    */
   private static class ByteArrayUrlStreamHandler extends URLStreamHandler {
 
-    /**
-     * The binary representation of a type's class file.
-     */
+    /** The binary representation of a type's class file. */
     private final byte[] binaryRepresentation;
 
     /**
@@ -84,7 +91,6 @@ public class ByteArrayUrl {
         return inputStream;
       }
 
-
       @Override
       public Permission getPermission() {
         return null;
@@ -94,9 +100,6 @@ public class ByteArrayUrl {
       public long getContentLengthLong() {
         return binaryRepresentation.length;
       }
-
     }
-
   }
-
 }

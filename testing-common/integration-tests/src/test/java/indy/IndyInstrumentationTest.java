@@ -151,11 +151,10 @@ public class IndyInstrumentationTest {
     assertThat(delegate.getClass().getName()).isEqualTo("indy.ProxyMe");
     assertThat(delegateCl.getClass().getName()).endsWith("InstrumentationModuleClassLoader");
 
-    //Ensure that the bytecode of the proxy is injected as a resource
-    InputStream res = IndyInstrumentationTest.class.getClassLoader()
-        .getResourceAsStream("foo/bar/Proxy.class");
+    // Ensure that the bytecode of the proxy is injected as a resource
+    InputStream res =
+        IndyInstrumentationTest.class.getClassLoader().getResourceAsStream("foo/bar/Proxy.class");
     byte[] bytecode = IOUtils.toByteArray(res);
     assertThat(bytecode).startsWith(0xCA, 0xFE, 0xBA, 0xBE);
-
   }
 }

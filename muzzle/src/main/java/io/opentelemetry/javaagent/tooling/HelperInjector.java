@@ -115,9 +115,13 @@ public class HelperInjector implements Transformer {
       Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
-    List<HelperClassDefinition> helpers = helperClassNames.stream()
-        .map(className -> HelperClassDefinition.create(className, helpersSource, InjectionMode.CLASS_ONLY))
-        .collect(Collectors.toList());
+    List<HelperClassDefinition> helpers =
+        helperClassNames.stream()
+            .map(
+                className ->
+                    HelperClassDefinition.create(
+                        className, helpersSource, InjectionMode.CLASS_ONLY))
+            .collect(Collectors.toList());
 
     this.helperClassesGenerator = (cl) -> helpers;
     this.helperResources = helperResources;
@@ -144,11 +148,13 @@ public class HelperInjector implements Transformer {
       Collection<DynamicType.Unloaded<?>> helpers,
       Instrumentation instrumentation) {
 
-    List<HelperClassDefinition> helperDefinitions = helpers.stream()
-        .map(helperType -> HelperClassDefinition.create(helperType, InjectionMode.CLASS_ONLY))
-        .collect(Collectors.toList());
+    List<HelperClassDefinition> helperDefinitions =
+        helpers.stream()
+            .map(helperType -> HelperClassDefinition.create(helperType, InjectionMode.CLASS_ONLY))
+            .collect(Collectors.toList());
 
-    return new HelperInjector(requestingName, cl -> helperDefinitions, Collections.emptyList(), null, instrumentation);
+    return new HelperInjector(
+        requestingName, cl -> helperDefinitions, Collections.emptyList(), null, instrumentation);
   }
 
   public static void setHelperInjectorListener(HelperInjectorListener listener) {
@@ -168,7 +174,8 @@ public class HelperInjector implements Transformer {
         cl -> {
           List<HelperClassDefinition> helpers = helperClassesGenerator.apply(cl);
 
-          LinkedHashMap<String, Supplier<byte[]>> classesToInject = helpers.stream()
+          LinkedHashMap<String, Supplier<byte[]>> classesToInject =
+              helpers.stream()
                   .filter(helper -> helper.getInjectionMode().shouldInjectClass())
                   .collect(
                       Collectors.toMap(
@@ -180,13 +187,13 @@ public class HelperInjector implements Transformer {
                           },
                           LinkedHashMap::new));
 
-          Map<String, URL> classResourcesToInject = helpers.stream()
+          Map<String, URL> classResourcesToInject =
+              helpers.stream()
                   .filter(helper -> helper.getInjectionMode().shouldInjectResource())
                   .collect(
                       Collectors.toMap(
-                          helper -> helper.getClassName().replace('.','/')+".class",
-                          helper -> helper.getBytecode().getUrl()
-                  ));
+                          helper -> helper.getClassName().replace('.', '/') + ".class",
+                          helper -> helper.getBytecode().getUrl()));
 
           injectHelperClasses(typeDescription, cl, classesToInject);
           if (!isBootClassLoader(cl)) {
@@ -197,7 +204,8 @@ public class HelperInjector implements Transformer {
     return builder;
   }
 
-  private void injectHelperResources(ClassLoader classLoader, Map<String, URL> additionalResources) {
+  private void injectHelperResources(
+      ClassLoader classLoader, Map<String, URL> additionalResources) {
     for (HelperResource helperResource : helperResources) {
       List<URL> resources;
       try {
@@ -226,10 +234,13 @@ public class HelperInjector implements Transformer {
         injectResourceToClassloader(classLoader, helperResource.getApplicationPath(), resources);
       }
     }
-    additionalResources.forEach((path, url) -> injectResourceToClassloader(classLoader, path, Collections.singletonList(url)));
+    additionalResources.forEach(
+        (path, url) ->
+            injectResourceToClassloader(classLoader, path, Collections.singletonList(url)));
   }
 
-  private static void injectResourceToClassloader(ClassLoader classLoader, String path, List<URL> resources) {
+  private static void injectResourceToClassloader(
+      ClassLoader classLoader, String path, List<URL> resources) {
     if (logger.isLoggable(FINE)) {
       logger.log(
           FINE,
@@ -240,8 +251,11 @@ public class HelperInjector implements Transformer {
   }
 
   @SuppressWarnings("NonApiType")
-  private void injectHelperClasses(TypeDescription typeDescription, ClassLoader classLoader, LinkedHashMap<String, Supplier<byte[]>> classnameToBytes) {
-    if(classnameToBytes.isEmpty()) {
+  private void injectHelperClasses(
+      TypeDescription typeDescription,
+      ClassLoader classLoader,
+      LinkedHashMap<String, Supplier<byte[]>> classnameToBytes) {
+    if (classnameToBytes.isEmpty()) {
       return;
     }
     if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER && instrumentation == null) {

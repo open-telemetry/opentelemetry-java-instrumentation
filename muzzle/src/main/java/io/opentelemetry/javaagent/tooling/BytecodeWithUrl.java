@@ -14,9 +14,9 @@ import net.bytebuddy.utility.StreamDrainer;
 /**
  * Provides the bytecode and the original resource URL for loaded and not-yet loaded classes. The
  * implementation is based on {@link net.bytebuddy.dynamic.ClassFileLocator.ForClassLoader}, with
- * the difference that it preserves the original classfile resource URL.
- * In addition {@link BytecodeWithUrl} created can be generated for runtime generated types, this
- * class will take care of runtime generating URLs for those.
+ * the difference that it preserves the original classfile resource URL. In addition {@link
+ * BytecodeWithUrl} created can be generated for runtime generated types, this class will take care
+ * of runtime generating URLs for those.
  */
 public abstract class BytecodeWithUrl {
 
@@ -74,10 +74,9 @@ public abstract class BytecodeWithUrl {
     return create(loadedClass.getName(), loadedClass.getClassLoader());
   }
 
-
   /**
-   * Creates a {@link BytecodeWithUrl} for a runtime-generated type.
-   * It will also provide an artificially generated {@link URL} pointing to the in-memory bytecode.
+   * Creates a {@link BytecodeWithUrl} for a runtime-generated type. It will also provide an
+   * artificially generated {@link URL} pointing to the in-memory bytecode.
    *
    * @param className the name of the class represented by the provided bytecode
    * @param bytecode the bytecode of the class
@@ -160,13 +159,11 @@ public abstract class BytecodeWithUrl {
     }
   }
 
-
   private static class ForDynamicType extends BytecodeWithUrl {
 
     private final byte[] byteCode;
     private final String className;
     private volatile URL generatedUrl;
-
 
     private ForDynamicType(String className, byte[] byteCode) {
       this.byteCode = byteCode;
@@ -192,8 +189,7 @@ public abstract class BytecodeWithUrl {
 
     @Override
     public BytecodeWithUrl cached() {
-      return this; //this type already holds the bytecode in-memory
+      return this; // this type already holds the bytecode in-memory
     }
   }
-
 }
