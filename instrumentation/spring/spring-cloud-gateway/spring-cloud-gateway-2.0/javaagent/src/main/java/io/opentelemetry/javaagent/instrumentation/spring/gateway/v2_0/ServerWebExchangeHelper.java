@@ -36,9 +36,6 @@ public final class ServerWebExchangeHelper {
       Pattern.compile(
           "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
-  /* Route ID for route whose routeID is unset */
-  private static final String UNSET_ROUTE_ID = "UNSET_ROUTE_ID";
-
   private static final String INVALID_RANDOM_ROUTE_ID =
       "org.springframework.util.AlternativeJdkIdGenerator@";
 
@@ -74,13 +71,13 @@ public final class ServerWebExchangeHelper {
   private static String convergeRouteId(Route route) {
     String routeId = route.getId();
     if (StringUtils.isNullOrEmpty(routeId)) {
-      return UNSET_ROUTE_ID;
+      return null;
     }
     if (UUID_REGEX.matcher(routeId).matches()) {
-      return UNSET_ROUTE_ID;
+      return null;
     }
     if (routeId.startsWith(INVALID_RANDOM_ROUTE_ID)) {
-      return UNSET_ROUTE_ID;
+      return null;
     }
     return routeId;
   }

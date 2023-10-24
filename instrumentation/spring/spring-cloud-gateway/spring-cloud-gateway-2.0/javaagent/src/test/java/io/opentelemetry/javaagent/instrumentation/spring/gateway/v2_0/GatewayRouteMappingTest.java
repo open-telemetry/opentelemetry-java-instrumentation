@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -37,8 +38,6 @@ class GatewayRouteMappingTest {
 
   private static final AttributeKey<String> ROUTE_INFO_ATTRIBUTES =
       AttributeKey.stringKey("ROUTE_INFO");
-
-  private static final String UNSET_ROUTE_ID = "UNSET_ROUTE_ID";
 
   @TestConfiguration
   static class ForceNettyAutoConfiguration {
@@ -70,7 +69,10 @@ class GatewayRouteMappingTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasAttribute(equalTo(SemanticAttributes.HTTP_ROUTE, "path_route")),
+                span ->
+                    span.hasName("POST path_route")
+                        .hasKind(SpanKind.SERVER)
+                        .hasAttribute(equalTo(SemanticAttributes.HTTP_ROUTE, "path_route")),
                 span ->
                     span.hasAttributesSatisfying(
                         satisfies(ROUTE_INFO_ATTRIBUTES, s -> s.contains("id='path_route'")),
@@ -87,7 +89,7 @@ class GatewayRouteMappingTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasAttribute(equalTo(SemanticAttributes.HTTP_ROUTE, UNSET_ROUTE_ID)),
+                span -> span.hasName("POST").hasKind(SpanKind.SERVER),
                 span ->
                     span.hasAttributesSatisfying(
                         satisfies(ROUTE_INFO_ATTRIBUTES, s -> s.contains("uri=h1c://mock.uuid")))));
@@ -96,6 +98,7 @@ class GatewayRouteMappingTest {
   @Test
   void gatewayFakeUuidRouteMappingTest() {
     String requestBody = "gateway";
+    String routeId = "ffffffff-ffff-ffff-ffff-ffff";
     AggregatedHttpResponse response = client.post("/fake/echo", requestBody).aggregate().join();
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo(requestBody);
@@ -103,8 +106,9 @@ class GatewayRouteMappingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasAttribute(
-                        equalTo(SemanticAttributes.HTTP_ROUTE, "ffffffff-ffff-ffff-ffff-ffff")),
+                    span.hasName("POST " + routeId)
+                        .hasKind(SpanKind.SERVER)
+                        .hasAttribute(equalTo(SemanticAttributes.HTTP_ROUTE, routeId)),
                 span ->
                     span.hasAttributesSatisfying(
                         satisfies(ROUTE_INFO_ATTRIBUTES, s -> s.contains("uri=h1c://mock.fake")))));

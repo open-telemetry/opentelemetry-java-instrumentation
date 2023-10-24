@@ -5,14 +5,13 @@
 
 package io.opentelemetry.instrumentation.spring.gateway.v2_2;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,8 +36,6 @@ public class Gateway22RouteMappingTest {
 
   private static final AttributeKey<String> ROUTE_INFO_ATTRIBUTES =
       AttributeKey.stringKey("ROUTE_INFO");
-
-  private static final String UNSET_ROUTE_ID = "UNSET_ROUTE_ID";
 
   @TestConfiguration
   static class ForceNettyAutoConfiguration {
@@ -70,7 +67,7 @@ public class Gateway22RouteMappingTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasAttribute(equalTo(SemanticAttributes.HTTP_ROUTE, UNSET_ROUTE_ID)),
+                span -> span.hasName("POST").hasKind(SpanKind.SERVER),
                 span ->
                     span.hasAttributesSatisfying(
                         satisfies(
