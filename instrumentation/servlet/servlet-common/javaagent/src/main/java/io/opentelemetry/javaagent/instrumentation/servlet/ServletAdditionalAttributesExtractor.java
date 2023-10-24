@@ -22,6 +22,10 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.servlet.experimental-span-attributes", false);
+  static final boolean CAPTURE_EXPERIMENTAL_ENDUSER_SPAN_ATTRIBUTES =
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.servlet.experimental.enduser-span-attributes", false);
+
   private static final AttributeKey<Long> SERVLET_TIMEOUT = longKey("servlet.timeout");
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
@@ -43,11 +47,13 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> responseContext,
       @Nullable Throwable error) {
-    Principal principal = accessor.getRequestUserPrincipal(requestContext.request());
-    if (principal != null) {
-      String name = principal.getName();
-      if (name != null) {
-        attributes.put(SemanticAttributes.ENDUSER_ID, name);
+    if (CAPTURE_EXPERIMENTAL_ENDUSER_SPAN_ATTRIBUTES) {
+      Principal principal = accessor.getRequestUserPrincipal(requestContext.request());
+      if (principal != null) {
+        String name = principal.getName();
+        if (name != null) {
+          attributes.put(SemanticAttributes.ENDUSER_ID, name);
+        }
       }
     }
     if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {

@@ -135,6 +135,10 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
    * created by servlet instrumentation we call this method on exit from the last servlet or filter.
    */
   private void captureEnduserId(Span serverSpan, REQUEST request) {
+    if (!ServletAdditionalAttributesExtractor.CAPTURE_EXPERIMENTAL_ENDUSER_SPAN_ATTRIBUTES) {
+      return;
+    }
+
     Principal principal = accessor.getRequestUserPrincipal(request);
     if (principal != null) {
       String name = principal.getName();
