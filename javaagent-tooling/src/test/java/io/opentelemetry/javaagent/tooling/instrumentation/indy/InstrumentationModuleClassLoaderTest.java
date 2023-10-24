@@ -43,9 +43,9 @@ class InstrumentationModuleClassLoaderTest {
     ClassLoader dummyParent = new URLClassLoader(new URL[] {}, null);
 
     InstrumentationModuleClassLoader m1 =
-        new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject);
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject, true);
     InstrumentationModuleClassLoader m2 =
-        new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject);
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject, true);
 
     // MethodHandles.publicLookup() always succeeds on the first invocation
     lookupAndInvokeFoo(m1);
@@ -79,7 +79,7 @@ class InstrumentationModuleClassLoaderTest {
 
     ClassLoader dummyParent = new URLClassLoader(new URL[] {}, null);
     InstrumentationModuleClassLoader m1 =
-        new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject);
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject, true);
 
     Class<?> injected = Class.forName(A.class.getName(), true, m1);
     // inject two classes from the same package to trigger errors if we try to redefine the package
@@ -120,7 +120,7 @@ class InstrumentationModuleClassLoaderTest {
       toInject.put(C.class.getName(), ClassCopySource.create(C.class.getName(), moduleSourceCl));
 
       InstrumentationModuleClassLoader moduleCl =
-          new InstrumentationModuleClassLoader(appCl, agentCl, toInject);
+          new InstrumentationModuleClassLoader(appCl, agentCl, toInject, true);
 
       // Verify precedence for classloading
       Class<?> clA = moduleCl.loadClass(A.class.getName());

@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
@@ -84,6 +85,9 @@ public class IndyModuleRegistry {
     // TODO (Jonas): Make muzzle include advice classes as helper classes
     // so that we don't have to include them here
     toInject.addAll(getModuleAdviceNames(module));
+    if (module instanceof ExperimentalInstrumentationModule) {
+      toInject.removeAll(((ExperimentalInstrumentationModule) module).injectedClassNames());
+    }
 
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
     Map<String, ClassCopySource> injectedClasses =

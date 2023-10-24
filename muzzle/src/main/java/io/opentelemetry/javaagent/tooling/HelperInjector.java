@@ -160,7 +160,6 @@ public class HelperInjector implements Transformer {
   private Map<String, Supplier<byte[]>> getHelperMap(ClassLoader targetClassloader) {
     Map<String, Supplier<byte[]>> result = new LinkedHashMap<>();
     if (dynamicTypeMap.isEmpty()) {
-
       for (String helperClassName : helperClassNames) {
         result.put(
             helperClassName,

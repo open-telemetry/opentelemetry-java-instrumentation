@@ -54,16 +54,26 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   private volatile MethodHandles.Lookup cachedLookup;
 
   private final ClassLoader instrumentedCl;
+  private final boolean delegateAllToAgent;
 
   public InstrumentationModuleClassLoader(
       ClassLoader instrumentedCl,
       ClassLoader agentOrExtensionCl,
       Map<String, ClassCopySource> injectedClasses) {
+    this(instrumentedCl, agentOrExtensionCl, injectedClasses, false);
+  }
+
+  InstrumentationModuleClassLoader(
+      ClassLoader instrumentedCl,
+      ClassLoader agentOrExtensionCl,
+      Map<String, ClassCopySource> injectedClasses,
+      boolean delegateAllToAgent) {
     // agent/extension-classloader is "main"-parent, but class lookup is overridden
     super(agentOrExtensionCl);
     additionalInjectedClasses = injectedClasses;
     this.agentOrExtensionCl = agentOrExtensionCl;
     this.instrumentedCl = instrumentedCl;
+    this.delegateAllToAgent = delegateAllToAgent;
   }
 
   /**
@@ -110,7 +120,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
           }
         }
       }
-      if (result == null) {
+      if (result == null && shouldLoadFromAgent(name)) {
         result = tryLoad(agentOrExtensionCl, name);
       }
       if (result == null) {
@@ -126,6 +136,10 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
         throw new ClassNotFoundException(name);
       }
     }
+  }
+
+  private boolean shouldLoadFromAgent(String dotClassName) {
+    return delegateAllToAgent || dotClassName.startsWith("io.opentelemetry.javaagent");
   }
 
   private static Class<?> tryLoad(ClassLoader cl, String name) {

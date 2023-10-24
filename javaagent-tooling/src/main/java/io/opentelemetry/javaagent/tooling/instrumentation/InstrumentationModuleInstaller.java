@@ -31,6 +31,7 @@ import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
 import io.opentelemetry.javaagent.tooling.util.NamedMatcher;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
+import java.util.Collections;
 import java.util.List;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
@@ -69,19 +70,40 @@ public final class InstrumentationModuleInstaller {
     }
 
     if (instrumentationModule.isIndyModule()) {
-      return installIndyModule(instrumentationModule, parentAgentBuilder);
+      return installIndyModule(instrumentationModule, parentAgentBuilder, config);
     } else {
       return installInjectingModule(instrumentationModule, parentAgentBuilder, config);
     }
   }
 
   private AgentBuilder installIndyModule(
-      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
-
-    IndyModuleRegistry.registerIndyModule(instrumentationModule);
-
+      InstrumentationModule instrumentationModule,
+      AgentBuilder parentAgentBuilder,
+      ConfigProperties config) {
+    List<String> helperClassNames =
+        InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
     instrumentationModule.registerHelperResources(helperResourceBuilder);
+    List<TypeInstrumentation> typeInstrumentations = instrumentationModule.typeInstrumentations();
+    if (typeInstrumentations.isEmpty()) {
+      if (!helperClassNames.isEmpty() || !helperResourceBuilder.getResources().isEmpty()) {
+        logger.log(
+            WARNING,
+            "Helper classes and resources won't be injected if no types are instrumented: {0}",
+            instrumentationModule.instrumentationName());
+      }
+
+      return parentAgentBuilder;
+    }
+
+    List<String> injectedHelperClassNames = Collections.emptyList();
+    if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
+      ExperimentalInstrumentationModule experimentalInstrumentationModule =
+          (ExperimentalInstrumentationModule) instrumentationModule;
+      injectedHelperClassNames = experimentalInstrumentationModule.injectedClassNames();
+    }
+
+    IndyModuleRegistry.registerIndyModule(instrumentationModule);
 
     ClassInjectorImpl injectedClassesCollector = new ClassInjectorImpl(instrumentationModule);
     if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
@@ -89,17 +111,23 @@ public final class InstrumentationModuleInstaller {
           .injectClasses(injectedClassesCollector);
     }
 
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
+
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
-            injectedClassesCollector.getClassesToInject(),
+            injectedHelperClassNames,
             helperResourceBuilder.getResources(),
             instrumentationModule.getClass().getClassLoader(),
             instrumentation);
+    AgentBuilder.Transformer indyHelperInjector =
+        new HelperInjector(
+            instrumentationModule.instrumentationName(),
+            injectedClassesCollector.getClassesToInject(),
+            Collections.emptyList(),
+            instrumentationModule.getClass().getClassLoader(),
+            instrumentation);
 
-    // TODO (Jonas): Adapt MuzzleMatcher to use the same type lookup strategy as the
-    // InstrumentationModuleClassLoader (see IndyModuleTypePool)
-    // MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
     VirtualFieldImplementationInstaller contextProvider =
         virtualFieldInstallerFactory.create(instrumentationModule);
 
@@ -107,8 +135,10 @@ public final class InstrumentationModuleInstaller {
     for (TypeInstrumentation typeInstrumentation : instrumentationModule.typeInstrumentations()) {
       AgentBuilder.Identified.Extendable extendableAgentBuilder =
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
+              .and(muzzleMatcher)
               .transform(new PatchByteCodeVersionTransformer())
-              .transform(helperInjector);
+              .transform(helperInjector)
+              .transform(indyHelperInjector);
 
       // TODO (Jonas): we are not calling
       // contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder) anymore
