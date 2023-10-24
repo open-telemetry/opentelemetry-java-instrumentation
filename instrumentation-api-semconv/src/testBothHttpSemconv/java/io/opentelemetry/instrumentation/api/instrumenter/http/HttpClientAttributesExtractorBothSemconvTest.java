@@ -141,6 +141,9 @@ class HttpClientAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.URL_FULL, "http://github.com"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(
+                AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
+                asList("123", "456")),
+            entry(
                 AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
                 asList("123", "456")),
             entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
@@ -159,6 +162,9 @@ class HttpClientAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
             entry(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
+            entry(
+                AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
+                asList("654", "321")),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom-response-header"),
                 asList("654", "321")),

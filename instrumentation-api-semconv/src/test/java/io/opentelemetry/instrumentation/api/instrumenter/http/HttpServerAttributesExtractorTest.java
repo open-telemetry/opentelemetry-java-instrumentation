@@ -170,7 +170,7 @@ class HttpServerAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
             entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
             entry(
-                AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
+                AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")));
 
     AttributesBuilder endAttributes = Attributes.builder();
@@ -184,7 +184,7 @@ class HttpServerAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
             entry(
-                AttributeKey.stringArrayKey("http.response.header.custom-response-header"),
+                AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")));
   }
 
