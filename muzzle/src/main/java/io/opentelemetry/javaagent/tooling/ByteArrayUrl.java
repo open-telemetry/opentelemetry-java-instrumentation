@@ -20,7 +20,6 @@ import java.security.PrivilegedAction;
 public class ByteArrayUrl {
 
   private ByteArrayUrl() {}
-  ;
 
   private static final String URL_SCHEMA = "x-otel-binary";
 
