@@ -3,27 +3,38 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
+package io.opentelemetry.instrumentation.kafka.internal;
 
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.function.BooleanSupplier;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class TracingList<K, V> extends TracingIterable<K, V> implements List<ConsumerRecord<K, V>> {
   private final List<ConsumerRecord<K, V>> delegate;
 
-  private TracingList(List<ConsumerRecord<K, V>> delegate, KafkaConsumerContext consumerContext) {
-    super(delegate, consumerContext);
+  private TracingList(
+      List<ConsumerRecord<K, V>> delegate,
+      Instrumenter<KafkaProcessRequest, Void> instrumenter,
+      BooleanSupplier wrappingEnabled,
+      KafkaConsumerContext consumerContext) {
+    super(delegate, instrumenter, wrappingEnabled, consumerContext);
     this.delegate = delegate;
   }
 
   public static <K, V> List<ConsumerRecord<K, V>> wrap(
-      List<ConsumerRecord<K, V>> delegate, KafkaConsumerContext consumerContext) {
-    if (KafkaClientsConsumerProcessTracing.wrappingEnabled()) {
-      return new TracingList<>(delegate, consumerContext);
+      List<ConsumerRecord<K, V>> delegate,
+      Instrumenter<KafkaProcessRequest, Void> instrumenter,
+      BooleanSupplier wrappingEnabled,
+      KafkaConsumerContext consumerContext) {
+    if (wrappingEnabled.getAsBoolean()) {
+      return new TracingList<>(delegate, instrumenter, wrappingEnabled, consumerContext);
     }
     return delegate;
   }

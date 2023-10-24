@@ -24,7 +24,9 @@ public class KafkaReceiveRequest extends AbstractKafkaConsumerRequest {
 
   public static KafkaReceiveRequest create(
       KafkaConsumerContext consumerContext, ConsumerRecords<?, ?> records) {
-    return create(records, consumerContext != null ? consumerContext.getConsumer() : null);
+    String consumerGroup = consumerContext != null ? consumerContext.getConsumerGroup() : null;
+    String clientId = consumerContext != null ? consumerContext.getClientId() : null;
+    return create(records, consumerGroup, clientId);
   }
 
   public static KafkaReceiveRequest create(

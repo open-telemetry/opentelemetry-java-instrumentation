@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.wrappingEnabledSupplier;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,6 +16,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.instrumentation.kafka.internal.TracingIterable;
+import io.opentelemetry.instrumentation.kafka.internal.TracingIterator;
+import io.opentelemetry.instrumentation.kafka.internal.TracingList;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Iterator;
@@ -70,7 +75,9 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       // case it's important to overwrite the leaked span instead of suppressing the correct span
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
       KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
-      iterable = TracingIterable.wrap(iterable, consumerContext);
+      iterable =
+          TracingIterable.wrap(
+              iterable, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
     }
   }
 
@@ -88,7 +95,9 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       // case it's important to overwrite the leaked span instead of suppressing the correct span
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
       KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
-      list = TracingList.wrap(list, consumerContext);
+      list =
+          TracingList.wrap(
+              list, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
     }
   }
 
@@ -106,7 +115,9 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       // case it's important to overwrite the leaked span instead of suppressing the correct span
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
       KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
-      iterator = TracingIterator.wrap(iterator, consumerContext);
+      iterator =
+          TracingIterator.wrap(
+              iterator, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
     }
   }
 }
