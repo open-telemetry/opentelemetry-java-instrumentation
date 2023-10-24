@@ -1,7 +1,6 @@
 package io.opentelemetry.javaagent.tooling;
 
-import com.google.auto.value.AutoValue;
-import io.opentelemetry.javaagent.extension.instrumentation.injection.InjectionMode;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import net.bytebuddy.dynamic.DynamicType;
 
 public class HelperClassDefinition {

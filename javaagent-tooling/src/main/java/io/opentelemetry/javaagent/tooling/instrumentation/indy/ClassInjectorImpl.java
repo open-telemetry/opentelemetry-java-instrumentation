@@ -32,10 +32,9 @@ public class ClassInjectorImpl implements ClassInjector {
     proxyFactory = IndyBootstrap.getProxyFactory(module);
   }
 
-  public Function<ClassLoader, List<HelperClassDefinition>> getClassesToInject() {
-    List<Function<ClassLoader, HelperClassDefinition>> copy = new ArrayList<>(classesToInject);
-    return (cl) -> copy.stream()
-        .map(generator -> generator.apply(cl))
+  public List<HelperClassDefinition>getClassesToInject(ClassLoader instrumentedCl) {
+    return classesToInject.stream()
+        .map(generator -> generator.apply(instrumentedCl))
         .collect(Collectors.toList());
   }
 
