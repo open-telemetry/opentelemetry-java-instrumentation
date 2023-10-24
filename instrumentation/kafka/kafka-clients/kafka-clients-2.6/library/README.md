@@ -72,31 +72,11 @@ Then use the `tracingConsumer` as usual for receiving messages from the Kafka cl
 ### Usage (Metrics)
 
 The Kafka client exposes metrics via `org.apache.kafka.common.metrics.MetricsReporter` interface.
-OpenTelemetry provides an implementation that bridges the metrics into OpenTelemetry. There are two
-options for capturing metrics, manually instrumenting or configuring JMX Metrics, both described below.
-
-#### Manual instrumentation
+OpenTelemetry provides an implementation that bridges the metrics into OpenTelemetry.
 
 To use, merge the config properties
 from `KafkaTelemetry.create(OpenTelemetry).metricConfigProperties()`
 with the configuration used when creating your producer or consumer.
-
-#### Configuring JMX Metrics
-
-the `kafka.consumer` and `kafka.producer` JMX Metrics can be configured as described
-in [opentelemetry-java-instrumentation](https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/jmx-metrics/javaagent#configuration-files),
-e.g.
-
-```yaml
-rules:
-  - bean: kafka.consumer:client-id=*,type=consumer-coordinator-metrics
-    metricAttribute:
-      'client-id': param(client-id)
-      type: beanattr(Type)
-    mapping:
-      'assigned-partitions':
-        desc: The number of partitions currently assigned to this consumer
-```
 
 Note: Kafka reports several metrics at multiple attribute granularities. For
 example, `records-consumed-total` is reported with attribute key `[client-id]`
