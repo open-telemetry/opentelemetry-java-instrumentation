@@ -149,7 +149,7 @@ public final class KafkaTelemetry {
             });
   }
 
-  public <K, V> ConsumerRecords<K, V> addTracing(
+  <K, V> ConsumerRecords<K, V> addTracing(
       ConsumerRecords<K, V> consumerRecords, KafkaConsumerContext consumerContext) {
     if (consumerRecords.isEmpty()) {
       return consumerRecords;
