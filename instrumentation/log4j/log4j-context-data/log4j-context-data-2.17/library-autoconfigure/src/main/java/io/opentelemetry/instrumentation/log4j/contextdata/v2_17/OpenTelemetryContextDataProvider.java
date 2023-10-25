@@ -27,20 +27,27 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
  */
 public class OpenTelemetryContextDataProvider implements ContextDataProvider {
 
-  private boolean configuredResourceAttributeAccessible;
-
-  public OpenTelemetryContextDataProvider() {
-    try {
-      Class.forName("io.opentelemetry.javaagent.bootstrap.ConfiguredResourceAttributesHolder");
-      this.configuredResourceAttributeAccessible = true;
-
-    } catch (ClassNotFoundException ok) {
-      this.configuredResourceAttributeAccessible = false;
-    }
-  }
-
   private static final boolean BAGGAGE_ENABLED =
       ConfigPropertiesUtil.getBoolean("otel.instrumentation.log4j-context-data.add-baggage", false);
+
+  private static final boolean configuredResourceAttributeAccessible =
+      isConfiguredResourceAttributeAccessible();
+
+  /**
+   * Checks whether {@link ConfiguredResourceAttributesHolder} is available in classpath. The result
+   * is true if {@link ConfiguredResourceAttributesHolder} can be loaded, false otherwise.
+   *
+   * @return A boolean
+   */
+  private static boolean isConfiguredResourceAttributeAccessible() {
+    try {
+      Class.forName("io.opentelemetry.javaagent.bootstrap.ConfiguredResourceAttributesHolder");
+      return true;
+
+    } catch (ClassNotFoundException ok) {
+      return false;
+    }
+  }
 
   /**
    * Returns context from the current span when available.
