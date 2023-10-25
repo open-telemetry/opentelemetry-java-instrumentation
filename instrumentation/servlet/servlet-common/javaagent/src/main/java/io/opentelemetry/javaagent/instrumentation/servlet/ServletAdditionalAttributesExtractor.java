@@ -11,6 +11,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.security.Principal;
@@ -22,9 +23,6 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.servlet.experimental-span-attributes", false);
-  static final boolean CAPTURE_EXPERIMENTAL_ENDUSER_SPAN_ATTRIBUTES =
-      InstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.servlet.experimental.enduser-span-attributes", false);
 
   private static final AttributeKey<Long> SERVLET_TIMEOUT = longKey("servlet.timeout");
 
@@ -47,7 +45,7 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> responseContext,
       @Nullable Throwable error) {
-    if (CAPTURE_EXPERIMENTAL_ENDUSER_SPAN_ATTRIBUTES) {
+    if (CommonConfig.get().shouldCaptureEnduser()) {
       Principal principal = accessor.getRequestUserPrincipal(requestContext.request());
       if (principal != null) {
         String name = principal.getName();
