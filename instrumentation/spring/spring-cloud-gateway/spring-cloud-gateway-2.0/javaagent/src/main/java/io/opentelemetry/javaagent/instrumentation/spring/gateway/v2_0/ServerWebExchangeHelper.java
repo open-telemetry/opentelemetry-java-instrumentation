@@ -11,6 +11,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.internal.StringUtils;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.regex.Pattern;
 import org.springframework.cloud.gateway.route.Route;
@@ -18,9 +19,21 @@ import org.springframework.web.server.ServerWebExchange;
 
 public final class ServerWebExchangeHelper {
 
-  /** Route info key. */
-  private static final AttributeKey<String> ROUTE_INFO_ATTRIBUTES =
-      AttributeKey.stringKey("ROUTE_INFO");
+  /** Route ID attribute key. */
+  private static final AttributeKey<String> ROUTE_ID_ATTRIBUTE =
+      AttributeKey.stringKey("spring-cloud-gateway.route.id");
+
+  /** Route URI attribute key. */
+  private static final AttributeKey<String> ROUTE_URI_ATTRIBUTE =
+      AttributeKey.stringKey("spring-cloud-gateway.route.uri");
+
+  /** Route order attribute key. */
+  private static final AttributeKey<Long> ROUTE_ORDER_ATTRIBUTE =
+      AttributeKey.longKey("spring-cloud-gateway.route.order");
+
+  /** Route filter size attribute key. */
+  private static final AttributeKey<Long> ROUTE_FILTER_SIZE_ATTRIBUTE =
+      AttributeKey.longKey("spring-cloud-gateway.route.filter.size");
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES;
 
@@ -45,11 +58,14 @@ public final class ServerWebExchangeHelper {
     // Record route info
     Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
     if (route != null && CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-      Span currentSpan = Span.fromContext(context);
-      if (currentSpan == null) {
+      Span serverSpan = LocalRootSpan.fromContextOrNull(context);
+      if (serverSpan == null) {
         return;
       }
-      currentSpan.setAttribute(ROUTE_INFO_ATTRIBUTES, summarizeRoute(route));
+      serverSpan.setAttribute(ROUTE_ID_ATTRIBUTE, route.getId());
+      serverSpan.setAttribute(ROUTE_URI_ATTRIBUTE, route.getUri().toASCIIString());
+      serverSpan.setAttribute(ROUTE_ORDER_ATTRIBUTE, route.getOrder());
+      serverSpan.setAttribute(ROUTE_FILTER_SIZE_ATTRIBUTE, route.getFilters().size());
     }
   }
 
@@ -80,18 +96,5 @@ public final class ServerWebExchangeHelper {
       return null;
     }
     return routeId;
-  }
-
-  private static String summarizeRoute(Route route) {
-    return "id='"
-        + route.getId()
-        + '\''
-        + ", uri="
-        + route.getUri()
-        + ", order="
-        + route.getOrder()
-        + ", filterSize="
-        + route.getFilters().size()
-        + '}';
   }
 }

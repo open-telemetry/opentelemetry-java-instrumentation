@@ -18,6 +18,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent"))
 
+  testImplementation(project(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:testing"))
+
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
 }
 

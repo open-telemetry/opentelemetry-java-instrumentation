@@ -5,3 +5,4 @@ spring:
         - uri: h1c://mock.response
           predicates:
             - Path=/gateway/echo
+          order: 2023
