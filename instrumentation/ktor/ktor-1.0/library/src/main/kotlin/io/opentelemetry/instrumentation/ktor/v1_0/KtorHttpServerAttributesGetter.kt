@@ -56,12 +56,4 @@ internal enum class KtorHttpServerAttributesGetter :
     }
     return null
   }
-
-  override fun getServerAddress(request: ApplicationRequest): String {
-    return request.local.host
-  }
-
-  override fun getServerPort(request: ApplicationRequest): Int {
-    return request.local.port
-  }
 }

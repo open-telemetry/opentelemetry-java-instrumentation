@@ -89,18 +89,6 @@ enum ArmeriaHttpServerAttributesGetter
     return protocol.isMultiplex() ? "2" : "1.1";
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(RequestContext ctx) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(RequestContext ctx) {
-    return null;
-  }
-
   @Override
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(

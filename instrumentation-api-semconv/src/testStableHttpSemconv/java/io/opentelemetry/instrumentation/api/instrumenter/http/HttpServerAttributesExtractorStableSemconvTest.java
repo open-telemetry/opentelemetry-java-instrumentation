@@ -145,19 +145,6 @@ class HttpServerAttributesExtractorStableSemconvTest {
 
     @Nullable
     @Override
-    public String getServerAddress(Map<String, String> request) {
-      return request.get("serverAddress");
-    }
-
-    @Nullable
-    @Override
-    public Integer getServerPort(Map<String, String> request) {
-      String value = request.get("serverPort");
-      return value == null ? null : Integer.parseInt(value);
-    }
-
-    @Nullable
-    @Override
     public String getErrorType(
         Map<String, String> request,
         @Nullable Map<String, String> respobse,
@@ -177,7 +164,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("header.content-length", "10");
     request.put("route", "/repositories/{id}");
     request.put("header.user-agent", "okhttp 3.x");
-    request.put("header.host", "www.github.com:456");
+    request.put("header.host", "github.com:123");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
     request.put("networkTransport", "udp");
@@ -188,8 +175,6 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("networkLocalPort", "42");
     request.put("networkPeerAddress", "4.3.2.1");
     request.put("networkPeerPort", "456");
-    request.put("serverAddress", "github.com");
-    request.put("serverPort", "123");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
@@ -419,6 +404,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("header.forwarded", "host=example.com:42");
     request.put("header.x-forwarded-host", "opentelemetry.io:987");
     request.put("header.host", "github.com:123");
+    request.put("header.:authority", "opentelemetry.io:42");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "200");
@@ -445,6 +431,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     Map<String, String> request = new HashMap<>();
     request.put("header.x-forwarded-host", "opentelemetry.io:987");
     request.put("header.host", "github.com:123");
+    request.put("header.:authority", "opentelemetry.io:42");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "200");
@@ -470,6 +457,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
   void shouldExtractServerAddressAndPortFromHostHeader() {
     Map<String, String> request = new HashMap<>();
     request.put("header.host", "github.com:123");
+    request.put("header.:authority", "opentelemetry.io:42");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "200");
@@ -484,6 +472,31 @@ class HttpServerAttributesExtractorStableSemconvTest {
         .containsOnly(
             entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
             entry(SemanticAttributes.SERVER_PORT, 123L));
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+  }
+
+  @Test
+  void shouldExtractServerAddressAndPortFromAuthorityPseudoHeader() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.:authority", "opentelemetry.io:42");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "200");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"),
+            entry(SemanticAttributes.SERVER_PORT, 42L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);

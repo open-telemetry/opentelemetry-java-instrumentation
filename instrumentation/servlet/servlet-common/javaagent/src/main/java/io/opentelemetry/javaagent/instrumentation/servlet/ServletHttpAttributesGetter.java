@@ -106,18 +106,6 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
     return null;
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(ServletRequestContext<REQUEST> requestContext) {
-    return accessor.getRequestServerName(requestContext.request());
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(ServletRequestContext<REQUEST> requestContext) {
-    return accessor.getRequestServerPort(requestContext.request());
-  }
-
   @Override
   @Nullable
   public String getNetworkPeerAddress(

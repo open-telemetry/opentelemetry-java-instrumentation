@@ -11,7 +11,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
-import org.apache.pekko.http.scaladsl.model.Uri;
 import scala.Option;
 
 class PekkoHttpServerAttributesGetter
@@ -67,17 +66,5 @@ class PekkoHttpServerAttributesGetter
   public String getNetworkProtocolVersion(
       HttpRequest request, @Nullable HttpResponse httpResponse) {
     return PekkoHttpUtil.protocolVersion(request);
-  }
-
-  @Nullable
-  @Override
-  public String getServerAddress(HttpRequest request) {
-    Uri.Host host = request.uri().authority().host();
-    return host.isEmpty() ? null : host.address();
-  }
-
-  @Override
-  public Integer getServerPort(HttpRequest request) {
-    return request.uri().authority().port();
   }
 }
