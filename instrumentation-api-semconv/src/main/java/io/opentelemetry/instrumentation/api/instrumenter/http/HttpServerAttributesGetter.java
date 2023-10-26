@@ -27,6 +27,7 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
         io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
             REQUEST, RESPONSE>,
         NetworkAttributesGetter<REQUEST, RESPONSE>,
+        // TODO remove ServerAttributesGetter from here
         ServerAttributesGetter<REQUEST, RESPONSE>,
         ClientAttributesGetter<REQUEST, RESPONSE> {
 
