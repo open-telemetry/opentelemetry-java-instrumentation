@@ -15,7 +15,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
-import io.opentelemetry.javaagent.bootstrap.ConfiguredResourceAttributesHolder;
+import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,7 +41,8 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
    */
   private static boolean isConfiguredResourceAttributeAccessible() {
     try {
-      Class.forName("io.opentelemetry.javaagent.bootstrap.ConfiguredResourceAttributesHolder");
+      Class.forName(
+          "io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder");
       return true;
 
     } catch (ClassNotFoundException ok) {

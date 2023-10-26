@@ -3,16 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.bootstrap;
+package io.opentelemetry.javaagent.bootstrap.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class ConfiguredResourceAttributesHolder {
 
   private static final Map<String, String> resourceAttributes = new HashMap<>();
@@ -22,23 +27,15 @@ public final class ConfiguredResourceAttributesHolder {
   }
 
   public static void initialize(Attributes resourceAttribute) {
-    String[] mdcResourceAttributes = getConfiguredAttributes();
-
+    List<String> mdcResourceAttributes =
+        InstrumentationConfig.get()
+            .getList("otel.instrumentation.mdc.resource-attributes", Collections.emptyList());
     for (String key : mdcResourceAttributes) {
       String value = resourceAttribute.get(stringKey(key));
       if (value != null) {
         ConfiguredResourceAttributesHolder.resourceAttributes.put(key, value);
       }
     }
-  }
-
-  private static String[] getConfiguredAttributes() {
-    String resourceAttributes =
-        ConfigPropertiesUtil.getString("otel.instrumentation.mdc.resource-attributes");
-    if (resourceAttributes == null) {
-      return new String[] {};
-    }
-    return resourceAttributes.split(",");
   }
 
   @Nullable
