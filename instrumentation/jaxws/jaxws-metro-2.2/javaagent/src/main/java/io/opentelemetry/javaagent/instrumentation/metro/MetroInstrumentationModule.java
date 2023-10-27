@@ -22,7 +22,7 @@ public class MetroInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("javax.jws.WebService");
+    return hasClassesNamed("com.sun.xml.ws.api.pipe.ServerTubeAssemblerContext");
   }
 
   @Override

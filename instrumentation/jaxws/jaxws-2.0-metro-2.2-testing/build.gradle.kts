@@ -1,31 +1,17 @@
 plugins {
-  id("otel.javaagent-instrumentation")
-}
-
-muzzle {
-  pass {
-    group.set("com.sun.xml.ws")
-    module.set("jaxws-rt")
-    versions.set("[2.2.0.1,3)")
-    // version 2.3.4 depends on org.glassfish.gmbal:gmbal-api-only:4.0.3 which does not exist
-    skip("2.3.4")
-    assertInverse.set(true)
-    extraDependency("javax.servlet:javax.servlet-api:3.0.1")
-  }
+  id("otel.javaagent-testing")
 }
 
 dependencies {
-  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
-
-  library("com.sun.xml.ws:jaxws-rt:2.2.0.1")
+  testLibrary("com.sun.xml.ws:jaxws-rt:2.2.0.1")
   // early versions of streambuffer depend on latest release of org.jvnet.staxex:stax-ex
   // which doesn't work with java 8
-  library("com.sun.xml.stream.buffer:streambuffer:1.4")
+  testLibrary("com.sun.xml.stream.buffer:streambuffer:1.4")
 
-  compileOnly("javax.servlet:javax.servlet-api:3.0.1")
-
+  testImplementation("javax.servlet:javax.servlet-api:3.0.1")
   testImplementation(project(":instrumentation:jaxws:jaxws-2.0-common-testing"))
 
+  testInstrumentation(project(":instrumentation:jaxws:jaxws-metro-2.2:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-jws-api-1.1:javaagent"))
 
