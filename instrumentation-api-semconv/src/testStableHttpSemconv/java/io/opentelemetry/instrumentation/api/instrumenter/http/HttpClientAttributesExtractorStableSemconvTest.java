@@ -371,7 +371,7 @@ class HttpClientAttributesExtractorStableSemconvTest {
   }
 
   @Test
-  void shouldNotExtractDuplicatePeerAddress() {
+  void shouldExtractPeerAddressEvenIfItDuplicatesServerAddress() {
     Map<String, String> request = new HashMap<>();
     request.put("networkPeerAddress", "1.2.3.4");
     request.put("networkPeerPort", "456");
@@ -394,6 +394,9 @@ class HttpClientAttributesExtractorStableSemconvTest {
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+        .containsOnly(
+            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4"),
+            entry(NetworkAttributes.NETWORK_PEER_PORT, 456L));
   }
 }

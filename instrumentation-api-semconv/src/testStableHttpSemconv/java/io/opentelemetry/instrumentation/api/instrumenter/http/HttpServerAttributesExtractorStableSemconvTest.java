@@ -483,6 +483,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
   void shouldExtractServerAddressAndPortFromHostHeader() {
     Map<String, String> request = new HashMap<>();
     request.put("header.host", "github.com:123");
+    request.put("header.:authority", "opentelemetry.io:42");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "200");
@@ -505,7 +506,32 @@ class HttpServerAttributesExtractorStableSemconvTest {
   }
 
   @Test
-  void shouldNotExtractDuplicatePeerAddress() {
+  void shouldExtractServerAddressAndPortFromAuthorityPseudoHeader() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.:authority", "opentelemetry.io:42");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "200");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"),
+            entry(SemanticAttributes.SERVER_PORT, 42L));
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+  }
+
+  @Test
+  void shouldExtractPeerAddressEvenIfItDuplicatesClientAddress() {
     Map<String, String> request = new HashMap<>();
     request.put("networkPeerAddress", "1.2.3.4");
     request.put("networkPeerPort", "456");
@@ -527,6 +553,9 @@ class HttpServerAttributesExtractorStableSemconvTest {
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+        .containsOnly(
+            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4"),
+            entry(NetworkAttributes.NETWORK_PEER_PORT, 456L));
   }
 }

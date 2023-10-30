@@ -50,7 +50,6 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,
-            AddressAndPortExtractor.noop(),
             serverAddressAndPortExtractor,
             /* captureNetworkTransportAndType= */ true,
             /* captureLocalSocketAttributes= */ false,
