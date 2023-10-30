@@ -10,13 +10,12 @@ import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsClient
 
-abstract class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest implements LibraryTestTrait {
+abstract class Aws2SqsSuppressReceiveSpansTest extends AbstractAws2SqsSuppressReceiveSpansTest implements LibraryTestTrait {
   static AwsSdkTelemetry telemetry
 
   def setupSpec() {
     def telemetryBuilder = AwsSdkTelemetry.builder(getOpenTelemetry())
       .setCaptureExperimentalSpanAttributes(true)
-      .setMessagingReceiveInstrumentationEnabled(true)
     configure(telemetryBuilder)
     telemetry = telemetryBuilder.build()
   }
@@ -41,7 +40,7 @@ abstract class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest implements 
   }
 }
 
-class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
+class Aws2SqsSuppressReceiveSpansDefaultPropagatorTest extends Aws2SqsSuppressReceiveSpansTest {
 
   @Override
   void configure(AwsSdkTelemetryBuilder telemetryBuilder) {}
@@ -76,7 +75,7 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
   }
 }
 
-class Aws2SqsW3CPropagatorTest extends Aws2SqsTracingTest {
+class Aws2SqsSuppressReceiveSpansW3CPropagatorTest extends Aws2SqsSuppressReceiveSpansTest {
 
   @Override
   void configure(AwsSdkTelemetryBuilder telemetryBuilder) {
@@ -96,7 +95,7 @@ class Aws2SqsW3CPropagatorTest extends Aws2SqsTracingTest {
 }
 
 /** We want to test the combination of W3C + Xray, as that's what you'll get in prod if you enable W3C. */
-class Aws2SqsW3CPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
+class Aws2SqsSuppressReceiveSpansW3CPropagatorAndXrayPropagatorTest extends Aws2SqsSuppressReceiveSpansTest {
 
   @Override
   void configure(AwsSdkTelemetryBuilder telemetryBuilder) {

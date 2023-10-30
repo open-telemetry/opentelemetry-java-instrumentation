@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
@@ -24,8 +25,10 @@ final class SqsAccess {
   static boolean afterReceiveMessageExecution(
       Context.AfterExecution context,
       ExecutionAttributes executionAttributes,
-      TracingExecutionInterceptor config) {
-    return enabled && SqsImpl.afterReceiveMessageExecution(context, executionAttributes, config);
+      TracingExecutionInterceptor config,
+      Timer timer) {
+    return enabled
+        && SqsImpl.afterReceiveMessageExecution(context, executionAttributes, config, timer);
   }
 
   /**

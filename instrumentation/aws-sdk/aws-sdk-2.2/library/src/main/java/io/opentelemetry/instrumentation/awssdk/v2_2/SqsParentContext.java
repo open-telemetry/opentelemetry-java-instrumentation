@@ -69,5 +69,24 @@ final class SqsParentContext {
             StringMapGetter.INSTANCE);
   }
 
+  static Context ofMessage(SqsMessage message, TracingExecutionInterceptor config) {
+    return ofMessage(message, config.getMessagingPropagator(), config.shouldUseXrayPropagator());
+  }
+
+  static Context ofMessage(
+      SqsMessage message, TextMapPropagator messagingPropagator, boolean shouldUseXrayPropagator) {
+    io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.root();
+
+    if (messagingPropagator != null) {
+      parentContext = ofMessageAttributes(message.messageAttributes(), messagingPropagator);
+    }
+
+    if (shouldUseXrayPropagator && parentContext == io.opentelemetry.context.Context.root()) {
+      parentContext = ofSystemAttributes(message.attributesAsStrings());
+    }
+
+    return parentContext;
+  }
+
   private SqsParentContext() {}
 }

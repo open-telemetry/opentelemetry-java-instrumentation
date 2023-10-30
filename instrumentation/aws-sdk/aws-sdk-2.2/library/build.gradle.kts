@@ -36,6 +36,8 @@ testing {
         implementation("software.amazon.awssdk:aws-core:2.2.0")
         implementation("software.amazon.awssdk:aws-json-protocol:2.2.0")
         implementation("software.amazon.awssdk:dynamodb:2.2.0")
+
+        compileOnly("software.amazon.awssdk:sqs:2.2.0")
       }
     }
   }

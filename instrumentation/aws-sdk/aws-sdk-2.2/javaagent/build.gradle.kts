@@ -105,13 +105,30 @@ testing {
 
 tasks {
   val testExperimentalSqs by registering(Test::class) {
-    group = "verification"
-
+    filter {
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    }
     systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
+    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+  }
+
+  val testReceiveSpansDisabled by registering(Test::class) {
+    filter {
+      includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    }
+    include("**/Aws2SqsSuppressReceiveSpansTest.*")
+  }
+
+  test {
+    filter {
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    }
+    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
   }
 
   check {
     dependsOn(testExperimentalSqs)
+    dependsOn(testReceiveSpansDisabled)
     dependsOn(testing.suites)
   }
 
