@@ -123,7 +123,6 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.method" "POST"
             "http.status_code" 200
             "http.url" "http://localhost:$sqsPort"
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
@@ -213,7 +212,6 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.method" "POST"
             "http.status_code" 200
             "http.url" "http://localhost:$sqsPort"
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"

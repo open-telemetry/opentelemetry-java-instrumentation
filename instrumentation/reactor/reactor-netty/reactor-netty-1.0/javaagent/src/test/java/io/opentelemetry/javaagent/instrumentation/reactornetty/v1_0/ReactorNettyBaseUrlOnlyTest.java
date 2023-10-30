@@ -111,7 +111,6 @@ class ReactorNettyBaseUrlOnlyTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_URL, uri + "/"),
-                            equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, USER_AGENT),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
                             equalTo(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 0),
                             satisfies(

@@ -171,7 +171,6 @@ class HttpClientAttributesExtractorStableSemconvTest {
         .containsOnly(
             entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(SemanticAttributes.URL_FULL, "http://github.com"),
-            entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
                 asList("123", "456")),

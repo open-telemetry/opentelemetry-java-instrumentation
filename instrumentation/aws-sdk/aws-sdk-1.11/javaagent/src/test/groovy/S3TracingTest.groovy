@@ -205,7 +205,6 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" String
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
@@ -572,7 +571,6 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "net.peer.name" String
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"

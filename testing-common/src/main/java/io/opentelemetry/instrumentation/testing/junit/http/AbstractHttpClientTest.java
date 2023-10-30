@@ -1087,22 +1087,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (httpClientAttributes.contains(httpMethodKey)) {
                 assertThat(attrs).containsEntry(httpMethodKey, method);
               }
-              if (httpClientAttributes.contains(SemanticAttributes.USER_AGENT_ORIGINAL)) {
-                String userAgent = options.getUserAgent();
-                if (userAgent != null
-                    || attrs.get(SemanticAttributes.USER_AGENT_ORIGINAL) != null) {
-                  assertThat(attrs)
-                      .hasEntrySatisfying(
-                          SemanticAttributes.USER_AGENT_ORIGINAL,
-                          actual -> {
-                            if (userAgent != null) {
-                              assertThat(actual).startsWith(userAgent);
-                            } else {
-                              assertThat(actual).isNull();
-                            }
-                          });
-                }
-              }
+              // opt-in, not collected by default
+              assertThat(attrs).doesNotContainKey(SemanticAttributes.USER_AGENT_ORIGINAL);
+
               AttributeKey<Long> httpRequestLengthKey =
                   getAttributeKey(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
               if (attrs.get(httpRequestLengthKey) != null) {
