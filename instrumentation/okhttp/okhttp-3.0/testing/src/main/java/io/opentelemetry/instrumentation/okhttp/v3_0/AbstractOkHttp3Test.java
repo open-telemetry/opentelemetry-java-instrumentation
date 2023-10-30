@@ -122,10 +122,6 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          // the tests are capturing the user-agent, but since it's not possible to override it in
-          // the builder, and since it contains the okhttp library version, let's just skip
-          // verification on this attribute
-          attributes.remove(SemanticAttributes.USER_AGENT_ORIGINAL);
 
           if (SemconvStability.emitOldHttpSemconv()) {
             // protocol is extracted from the response, and those URLs cause exceptions (= null

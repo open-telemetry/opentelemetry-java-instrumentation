@@ -5,11 +5,9 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -20,8 +18,6 @@ import javax.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.http.HttpField;
-import org.eclipse.jetty.http.HttpHeader;
 
 /**
  * JettyHttpClient9TracingInterceptor does three jobs stimulated from the Jetty Request object from
@@ -137,15 +133,7 @@ public class JettyHttpClient9TracingInterceptor
   }
 
   @Override
-  public void onBegin(Request request) {
-    if (this.context != null) {
-      Span span = Span.fromContext(this.context);
-      HttpField agentField = request.getHeaders().getField(HttpHeader.USER_AGENT);
-      if (agentField != null) {
-        span.setAttribute(SemanticAttributes.USER_AGENT_ORIGINAL, agentField.getValue());
-      }
-    }
-  }
+  public void onBegin(Request request) {}
 
   @Override
   public void onComplete(Result result) {

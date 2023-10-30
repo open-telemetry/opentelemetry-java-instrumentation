@@ -188,7 +188,6 @@ class ReactorNettyClientSslTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_URL, uri),
-                            equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, USER_AGENT),
                             equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
                             equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),

@@ -44,6 +44,8 @@ import reactor.netty.http.client.HttpClient;
 abstract class AbstractReactorNettyHttpClientTest
     extends AbstractHttpClientTest<HttpClient.ResponseReceiver<?>> {
 
+  static final String USER_AGENT = "ReactorNetty";
+
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 

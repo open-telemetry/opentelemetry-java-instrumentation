@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -322,7 +321,6 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       executionAttributes.putAttribute(SDK_HTTP_REQUEST_ATTRIBUTE, context.httpRequest());
 
       Span span = Span.fromContext(otelContext);
-      onUserAgentHeaderAvailable(span, executionAttributes);
       onSdkResponse(span, context.response(), executionAttributes);
 
       SdkHttpResponse httpResponse = context.httpResponse();
@@ -334,15 +332,6 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
           otelContext, executionAttributes, new Response(httpResponse, context.response()), null);
     }
     clearAttributes(executionAttributes);
-  }
-
-  // Certain headers in the request like User-Agent are only available after execution.
-  private static void onUserAgentHeaderAvailable(Span span, ExecutionAttributes request) {
-    List<String> userAgent =
-        AwsSdkInstrumenterFactory.httpAttributesGetter.getHttpRequestHeader(request, "User-Agent");
-    if (!userAgent.isEmpty()) {
-      span.setAttribute(SemanticAttributes.USER_AGENT_ORIGINAL, userAgent.get(0));
-    }
   }
 
   private void onSdkResponse(
