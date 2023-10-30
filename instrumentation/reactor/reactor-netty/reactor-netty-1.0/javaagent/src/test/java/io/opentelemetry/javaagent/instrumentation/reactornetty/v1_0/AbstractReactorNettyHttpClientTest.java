@@ -44,8 +44,6 @@ import reactor.netty.http.client.HttpClient;
 abstract class AbstractReactorNettyHttpClientTest
     extends AbstractHttpClientTest<HttpClient.ResponseReceiver<?>> {
 
-  static final String USER_AGENT = "ReactorNetty";
-
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
@@ -106,7 +104,6 @@ abstract class AbstractReactorNettyHttpClientTest
     optionsBuilder.markAsLowLevelInstrumentation();
     optionsBuilder.setMaxRedirects(52);
 
-    optionsBuilder.setUserAgent(USER_AGENT);
     // TODO: remove this test altogether? this scenario is (was) only implemented in reactor-netty,
     // all other HTTP clients worked in a different way
     //    optionsBuilder.enableTestCallbackWithImplicitParent();
@@ -312,7 +309,6 @@ abstract class AbstractReactorNettyHttpClientTest
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_URL, uri.toString()),
-                            equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, USER_AGENT),
                             equalTo(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 0),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, uri.getPort())),

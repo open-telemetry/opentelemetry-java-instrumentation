@@ -33,8 +33,7 @@ public abstract class HttpClientTestOptions {
                   SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PEER_NAME),
                   SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PEER_PORT),
                   SemconvStabilityUtil.getAttributeKey(SemanticAttributes.HTTP_URL),
-                  SemconvStabilityUtil.getAttributeKey(SemanticAttributes.HTTP_METHOD),
-                  SemconvStabilityUtil.getAttributeKey(SemanticAttributes.USER_AGENT_ORIGINAL))));
+                  SemconvStabilityUtil.getAttributeKey(SemanticAttributes.HTTP_METHOD))));
 
   public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =
       (uri, method) -> HttpConstants._OTHER.equals(method) ? "HTTP" : method;
@@ -45,9 +44,6 @@ public abstract class HttpClientTestOptions {
 
   @Nullable
   public abstract Integer getResponseCodeOnRedirectError();
-
-  @Nullable
-  public abstract String getUserAgent();
 
   public abstract BiFunction<URI, Throwable, Throwable> getClientSpanErrorMapper();
 
@@ -108,7 +104,6 @@ public abstract class HttpClientTestOptions {
     default Builder withDefaults() {
       return setHttpAttributes(x -> DEFAULT_HTTP_ATTRIBUTES)
           .setResponseCodeOnRedirectError(FOUND_STATUS_CODE)
-          .setUserAgent(null)
           .setClientSpanErrorMapper((uri, exception) -> exception)
           .setSingleConnectionFactory((host, port) -> null)
           .setExpectedClientSpanNameMapper(DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER)
@@ -132,8 +127,6 @@ public abstract class HttpClientTestOptions {
     Builder setHttpAttributes(Function<URI, Set<AttributeKey<?>>> value);
 
     Builder setResponseCodeOnRedirectError(Integer value);
-
-    Builder setUserAgent(String value);
 
     Builder setClientSpanErrorMapper(BiFunction<URI, Throwable, Throwable> value);
 

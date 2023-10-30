@@ -67,7 +67,6 @@ abstract class HttpCommonAttributesExtractor<
     if (SemconvStability.emitOldHttpSemconv()) {
       internalSet(attributes, SemanticAttributes.HTTP_METHOD, method);
     }
-    internalSet(attributes, SemanticAttributes.USER_AGENT_ORIGINAL, userAgent(request));
 
     for (String name : capturedRequestHeaders) {
       List<String> values = getter.getHttpRequestHeader(request, name);
@@ -150,11 +149,6 @@ abstract class HttpCommonAttributesExtractor<
       }
       internalSet(attributes, HttpAttributes.ERROR_TYPE, errorType);
     }
-  }
-
-  @Nullable
-  private String userAgent(REQUEST request) {
-    return firstHeaderValue(getter.getHttpRequestHeader(request, "user-agent"));
   }
 
   @Nullable

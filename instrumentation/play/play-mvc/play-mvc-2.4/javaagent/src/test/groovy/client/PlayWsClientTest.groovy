@@ -54,11 +54,6 @@ class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTra
   }
 
   @Override
-  String userAgent() {
-    return "AHC"
-  }
-
-  @Override
   boolean testRedirects() {
     false
   }

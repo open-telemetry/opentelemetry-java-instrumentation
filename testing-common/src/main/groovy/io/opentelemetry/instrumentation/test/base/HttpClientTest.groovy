@@ -131,7 +131,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
       optionsBuilder.setHttpAttributes(HttpClientTest.this.&httpAttributes)
       optionsBuilder.setResponseCodeOnRedirectError(responseCodeOnRedirectError())
-      optionsBuilder.setUserAgent(HttpClientTest.this.userAgent())
       optionsBuilder.setClientSpanErrorMapper(HttpClientTest.this.&clientSpanError)
       optionsBuilder.setSingleConnectionFactory(HttpClientTest.this.&createSingleConnection)
       optionsBuilder.setExpectedClientSpanNameMapper(HttpClientTest.this.&expectedClientSpanName)
@@ -379,10 +378,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   Integer responseCodeOnRedirectError() {
     return 302
-  }
-
-  String userAgent() {
-    return null
   }
 
   /** A list of additional HTTP client span attributes extracted by the instrumentation per URI. */

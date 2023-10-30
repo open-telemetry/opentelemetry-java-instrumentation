@@ -139,7 +139,6 @@ class HttpClientAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_URL, "http://github.com"),
             entry(SemanticAttributes.URL_FULL, "http://github.com"),
-            entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")),

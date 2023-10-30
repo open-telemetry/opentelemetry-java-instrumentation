@@ -115,6 +115,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     internalClientExtractor.onStart(attributes, request);
 
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.getHttpRoute(request));
+    internalSet(attributes, SemanticAttributes.USER_AGENT_ORIGINAL, userAgent(request));
   }
 
   @Override
@@ -139,5 +140,10 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public SpanKey internalGetSpanKey() {
     return SpanKey.HTTP_SERVER;
+  }
+
+  @Nullable
+  private String userAgent(REQUEST request) {
+    return firstHeaderValue(getter.getHttpRequestHeader(request, "user-agent"));
   }
 }

@@ -141,11 +141,6 @@ class JerseyClientTest extends JaxRsClientTest {
   }
 
   @Override
-  String userAgent() {
-    "Jersey"
-  }
-
-  @Override
   SingleConnection createSingleConnection(String host, int port) {
     // Jersey JAX-RS client uses HttpURLConnection internally, which does not support pipelining nor
     // waiting for a connection in the pool to become available. Therefore a high concurrency test
@@ -196,11 +191,6 @@ class CxfClientTest extends JaxRsClientTest {
   @Override
   boolean testReadTimeout() {
     return false
-  }
-
-  @Override
-  String userAgent() {
-    "Apache"
   }
 
   @Override
