@@ -36,15 +36,15 @@ final class ForwardedHostAddressAndPortExtractor<REQUEST>
       }
     }
 
-    // try Host
-    for (String host : getter.getHttpRequestHeader(request, "host")) {
+    // try :authority (HTTP 2.0 pseudo-header)
+    for (String host : getter.getHttpRequestHeader(request, ":authority")) {
       if (extractHost(sink, host, 0, host.length())) {
         return;
       }
     }
 
-    // try :authority (HTTP 2.0 pseudo-header)
-    for (String host : getter.getHttpRequestHeader(request, ":authority")) {
+    // try Host
+    for (String host : getter.getHttpRequestHeader(request, "host")) {
       if (extractHost(sink, host, 0, host.length())) {
         return;
       }
