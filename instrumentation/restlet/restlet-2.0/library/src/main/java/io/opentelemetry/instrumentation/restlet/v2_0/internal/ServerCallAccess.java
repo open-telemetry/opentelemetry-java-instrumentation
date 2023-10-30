@@ -16,16 +16,12 @@ final class ServerCallAccess {
 
   private static final Class<?> HTTP_REQUEST_CLASS;
   private static final MethodHandle GET_HTTP_CALL;
-  private static final MethodHandle GET_HOST_DOMAIN;
-  private static final MethodHandle GET_SERVER_PORT;
   private static final MethodHandle GET_SERVER_ADDRESS;
 
   static {
     Class<?> httpRequestClass = null;
     Class<?> serverCallClass = null;
     MethodHandle getHttpCall = null;
-    MethodHandle getHostDomain = null;
-    MethodHandle getServerPort = null;
     MethodHandle getServerAddress = null;
 
     try {
@@ -55,9 +51,6 @@ final class ServerCallAccess {
         MethodHandles.Lookup lookup = MethodHandles.publicLookup();
         getHttpCall =
             lookup.findVirtual(httpRequestClass, "getHttpCall", methodType(serverCallClass));
-        getHostDomain =
-            lookup.findVirtual(serverCallClass, "getHostDomain", methodType(String.class));
-        getServerPort = lookup.findVirtual(serverCallClass, "getServerPort", methodType(int.class));
         getServerAddress =
             lookup.findVirtual(serverCallClass, "getServerAddress", methodType(String.class));
       } catch (NoSuchMethodException | IllegalAccessException e) {
@@ -67,41 +60,7 @@ final class ServerCallAccess {
 
     HTTP_REQUEST_CLASS = httpRequestClass;
     GET_HTTP_CALL = getHttpCall;
-    GET_HOST_DOMAIN = getHostDomain;
-    GET_SERVER_PORT = getServerPort;
     GET_SERVER_ADDRESS = getServerAddress;
-  }
-
-  @Nullable
-  static String getHostDomain(Request request) {
-    if (GET_HOST_DOMAIN == null) {
-      return null;
-    }
-    Object call = serverCall(request);
-    if (call == null) {
-      return null;
-    }
-    try {
-      return (String) GET_HOST_DOMAIN.invoke(call);
-    } catch (Throwable e) {
-      return null;
-    }
-  }
-
-  @Nullable
-  static Integer getServerPort(Request request) {
-    if (GET_SERVER_PORT == null) {
-      return null;
-    }
-    Object call = serverCall(request);
-    if (call == null) {
-      return null;
-    }
-    try {
-      return (int) GET_SERVER_PORT.invoke(call);
-    } catch (Throwable e) {
-      return null;
-    }
   }
 
   @Nullable

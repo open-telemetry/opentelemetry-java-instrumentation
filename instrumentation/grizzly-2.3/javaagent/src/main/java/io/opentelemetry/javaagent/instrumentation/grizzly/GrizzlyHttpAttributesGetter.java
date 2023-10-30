@@ -119,19 +119,6 @@ final class GrizzlyHttpAttributesGetter
 
   @Nullable
   @Override
-  public String getServerAddress(HttpRequestPacket request) {
-    // rely on the 'host' header parsing
-    return null;
-  }
-
-  @Override
-  public Integer getServerPort(HttpRequestPacket request) {
-    // rely on the 'host' header parsing
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getNetworkPeerAddress(
       HttpRequestPacket request, @Nullable HttpResponsePacket response) {
     return request.getRemoteAddress();

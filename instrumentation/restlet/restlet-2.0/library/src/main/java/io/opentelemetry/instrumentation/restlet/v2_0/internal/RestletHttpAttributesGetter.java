@@ -82,18 +82,6 @@ public enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
     return request.getProtocol().getVersion();
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(Request request) {
-    return ServerCallAccess.getHostDomain(request);
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(Request request) {
-    return ServerCallAccess.getServerPort(request);
-  }
-
   @Override
   @Nullable
   public String getNetworkPeerAddress(Request request, @Nullable Response response) {

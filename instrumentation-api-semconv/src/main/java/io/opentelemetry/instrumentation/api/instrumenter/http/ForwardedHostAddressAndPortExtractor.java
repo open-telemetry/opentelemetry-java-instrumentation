@@ -42,6 +42,13 @@ final class ForwardedHostAddressAndPortExtractor<REQUEST>
         return;
       }
     }
+
+    // try :authority (HTTP 2.0 pseudo-header)
+    for (String host : getter.getHttpRequestHeader(request, ":authority")) {
+      if (extractHost(sink, host, 0, host.length())) {
+        return;
+      }
+    }
   }
 
   private static boolean extractFromForwardedHeader(AddressPortSink sink, String forwarded) {

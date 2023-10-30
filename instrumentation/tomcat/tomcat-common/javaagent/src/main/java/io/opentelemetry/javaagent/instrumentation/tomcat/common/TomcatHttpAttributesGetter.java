@@ -79,17 +79,6 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
     return null;
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(Request request) {
-    return messageBytesToString(request.serverName());
-  }
-
-  @Override
-  public Integer getServerPort(Request request) {
-    return request.getServerPort();
-  }
-
   @Override
   @Nullable
   public String getNetworkPeerAddress(Request request, @Nullable Response response) {

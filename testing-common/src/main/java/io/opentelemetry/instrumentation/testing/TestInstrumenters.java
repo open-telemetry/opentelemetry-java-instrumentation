@@ -177,17 +177,5 @@ final class TestInstrumenters {
     public String getUrlQuery(String s) {
       return null;
     }
-
-    @Nullable
-    @Override
-    public String getServerAddress(String unused) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public Integer getServerPort(String unused) {
-      return null;
-    }
   }
 }

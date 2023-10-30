@@ -111,18 +111,6 @@ class HttpServerAttributesExtractorTest {
         Map<String, Object> request, Map<String, Object> response) {
       return (String) request.get("protocolVersion");
     }
-
-    @Nullable
-    @Override
-    public String getServerAddress(Map<String, Object> request) {
-      return (String) request.get("serverAddress");
-    }
-
-    @Nullable
-    @Override
-    public Integer getServerPort(Map<String, Object> request) {
-      return (Integer) request.get("serverPort");
-    }
   }
 
   @Test
@@ -232,27 +220,6 @@ class HttpServerAttributesExtractorTest {
   void extractNetHostAndPortFromHostHeader() {
     Map<String, Object> request = new HashMap<>();
     request.put("header.host", "thehost:777");
-
-    AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
-            .setCapturedRequestHeaders(emptyList())
-            .setCapturedResponseHeaders(emptyList())
-            .build();
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), request);
-    assertThat(attributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_HOST_NAME, "thehost"),
-            entry(SemanticAttributes.NET_HOST_PORT, 777L));
-  }
-
-  @Test
-  void extractNetHostAndPortFromNetAttributesGetter() {
-    Map<String, Object> request = new HashMap<>();
-    request.put("header.host", "notthehost:77777"); // this should have lower precedence
-    request.put("serverAddress", "thehost");
-    request.put("serverPort", 777);
 
     AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
         HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())

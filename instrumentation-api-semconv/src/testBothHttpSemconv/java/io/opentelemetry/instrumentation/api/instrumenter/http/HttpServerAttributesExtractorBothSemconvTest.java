@@ -103,18 +103,6 @@ class HttpServerAttributesExtractorBothSemconvTest {
         Map<String, Object> request, Map<String, Object> response) {
       return (String) request.get("protocolVersion");
     }
-
-    @Nullable
-    @Override
-    public String getServerAddress(Map<String, Object> request) {
-      return (String) request.get("serverAddress");
-    }
-
-    @Nullable
-    @Override
-    public Integer getServerPort(Map<String, Object> request) {
-      return (Integer) request.get("serverPort");
-    }
   }
 
   @Test

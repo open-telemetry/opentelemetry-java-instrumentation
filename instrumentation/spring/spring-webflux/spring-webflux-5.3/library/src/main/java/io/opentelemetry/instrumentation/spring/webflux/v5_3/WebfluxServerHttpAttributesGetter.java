@@ -81,19 +81,6 @@ enum WebfluxServerHttpAttributesGetter
 
   @Nullable
   @Override
-  public String getServerAddress(ServerWebExchange request) {
-    return request.getRequest().getURI().getHost();
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(ServerWebExchange request) {
-    int port = request.getRequest().getURI().getPort();
-    return port == -1 ? null : port;
-  }
-
-  @Nullable
-  @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       ServerWebExchange request, @Nullable ServerWebExchange response) {
     return request.getRequest().getRemoteAddress();
