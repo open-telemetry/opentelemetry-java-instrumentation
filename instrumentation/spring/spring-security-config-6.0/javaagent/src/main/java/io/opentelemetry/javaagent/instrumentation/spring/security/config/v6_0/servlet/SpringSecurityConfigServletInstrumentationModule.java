@@ -32,7 +32,7 @@ public class SpringSecurityConfigServletInstrumentationModule extends Instrument
      * If any functionality not related to enduser attributes is added to this module,
      * then this check will need to move elsewhere to only guard the enduser attributes logic.
      */
-    return CommonConfig.get().getEnduserConfig().isEnabled();
+    return CommonConfig.get().getEnduserConfig().isAnyEnabled();
   }
 
   @Override

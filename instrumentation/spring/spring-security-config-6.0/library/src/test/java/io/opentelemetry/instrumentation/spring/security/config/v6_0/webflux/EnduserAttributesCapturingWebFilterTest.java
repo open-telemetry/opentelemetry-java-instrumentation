@@ -43,6 +43,9 @@ class EnduserAttributesCapturingWebFilterTest {
   void test() {
 
     EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
+    capturer.setEnduserIdEnabled(true);
+    capturer.setEnduserRoleEnabled(true);
+    capturer.setEnduserScopeEnabled(true);
     EnduserAttributesCapturingWebFilter filter = new EnduserAttributesCapturingWebFilter(capturer);
 
     testing.runWithHttpServerSpan(

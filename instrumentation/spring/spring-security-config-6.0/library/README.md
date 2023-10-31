@@ -27,9 +27,9 @@ class MyWebSecurityConfig {
     // Then, apply enduser.* attribute capturing
     EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
     // Set properties of capturer.  Defaults shown.
-    capturer.setEnduserIdEnabled(true);
-    capturer.setEnduserRoleEnabled(true);
-    capturer.setEnduserScopeEnabled(true);
+    capturer.setEnduserIdEnabled(false);
+    capturer.setEnduserRoleEnabled(false);
+    capturer.setEnduserScopeEnabled(false);
     capturer.setRoleGrantedAuthorityPrefix("ROLE_");
     capturer.setScopeGrantedAuthorityPrefix("SCOPE_");
 
@@ -62,9 +62,9 @@ class MyWebFluxSecurityConfig {
     // Then, apply enduser.* attribute capturing
     EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
     // Set properties of capturer.  Defaults shown.
-    capturer.setEnduserIdEnabled(true);
-    capturer.setEnduserRoleEnabled(true);
-    capturer.setEnduserScopeEnabled(true);
+    capturer.setEnduserIdEnabled(false);
+    capturer.setEnduserRoleEnabled(false);
+    capturer.setEnduserScopeEnabled(false);
     capturer.setRoleGrantedAuthorityPrefix("ROLE_");
     capturer.setScopeGrantedAuthorityPrefix("SCOPE_");
 

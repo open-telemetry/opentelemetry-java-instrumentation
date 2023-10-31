@@ -21,21 +21,13 @@ import java.util.Objects;
  *
  * </blockquote>
  *
- * <p>Capturing of the {@code enduser.*} semantic attributes can be enabled by configured the
- * following property:
+ * <p>Capturing of the {@code enduser.*} semantic attributes can be individually enabled by
+ * configured the following properties:
  *
  * <pre>
- * otel.instrumentation.common.enduser.enabled=true
- * </pre>
- *
- * <p>When {@code otel.instrumentation.common.enduser.enabled == true}, then each of the {@code
- * enduser.*} attributes will be captured, unless they have been specifically disabled with one of
- * the following properties:
- *
- * <pre>
- * otel.instrumentation.common.enduser.id.enabled=false
- * otel.instrumentation.common.enduser.role.enabled=false
- * otel.instrumentation.common.enduser.scope.enabled=false
+ * otel.instrumentation.common.enduser.id.enabled=true
+ * otel.instrumentation.common.enduser.role.enabled=true
+ * otel.instrumentation.common.enduser.scope.enabled=true
  * </pre>
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
@@ -43,7 +35,6 @@ import java.util.Objects;
  */
 public class EnduserConfig {
 
-  private final boolean enabled;
   private final boolean idEnabled;
   private final boolean roleEnabled;
   private final boolean scopeEnabled;
@@ -58,39 +49,23 @@ public class EnduserConfig {
      *
      * https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#general-identity-attributes
      */
-    this.enabled =
-        instrumentationConfig.getBoolean("otel.instrumentation.common.enduser.enabled", false);
-
     this.idEnabled =
-        this.enabled
-            && instrumentationConfig.getBoolean(
-                "otel.instrumentation.common.enduser.id.enabled", true);
+        instrumentationConfig.getBoolean("otel.instrumentation.common.enduser.id.enabled", false);
     this.roleEnabled =
-        this.enabled
-            && instrumentationConfig.getBoolean(
-                "otel.instrumentation.common.enduser.role.enabled", true);
+        instrumentationConfig.getBoolean("otel.instrumentation.common.enduser.role.enabled", false);
     this.scopeEnabled =
-        this.enabled
-            && instrumentationConfig.getBoolean(
-                "otel.instrumentation.common.enduser.scope.enabled", true);
+        instrumentationConfig.getBoolean(
+            "otel.instrumentation.common.enduser.scope.enabled", false);
   }
 
   /**
-   * Returns true if capturing the {@code enduser.*} semantic attributes is generally enabled.
+   * Returns true if capturing of any {@code enduser.*} semantic attribute is enabled.
    *
-   * <p>This flag is meant to control whether enduser capturing instrumentations should be applied.
-   * Whereas, the attribute-specific flags ({@link #isIdEnabled()}, {@link #isRoleEnabled()}, {@link
-   * #isScopeEnabled()}) are meant to be used by instrumentations to determine which specific
-   * attributes to capture.
-   *
-   * <p>Instrumentation implementations must also check the flags for specific attributes ({@link
-   * #isIdEnabled()}, {@link #isRoleEnabled()}, {@link #isScopeEnabled()}) when deciding which
-   * attribtues to capture.
-   *
-   * @return true if capturing the {@code enduser.*} semantic attributes is generally enabled.
+   * <p>This flag can be used by capturing instrumentations to bypass all {@code enduser.*}
+   * attribute capturing.
    */
-  public boolean isEnabled() {
-    return this.enabled;
+  public boolean isAnyEnabled() {
+    return this.idEnabled || this.roleEnabled || this.scopeEnabled;
   }
 
   /**

@@ -13,20 +13,25 @@ import java.util.Objects;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
-/** Captures {@code enduser.*} semantic attributes from {@link Authentication} objects. */
+/**
+ * Captures {@code enduser.*} semantic attributes from {@link Authentication} objects.
+ *
+ * <p>After construction, you must selectively enable which attributes you want captured by calling
+ * the appropriate {@code set*Enabled(true)} method.
+ */
 public class EnduserAttributesCapturer {
 
   private static final String DEFAULT_ROLE_PREFIX = "ROLE_";
   private static final String DEFAULT_SCOPE_PREFIX = "SCOPE_";
 
   /** Determines if the {@code enduser.id} attribute should be captured. */
-  private boolean enduserIdEnabled = true;
+  private boolean enduserIdEnabled;
 
   /** Determines if the {@code enduser.role} attribute should be captured. */
-  private boolean enduserRoleEnabled = true;
+  private boolean enduserRoleEnabled;
 
   /** Determines if the {@code enduser.scope} attribute should be captured. */
-  private boolean enduserScopeEnabled = true;
+  private boolean enduserScopeEnabled;
 
   /** The prefix used to find {@link GrantedAuthority} objects for roles. */
   private String roleGrantedAuthorityPrefix = DEFAULT_ROLE_PREFIX;

@@ -26,7 +26,7 @@ public class EnduserAttributesCapturerTest {
   @RegisterExtension InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
-  void defaults() {
+  void nothingEnabled() {
     EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
 
     Authentication authentication =
@@ -41,20 +41,20 @@ public class EnduserAttributesCapturerTest {
 
     ThrowingConsumer<SpanData> assertions =
         span -> {
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID))
-              .isEqualTo("principal");
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ROLE))
-              .isEqualTo("role1,role2");
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE))
-              .isEqualTo("scope1,scope2");
+          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID)).isNull();
+          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ROLE)).isNull();
+          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE)).isNull();
         };
 
     test(capturer, authentication, assertions);
   }
 
   @Test
-  void noRoles() {
+  void allEnabledButNoRoles() {
     EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
+    capturer.setEnduserIdEnabled(true);
+    capturer.setEnduserRoleEnabled(true);
+    capturer.setEnduserScopeEnabled(true);
 
     Authentication authentication =
         new PreAuthenticatedAuthenticationToken(
@@ -77,8 +77,11 @@ public class EnduserAttributesCapturerTest {
   }
 
   @Test
-  void noScopes() {
+  void allEnabledButNoScopes() {
     EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
+    capturer.setEnduserIdEnabled(true);
+    capturer.setEnduserRoleEnabled(true);
+    capturer.setEnduserScopeEnabled(true);
 
     Authentication authentication =
         new PreAuthenticatedAuthenticationToken(
@@ -101,36 +104,9 @@ public class EnduserAttributesCapturerTest {
   }
 
   @Test
-  void disableEnduserId() {
+  void onlyEnduserIdEnabled() {
     EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
-    capturer.setEnduserIdEnabled(false);
-
-    Authentication authentication =
-        new PreAuthenticatedAuthenticationToken(
-            "principal",
-            null,
-            Arrays.asList(
-                new SimpleGrantedAuthority("ROLE_role1"),
-                new SimpleGrantedAuthority("ROLE_role2"),
-                new SimpleGrantedAuthority("SCOPE_scope1"),
-                new SimpleGrantedAuthority("SCOPE_scope2")));
-
-    ThrowingConsumer<SpanData> assertions =
-        span -> {
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID)).isNull();
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ROLE))
-              .isEqualTo("role1,role2");
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE))
-              .isEqualTo("scope1,scope2");
-        };
-
-    test(capturer, authentication, assertions);
-  }
-
-  @Test
-  void disableEnduserRole() {
-    EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
-    capturer.setEnduserRoleEnabled(false);
+    capturer.setEnduserIdEnabled(true);
 
     Authentication authentication =
         new PreAuthenticatedAuthenticationToken(
@@ -147,17 +123,16 @@ public class EnduserAttributesCapturerTest {
           assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID))
               .isEqualTo("principal");
           assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ROLE)).isNull();
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE))
-              .isEqualTo("scope1,scope2");
+          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE)).isNull();
         };
 
     test(capturer, authentication, assertions);
   }
 
   @Test
-  void disableEnduserScope() {
+  void onlyEnduserRoleEnabled() {
     EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
-    capturer.setEnduserScopeEnabled(false);
+    capturer.setEnduserRoleEnabled(true);
 
     Authentication authentication =
         new PreAuthenticatedAuthenticationToken(
@@ -171,8 +146,7 @@ public class EnduserAttributesCapturerTest {
 
     ThrowingConsumer<SpanData> assertions =
         span -> {
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID))
-              .isEqualTo("principal");
+          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID)).isNull();
           assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ROLE))
               .isEqualTo("role1,role2");
           assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE)).isNull();
@@ -182,8 +156,37 @@ public class EnduserAttributesCapturerTest {
   }
 
   @Test
-  void alternatePrefix() {
+  void onlyEnduserScopeEnabled() {
     EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
+    capturer.setEnduserScopeEnabled(true);
+
+    Authentication authentication =
+        new PreAuthenticatedAuthenticationToken(
+            "principal",
+            null,
+            Arrays.asList(
+                new SimpleGrantedAuthority("ROLE_role1"),
+                new SimpleGrantedAuthority("ROLE_role2"),
+                new SimpleGrantedAuthority("SCOPE_scope1"),
+                new SimpleGrantedAuthority("SCOPE_scope2")));
+
+    ThrowingConsumer<SpanData> assertions =
+        span -> {
+          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID)).isNull();
+          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ROLE)).isNull();
+          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE))
+              .isEqualTo("scope1,scope2");
+        };
+
+    test(capturer, authentication, assertions);
+  }
+
+  @Test
+  void allEnabledAndAlternatePrefix() {
+    EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
+    capturer.setEnduserIdEnabled(true);
+    capturer.setEnduserRoleEnabled(true);
+    capturer.setEnduserScopeEnabled(true);
     capturer.setRoleGrantedAuthorityPrefix("role_");
     capturer.setScopeGrantedAuthorityPrefix("scope_");
 

@@ -34,6 +34,8 @@ otelJava {
 
 tasks {
   test {
-    systemProperty("otel.instrumentation.common.enduser.enabled", "true")
+    systemProperty("otel.instrumentation.common.enduser.id.enabled", "true")
+    systemProperty("otel.instrumentation.common.enduser.role.enabled", "true")
+    systemProperty("otel.instrumentation.common.enduser.scope.enabled", "true")
   }
 }

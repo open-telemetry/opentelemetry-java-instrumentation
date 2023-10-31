@@ -43,6 +43,9 @@ class EnduserAttributesCapturingServletFilterTest {
   void test() throws Exception {
 
     EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
+    capturer.setEnduserIdEnabled(true);
+    capturer.setEnduserRoleEnabled(true);
+    capturer.setEnduserScopeEnabled(true);
     EnduserAttributesCapturingServletFilter filter =
         new EnduserAttributesCapturingServletFilter(capturer);
 
