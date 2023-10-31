@@ -9,6 +9,10 @@ symbols on the application classpath.
 
 Muzzle will prevent loading an instrumentation if it detects any mismatch or conflict.
 
+Muzzle's dependency graph and class injection are encountered especially during the writing of
+[`instrumentation modules`](writing-instrumentation-module.md). This functionality is required if
+the packaged instrumentation utilizes `VirtualField`.
+
 ## How it works
 
 Muzzle has two phases:
