@@ -100,11 +100,19 @@ public class AwsSdkTelemetry {
         recordIndividualHttpError);
   }
 
+  /**
+   * Construct a new tracing-enable {@link SqsClient} using the provided {@link SqsClient}
+   * instance.
+   */
   @NoMuzzle
   public SqsClient wrap(SqsClient sqsClient) {
     return SqsImpl.wrap(sqsClient);
   }
 
+  /**
+   * Construct a new tracing-enable {@link SqsAsyncClient} using the provided {@link SqsAsyncClient}
+   * instance.
+   */
   @NoMuzzle
   public SqsAsyncClient wrap(SqsAsyncClient sqsClient) {
     return SqsImpl.wrap(sqsClient);
