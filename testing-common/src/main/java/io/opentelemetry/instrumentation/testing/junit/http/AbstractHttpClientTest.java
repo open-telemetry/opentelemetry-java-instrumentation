@@ -1043,9 +1043,12 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               AttributeKey<Long> netPeerPortKey = getAttributeKey(SemanticAttributes.NET_PEER_PORT);
               if (httpClientAttributes.contains(netPeerPortKey)) {
                 int uriPort = uri.getPort();
-                // default values are ignored
-                if (uriPort <= 0 || uriPort == 80 || uriPort == 443) {
-                  assertThat(attrs).doesNotContainKey(netPeerPortKey);
+                if (uriPort <= 0) {
+                  if (attrs.get(netPeerPortKey) != null) {
+                    int effectivePort = "https".equals(uri.getScheme()) ? 443 : 80;
+                    assertThat(attrs).containsEntry(netPeerPortKey, effectivePort);
+                  }
+                  // alternatively, peer port is not emitted -- and that's fine too
                 } else {
                   assertThat(attrs).containsEntry(netPeerPortKey, uriPort);
                 }
