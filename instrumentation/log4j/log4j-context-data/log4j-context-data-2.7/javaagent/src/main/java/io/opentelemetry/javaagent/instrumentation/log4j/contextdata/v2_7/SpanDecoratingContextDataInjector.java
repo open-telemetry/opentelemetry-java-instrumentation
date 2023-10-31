@@ -29,6 +29,8 @@ public final class SpanDecoratingContextDataInjector implements ContextDataInjec
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.log4j-context-data.add-baggage", false);
 
+  private static final StringMap staticContextData = getStaticContextData();
+
   private final ContextDataInjector delegate;
 
   public SpanDecoratingContextDataInjector(ContextDataInjector delegate) {
@@ -41,25 +43,20 @@ public final class SpanDecoratingContextDataInjector implements ContextDataInjec
 
     if (contextData.containsKey(TRACE_ID)) {
       // Assume already instrumented event if traceId is present.
-      return contextData;
+      return staticContextData.isEmpty() ? contextData : newContextData(contextData);
     }
 
     Context context = Context.current();
     Span span = Span.fromContext(context);
     SpanContext currentContext = span.getSpanContext();
     if (!currentContext.isValid()) {
-      return contextData;
+      return staticContextData.isEmpty() ? contextData : newContextData(contextData);
     }
 
-    StringMap newContextData = new SortedArrayStringMap(contextData);
+    StringMap newContextData = newContextData(contextData);
     newContextData.putValue(TRACE_ID, currentContext.getTraceId());
     newContextData.putValue(SPAN_ID, currentContext.getSpanId());
     newContextData.putValue(TRACE_FLAGS, currentContext.getTraceFlags().asHex());
-
-    for (Map.Entry<String, String> entry :
-        ConfiguredResourceAttributesHolder.getResourceAttributes().entrySet()) {
-      newContextData.putValue(entry.getKey(), entry.getValue());
-    }
 
     if (BAGGAGE_ENABLED) {
       Baggage baggage = Baggage.fromContext(context);
@@ -74,5 +71,20 @@ public final class SpanDecoratingContextDataInjector implements ContextDataInjec
   @Override
   public ReadOnlyStringMap rawContextData() {
     return delegate.rawContextData();
+  }
+
+  private static StringMap newContextData(StringMap contextData) {
+    StringMap newContextData = new SortedArrayStringMap(contextData);
+    newContextData.putAll(staticContextData);
+    return newContextData;
+  }
+
+  private static StringMap getStaticContextData() {
+    StringMap map = new SortedArrayStringMap();
+    for (Map.Entry<String, String> entry :
+        ConfiguredResourceAttributesHolder.getResourceAttributes().entrySet()) {
+      map.putValue(entry.getKey(), entry.getValue());
+    }
+    return map;
   }
 }

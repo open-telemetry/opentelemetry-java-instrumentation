@@ -80,10 +80,8 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
           default:
             // do nothing
         }
-      } else if (ConfiguredResourceAttributesHolder.getAttributeValue(key) != null) {
-        if (value == null) {
-          value = ConfiguredResourceAttributesHolder.getAttributeValue(key);
-        }
+      } else if (value == null) {
+        value = ConfiguredResourceAttributesHolder.getAttributeValue(key);
       }
     }
   }

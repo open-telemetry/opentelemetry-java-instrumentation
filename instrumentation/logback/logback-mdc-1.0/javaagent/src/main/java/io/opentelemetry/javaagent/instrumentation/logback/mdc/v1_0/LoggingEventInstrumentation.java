@@ -80,9 +80,8 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         spanContextData.put(TRACE_ID, spanContext.getTraceId());
         spanContextData.put(SPAN_ID, spanContext.getSpanId());
         spanContextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
-
-        spanContextData.putAll(ConfiguredResourceAttributesHolder.getResourceAttributes());
       }
+      spanContextData.putAll(ConfiguredResourceAttributesHolder.getResourceAttributes());
 
       if (LogbackSingletons.addBaggage()) {
         Baggage baggage = Java8BytecodeBridge.baggageFromContext(context);

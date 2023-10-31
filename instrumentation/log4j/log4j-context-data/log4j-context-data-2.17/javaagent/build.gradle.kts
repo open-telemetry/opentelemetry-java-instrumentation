@@ -74,6 +74,7 @@ tasks {
   test {
     jvmArgs("-Dlog4j2.is.webapp=false")
     jvmArgs("-Dlog4j2.enable.threadlocals=true")
+    jvmArgs("-Dotel.instrumentation.mdc.resource-attributes=service.name,telemetry.sdk.language")
   }
 
   named("check") {

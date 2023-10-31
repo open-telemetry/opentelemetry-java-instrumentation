@@ -33,6 +33,15 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
   private static final boolean configuredResourceAttributeAccessible =
       isConfiguredResourceAttributeAccessible();
 
+  private static final Map<String, String> staticContextData = getStaticContextData();
+
+  private static Map<String, String> getStaticContextData() {
+    if (configuredResourceAttributeAccessible) {
+      return ConfiguredResourceAttributesHolder.getResourceAttributes();
+    }
+    return Collections.emptyMap();
+  }
+
   /**
    * Checks whether {@link ConfiguredResourceAttributesHolder} is available in classpath. The result
    * is true if {@link ConfiguredResourceAttributesHolder} can be loaded, false otherwise.
@@ -61,18 +70,16 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
     Context context = Context.current();
     Span currentSpan = Span.fromContext(context);
     if (!currentSpan.getSpanContext().isValid()) {
-      return Collections.emptyMap();
+      return staticContextData;
     }
 
     Map<String, String> contextData = new HashMap<>();
+    contextData.putAll(staticContextData);
+
     SpanContext spanContext = currentSpan.getSpanContext();
     contextData.put(TRACE_ID, spanContext.getTraceId());
     contextData.put(SPAN_ID, spanContext.getSpanId());
     contextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
-
-    if (configuredResourceAttributeAccessible) {
-      contextData.putAll(ConfiguredResourceAttributesHolder.getResourceAttributes());
-    }
 
     if (BAGGAGE_ENABLED) {
       Baggage baggage = Baggage.fromContext(context);

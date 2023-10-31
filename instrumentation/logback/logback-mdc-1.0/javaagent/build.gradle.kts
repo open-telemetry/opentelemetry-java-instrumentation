@@ -63,6 +63,10 @@ dependencies {
 }
 
 tasks {
+  test {
+    jvmArgs("-Dotel.instrumentation.mdc.resource-attributes=service.name,telemetry.sdk.language")
+  }
+
   named("check") {
     dependsOn(testing.suites)
   }
