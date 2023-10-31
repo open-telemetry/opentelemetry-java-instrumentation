@@ -52,7 +52,6 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,
-            serverAddressAndPortExtractor,
             clientAddressAndPortExtractor,
             /* captureNetworkTransportAndType= */ true,
             /* captureLocalSocketAttributes= */ true,

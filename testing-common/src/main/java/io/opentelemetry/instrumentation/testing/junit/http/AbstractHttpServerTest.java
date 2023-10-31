@@ -757,6 +757,13 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
           if (attrs.get(netHostPortKey) != null) {
             assertThat(attrs).containsEntry(netHostPortKey, port);
           }
+
+          AttributeKey<String> netSockPeerAddrKey =
+              getAttributeKey(SemanticAttributes.NET_SOCK_PEER_ADDR);
+          if (attrs.get(netSockPeerAddrKey) != null) {
+            assertThat(attrs)
+                .containsEntry(netSockPeerAddrKey, options.sockPeerAddr.apply(endpoint));
+          }
           AttributeKey<Long> netSockPeerPortKey =
               getAttributeKey(SemanticAttributes.NET_SOCK_PEER_PORT);
           if (attrs.get(netSockPeerPortKey) != null) {
@@ -767,17 +774,6 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                         assertThat(value)
                             .isInstanceOf(Long.class)
                             .isNotEqualTo(Long.valueOf(port)));
-          }
-          AttributeKey<String> netSockPeerAddrKey =
-              getAttributeKey(SemanticAttributes.NET_SOCK_PEER_ADDR);
-          if (attrs.get(netSockPeerAddrKey) != null) {
-            assertThat(attrs)
-                .containsEntry(netSockPeerAddrKey, options.sockPeerAddr.apply(endpoint));
-          }
-          AttributeKey<String> netSockHostAddrKey =
-              getAttributeKey(SemanticAttributes.NET_SOCK_PEER_ADDR);
-          if (attrs.get(netSockHostAddrKey) != null) {
-            assertThat(attrs).containsEntry(netSockHostAddrKey, "127.0.0.1");
           }
 
           assertThat(attrs)

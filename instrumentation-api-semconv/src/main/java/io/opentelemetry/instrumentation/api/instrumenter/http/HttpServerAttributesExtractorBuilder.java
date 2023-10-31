@@ -148,7 +148,6 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   InternalNetworkAttributesExtractor<REQUEST, RESPONSE> buildNetworkExtractor() {
     return new InternalNetworkAttributesExtractor<>(
         netAttributesGetter,
-        serverAddressPortExtractor,
         clientAddressPortExtractor,
         /* captureNetworkTransportAndType= */ false,
         /* captureLocalSocketAttributes= */ false,

@@ -148,36 +148,6 @@ class NetClientAttributesExtractorTest {
   }
 
   @Test
-  void doesNotSetDuplicateSocketAddress() {
-    // given
-    Map<String, String> map = new HashMap<>();
-    map.put("netTransport", IP_TCP);
-    map.put("peerName", "1:2:3:4::");
-    map.put("peerPort", "42");
-    map.put("sockFamily", "inet6");
-    map.put("sockPeerAddr", "1:2:3:4::");
-    map.put("sockPeerName", "proxy.opentelemetry.io");
-    map.put("sockPeerPort", "123");
-
-    Context context = Context.root();
-
-    // when
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, context, map);
-
-    AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, map, null);
-
-    // then
-    assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_PEER_NAME, "1:2:3:4::"),
-            entry(SemanticAttributes.NET_PEER_PORT, 42L));
-
-    assertThat(endAttributes.build()).containsOnly(entry(SemanticAttributes.NET_TRANSPORT, IP_TCP));
-  }
-
-  @Test
   void doesNotSetNegativePortValues() {
     // given
     Map<String, String> map = new HashMap<>();

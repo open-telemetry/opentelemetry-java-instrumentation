@@ -135,7 +135,6 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   InternalNetworkAttributesExtractor<REQUEST, RESPONSE> buildNetworkExtractor() {
     return new InternalNetworkAttributesExtractor<>(
         netAttributesGetter,
-        AddressAndPortExtractor.noop(),
         serverAddressAndPortExtractor,
         /* captureNetworkTransportAndType= */ false,
         /* captureLocalSocketAttributes= */ false,
