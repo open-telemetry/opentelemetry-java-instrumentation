@@ -61,7 +61,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
           HttpServerRouteSource.NESTED_CONTROLLER,
           GatewaySingletons.httpRouteGetter(),
           exchange);
-      // Record route info in current span, should be webflux's span.
+      // Record route info in current span, should be server span.
       ServerWebExchangeHelper.extractAttributes(exchange, context);
     }
   }
