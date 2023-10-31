@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -538,13 +539,28 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
           trace.hasSpansSatisfyingExactly(
               span -> {
                 assertClientSpan(span, uri, method, responseCode, null).hasNoParent();
-                span.hasAttributesSatisfying(
-                    equalTo(
-                        AttributeKey.stringArrayKey("http.request.header.x_test_request"),
-                        singletonList("test")),
-                    equalTo(
-                        AttributeKey.stringArrayKey("http.response.header.x_test_response"),
-                        singletonList("test")));
+                List<AttributeAssertion> attributeAssertions = new ArrayList<>();
+                if (SemconvStability.emitOldHttpSemconv()) {
+                  attributeAssertions.add(
+                      equalTo(
+                          AttributeKey.stringArrayKey("http.request.header.x_test_request"),
+                          singletonList("test")));
+                  attributeAssertions.add(
+                      equalTo(
+                          AttributeKey.stringArrayKey("http.response.header.x_test_response"),
+                          singletonList("test")));
+                }
+                if (SemconvStability.emitStableHttpSemconv()) {
+                  attributeAssertions.add(
+                      equalTo(
+                          AttributeKey.stringArrayKey("http.request.header.x-test-request"),
+                          singletonList("test")));
+                  attributeAssertions.add(
+                      equalTo(
+                          AttributeKey.stringArrayKey("http.response.header.x-test-response"),
+                          singletonList("test")));
+                }
+                span.hasAttributesSatisfying(attributeAssertions);
               },
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
@@ -1071,22 +1087,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (httpClientAttributes.contains(httpMethodKey)) {
                 assertThat(attrs).containsEntry(httpMethodKey, method);
               }
-              if (httpClientAttributes.contains(SemanticAttributes.USER_AGENT_ORIGINAL)) {
-                String userAgent = options.getUserAgent();
-                if (userAgent != null
-                    || attrs.get(SemanticAttributes.USER_AGENT_ORIGINAL) != null) {
-                  assertThat(attrs)
-                      .hasEntrySatisfying(
-                          SemanticAttributes.USER_AGENT_ORIGINAL,
-                          actual -> {
-                            if (userAgent != null) {
-                              assertThat(actual).startsWith(userAgent);
-                            } else {
-                              assertThat(actual).isNull();
-                            }
-                          });
-                }
-              }
+              // opt-in, not collected by default
+              assertThat(attrs).doesNotContainKey(SemanticAttributes.USER_AGENT_ORIGINAL);
+
               AttributeKey<Long> httpRequestLengthKey =
                   getAttributeKey(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
               if (attrs.get(httpRequestLengthKey) != null) {

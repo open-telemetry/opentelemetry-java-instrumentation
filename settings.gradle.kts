@@ -4,7 +4,7 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.4.0"
     id("com.gradle.plugin-publish") version "1.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
-    id("org.jetbrains.kotlin.jvm") version "1.9.10"
+    id("org.jetbrains.kotlin.jvm") version "1.9.20"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
     id("org.graalvm.buildtools.native") version "0.9.28"
@@ -20,7 +20,7 @@ plugins {
   // in particular, these commands are failing (reproducible locally):
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
-  id("com.bmuschko.docker-remote-api") version "9.3.4" apply false
+  id("com.bmuschko.docker-remote-api") version "9.3.6" apply false
 }
 
 dependencyResolutionManagement {
@@ -287,15 +287,18 @@ include(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent")
 include(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-resteasy-6.0:javaagent")
 include(":instrumentation:jaxrs-client:jaxrs-client-1.1-testing")
 include(":instrumentation:jaxrs-client:jaxrs-client-2.0-testing")
+include(":instrumentation:jaxws:jaxws-metro-2.2:javaagent")
 include(":instrumentation:jaxws:jaxws-2.0:javaagent")
 include(":instrumentation:jaxws:jaxws-2.0-arquillian-testing")
 include(":instrumentation:jaxws:jaxws-2.0-axis2-1.6:javaagent")
 include(":instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent")
 include(":instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent-unit-tests")
-include(":instrumentation:jaxws:jaxws-2.0-metro-2.2:javaagent")
+include(":instrumentation:jaxws:jaxws-2.0-metro-2.2-testing")
 include(":instrumentation:jaxws:jaxws-2.0-common-testing")
 include(":instrumentation:jaxws:jaxws-2.0-tomee-testing")
 include(":instrumentation:jaxws:jaxws-2.0-wildfly-testing")
+include(":instrumentation:jaxws:jaxws-3.0-common-testing")
+include(":instrumentation:jaxws:jaxws-3.0-metro-2.2-testing")
 include(":instrumentation:jaxws:jaxws-common:javaagent")
 include(":instrumentation:jaxws:jaxws-jws-api-1.1:javaagent")
 include(":instrumentation:jboss-logmanager:jboss-logmanager-appender-1.1:javaagent")

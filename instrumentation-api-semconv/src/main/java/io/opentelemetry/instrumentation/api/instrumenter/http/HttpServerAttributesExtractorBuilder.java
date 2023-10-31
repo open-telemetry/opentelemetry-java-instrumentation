@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.internal.Client
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ServerAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -55,9 +54,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
     clientAddressPortExtractor =
         new ClientAddressAndPortExtractor<>(
             netAttributesGetter, new ForwardedForAddressAndPortExtractor<>(httpAttributesGetter));
-    serverAddressPortExtractor =
-        new ServerAddressAndPortExtractor<>(
-            netAttributesGetter, new ForwardedHostAddressAndPortExtractor<>(httpAttributesGetter));
+    serverAddressPortExtractor = new ForwardedHostAddressAndPortExtractor<>(httpAttributesGetter);
   }
 
   /**

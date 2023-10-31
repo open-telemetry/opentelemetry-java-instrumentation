@@ -6,8 +6,10 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.lowercase;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.requestAttributeKey;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.responseAttributeKey;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.oldSemconvRequestAttributeKey;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.oldSemconvResponseAttributeKey;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.stableSemconvRequestAttributeKey;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.stableSemconvResponseAttributeKey;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 
@@ -65,12 +67,16 @@ abstract class HttpCommonAttributesExtractor<
     if (SemconvStability.emitOldHttpSemconv()) {
       internalSet(attributes, SemanticAttributes.HTTP_METHOD, method);
     }
-    internalSet(attributes, SemanticAttributes.USER_AGENT_ORIGINAL, userAgent(request));
 
     for (String name : capturedRequestHeaders) {
       List<String> values = getter.getHttpRequestHeader(request, name);
       if (!values.isEmpty()) {
-        internalSet(attributes, requestAttributeKey(name), values);
+        if (SemconvStability.emitOldHttpSemconv()) {
+          internalSet(attributes, oldSemconvRequestAttributeKey(name), values);
+        }
+        if (SemconvStability.emitStableHttpSemconv()) {
+          internalSet(attributes, stableSemconvRequestAttributeKey(name), values);
+        }
       }
     }
   }
@@ -115,7 +121,12 @@ abstract class HttpCommonAttributesExtractor<
       for (String name : capturedResponseHeaders) {
         List<String> values = getter.getHttpResponseHeader(request, response, name);
         if (!values.isEmpty()) {
-          internalSet(attributes, responseAttributeKey(name), values);
+          if (SemconvStability.emitOldHttpSemconv()) {
+            internalSet(attributes, oldSemconvResponseAttributeKey(name), values);
+          }
+          if (SemconvStability.emitStableHttpSemconv()) {
+            internalSet(attributes, stableSemconvResponseAttributeKey(name), values);
+          }
         }
       }
     }
@@ -138,11 +149,6 @@ abstract class HttpCommonAttributesExtractor<
       }
       internalSet(attributes, HttpAttributes.ERROR_TYPE, errorType);
     }
-  }
-
-  @Nullable
-  private String userAgent(REQUEST request) {
-    return firstHeaderValue(getter.getHttpRequestHeader(request, "user-agent"));
   }
 
   @Nullable

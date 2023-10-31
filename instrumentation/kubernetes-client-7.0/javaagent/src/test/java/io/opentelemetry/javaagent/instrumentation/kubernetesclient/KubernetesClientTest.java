@@ -84,7 +84,6 @@ class KubernetesClientTest {
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy?path=path"),
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "127.0.0.1"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, mockWebServer.httpPort()),
@@ -135,7 +134,6 @@ class KubernetesClientTest {
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy?path=path"),
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 451),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "127.0.0.1"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, mockWebServer.httpPort()),
@@ -192,7 +190,6 @@ class KubernetesClientTest {
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy?path=path"),
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "127.0.0.1"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, mockWebServer.httpPort()),
@@ -257,7 +254,6 @@ class KubernetesClientTest {
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy?path=path"),
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 451),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "127.0.0.1"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, mockWebServer.httpPort()),

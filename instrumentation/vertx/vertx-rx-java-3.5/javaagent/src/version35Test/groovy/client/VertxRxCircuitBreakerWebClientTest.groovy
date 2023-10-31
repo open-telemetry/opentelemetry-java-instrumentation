@@ -85,11 +85,6 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
   }
 
   @Override
-  String userAgent() {
-    return "Vert.x-WebClient"
-  }
-
-  @Override
   boolean testRedirects() {
     false
   }

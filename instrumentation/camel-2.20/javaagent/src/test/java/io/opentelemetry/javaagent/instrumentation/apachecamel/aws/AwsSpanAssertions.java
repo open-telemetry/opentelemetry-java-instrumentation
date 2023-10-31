@@ -79,12 +79,6 @@ class AwsSpanAssertions {
                 val ->
                     val.satisfiesAnyOf(
                         v -> assertThat(v).isNull(), v -> assertThat(v).isInstanceOf(Long.class))),
-            satisfies(
-                SemanticAttributes.USER_AGENT_ORIGINAL,
-                val ->
-                    val.satisfiesAnyOf(
-                        v -> assertThat(v).isNull(),
-                        v -> assertThat(v).isInstanceOf(String.class))),
             satisfies(SemanticAttributes.HTTP_URL, val -> val.isInstanceOf(String.class)),
             satisfies(
                 stringKey("net.peer.name"),

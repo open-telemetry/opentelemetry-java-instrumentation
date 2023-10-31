@@ -20,7 +20,7 @@ final class RuntimeFieldBasedImplementationSupplier
       Class<T> type, Class<F> fieldType) {
     try {
       String virtualFieldImplClassName =
-          getVirtualFieldImplementationClassName(type.getName(), fieldType.getName());
+          getVirtualFieldImplementationClassName(type.getTypeName(), fieldType.getTypeName());
       Class<?> contextStoreClass = Class.forName(virtualFieldImplClassName, false, null);
       Method method = contextStoreClass.getMethod("getVirtualField", Class.class, Class.class);
       @SuppressWarnings("unchecked")

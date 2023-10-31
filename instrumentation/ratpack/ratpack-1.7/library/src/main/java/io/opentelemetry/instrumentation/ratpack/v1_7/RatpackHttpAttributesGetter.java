@@ -83,28 +83,6 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
     return null;
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(Request request) {
-    PublicAddress publicAddress = getPublicAddress(request);
-    return publicAddress == null ? null : publicAddress.get().getHost();
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(Request request) {
-    PublicAddress publicAddress = getPublicAddress(request);
-    return publicAddress == null ? null : publicAddress.get().getPort();
-  }
-
-  private static PublicAddress getPublicAddress(Request request) {
-    Context ratpackContext = request.get(Context.class);
-    if (ratpackContext == null) {
-      return null;
-    }
-    return ratpackContext.get(PublicAddress.class);
-  }
-
   @Override
   public Integer getNetworkPeerPort(Request request, @Nullable Response response) {
     return request.getRemoteAddress().getPort();

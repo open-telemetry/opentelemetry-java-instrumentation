@@ -115,7 +115,6 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
             "$SemanticAttributes.HTTP_URL" "${uri}"
             "$SemanticAttributes.HTTP_METHOD" method
             "$SemanticAttributes.HTTP_STATUS_CODE" statusCode
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" { it == null || it instanceof String }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
@@ -138,11 +137,6 @@ class JerseyClientTest extends JaxRsClientTest {
     config.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT_MS)
     config.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT_MS)
     return new JerseyClientBuilder().withConfig(config)
-  }
-
-  @Override
-  String userAgent() {
-    "Jersey"
   }
 
   @Override
@@ -196,11 +190,6 @@ class CxfClientTest extends JaxRsClientTest {
   @Override
   boolean testReadTimeout() {
     return false
-  }
-
-  @Override
-  String userAgent() {
-    "Apache"
   }
 
   @Override
