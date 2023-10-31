@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpRequestBodySize;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMessageBodySizeUtil.getHttpResponseBodySize;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.mergeClientAttributes;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.Attributes;
@@ -84,7 +83,7 @@ public final class HttpClientExperimentalMetrics implements OperationListener {
       return;
     }
 
-    Attributes sizeAttributes = mergeClientAttributes(startAttributes, endAttributes);
+    Attributes sizeAttributes = startAttributes.toBuilder().putAll(endAttributes).build();
 
     Long requestBodySize = getHttpRequestBodySize(endAttributes, startAttributes);
     if (requestBodySize != null) {

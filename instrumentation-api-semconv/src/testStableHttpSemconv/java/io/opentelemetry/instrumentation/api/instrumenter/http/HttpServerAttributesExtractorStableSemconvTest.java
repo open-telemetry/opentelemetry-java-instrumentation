@@ -164,7 +164,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("header.content-length", "10");
     request.put("route", "/repositories/{id}");
     request.put("header.user-agent", "okhttp 3.x");
-    request.put("header.host", "github.com:123");
+    request.put("header.host", "github.com:443");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
     request.put("networkTransport", "udp");
@@ -195,7 +195,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
-            entry(SemanticAttributes.SERVER_PORT, 123L),
+            entry(SemanticAttributes.SERVER_PORT, 443L),
             entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(SemanticAttributes.URL_SCHEME, "https"),
             entry(SemanticAttributes.URL_PATH, "/repositories/1"),

@@ -124,7 +124,7 @@ class HttpServerAttributesExtractorTest {
     request.put("header.content-length", "10");
     request.put("route", "/repositories/{id}");
     request.put("header.user-agent", "okhttp 3.x");
-    request.put("header.host", "github.com");
+    request.put("header.host", "github.com:80");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
     request.put("networkTransport", "tcp");
@@ -151,6 +151,7 @@ class HttpServerAttributesExtractorTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_HOST_NAME, "github.com"),
+            entry(SemanticAttributes.NET_HOST_PORT, 80L),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1?details=true"),
@@ -233,33 +234,6 @@ class HttpServerAttributesExtractorTest {
         .containsOnly(
             entry(SemanticAttributes.NET_HOST_NAME, "thehost"),
             entry(SemanticAttributes.NET_HOST_PORT, 777L));
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(DefaultHostPortArgumentSource.class)
-  void defaultHostPort(int hostPort, String scheme) {
-    Map<String, Object> request = new HashMap<>();
-    request.put("urlScheme", scheme);
-    request.put("serverPort", hostPort);
-
-    AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
-        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
-            .setCapturedRequestHeaders(emptyList())
-            .setCapturedResponseHeaders(emptyList())
-            .build();
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), request);
-
-    assertThat(attributes.build()).doesNotContainKey(SemanticAttributes.NET_HOST_PORT);
-  }
-
-  static class DefaultHostPortArgumentSource implements ArgumentsProvider {
-
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(arguments(80, "http"), arguments(443, "https"));
-    }
   }
 
   @ParameterizedTest
