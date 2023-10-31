@@ -101,8 +101,7 @@ public class AwsSdkTelemetry {
   }
 
   /**
-   * Construct a new tracing-enable {@link SqsClient} using the provided {@link SqsClient}
-   * instance.
+   * Construct a new tracing-enable {@link SqsClient} using the provided {@link SqsClient} instance.
    */
   @NoMuzzle
   public SqsClient wrap(SqsClient sqsClient) {
