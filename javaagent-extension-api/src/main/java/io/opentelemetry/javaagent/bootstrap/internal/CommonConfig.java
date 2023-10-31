@@ -35,6 +35,7 @@ public final class CommonConfig {
   private final boolean statementSanitizationEnabled;
   private final boolean emitExperimentalHttpClientMetrics;
   private final boolean emitExperimentalHttpServerMetrics;
+  private final boolean captureEnduser;
 
   CommonConfig(InstrumentationConfig config) {
     peerServiceResolver =
@@ -73,6 +74,8 @@ public final class CommonConfig {
         config.getBoolean("otel.instrumentation.http.client.emit-experimental-metrics", false);
     emitExperimentalHttpServerMetrics =
         config.getBoolean("otel.instrumentation.http.server.emit-experimental-metrics", false);
+    captureEnduser =
+        config.getBoolean("otel.instrumentation.common.capture-enduser.enabled", false);
   }
 
   public PeerServiceResolver getPeerServiceResolver() {
@@ -109,5 +112,9 @@ public final class CommonConfig {
 
   public boolean shouldEmitExperimentalHttpServerMetrics() {
     return emitExperimentalHttpServerMetrics;
+  }
+
+  public boolean shouldCaptureEnduser() {
+    return captureEnduser;
   }
 }
