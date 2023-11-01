@@ -145,7 +145,6 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   InternalServerAttributesExtractor<REQUEST> buildServerExtractor() {
     return new InternalServerAttributesExtractor<>(
-        new ClientSideServerPortCondition<>(httpAttributesGetter),
         serverAddressAndPortExtractor,
         SemconvStability.emitStableHttpSemconv(),
         SemconvStability.emitOldHttpSemconv(),
