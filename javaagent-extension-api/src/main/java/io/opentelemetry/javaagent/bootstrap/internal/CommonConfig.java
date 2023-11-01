@@ -74,8 +74,7 @@ public final class CommonConfig {
         config.getBoolean("otel.instrumentation.http.client.emit-experimental-metrics", false);
     emitExperimentalHttpServerMetrics =
         config.getBoolean("otel.instrumentation.http.server.emit-experimental-metrics", false);
-    captureEnduser =
-        config.getBoolean("otel.instrumentation.common.capture-enduser.enabled", false);
+    captureEnduser = config.getBoolean("otel.instrumentation.common.enduser.id.enabled", false);
   }
 
   public PeerServiceResolver getPeerServiceResolver() {
