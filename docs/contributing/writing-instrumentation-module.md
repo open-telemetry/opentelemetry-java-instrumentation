@@ -341,6 +341,9 @@ limited: the `VirtualField#get()` method must receive class references as its pa
 work with variables, method params, etc. Both the owner class and the field class must be known at
 compile time for it to work.
 
+Use of `VirtualField` requires the `muzzle-generation` gradle plugin. Failing to use the plugin will result in
+ClassNotFoundException when trying to access the field.
+
 ### Why we don't use ByteBuddy @Advice.Origin Method
 
 Instead of
