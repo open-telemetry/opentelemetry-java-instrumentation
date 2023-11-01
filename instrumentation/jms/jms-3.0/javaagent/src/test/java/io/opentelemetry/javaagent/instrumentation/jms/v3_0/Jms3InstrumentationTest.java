@@ -147,6 +147,7 @@ class Jms3InstrumentationTest {
                           equalTo(
                               SemanticAttributes.MESSAGING_DESTINATION_NAME,
                               producerDestinationName),
+                          equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                           equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
@@ -214,6 +215,7 @@ class Jms3InstrumentationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 producerDestinationName),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
@@ -297,6 +299,7 @@ class Jms3InstrumentationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 producerDestinationName),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(

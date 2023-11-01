@@ -99,6 +99,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
+            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.MESSAGING_CLIENT_ID" { it.startsWith("producer") }
             "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
@@ -154,6 +155,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
+            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.MESSAGING_CLIENT_ID" { it.endsWith("producer") }
             "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0

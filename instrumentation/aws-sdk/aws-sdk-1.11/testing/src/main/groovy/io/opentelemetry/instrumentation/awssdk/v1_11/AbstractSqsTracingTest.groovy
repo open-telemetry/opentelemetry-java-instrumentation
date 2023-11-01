@@ -104,6 +104,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "net.peer.port" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
@@ -193,6 +194,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "net.peer.port" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long

@@ -115,6 +115,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             } else if (service == "Sqs" && operation == "SendMessage") {
               "aws.queue.url" QUEUE_URL
               "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "somequeue"
+              "$SemanticAttributes.MESSAGING_OPERATION" "publish"
               "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
               "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             } else if (service == "Kinesis") {
@@ -217,6 +218,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             } else if (service == "Sqs" && operation == "SendMessage") {
               "aws.queue.url" QUEUE_URL
               "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "somequeue"
+              "$SemanticAttributes.MESSAGING_OPERATION" "publish"
               "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
               "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             } else if (service == "Kinesis") {

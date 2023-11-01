@@ -115,6 +115,7 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,
                                 AbstractStringAssert::isNotBlank)),
@@ -195,6 +196,7 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,
                                 AbstractStringAssert::isNotBlank),
