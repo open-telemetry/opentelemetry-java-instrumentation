@@ -37,6 +37,7 @@ public final class ClientAttributesExtractor<REQUEST, RESPONSE>
     internalExtractor =
         new InternalClientAttributesExtractor<>(
             new ClientAddressAndPortExtractor<>(getter, AddressAndPortExtractor.noop()),
+            /* capturePort= */ true,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
   }

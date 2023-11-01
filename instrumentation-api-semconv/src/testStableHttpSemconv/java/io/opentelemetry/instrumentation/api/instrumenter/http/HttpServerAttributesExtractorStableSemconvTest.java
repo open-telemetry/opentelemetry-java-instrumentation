@@ -520,9 +520,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.CLIENT_ADDRESS, "1.2.3.4"),
-            entry(SemanticAttributes.CLIENT_PORT, 123L));
+        .containsOnly(entry(SemanticAttributes.CLIENT_ADDRESS, "1.2.3.4"));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
