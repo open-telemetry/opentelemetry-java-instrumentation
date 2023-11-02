@@ -114,13 +114,6 @@ class OtelSpringStarterSmokeTest {
 
     // Log
     List<LogRecordData> logs = LOG_RECORD_EXPORTER.getFinishedLogRecordItems();
-    int logSize = logs.size();
-    System.out.println("logSize = " + logSize);
-
-    System.out.println("logs = " + logs);
-    List<Body> logsBody = logs.stream().map(log -> log.getBody()).collect(Collectors.toList());
-    System.out.println("logsBody = " + logsBody);
-
     LogRecordData firstLog = logs.get(0);
     assertThat(firstLog.getBody().asString())
         .as("Should instrument logs")
