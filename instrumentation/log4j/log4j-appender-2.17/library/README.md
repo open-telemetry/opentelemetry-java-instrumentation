@@ -99,6 +99,6 @@ The available settings are:
 | `captureMapMessageAttributes`   | Boolean | `false` | Enable the capture of `MapMessage` attributes.                                                                        |
 | `captureMarkerAttribute;`       | Boolean | `false` | Enable the capture of Log4j markers as attributes.                                                                    |
 | `captureContextDataAttributes`  | String  |         | Comma separated list of context data attributes to capture. Use the wildcard character `*` to capture all attributes. |
-| `firstLogsCacheSize   `         | Integer | 50       | Comma separated list of context data attributes to capture. Use the wildcard character `*` to capture all attributes. |
+| `firstLogsCacheSize`            | Integer | 50      | Log telemetry is displayed after the initialization of the OpenTelemetry Log4j appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. |
 
 [source code attributes]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes
