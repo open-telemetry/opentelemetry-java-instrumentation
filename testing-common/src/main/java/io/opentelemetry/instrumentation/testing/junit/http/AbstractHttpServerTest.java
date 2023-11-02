@@ -784,11 +784,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                           .satisfiesAnyOf(
                               value -> assertThat(value).isNull(),
                               value -> assertThat(value).isEqualTo(TEST_CLIENT_IP)));
-          if (SemconvStability.emitStableHttpSemconv()
-              && attrs.get(SemanticAttributes.CLIENT_PORT) != null) {
-            assertThat(attrs)
-                .hasEntrySatisfying(
-                    SemanticAttributes.CLIENT_PORT, port -> assertThat(port).isGreaterThan(0));
+          if (SemconvStability.emitStableHttpSemconv()) {
+            // client.port is opt-in
+            assertThat(attrs).doesNotContainKey(SemanticAttributes.CLIENT_PORT);
           }
           assertThat(attrs).containsEntry(getAttributeKey(SemanticAttributes.HTTP_METHOD), method);
 

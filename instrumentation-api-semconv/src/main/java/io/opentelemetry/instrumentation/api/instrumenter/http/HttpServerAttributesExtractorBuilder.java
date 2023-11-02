@@ -149,7 +149,9 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
     return new InternalNetworkAttributesExtractor<>(
         netAttributesGetter,
         clientAddressPortExtractor,
+        // network.type and network.transport are opt-in
         /* captureNetworkTransportAndType= */ false,
+        // network.local.* are opt-in
         /* captureLocalSocketAttributes= */ false,
         /* captureOldPeerDomainAttribute= */ false,
         SemconvStability.emitStableHttpSemconv(),
@@ -158,7 +160,6 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   InternalServerAttributesExtractor<REQUEST> buildServerExtractor() {
     return new InternalServerAttributesExtractor<>(
-        new ServerSideServerPortCondition<>(httpAttributesGetter),
         serverAddressPortExtractor,
         SemconvStability.emitStableHttpSemconv(),
         SemconvStability.emitOldHttpSemconv(),
@@ -168,6 +169,8 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   InternalClientAttributesExtractor<REQUEST> buildClientExtractor() {
     return new InternalClientAttributesExtractor<>(
         clientAddressPortExtractor,
+        // client.port is opt-in
+        /* capturePort= */ false,
         SemconvStability.emitStableHttpSemconv(),
         SemconvStability.emitOldHttpSemconv());
   }

@@ -51,10 +51,8 @@ public final class ServerAttributesExtractor<REQUEST, RESPONSE>
   ServerAttributesExtractor(
       ServerAttributesGetter<REQUEST, RESPONSE> getter,
       InternalServerAttributesExtractor.Mode mode) {
-    // the ServerAttributesExtractor will always emit new semconv
     internalExtractor =
         new InternalServerAttributesExtractor<>(
-            (port, request) -> true,
             new ServerAddressAndPortExtractor<>(getter, AddressAndPortExtractor.noop()),
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),

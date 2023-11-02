@@ -149,7 +149,7 @@ class HttpClientAttributesExtractorStableSemconvTest {
     request.put("networkPeerAddress", "4.3.2.1");
     request.put("networkPeerPort", "456");
     request.put("serverAddress", "github.com");
-    request.put("serverPort", "123");
+    request.put("serverPort", "80");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
@@ -175,7 +175,7 @@ class HttpClientAttributesExtractorStableSemconvTest {
                 AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
                 asList("123", "456")),
             entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
-            entry(SemanticAttributes.SERVER_PORT, 123L),
+            entry(SemanticAttributes.SERVER_PORT, 80L),
             entry(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, 2L));
 
     AttributesBuilder endAttributes = Attributes.builder();

@@ -122,7 +122,7 @@ class HttpClientAttributesExtractorTest {
     request.put("protocolName", "http");
     request.put("protocolVersion", "1.1");
     request.put("serverAddress", "github.com");
-    request.put("serverPort", "123");
+    request.put("serverPort", "80");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
@@ -148,7 +148,7 @@ class HttpClientAttributesExtractorTest {
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")),
             entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
-            entry(SemanticAttributes.NET_PEER_PORT, 123L),
+            entry(SemanticAttributes.NET_PEER_PORT, 80L),
             entry(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, 2L));
 
     AttributesBuilder endAttributes = Attributes.builder();
@@ -257,34 +257,6 @@ class HttpClientAttributesExtractorTest {
         .containsOnly(
             entry(SemanticAttributes.NET_PEER_NAME, "thehost"),
             entry(SemanticAttributes.NET_PEER_PORT, 777L));
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(DefaultPeerPortArgumentSource.class)
-  void defaultPeerPort(int peerPort, String url) {
-    Map<String, String> request = new HashMap<>();
-    request.put("urlFull", url);
-    request.put("serverPort", String.valueOf(peerPort));
-
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), request);
-
-    assertThat(attributes.build()).doesNotContainKey(SemanticAttributes.NET_PEER_PORT);
-  }
-
-  static class DefaultPeerPortArgumentSource implements ArgumentsProvider {
-
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          arguments(80, "http://github.com"),
-          arguments(80, "HTTP://GITHUB.COM"),
-          arguments(443, "https://github.com"),
-          arguments(443, "HTTPS://GITHUB.COM"));
-    }
   }
 
   @Test

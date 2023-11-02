@@ -58,7 +58,6 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
             SemconvStability.emitOldHttpSemconv());
     internalServerExtractor =
         new InternalServerAttributesExtractor<>(
-            (port, request) -> true,
             serverAddressAndPortExtractor,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
