@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -126,7 +127,9 @@ public final class ApacheHttpClientTelemetryBuilder {
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
     if (emitExperimentalHttpClientMetrics) {
-      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+      builder
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
 
     Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter =

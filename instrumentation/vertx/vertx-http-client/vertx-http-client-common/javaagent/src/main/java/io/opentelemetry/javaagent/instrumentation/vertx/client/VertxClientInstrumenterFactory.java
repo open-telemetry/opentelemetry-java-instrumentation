@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientPeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
@@ -41,8 +42,10 @@ public final class VertxClientInstrumenterFactory {
                 HttpClientPeerServiceAttributesExtractor.create(
                     httpAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
             .addOperationMetrics(HttpClientMetrics.get());
-    if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
-      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+    if (CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry()) {
+      builder
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
 
     return builder.buildClientInstrumenter(new HttpRequestHeaderSetter());

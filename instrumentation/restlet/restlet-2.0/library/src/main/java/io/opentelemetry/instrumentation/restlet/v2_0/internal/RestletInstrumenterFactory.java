@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -45,7 +46,9 @@ public final class RestletInstrumenterFactory {
             .addContextCustomizer(httpServerRoute)
             .addOperationMetrics(HttpServerMetrics.get());
     if (emitExperimentalHttpServerMetrics) {
-      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+      builder
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
     return builder.buildServerInstrumenter(new RestletHeadersGetter());
   }
