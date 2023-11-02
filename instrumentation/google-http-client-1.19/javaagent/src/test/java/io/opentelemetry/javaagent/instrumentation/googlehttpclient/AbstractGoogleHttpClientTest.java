@@ -106,10 +106,13 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
                     AbstractLongAssert::isPositive),
                 equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), uri.toString()),
                 equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET"),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), 500),
-                satisfies(
-                    getAttributeKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH),
-                    AbstractLongAssert::isPositive)));
+                equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), 500)));
+    if (SemconvStability.emitOldHttpSemconv()) {
+      attributes.add(
+          satisfies(
+              getAttributeKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH),
+              AbstractLongAssert::isPositive));
+    }
     if (SemconvStability.emitStableHttpSemconv()) {
       attributes.add(equalTo(HttpAttributes.ERROR_TYPE, "500"));
     }
