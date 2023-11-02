@@ -40,6 +40,7 @@ testing {
           testTask.configure {
             jvmArgs("-Dlog4j2.is.webapp=false")
             jvmArgs("-Dlog4j2.enable.threadlocals=false")
+            jvmArgs("-Dotel.instrumentation.mdc.resource-attributes=service.name,telemetry.sdk.language")
           }
         }
       }
