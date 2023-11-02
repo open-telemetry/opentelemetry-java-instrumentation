@@ -53,7 +53,8 @@ class SpringBootServiceNameDetectorTest {
 
   @Test
   void classpathApplicationProperties() {
-    when(system.openClasspathResource(APPLICATION_PROPS)).thenReturn(openClasspathResource(APPLICATION_PROPS));
+    when(system.openClasspathResource(APPLICATION_PROPS))
+        .thenReturn(openClasspathResource(APPLICATION_PROPS));
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource result = guesser.createResource(config);
     expectServiceName(result, "dog-store");
@@ -61,7 +62,8 @@ class SpringBootServiceNameDetectorTest {
 
   @Test
   void classpathBootstrapProperties() {
-    when(system.openClasspathResource(BOOTSTRAP_PROPS)).thenReturn(openClasspathResource(BOOTSTRAP_PROPS));
+    when(system.openClasspathResource(BOOTSTRAP_PROPS))
+        .thenReturn(openClasspathResource(BOOTSTRAP_PROPS));
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource result = guesser.createResource(config);
     expectServiceName(result, "dog-store-bootstrap");
@@ -99,13 +101,11 @@ class SpringBootServiceNameDetectorTest {
     expectServiceName(result, "cat-store-bootstrap");
   }
 
-
   @ParameterizedTest
   @ValueSource(strings = {"bootstrap.yaml", BOOTSTRAP_YML})
   void classpathBootstrapYamlContainingMultipleYamlDefinitions(String fileName) {
     when(system.openClasspathResource(fileName))
-        .thenReturn(
-            ClassLoader.getSystemClassLoader().getResourceAsStream("bootstrap-multi.yml"));
+        .thenReturn(ClassLoader.getSystemClassLoader().getResourceAsStream("bootstrap-multi.yml"));
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource result = guesser.createResource(config);
     expectServiceName(result, "cat-store-bootstrap");
