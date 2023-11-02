@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alway
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor
 import io.opentelemetry.instrumentation.ktor.v2_0.InstrumentationProperties.INSTRUMENTATION_NAME
@@ -77,7 +78,9 @@ class KtorClientTracingBuilder {
       .addOperationMetrics(HttpClientMetrics.get())
 
     if (emitExperimentalHttpClientMetrics) {
-      instrumenterBuilder.addOperationMetrics(HttpClientExperimentalMetrics.get())
+      instrumenterBuilder
+        .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(KtorHttpClientAttributesGetter))
+        .addOperationMetrics(HttpClientExperimentalMetrics.get())
     }
 
     val instrumenter = instrumenterBuilder
