@@ -74,6 +74,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     // that we have "first one wins" while Spring has "last one wins".
     // The docs for Spring are here:
     // https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config
+    // https://docs.spring.io/spring-cloud-commons/docs/4.0.4/reference/html/#the-bootstrap-application-context
     Stream<Supplier<String>> finders =
         Stream.of(
             this::findByCommandlineArgument,
@@ -84,7 +85,10 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
             this::findByCurrentDirectoryApplicationYaml,
             this::findByClasspathApplicationProperties,
             this::findByClasspathApplicationYml,
-            this::findByClasspathApplicationYaml);
+            this::findByClasspathApplicationYaml,
+            this::findByClasspathBootstrapProperties,
+            this::findByClasspathBootstrapYml,
+            this::findByClasspathBootstrapYaml);
     return finders
         .map(Supplier::get)
         .filter(Objects::nonNull)
@@ -137,6 +141,14 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   }
 
   @Nullable
+  private String findByClasspathBootstrapProperties() {
+    String result = readNameFromBootstrapProperties();
+    logger.log(
+        FINER, "Checking for spring.application.name in application.properties file: {0}", result);
+    return result;
+  }
+
+  @Nullable
   private String findByCurrentDirectoryApplicationProperties() {
     String result = null;
     try (InputStream in = system.openFile("application.properties")) {
@@ -154,8 +166,18 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   }
 
   @Nullable
+  private String findByClasspathBootstrapYml() {
+    return findByClasspathYamlFile("bootstrap.yml");
+  }
+
+  @Nullable
   private String findByClasspathApplicationYaml() {
     return findByClasspathYamlFile("application.yaml");
+  }
+
+  @Nullable
+  private String findByClasspathBootstrapYaml() {
+    return findByClasspathYamlFile("bootstrap.yaml");
   }
 
   private String findByClasspathYamlFile(String fileName) {
@@ -260,6 +282,12 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   private String readNameFromAppProperties() {
     return loadFromClasspath(
         "application.properties", SpringBootServiceNameDetector::getAppNamePropertyFromStream);
+  }
+
+  @Nullable
+  private String readNameFromBootstrapProperties() {
+    return loadFromClasspath(
+        "bootstrap.properties", SpringBootServiceNameDetector::getAppNamePropertyFromStream);
   }
 
   @Nullable
