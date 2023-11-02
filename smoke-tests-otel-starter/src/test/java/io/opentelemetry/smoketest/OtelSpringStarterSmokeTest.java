@@ -124,6 +124,7 @@ class OtelSpringStarterSmokeTest {
     LogRecordData firstLog = logs.get(0);
     assertThat(firstLog.getBody().asString())
         .as("Should instrument logs")
-        .startsWith("Starting ").contains(this.getClass().getSimpleName());
+        .startsWith("Starting ")
+        .contains(this.getClass().getSimpleName());
   }
 }
