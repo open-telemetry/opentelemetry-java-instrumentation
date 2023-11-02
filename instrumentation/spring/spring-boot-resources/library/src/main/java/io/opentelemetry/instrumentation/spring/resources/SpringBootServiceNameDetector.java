@@ -144,7 +144,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   private String findByClasspathBootstrapProperties() {
     String result = readNameFromBootstrapProperties();
     logger.log(
-        FINER, "Checking for spring.application.name in application.properties file: {0}", result);
+        FINER, "Checking for spring.application.name in bootstrap.properties file: {0}", result);
     return result;
   }
 
