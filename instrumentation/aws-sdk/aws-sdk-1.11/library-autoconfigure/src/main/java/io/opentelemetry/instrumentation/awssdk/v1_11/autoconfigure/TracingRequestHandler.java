@@ -23,6 +23,9 @@ public class TracingRequestHandler extends RequestHandler2 {
           .setCaptureExperimentalSpanAttributes(
               ConfigPropertiesUtil.getBoolean(
                   "otel.instrumentation.aws-sdk.experimental-span-attributes", false))
+          .setMessagingReceiveInstrumentationEnabled(
+              ConfigPropertiesUtil.getBoolean(
+                  "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
           .build()
           .newRequestHandler();
 

@@ -36,7 +36,11 @@ class S3TracingTest extends AgentInstrumentationSpecification {
     awsConnector.receiveMessage(queueUrl)
     awsConnector.putSampleData(bucketName)
     // traced message
-    awsConnector.receiveMessage(queueUrl)
+    def receiveMessageResult = awsConnector.receiveMessage(queueUrl)
+    receiveMessageResult.messages.each {message ->
+      runWithSpan("process child") {}
+    }
+
     // cleanup
     awsConnector.deleteBucket(bucketName)
     awsConnector.purgeQueue(queueUrl)
@@ -168,7 +172,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(5, 2) {
+      trace(5, 3) {
         span(0) {
           name "S3.PutObject"
           kind CLIENT
@@ -192,7 +196,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
         span(1) {
-          name "s3ToSqsTestQueue receive"
+          name "s3ToSqsTestQueue process"
           kind CONSUMER
           childOf span(0)
           attributes {
@@ -203,17 +207,18 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
             "http.method" "POST"
-            "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "s3ToSqsTestQueue"
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+          }
+        }
+        span(2) {
+          name "process child"
+          childOf span(1)
+          attributes {
           }
         }
       }
@@ -336,7 +341,10 @@ class S3TracingTest extends AgentInstrumentationSpecification {
     awsConnector.receiveMessage(queueUrl)
     awsConnector.putSampleData(bucketName)
     // traced message
-    awsConnector.receiveMessage(queueUrl)
+    def receiveMessageResult = awsConnector.receiveMessage(queueUrl)
+    receiveMessageResult.messages.each {message ->
+      runWithSpan("process child") {}
+    }
     // cleanup
     awsConnector.deleteBucket(bucketName)
     awsConnector.purgeQueue(queueUrl)
@@ -556,9 +564,9 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(9, 1) {
+      trace(9, 2) {
         span(0) {
-          name "s3ToSnsToSqsTestQueue receive"
+          name "s3ToSnsToSqsTestQueue process"
           kind CONSUMER
           hasNoParent()
           attributes {
@@ -569,17 +577,20 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
             "http.method" "POST"
-            "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "s3ToSnsToSqsTestQueue"
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+          }
+        }
+        span(1) {
+          name "process child"
+          childOf span(0)
+          attributes {
           }
         }
       }
