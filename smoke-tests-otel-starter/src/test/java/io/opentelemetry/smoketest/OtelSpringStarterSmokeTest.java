@@ -8,6 +8,7 @@ package io.opentelemetry.smoketest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.sdk.logs.data.Body;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
@@ -23,6 +24,7 @@ import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -112,9 +114,16 @@ class OtelSpringStarterSmokeTest {
 
     // Log
     List<LogRecordData> logs = LOG_RECORD_EXPORTER.getFinishedLogRecordItems();
+    int logSize = logs.size();
+    System.out.println("logSize = " + logSize);
+
+    System.out.println("logs = " + logs);
+    List<Body> logsBody = logs.stream().map(log -> log.getBody()).collect(Collectors.toList());
+    System.out.println("logsBody = " + logsBody);
+
     LogRecordData firstLog = logs.get(0);
     assertThat(firstLog.getBody().asString())
         .as("Should instrument logs")
-        .isEqualTo("Initializing Spring DispatcherServlet 'dispatcherServlet'");
+        .startsWith("Starting ").contains(this.getClass().getSimpleName());
   }
 }

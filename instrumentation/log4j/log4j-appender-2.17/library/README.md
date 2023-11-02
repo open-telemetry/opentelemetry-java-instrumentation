@@ -94,10 +94,11 @@ Setting can be configured as XML attributes, for example:
 The available settings are:
 
 | XML Attribute                   | Type    | Default | Description                                                                                                           |
-| ------------------------------- | ------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
+|---------------------------------|---------|---------| --------------------------------------------------------------------------------------------------------------------- |
 | `captureExperimentalAttributes` | Boolean | `false` | Enable the capture of experimental span attributes `thread.name` and `thread.id`.                                     |
 | `captureMapMessageAttributes`   | Boolean | `false` | Enable the capture of `MapMessage` attributes.                                                                        |
 | `captureMarkerAttribute;`       | Boolean | `false` | Enable the capture of Log4j markers as attributes.                                                                    |
 | `captureContextDataAttributes`  | String  |         | Comma separated list of context data attributes to capture. Use the wildcard character `*` to capture all attributes. |
+| `firstLogsCacheSize   `         | Integer | 50       | Comma separated list of context data attributes to capture. Use the wildcard character `*` to capture all attributes. |
 
 [source code attributes]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes

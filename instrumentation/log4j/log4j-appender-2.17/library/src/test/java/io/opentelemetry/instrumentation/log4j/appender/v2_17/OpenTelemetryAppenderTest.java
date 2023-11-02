@@ -64,13 +64,13 @@ class OpenTelemetryAppenderTest {
             .build();
 
     openTelemetry = OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build();
-    OpenTelemetryAppender.install(openTelemetry);
   }
 
   @BeforeEach
   void setup() {
     logRecordExporter.reset();
     ThreadContext.clearAll();
+    OpenTelemetryAppender.install(openTelemetry);
   }
 
   @AfterAll
@@ -109,6 +109,23 @@ class OpenTelemetryAppenderTest {
         .hasInstrumentationScope(instrumentationScopeInfo)
         .hasBody("log message 1")
         .hasAttributes(Attributes.empty());
+  }
+
+  @Test
+  void replayLogsDuringOpenTelemetryInstallation() {
+    // Uninstall OpenTelemetry
+    OpenTelemetryAppender.install(OpenTelemetry.noop());
+
+    logger.info("log message 1");
+
+    OpenTelemetryAppender.install(openTelemetry);
+
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
+    assertThat(logDataList).hasSize(1);
+    assertThat(logDataList.get(0))
+        .hasResource(resource)
+        .hasInstrumentationScope(instrumentationScopeInfo)
+        .hasBody("log message 1");
   }
 
   @Test
@@ -160,6 +177,35 @@ class OpenTelemetryAppenderTest {
   }
 
   @Test
+  void logWithExtrasAndLogReplay() {
+
+    // Uninstall OpenTelemetry
+    OpenTelemetryAppender.install(OpenTelemetry.noop());
+
+    Instant start = Instant.now();
+    logger.info("log message 1", new IllegalStateException("Error!"));
+
+    OpenTelemetryAppender.install(openTelemetry);
+
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
+    assertThat(logDataList).hasSize(1);
+    assertThat(logDataList.get(0))
+        .hasResource(resource)
+        .hasInstrumentationScope(instrumentationScopeInfo)
+        .hasBody("log message 1")
+        .hasSeverity(Severity.INFO)
+        .hasSeverityText("INFO")
+        .hasAttributesSatisfyingExactly(
+            equalTo(SemanticAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
+            equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "Error!"),
+            satisfies(SemanticAttributes.EXCEPTION_STACKTRACE, v -> v.contains("logWithExtras")));
+
+    assertThat(logDataList.get(0).getTimestampEpochNanos())
+        .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
+        .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
+  }
+
+  @Test
   void logContextData() {
     ThreadContext.put("key1", "val1");
     ThreadContext.put("key2", "val2");
@@ -181,11 +227,62 @@ class OpenTelemetryAppenderTest {
   }
 
   @Test
+  void logContextDataAndLogReplay() {
+
+    // Uninstall OpenTelemetry
+    OpenTelemetryAppender.install(OpenTelemetry.noop());
+
+    ThreadContext.put("key1", "val1");
+    ThreadContext.put("key2", "val2");
+    try {
+      logger.info("log message 1");
+    } finally {
+      ThreadContext.clearMap();
+    }
+
+    OpenTelemetryAppender.install(openTelemetry);
+
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
+    assertThat(logDataList).hasSize(1);
+    assertThat(logDataList.get(0))
+        .hasResource(resource)
+        .hasInstrumentationScope(instrumentationScopeInfo)
+        .hasBody("log message 1")
+        .hasAttributesSatisfyingExactly(
+            equalTo(stringKey("log4j.context_data.key1"), "val1"),
+            equalTo(stringKey("log4j.context_data.key2"), "val2"));
+  }
+
+  @Test
   void logStringMapMessage() {
     StringMapMessage message = new StringMapMessage();
     message.put("key1", "val1");
     message.put("key2", "val2");
     logger.info(message);
+
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
+    assertThat(logDataList).hasSize(1);
+    assertThat(logDataList.get(0))
+        .hasResource(resource)
+        .hasInstrumentationScope(instrumentationScopeInfo)
+        .hasAttributesSatisfyingExactly(
+            equalTo(stringKey("log4j.map_message.key1"), "val1"),
+            equalTo(stringKey("log4j.map_message.key2"), "val2"));
+  }
+
+  @Test
+  void logStringMapMessageWithLogReplay() {
+
+    // Uninstall OpenTelemetry
+    OpenTelemetryAppender.install(OpenTelemetry.noop());
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("key1", "val1");
+    message.put("key2", "val2");
+
+    logger.info(message);
+
+    OpenTelemetryAppender.install(openTelemetry);
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
@@ -226,11 +323,52 @@ class OpenTelemetryAppenderTest {
   }
 
   @Test
+  void testCaptureMarkerAttributeAndLogReplay() {
+    String markerName = "aMarker";
+    Marker marker = MarkerManager.getMarker(markerName);
+
+    // Uninstall OpenTelemetry
+    OpenTelemetryAppender.install(OpenTelemetry.noop());
+
+    logger.info(marker, "Message");
+
+    OpenTelemetryAppender.install(openTelemetry);
+
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
+    LogRecordData logData = logDataList.get(0);
+    assertThat(logData.getAttributes().get(stringKey("log4j.marker"))).isEqualTo(markerName);
+  }
+
+  @Test
   void logStructuredDataMessage() {
     StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");
     message.put("key1", "val1");
     message.put("key2", "val2");
     logger.info(message);
+
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
+    assertThat(logDataList).hasSize(1);
+    assertThat(logDataList.get(0))
+        .hasResource(resource)
+        .hasInstrumentationScope(instrumentationScopeInfo)
+        .hasBody("a message")
+        .hasAttributesSatisfyingExactly(
+            equalTo(stringKey("log4j.map_message.key1"), "val1"),
+            equalTo(stringKey("log4j.map_message.key2"), "val2"));
+  }
+
+  @Test
+  void logStructuredDataMessageAndLogReplay() {
+
+    // Uninstall OpenTelemetry
+    OpenTelemetryAppender.install(OpenTelemetry.noop());
+
+    StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");
+    message.put("key1", "val1");
+    message.put("key2", "val2");
+    logger.info(message);
+
+    OpenTelemetryAppender.install(openTelemetry);
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);

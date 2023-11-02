@@ -14,6 +14,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
@@ -29,6 +32,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
+
+  private BlockingQueue<LoggingEventToReplay> eventsToReplay = new ArrayBlockingQueue<>(50);
+  private boolean logCacheWarningDisplayed;
 
   public OpenTelemetryAppender() {}
 
@@ -71,6 +77,19 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   @Override
   protected void append(ILoggingEvent event) {
+    if (openTelemetry == OpenTelemetry.noop()) {
+      if (eventsToReplay.remainingCapacity() > 0) {
+        LoggingEventToReplay logEventToReplay =
+            new LoggingEventToReplay(event, captureCodeAttributes);
+        eventsToReplay.offer(logEventToReplay);
+      } else if (!logCacheWarningDisplayed) {
+        logCacheWarningDisplayed = true;
+        String message =
+            "Log cache size of the OpenTelemetry appender is too small. firstLogsCacheSize value has to be increased;";
+        System.err.println(message);
+      }
+      return;
+    }
     mapper.emit(openTelemetry.getLogsBridge(), event);
   }
 
@@ -123,11 +142,28 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   }
 
   /**
+   * Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with an
+   * {@link OpenTelemetry} object. This setting allows you to modify the size of the cache used to
+   * replay the first logs.
+   */
+  public void setFirstLogsCacheSize(int size) {
+    eventsToReplay = new ArrayBlockingQueue<>(size);
+  }
+
+  /**
    * Configures the {@link OpenTelemetry} used to append logs. This MUST be called for the appender
    * to function. See {@link #install(OpenTelemetry)} for simple installation option.
    */
   public void setOpenTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
+    while (!eventsToReplay.isEmpty()) {
+      try {
+        ILoggingEvent eventToReplay = eventsToReplay.poll(10, TimeUnit.MILLISECONDS);
+        mapper.emit(openTelemetry.getLogsBridge(), eventToReplay);
+      } catch (InterruptedException e) {
+        // Ignore
+      }
+    }
   }
 
   // copied from SDK's DefaultConfigProperties

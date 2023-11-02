@@ -11,10 +11,13 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
+import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAttributesResolver;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -47,6 +50,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
   private final LogEventMapper<ReadOnlyStringMap> mapper;
   private volatile OpenTelemetry openTelemetry;
+
+  private BlockingQueue<LogEventToReplay> eventsToReplay = new ArrayBlockingQueue<>(50);
+
+  private boolean logCacheWarningDisplayed;
+
+  private final boolean captureAllContextDataAttributes;
 
   /**
    * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
@@ -82,6 +91,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
     @PluginBuilderAttribute private String captureContextDataAttributes;
+    @PluginBuilderAttribute private int firstLogsCacheSize;
 
     @Nullable private OpenTelemetry openTelemetry;
 
@@ -121,6 +131,17 @@ public class OpenTelemetryAppender extends AbstractAppender {
       return asBuilder();
     }
 
+    /**
+     * Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with
+     * an {@link OpenTelemetry} object. This setting allows you to modify the size of the cache used
+     * to replay the first logs.
+     */
+    @CanIgnoreReturnValue
+    public B setFirstLogsCacheSize(int firstLogsCacheSize) {
+      this.firstLogsCacheSize = firstLogsCacheSize;
+      return asBuilder();
+    }
+
     /** Configures the {@link OpenTelemetry} used to append logs. */
     @CanIgnoreReturnValue
     public B setOpenTelemetry(OpenTelemetry openTelemetry) {
@@ -144,6 +165,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
           captureMapMessageAttributes,
           captureMarkerAttribute,
           captureContextDataAttributes,
+          firstLogsCacheSize,
           openTelemetry);
     }
   }
@@ -158,17 +180,26 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
       String captureContextDataAttributes,
+      int firstLogsCacheSize,
       OpenTelemetry openTelemetry) {
 
     super(name, filter, layout, ignoreExceptions, properties);
+    List<String> captureContextDataAttributesAsList =
+        splitAndFilterBlanksAndNulls(captureContextDataAttributes);
     this.mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE,
             captureExperimentalAttributes,
             captureMapMessageAttributes,
             captureMarkerAttribute,
-            splitAndFilterBlanksAndNulls(captureContextDataAttributes));
+            captureContextDataAttributesAsList);
     this.openTelemetry = openTelemetry;
+    this.captureAllContextDataAttributes =
+        ContextDataAttributesResolver.resolveCaptureAllContextDataAttributes(
+            captureContextDataAttributesAsList);
+    if (firstLogsCacheSize != 0) {
+      this.eventsToReplay = new ArrayBlockingQueue<>(firstLogsCacheSize);
+    }
   }
 
   private static List<String> splitAndFilterBlanksAndNulls(String value) {
@@ -187,10 +218,31 @@ public class OpenTelemetryAppender extends AbstractAppender {
    */
   public void setOpenTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
+    while (!eventsToReplay.isEmpty()) {
+      try {
+        LogEvent eventToReplay = eventsToReplay.poll(10, TimeUnit.MILLISECONDS);
+        append(eventToReplay);
+      } catch (InterruptedException e) {
+        // Ignore
+      }
+    }
   }
 
   @Override
   public void append(LogEvent event) {
+    if (openTelemetry == OpenTelemetry.noop()) {
+      if (eventsToReplay.remainingCapacity() > 0) {
+        LogEventToReplay logEventToReplay =
+            new LogEventToReplay(event, captureAllContextDataAttributes);
+        eventsToReplay.offer(logEventToReplay);
+      } else if (!logCacheWarningDisplayed) {
+        logCacheWarningDisplayed = true;
+        System.err.println(
+            "Log cache size of the OpenTelemetry appender is too small. firstLogsCacheSize value has to be increased");
+      }
+      return;
+    }
+
     String instrumentationName = event.getLoggerName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
