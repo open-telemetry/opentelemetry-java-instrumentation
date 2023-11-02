@@ -228,6 +228,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
   }
 
+  @SuppressWarnings("SystemOut")
   @Override
   public void append(LogEvent event) {
     if (openTelemetry == OpenTelemetry.noop()) {

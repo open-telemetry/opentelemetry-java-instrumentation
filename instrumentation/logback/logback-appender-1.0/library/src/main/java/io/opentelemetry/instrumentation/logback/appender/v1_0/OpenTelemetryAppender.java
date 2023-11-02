@@ -75,6 +75,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     super.start();
   }
 
+  @SuppressWarnings("SystemOut")
   @Override
   protected void append(ILoggingEvent event) {
     if (openTelemetry == OpenTelemetry.noop()) {
