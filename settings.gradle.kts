@@ -204,6 +204,7 @@ include(":instrumentation:internal:internal-url-class-loader:javaagent-integrati
 include(":instrumentation:c3p0-0.9:javaagent")
 include(":instrumentation:c3p0-0.9:library")
 include(":instrumentation:c3p0-0.9:testing")
+include(":instrumentation:classhook:javaagent")
 include(":instrumentation:couchbase:couchbase-2.0:javaagent")
 include(":instrumentation:couchbase:couchbase-2.6:javaagent")
 include(":instrumentation:couchbase:couchbase-2-common:javaagent")
