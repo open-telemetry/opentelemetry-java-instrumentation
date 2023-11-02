@@ -796,11 +796,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             assertThat(attrs).containsEntry(HttpAttributes.ERROR_TYPE, String.valueOf(statusCode));
           }
 
+          // only protocol names different from "http" are emitted
           AttributeKey<String> netProtocolKey =
               getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME);
-          if (attrs.get(netProtocolKey) != null) {
-            assertThat(attrs).containsEntry(netProtocolKey, "http");
-          }
+          assertThat(attrs).doesNotContainKey(netProtocolKey);
           AttributeKey<String> netProtocolVersionKey =
               getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION);
           if (attrs.get(netProtocolVersionKey) != null) {

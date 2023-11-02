@@ -91,6 +91,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   HttpClientAttributesExtractor(HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder) {
     super(
         builder.httpAttributesGetter,
+        builder.netAttributesGetter,
         HttpStatusCodeConverter.CLIENT,
         builder.capturedRequestHeaders,
         builder.capturedResponseHeaders,

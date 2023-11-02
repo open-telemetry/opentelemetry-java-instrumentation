@@ -53,7 +53,7 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
         new InternalNetworkAttributesExtractor<>(
             getter,
             clientAddressAndPortExtractor,
-            /* captureNetworkTransportAndType= */ true,
+            /* captureProtocolAttributes= */ true,
             /* captureLocalSocketAttributes= */ true,
             /* captureOldPeerDomainAttribute= */ false,
             SemconvStability.emitStableHttpSemconv(),

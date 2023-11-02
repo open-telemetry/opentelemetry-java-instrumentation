@@ -23,7 +23,7 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
 
   private final NetworkAttributesGetter<REQUEST, RESPONSE> getter;
   private final AddressAndPortExtractor<REQUEST> logicalPeerAddressAndPortExtractor;
-  private final boolean captureNetworkTransportAndType;
+  private final boolean captureProtocolAttributes;
   private final boolean captureLocalSocketAttributes;
   private final boolean captureOldPeerDomainAttribute;
   private final boolean emitStableUrlAttributes;
@@ -32,14 +32,14 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
   public InternalNetworkAttributesExtractor(
       NetworkAttributesGetter<REQUEST, RESPONSE> getter,
       AddressAndPortExtractor<REQUEST> logicalPeerAddressAndPortExtractor,
-      boolean captureNetworkTransportAndType,
+      boolean captureProtocolAttributes,
       boolean captureLocalSocketAttributes,
       boolean captureOldPeerDomainAttribute,
       boolean emitStableUrlAttributes,
       boolean emitOldHttpAttributes) {
     this.getter = getter;
     this.logicalPeerAddressAndPortExtractor = logicalPeerAddressAndPortExtractor;
-    this.captureNetworkTransportAndType = captureNetworkTransportAndType;
+    this.captureProtocolAttributes = captureProtocolAttributes;
     this.captureLocalSocketAttributes = captureLocalSocketAttributes;
     this.captureOldPeerDomainAttribute = captureOldPeerDomainAttribute;
     this.emitStableUrlAttributes = emitStableUrlAttributes;
@@ -51,15 +51,13 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
     String protocolName = lowercase(getter.getNetworkProtocolName(request, response));
     String protocolVersion = lowercase(getter.getNetworkProtocolVersion(request, response));
 
-    if (emitStableUrlAttributes) {
+    if (emitStableUrlAttributes && captureProtocolAttributes) {
       String transport = lowercase(getter.getNetworkTransport(request, response));
-      if (captureNetworkTransportAndType) {
-        internalSet(attributes, SemanticAttributes.NETWORK_TRANSPORT, transport);
-        internalSet(
-            attributes,
-            SemanticAttributes.NETWORK_TYPE,
-            lowercase(getter.getNetworkType(request, response)));
-      }
+      internalSet(attributes, SemanticAttributes.NETWORK_TRANSPORT, transport);
+      internalSet(
+          attributes,
+          SemanticAttributes.NETWORK_TYPE,
+          lowercase(getter.getNetworkType(request, response)));
       internalSet(attributes, SemanticAttributes.NETWORK_PROTOCOL_NAME, protocolName);
       internalSet(attributes, SemanticAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
     }
