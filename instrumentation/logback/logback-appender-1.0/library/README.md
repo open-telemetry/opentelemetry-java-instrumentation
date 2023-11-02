@@ -100,6 +100,6 @@ The available settings are:
 | `captureMarkerAttribute`        | Boolean | `false` | Enable the capture of Logback markers as attributes.                                                                                                                                                         |
 | `captureKeyValuePairAttributes` | Boolean | `false` | Enable the capture of Logback key value pairs as attributes.                                                                                                                                                 |
 | `captureMdcAttributes`          | String  |         | Comma separated list of MDC attributes to capture. Use the wildcard character `*` to capture all attributes.                                                                                                 |
-| `firstLogsCacheSize`            | Integer | 50      | Log telemetry is emitted after the initialization of the OpenTelemetry Log4j appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. |
+| `firstLogsCacheSize`            | Integer | 50      | Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. |
 
 [source code attributes]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes
