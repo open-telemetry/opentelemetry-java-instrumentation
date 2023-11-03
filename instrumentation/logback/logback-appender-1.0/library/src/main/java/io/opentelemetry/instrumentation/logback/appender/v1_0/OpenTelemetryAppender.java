@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private LoggingEventMapper mapper;
 
   private BlockingQueue<LoggingEventToReplay> eventsToReplay = new ArrayBlockingQueue<>(1000);
-  private boolean logCacheWarningDisplayed;
+  private final AtomicBoolean logCacheWarningDisplayed = new AtomicBoolean();
 
   public OpenTelemetryAppender() {}
 
@@ -84,8 +85,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
         LoggingEventToReplay logEventToReplay =
             new LoggingEventToReplay(event, captureExperimentalAttributes, captureCodeAttributes);
         eventsToReplay.offer(logEventToReplay);
-      } else if (!logCacheWarningDisplayed) {
-        logCacheWarningDisplayed = true;
+      } else if (!logCacheWarningDisplayed.getAndSet(true)) {
         String message =
             "Log cache size of the OpenTelemetry appender is too small. firstLogsCacheSize value has to be increased;";
         System.err.println(message);
