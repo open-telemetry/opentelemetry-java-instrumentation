@@ -48,7 +48,7 @@ public final class NettyClientSingletons {
             enabledOrErrorOnly(connectionTelemetryEnabled),
             enabledOrErrorOnly(sslTelemetryEnabled),
             CommonConfig.get().getPeerServiceResolver(),
-            CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
+            CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
     INSTRUMENTER =
         factory.createHttpInstrumenter(
             builder ->

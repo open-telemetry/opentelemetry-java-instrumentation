@@ -216,9 +216,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
             entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),
             entry(NetworkAttributes.NETWORK_PEER_PORT, 456L),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
-            entry(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
             entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
-            entry(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom-response-header"),
                 asList("654", "321")));

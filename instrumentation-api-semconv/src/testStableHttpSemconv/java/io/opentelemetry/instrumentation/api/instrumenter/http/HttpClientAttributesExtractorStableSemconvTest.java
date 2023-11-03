@@ -182,9 +182,7 @@ class HttpClientAttributesExtractorStableSemconvTest {
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
             entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
-            entry(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom-response-header"),
                 asList("654", "321")),

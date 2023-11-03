@@ -38,7 +38,7 @@ public final class WebClientHelper {
           InstrumentationConfig.get()
               .getBoolean(
                   "otel.instrumentation.spring-webflux.experimental-span-attributes", false),
-          CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
+          CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
 
   public static void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
     for (ExchangeFilterFunction filterFunction : exchangeFilterFunctions) {
