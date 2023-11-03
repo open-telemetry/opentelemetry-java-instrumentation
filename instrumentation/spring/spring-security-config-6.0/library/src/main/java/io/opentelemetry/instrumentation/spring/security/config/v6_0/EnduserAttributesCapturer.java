@@ -39,6 +39,29 @@ public class EnduserAttributesCapturer {
   /** The prefix used to find {@link GrantedAuthority} objects for scopes. */
   private String scopeGrantedAuthorityPrefix = DEFAULT_SCOPE_PREFIX;
 
+  /**
+   * Captures the {@code enduser.*} semantic attributes from the given {@link Authentication} into
+   * the {@link LocalRootSpan} of the given {@link Context}.
+   *
+   * <p>Only the attributes enabled via the {@code set*Enabled(true)} methods are captured.
+   *
+   * <p>The following attributes can be captured:
+   *
+   * <ul>
+   *   <li>{@code enduser.id} - from {@link Authentication#getName()}
+   *   <li>{@code enduser.role} - a comma-separated list from the {@link
+   *       Authentication#getAuthorities()} with the configured {@link
+   *       #getRoleGrantedAuthorityPrefix() role prefix}
+   *   <li>{@code enduser.scope} - a comma-separated list from the {@link
+   *       Authentication#getAuthorities()} with the configured {@link
+   *       #getScopeGrantedAuthorityPrefix() scope prefix}
+   * </ul>
+   *
+   * @param otelContext the context from which the {@link LocalRootSpan} in which to capture the
+   *     attributes will be retrieved
+   * @param authentication the authentication from which to determine the {@code enduser.*}
+   *     attributes.
+   */
   public void captureEnduserAttributes(Context otelContext, Authentication authentication) {
     if (authentication != null) {
       Span localRootSpan = LocalRootSpan.fromContext(otelContext);
