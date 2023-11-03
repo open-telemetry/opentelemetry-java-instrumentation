@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -53,7 +54,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
   private BlockingQueue<LogEventToReplay> eventsToReplay = new ArrayBlockingQueue<>(1000);
 
-  private boolean logCacheWarningDisplayed;
+  private AtomicBoolean logCacheWarningDisplayed = new AtomicBoolean();
 
   private final boolean captureAllContextDataAttributes;
 
@@ -235,8 +236,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       if (eventsToReplay.remainingCapacity() > 0) {
         LogEventToReplay logEventToReplay = new LogEventToReplay(event);
         eventsToReplay.offer(logEventToReplay);
-      } else if (!logCacheWarningDisplayed) {
-        logCacheWarningDisplayed = true;
+      } else if (!logCacheWarningDisplayed.getAndSet(true)) {
         System.err.println(
             "Log cache size of the OpenTelemetry appender is too small. firstLogsCacheSize value has to be increased");
       }
