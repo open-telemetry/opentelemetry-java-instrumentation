@@ -9,19 +9,17 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.LoggerContextVO;
-import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventWithThreadId;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Marker;
 import org.slf4j.event.KeyValuePair;
 
-class LoggingEventToReplay implements LoggingEventWithThreadId {
+class LoggingEventToReplay implements ILoggingEvent {
 
   private final ILoggingEvent loggingEvent;
   private final long timeStamp;
   private StackTraceElement[] callerData;
   private String threadName;
-  private long threadId;
 
   LoggingEventToReplay(
       ILoggingEvent loggingEvent,
@@ -31,7 +29,6 @@ class LoggingEventToReplay implements LoggingEventWithThreadId {
     this.timeStamp = loggingEvent.getTimeStamp();
     if (captureExperimentalAttributes) {
       this.threadName = loggingEvent.getThreadName();
-      this.threadId = Thread.currentThread().getId();
     }
     if (captureCodeAttributes) {
       this.callerData = loggingEvent.getCallerData();
@@ -41,11 +38,6 @@ class LoggingEventToReplay implements LoggingEventWithThreadId {
   @Override
   public String getThreadName() {
     return threadName;
-  }
-
-  @Override
-  public long getThreadId() {
-    return threadId;
   }
 
   @Override

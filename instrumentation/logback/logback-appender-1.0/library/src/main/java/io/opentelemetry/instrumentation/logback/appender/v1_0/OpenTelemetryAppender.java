@@ -12,7 +12,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
-import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventWrapper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -92,7 +91,10 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       }
       return;
     }
-    mapper.emit(openTelemetry.getLogsBridge(), new LoggingEventWrapper(event));
+    mapper.emit(
+        openTelemetry.getLogsBridge(),
+        new LoggingEventToReplay(event, captureExperimentalAttributes, captureCodeAttributes),
+        -1);
   }
 
   /**
@@ -161,7 +163,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     while (!eventsToReplay.isEmpty()) {
       try {
         LoggingEventToReplay eventToReplay = eventsToReplay.poll(10, TimeUnit.MILLISECONDS);
-        mapper.emit(openTelemetry.getLogsBridge(), eventToReplay);
+        mapper.emit(openTelemetry.getLogsBridge(), eventToReplay, -1);
       } catch (InterruptedException e) {
         // Ignore
       }
