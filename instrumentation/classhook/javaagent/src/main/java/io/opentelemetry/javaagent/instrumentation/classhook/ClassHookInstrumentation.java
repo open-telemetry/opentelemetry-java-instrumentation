@@ -5,17 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.classhook;
 
+import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.logging.Logger;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class ClassHookInstrumentation implements TypeInstrumentation {
+  private static final Logger logger = Logger.getLogger(ClassHookInstrumentation.class.getName());
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.azure.spring.cloud.test.config.client");
@@ -23,6 +26,7 @@ public class ClassHookInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    logger.log(FINE, "Applying ClassHookMethodAdvice to {0}.", transformer.getClass());
     transformer.applyAdviceToMethod(
         isPublic(), this.getClass().getName() + "$ClassHookMethodAdvice");
   }
@@ -30,13 +34,13 @@ public class ClassHookInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   static class ClassHookMethodAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Local("otelScope") Scope scope) {
-      System.out.println("Entering public function " + scope.getClass().getName());
+    public static void onEnter() {
+      logger.log(FINE, "Enter public function.");
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onExit(@Advice.Local("otelScope") Scope scope) {
-      System.out.println("Leaving public function " + scope.getClass().getName());
+    public static void onExit() {
+      logger.log(FINE, "Exit public function.");
     }
   }
 }
