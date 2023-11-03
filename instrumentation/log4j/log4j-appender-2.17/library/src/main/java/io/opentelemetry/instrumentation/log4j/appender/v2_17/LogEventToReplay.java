@@ -37,9 +37,7 @@ class LogEventToReplay implements LogEvent {
     this.instant = logEvent.getInstant();
     this.thrown = logEvent.getThrown();
     this.marker = logEvent.getMarker();
-    if (captureAllContextDataAttributes) {
-      this.contextData = logEvent.getContextData();
-    }
+    this.contextData = logEvent.getContextData();
   }
 
   @Override
