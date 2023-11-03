@@ -11,7 +11,6 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
-import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAttributesResolver;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
 import java.io.Serializable;
 import java.util.Arrays;
@@ -55,8 +54,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
   private BlockingQueue<LogEventToReplay> eventsToReplay = new ArrayBlockingQueue<>(1000);
 
   private AtomicBoolean logCacheWarningDisplayed = new AtomicBoolean();
-
-  private final boolean captureAllContextDataAttributes;
 
   /**
    * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
@@ -195,9 +192,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
             captureMarkerAttribute,
             captureContextDataAttributesAsList);
     this.openTelemetry = openTelemetry;
-    this.captureAllContextDataAttributes =
-        ContextDataAttributesResolver.resolveCaptureAllContextDataAttributes(
-            captureContextDataAttributesAsList);
     if (firstLogsCacheSize != 0) {
       this.eventsToReplay = new ArrayBlockingQueue<>(firstLogsCacheSize);
     }

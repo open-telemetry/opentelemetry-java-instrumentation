@@ -59,8 +59,7 @@ public final class LogEventMapper<T> {
     this.captureMarkerAttribute = captureMarkerAttribute;
     this.captureContextDataAttributes = captureContextDataAttributes;
     this.captureAllContextDataAttributes =
-        ContextDataAttributesResolver.resolveCaptureAllContextDataAttributes(
-            captureContextDataAttributes);
+        captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
   }
 
   /**
