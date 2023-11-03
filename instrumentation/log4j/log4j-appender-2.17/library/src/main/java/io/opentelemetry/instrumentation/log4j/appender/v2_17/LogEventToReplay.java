@@ -29,7 +29,7 @@ class LogEventToReplay implements LogEvent {
   private final Marker marker;
   private ReadOnlyStringMap contextData;
 
-  LogEventToReplay(LogEvent logEvent, boolean captureAllContextDataAttributes) {
+  LogEventToReplay(LogEvent logEvent) {
     this.logEvent = logEvent;
     this.loggerName = logEvent.getLoggerName();
     this.message = logEvent.getMessage();
@@ -53,10 +53,7 @@ class LogEventToReplay implements LogEvent {
 
   @Override
   public ReadOnlyStringMap getContextData() {
-    if (contextData != null) {
-      return contextData;
-    }
-    return logEvent.getContextData();
+    return contextData;
   }
 
   @Override

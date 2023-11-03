@@ -233,8 +233,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   public void append(LogEvent event) {
     if (openTelemetry == OpenTelemetry.noop()) {
       if (eventsToReplay.remainingCapacity() > 0) {
-        LogEventToReplay logEventToReplay =
-            new LogEventToReplay(event, captureAllContextDataAttributes);
+        LogEventToReplay logEventToReplay = new LogEventToReplay(event);
         eventsToReplay.offer(logEventToReplay);
       } else if (!logCacheWarningDisplayed) {
         logCacheWarningDisplayed = true;
