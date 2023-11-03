@@ -27,10 +27,12 @@ public final class Log4jHelper {
 
   private static final LogEventMapper<Map<String, String>> mapper;
 
+  private static final boolean captureExperimentalAttributes;
+
   static {
     InstrumentationConfig config = InstrumentationConfig.get();
 
-    boolean captureExperimentalAttributes =
+    captureExperimentalAttributes =
         config.getBoolean("otel.instrumentation.log4j-appender.experimental-log-attributes", false);
     boolean captureMapMessageAttributes =
         config.getBoolean(
@@ -66,7 +68,21 @@ public final class Log4jHelper {
             .build()
             .logRecordBuilder();
     Map<String, String> contextData = ThreadContext.getImmutableContext();
-    mapper.mapLogEvent(builder, message, level, marker, throwable, contextData);
+
+    if (captureExperimentalAttributes) {
+      Thread currentThread = Thread.currentThread();
+      mapper.mapLogEvent(
+          builder,
+          message,
+          level,
+          marker,
+          throwable,
+          contextData,
+          currentThread.getName(),
+          currentThread.getId());
+    } else {
+      mapper.mapLogEvent(builder, message, level, marker, throwable, contextData, null, -1);
+    }
     builder.setTimestamp(Instant.now());
     builder.emit();
   }

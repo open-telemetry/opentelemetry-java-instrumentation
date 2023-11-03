@@ -53,7 +53,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
   private BlockingQueue<LogEventToReplay> eventsToReplay = new ArrayBlockingQueue<>(1000);
 
-  private AtomicBoolean logCacheWarningDisplayed = new AtomicBoolean();
+  private final AtomicBoolean logCacheWarningDisplayed = new AtomicBoolean();
 
   /**
    * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
@@ -255,7 +255,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
         event.getLevel(),
         event.getMarker(),
         event.getThrown(),
-        contextData);
+        contextData,
+        event.getThreadName(),
+        event.getThreadId());
 
     Instant timestamp = event.getInstant();
     if (timestamp != null) {

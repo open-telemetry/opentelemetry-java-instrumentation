@@ -12,6 +12,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
+import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventWrapper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -81,7 +82,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     if (openTelemetry == OpenTelemetry.noop()) {
       if (eventsToReplay.remainingCapacity() > 0) {
         LoggingEventToReplay logEventToReplay =
-            new LoggingEventToReplay(event, captureCodeAttributes);
+            new LoggingEventToReplay(event, captureExperimentalAttributes, captureCodeAttributes);
         eventsToReplay.offer(logEventToReplay);
       } else if (!logCacheWarningDisplayed) {
         logCacheWarningDisplayed = true;
@@ -91,7 +92,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       }
       return;
     }
-    mapper.emit(openTelemetry.getLogsBridge(), event);
+    mapper.emit(openTelemetry.getLogsBridge(), new LoggingEventWrapper(event));
   }
 
   /**
@@ -159,7 +160,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     this.openTelemetry = openTelemetry;
     while (!eventsToReplay.isEmpty()) {
       try {
-        ILoggingEvent eventToReplay = eventsToReplay.poll(10, TimeUnit.MILLISECONDS);
+        LoggingEventToReplay eventToReplay = eventsToReplay.poll(10, TimeUnit.MILLISECONDS);
         mapper.emit(openTelemetry.getLogsBridge(), eventToReplay);
       } catch (InterruptedException e) {
         // Ignore

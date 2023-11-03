@@ -3,49 +3,38 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.logback.appender.v1_0;
+package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.LoggerContextVO;
-import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventWithThreadId;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Marker;
 import org.slf4j.event.KeyValuePair;
 
-class LoggingEventToReplay implements LoggingEventWithThreadId {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public class LoggingEventWrapper implements LoggingEventWithThreadId {
 
   private final ILoggingEvent loggingEvent;
-  private final long timeStamp;
-  private StackTraceElement[] callerData;
-  private String threadName;
-  private long threadId;
 
-  LoggingEventToReplay(
-      ILoggingEvent loggingEvent,
-      boolean captureExperimentalAttributes,
-      boolean captureCodeAttributes) {
+  public LoggingEventWrapper(ILoggingEvent loggingEvent) {
     this.loggingEvent = loggingEvent;
-    this.timeStamp = loggingEvent.getTimeStamp();
-    if (captureExperimentalAttributes) {
-      this.threadName = loggingEvent.getThreadName();
-      this.threadId = Thread.currentThread().getId();
-    }
-    if (captureCodeAttributes) {
-      this.callerData = loggingEvent.getCallerData();
-    }
   }
 
   @Override
   public String getThreadName() {
-    return threadName;
+    return loggingEvent.getThreadName();
   }
 
   @Override
   public long getThreadId() {
-    return threadId;
+    Thread currentThread = Thread.currentThread();
+    return currentThread.getId();
   }
 
   @Override
@@ -85,7 +74,7 @@ class LoggingEventToReplay implements LoggingEventWithThreadId {
 
   @Override
   public StackTraceElement[] getCallerData() {
-    return callerData;
+    return loggingEvent.getCallerData();
   }
 
   @Override
@@ -117,7 +106,7 @@ class LoggingEventToReplay implements LoggingEventWithThreadId {
 
   @Override
   public long getTimeStamp() {
-    return timeStamp;
+    return loggingEvent.getTimeStamp();
   }
 
   @Override

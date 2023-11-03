@@ -18,16 +18,17 @@ import org.apache.logging.log4j.util.ReadOnlyStringMap;
 class LogEventToReplay implements LogEvent {
 
   private static final long serialVersionUID = -3639807661256104630L;
+
   private final LogEvent logEvent;
-
   private final String loggerName;
-
   private final Message message;
   private final Level level;
   private final Instant instant;
   private final Throwable thrown;
   private final Marker marker;
-  private ReadOnlyStringMap contextData;
+  private final ReadOnlyStringMap contextData;
+  private final String threadName;
+  private final long threadId;
 
   LogEventToReplay(LogEvent logEvent) {
     this.logEvent = logEvent;
@@ -38,6 +39,8 @@ class LogEventToReplay implements LogEvent {
     this.thrown = logEvent.getThrown();
     this.marker = logEvent.getMarker();
     this.contextData = logEvent.getContextData();
+    this.threadName = logEvent.getThreadName();
+    this.threadId = logEvent.getThreadId();
   }
 
   @Override
@@ -103,12 +106,12 @@ class LogEventToReplay implements LogEvent {
 
   @Override
   public String getThreadName() {
-    return logEvent.getThreadName();
+    return threadName;
   }
 
   @Override
   public long getThreadId() {
-    return logEvent.getThreadId();
+    return threadId;
   }
 
   @Override
