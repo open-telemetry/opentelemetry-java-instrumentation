@@ -13,6 +13,8 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.impl.ThrowableProxy;
 import org.apache.logging.log4j.core.time.Instant;
 import org.apache.logging.log4j.message.Message;
+import org.apache.logging.log4j.message.StringMapMessage;
+import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.apache.logging.log4j.util.ReadOnlyStringMap;
 
 class LogEventToReplay implements LogEvent {
@@ -70,7 +72,21 @@ class LogEventToReplay implements LogEvent {
   LogEventToReplay(LogEvent logEvent) {
     this.logEvent = logEvent;
     this.loggerName = logEvent.getLoggerName();
-    this.message = new MessageCopy(logEvent.getMessage());
+    Message messageOrigin = logEvent.getMessage();
+    if (messageOrigin instanceof StructuredDataMessage) {
+      StructuredDataMessage structuredDataMessage = (StructuredDataMessage) messageOrigin;
+      this.message =
+          new StructuredDataMessage(
+              structuredDataMessage.getId(),
+              structuredDataMessage.getFormat(),
+              structuredDataMessage.getType(),
+              structuredDataMessage.getData());
+    } else if (messageOrigin instanceof StringMapMessage) {
+      this.message = messageOrigin;
+    } else {
+      this.message = new MessageCopy(logEvent.getMessage());
+    }
+
     this.level = logEvent.getLevel();
     this.instant = logEvent.getInstant();
     this.thrown = logEvent.getThrown();

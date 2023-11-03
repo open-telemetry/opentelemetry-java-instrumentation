@@ -284,6 +284,12 @@ class OpenTelemetryAppenderTest {
 
     logger.info(message);
 
+    StringMapMessage message2 = new StringMapMessage();
+    message2.put("key1-2", "val1-2");
+    message2.put("key2-2", "val2-2");
+
+    logger.info(message2); // Won't be instrumented because cache size is 1 (see log4j2.xml file)
+
     OpenTelemetryAppender.install(openTelemetry);
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
@@ -369,6 +375,12 @@ class OpenTelemetryAppenderTest {
     message.put("key1", "val1");
     message.put("key2", "val2");
     logger.info(message);
+
+    StructuredDataMessage message2 =
+        new StructuredDataMessage("an id 2", "a message 2", "a type 2");
+    message.put("key1-2", "val1-2");
+    message.put("key2-2", "val2-2");
+    logger.info(message2); // Won't be instrumented because cache size is 1 (see log4j2.xml file)
 
     OpenTelemetryAppender.install(openTelemetry);
 
