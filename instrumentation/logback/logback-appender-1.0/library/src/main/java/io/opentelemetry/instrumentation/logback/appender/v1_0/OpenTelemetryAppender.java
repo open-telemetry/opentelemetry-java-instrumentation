@@ -33,7 +33,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
 
-  private BlockingQueue<LoggingEventToReplay> eventsToReplay = new ArrayBlockingQueue<>(50);
+  private BlockingQueue<LoggingEventToReplay> eventsToReplay = new ArrayBlockingQueue<>(1000);
   private boolean logCacheWarningDisplayed;
 
   public OpenTelemetryAppender() {}

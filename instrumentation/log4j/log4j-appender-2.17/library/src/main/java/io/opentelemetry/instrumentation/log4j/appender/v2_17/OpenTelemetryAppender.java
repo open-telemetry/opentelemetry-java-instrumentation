@@ -51,7 +51,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   private final LogEventMapper<ReadOnlyStringMap> mapper;
   private volatile OpenTelemetry openTelemetry;
 
-  private BlockingQueue<LogEventToReplay> eventsToReplay = new ArrayBlockingQueue<>(50);
+  private BlockingQueue<LogEventToReplay> eventsToReplay = new ArrayBlockingQueue<>(1000);
 
   private boolean logCacheWarningDisplayed;
 
