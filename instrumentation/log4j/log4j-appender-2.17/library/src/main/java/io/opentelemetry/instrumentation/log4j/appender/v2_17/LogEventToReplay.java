@@ -30,10 +30,47 @@ class LogEventToReplay implements LogEvent {
   private final String threadName;
   private final long threadId;
 
+  // Log4j 2 seems to reuse Message objects
+  private static class MessageCopy implements Message {
+
+    private static final long serialVersionUID = 6921483958779195777L;
+    private final String formattedMessage;
+    private final String format;
+    private final Object[] parameters;
+    private final Throwable throwable;
+
+    public MessageCopy(Message message) {
+      this.formattedMessage = message.getFormattedMessage();
+      this.format = message.getFormat();
+      this.parameters = message.getParameters();
+      this.throwable = message.getThrowable();
+    }
+
+    @Override
+    public String getFormattedMessage() {
+      return formattedMessage;
+    }
+
+    @Override
+    public String getFormat() {
+      return format;
+    }
+
+    @Override
+    public Object[] getParameters() {
+      return parameters;
+    }
+
+    @Override
+    public Throwable getThrowable() {
+      return throwable;
+    }
+  }
+
   LogEventToReplay(LogEvent logEvent) {
     this.logEvent = logEvent;
     this.loggerName = logEvent.getLoggerName();
-    this.message = logEvent.getMessage();
+    this.message = new MessageCopy(logEvent.getMessage());
     this.level = logEvent.getLevel();
     this.instant = logEvent.getInstant();
     this.thrown = logEvent.getThrown();

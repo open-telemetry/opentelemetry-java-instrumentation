@@ -117,6 +117,9 @@ class OpenTelemetryAppenderTest {
     OpenTelemetryAppender.install(OpenTelemetry.noop());
 
     logger.info("log message 1");
+    logger.info(
+        "log message 2"); // Won't be instrumented because cache size is 1 (see log4j2.xml file)
+    // file)
 
     OpenTelemetryAppender.install(openTelemetry);
 
