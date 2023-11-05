@@ -29,7 +29,6 @@ import spring.config.TaskWithErrorConfig;
 import spring.config.TriggerTaskConfig;
 import spring.service.LambdaTaskConfigurer;
 
-@SuppressWarnings("ignored")
 class SpringSchedulingTest {
 
   @RegisterExtension
