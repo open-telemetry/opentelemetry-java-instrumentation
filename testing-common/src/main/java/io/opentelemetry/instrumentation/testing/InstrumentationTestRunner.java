@@ -24,8 +24,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -119,15 +121,29 @@ public abstract class InstrumentationTestRunner {
     List<T> assertionsList = new ArrayList<>();
     assertions.forEach(assertionsList::add);
 
+    AtomicReference<AssertionError> assertionError = new AtomicReference<>();
     try {
       await()
-          .untilAsserted(() -> doAssertTraces(traceComparator, assertionsList, verifyScopeVersion));
+          .untilAsserted(
+              () -> {
+                try {
+                  doAssertTraces(traceComparator, assertionsList, verifyScopeVersion);
+                } catch (AssertionError error) {
+                  // If a separately running thread keeps adding traces in the meanwhile, we might
+                  // end up with the trace count mismatch AssertionError and replacing the actual
+                  // AssertionError, so we consider only the first one
+                  if (Objects.isNull(assertionError.get())) {
+                    assertionError.set(error);
+                  }
+                  throw error;
+                }
+              });
     } catch (ConditionTimeoutException e) {
-      // Don't throw this failure since the stack is the awaitility thread, causing confusion.
-      // Instead, just assert one more time on the test thread, which will fail with a better stack
-      // trace.
-      // TODO(anuraaga): There is probably a better way to do this.
-      doAssertTraces(traceComparator, assertionsList, verifyScopeVersion);
+      if (Objects.nonNull(assertionError.get())) {
+        throw assertionError.get();
+      } else {
+        throw e;
+      }
     }
   }
 
