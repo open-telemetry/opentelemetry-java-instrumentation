@@ -19,7 +19,7 @@ public class ByteArrayUrlTest {
 
     URL url = ByteArrayUrl.create("my.data$foo", content);
 
-    assertThat(url).hasHost("my.data%24foo").hasProtocol("x-otel-binary");
+    assertThat(url).hasPath("my.data%24foo").hasProtocol("x-otel-binary");
 
     URLConnection connection = url.openConnection();
     assertThat(connection.getContentLengthLong()).isEqualTo(4);

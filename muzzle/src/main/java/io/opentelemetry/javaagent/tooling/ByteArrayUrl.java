@@ -24,22 +24,22 @@ public class ByteArrayUrl {
   private static final String URL_SCHEMA = "x-otel-binary";
 
   @SuppressWarnings("removal")
-  public static URL create(String uniqueName, byte[] data) {
+  public static URL create(String contentName, byte[] data) {
     if (System.getSecurityManager() != null) {
       return java.security.AccessController.doPrivileged(
           (PrivilegedAction<URL>)
               () -> {
-                return doCreate(uniqueName, data);
+                return doCreate(contentName, data);
               });
     } else {
-      return doCreate(uniqueName, data);
+      return doCreate(contentName, data);
     }
   }
 
-  private static URL doCreate(String uniqueName, byte[] data) {
+  private static URL doCreate(String contentName, byte[] data) {
     try {
-      String hostname = URLEncoder.encode(uniqueName, StandardCharsets.UTF_8.toString());
-      return new URL(URL_SCHEMA, hostname, -1, "", new ByteArrayUrlStreamHandler(data));
+      String file = URLEncoder.encode(contentName, StandardCharsets.UTF_8.toString());
+      return new URL(URL_SCHEMA, null, -1, file, new ByteArrayUrlStreamHandler(data));
     } catch (MalformedURLException e) {
       throw new IllegalArgumentException("Failed to generate URL for the provided arguments", e);
     } catch (UnsupportedEncodingException e) {
@@ -48,8 +48,8 @@ public class ByteArrayUrl {
   }
 
   /**
-   * This class has been copied from ByteBuddy ({@link
-   * net.bytebuddy.dynamic.loading.ByteArrayClassLoader.PersistenceHandler}).
+   * This class is based on ByteBuddy {@link
+   * net.bytebuddy.dynamic.loading.ByteArrayClassLoader.PersistenceHandler}.
    */
   private static class ByteArrayUrlStreamHandler extends URLStreamHandler {
 
