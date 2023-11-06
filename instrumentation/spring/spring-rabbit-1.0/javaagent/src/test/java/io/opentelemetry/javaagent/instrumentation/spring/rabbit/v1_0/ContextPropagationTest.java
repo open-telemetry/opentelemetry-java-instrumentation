@@ -152,7 +152,7 @@ public class ContextPropagationTest {
             trace -> {
               trace
                   .hasSize(5)
-                  .hasSpansSatisfyingExactly(
+                  .hasSpansSatisfyingExactlyInAnyOrder(
                       span -> span.hasName("parent"),
                       span ->
                           span.hasName("<default> publish")

@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
@@ -129,7 +130,9 @@ public final class RestletTelemetryBuilder {
             .addContextCustomizer(httpServerRouteBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get());
     if (emitExperimentalHttpServerMetrics) {
-      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+      builder
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
 
     return new RestletTelemetry(builder.buildServerInstrumenter(RestletHeadersGetter.INSTANCE));

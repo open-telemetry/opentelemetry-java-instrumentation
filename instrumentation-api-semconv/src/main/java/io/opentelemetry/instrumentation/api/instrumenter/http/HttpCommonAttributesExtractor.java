@@ -91,9 +91,6 @@ abstract class HttpCommonAttributesExtractor<
       @Nullable Throwable error) {
 
     Long requestBodySize = requestBodySize(request);
-    if (SemconvStability.emitStableHttpSemconv()) {
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_BODY_SIZE, requestBodySize);
-    }
     if (SemconvStability.emitOldHttpSemconv()) {
       internalSet(attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestBodySize);
     }
@@ -111,9 +108,6 @@ abstract class HttpCommonAttributesExtractor<
       }
 
       Long responseBodySize = responseBodySize(request, response);
-      if (SemconvStability.emitStableHttpSemconv()) {
-        internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, responseBodySize);
-      }
       if (SemconvStability.emitOldHttpSemconv()) {
         internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, responseBodySize);
       }

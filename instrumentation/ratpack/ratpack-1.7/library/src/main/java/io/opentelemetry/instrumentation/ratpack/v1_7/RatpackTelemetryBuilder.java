@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
@@ -194,7 +195,9 @@ public final class RatpackTelemetryBuilder {
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(httpServerRouteBuilder.build());
     if (emitExperimentalHttpServerMetrics) {
-      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+      builder
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributes))
+          .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
     return builder.buildServerInstrumenter(RatpackGetter.INSTANCE);
   }
@@ -210,7 +213,9 @@ public final class RatpackTelemetryBuilder {
             .addAttributesExtractors(additionalHttpClientExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
     if (emitExperimentalHttpClientMetrics) {
-      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+      builder
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributes))
+          .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
     return builder.buildClientInstrumenter(RequestHeaderSetter.INSTANCE);
   }
