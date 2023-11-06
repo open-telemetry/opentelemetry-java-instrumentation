@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -178,7 +179,27 @@ public class ContextPropagationTest {
                               .hasParent(trace.getSpan(1))
                               .hasAttributesSatisfyingExactly(
                                   getAssertions("testQueue", "process", null, false, testHeaders)),
-                      span -> span.hasName("consumer").hasParent(trace.getSpan(3)));
+                      span -> {
+                        // occasionally "testQueue process" spans have their order swapped, usually
+                        // it would be
+                        // 0 - parent
+                        // 1 - <default> publish
+                        // 2 - testQueue process (<default>)
+                        // 3 - testQueue process (testQueue)
+                        // 4 - consumer
+                        // but it could also be
+                        // 0 - parent
+                        // 1 - <default> publish
+                        // 2 - testQueue process (testQueue)
+                        // 3 - consumer
+                        // 4 - testQueue process (<default>)
+                        // determine the correct parent span based on the span name
+                        SpanData parentSpan = trace.getSpan(3);
+                        if (!"testQueue process".equals(parentSpan.getName())) {
+                          parentSpan = trace.getSpan(2);
+                        }
+                        span.hasName("consumer").hasParent(parentSpan);
+                      });
             },
             trace -> {
               trace
