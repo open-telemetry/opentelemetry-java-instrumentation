@@ -25,24 +25,26 @@ public class SpringSecurityConfigServletInstrumentationModule extends Instrument
 
   @Override
   public boolean defaultEnabled(ConfigProperties config) {
-    /*
-     * Since the only thing this module currently does is capture enduser attributes,
-     * the module can be completely disabled if enduser attributes are disabled.
-     *
-     * If any functionality not related to enduser attributes is added to this module,
-     * then this check will need to move elsewhere to only guard the enduser attributes logic.
-     */
-    return CommonConfig.get().getEnduserConfig().isAnyEnabled();
+    return super.defaultEnabled(config)
+        /*
+         * Since the only thing this module currently does is capture enduser attributes,
+         * the module can be completely disabled if enduser attributes are disabled.
+         *
+         * If any functionality not related to enduser attributes is added to this module,
+         * then this check will need to move elsewhere to only guard the enduser attributes logic.
+         */
+        && CommonConfig.get().getEnduserConfig().isAnyEnabled();
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    /*
+     * Ensure this module is only applied to Spring Security >= 6.0,
+     * since Spring Security >= 6.0 uses Jakarta EE rather than Java EE,
+     * and this instrumentation module uses Jakarta EE.
+     */
     return hasClassesNamed(
-            "org.springframework.security.config.annotation.web.builders.HttpSecurity")
-        .and(
-            hasClassesNamed(
-                "org.springframework.security.web.access.intercept.AuthorizationFilter"))
-        .and(hasClassesNamed("jakarta.servlet.Servlet"));
+        "org.springframework.security.authentication.ObservationAuthenticationManager");
   }
 
   @Override

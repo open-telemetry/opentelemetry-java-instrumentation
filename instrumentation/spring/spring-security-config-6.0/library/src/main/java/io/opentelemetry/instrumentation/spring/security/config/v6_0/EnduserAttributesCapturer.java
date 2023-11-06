@@ -17,9 +17,9 @@ import org.springframework.security.core.GrantedAuthority;
  * Captures {@code enduser.*} semantic attributes from {@link Authentication} objects.
  *
  * <p>After construction, you must selectively enable which attributes you want captured by calling
- * the appropriate {@code set*Enabled(true)} method.
+ * the appropriate {@code setEnduser*Enabled(true)} method.
  */
-public class EnduserAttributesCapturer {
+public final class EnduserAttributesCapturer {
 
   private static final String DEFAULT_ROLE_PREFIX = "ROLE_";
   private static final String DEFAULT_SCOPE_PREFIX = "SCOPE_";
@@ -43,7 +43,7 @@ public class EnduserAttributesCapturer {
    * Captures the {@code enduser.*} semantic attributes from the given {@link Authentication} into
    * the {@link LocalRootSpan} of the given {@link Context}.
    *
-   * <p>Only the attributes enabled via the {@code set*Enabled(true)} methods are captured.
+   * <p>Only the attributes enabled via the {@code setEnduser*Enabled(true)} methods are captured.
    *
    * <p>The following attributes can be captured:
    *
