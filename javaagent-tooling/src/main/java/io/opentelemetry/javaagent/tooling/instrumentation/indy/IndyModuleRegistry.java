@@ -10,6 +10,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.tooling.BytecodeWithUrl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
@@ -90,11 +91,11 @@ public class IndyModuleRegistry {
     }
 
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
-    Map<String, ClassCopySource> injectedClasses =
+    Map<String, BytecodeWithUrl> injectedClasses =
         toInject.stream()
             .collect(
                 Collectors.toMap(
-                    name -> name, name -> ClassCopySource.create(name, agentOrExtensionCl)));
+                    name -> name, name -> BytecodeWithUrl.create(name, agentOrExtensionCl)));
 
     return new InstrumentationModuleClassLoader(
         instrumentedClassloader, agentOrExtensionCl, injectedClasses);
