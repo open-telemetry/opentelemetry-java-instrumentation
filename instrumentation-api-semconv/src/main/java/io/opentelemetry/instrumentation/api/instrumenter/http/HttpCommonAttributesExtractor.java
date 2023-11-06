@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -149,8 +150,9 @@ abstract class HttpCommonAttributesExtractor<
     }
 
     if (SemconvStability.emitStableHttpSemconv()) {
-      String protocolName = networkGetter.getNetworkProtocolName(request, response);
-      String protocolVersion = networkGetter.getNetworkProtocolVersion(request, response);
+      String protocolName = lowercaseStr(networkGetter.getNetworkProtocolName(request, response));
+      String protocolVersion =
+          lowercaseStr(networkGetter.getNetworkProtocolVersion(request, response));
 
       if (protocolVersion != null) {
         if (!"http".equals(protocolName)) {
@@ -188,5 +190,10 @@ abstract class HttpCommonAttributesExtractor<
       // not a number
       return null;
     }
+  }
+
+  @Nullable
+  private static String lowercaseStr(@Nullable String str) {
+    return str == null ? null : str.toLowerCase(Locale.ROOT);
   }
 }
