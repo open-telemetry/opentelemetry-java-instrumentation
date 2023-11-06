@@ -134,18 +134,12 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
 
   @Nullable
   private String findByClasspathApplicationProperties() {
-    String result = readNameFromAppProperties();
-    logger.log(
-        FINER, "Checking for spring.application.name in application.properties file: {0}", result);
-    return result;
+    return findByClasspathPropertiesFile("application.properties");
   }
 
   @Nullable
   private String findByClasspathBootstrapProperties() {
-    String result = readNameFromBootstrapProperties();
-    logger.log(
-        FINER, "Checking for spring.application.name in bootstrap.properties file: {0}", result);
-    return result;
+    return findByClasspathPropertiesFile("bootstrap.properties");
   }
 
   @Nullable
@@ -279,15 +273,16 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   }
 
   @Nullable
-  private String readNameFromAppProperties() {
-    return loadFromClasspath(
-        "application.properties", SpringBootServiceNameDetector::getAppNamePropertyFromStream);
-  }
-
-  @Nullable
-  private String readNameFromBootstrapProperties() {
-    return loadFromClasspath(
-        "bootstrap.properties", SpringBootServiceNameDetector::getAppNamePropertyFromStream);
+  private String findByClasspathPropertiesFile(String filename) {
+    String result =
+        loadFromClasspath(filename, SpringBootServiceNameDetector::getAppNamePropertyFromStream);
+    if (logger.isLoggable(FINER)) {
+      logger.log(
+          FINER,
+          "Checking for spring.application.name in {0} file: {1}",
+          new Object[] {filename, result});
+    }
+    return result;
   }
 
   @Nullable
