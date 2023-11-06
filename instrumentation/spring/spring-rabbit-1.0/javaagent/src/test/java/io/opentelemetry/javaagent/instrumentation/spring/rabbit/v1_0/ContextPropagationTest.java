@@ -159,7 +159,8 @@ public class ContextPropagationTest {
                               .hasKind(SpanKind.PRODUCER)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  getAssertions("<default>", null, "127.0.0.1", true, testHeaders)),
+                                  getAssertions(
+                                      "<default>", "publish", "127.0.0.1", true, testHeaders)),
                       // spring-cloud-stream-binder-rabbit listener puts all messages into a
                       // BlockingQueue immediately after receiving
                       // that's why the rabbitmq CONSUMER span will never have any child span (and

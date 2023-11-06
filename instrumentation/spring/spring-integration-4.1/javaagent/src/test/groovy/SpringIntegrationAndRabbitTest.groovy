@@ -60,6 +60,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
             "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testTopic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
           }
