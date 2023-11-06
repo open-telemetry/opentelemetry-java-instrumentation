@@ -1,3 +1,8 @@
 spring:
   application:
     name: cat-store-bootstrap
+
+some:
+  other:
+    property: value
+    
