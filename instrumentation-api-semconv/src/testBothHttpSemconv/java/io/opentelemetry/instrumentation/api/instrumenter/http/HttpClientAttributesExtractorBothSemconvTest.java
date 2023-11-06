@@ -167,7 +167,6 @@ class HttpClientAttributesExtractorBothSemconvTest {
                 asList("654", "321")),
             entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"));
   }
 }

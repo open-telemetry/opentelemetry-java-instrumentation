@@ -171,7 +171,6 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
               "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
               "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
               "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-              "$SemanticAttributes.NETWORK_PROTOCOL_NAME" "http"
               "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
               "$SemanticAttributes.SERVER_ADDRESS" uri.host
               "$SemanticAttributes.SERVER_PORT" uri.port
@@ -242,7 +241,6 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
               "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
               "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
               "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-              "$SemanticAttributes.NETWORK_PROTOCOL_NAME" "http"
               "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
               "$SemanticAttributes.SERVER_ADDRESS" uri.host
               "$SemanticAttributes.SERVER_PORT" uri.port

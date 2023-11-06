@@ -169,6 +169,7 @@ public class Jms2InstrumentationTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
+                          equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                           equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
@@ -231,6 +232,7 @@ public class Jms2InstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->

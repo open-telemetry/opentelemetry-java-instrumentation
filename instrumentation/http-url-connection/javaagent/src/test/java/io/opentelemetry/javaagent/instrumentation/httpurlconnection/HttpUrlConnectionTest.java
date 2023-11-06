@@ -124,7 +124,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), "http"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PEER_PORT), url.getPort()),
@@ -132,6 +131,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET"),
                 equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), STATUS)));
     if (SemconvStability.emitOldHttpSemconv()) {
+      attributes.add(equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"));
       attributes.add(
           satisfies(
               SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, AbstractLongAssert::isNotNegative));
@@ -176,7 +176,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), "http"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PEER_PORT), url.getPort()),
@@ -184,6 +183,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET"),
                 equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), STATUS)));
     if (SemconvStability.emitOldHttpSemconv()) {
+      attributes.add(equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"));
       attributes.add(
           satisfies(
               SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, AbstractLongAssert::isNotNegative));
@@ -234,7 +234,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), "http"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PEER_PORT), url.getPort()),
@@ -242,6 +241,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "POST"),
                 equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), STATUS)));
     if (SemconvStability.emitOldHttpSemconv()) {
+      attributes.add(equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"));
       attributes.add(
           satisfies(
               SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, AbstractLongAssert::isNotNegative));
@@ -297,7 +297,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), "http"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PEER_PORT), url.getPort()),
@@ -305,6 +304,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "POST"),
                 equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), STATUS)));
     if (SemconvStability.emitOldHttpSemconv()) {
+      attributes.add(equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"));
       attributes.add(
           satisfies(
               SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, AbstractLongAssert::isNotNegative));
@@ -349,12 +349,14 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME), "http"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
                 equalTo(getAttributeKey(SemanticAttributes.NET_PEER_PORT), PortUtils.UNUSABLE_PORT),
                 equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), uri),
                 equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET")));
+    if (SemconvStability.emitOldHttpSemconv()) {
+      attributes.add(equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"));
+    }
     if (SemconvStability.emitStableHttpSemconv()) {
       attributes.add(equalTo(HttpAttributes.ERROR_TYPE, "java.net.ConnectException"));
     }
