@@ -1024,9 +1024,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                     .doesNotContainKey(SemanticAttributes.NETWORK_TRANSPORT)
                     .doesNotContainKey(SemanticAttributes.NETWORK_TYPE);
               }
+
               AttributeKey<String> netProtocolKey =
                   getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME);
-              if (httpClientAttributes.contains(netProtocolKey)) {
+              if (SemconvStability.emitStableHttpSemconv()) {
+                // only protocol names different from "http" are emitted
+                assertThat(attrs).doesNotContainKey(netProtocolKey);
+              } else if (attrs.get(netProtocolKey) != null) {
                 assertThat(attrs).containsEntry(netProtocolKey, "http");
               }
               AttributeKey<String> netProtocolVersionKey =

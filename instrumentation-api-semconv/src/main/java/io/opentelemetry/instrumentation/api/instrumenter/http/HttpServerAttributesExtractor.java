@@ -93,6 +93,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   HttpServerAttributesExtractor(HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder) {
     super(
         builder.httpAttributesGetter,
+        builder.netAttributesGetter,
         HttpStatusCodeConverter.SERVER,
         builder.capturedRequestHeaders,
         builder.capturedResponseHeaders,

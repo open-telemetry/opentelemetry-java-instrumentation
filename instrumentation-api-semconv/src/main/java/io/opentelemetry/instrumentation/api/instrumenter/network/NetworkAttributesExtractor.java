@@ -37,7 +37,7 @@ public final class NetworkAttributesExtractor<REQUEST, RESPONSE>
         new InternalNetworkAttributesExtractor<>(
             getter,
             AddressAndPortExtractor.noop(),
-            /* captureNetworkTransportAndType= */ true,
+            /* captureProtocolAttributes= */ true,
             /* captureLocalSocketAttributes= */ true,
             // capture the old net.sock.peer.name attr for backwards compatibility
             /* captureOldPeerDomainAttribute= */ true,

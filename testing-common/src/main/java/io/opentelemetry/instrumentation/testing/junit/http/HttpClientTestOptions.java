@@ -28,7 +28,6 @@ public abstract class HttpClientTestOptions {
       Collections.unmodifiableSet(
           new HashSet<>(
               Arrays.asList(
-                  SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME),
                   SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION),
                   SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PEER_NAME),
                   SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PEER_PORT),

@@ -129,6 +129,7 @@ public class Jms1InstrumentationTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
+                          equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                           equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
@@ -191,6 +192,7 @@ public class Jms1InstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
@@ -269,6 +271,7 @@ public class Jms1InstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
@@ -338,6 +341,7 @@ public class Jms1InstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))),
         trace ->

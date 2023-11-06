@@ -28,6 +28,7 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("producer"))),

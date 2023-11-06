@@ -30,7 +30,9 @@ public final class RabbitSingletons {
           .getBoolean("otel.instrumentation.rabbitmq.experimental-span-attributes", false);
   private static final String instrumentationName = "io.opentelemetry.rabbitmq-2.7";
   private static final Instrumenter<ChannelAndMethod, Void> channelInstrumenter =
-      createChannelInstrumenter();
+      createChannelInstrumenter(false);
+  private static final Instrumenter<ChannelAndMethod, Void> channelPublishInstrumenter =
+      createChannelInstrumenter(true);
   private static final Instrumenter<ReceiveRequest, GetResponse> receiveInstrumenter =
       createReceiveInstrumenter();
   private static final Instrumenter<DeliveryRequest, Void> deliverInstrumenter =
@@ -38,8 +40,11 @@ public final class RabbitSingletons {
   static final ContextKey<RabbitChannelAndMethodHolder> CHANNEL_AND_METHOD_CONTEXT_KEY =
       ContextKey.named("opentelemetry-rabbitmq-channel-and-method-context-key");
 
-  public static Instrumenter<ChannelAndMethod, Void> channelInstrumenter() {
-    return channelInstrumenter;
+  public static Instrumenter<ChannelAndMethod, Void> channelInstrumenter(
+      ChannelAndMethod channelAndMethod) {
+    return channelAndMethod.getMethod().equals("Channel.basicPublish")
+        ? channelPublishInstrumenter
+        : channelInstrumenter;
   }
 
   public static Instrumenter<ReceiveRequest, GetResponse> receiveInstrumenter() {
@@ -51,21 +56,19 @@ public final class RabbitSingletons {
   }
 
   @SuppressWarnings("deprecation") // have to use the deprecated Net*AttributesExtractor for now
-  private static Instrumenter<ChannelAndMethod, Void> createChannelInstrumenter() {
+  private static Instrumenter<ChannelAndMethod, Void> createChannelInstrumenter(boolean publish) {
     return Instrumenter.<ChannelAndMethod, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, ChannelAndMethod::getMethod)
         .addAttributesExtractor(
             buildMessagingAttributesExtractor(
-                RabbitChannelAttributesGetter.INSTANCE, MessageOperation.PUBLISH))
+                RabbitChannelAttributesGetter.INSTANCE, publish ? MessageOperation.PUBLISH : null))
         .addAttributesExtractor(
             io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor
                 .create(new RabbitChannelNetAttributesGetter()))
         .addContextCustomizer(
             (context, request, startAttributes) ->
                 context.with(CHANNEL_AND_METHOD_CONTEXT_KEY, new RabbitChannelAndMethodHolder()))
-        .buildInstrumenter(
-            channelAndMethod ->
-                channelAndMethod.getMethod().equals("Channel.basicPublish") ? PRODUCER : CLIENT);
+        .buildInstrumenter(channelAndMethod -> publish ? PRODUCER : CLIENT);
   }
 
   @SuppressWarnings("deprecation") // have to use the deprecated Net*AttributesExtractor for now

@@ -154,6 +154,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "net.peer.port" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -321,6 +322,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "net.peer.port" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }

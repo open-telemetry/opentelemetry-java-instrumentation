@@ -149,8 +149,8 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
     return new InternalNetworkAttributesExtractor<>(
         netAttributesGetter,
         clientAddressPortExtractor,
-        // network.type and network.transport are opt-in
-        /* captureNetworkTransportAndType= */ false,
+        // network.{transport,type} are opt-in, network.protocol.* have HTTP-specific logic
+        /* captureProtocolAttributes= */ false,
         // network.local.* are opt-in
         /* captureLocalSocketAttributes= */ false,
         /* captureOldPeerDomainAttribute= */ false,

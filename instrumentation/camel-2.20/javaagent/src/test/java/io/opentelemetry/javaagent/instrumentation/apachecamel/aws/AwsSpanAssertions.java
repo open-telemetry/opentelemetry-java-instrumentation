@@ -102,6 +102,8 @@ class AwsSpanAssertions {
               equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")));
       if (spanName.endsWith("receive")) {
         attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"));
+      } else if (spanName.endsWith("publish")) {
+        attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"));
       }
     }
 
