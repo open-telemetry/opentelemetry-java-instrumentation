@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -18,15 +17,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class Log4j2Test {
-  @RegisterExtension
-  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
-
-  public InstrumentationExtension getInstrumentationExtension() {
-    return testing;
-  }
+  public abstract InstrumentationExtension getInstrumentationExtension();
 
   @BeforeEach
   void setUp() {

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.testing.instrumentation.log4j.contextdata.v2_17;
+package io.opentelemetry.javaagent.instrumentation.log4j.contextdata.v2_17;
 
 import io.opentelemetry.instrumentation.log4j.contextdata.Log4j2Test;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
