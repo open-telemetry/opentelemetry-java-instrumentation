@@ -88,7 +88,10 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     Context result = addServletContextPath(context, request);
     if (mappingResolver != null) {
       HttpServerRoute.update(
-          result, servlet ? SERVER : SERVER_FILTER, spanNameProvider, mappingResolver, request);
+          result,
+          servlet ? SERVER : SERVER_FILTER,
+          (ctx, req) -> spanNameProvider.get(ctx, req, mappingResolver),
+          request);
     }
 
     return result;

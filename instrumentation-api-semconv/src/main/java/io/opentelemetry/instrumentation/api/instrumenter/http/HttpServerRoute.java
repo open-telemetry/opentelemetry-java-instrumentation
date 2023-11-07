@@ -90,19 +90,26 @@ public final class HttpServerRoute {
    *
    * <p>If there is a server span in the context, and the context has been customized with a {@link
    * HttpServerRoute}, then this method will update the route using the provided {@link
-   * HttpServerRouteBiGetter} if and only if the last {@link HttpServerRouteSource} to update the
-   * route using this method has strictly lower priority than the provided {@link
-   * HttpServerRouteSource}, and the value returned from the {@link HttpServerRouteBiGetter} is
+   * io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBiGetter} if and only if
+   * the last {@link HttpServerRouteSource} to update the route using this method has strictly lower
+   * priority than the provided {@link HttpServerRouteSource}, and the value returned from the
+   * {@link io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBiGetter} is
    * non-null.
    *
    * <p>If there is a server span in the context, and the context has NOT been customized with a
    * {@code ServerSpanName}, then this method will update the route using the provided {@link
-   * HttpServerRouteBiGetter} if the value returned from it is non-null.
+   * io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBiGetter} if the value
+   * returned from it is non-null.
+   *
+   * @deprecated Use {@link #update(Context, HttpServerRouteSource, HttpServerRouteGetter, Object)}
+   *     with capturing lambda instead.
    */
+  @Deprecated
   public static <T, U> void update(
       Context context,
       HttpServerRouteSource source,
-      HttpServerRouteBiGetter<T, U> httpRouteGetter,
+      io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBiGetter<T, U>
+          httpRouteGetter,
       T arg1,
       U arg2) {
     Span serverSpan = LocalRootSpan.fromContextOrNull(context);
@@ -164,8 +171,10 @@ public final class HttpServerRoute {
     return httpRouteState == null ? null : httpRouteState.getRoute();
   }
 
+  @SuppressWarnings("deprecation") // supporting deprecated functionality
   private static final class OneArgAdapter<T>
-      implements HttpServerRouteBiGetter<T, HttpServerRouteGetter<T>> {
+      implements io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteBiGetter<
+          T, HttpServerRouteGetter<T>> {
 
     private static final OneArgAdapter<Object> INSTANCE = new OneArgAdapter<>();
 

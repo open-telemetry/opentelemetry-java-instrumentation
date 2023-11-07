@@ -150,9 +150,8 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     HttpServerRoute.update(
         context,
         HttpServerRouteSource.CONTROLLER,
-        (c, exchange, endpoint) -> getPath(exchange, endpoint),
-        camelExchange,
-        camelEndpoint);
+        (ctx, exchange) -> getPath(exchange, camelEndpoint),
+        camelExchange);
   }
 
   protected String getHttpUrl(Exchange exchange, Endpoint endpoint) {
