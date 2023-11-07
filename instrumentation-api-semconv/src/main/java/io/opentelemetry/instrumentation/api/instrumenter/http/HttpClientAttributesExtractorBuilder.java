@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
@@ -54,12 +55,11 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   /**
    * Configures the HTTP request headers that will be captured as span attributes as described in <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#common-attributes">HTTP
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#http-client">HTTP
    * semantic conventions</a>.
    *
-   * <p>The HTTP request header values will be captured under the {@code http.request.header.<name>}
-   * attribute key. The {@code <name>} part in the attribute key is the normalized header name:
-   * lowercase, with dashes replaced by underscores.
+   * <p>The HTTP request header values will be captured under the {@code http.request.header.<key>}
+   * attribute key. The {@code <key>} part in the attribute key is the lowercase header name.
    *
    * @param requestHeaders A list of HTTP header names.
    */
@@ -73,12 +73,12 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   /**
    * Configures the HTTP response headers that will be captured as span attributes as described in
    * <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#common-attributes">HTTP
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#common-attributes">HTTP
    * semantic conventions</a>.
    *
    * <p>The HTTP response header values will be captured under the {@code
-   * http.response.header.<name>} attribute key. The {@code <name>} part in the attribute key is the
-   * normalized header name: lowercase, with dashes replaced by underscores.
+   * http.response.header.<key>} attribute key. The {@code <key>} part in the attribute key is the
+   * lowercase header name.
    *
    * @param responseHeaders A list of HTTP header names.
    */
@@ -122,6 +122,8 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   /**
    * Returns a new {@link HttpClientAttributesExtractor} with the settings of this {@link
    * HttpClientAttributesExtractorBuilder}.
+   *
+   * @see InstrumenterBuilder#addAttributesExtractor(AttributesExtractor)
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new HttpClientAttributesExtractor<>(this);

@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
@@ -23,19 +24,19 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-server">HTTP
- * server attributes</a>. Instrumentation of HTTP server frameworks should extend this class,
- * defining {@link REQUEST} and {@link RESPONSE} with the actual request / response types of the
- * instrumented library. If an attribute is not available in this library, it is appropriate to
- * return {@code null} from the protected attribute methods, but implement as many as possible for
- * best compliance with the OpenTelemetry specification.
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#http-server">HTTP
+ * server attributes</a>.
  */
 public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     extends HttpCommonAttributesExtractor<
         REQUEST, RESPONSE, HttpServerAttributesGetter<REQUEST, RESPONSE>>
     implements SpanKeyProvider {
 
-  /** Creates the HTTP server attributes extractor with default configuration. */
+  /**
+   * Creates the HTTP server attributes extractor with default configuration.
+   *
+   * @see InstrumenterBuilder#addAttributesExtractor(AttributesExtractor)
+   */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
     return builder(httpAttributesGetter).build();

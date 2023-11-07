@@ -5,63 +5,99 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import java.util.HashSet;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 /**
  * Extractor of the <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#name">HTTP
- * span name</a>. Instrumentation of HTTP server or client frameworks should use this class to
- * comply with OpenTelemetry HTTP semantic conventions.
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#name">HTTP
+ * span name</a>.
  */
-public final class HttpSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQUEST> {
+public final class HttpSpanNameExtractor {
 
   /**
-   * Returns a {@link SpanNameExtractor} which should be used for HTTP requests with default
-   * configuration. HTTP attributes will be examined to determine the name of the span.
+   * Returns an HTTP client {@link SpanNameExtractor} with default configuration.
+   *
+   * @see Instrumenter#builder(OpenTelemetry, String, SpanNameExtractor)
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      HttpCommonAttributesGetter<REQUEST, ?> getter) {
+      HttpClientAttributesGetter<REQUEST, ?> getter) {
     return builder(getter).build();
   }
 
   /**
-   * Returns a new {@link HttpSpanNameExtractorBuilder} that can be used to configure the HTTP span
-   * name extractor.
+   * Returns an HTTP server {@link SpanNameExtractor} with default configuration.
+   *
+   * @see Instrumenter#builder(OpenTelemetry, String, SpanNameExtractor)
+   */
+  public static <REQUEST> SpanNameExtractor<REQUEST> create(
+      HttpServerAttributesGetter<REQUEST, ?> getter) {
+    return builder(getter).build();
+  }
+
+  /**
+   * Returns a new {@link HttpSpanNameExtractorBuilder} that can be used to configure the HTTP
+   * client span name extractor.
    */
   public static <REQUEST> HttpSpanNameExtractorBuilder<REQUEST> builder(
-      HttpCommonAttributesGetter<REQUEST, ?> getter) {
-    return new HttpSpanNameExtractorBuilder<>(getter);
+      HttpClientAttributesGetter<REQUEST, ?> getter) {
+    return new HttpSpanNameExtractorBuilder<>(getter, null);
   }
 
-  private final HttpCommonAttributesGetter<REQUEST, ?> getter;
-  private final Set<String> knownMethods;
-
-  HttpSpanNameExtractor(HttpSpanNameExtractorBuilder<REQUEST> builder) {
-    this.getter = builder.httpAttributesGetter;
-    this.knownMethods = new HashSet<>(builder.knownMethods);
+  /**
+   * Returns a new {@link HttpSpanNameExtractorBuilder} that can be used to configure the HTTP
+   * server span name extractor.
+   */
+  public static <REQUEST> HttpSpanNameExtractorBuilder<REQUEST> builder(
+      HttpServerAttributesGetter<REQUEST, ?> getter) {
+    return new HttpSpanNameExtractorBuilder<>(null, getter);
   }
 
-  @Override
-  public String extract(REQUEST request) {
-    String method = getter.getHttpRequestMethod(request);
-    String route = extractRoute(request);
-    if (method != null) {
+  static final class Client<REQUEST> implements SpanNameExtractor<REQUEST> {
+
+    private final HttpClientAttributesGetter<REQUEST, ?> getter;
+    private final Set<String> knownMethods;
+
+    Client(HttpClientAttributesGetter<REQUEST, ?> getter, Set<String> knownMethods) {
+      this.getter = getter;
+      this.knownMethods = knownMethods;
+    }
+
+    @Override
+    public String extract(REQUEST request) {
+      String method = getter.getHttpRequestMethod(request);
+      if (method == null || !knownMethods.contains(method)) {
+        return "HTTP";
+      }
+      return method;
+    }
+  }
+
+  static final class Server<REQUEST> implements SpanNameExtractor<REQUEST> {
+
+    private final HttpServerAttributesGetter<REQUEST, ?> getter;
+    private final Set<String> knownMethods;
+
+    Server(HttpServerAttributesGetter<REQUEST, ?> getter, Set<String> knownMethods) {
+      this.getter = getter;
+      this.knownMethods = knownMethods;
+    }
+
+    @Override
+    public String extract(REQUEST request) {
+      String method = getter.getHttpRequestMethod(request);
+      String route = getter.getHttpRoute(request);
+      if (method == null) {
+        return "HTTP";
+      }
       if (!knownMethods.contains(method)) {
         method = "HTTP";
       }
       return route == null ? method : method + " " + route;
     }
-    return "HTTP";
   }
 
-  @Nullable
-  private String extractRoute(REQUEST request) {
-    if (getter instanceof HttpServerAttributesGetter) {
-      return ((HttpServerAttributesGetter<REQUEST, ?>) getter).getHttpRoute(request);
-    }
-    return null;
-  }
+  private HttpSpanNameExtractor() {}
 }

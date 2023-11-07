@@ -6,23 +6,25 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import javax.annotation.Nullable;
 
 /**
  * Extractor of the <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#status">HTTP
- * span status</a>. Instrumentation of HTTP server or client frameworks should use this class to
- * comply with OpenTelemetry HTTP semantic conventions.
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#status">HTTP
+ * span status</a>.
  */
 public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
     implements SpanStatusExtractor<REQUEST, RESPONSE> {
 
   /**
-   * Returns the {@link SpanStatusExtractor} for HTTP requests, which will use the HTTP status code
-   * to determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
+   * Returns the HTTP client {@link SpanStatusExtractor}, which will use the HTTP status code to
+   * determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
    * default status} otherwise.
+   *
+   * @see InstrumenterBuilder#setSpanStatusExtractor(SpanStatusExtractor)
    */
   public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<? super REQUEST, ? super RESPONSE> getter) {
@@ -30,9 +32,11 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
   }
 
   /**
-   * Returns the {@link SpanStatusExtractor} for HTTP requests, which will use the HTTP status code
-   * to determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
+   * Returns the HTTP server {@link SpanStatusExtractor}, which will use the HTTP status code to
+   * determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
    * default status} otherwise.
+   *
+   * @see InstrumenterBuilder#setSpanStatusExtractor(SpanStatusExtractor)
    */
   public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
       HttpServerAttributesGetter<? super REQUEST, ? super RESPONSE> getter) {

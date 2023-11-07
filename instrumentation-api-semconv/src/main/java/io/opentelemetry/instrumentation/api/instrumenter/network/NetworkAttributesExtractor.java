@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.network;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -15,15 +16,16 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/specification/trace/semantic_conventions/span-general.md#network-attributes">network
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/general/attributes.md#other-network-attributes">network
  * attributes</a>.
  */
 public final class NetworkAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   /**
-   * Returns a new {@link NetworkAttributesExtractor} that will use the passed {@link
-   * NetworkAttributesGetter}.
+   * Creates the network attributes extractor.
+   *
+   * @see InstrumenterBuilder#addAttributesExtractor(AttributesExtractor)
    */
   public static <REQUEST, RESPONSE> NetworkAttributesExtractor<REQUEST, RESPONSE> create(
       NetworkAttributesGetter<REQUEST, RESPONSE> getter) {
