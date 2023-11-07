@@ -11,12 +11,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.concurrent.Callable;
 import library.MyProxySuperclass;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 
 @SuppressWarnings({"unused", "MethodCanBeStatic"})
 public class IndyInstrumentationTest {
@@ -148,5 +150,11 @@ public class IndyInstrumentationTest {
     ClassLoader delegateCl = delegate.getClass().getClassLoader();
     assertThat(delegate.getClass().getName()).isEqualTo("indy.ProxyMe");
     assertThat(delegateCl.getClass().getName()).endsWith("InstrumentationModuleClassLoader");
+
+    // Ensure that the bytecode of the proxy is injected as a resource
+    InputStream res =
+        IndyInstrumentationTest.class.getClassLoader().getResourceAsStream("foo/bar/Proxy.class");
+    byte[] bytecode = IOUtils.toByteArray(res);
+    assertThat(bytecode).startsWith(0xCA, 0xFE, 0xBA, 0xBE);
   }
 }

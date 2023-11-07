@@ -12,11 +12,15 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SpringBootActuatorInstrumentationModule extends InstrumentationModule {
+public class SpringBootActuatorInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public SpringBootActuatorInstrumentationModule() {
     super(
@@ -39,14 +43,19 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
     // this line will make OpenTelemetryMeterRegistryAutoConfiguration available to all
     // classloaders, so that the bean class loader (different from the instrumented class loader)
     // can load it
-    helperResourceBuilder.registerForAllClassLoaders(
-        "io/opentelemetry/javaagent/instrumentation/spring/actuator/v2_0/OpenTelemetryMeterRegistryAutoConfiguration.class");
+    if (!isIndyModule()) {
+      // For indy module the proxy-bytecode will be injected as resource by injectClasses()
+      helperResourceBuilder.registerForAllClassLoaders(
+          "io/opentelemetry/javaagent/instrumentation/spring/actuator/v2_0/OpenTelemetryMeterRegistryAutoConfiguration.class");
+    }
   }
 
   @Override
-  public boolean isIndyModule() {
-    // can not access OpenTelemetryMeterRegistryAutoConfiguration
-    return false;
+  public void injectClasses(ClassInjector injector) {
+    injector
+        .proxyBuilder(
+            "io.opentelemetry.javaagent.instrumentation.spring.actuator.v2_0.OpenTelemetryMeterRegistryAutoConfiguration")
+        .inject(InjectionMode.CLASS_AND_RESOURCE);
   }
 
   @Override
