@@ -22,7 +22,6 @@ import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import static org.junit.jupiter.api.Assumptions.assumeFalse
 import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
