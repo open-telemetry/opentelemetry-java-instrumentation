@@ -45,16 +45,27 @@ public class AwsSdkTelemetry {
   }
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
-  private final Instrumenter<Request<?>, Response<?>> consumerInstrumenter;
+  private final Instrumenter<Request<?>, Response<?>> consumerReceiveInstrumenter;
+  private final Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
 
-  AwsSdkTelemetry(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
+  AwsSdkTelemetry(
+      OpenTelemetry openTelemetry,
+      boolean captureExperimentalSpanAttributes,
+      boolean messagingReceiveInstrumentationEnabled) {
     requestInstrumenter =
         AwsSdkInstrumenterFactory.requestInstrumenter(
             openTelemetry, captureExperimentalSpanAttributes);
-    consumerInstrumenter =
-        AwsSdkInstrumenterFactory.consumerInstrumenter(
-            openTelemetry, captureExperimentalSpanAttributes);
+    consumerReceiveInstrumenter =
+        AwsSdkInstrumenterFactory.consumerReceiveInstrumenter(
+            openTelemetry,
+            captureExperimentalSpanAttributes,
+            messagingReceiveInstrumentationEnabled);
+    consumerProcessInstrumenter =
+        AwsSdkInstrumenterFactory.consumerProcessInstrumenter(
+            openTelemetry,
+            captureExperimentalSpanAttributes,
+            messagingReceiveInstrumentationEnabled);
     producerInstrumenter =
         AwsSdkInstrumenterFactory.producerInstrumenter(
             openTelemetry, captureExperimentalSpanAttributes);
@@ -66,6 +77,9 @@ public class AwsSdkTelemetry {
    */
   public RequestHandler2 newRequestHandler() {
     return new TracingRequestHandler(
-        requestInstrumenter, consumerInstrumenter, producerInstrumenter);
+        requestInstrumenter,
+        consumerReceiveInstrumenter,
+        consumerProcessInstrumenter,
+        producerInstrumenter);
   }
 }

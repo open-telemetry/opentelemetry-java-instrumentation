@@ -44,7 +44,7 @@ class AwsSpanAssertions {
     String rpcMethod;
     if (spanName.startsWith("SQS.")) {
       rpcMethod = spanName.substring(4);
-    } else if (spanName.endsWith("receive")) {
+    } else if (spanName.endsWith("process")) {
       rpcMethod = "ReceiveMessage";
     } else if (spanName.endsWith("publish")) {
       rpcMethod = "SendMessage";
@@ -57,7 +57,6 @@ class AwsSpanAssertions {
         Arrays.asList(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             satisfies(stringKey("aws.endpoint"), val -> val.isInstanceOf(String.class)),
-            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
             satisfies(
                 stringKey("aws.queue.name"),
                 val ->
@@ -69,11 +68,6 @@ class AwsSpanAssertions {
                     val.satisfiesAnyOf(
                         v -> assertThat(v).isEqualTo(queueUrl), v -> assertThat(v).isNull())),
             equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
-            satisfies(
-                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                val ->
-                    val.satisfiesAnyOf(
-                        v -> assertThat(v).isNull(), v -> assertThat(v).isInstanceOf(Long.class))),
             satisfies(
                 SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
                 val ->
@@ -89,19 +83,34 @@ class AwsSpanAssertions {
                     val.satisfiesAnyOf(
                         v -> assertThat(v).isNull(),
                         v -> assertThat(v).isInstanceOf(Number.class))),
-            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
             equalTo(stringKey("rpc.system"), "aws-api"),
             satisfies(stringKey("rpc.method"), stringAssert -> stringAssert.isEqualTo(rpcMethod)),
             equalTo(stringKey("rpc.service"), "AmazonSQS")));
 
-    if (spanName.endsWith("receive") || spanName.endsWith("publish")) {
+    if (!spanName.endsWith("process")) {
+      attributeAssertions.addAll(
+          Arrays.asList(
+              equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
+              satisfies(
+                  SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                  val ->
+                      val.satisfiesAnyOf(
+                          v -> assertThat(v).isNull(),
+                          v -> assertThat(v).isInstanceOf(Long.class))),
+              equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
+              equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1")));
+    }
+    if (spanName.endsWith("receive")
+        || spanName.endsWith("process")
+        || spanName.endsWith("publish")) {
       attributeAssertions.addAll(
           Arrays.asList(
               equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, queueName),
               equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")));
       if (spanName.endsWith("receive")) {
         attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"));
+      } else if (spanName.endsWith("process")) {
+        attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"));
       } else if (spanName.endsWith("publish")) {
         attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"));
       }

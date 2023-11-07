@@ -96,6 +96,22 @@ testing {
 
         implementation("com.amazonaws:aws-java-sdk-sqs:1.11.106")
       }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+          }
+        }
+      }
+    }
+
+    val testSqsNoReceiveTelemetry by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
+
+        implementation("com.amazonaws:aws-java-sdk-sqs:1.11.106")
+      }
     }
   }
 }
@@ -105,14 +121,19 @@ tasks {
     check {
       dependsOn(testing.suites)
     }
+  } else {
+    check {
+      dependsOn(testing.suites.named("testSqs"), testing.suites.named("testSqsNoReceiveTelemetry"))
+    }
   }
 
   test {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 }

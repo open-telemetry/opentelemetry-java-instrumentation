@@ -8,13 +8,12 @@ package io.opentelemetry.instrumentation.awssdk.v1_11
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 
-class SqsTracingTest extends AbstractSqsTracingTest implements LibraryTestTrait {
+class SqsSuppressReceiveSpansTest extends AbstractSqsSuppressReceiveSpansTest implements LibraryTestTrait {
   @Override
   AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
     return client.withRequestHandlers(
       AwsSdkTelemetry.builder(getOpenTelemetry())
         .setCaptureExperimentalSpanAttributes(true)
-        .setMessagingReceiveInstrumentationEnabled(true)
         .build()
         .newRequestHandler())
   }
