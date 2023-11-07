@@ -5,20 +5,29 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.HashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /** A builder of {@link HttpSpanNameExtractor}. */
 public final class HttpSpanNameExtractorBuilder<REQUEST> {
 
-  final HttpCommonAttributesGetter<REQUEST, ?> httpAttributesGetter;
+  @Nullable final HttpClientAttributesGetter<REQUEST, ?> clientGetter;
+  @Nullable final HttpServerAttributesGetter<REQUEST, ?> serverGetter;
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
 
-  HttpSpanNameExtractorBuilder(HttpCommonAttributesGetter<REQUEST, ?> httpAttributesGetter) {
-    this.httpAttributesGetter = httpAttributesGetter;
+  public HttpSpanNameExtractorBuilder(
+      @Nullable HttpClientAttributesGetter<REQUEST, ?> clientGetter,
+      @Nullable HttpServerAttributesGetter<REQUEST, ?> serverGetter) {
+    this.clientGetter = clientGetter;
+    this.serverGetter = serverGetter;
   }
 
   /**
@@ -45,8 +54,13 @@ public final class HttpSpanNameExtractorBuilder<REQUEST> {
   /**
    * Returns a new {@link HttpSpanNameExtractor} with the settings of this {@link
    * HttpSpanNameExtractorBuilder}.
+   *
+   * @see Instrumenter#builder(OpenTelemetry, String, SpanNameExtractor)
    */
   public SpanNameExtractor<REQUEST> build() {
-    return new HttpSpanNameExtractor<>(this);
+    Set<String> knownMethods = new HashSet<>(this.knownMethods);
+    return clientGetter != null
+        ? new HttpSpanNameExtractor.Client<>(clientGetter, knownMethods)
+        : new HttpSpanNameExtractor.Server<>(requireNonNull(serverGetter), knownMethods);
   }
 }

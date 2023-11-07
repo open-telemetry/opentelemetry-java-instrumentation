@@ -19,19 +19,7 @@ import javax.annotation.Nullable;
 public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
 
   /**
-   * Returns the <a href="https://osi-model.com/transport-layer/">OSI Transport Layer</a> or <a
-   * href="https://en.wikipedia.org/wiki/Inter-process_communication">Inter-process Communication
-   * method</a>.
-   *
-   * <p>Examples: {@code tcp}, {@code udp}
-   */
-  @Nullable
-  default String getNetworkTransport(REQUEST request, @Nullable RESPONSE response) {
-    return null;
-  }
-
-  /**
-   * Returns the <a href="https://osi-model.com/network-layer/">OSI Network Layer</a> or non-OSI
+   * Returns the <a href="https://osi-model.com/network-layer/">OSI network layer</a> or non-OSI
    * equivalent.
    *
    * <p>Examples: {@code ipv4}, {@code ipv6}
@@ -44,7 +32,19 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns the <a href="https://osi-model.com/application-layer/">OSI Application Layer</a> or
+   * Returns the <a href="https://osi-model.com/transport-layer/">OSI transport layer</a> or <a
+   * href="https://en.wikipedia.org/wiki/Inter-process_communication">inter-process communication
+   * method</a>.
+   *
+   * <p>Examples: {@code tcp}, {@code udp}
+   */
+  @Nullable
+  default String getNetworkTransport(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
+  /**
+   * Returns the <a href="https://osi-model.com/application-layer/">OSI application layer</a> or
    * non-OSI equivalent.
    *
    * <p>Examples: {@code ampq}, {@code http}, {@code mqtt}
@@ -55,7 +55,8 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns the version of the application layer protocol used.
+   * Returns the version of the protocol returned by {@link #getNetworkProtocolName(Object,
+   * Object)}.
    *
    * <p>Examples: {@code 3.1.1}
    */
@@ -82,7 +83,7 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    * <p>Examples: {@code 10.1.2.80}, {@code /tmp/my.sock}
    *
    * <p>By default, this method attempts to retrieve the local address using the {@link
-   * #getNetworkLocalInetSocketAddress(Object, Object)} method. If this method is not implemented,
+   * #getNetworkLocalInetSocketAddress(Object, Object)} method. If that method is not implemented,
    * it will simply return {@code null}. If the instrumented library does not expose {@link
    * InetSocketAddress} in its API, you might want to implement this method instead of {@link
    * #getNetworkLocalInetSocketAddress(Object, Object)}.
@@ -98,7 +99,7 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    * <p>Examples: {@code 65123}
    *
    * <p>By default, this method attempts to retrieve the local port using the {@link
-   * #getNetworkLocalInetSocketAddress(Object, Object)} method. If this method is not implemented,
+   * #getNetworkLocalInetSocketAddress(Object, Object)} method. If that method is not implemented,
    * it will simply return {@code null}. If the instrumented library does not expose {@link
    * InetSocketAddress} in its API, you might want to implement this method instead of {@link
    * #getNetworkLocalInetSocketAddress(Object, Object)}.
@@ -126,7 +127,7 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    * <p>Examples: {@code 10.1.2.80}, {@code /tmp/my.sock}
    *
    * <p>By default, this method attempts to retrieve the peer address using the {@link
-   * #getNetworkPeerInetSocketAddress(Object, Object)} method. If this method is not implemented, it
+   * #getNetworkPeerInetSocketAddress(Object, Object)} method. If that method is not implemented, it
    * will simply return {@code null}. If the instrumented library does not expose {@link
    * InetSocketAddress} in its API, you might want to implement this method instead of {@link
    * #getNetworkPeerInetSocketAddress(Object, Object)}.
@@ -142,7 +143,7 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    * <p>Examples: {@code 65123}
    *
    * <p>By default, this method attempts to retrieve the peer port using the {@link
-   * #getNetworkPeerInetSocketAddress(Object, Object)} method. If this method is not implemented, it
+   * #getNetworkPeerInetSocketAddress(Object, Object)} method. If that method is not implemented, it
    * will simply return {@code null}. If the instrumented library does not expose {@link
    * InetSocketAddress} in its API, you might want to implement this method instead of {@link
    * #getNetworkPeerInetSocketAddress(Object, Object)}.
