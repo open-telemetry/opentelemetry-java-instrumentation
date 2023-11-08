@@ -242,7 +242,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
 
     then:
     resp.messages.size() == 1
-    resp.messages.each {message ->  runWithSpan("process child") {}}
+    resp.messages.each {message -> runWithSpan("process child") {}}
     assertSqsTraces()
   }
 
@@ -263,7 +263,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
 
     then:
     resp.messages.size() == 1
-    resp.messages.each {message ->  runWithSpan("process child") {}}
+    resp.messages.each {message -> runWithSpan("process child") {}}
     assertSqsTraces(true)
   }
 
@@ -282,7 +282,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
 
     then:
     resp.messages.size() == 1
-    resp.messages.each {message ->  runWithSpan("process child") {}}
+    resp.messages.each {message -> runWithSpan("process child") {}}
     assertSqsTraces()
   }
 

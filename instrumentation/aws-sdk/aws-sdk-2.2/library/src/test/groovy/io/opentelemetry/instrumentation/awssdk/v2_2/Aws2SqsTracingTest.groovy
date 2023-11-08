@@ -71,7 +71,7 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
 
     then:
     resp.messages().size() == 1
-    resp.messages.each {message ->  runWithSpan("process child") {}}
+    resp.messages.each {message -> runWithSpan("process child") {}}
     assertSqsTraces()
   }
 }

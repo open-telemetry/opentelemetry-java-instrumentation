@@ -293,7 +293,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
 
     then:
     resp.messages.size() == 1
-    resp.messages.each {message ->  runWithSpan("process child") {}}
+    resp.messages.each {message -> runWithSpan("process child") {}}
     assertSqsTraces(true)
   }
 
@@ -312,7 +312,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
 
     then:
     resp.messages.size() == 1
-    resp.messages.each {message ->  runWithSpan("process child") {}}
+    resp.messages.each {message -> runWithSpan("process child") {}}
     assertSqsTraces()
   }
 
@@ -328,7 +328,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
     client.sendMessageBatch(sendMessageBatchRequest)
 
     def resp = client.receiveMessage(receiveMessageBatchRequest)
-    resp.messages.each {message ->  runWithSpan("process child") {}}
+    resp.messages.each {message -> runWithSpan("process child") {}}
     def totalAttrs = resp.messages.sum {it.messageAttributes().size() }
 
     then:

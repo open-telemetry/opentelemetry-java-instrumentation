@@ -70,7 +70,7 @@ class Aws2SqsSuppressReceiveSpansDefaultPropagatorTest extends Aws2SqsSuppressRe
 
     then:
     resp.messages().size() == 1
-    resp.messages.each {message ->  runWithSpan("process child") {}}
+    resp.messages.each {message -> runWithSpan("process child") {}}
     assertSqsTraces()
   }
 }
