@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1;
 
 import static io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1.AersopikeSingletons.instrumenter;
@@ -48,8 +53,7 @@ public class SocketInstrumentation implements TypeInstrumentation {
   public static class NodeSyncCommandAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @Advice.Return Node node) {
+    public static void stopSpan(@Advice.Return Node node) {
       AerospikeRequestContext context = AerospikeRequestContext.current();
       if (context != null) {
         AerospikeRequest request = context.getRequest();
@@ -66,8 +70,8 @@ public class SocketInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Return Node node,
         @Advice.This Command command) {
-      VirtualField<Command, AerospikeRequestContext> virtualField = VirtualField.find(Command.class,
-          AerospikeRequestContext.class);
+      VirtualField<Command, AerospikeRequestContext> virtualField =
+          VirtualField.find(Command.class, AerospikeRequestContext.class);
       AerospikeRequestContext requestContext = virtualField.get(command);
       if (requestContext != null) {
         AerospikeRequest request = requestContext.getRequest();

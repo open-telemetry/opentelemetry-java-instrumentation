@@ -28,16 +28,15 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AsyncCommandInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return hasSuperClass(named("com.aerospike.client.async.AsyncCommand").and(
-        not(named("com.aerospike.client.command.Command"))));
+    return hasSuperClass(
+        named("com.aerospike.client.async.AsyncCommand")
+            .and(not(named("com.aerospike.client.command.Command"))));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(isPublic()),
-        this.getClass().getName() + "$ConstructorAdvice");
+        isConstructor().and(isPublic()), this.getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -59,21 +58,21 @@ public class AsyncCommandInstrumentation implements TypeInstrumentation {
       if (key == null) {
         return;
       }
-      VirtualField<Command, AerospikeRequestContext> virtualField = VirtualField.find(Command.class,
-          AerospikeRequestContext.class);
+      VirtualField<Command, AerospikeRequestContext> virtualField =
+          VirtualField.find(Command.class, AerospikeRequestContext.class);
       AerospikeRequestContext requestContext = virtualField.get(command);
       if (requestContext != null) {
         return;
       }
       Context parentContext = currentContext();
-      request = AerospikeRequest.create(command.getClass().getSimpleName().toUpperCase(Locale.ROOT),
-          key);
+      request =
+          AerospikeRequest.create(command.getClass().getSimpleName().toUpperCase(Locale.ROOT), key);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
       context = instrumenter().start(parentContext, request);
-      AerospikeRequestContext aerospikeRequestContext = AerospikeRequestContext.attach(request,
-          context);
+      AerospikeRequestContext aerospikeRequestContext =
+          AerospikeRequestContext.attach(request, context);
       scope = context.makeCurrent();
 
       virtualField.set(command, aerospikeRequestContext);

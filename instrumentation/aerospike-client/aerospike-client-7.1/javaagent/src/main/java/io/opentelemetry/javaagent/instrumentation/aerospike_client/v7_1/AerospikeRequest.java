@@ -17,7 +17,8 @@ public abstract class AerospikeRequest {
   private Status status;
 
   public static AerospikeRequest create(String operation, Key key) {
-    return new AutoValue_AerospikeRequest(operation, key.namespace, key.setName, key.userKey.toString());
+    return new AutoValue_AerospikeRequest(
+        operation, key.namespace, key.setName, key.userKey.toString());
   }
 
   public static AerospikeRequest create(String operation, String namespace, String set) {

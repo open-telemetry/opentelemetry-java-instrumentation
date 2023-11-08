@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.instrumenter.db;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.db.DbMessageSizeUtil.getMessageSize;
@@ -31,20 +36,17 @@ public final class AerospikeMetrics implements OperationListener {
   private final LongCounter responseCounter;
   private final LongUpDownCounter concurrencyUpDownCounter;
   private final DoubleHistogram clientLatencyHistogram;
+
   @SuppressWarnings("unused")
   private final DoubleHistogram recordSizeHistogram;
 
   private AerospikeMetrics(Meter meter) {
     LongCounterBuilder requestCounterBuilder =
-        meter
-            .counterBuilder("aerospike.requests")
-            .setDescription("Aerospike Calls");
+        meter.counterBuilder("aerospike.requests").setDescription("Aerospike Calls");
     AerospikeMetricsAdvice.applyRequestCounterAdvice(requestCounterBuilder);
     requestCounter = requestCounterBuilder.build();
     LongCounterBuilder responseCounterBuilder =
-        meter
-            .counterBuilder("aerospike.response")
-            .setDescription("Aerospike Responses");
+        meter.counterBuilder("aerospike.response").setDescription("Aerospike Responses");
     AerospikeMetricsAdvice.applyResponseCounterAdvice(responseCounterBuilder);
     responseCounter = responseCounterBuilder.build();
     LongUpDownCounterBuilder concurrencyUpDownCounterBuilder =
@@ -73,7 +75,6 @@ public final class AerospikeMetrics implements OperationListener {
     return AerospikeMetrics::new;
   }
 
-
   @Override
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
     requestCounter.add(1, startAttributes, context);
@@ -97,9 +98,7 @@ public final class AerospikeMetrics implements OperationListener {
     Attributes mergedAttributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
     responseCounter.add(1, mergedAttributes, context);
     clientLatencyHistogram.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
-        mergedAttributes,
-        context);
+        (endNanos - state.startTimeNanos()) / NANOS_PER_MS, mergedAttributes, context);
     Long requestBodySize = getMessageSize(mergedAttributes);
     if (requestBodySize != null) {
       recordSizeHistogram.record(requestBodySize, mergedAttributes, context);

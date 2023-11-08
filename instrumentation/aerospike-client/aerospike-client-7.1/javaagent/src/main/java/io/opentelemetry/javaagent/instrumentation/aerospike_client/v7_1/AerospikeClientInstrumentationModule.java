@@ -34,8 +34,7 @@ public class AerospikeClientInstrumentationModule extends InstrumentationModule 
         new TransferSizeIntrumentation(),
         new AsyncCommandInstrumentation(),
         new AsyncHandlerInstrumentation(),
-        new AsyncScanAllCommandInstrumentation()
-    );
+        new AsyncScanAllCommandInstrumentation());
   }
 
   @Override

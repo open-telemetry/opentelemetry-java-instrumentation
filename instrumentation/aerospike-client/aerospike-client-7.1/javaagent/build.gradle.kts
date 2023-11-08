@@ -16,6 +16,7 @@ dependencies {
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
+  testInstrumentation(project(":instrumentation:aerospike-client:aerospike-client-7.1:javaagent"))
 }
 
 tasks {

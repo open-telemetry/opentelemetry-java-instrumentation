@@ -9,7 +9,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 public final class AerospikeRequestContext {
-  private static final ThreadLocal<AerospikeRequestContext> contextThreadLocal = new ThreadLocal<>();
+  private static final ThreadLocal<AerospikeRequestContext> contextThreadLocal =
+      new ThreadLocal<>();
   private AerospikeRequest request;
   private Context context;
 
@@ -34,7 +35,9 @@ public final class AerospikeRequestContext {
   }
 
   public void endSpan(
-      Instrumenter<AerospikeRequest, Void> instrumenter, Context context, AerospikeRequest request,
+      Instrumenter<AerospikeRequest, Void> instrumenter,
+      Context context,
+      AerospikeRequest request,
       Throwable throwable) {
     instrumenter.end(context, request, null, throwable);
   }

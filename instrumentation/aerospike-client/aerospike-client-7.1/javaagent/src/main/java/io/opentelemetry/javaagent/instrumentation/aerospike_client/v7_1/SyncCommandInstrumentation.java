@@ -41,7 +41,8 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod()
             .and(isPublic())
-            .and(not(isStatic())).and(isFinal())
+            .and(not(isStatic()))
+            .and(isFinal())
             .and(takesArgument(1, named("com.aerospike.client.Key")))
             .and(not(takesArgument(0, named("com.aerospike.client.async.EventLoop"))))
             .and(returns(named("com.aerospike.client.Record"))),
@@ -50,7 +51,8 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod()
             .and(isPublic())
-            .and(not(isStatic())).and(isFinal())
+            .and(not(isStatic()))
+            .and(isFinal())
             .and(takesArgument(1, named("com.aerospike.client.Key")))
             .and(not(takesArgument(0, named("com.aerospike.client.async.EventLoop"))))
             .and(not(returns(named("com.aerospike.client.Record")))),
@@ -59,7 +61,9 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod()
             .and(isPublic())
-            .and(not(isStatic())).and(isFinal()).and(named("scanAll"))
+            .and(not(isStatic()))
+            .and(isFinal())
+            .and(named("scanAll"))
             .and(not(takesArgument(0, named("com.aerospike.client.async.EventLoop")))),
         this.getClass().getName() + "$SyncScanAllCommandAdvice");
   }

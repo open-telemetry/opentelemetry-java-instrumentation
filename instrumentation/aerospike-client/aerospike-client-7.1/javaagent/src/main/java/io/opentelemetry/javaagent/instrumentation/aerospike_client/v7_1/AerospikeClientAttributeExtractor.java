@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1;
 
 import com.aerospike.client.AerospikeException;
@@ -8,37 +13,40 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.AerospikeSemanticAttributes;
 import javax.annotation.Nullable;
 
-public class AerospikeClientAttributeExtractor implements
-    AttributesExtractor<AerospikeRequest, Void> {
+public class AerospikeClientAttributeExtractor
+    implements AttributesExtractor<AerospikeRequest, Void> {
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext,
-      AerospikeRequest aerospikeRequest) {
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, AerospikeRequest aerospikeRequest) {
     attributes.put(
-        AerospikeSemanticAttributes.AEROSPIKE_NAMESPACE,
-        aerospikeRequest.getNamespace());
+        AerospikeSemanticAttributes.AEROSPIKE_NAMESPACE, aerospikeRequest.getNamespace());
     attributes.put(AerospikeSemanticAttributes.AEROSPIKE_SET_NAME, aerospikeRequest.getSet());
     attributes.put(AerospikeSemanticAttributes.AEROSPIKE_USER_KEY, aerospikeRequest.getUserKey());
   }
 
   @Override
-  public void onEnd(AttributesBuilder attributes, Context context,
-      AerospikeRequest aerospikeRequest, @Nullable Void unused, @Nullable Throwable error) {
-    attributes.put(AerospikeSemanticAttributes.AEROSPIKE_STATUS,
-        aerospikeRequest.getStatus().name());
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      AerospikeRequest aerospikeRequest,
+      @Nullable Void unused,
+      @Nullable Throwable error) {
+    attributes.put(
+        AerospikeSemanticAttributes.AEROSPIKE_STATUS, aerospikeRequest.getStatus().name());
     if (error != null) {
       if (error instanceof AerospikeException) {
         AerospikeException aerospikeException = (AerospikeException) error;
-        attributes.put(AerospikeSemanticAttributes.AEROSPIKE_ERROR_CODE,
-            aerospikeException.getResultCode());
+        attributes.put(
+            AerospikeSemanticAttributes.AEROSPIKE_ERROR_CODE, aerospikeException.getResultCode());
       } else {
         attributes.put(AerospikeSemanticAttributes.AEROSPIKE_ERROR_CODE, ResultCode.CLIENT_ERROR);
       }
     } else {
       attributes.put(AerospikeSemanticAttributes.AEROSPIKE_ERROR_CODE, ResultCode.OK);
       if (aerospikeRequest.getSize() != null) {
-        attributes.put(AerospikeSemanticAttributes.AEROSPIKE_TRANSFER_SIZE,
-            aerospikeRequest.getSize());
+        attributes.put(
+            AerospikeSemanticAttributes.AEROSPIKE_TRANSFER_SIZE, aerospikeRequest.getSize());
       }
     }
   }

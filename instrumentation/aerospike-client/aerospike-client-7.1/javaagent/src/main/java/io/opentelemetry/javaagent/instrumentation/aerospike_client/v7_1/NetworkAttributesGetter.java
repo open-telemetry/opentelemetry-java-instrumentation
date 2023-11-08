@@ -10,14 +10,15 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttribute
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class NetworkAttributesGetter implements
-    ServerAttributesGetter<AerospikeRequest, Void>,
-    io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter<AerospikeRequest, Void> {
+final class NetworkAttributesGetter
+    implements ServerAttributesGetter<AerospikeRequest, Void>,
+        io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter<
+            AerospikeRequest, Void> {
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(AerospikeRequest aerospikeRequest,
-      @Nullable Void unused) {
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      AerospikeRequest aerospikeRequest, @Nullable Void unused) {
     Node node = aerospikeRequest.getNode();
     if (node != null) {
       return node.getAddress();

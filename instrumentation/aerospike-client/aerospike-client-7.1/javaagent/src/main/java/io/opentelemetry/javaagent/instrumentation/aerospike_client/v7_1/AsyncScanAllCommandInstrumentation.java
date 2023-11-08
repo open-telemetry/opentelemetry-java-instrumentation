@@ -36,13 +36,9 @@ public class AsyncScanAllCommandInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(isPublic()),
-        this.getClass().getName() + "$ConstructorAdvice");
+        isConstructor().and(isPublic()), this.getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("onSuccess")
-            .and(takesNoArguments())
-            .and(isProtected()),
+        named("onSuccess").and(takesNoArguments()).and(isProtected()),
         this.getClass().getName() + "$OnSuccessAdvice");
     transformer.applyAdviceToMethod(
         named("onFailure")
@@ -61,23 +57,24 @@ public class AsyncScanAllCommandInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope,
         @Advice.Argument(4) String namespace,
         @Advice.Argument(5) String setName) {
-      VirtualField<AsyncScanPartitionExecutor, AerospikeRequestContext> virtualField = VirtualField.find(
-          AsyncScanPartitionExecutor.class,
-          AerospikeRequestContext.class);
+      VirtualField<AsyncScanPartitionExecutor, AerospikeRequestContext> virtualField =
+          VirtualField.find(AsyncScanPartitionExecutor.class, AerospikeRequestContext.class);
       AerospikeRequestContext requestContext = virtualField.get(asyncScanPartitionExecutor);
       if (requestContext != null) {
         return;
       }
       Context parentContext = currentContext();
-      request = AerospikeRequest.create(
-          asyncScanPartitionExecutor.getClass().getSimpleName().toUpperCase(Locale.ROOT),
-          namespace, setName);
+      request =
+          AerospikeRequest.create(
+              asyncScanPartitionExecutor.getClass().getSimpleName().toUpperCase(Locale.ROOT),
+              namespace,
+              setName);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
       context = instrumenter().start(parentContext, request);
-      AerospikeRequestContext aerospikeRequestContext = AerospikeRequestContext.attach(request,
-          context);
+      AerospikeRequestContext aerospikeRequestContext =
+          AerospikeRequestContext.attach(request, context);
       scope = context.makeCurrent();
 
       virtualField.set(asyncScanPartitionExecutor, aerospikeRequestContext);
@@ -91,11 +88,11 @@ public class AsyncScanAllCommandInstrumentation implements TypeInstrumentation {
   public static class OnSuccessAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Thrown Throwable throwable,
+    public static void onExit(
+        @Advice.Thrown Throwable throwable,
         @Advice.This AsyncScanPartitionExecutor asyncScanPartitionExecutor) {
-      VirtualField<AsyncScanPartitionExecutor, AerospikeRequestContext> virtualField = VirtualField.find(
-          AsyncScanPartitionExecutor.class,
-          AerospikeRequestContext.class);
+      VirtualField<AsyncScanPartitionExecutor, AerospikeRequestContext> virtualField =
+          VirtualField.find(AsyncScanPartitionExecutor.class, AerospikeRequestContext.class);
       AerospikeRequestContext requestContext = virtualField.get(asyncScanPartitionExecutor);
       virtualField.set(asyncScanPartitionExecutor, null);
       if (requestContext != null) {
@@ -119,11 +116,11 @@ public class AsyncScanAllCommandInstrumentation implements TypeInstrumentation {
   public static class OnFailureAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Thrown Throwable throwable,
+    public static void onExit(
+        @Advice.Thrown Throwable throwable,
         @Advice.This AsyncScanPartitionExecutor asyncScanPartitionExecutor) {
-      VirtualField<AsyncScanPartitionExecutor, AerospikeRequestContext> virtualField = VirtualField.find(
-          AsyncScanPartitionExecutor.class,
-          AerospikeRequestContext.class);
+      VirtualField<AsyncScanPartitionExecutor, AerospikeRequestContext> virtualField =
+          VirtualField.find(AsyncScanPartitionExecutor.class, AerospikeRequestContext.class);
       AerospikeRequestContext requestContext = virtualField.get(asyncScanPartitionExecutor);
       virtualField.set(asyncScanPartitionExecutor, null);
       if (requestContext != null) {

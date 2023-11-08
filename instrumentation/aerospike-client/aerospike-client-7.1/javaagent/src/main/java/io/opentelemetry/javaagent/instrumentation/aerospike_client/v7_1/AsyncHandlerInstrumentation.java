@@ -34,9 +34,7 @@ public class AsyncHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("onSuccess")
-            .and(takesNoArguments())
-            .and(isProtected()),
+        named("onSuccess").and(takesNoArguments()).and(isProtected()),
         this.getClass().getName() + "$OnSuccessAdvice");
     transformer.applyAdviceToMethod(
         named("onFailure")
@@ -50,8 +48,8 @@ public class AsyncHandlerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Thrown Throwable throwable, @Advice.This Command command) {
-      VirtualField<Command, AerospikeRequestContext> virtualField = VirtualField.find(Command.class,
-          AerospikeRequestContext.class);
+      VirtualField<Command, AerospikeRequestContext> virtualField =
+          VirtualField.find(Command.class, AerospikeRequestContext.class);
       AerospikeRequestContext requestContext = virtualField.get(command);
       virtualField.set(command, null);
       if (requestContext != null) {
@@ -76,8 +74,8 @@ public class AsyncHandlerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Thrown Throwable throwable, @Advice.This Command command) {
-      VirtualField<Command, AerospikeRequestContext> virtualField = VirtualField.find(Command.class,
-          AerospikeRequestContext.class);
+      VirtualField<Command, AerospikeRequestContext> virtualField =
+          VirtualField.find(Command.class, AerospikeRequestContext.class);
       AerospikeRequestContext requestContext = virtualField.get(command);
       virtualField.set(command, null);
       if (requestContext != null) {

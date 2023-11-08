@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1;
 
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperClass;
@@ -21,18 +26,14 @@ public class TransferSizeIntrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(named("execute"))
-            .and(takesNoArguments()),
+        isMethod().and(isPublic()).and(named("execute")).and(takesNoArguments()),
         this.getClass().getName() + "$SizeAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class SizeAdvice {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @Advice.FieldValue("dataOffset") int dataOffset) {
+    public static void stopSpan(@Advice.FieldValue("dataOffset") int dataOffset) {
       AerospikeRequestContext context = AerospikeRequestContext.current();
       if (context != null) {
         AerospikeRequest request = context.getRequest();
