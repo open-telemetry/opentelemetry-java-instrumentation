@@ -22,11 +22,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 final class AwsSdkInstrumenterFactory {
@@ -47,48 +49,73 @@ final class AwsSdkInstrumenterFactory {
               httpAttributesExtractor, rpcAttributesExtractor, experimentalAttributesExtractor);
   private static final AwsSdkSpanNameExtractor spanName = new AwsSdkSpanNameExtractor();
 
-  static Instrumenter<Request<?>, Response<?>> requestInstrumenter(
-      OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
+  private final OpenTelemetry openTelemetry;
+  private final List<String> capturedHeaders;
+  private final boolean captureExperimentalSpanAttributes;
+  private final boolean messagingReceiveInstrumentationEnabled;
 
+  AwsSdkInstrumenterFactory(
+      OpenTelemetry openTelemetry,
+      List<String> capturedHeaders,
+      boolean captureExperimentalSpanAttributes,
+      boolean messagingReceiveInstrumentationEnabled) {
+    this.openTelemetry = openTelemetry;
+    this.capturedHeaders = capturedHeaders;
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
+  }
+
+  Instrumenter<Request<?>, Response<?>> requestInstrumenter() {
     return createInstrumenter(
         openTelemetry,
-        captureExperimentalSpanAttributes,
         spanName,
         SpanKindExtractor.alwaysClient(),
+        attributesExtractors(),
         emptyList(),
         true);
   }
 
-  static Instrumenter<Request<?>, Response<?>> consumerReceiveInstrumenter(
-      OpenTelemetry openTelemetry,
-      boolean captureExperimentalSpanAttributes,
-      boolean messagingReceiveInstrumentationEnabled) {
-    return sqsInstrumenter(
+  private List<AttributesExtractor<Request<?>, Response<?>>> attributesExtractors() {
+    return captureExperimentalSpanAttributes
+        ? extendedAttributesExtractors
+        : defaultAttributesExtractors;
+  }
+
+  private <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> messagingAttributesExtractor(
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
+    return MessagingAttributesExtractor.builder(getter, operation)
+        .setCapturedHeaders(capturedHeaders)
+        .build();
+  }
+
+  Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter() {
+    MessageOperation operation = MessageOperation.RECEIVE;
+    SqsReceiveRequestAttributesGetter getter = SqsReceiveRequestAttributesGetter.INSTANCE;
+    AttributesExtractor<SqsReceiveRequest, Response<?>> messagingAttributeExtractor =
+        messagingAttributesExtractor(getter, operation);
+
+    return createInstrumenter(
         openTelemetry,
-        MessageOperation.RECEIVE,
-        captureExperimentalSpanAttributes,
+        MessagingSpanNameExtractor.create(getter, operation),
+        SpanKindExtractor.alwaysConsumer(),
+        toSqsRequestExtractors(attributesExtractors(), Function.identity()),
+        singletonList(messagingAttributeExtractor),
         messagingReceiveInstrumentationEnabled);
   }
 
-  static Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter(
-      OpenTelemetry openTelemetry,
-      boolean captureExperimentalSpanAttributes,
-      boolean messagingReceiveInstrumentationEnabled) {
+  Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter() {
     MessageOperation operation = MessageOperation.PROCESS;
     SqsProcessRequestAttributesGetter getter = SqsProcessRequestAttributesGetter.INSTANCE;
+    AttributesExtractor<SqsProcessRequest, Void> messagingAttributeExtractor =
+        messagingAttributesExtractor(getter, operation);
 
     InstrumenterBuilder<SqsProcessRequest, Void> builder =
         Instrumenter.<SqsProcessRequest, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operation))
-            .addAttributesExtractors(
-                toProcessRequestExtractors(
-                    captureExperimentalSpanAttributes
-                        ? extendedAttributesExtractors
-                        : defaultAttributesExtractors))
-            .addAttributesExtractor(
-                MessagingAttributesExtractor.builder(getter, operation).build());
+            .addAttributesExtractors(toSqsRequestExtractors(attributesExtractors(), unused -> null))
+            .addAttributesExtractor(messagingAttributeExtractor);
 
     if (messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
@@ -101,77 +128,68 @@ final class AwsSdkInstrumenterFactory {
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
-  private static List<AttributesExtractor<SqsProcessRequest, Void>> toProcessRequestExtractors(
-      List<AttributesExtractor<Request<?>, Response<?>>> extractors) {
-    List<AttributesExtractor<SqsProcessRequest, Void>> result = new ArrayList<>();
+  private static <RESPONSE>
+      List<AttributesExtractor<AbstractSqsRequest, RESPONSE>> toSqsRequestExtractors(
+          List<AttributesExtractor<Request<?>, Response<?>>> extractors,
+          Function<RESPONSE, Response<?>> responseConverter) {
+    List<AttributesExtractor<AbstractSqsRequest, RESPONSE>> result = new ArrayList<>();
     for (AttributesExtractor<Request<?>, Response<?>> extractor : extractors) {
       result.add(
-          new AttributesExtractor<SqsProcessRequest, Void>() {
+          new AttributesExtractor<AbstractSqsRequest, RESPONSE>() {
             @Override
             public void onStart(
                 AttributesBuilder attributes,
                 Context parentContext,
-                SqsProcessRequest sqsProcessRequest) {
-              extractor.onStart(attributes, parentContext, sqsProcessRequest.getRequest());
+                AbstractSqsRequest sqsRequest) {
+              extractor.onStart(attributes, parentContext, sqsRequest.getRequest());
             }
 
             @Override
             public void onEnd(
                 AttributesBuilder attributes,
                 Context context,
-                SqsProcessRequest sqsProcessRequest,
-                @Nullable Void unused,
+                AbstractSqsRequest sqsRequest,
+                @Nullable RESPONSE response,
                 @Nullable Throwable error) {
-              extractor.onEnd(attributes, context, sqsProcessRequest.getRequest(), null, error);
+              extractor.onEnd(
+                  attributes,
+                  context,
+                  sqsRequest.getRequest(),
+                  responseConverter.apply(response),
+                  error);
             }
           });
     }
     return result;
   }
 
-  static Instrumenter<Request<?>, Response<?>> producerInstrumenter(
-      OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
-    return sqsInstrumenter(
-        openTelemetry, MessageOperation.PUBLISH, captureExperimentalSpanAttributes, true);
-  }
-
-  private static Instrumenter<Request<?>, Response<?>> sqsInstrumenter(
-      OpenTelemetry openTelemetry,
-      MessageOperation operation,
-      boolean captureExperimentalSpanAttributes,
-      boolean enabled) {
+  Instrumenter<Request<?>, Response<?>> producerInstrumenter() {
+    MessageOperation operation = MessageOperation.PUBLISH;
     SqsAttributesGetter getter = SqsAttributesGetter.INSTANCE;
     AttributesExtractor<Request<?>, Response<?>> messagingAttributeExtractor =
-        MessagingAttributesExtractor.builder(getter, operation).build();
+        messagingAttributesExtractor(getter, operation);
 
     return createInstrumenter(
         openTelemetry,
-        captureExperimentalSpanAttributes,
         MessagingSpanNameExtractor.create(getter, operation),
-        operation == MessageOperation.PUBLISH
-            ? SpanKindExtractor.alwaysProducer()
-            : SpanKindExtractor.alwaysConsumer(),
+        SpanKindExtractor.alwaysProducer(),
+        attributesExtractors(),
         singletonList(messagingAttributeExtractor),
-        enabled);
+        true);
   }
 
-  private static Instrumenter<Request<?>, Response<?>> createInstrumenter(
+  private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(
       OpenTelemetry openTelemetry,
-      boolean captureExperimentalSpanAttributes,
-      SpanNameExtractor<Request<?>> spanNameExtractor,
-      SpanKindExtractor<Request<?>> spanKindExtractor,
-      List<AttributesExtractor<Request<?>, Response<?>>> additionalAttributeExtractors,
+      SpanNameExtractor<REQUEST> spanNameExtractor,
+      SpanKindExtractor<REQUEST> spanKindExtractor,
+      List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributeExtractors,
+      List<AttributesExtractor<REQUEST, RESPONSE>> additionalAttributeExtractors,
       boolean enabled) {
-    return Instrumenter.<Request<?>, Response<?>>builder(
+    return Instrumenter.<REQUEST, RESPONSE>builder(
             openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-        .addAttributesExtractors(
-            captureExperimentalSpanAttributes
-                ? extendedAttributesExtractors
-                : defaultAttributesExtractors)
+        .addAttributesExtractors(attributeExtractors)
         .addAttributesExtractors(additionalAttributeExtractors)
         .setEnabled(enabled)
         .buildInstrumenter(spanKindExtractor);
   }
-
-  private AwsSdkInstrumenterFactory() {}
 }

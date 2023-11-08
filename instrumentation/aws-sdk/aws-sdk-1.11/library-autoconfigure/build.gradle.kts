@@ -23,6 +23,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "test-message-header")
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {

@@ -58,7 +58,7 @@ enum SqsProcessRequestAttributesGetter
 
   @Override
   public List<String> getMessageHeader(SqsProcessRequest request, String name) {
-    String value = SqsAccess.getMessageAttributes(request.getRequest()).get(name);
+    String value = request.getMessage().getMessageAttribute(name);
     return value != null ? Collections.singletonList(value) : Collections.emptyList();
   }
 }

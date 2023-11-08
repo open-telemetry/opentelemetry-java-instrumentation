@@ -14,4 +14,6 @@ import java.util.Map;
 interface SqsMessage {
 
   Map<String, String> getAttributes();
+
+  String getMessageAttribute(String name);
 }

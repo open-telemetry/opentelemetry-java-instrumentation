@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.autoconfigure;
 
+import static java.util.Collections.emptyList;
+
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -26,6 +28,9 @@ public class TracingRequestHandler extends RequestHandler2 {
           .setMessagingReceiveInstrumentationEnabled(
               ConfigPropertiesUtil.getBoolean(
                   "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
+          .setCapturedHeaders(
+              ConfigPropertiesUtil.getList(
+                  "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
           .build()
           .newRequestHandler();
 
