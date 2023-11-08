@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
-import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.Message;
 
 class TracingList extends ArrayList<Message> {
@@ -51,7 +50,7 @@ class TracingList extends ArrayList<Message> {
     // We should only return one iterator with tracing.
     // However, this is not thread-safe, but usually the first (hopefully only) traversal of
     // List is performed in the same thread that called receiveMessage()
-    if (firstIterator && !inAwsClient()) {
+    if (firstIterator) {
       it = TracingIterator.wrap(super.iterator(), instrumenter, request, config, receiveContext);
       firstIterator = false;
     } else {
@@ -59,24 +58,5 @@ class TracingList extends ArrayList<Message> {
     }
 
     return it;
-  }
-
-  private static boolean inAwsClient() {
-    for (Class<?> caller : CallerClass.INSTANCE.getClassContext()) {
-      if (SqsClient.class.isAssignableFrom(caller)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  private static class CallerClass extends SecurityManager {
-    public static final CallerClass INSTANCE = new CallerClass();
-
-    @Override
-    public Class<?>[] getClassContext() {
-      return super.getClassContext();
-    }
   }
 }
