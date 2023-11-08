@@ -3,17 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package spring.component;
+package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.component;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
-public class OneTimeTask implements Runnable {
+public class TriggerTask implements Runnable {
 
   private final CountDownLatch latch = new CountDownLatch(1);
 
+  @Scheduled(cron = "0/5 * * * * *")
   @Override
   public void run() {
     latch.countDown();

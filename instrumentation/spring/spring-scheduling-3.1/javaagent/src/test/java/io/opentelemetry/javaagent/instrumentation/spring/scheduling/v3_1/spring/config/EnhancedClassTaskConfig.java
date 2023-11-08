@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package spring.config;
+package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.config;
 
 import java.util.concurrent.CountDownLatch;
 import org.springframework.context.annotation.Bean;

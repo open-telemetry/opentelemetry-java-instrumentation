@@ -3,19 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package spring.config;
+package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import spring.service.LambdaTaskConfigurer;
+import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.component.IntervalTask;
 
 @Configuration
 @EnableScheduling
-public class LambdaTaskConfig {
-
+public class IntervalTaskConfig {
   @Bean
-  LambdaTaskConfigurer lambdaTaskConfigurer() {
-    return new LambdaTaskConfigurer();
+  public IntervalTask scheduledTasks() {
+    return new IntervalTask();
   }
 }
