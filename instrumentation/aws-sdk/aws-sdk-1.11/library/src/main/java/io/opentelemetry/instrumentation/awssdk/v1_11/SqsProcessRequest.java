@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.Request;
 
-final class SqsProcessRequest {
+final class SqsProcessRequest extends AbstractSqsRequest {
   private final Request<?> request;
   private final SqsMessage message;
 
@@ -20,6 +20,7 @@ final class SqsProcessRequest {
     return new SqsProcessRequest(request, message);
   }
 
+  @Override
   public Request<?> getRequest() {
     return request;
   }
