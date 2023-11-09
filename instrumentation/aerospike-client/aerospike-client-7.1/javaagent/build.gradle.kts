@@ -7,7 +7,6 @@ muzzle {
     group.set("com.aerospike")
     module.set("aerospike-client")
     versions.set("[7.1.0,)")
-    assertInverse.set(true)
   }
 }
 

@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class AerospikeClientAsyncCommandTest {
@@ -35,7 +36,9 @@ class AerospikeClientAsyncCommandTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   static GenericContainer<?> aerospikeServer =
-      new GenericContainer<>("aerospike/aerospike-server:6.2.0.0").withExposedPorts(3000);
+      new GenericContainer<>("aerospike/aerospike-server:6.2.0.0")
+          .withExposedPorts(3000)
+          .waitingFor(Wait.forLogMessage(".*applied cluster size 1.*", 1));
 
   static int port;
 

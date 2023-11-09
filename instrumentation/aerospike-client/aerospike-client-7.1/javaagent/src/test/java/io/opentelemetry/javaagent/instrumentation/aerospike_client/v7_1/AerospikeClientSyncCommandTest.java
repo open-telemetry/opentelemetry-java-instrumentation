@@ -26,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class AerospikeClientSyncCommandTest {
@@ -33,7 +34,9 @@ class AerospikeClientSyncCommandTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   static GenericContainer<?> aerospikeServer =
-      new GenericContainer<>("aerospike/aerospike-server:6.2.0.0").withExposedPorts(3000);
+      new GenericContainer<>("aerospike/aerospike-server:6.2.0.0")
+          .withExposedPorts(3000)
+          .waitingFor(Wait.forLogMessage(".*applied cluster size 1.*", 1));
   static int port;
 
   static AerospikeClient aerospikeClient;
@@ -56,9 +59,12 @@ class AerospikeClientSyncCommandTest {
   }
 
   @Test
-  void putCommand() {
+  void putAndGetCommand() {
     Key aerospikeKey = new Key("test", "test-set", "data1");
     aerospikeClient.put(null, aerospikeKey, new Bin("bin1", "value1"));
+    List<String> bins = singletonList("bin1");
+    Record aerospikeRecord = aerospikeClient.get(null, aerospikeKey, bins.toArray(new String[0]));
+    assertThat(aerospikeRecord.getString("bin1")).isEqualTo("value1");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -79,17 +85,7 @@ class AerospikeClientSyncCommandTest {
                             equalTo(AerospikeSemanticAttributes.AEROSPIKE_TRANSFER_SIZE, 95),
                             satisfies(
                                 SemanticAttributes.NET_SOCK_PEER_NAME,
-                                val -> val.isIn("localhost", "127.0.0.1")))));
-  }
-
-  @Test
-  void getCommand() {
-    Key aerospikeKey = new Key("test", "test-set", "data1");
-    List<String> bins = singletonList("bin1");
-    Record aerospikeRecord = aerospikeClient.get(null, aerospikeKey, bins.toArray(new String[0]));
-    assertThat(aerospikeRecord.getString("bin1")).isEqualTo("value1");
-
-    testing.waitAndAssertTraces(
+                                val -> val.isIn("localhost", "127.0.0.1")))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->

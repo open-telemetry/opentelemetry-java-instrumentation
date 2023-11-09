@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 
 public final class AersopikeSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aerospike-client-7.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aerospike-client-7.1";
 
   private static final Instrumenter<AerospikeRequest, Void> INSTRUMENTER;
 
