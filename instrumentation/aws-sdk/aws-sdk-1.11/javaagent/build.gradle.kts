@@ -61,6 +61,9 @@ dependencies {
 
   // needed by S3
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
+
+  // last version that does not use json protocol
+  latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:1.12.583")
 }
 
 testing {
@@ -94,7 +97,12 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        implementation("com.amazonaws:aws-java-sdk-sqs:1.11.106")
+        if (findProperty("testLatestDeps") as Boolean) {
+          // last version that does not use json protocol
+          implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
+        } else {
+          implementation("com.amazonaws:aws-java-sdk-sqs:1.11.106")
+        }
       }
 
       targets {
@@ -110,7 +118,12 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        implementation("com.amazonaws:aws-java-sdk-sqs:1.11.106")
+        if (findProperty("testLatestDeps") as Boolean) {
+          // last version that does not use json protocol
+          implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
+        } else {
+          implementation("com.amazonaws:aws-java-sdk-sqs:1.11.106")
+        }
       }
     }
   }
