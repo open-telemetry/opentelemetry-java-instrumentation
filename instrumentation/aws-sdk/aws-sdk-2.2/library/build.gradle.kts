@@ -19,6 +19,9 @@ dependencies {
   testLibrary("software.amazon.awssdk:rds:2.2.0")
   testLibrary("software.amazon.awssdk:s3:2.2.0")
   testLibrary("software.amazon.awssdk:ses:2.2.0")
+
+  // last version that does not use json protocol
+  latestDepTestLibrary("software.amazon.awssdk:sqs:2.21.17")
 }
 
 testing {
@@ -33,9 +36,15 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-        implementation("software.amazon.awssdk:aws-core:2.2.0")
-        implementation("software.amazon.awssdk:aws-json-protocol:2.2.0")
-        implementation("software.amazon.awssdk:dynamodb:2.2.0")
+        if (findProperty("testLatestDeps") as Boolean) {
+          implementation("software.amazon.awssdk:aws-core:+")
+          implementation("software.amazon.awssdk:aws-json-protocol:+")
+          implementation("software.amazon.awssdk:dynamodb:+")
+        } else {
+          implementation("software.amazon.awssdk:aws-core:2.2.0")
+          implementation("software.amazon.awssdk:aws-json-protocol:2.2.0")
+          implementation("software.amazon.awssdk:dynamodb:2.2.0")
+        }
       }
     }
   }
