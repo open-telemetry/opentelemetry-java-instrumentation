@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.classhook;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.service.AutoService;
@@ -13,6 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class ClassHookInstrumentationModule extends InstrumentationModule {
@@ -31,9 +33,8 @@ public class ClassHookInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    logger.log(FINE, "ClassHookInstrumentationModule checking {0}", className);
-    return className.startsWith("com.azure.spring.cloud.test.config.client");
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    return hasClassesNamed("com.tests.springboot.controller.WebController");
   }
 
   @Override

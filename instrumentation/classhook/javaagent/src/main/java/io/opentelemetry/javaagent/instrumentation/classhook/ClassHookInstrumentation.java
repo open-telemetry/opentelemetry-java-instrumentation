@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.classhook;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.logging.Level.FINE;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -21,26 +23,27 @@ public class ClassHookInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.azure.spring.cloud.test.config.client");
+    return named("com.tests.springboot.controller.WebController");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("com.tests.springboot.controller.WebController");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
-    logger.log(FINE, "Applying ClassHookMethodAdvice to {0}.", transformer.getClass());
+    logger.log(FINE, "transform apply ClassHookMethodAdvice");
     transformer.applyAdviceToMethod(
-        isPublic(), this.getClass().getName() + "$ClassHookMethodAdvice");
+        isMethod().and(isPublic()).and(named("greeting")),
+        this.getClass().getName() + "$ClassHookMethodAdvice");
   }
 
   @SuppressWarnings("unused")
-  static class ClassHookMethodAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter() {
-      logger.log(FINE, "Enter public function.");
-    }
-
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onExit() {
-      logger.log(FINE, "Exit public function.");
+  public static class ClassHookMethodAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(@Advice.Return(readOnly = false) String resp) {
+      resp = "Hi! from ClassHookMethodAdvice -- " + resp;
     }
   }
 }
