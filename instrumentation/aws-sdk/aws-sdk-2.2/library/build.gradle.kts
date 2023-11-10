@@ -36,6 +36,7 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        compileOnly("software.amazon.awssdk:sqs:2.2.0")
         if (findProperty("testLatestDeps") as Boolean) {
           implementation("software.amazon.awssdk:aws-core:+")
           implementation("software.amazon.awssdk:aws-json-protocol:+")

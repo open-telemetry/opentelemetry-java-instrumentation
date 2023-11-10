@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
@@ -27,7 +26,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
-abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
+abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSpecification {
 
   private static final StaticCredentialsProvider CREDENTIALS_PROVIDER = StaticCredentialsProvider
     .create(AwsBasicCredentials.create("my-access-key", "my-secret-key"))
@@ -116,8 +115,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
   }
 
   void assertSqsTraces(withParent = false) {
-    assertTraces(3) {
-      SpanData publishSpan
+    assertTraces(2 + (withParent ? 1 : 0)) {
       trace(0, 1) {
 
         span(0) {
@@ -141,7 +139,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
           }
         }
       }
-      trace(1, 1) {
+      trace(1, 3) {
         span(0) {
           name "testSdkSqs publish"
           kind PRODUCER
@@ -166,19 +164,43 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
-        publishSpan = span(0)
+        span(1) {
+          name "testSdkSqs process"
+          kind CONSUMER
+          childOf span(0)
+          hasNoLinks()
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "rpc.method" "ReceiveMessage"
+            "rpc.system" "aws-api"
+            "rpc.service" "Sqs"
+            "http.method" "POST"
+            "http.url" { it.startsWith("http://localhost:$sqsPort") }
+            "net.peer.name" "localhost"
+            "net.peer.port" sqsPort
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+          }
+        }
+        span(2) {
+          name "process child"
+          childOf span(1)
+          attributes {
+          }
+        }
       }
-      def offset = withParent ? 2 : 0
-      trace(2, 3 + offset) {
-        if (withParent) {
+      if (withParent) {
+        /**
+         * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
+         * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
+         */
+        trace(2, 2) {
           span(0) {
             name "parent"
             hasNoParent()
           }
-          /**
-           * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
-           * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
-           */
           span(1) {
             name "Sqs.ReceiveMessage"
             kind CLIENT
@@ -199,58 +221,6 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
               "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             }
-          }
-        }
-        span(0 + offset) {
-          name "testSdkSqs receive"
-          kind CONSUMER
-          if (withParent) {
-           childOf span(0)
-          } else {
-            hasNoParent()
-          }
-          hasNoLinks()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "rpc.method" "ReceiveMessage"
-            "rpc.system" "aws-api"
-            "rpc.service" "Sqs"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
-            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
-          }
-        }
-        span(1 + offset) {
-          name "testSdkSqs process"
-          kind CONSUMER
-          childOf span(0 + offset)
-          hasLink(publishSpan)
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "rpc.method" "ReceiveMessage"
-            "rpc.system" "aws-api"
-            "rpc.service" "Sqs"
-            "http.method" "POST"
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
-            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-            "$SemanticAttributes.MESSAGING_OPERATION" "process"
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-          }
-        }
-        span(2 + offset) {
-          name "process child"
-          childOf span(1 + offset)
-          attributes {
           }
         }
       }
@@ -328,17 +298,15 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
     client.sendMessageBatch(sendMessageBatchRequest)
 
     def resp = client.receiveMessage(receiveMessageBatchRequest)
-    resp.messages.each {message -> runWithSpan("process child") {}}
-    def totalAttrs = resp.messages.sum {it.messageAttributes().size() }
+    def totalAttrs = resp.messages().sum {it.messageAttributes().size() }
 
     then:
-    resp.messages.size() == 3
+    resp.messages().size() == 3
 
     // +2: 3 messages, 2x traceparent, 1x not injected due to too many attrs
     totalAttrs == 18 + (sqsAttributeInjectionEnabled ? 2 : 0)
 
-    assertTraces(3) {
-      def publishSpan
+    assertTraces(xrayInjectionEnabled ? 2 : 3) {
       trace(0, 1) {
 
         span(0) {
@@ -346,7 +314,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
           kind CLIENT
         }
       }
-      trace(1, 1) {
+      trace(1, xrayInjectionEnabled ? 4 : 3) {
         span(0) {
           name "testSdkSqs publish"
           kind PRODUCER
@@ -370,44 +338,13 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
-        publishSpan = span(0)
-      }
-      trace(2, 1 + 2 * 3) {
-        span(0) {
-          name "testSdkSqs receive"
-          kind CONSUMER
-          hasNoParent()
-          hasNoLinks()
-
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "rpc.method" "ReceiveMessage"
-            "rpc.system" "aws-api"
-            "rpc.service" "Sqs"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
-            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
-          }
-        }
-        for (int i: 0..2) {
-          span(1 + 2*i) {
+        for (int i: 1..(xrayInjectionEnabled ? 3 : 2)) {
+          span(i) {
             name "testSdkSqs process"
             kind CONSUMER
             childOf span(0)
-            if (!xrayInjectionEnabled && i == 2) {
-              // last message in batch has too many attributes so injecting tracing header is not
-              // possible
-              hasNoLinks()
-            } else {
-              hasLink(publishSpan)
-            }
+            hasNoLinks()
+
             attributes {
               "aws.agent" "java-aws-sdk"
               "rpc.method" "ReceiveMessage"
@@ -423,10 +360,31 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             }
           }
-          span(1 + 2*i + 1) {
-            name "process child"
-            childOf span(1 + 2*i)
+        }
+      }
+      if (!xrayInjectionEnabled) {
+        trace(2, 1) {
+          span(0) {
+            name "testSdkSqs process"
+            kind CONSUMER
+
+            // TODO This is not nice at all, and can also happen if producer is not instrumented
+            hasNoParent()
+            hasNoLinks()
+
             attributes {
+              "aws.agent" "java-aws-sdk"
+              "rpc.method" "ReceiveMessage"
+              "rpc.system" "aws-api"
+              "rpc.service" "Sqs"
+              "http.method" "POST"
+              "http.url" { it.startsWith("http://localhost:$sqsPort") }
+              "net.peer.name" "localhost"
+              "net.peer.port" sqsPort
+              "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+              "$SemanticAttributes.MESSAGING_OPERATION" "process"
+              "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             }
           }
         }
