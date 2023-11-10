@@ -38,7 +38,7 @@ class AerospikeClientAsyncCommandTest {
   static GenericContainer<?> aerospikeServer =
       new GenericContainer<>("aerospike/aerospike-server:6.2.0.0")
           .withExposedPorts(3000)
-          .waitingFor(Wait.forLogMessage(".*applied cluster size 1.*", 1));
+          .waitingFor(Wait.forLogMessage(".*replication factor is 1.*", 1));
 
   static int port;
 
@@ -62,6 +62,7 @@ class AerospikeClientAsyncCommandTest {
   @AfterAll
   static void cleanupSpec() {
     aerospikeClient.close();
+    aerospikeServer.stop();
   }
 
   @BeforeEach
