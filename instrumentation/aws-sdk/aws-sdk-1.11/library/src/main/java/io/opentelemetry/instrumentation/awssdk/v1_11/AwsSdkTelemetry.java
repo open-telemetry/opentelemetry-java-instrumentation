@@ -11,6 +11,7 @@ import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.util.List;
 
 /**
  * Entrypoint for instrumenting AWS SDK v1 clients.
@@ -45,30 +46,25 @@ public class AwsSdkTelemetry {
   }
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
-  private final Instrumenter<Request<?>, Response<?>> consumerReceiveInstrumenter;
+  private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
 
   AwsSdkTelemetry(
       OpenTelemetry openTelemetry,
+      List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
       boolean messagingReceiveInstrumentationEnabled) {
-    requestInstrumenter =
-        AwsSdkInstrumenterFactory.requestInstrumenter(
-            openTelemetry, captureExperimentalSpanAttributes);
-    consumerReceiveInstrumenter =
-        AwsSdkInstrumenterFactory.consumerReceiveInstrumenter(
+    AwsSdkInstrumenterFactory instrumenterFactory =
+        new AwsSdkInstrumenterFactory(
             openTelemetry,
+            capturedHeaders,
             captureExperimentalSpanAttributes,
             messagingReceiveInstrumentationEnabled);
-    consumerProcessInstrumenter =
-        AwsSdkInstrumenterFactory.consumerProcessInstrumenter(
-            openTelemetry,
-            captureExperimentalSpanAttributes,
-            messagingReceiveInstrumentationEnabled);
-    producerInstrumenter =
-        AwsSdkInstrumenterFactory.producerInstrumenter(
-            openTelemetry, captureExperimentalSpanAttributes);
+    requestInstrumenter = instrumenterFactory.requestInstrumenter();
+    consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();
+    consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();
+    producerInstrumenter = instrumenterFactory.producerInstrumenter();
   }
 
   /**

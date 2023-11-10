@@ -10,6 +10,7 @@ import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder
+import com.amazonaws.services.sqs.model.MessageAttributeValue
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
 import com.amazonaws.services.sqs.model.SendMessageRequest
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -51,14 +52,21 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
     }
   }
 
-  def "simple sqs producer-consumer services"() {
+  def "simple sqs producer-consumer services #testCaptureHeaders"() {
     setup:
     client.createQueue("testSdkSqs")
 
     when:
-    SendMessageRequest send = new SendMessageRequest("http://localhost:$sqsPort/000000000000/testSdkSqs", "{\"type\": \"hello\"}")
-    client.sendMessage(send)
-    def receiveMessageResult = client.receiveMessage("http://localhost:$sqsPort/000000000000/testSdkSqs")
+    SendMessageRequest sendMessageRequest = new SendMessageRequest("http://localhost:$sqsPort/000000000000/testSdkSqs", "{\"type\": \"hello\"}")
+    if (testCaptureHeaders) {
+      sendMessageRequest.addMessageAttributesEntry("test-message-header", new MessageAttributeValue().withDataType("String").withStringValue("test"))
+    }
+    client.sendMessage(sendMessageRequest)
+    ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest("http://localhost:$sqsPort/000000000000/testSdkSqs")
+    if (testCaptureHeaders) {
+      receiveMessageRequest.withMessageAttributeNames("test-message-header")
+    }
+    def receiveMessageResult = client.receiveMessage(receiveMessageRequest)
     receiveMessageResult.messages.each {message ->
       runWithSpan("process child") {}
     }
@@ -113,6 +121,9 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            if (testCaptureHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
           }
         }
         publishSpan = span(0)
@@ -140,6 +151,9 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            if (testCaptureHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
           }
         }
         span(1) {
@@ -161,6 +175,9 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            if (testCaptureHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
           }
         }
         span(2) {
@@ -171,6 +188,9 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
         }
       }
     }
+
+    where:
+    testCaptureHeaders << [false, true]
   }
 
   def "simple sqs producer-consumer services with parent span"() {

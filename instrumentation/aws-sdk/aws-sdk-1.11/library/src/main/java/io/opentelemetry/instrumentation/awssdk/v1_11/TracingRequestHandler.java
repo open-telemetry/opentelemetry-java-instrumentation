@@ -33,13 +33,13 @@ final class TracingRequestHandler extends RequestHandler2 {
       ContextKey.named(TracingRequestHandler.class.getName() + ".RequestSpanSuppressed");
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
-  private final Instrumenter<Request<?>, Response<?>> consumerReceiveInstrumenter;
+  private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
 
   TracingRequestHandler(
       Instrumenter<Request<?>, Response<?>> requestInstrumenter,
-      Instrumenter<Request<?>, Response<?>> consumerReceiveInstrumenter,
+      Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter,
       Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter,
       Instrumenter<Request<?>, Response<?>> producerInstrumenter) {
     this.requestInstrumenter = requestInstrumenter;
@@ -99,7 +99,7 @@ final class TracingRequestHandler extends RequestHandler2 {
     return request;
   }
 
-  Instrumenter<Request<?>, Response<?>> getConsumerReceiveInstrumenter() {
+  Instrumenter<SqsReceiveRequest, Response<?>> getConsumerReceiveInstrumenter() {
     return consumerReceiveInstrumenter;
   }
 

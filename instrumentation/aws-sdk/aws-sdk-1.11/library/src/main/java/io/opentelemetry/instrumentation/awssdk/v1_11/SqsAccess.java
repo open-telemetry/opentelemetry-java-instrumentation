@@ -11,8 +11,6 @@ import com.amazonaws.Response;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
-import java.util.Collections;
-import java.util.Map;
 
 final class SqsAccess {
   private SqsAccess() {}
@@ -36,7 +34,7 @@ final class SqsAccess {
   }
 
   @NoMuzzle
-  static Map<String, String> getMessageAttributes(Request<?> request) {
-    return enabled ? SqsImpl.getMessageAttributes(request) : Collections.emptyMap();
+  static String getMessageAttribute(Request<?> request, String name) {
+    return enabled ? SqsImpl.getMessageAttribute(request, name) : null;
   }
 }

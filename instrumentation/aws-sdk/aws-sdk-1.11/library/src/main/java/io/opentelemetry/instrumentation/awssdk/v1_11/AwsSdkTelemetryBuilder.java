@@ -5,19 +5,34 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static java.util.Collections.emptyList;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.List;
 
 /** A builder of {@link AwsSdkTelemetry}. */
 public class AwsSdkTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
 
+  private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes;
   private boolean messagingReceiveInstrumentationEnabled;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
+  }
+
+  /**
+   * Configures the messaging headers that will be captured as span attributes.
+   *
+   * @param capturedHeaders A list of messaging header names.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setCapturedHeaders(List<String> capturedHeaders) {
+    this.capturedHeaders = capturedHeaders;
+    return this;
   }
 
   /**
@@ -50,6 +65,9 @@ public class AwsSdkTelemetryBuilder {
    */
   public AwsSdkTelemetry build() {
     return new AwsSdkTelemetry(
-        openTelemetry, captureExperimentalSpanAttributes, messagingReceiveInstrumentationEnabled);
+        openTelemetry,
+        capturedHeaders,
+        captureExperimentalSpanAttributes,
+        messagingReceiveInstrumentationEnabled);
   }
 }

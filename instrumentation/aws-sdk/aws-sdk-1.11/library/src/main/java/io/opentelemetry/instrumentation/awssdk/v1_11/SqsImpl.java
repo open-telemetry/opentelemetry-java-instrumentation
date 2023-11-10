@@ -18,8 +18,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 final class SqsImpl {
@@ -56,18 +54,20 @@ final class SqsImpl {
       return;
     }
 
-    Instrumenter<Request<?>, Response<?>> consumerReceiveInstrumenter =
+    Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter =
         requestHandler.getConsumerReceiveInstrumenter();
     Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter =
         requestHandler.getConsumerProcessInstrumenter();
 
     Context receiveContext = null;
-    if (timer != null && consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
+    SqsReceiveRequest receiveRequest =
+        SqsReceiveRequest.create(request, SqsMessageImpl.wrap(receiveMessageResult.getMessages()));
+    if (timer != null && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
       receiveContext =
           InstrumenterUtil.startAndEnd(
               consumerReceiveInstrumenter,
               parentContext,
-              request,
+              receiveRequest,
               response,
               null,
               timer.startTime(),
@@ -123,18 +123,15 @@ final class SqsImpl {
     return false;
   }
 
-  static Map<String, String> getMessageAttributes(Request<?> request) {
-    if (request instanceof SendMessageRequest) {
+  static String getMessageAttribute(Request<?> request, String name) {
+    if (request.getOriginalRequest() instanceof SendMessageRequest) {
       Map<String, MessageAttributeValue> map =
-          ((SendMessageRequest) request).getMessageAttributes();
-      if (!map.isEmpty()) {
-        Map<String, String> result = new HashMap<>();
-        for (Map.Entry<String, MessageAttributeValue> entry : map.entrySet()) {
-          result.put(entry.getKey(), entry.getValue().getStringValue());
-        }
-        return result;
+          ((SendMessageRequest) request.getOriginalRequest()).getMessageAttributes();
+      MessageAttributeValue value = map.get(name);
+      if (value != null) {
+        return value.getStringValue();
       }
     }
-    return Collections.emptyMap();
+    return null;
   }
 }
