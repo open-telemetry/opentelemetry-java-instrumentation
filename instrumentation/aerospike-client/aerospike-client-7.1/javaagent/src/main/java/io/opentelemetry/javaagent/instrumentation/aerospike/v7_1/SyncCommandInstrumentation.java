@@ -3,13 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1;
+package io.opentelemetry.javaagent.instrumentation.aerospike.v7_1;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1.AersopikeSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1.Status.FAILURE;
-import static io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1.Status.RECORD_NOT_FOUND;
-import static io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1.Status.SUCCESS;
 import static net.bytebuddy.matcher.ElementMatchers.isFinal;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -89,10 +85,10 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
         return null;
       }
       request = AerospikeRequest.create(methodName.toUpperCase(Locale.ROOT), key);
-      if (!instrumenter().shouldStart(parentContext, request)) {
+      if (!AersopikeSingletons.instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
-      context = instrumenter().start(parentContext, request);
+      context = AersopikeSingletons.instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
       return AerospikeRequestContext.attach(request, context);
     }
@@ -106,11 +102,11 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (throwable != null) {
-        request.setStatus(FAILURE);
+        request.setStatus(Status.FAILURE);
       } else if (record == null) {
-        request.setStatus(RECORD_NOT_FOUND);
+        request.setStatus(Status.RECORD_NOT_FOUND);
       } else {
-        request.setStatus(SUCCESS);
+        request.setStatus(Status.SUCCESS);
       }
       if (scope == null) {
         return;
@@ -118,7 +114,7 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
 
       scope.close();
       if (requestContext != null) {
-        requestContext.endSpan(instrumenter(), context, request, throwable);
+        requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
         requestContext.detachAndEnd();
       }
     }
@@ -145,10 +141,10 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
         return null;
       }
       request = AerospikeRequest.create(methodName.toUpperCase(Locale.ROOT), key);
-      if (!instrumenter().shouldStart(parentContext, request)) {
+      if (!AersopikeSingletons.instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
-      context = instrumenter().start(parentContext, request);
+      context = AersopikeSingletons.instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
       return AerospikeRequestContext.attach(request, context);
     }
@@ -161,9 +157,9 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (throwable != null) {
-        request.setStatus(FAILURE);
+        request.setStatus(Status.FAILURE);
       } else {
-        request.setStatus(SUCCESS);
+        request.setStatus(Status.SUCCESS);
       }
       if (scope == null) {
         return requestContext;
@@ -171,7 +167,7 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
 
       scope.close();
       if (requestContext != null) {
-        requestContext.endSpan(instrumenter(), context, request, throwable);
+        requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
         requestContext.detachAndEnd();
       }
       return requestContext;
@@ -192,10 +188,10 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
       Context parentContext = currentContext();
 
       request = AerospikeRequest.create(methodName.toUpperCase(Locale.ROOT), namespace, setName);
-      if (!instrumenter().shouldStart(parentContext, request)) {
+      if (!AersopikeSingletons.instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
-      context = instrumenter().start(parentContext, request);
+      context = AersopikeSingletons.instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
       return AerospikeRequestContext.attach(request, context);
     }
@@ -208,9 +204,9 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (throwable != null) {
-        request.setStatus(FAILURE);
+        request.setStatus(Status.FAILURE);
       } else {
-        request.setStatus(SUCCESS);
+        request.setStatus(Status.SUCCESS);
       }
       if (scope == null) {
         return requestContext;
@@ -218,7 +214,7 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
 
       scope.close();
       if (requestContext != null) {
-        requestContext.endSpan(instrumenter(), context, request, throwable);
+        requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
         requestContext.detachAndEnd();
       }
       return requestContext;

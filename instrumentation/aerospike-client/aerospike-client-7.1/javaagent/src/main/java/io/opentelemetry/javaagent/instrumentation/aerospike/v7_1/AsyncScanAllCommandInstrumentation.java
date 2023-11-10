@@ -3,12 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1;
+package io.opentelemetry.javaagent.instrumentation.aerospike.v7_1;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1.AersopikeSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1.Status.FAILURE;
-import static io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1.Status.SUCCESS;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -69,10 +66,10 @@ public class AsyncScanAllCommandInstrumentation implements TypeInstrumentation {
               asyncScanPartitionExecutor.getClass().getSimpleName().toUpperCase(Locale.ROOT),
               namespace,
               setName);
-      if (!instrumenter().shouldStart(parentContext, request)) {
+      if (!AersopikeSingletons.instrumenter().shouldStart(parentContext, request)) {
         return;
       }
-      context = instrumenter().start(parentContext, request);
+      context = AersopikeSingletons.instrumenter().start(parentContext, request);
       AerospikeRequestContext aerospikeRequestContext =
           AerospikeRequestContext.attach(request, context);
       scope = context.makeCurrent();
@@ -99,11 +96,11 @@ public class AsyncScanAllCommandInstrumentation implements TypeInstrumentation {
         AerospikeRequest request = requestContext.getRequest();
         Context context = requestContext.getContext();
         if (throwable == null) {
-          request.setStatus(SUCCESS);
+          request.setStatus(Status.SUCCESS);
         } else {
-          request.setStatus(FAILURE);
+          request.setStatus(Status.FAILURE);
         }
-        requestContext.endSpan(instrumenter(), context, request, throwable);
+        requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
         Scope scope = context.makeCurrent();
         if (null != scope) {
           scope.close();
@@ -126,8 +123,8 @@ public class AsyncScanAllCommandInstrumentation implements TypeInstrumentation {
       if (requestContext != null) {
         AerospikeRequest request = requestContext.getRequest();
         Context context = requestContext.getContext();
-        request.setStatus(FAILURE);
-        requestContext.endSpan(instrumenter(), context, request, throwable);
+        request.setStatus(Status.FAILURE);
+        requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
         Scope scope = context.makeCurrent();
         if (null != scope) {
           scope.close();

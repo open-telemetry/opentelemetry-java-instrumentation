@@ -3,19 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1;
+package io.opentelemetry.javaagent.instrumentation.aerospike.v7_1;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
-import com.aerospike.client.async.EventLoops;
-import com.aerospike.client.async.EventPolicy;
-import com.aerospike.client.async.NioEventLoops;
-import com.aerospike.client.policy.ClientPolicy;
+import com.aerospike.client.Record;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.db.AerospikeSemanticAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -31,7 +29,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
-class AerospikeClientAsyncCommandTest {
+class AerospikeClientSyncCommandTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -39,7 +37,6 @@ class AerospikeClientAsyncCommandTest {
       new GenericContainer<>("aerospike/aerospike-server:6.2.0.0")
           .withExposedPorts(3000)
           .waitingFor(Wait.forLogMessage(".*applied cluster size 1.*", 1));
-
   static int port;
 
   static AerospikeClient aerospikeClient;
@@ -48,15 +45,7 @@ class AerospikeClientAsyncCommandTest {
   static void setupSpec() {
     aerospikeServer.start();
     port = aerospikeServer.getMappedPort(3000);
-    ClientPolicy clientPolicy = new ClientPolicy();
-    int eventLoopSize = Runtime.getRuntime().availableProcessors();
-    EventPolicy eventPolicy = new EventPolicy();
-    eventPolicy.commandsPerEventLoop = 2;
-    EventLoops eventLoops = new NioEventLoops(eventPolicy, eventLoopSize);
-    clientPolicy.eventLoops = eventLoops;
-    clientPolicy.maxConnsPerNode = 11;
-    clientPolicy.failIfNotConnected = true;
-    aerospikeClient = new AerospikeClient(clientPolicy, "localhost", port);
+    aerospikeClient = new AerospikeClient("localhost", port);
   }
 
   @AfterAll
@@ -70,19 +59,22 @@ class AerospikeClientAsyncCommandTest {
   }
 
   @Test
-  void putCommand() {
+  void putAndGetCommand() {
     Key aerospikeKey = new Key("test", "test-set", "data1");
-    aerospikeClient.put(null, null, null, aerospikeKey, new Bin("bin1", "value1"));
+    aerospikeClient.put(null, aerospikeKey, new Bin("bin1", "value1"));
+    List<String> bins = singletonList("bin1");
+    Record aerospikeRecord = aerospikeClient.get(null, aerospikeKey, bins.toArray(new String[0]));
+    assertThat(aerospikeRecord.getString("bin1")).isEqualTo("value1");
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("ASYNCWRITE")
+                    span.hasName("PUT")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "aerospike"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "ASYNCWRITE"),
+                            equalTo(SemanticAttributes.DB_OPERATION, "PUT"),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             equalTo(AerospikeSemanticAttributes.AEROSPIKE_NAMESPACE, "test"),
@@ -90,26 +82,18 @@ class AerospikeClientAsyncCommandTest {
                             equalTo(AerospikeSemanticAttributes.AEROSPIKE_USER_KEY, "data1"),
                             equalTo(AerospikeSemanticAttributes.AEROSPIKE_STATUS, "SUCCESS"),
                             equalTo(AerospikeSemanticAttributes.AEROSPIKE_ERROR_CODE, 0),
+                            equalTo(AerospikeSemanticAttributes.AEROSPIKE_TRANSFER_SIZE, 95),
                             satisfies(
                                 SemanticAttributes.NET_SOCK_PEER_NAME,
-                                val -> val.isIn("localhost", "127.0.0.1")))));
-  }
-
-  @Test
-  void getCommand() {
-    Key aerospikeKey = new Key("test", "test-set", "data1");
-    List<String> bins = singletonList("bin1");
-    aerospikeClient.get(null, null, null, aerospikeKey, bins.toArray(new String[0]));
-
-    testing.waitAndAssertTraces(
+                                val -> val.isIn("localhost", "127.0.0.1")))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("ASYNCREAD")
+                    span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "aerospike"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "ASYNCREAD"),
+                            equalTo(SemanticAttributes.DB_OPERATION, "GET"),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             equalTo(AerospikeSemanticAttributes.AEROSPIKE_NAMESPACE, "test"),
@@ -117,6 +101,7 @@ class AerospikeClientAsyncCommandTest {
                             equalTo(AerospikeSemanticAttributes.AEROSPIKE_USER_KEY, "data1"),
                             equalTo(AerospikeSemanticAttributes.AEROSPIKE_STATUS, "SUCCESS"),
                             equalTo(AerospikeSemanticAttributes.AEROSPIKE_ERROR_CODE, 0),
+                            equalTo(AerospikeSemanticAttributes.AEROSPIKE_TRANSFER_SIZE, 40),
                             satisfies(
                                 SemanticAttributes.NET_SOCK_PEER_NAME,
                                 val -> val.isIn("localhost", "127.0.0.1")))));

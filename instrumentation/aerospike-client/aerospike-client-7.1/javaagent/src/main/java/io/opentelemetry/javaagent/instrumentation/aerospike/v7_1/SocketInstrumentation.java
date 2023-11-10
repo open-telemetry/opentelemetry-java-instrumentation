@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1;
+package io.opentelemetry.javaagent.instrumentation.aerospike.v7_1;
 
-import static io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1.AersopikeSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1.Status.FAILURE;
+import static io.opentelemetry.javaagent.instrumentation.aerospike.v7_1.AersopikeSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.aerospike.v7_1.Status.FAILURE;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperClass;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;

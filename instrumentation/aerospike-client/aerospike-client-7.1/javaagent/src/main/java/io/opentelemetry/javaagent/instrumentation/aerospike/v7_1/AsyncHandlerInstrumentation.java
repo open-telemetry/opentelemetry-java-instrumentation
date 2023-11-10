@@ -3,11 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1;
+package io.opentelemetry.javaagent.instrumentation.aerospike.v7_1;
 
-import static io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1.AersopikeSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1.Status.FAILURE;
-import static io.opentelemetry.javaagent.instrumentation.aerospike_client.v7_1.Status.SUCCESS;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperClass;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -56,11 +53,11 @@ public class AsyncHandlerInstrumentation implements TypeInstrumentation {
         AerospikeRequest request = requestContext.getRequest();
         Context context = requestContext.getContext();
         if (throwable == null) {
-          request.setStatus(SUCCESS);
+          request.setStatus(Status.SUCCESS);
         } else {
-          request.setStatus(FAILURE);
+          request.setStatus(Status.FAILURE);
         }
-        requestContext.endSpan(instrumenter(), context, request, throwable);
+        requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
         Scope scope = context.makeCurrent();
         if (null != scope) {
           scope.close();
@@ -81,8 +78,8 @@ public class AsyncHandlerInstrumentation implements TypeInstrumentation {
       if (requestContext != null) {
         AerospikeRequest request = requestContext.getRequest();
         Context context = requestContext.getContext();
-        request.setStatus(FAILURE);
-        requestContext.endSpan(instrumenter(), context, request, throwable);
+        request.setStatus(Status.FAILURE);
+        requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
         Scope scope = context.makeCurrent();
         if (null != scope) {
           scope.close();
