@@ -10,6 +10,8 @@ import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsClient
 
+import static java.util.Collections.singletonList
+
 abstract class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest implements LibraryTestTrait {
   static AwsSdkTelemetry telemetry
 
@@ -17,6 +19,8 @@ abstract class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest implements 
     def telemetryBuilder = AwsSdkTelemetry.builder(getOpenTelemetry())
       .setCaptureExperimentalSpanAttributes(true)
       .setMessagingReceiveInstrumentationEnabled(true)
+      .setCapturedHeaders(singletonList("test-message-header"))
+
     configure(telemetryBuilder)
     telemetry = telemetryBuilder.build()
   }
