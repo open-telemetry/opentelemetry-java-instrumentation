@@ -108,6 +108,15 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
       } else {
         request.setStatus(Status.SUCCESS);
       }
+      if (record == null || record.bins.isEmpty()) {
+        request.setSize(0);
+      } else {
+        int size = 0;
+        for (Object value : record.bins.values()) {
+          size += ((String) value).length();
+        }
+        request.setSize(size);
+      }
       if (scope == null) {
         return;
       }

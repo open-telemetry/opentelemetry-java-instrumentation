@@ -31,7 +31,6 @@ public class AerospikeClientInstrumentationModule extends InstrumentationModule 
     return asList(
         new SyncCommandInstrumentation(),
         new SocketInstrumentation(),
-        new TransferSizeIntrumentation(),
         new AsyncCommandInstrumentation(),
         new AsyncHandlerInstrumentation(),
         new AsyncScanAllCommandInstrumentation());

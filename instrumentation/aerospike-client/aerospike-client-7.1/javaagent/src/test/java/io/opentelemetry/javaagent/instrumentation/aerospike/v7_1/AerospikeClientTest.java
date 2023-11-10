@@ -8,10 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.aerospike.v7_1;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
+import com.aerospike.client.Record;
 import com.aerospike.client.async.EventLoops;
 import com.aerospike.client.async.EventPolicy;
 import com.aerospike.client.async.NioEventLoops;
@@ -31,7 +33,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
-class AerospikeClientAsyncCommandTest {
+class AerospikeClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -71,7 +73,7 @@ class AerospikeClientAsyncCommandTest {
   }
 
   @Test
-  void putCommand() {
+  void asyncCommand() {
     Key aerospikeKey = new Key("test", "test-set", "data1");
     aerospikeClient.put(null, null, null, aerospikeKey, new Bin("bin1", "value1"));
 
@@ -97,27 +99,48 @@ class AerospikeClientAsyncCommandTest {
   }
 
   @Test
-  void getCommand() {
-    Key aerospikeKey = new Key("test", "test-set", "data1");
-    List<String> bins = singletonList("bin1");
-    aerospikeClient.get(null, null, null, aerospikeKey, bins.toArray(new String[0]));
+  void syncCommand() {
+    Key aerospikeKey = new Key("test", "test-set", "data2");
+    aerospikeClient.put(null, aerospikeKey, new Bin("bin2", "value2"));
+    List<String> bins = singletonList("bin2");
+    Record aerospikeRecord = aerospikeClient.get(null, aerospikeKey, bins.toArray(new String[0]));
+    assertThat(aerospikeRecord.getString("bin2")).isEqualTo("value2");
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("ASYNCREAD")
+                    span.hasName("PUT")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "aerospike"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "ASYNCREAD"),
+                            equalTo(SemanticAttributes.DB_OPERATION, "PUT"),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             equalTo(AerospikeSemanticAttributes.AEROSPIKE_NAMESPACE, "test"),
                             equalTo(AerospikeSemanticAttributes.AEROSPIKE_SET_NAME, "test-set"),
-                            equalTo(AerospikeSemanticAttributes.AEROSPIKE_USER_KEY, "data1"),
+                            equalTo(AerospikeSemanticAttributes.AEROSPIKE_USER_KEY, "data2"),
                             equalTo(AerospikeSemanticAttributes.AEROSPIKE_STATUS, "SUCCESS"),
                             equalTo(AerospikeSemanticAttributes.AEROSPIKE_ERROR_CODE, 0),
+                            satisfies(
+                                SemanticAttributes.NET_SOCK_PEER_NAME,
+                                val -> val.isIn("localhost", "127.0.0.1")))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "aerospike"),
+                            equalTo(SemanticAttributes.DB_OPERATION, "GET"),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            equalTo(AerospikeSemanticAttributes.AEROSPIKE_NAMESPACE, "test"),
+                            equalTo(AerospikeSemanticAttributes.AEROSPIKE_SET_NAME, "test-set"),
+                            equalTo(AerospikeSemanticAttributes.AEROSPIKE_USER_KEY, "data2"),
+                            equalTo(AerospikeSemanticAttributes.AEROSPIKE_STATUS, "SUCCESS"),
+                            equalTo(AerospikeSemanticAttributes.AEROSPIKE_ERROR_CODE, 0),
+                            equalTo(AerospikeSemanticAttributes.AEROSPIKE_TRANSFER_SIZE, 6),
                             satisfies(
                                 SemanticAttributes.NET_SOCK_PEER_NAME,
                                 val -> val.isIn("localhost", "127.0.0.1")))));
