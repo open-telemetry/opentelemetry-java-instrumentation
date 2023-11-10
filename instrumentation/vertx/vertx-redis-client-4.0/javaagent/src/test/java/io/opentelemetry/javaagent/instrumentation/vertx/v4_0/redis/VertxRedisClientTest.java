@@ -15,6 +15,7 @@ import io.opentelemetry.semconv.SemanticAttributes;
 import io.vertx.core.Vertx;
 import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisAPI;
+import io.vertx.redis.client.RedisConnection;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -37,13 +38,15 @@ class VertxRedisClientTest {
   private static RedisAPI redis;
 
   @BeforeAll
-  static void setupSpec() {
+  static void setupSpec() throws Exception {
     redisServer.start();
     port = redisServer.getMappedPort(6379);
 
     vertx = Vertx.vertx();
     client = Redis.createClient(vertx, "redis://localhost:" + port);
-    redis = RedisAPI.api(client);
+    RedisConnection connection =
+        client.connect().toCompletionStage().toCompletableFuture().get(30, TimeUnit.SECONDS);
+    redis = RedisAPI.api(connection);
   }
 
   @AfterAll
