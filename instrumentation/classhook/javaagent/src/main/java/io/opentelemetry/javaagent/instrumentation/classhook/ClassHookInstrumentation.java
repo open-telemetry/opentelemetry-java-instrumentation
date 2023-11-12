@@ -23,12 +23,12 @@ public class ClassHookInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.tests.springboot.controller.WebController");
+    return named("io.opentelemetry.smoketest.springboot.controller.WebController");
   }
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.tests.springboot.controller.WebController");
+    return hasClassesNamed("io.opentelemetry.smoketest.springboot.controller.WebController");
   }
 
   @Override
@@ -43,7 +43,7 @@ public class ClassHookInstrumentation implements TypeInstrumentation {
   public static class ClassHookMethodAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Return(readOnly = false) String resp) {
-      resp = "Hi! from ClassHookMethodAdvice -- " + resp;
+      resp = "ClassHookMethodAdvice -- " + resp;
     }
   }
 }

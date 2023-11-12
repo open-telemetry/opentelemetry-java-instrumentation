@@ -25,10 +25,10 @@ abstract class IntegrationTest {
 
   private static final Network network = Network.newNetwork();
   protected static final String agentPath =
-      System.getProperty("io.opentelemetry.smoketest.agentPath");
+      System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path");
 
   protected static final String extensionPath =
-      System.getProperty("io.opentelemetry.smoketest.extensionPath");
+      System.getProperty("io.opentelemetry.smoketest.extension.path");
 
   protected abstract String getTargetImage(int jdk);
 
@@ -42,14 +42,14 @@ abstract class IntegrationTest {
 
   protected GenericContainer<?> target;
 
-  void startTarget(String extensionLocation) {
-    target = buildTargetContainer(agentPath, extensionLocation);
+  void startTarget() {
+    target = buildTargetContainer(agentPath, null);
     target.start();
   }
 
   private GenericContainer<?> buildTargetContainer(String agentPath, String extensionLocation) {
     GenericContainer<?> result =
-        new GenericContainer<>(getTargetImage(8))
+        new GenericContainer<>(getTargetImage(11))
             .withExposedPorts(8080)
             .withNetwork(network)
             .withLogConsumer(new Slf4jLogConsumer(logger))
@@ -59,9 +59,6 @@ abstract class IntegrationTest {
             .withEnv(
                 "JAVA_TOOL_OPTIONS",
                 "-javaagent:/opentelemetry-javaagent.jar -Dotel.javaagent.debug=true")
-            .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
-            .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
-            .withEnv("OTEL_PROPAGATORS", "tracecontext,baggage,demo")
             .withEnv(getExtraEnv());
     // If external extensions are requested
     if (extensionLocation != null) {

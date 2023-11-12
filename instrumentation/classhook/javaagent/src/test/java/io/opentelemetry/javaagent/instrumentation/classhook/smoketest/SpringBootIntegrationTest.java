@@ -21,8 +21,8 @@ class SpringBootIntegrationTest extends IntegrationTest {
   }
 
   @Test
-  public void extensionsAreLoadedFromJar() throws IOException, InterruptedException {
-    startTarget("/opentelemetry-extensions.jar");
+  public void extensionsAreLoadedFromJar() throws IOException {
+    startTarget();
 
     testAndVerify();
 
@@ -35,8 +35,8 @@ class SpringBootIntegrationTest extends IntegrationTest {
 
     Response response = client.newCall(request).execute();
 
-    Assertions.assertNotNull(response.header("X-server-id"));
-    Assertions.assertEquals(1, response.headers("X-server-id").size());
-    Assertions.assertEquals("Hi!", response.body().string());
+    String resp = response.body().string();
+
+    Assertions.assertEquals("ClassHookMethodAdvice -- Hi!", resp);
   }
 }

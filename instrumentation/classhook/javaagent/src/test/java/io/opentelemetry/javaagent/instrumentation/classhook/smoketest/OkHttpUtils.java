@@ -10,7 +10,10 @@ import okhttp3.OkHttpClient;
 
 public class OkHttpUtils {
 
-  static OkHttpClient.Builder clientBuilder() {
+  private OkHttpUtils() {
+  }
+
+  private static OkHttpClient.Builder clientBuilder() {
     TimeUnit unit = TimeUnit.MINUTES;
     return new OkHttpClient.Builder()
         .connectTimeout(1, unit)

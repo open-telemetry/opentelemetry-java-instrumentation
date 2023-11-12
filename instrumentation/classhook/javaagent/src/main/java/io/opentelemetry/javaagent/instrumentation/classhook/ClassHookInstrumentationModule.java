@@ -34,7 +34,7 @@ public class ClassHookInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("com.tests.springboot.controller.WebController");
+    return hasClassesNamed("io.opentelemetry.smoketest.springboot.controller.WebController");
   }
 
   @Override
