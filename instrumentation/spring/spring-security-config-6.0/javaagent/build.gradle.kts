@@ -16,14 +16,13 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:spring:spring-security-config-6.0:library"))
-  implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
 
   library("org.springframework.security:spring-security-config:6.0.0")
   library("org.springframework.security:spring-security-web:6.0.0")
   library("io.projectreactor:reactor-core:3.5.0")
 
-  testImplementation("org.springframework:spring-test:6.0.0")
-  testImplementation("jakarta.servlet:jakarta.servlet-api:6.0.0")
+  testLibrary("org.springframework:spring-test:6.0.0")
+  testLibrary("jakarta.servlet:jakarta.servlet-api:6.0.0")
 }
 
 otelJava {
