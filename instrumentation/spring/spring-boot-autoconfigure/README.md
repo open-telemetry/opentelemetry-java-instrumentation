@@ -151,7 +151,7 @@ implementation("io.opentelemetry:opentelemetry-extension-annotations:OPENTELEMET
 
 #### OpenTelemetry Tracer Auto Configuration
 
-Provides a OpenTelemetry tracer bean (`io.opentelemetry.api.trace.Tracer`) if one does not exist in the application context of the spring project. This tracer bean will be used in all configurations listed below. Feel free to declare your own Opentelemetry tracer bean to overwrite this configuration.
+Provides a OpenTelemetry tracer bean (`io.opentelemetry.api.trace.Tracer`) if one does not exist in the application context of the spring project. This tracer bean will be used in all configurations listed below. Feel free to declare your own OpenTelemetry tracer bean to overwrite this configuration.
 
 #### Spring Web Auto Configuration
 
