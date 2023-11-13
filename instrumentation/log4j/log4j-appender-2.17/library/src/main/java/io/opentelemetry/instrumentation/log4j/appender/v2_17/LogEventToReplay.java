@@ -32,7 +32,6 @@ class LogEventToReplay implements LogEvent {
   private final String threadName;
   private final long threadId;
 
-  // Log4j 2 seems to reuse Message objects
   private static class MessageCopy implements Message {
 
     private static final long serialVersionUID = 6921483958779195777L;
@@ -69,6 +68,8 @@ class LogEventToReplay implements LogEvent {
     }
   }
 
+  // Log4j 2 reuses LogEvent object, so we make a copy to be able to
+  // replay the log event later.
   LogEventToReplay(LogEvent logEvent) {
     this.logEvent = logEvent;
     this.loggerName = logEvent.getLoggerName();
