@@ -15,8 +15,6 @@ muzzle {
 }
 
 dependencies {
-  bootstrap(project(":instrumentation:executors:bootstrap"))
-
   implementation(project(":instrumentation:spring:spring-security-config-6.0:library"))
   implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
 
