@@ -19,7 +19,7 @@ import org.apache.logging.log4j.util.ReadOnlyStringMap;
 
 class LogEventToReplay implements LogEvent {
 
-  private static final long serialVersionUID = -3639807661256104630L;
+  private static final long serialVersionUID = 1L;
 
   private final LogEvent logEvent;
   private final String loggerName;
