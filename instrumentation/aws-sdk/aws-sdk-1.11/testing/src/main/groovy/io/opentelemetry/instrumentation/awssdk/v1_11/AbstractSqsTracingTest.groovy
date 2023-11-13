@@ -260,6 +260,21 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
         publishSpan = span(0)
       }
       trace(2, 5) {
+        // sort spans with a ranking function
+        spans.sort({
+          // job span is first
+          if (it.name == "parent") {
+            return 0
+          }
+          if (it.name == "SQS.ReceiveMessage") {
+            return 1
+          }
+          if (it.name == "testSdkSqs receive") {
+            return 2
+          }
+          return 3
+        })
+
         span(0) {
           name "parent"
           hasNoParent()
