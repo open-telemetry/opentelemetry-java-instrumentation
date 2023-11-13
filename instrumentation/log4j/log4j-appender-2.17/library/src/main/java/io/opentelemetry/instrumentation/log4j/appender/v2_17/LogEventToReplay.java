@@ -77,6 +77,7 @@ class LogEventToReplay implements LogEvent {
     if (messageOrigin instanceof StructuredDataMessage) {
       StructuredDataMessage structuredDataMessage = (StructuredDataMessage) messageOrigin;
       this.message =
+          // Log4j 2 reuses StructuredDataMessage object
           new StructuredDataMessage(
               structuredDataMessage.getId(),
               structuredDataMessage.getFormat(),
