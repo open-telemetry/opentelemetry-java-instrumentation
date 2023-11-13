@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
+import java.util.Collections;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.ThreadContext;
@@ -21,7 +23,6 @@ class LogEventToReplay implements LogEvent {
 
   private static final long serialVersionUID = 1L;
 
-  private final LogEvent logEvent;
   private final String loggerName;
   private final Message message;
   private final Level level;
@@ -71,7 +72,6 @@ class LogEventToReplay implements LogEvent {
   // Log4j 2 reuses LogEvent object, so we make a copy to be able to
   // replay the log event later.
   LogEventToReplay(LogEvent logEvent) {
-    this.logEvent = logEvent;
     this.loggerName = logEvent.getLoggerName();
     Message messageOrigin = logEvent.getMessage();
     if (messageOrigin instanceof StructuredDataMessage) {
@@ -99,13 +99,13 @@ class LogEventToReplay implements LogEvent {
 
   @Override
   public LogEvent toImmutable() {
-    return logEvent.toImmutable();
+    return null;
   }
 
   @SuppressWarnings("deprecation") // Delegate
   @Override
   public Map<String, String> getContextMap() {
-    return logEvent.getContextMap();
+    return Collections.emptyMap();
   }
 
   @Override
@@ -113,14 +113,15 @@ class LogEventToReplay implements LogEvent {
     return contextData;
   }
 
+  @Nullable
   @Override
   public ThreadContext.ContextStack getContextStack() {
-    return logEvent.getContextStack();
+    return null;
   }
 
   @Override
   public String getLoggerFqcn() {
-    return logEvent.getLoggerFqcn();
+    return null;
   }
 
   @Override
@@ -145,7 +146,7 @@ class LogEventToReplay implements LogEvent {
 
   @Override
   public long getTimeMillis() {
-    return logEvent.getTimeMillis();
+    return 0;
   }
 
   @Override
@@ -155,7 +156,7 @@ class LogEventToReplay implements LogEvent {
 
   @Override
   public StackTraceElement getSource() {
-    return logEvent.getSource();
+    return null;
   }
 
   @Override
@@ -170,7 +171,7 @@ class LogEventToReplay implements LogEvent {
 
   @Override
   public int getThreadPriority() {
-    return logEvent.getThreadPriority();
+    return 0;
   }
 
   @Override
@@ -180,31 +181,27 @@ class LogEventToReplay implements LogEvent {
 
   @Override
   public ThrowableProxy getThrownProxy() {
-    return logEvent.getThrownProxy();
+    return null;
   }
 
   @Override
   public boolean isEndOfBatch() {
-    return logEvent.isEndOfBatch();
+    return false;
   }
 
   @Override
   public boolean isIncludeLocation() {
-    return logEvent.isIncludeLocation();
+    return false;
   }
 
   @Override
-  public void setEndOfBatch(boolean endOfBatch) {
-    logEvent.setEndOfBatch(endOfBatch);
-  }
+  public void setEndOfBatch(boolean endOfBatch) {}
 
   @Override
-  public void setIncludeLocation(boolean locationRequired) {
-    logEvent.setIncludeLocation(locationRequired);
-  }
+  public void setIncludeLocation(boolean locationRequired) {}
 
   @Override
   public long getNanoTime() {
-    return logEvent.getNanoTime();
+    return 0;
   }
 }
