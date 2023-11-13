@@ -35,7 +35,7 @@ class LogEventToReplay implements LogEvent {
 
   private static class MessageCopy implements Message {
 
-    private static final long serialVersionUID = 6921483958779195777L;
+    private static final long serialVersionUID = 1L;
     private final String formattedMessage;
     private final String format;
     private final Object[] parameters;
