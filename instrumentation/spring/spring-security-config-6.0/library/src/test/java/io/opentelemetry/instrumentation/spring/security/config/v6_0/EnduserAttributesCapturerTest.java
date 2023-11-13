@@ -5,16 +5,16 @@
 
 package io.opentelemetry.instrumentation.spring.security.config.v6_0;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Arrays;
-import java.util.List;
-import org.assertj.core.api.ThrowingConsumer;
+import java.util.function.Consumer;
+import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.security.core.Authentication;
@@ -39,14 +39,13 @@ public class EnduserAttributesCapturerTest {
                 new SimpleGrantedAuthority("SCOPE_scope1"),
                 new SimpleGrantedAuthority("SCOPE_scope2")));
 
-    ThrowingConsumer<SpanData> assertions =
-        span -> {
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID)).isNull();
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ROLE)).isNull();
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE)).isNull();
-        };
-
-    test(capturer, authentication, assertions);
+    test(
+        capturer,
+        authentication,
+        span ->
+            span.doesNotHave(attribute(SemanticAttributes.ENDUSER_ID))
+                .doesNotHave(attribute(SemanticAttributes.ENDUSER_ROLE))
+                .doesNotHave(attribute(SemanticAttributes.ENDUSER_SCOPE)));
   }
 
   @Test
@@ -64,16 +63,13 @@ public class EnduserAttributesCapturerTest {
                 new SimpleGrantedAuthority("SCOPE_scope1"),
                 new SimpleGrantedAuthority("SCOPE_scope2")));
 
-    ThrowingConsumer<SpanData> assertions =
-        span -> {
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID))
-              .isEqualTo("principal");
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ROLE)).isNull();
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE))
-              .isEqualTo("scope1,scope2");
-        };
-
-    test(capturer, authentication, assertions);
+    test(
+        capturer,
+        authentication,
+        span ->
+            span.hasAttribute(SemanticAttributes.ENDUSER_ID, "principal")
+                .doesNotHave(attribute(SemanticAttributes.ENDUSER_ROLE))
+                .hasAttribute(SemanticAttributes.ENDUSER_SCOPE, "scope1,scope2"));
   }
 
   @Test
@@ -91,16 +87,13 @@ public class EnduserAttributesCapturerTest {
                 new SimpleGrantedAuthority("ROLE_role1"),
                 new SimpleGrantedAuthority("ROLE_role2")));
 
-    ThrowingConsumer<SpanData> assertions =
-        span -> {
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID))
-              .isEqualTo("principal");
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ROLE))
-              .isEqualTo("role1,role2");
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE)).isNull();
-        };
-
-    test(capturer, authentication, assertions);
+    test(
+        capturer,
+        authentication,
+        span ->
+            span.hasAttribute(SemanticAttributes.ENDUSER_ID, "principal")
+                .hasAttribute(SemanticAttributes.ENDUSER_ROLE, "role1,role2")
+                .doesNotHave(attribute(SemanticAttributes.ENDUSER_SCOPE)));
   }
 
   @Test
@@ -118,15 +111,13 @@ public class EnduserAttributesCapturerTest {
                 new SimpleGrantedAuthority("SCOPE_scope1"),
                 new SimpleGrantedAuthority("SCOPE_scope2")));
 
-    ThrowingConsumer<SpanData> assertions =
-        span -> {
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID))
-              .isEqualTo("principal");
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ROLE)).isNull();
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE)).isNull();
-        };
-
-    test(capturer, authentication, assertions);
+    test(
+        capturer,
+        authentication,
+        span ->
+            span.hasAttribute(SemanticAttributes.ENDUSER_ID, "principal")
+                .doesNotHave(attribute(SemanticAttributes.ENDUSER_ROLE))
+                .doesNotHave(attribute(SemanticAttributes.ENDUSER_SCOPE)));
   }
 
   @Test
@@ -144,15 +135,13 @@ public class EnduserAttributesCapturerTest {
                 new SimpleGrantedAuthority("SCOPE_scope1"),
                 new SimpleGrantedAuthority("SCOPE_scope2")));
 
-    ThrowingConsumer<SpanData> assertions =
-        span -> {
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID)).isNull();
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ROLE))
-              .isEqualTo("role1,role2");
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE)).isNull();
-        };
-
-    test(capturer, authentication, assertions);
+    test(
+        capturer,
+        authentication,
+        span ->
+            span.doesNotHave(attribute(SemanticAttributes.ENDUSER_ID))
+                .hasAttribute(SemanticAttributes.ENDUSER_ROLE, "role1,role2")
+                .doesNotHave(attribute(SemanticAttributes.ENDUSER_SCOPE)));
   }
 
   @Test
@@ -170,15 +159,13 @@ public class EnduserAttributesCapturerTest {
                 new SimpleGrantedAuthority("SCOPE_scope1"),
                 new SimpleGrantedAuthority("SCOPE_scope2")));
 
-    ThrowingConsumer<SpanData> assertions =
-        span -> {
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID)).isNull();
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ROLE)).isNull();
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE))
-              .isEqualTo("scope1,scope2");
-        };
-
-    test(capturer, authentication, assertions);
+    test(
+        capturer,
+        authentication,
+        span ->
+            span.doesNotHave(attribute(SemanticAttributes.ENDUSER_ID))
+                .doesNotHave(attribute(SemanticAttributes.ENDUSER_ROLE))
+                .hasAttribute(SemanticAttributes.ENDUSER_SCOPE, "scope1,scope2"));
   }
 
   @Test
@@ -200,30 +187,31 @@ public class EnduserAttributesCapturerTest {
                 new SimpleGrantedAuthority("scope_scope1"),
                 new SimpleGrantedAuthority("scope_scope2")));
 
-    ThrowingConsumer<SpanData> assertions =
-        span -> {
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID))
-              .isEqualTo("principal");
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ROLE))
-              .isEqualTo("role1,role2");
-          assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE))
-              .isEqualTo("scope1,scope2");
-        };
-
-    test(capturer, authentication, assertions);
+    test(
+        capturer,
+        authentication,
+        span ->
+            span.hasAttribute(SemanticAttributes.ENDUSER_ID, "principal")
+                .hasAttribute(SemanticAttributes.ENDUSER_ROLE, "role1,role2")
+                .hasAttribute(SemanticAttributes.ENDUSER_SCOPE, "scope1,scope2"));
   }
 
   void test(
       EnduserAttributesCapturer capturer,
       Authentication authentication,
-      ThrowingConsumer<SpanData> assertions) {
+      Consumer<SpanDataAssert> assertions) {
     testing.runWithHttpServerSpan(
         () -> {
           Context otelContext = Context.current();
           capturer.captureEnduserAttributes(otelContext, authentication);
         });
 
-    List<SpanData> spans = testing.spans();
-    assertThat(spans).singleElement().satisfies(assertions);
+    testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(assertions));
+  }
+
+  private static Condition<SpanData> attribute(AttributeKey<?> attributeKey) {
+    return new Condition<>(
+        spanData -> spanData.getAttributes().get(attributeKey) != null,
+        "attribute " + attributeKey);
   }
 }

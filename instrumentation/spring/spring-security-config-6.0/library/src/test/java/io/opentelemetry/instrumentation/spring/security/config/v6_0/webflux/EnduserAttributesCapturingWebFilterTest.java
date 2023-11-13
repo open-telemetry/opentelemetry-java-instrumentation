@@ -5,18 +5,14 @@
 
 package io.opentelemetry.instrumentation.spring.security.config.v6_0.webflux;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
@@ -73,17 +69,12 @@ class EnduserAttributesCapturingWebFilterTest {
               .block();
         });
 
-    List<SpanData> spans = testing.spans();
-    assertThat(spans)
-        .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ID))
-                  .isEqualTo("principal");
-              assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_ROLE))
-                  .isEqualTo("role1,role2");
-              assertThat(span.getAttributes().get(SemanticAttributes.ENDUSER_SCOPE))
-                  .isEqualTo("scope1,scope2");
-            });
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttribute(SemanticAttributes.ENDUSER_ID, "principal")
+                        .hasAttribute(SemanticAttributes.ENDUSER_ROLE, "role1,role2")
+                        .hasAttribute(SemanticAttributes.ENDUSER_SCOPE, "scope1,scope2")));
   }
 }
