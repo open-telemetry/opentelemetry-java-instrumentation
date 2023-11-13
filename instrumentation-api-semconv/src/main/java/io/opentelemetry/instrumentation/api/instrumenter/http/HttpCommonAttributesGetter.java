@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -61,13 +62,13 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    * received.
    *
    * <p>If this method is not implemented, or if it returns {@code null}, the exception class name
-   * (if any was caught) or the value {@code _OTHER} will be used as error type.
+   * (if any was caught) or the value {@value HttpConstants#_OTHER} will be used as error type.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.
    *
-   * <p>Examples: {@code Bad Request}, {@code java.net.UnknownHostException}, {@code request
-   * cancelled}, {@code _OTHER}.
+   * <p>Examples: {@code timeout}, {@code java.net.UnknownHostException}, {@code
+   * server_certificate_invalid}, {@code 500}, {@code _OTHER}.
    */
   @Nullable
   default String getErrorType(

@@ -9,9 +9,9 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
-import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 /**
@@ -28,6 +28,8 @@ public final class HttpServerRoute {
   /**
    * Returns a {@link ContextCustomizer} that initializes an {@link HttpServerRoute} in the {@link
    * Context} returned from {@link Instrumenter#start(Context, Object)}.
+   *
+   * @see InstrumenterBuilder#addContextCustomizer(ContextCustomizer)
    */
   public static <REQUEST> ContextCustomizer<REQUEST> create(
       HttpServerAttributesGetter<REQUEST, ?> getter) {
@@ -53,10 +55,6 @@ public final class HttpServerRoute {
    * if and only if the last {@link HttpServerRouteSource} to update the route using this method has
    * strictly lower priority than the provided {@link HttpServerRouteSource}, and the passed value
    * is non-null.
-   *
-   * <p>If there is a server span in the context, and the context has NOT been customized with a
-   * {@link HttpServerRoute}, then this method will update the route using the provided value if it
-   * is non-null.
    */
   public static void update(
       Context context, HttpServerRouteSource source, @Nullable String httpRoute) {
@@ -72,10 +70,6 @@ public final class HttpServerRoute {
    * route using this method has strictly lower priority than the provided {@link
    * HttpServerRouteSource}, and the value returned from the {@link HttpServerRouteGetter} is
    * non-null.
-   *
-   * <p>If there is a server span in the context, and the context has NOT been customized with a
-   * {@link HttpServerRoute}, then this method will update the route using the provided {@link
-   * HttpServerRouteGetter} if the value returned from it is non-null.
    */
   public static <T> void update(
       Context context,
@@ -94,10 +88,6 @@ public final class HttpServerRoute {
    * route using this method has strictly lower priority than the provided {@link
    * HttpServerRouteSource}, and the value returned from the {@link HttpServerRouteBiGetter} is
    * non-null.
-   *
-   * <p>If there is a server span in the context, and the context has NOT been customized with a
-   * {@code ServerSpanName}, then this method will update the route using the provided {@link
-   * HttpServerRouteBiGetter} if the value returned from it is non-null.
    */
   public static <T, U> void update(
       Context context,
@@ -113,12 +103,6 @@ public final class HttpServerRoute {
     }
     HttpRouteState httpRouteState = HttpRouteState.fromContextOrNull(context);
     if (httpRouteState == null) {
-      // TODO: remove this branch?
-      String httpRoute = httpRouteGetter.get(context, arg1, arg2);
-      if (httpRoute != null && !httpRoute.isEmpty()) {
-        // update just the attribute - without http.method we can't compute a proper span name here
-        serverSpan.setAttribute(SemanticAttributes.HTTP_ROUTE, httpRoute);
-      }
       return;
     }
     // special case for servlet filters, even when we have a route from previous filter see whether

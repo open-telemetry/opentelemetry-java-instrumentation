@@ -60,7 +60,7 @@ class SqsCamelTest {
                         .hasParent(trace.getSpan(1)),
                 span ->
                     AwsSpanAssertions.sqs(
-                            span, "sqsCamelTest receive", queueUrl, queueName, SpanKind.CONSUMER)
+                            span, "sqsCamelTest process", queueUrl, queueName, SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(2)),
                 span ->
                     CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(2))),
@@ -95,7 +95,7 @@ class SqsCamelTest {
                         .hasNoParent(),
                 span ->
                     AwsSpanAssertions.sqs(
-                            span, "sqsCamelTest receive", queueUrl, queueName, SpanKind.CONSUMER)
+                            span, "sqsCamelTest process", queueUrl, queueName, SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0)),
                 span ->
                     CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(0))),
@@ -137,7 +137,7 @@ class SqsCamelTest {
                 span ->
                     AwsSpanAssertions.sqs(
                             span,
-                            "sqsCamelTestSdkConsumer receive",
+                            "sqsCamelTestSdkConsumer process",
                             queueUrl,
                             queueName,
                             SpanKind.CONSUMER)

@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
@@ -245,10 +246,16 @@ public final class ArmeriaTelemetryBuilder {
           AttributesExtractor.constant(SemanticAttributes.PEER_SERVICE, peerService));
     }
     if (emitExperimentalHttpClientMetrics) {
-      clientInstrumenterBuilder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+      clientInstrumenterBuilder
+          .addAttributesExtractor(
+              HttpExperimentalAttributesExtractor.create(clientAttributesGetter))
+          .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
     if (emitExperimentalHttpServerMetrics) {
-      serverInstrumenterBuilder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+      serverInstrumenterBuilder
+          .addAttributesExtractor(
+              HttpExperimentalAttributesExtractor.create(serverAttributesGetter))
+          .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
 
     return new ArmeriaTelemetry(

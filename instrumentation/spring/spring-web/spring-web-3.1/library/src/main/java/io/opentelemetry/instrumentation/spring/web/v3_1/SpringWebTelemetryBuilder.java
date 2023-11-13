@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -128,7 +129,7 @@ public final class SpringWebTelemetryBuilder {
    * SpringWebTelemetryBuilder}.
    */
   public SpringWebTelemetry build() {
-    SpringWebHttpAttributesGetter httpAttributeGetter = SpringWebHttpAttributesGetter.INSTANCE;
+    SpringWebHttpAttributesGetter httpAttributesGetter = SpringWebHttpAttributesGetter.INSTANCE;
 
     SpanNameExtractor<HttpRequest> originalSpanNameExtractor = httpSpanNameExtractorBuilder.build();
     SpanNameExtractor<? super HttpRequest> spanNameExtractor = originalSpanNameExtractor;
@@ -139,12 +140,14 @@ public final class SpringWebTelemetryBuilder {
     InstrumenterBuilder<HttpRequest, ClientHttpResponse> builder =
         Instrumenter.<HttpRequest, ClientHttpResponse>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
     if (emitExperimentalHttpClientMetrics) {
-      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+      builder
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
 
     Instrumenter<HttpRequest, ClientHttpResponse> instrumenter =

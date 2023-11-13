@@ -32,7 +32,10 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
 
     when:
     awsConnector.publishSampleNotification(topicArn)
-    awsConnector.receiveMessage(queueUrl)
+    def receiveMessageResult = awsConnector.receiveMessage(queueUrl)
+    receiveMessageResult.messages.each {message ->
+      runWithSpan("process child") {}
+    }
 
     then:
     assertTraces(6) {
@@ -154,7 +157,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(5, 2) {
+      trace(5, 3) {
         span(0) {
           name "SNS.Publish"
           kind CLIENT
@@ -176,7 +179,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           }
         }
         span(1) {
-          name "snsToSqsTestQueue receive"
+          name "snsToSqsTestQueue process"
           kind CONSUMER
           childOf span(0)
           attributes {
@@ -187,16 +190,18 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.service" "AmazonSQS"
             "rpc.method" "ReceiveMessage"
             "http.method" "POST"
-            "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "snsToSqsTestQueue"
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+          }
+        }
+        span(2) {
+          name "process child"
+          childOf span(1)
+          attributes {
           }
         }
       }

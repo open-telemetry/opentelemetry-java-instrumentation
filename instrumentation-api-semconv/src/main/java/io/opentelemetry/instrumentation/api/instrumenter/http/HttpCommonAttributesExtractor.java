@@ -17,16 +17,18 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#common-attributes">HTTP
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#common-attributes">HTTP
  * attributes</a> that are common to client and server instrumentations.
  */
 abstract class HttpCommonAttributesExtractor<
@@ -34,6 +36,7 @@ abstract class HttpCommonAttributesExtractor<
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   final GETTER getter;
+  final NetworkAttributesGetter<REQUEST, RESPONSE> networkGetter;
   private final HttpStatusCodeConverter statusCodeConverter;
   private final List<String> capturedRequestHeaders;
   private final List<String> capturedResponseHeaders;
@@ -41,11 +44,13 @@ abstract class HttpCommonAttributesExtractor<
 
   HttpCommonAttributesExtractor(
       GETTER getter,
+      NetworkAttributesGetter<REQUEST, RESPONSE> networkGetter,
       HttpStatusCodeConverter statusCodeConverter,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders,
       Set<String> knownMethods) {
     this.getter = getter;
+    this.networkGetter = networkGetter;
     this.statusCodeConverter = statusCodeConverter;
     this.capturedRequestHeaders = lowercase(capturedRequestHeaders);
     this.capturedResponseHeaders = lowercase(capturedResponseHeaders);
@@ -91,9 +96,6 @@ abstract class HttpCommonAttributesExtractor<
       @Nullable Throwable error) {
 
     Long requestBodySize = requestBodySize(request);
-    if (SemconvStability.emitStableHttpSemconv()) {
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_BODY_SIZE, requestBodySize);
-    }
     if (SemconvStability.emitOldHttpSemconv()) {
       internalSet(attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestBodySize);
     }
@@ -111,9 +113,6 @@ abstract class HttpCommonAttributesExtractor<
       }
 
       Long responseBodySize = responseBodySize(request, response);
-      if (SemconvStability.emitStableHttpSemconv()) {
-        internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, responseBodySize);
-      }
       if (SemconvStability.emitOldHttpSemconv()) {
         internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, responseBodySize);
       }
@@ -149,6 +148,19 @@ abstract class HttpCommonAttributesExtractor<
       }
       internalSet(attributes, HttpAttributes.ERROR_TYPE, errorType);
     }
+
+    if (SemconvStability.emitStableHttpSemconv()) {
+      String protocolName = lowercaseStr(networkGetter.getNetworkProtocolName(request, response));
+      String protocolVersion =
+          lowercaseStr(networkGetter.getNetworkProtocolVersion(request, response));
+
+      if (protocolVersion != null) {
+        if (!"http".equals(protocolName)) {
+          internalSet(attributes, SemanticAttributes.NETWORK_PROTOCOL_NAME, protocolName);
+        }
+        internalSet(attributes, SemanticAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
+      }
+    }
   }
 
   @Nullable
@@ -178,5 +190,10 @@ abstract class HttpCommonAttributesExtractor<
       // not a number
       return null;
     }
+  }
+
+  @Nullable
+  private static String lowercaseStr(@Nullable String str) {
+    return str == null ? null : str.toLowerCase(Locale.ROOT);
   }
 }

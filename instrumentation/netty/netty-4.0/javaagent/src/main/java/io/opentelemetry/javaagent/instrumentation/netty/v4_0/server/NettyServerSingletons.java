@@ -25,7 +25,7 @@ public final class NettyServerSingletons {
                   .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
           builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
           builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-          CommonConfig.get().shouldEmitExperimentalHttpServerMetrics());
+          CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry());
 
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {
     return INSTRUMENTER;

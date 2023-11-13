@@ -10,9 +10,23 @@ package io.opentelemetry.javaagent.extension.instrumentation.internal.injection;
  * any time.
  */
 public enum InjectionMode {
-  CLASS_ONLY
-  // TODO: implement the modes RESOURCE_ONLY and CLASS_AND_RESOURCE
-  // This will require a custom URL implementation for byte arrays, similar to how bytebuddy's
-  // ByteArrayClassLoader does it
+  CLASS_ONLY(true, false),
+  RESOURCE_ONLY(false, true),
+  CLASS_AND_RESOURCE(true, true);
 
+  private final boolean injectClass;
+  private final boolean injectResource;
+
+  InjectionMode(boolean injectClass, boolean injectResource) {
+    this.injectClass = injectClass;
+    this.injectResource = injectResource;
+  }
+
+  public boolean shouldInjectClass() {
+    return injectClass;
+  }
+
+  public boolean shouldInjectResource() {
+    return injectResource;
+  }
 }

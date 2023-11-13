@@ -28,7 +28,6 @@ public abstract class HttpClientTestOptions {
       Collections.unmodifiableSet(
           new HashSet<>(
               Arrays.asList(
-                  SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME),
                   SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION),
                   SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PEER_NAME),
                   SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PEER_PORT),
@@ -84,11 +83,6 @@ public abstract class HttpClientTestOptions {
 
   public abstract boolean getTestCallbackWithParent();
 
-  // depending on async behavior callback can be executed within
-  // parent span scope or outside of the scope, e.g. in reactor-netty or spring
-  // callback is correlated.
-  public abstract boolean getTestCallbackWithImplicitParent();
-
   public abstract boolean getTestErrorWithCallback();
 
   public abstract boolean getTestNonStandardHttpMethod();
@@ -119,7 +113,6 @@ public abstract class HttpClientTestOptions {
           .setTestHttps(true)
           .setTestCallback(true)
           .setTestCallbackWithParent(true)
-          .setTestCallbackWithImplicitParent(false)
           .setTestErrorWithCallback(true)
           .setTestNonStandardHttpMethod(true);
     }
@@ -157,8 +150,6 @@ public abstract class HttpClientTestOptions {
     Builder setTestCallback(boolean value);
 
     Builder setTestCallbackWithParent(boolean value);
-
-    Builder setTestCallbackWithImplicitParent(boolean value);
 
     Builder setTestErrorWithCallback(boolean value);
 
@@ -222,11 +213,6 @@ public abstract class HttpClientTestOptions {
     @CanIgnoreReturnValue
     default Builder disableTestNonStandardHttpMethod() {
       return setTestNonStandardHttpMethod(false);
-    }
-
-    @CanIgnoreReturnValue
-    default Builder enableTestCallbackWithImplicitParent() {
-      return setTestCallbackWithImplicitParent(true);
     }
 
     @CanIgnoreReturnValue

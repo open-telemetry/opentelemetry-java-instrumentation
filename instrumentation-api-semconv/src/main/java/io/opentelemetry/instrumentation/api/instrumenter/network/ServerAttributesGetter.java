@@ -19,10 +19,10 @@ import javax.annotation.Nullable;
 public interface ServerAttributesGetter<REQUEST, RESPONSE> {
 
   /**
-   * Return the logical server hostname that matches server FQDN if available, and IP or socket
-   * address if FQDN is not known.
+   * Returns the server domain name if available without reverse DNS lookup; otherwise, IP address
+   * or Unix domain socket name.
    *
-   * <p>Examples: {@code example.com}
+   * <p>Examples: {@code client.example.com}, {@code 10.1.2.80}, {@code /tmp/my.sock}
    */
   @Nullable
   default String getServerAddress(REQUEST request) {
@@ -30,7 +30,7 @@ public interface ServerAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Return the logical server port number.
+   * Return the server port number.
    *
    * <p>Examples: {@code 80}, {@code 8080}, {@code 443}
    */

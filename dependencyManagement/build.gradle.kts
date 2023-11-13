@@ -32,7 +32,7 @@ val DEPENDENCY_BOMS = listOf(
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.junit:junit-bom:5.10.0",
+  "org.junit:junit-bom:5.10.1",
   "org.testcontainers:testcontainers-bom:1.19.1",
   "org.spockframework:spock-bom:2.4-M1-groovy-4.0"
 )
@@ -84,7 +84,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.10.15",
+  "com.uber.nullaway:nullaway:0.10.16",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.6.0",
   "commons-codec:commons-codec:1.16.0",

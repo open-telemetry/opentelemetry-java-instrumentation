@@ -14,12 +14,10 @@ public final class AwsSdkTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
 
   private boolean captureExperimentalSpanAttributes;
-
   private boolean useMessagingPropagator;
-
   private boolean recordIndividualHttpError;
-
   private boolean useXrayPropagator = true;
+  private boolean messagingReceiveInstrumentationEnabled;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -88,6 +86,19 @@ public final class AwsSdkTelemetryBuilder {
   }
 
   /**
+   * Set whether to capture the consumer message receive telemetry in messaging instrumentation.
+   *
+   * <p>Note that this will cause the consumer side to start a new trace, with only a span link
+   * connecting it to the producer trace.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setMessagingReceiveInstrumentationEnabled(
+      boolean messagingReceiveInstrumentationEnabled) {
+    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
+    return this;
+  }
+
+  /**
    * Returns a new {@link AwsSdkTelemetry} with the settings of this {@link AwsSdkTelemetryBuilder}.
    */
   public AwsSdkTelemetry build() {
@@ -96,6 +107,7 @@ public final class AwsSdkTelemetryBuilder {
         captureExperimentalSpanAttributes,
         useMessagingPropagator,
         useXrayPropagator,
-        recordIndividualHttpError);
+        recordIndividualHttpError,
+        messagingReceiveInstrumentationEnabled);
   }
 }

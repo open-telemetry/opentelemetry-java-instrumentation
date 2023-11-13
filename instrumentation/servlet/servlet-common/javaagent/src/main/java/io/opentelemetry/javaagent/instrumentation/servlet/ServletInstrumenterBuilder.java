@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
@@ -79,8 +80,10 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
         contextCustomizers) {
       builder.addContextCustomizer(contextCustomizer);
     }
-    if (CommonConfig.get().shouldEmitExperimentalHttpServerMetrics()) {
-      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+    if (CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
+      builder
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
     return builder.buildServerInstrumenter(new ServletRequestGetter<>(accessor));
   }

@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -64,7 +65,9 @@ public final class ClientInstrumenterFactory {
       clientBuilder.addAttributesExtractor(new WebClientExperimentalAttributesExtractor());
     }
     if (emitExperimentalHttpClientMetrics) {
-      clientBuilder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+      clientBuilder
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
 
     // headers are injected elsewhere; ClientRequest is immutable

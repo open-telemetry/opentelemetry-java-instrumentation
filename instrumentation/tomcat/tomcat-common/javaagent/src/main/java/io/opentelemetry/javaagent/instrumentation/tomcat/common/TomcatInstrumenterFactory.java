@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
@@ -55,8 +56,10 @@ public final class TomcatInstrumenterFactory {
                         .recordException()
                         .init(context))
             .addOperationMetrics(HttpServerMetrics.get());
-    if (CommonConfig.get().shouldEmitExperimentalHttpServerMetrics()) {
-      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+    if (CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
+      builder
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
     return builder.buildServerInstrumenter(TomcatRequestGetter.INSTANCE);
   }

@@ -169,15 +169,12 @@ class HttpServerAttributesExtractorBothSemconvTest {
         .containsOnly(
             entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0"),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
-            entry(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
-            entry(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")),
