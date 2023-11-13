@@ -29,7 +29,8 @@ public final class ConfiguredResourceAttributesHolder {
   public static void initialize(Attributes resourceAttribute) {
     List<String> mdcResourceAttributes =
         InstrumentationConfig.get()
-            .getList("otel.instrumentation.mdc.resource-attributes", Collections.emptyList());
+            .getList(
+                "otel.instrumentation.common.mdc.resource-attributes", Collections.emptyList());
     for (String key : mdcResourceAttributes) {
       String value = resourceAttribute.get(stringKey(key));
       if (value != null) {

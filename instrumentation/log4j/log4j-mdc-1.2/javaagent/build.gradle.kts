@@ -33,6 +33,6 @@ configurations {
 
 tasks {
   test {
-    jvmArgs("-Dotel.instrumentation.mdc.resource-attributes=service.name,telemetry.sdk.language")
+    jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
   }
 }
