@@ -214,13 +214,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
    */
   public void setOpenTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
-    while (!eventsToReplay.isEmpty()) {
-      try {
-        LogEvent eventToReplay = eventsToReplay.poll(10, TimeUnit.MILLISECONDS);
-        append(eventToReplay);
-      } catch (InterruptedException e) {
-        // Ignore
-      }
+    LogEventToReplay eventToReplay;
+    while ((eventToReplay = eventsToReplay.poll()) != null) {
+      append(eventToReplay);
     }
   }
 
