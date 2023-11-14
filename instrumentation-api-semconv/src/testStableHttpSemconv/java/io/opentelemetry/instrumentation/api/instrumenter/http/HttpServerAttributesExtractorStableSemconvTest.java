@@ -211,7 +211,6 @@ class HttpServerAttributesExtractorStableSemconvTest {
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
             entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),
             entry(NetworkAttributes.NETWORK_PEER_PORT, 456L),
@@ -527,5 +526,30 @@ class HttpServerAttributesExtractorStableSemconvTest {
             entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
             entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4"),
             entry(NetworkAttributes.NETWORK_PEER_PORT, 456L));
+  }
+
+  @Test
+  void shouldExtractProtocolNameDifferentFromHttp() {
+    Map<String, String> request = new HashMap<>();
+    request.put("networkProtocolName", "spdy");
+    request.put("networkProtocolVersion", "3.1");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "200");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build()).isEmpty();
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "spdy"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "3.1"));
   }
 }

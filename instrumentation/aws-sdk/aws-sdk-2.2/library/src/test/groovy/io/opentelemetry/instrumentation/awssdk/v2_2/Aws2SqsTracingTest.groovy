@@ -7,18 +7,44 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsClient
 
-class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest implements LibraryTestTrait {
+abstract class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest implements LibraryTestTrait {
+  static AwsSdkTelemetry telemetry
+
+  def setupSpec() {
+    def telemetryBuilder = AwsSdkTelemetry.builder(getOpenTelemetry())
+      .setCaptureExperimentalSpanAttributes(true)
+      .setMessagingReceiveInstrumentationEnabled(true)
+    configure(telemetryBuilder)
+    telemetry = telemetryBuilder.build()
+  }
+
+  abstract void configure(AwsSdkTelemetryBuilder telemetryBuilder)
+
   @Override
   ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder()
       .addExecutionInterceptor(
-        AwsSdkTelemetry.builder(getOpenTelemetry())
-          .setCaptureExperimentalSpanAttributes(true)
-          .build()
-          .newExecutionInterceptor())
+        telemetry.newExecutionInterceptor())
   }
+
+  @Override
+  SqsClient configureSqsClient(SqsClient sqsClient) {
+    return telemetry.wrap(sqsClient)
+  }
+
+  @Override
+  SqsAsyncClient configureSqsClient(SqsAsyncClient sqsClient) {
+    return telemetry.wrap(sqsClient)
+  }
+}
+
+class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
+
+  @Override
+  void configure(AwsSdkTelemetryBuilder telemetryBuilder) {}
 
   @Override
   boolean isSqsAttributeInjectionEnabled() {
@@ -29,15 +55,12 @@ class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest implements LibraryTe
     setup:
     def builder = SqsClient.builder()
     configureSdkClient(builder)
-    def telemetry = AwsSdkTelemetry.builder(getOpenTelemetry())
-      .setCaptureExperimentalSpanAttributes(true)
-      .build()
     def overrideConfiguration = ClientOverrideConfiguration.builder()
       .addExecutionInterceptor(telemetry.newExecutionInterceptor())
       .addExecutionInterceptor(telemetry.newExecutionInterceptor())
       .build()
     builder.overrideConfiguration(overrideConfiguration)
-    def client = builder.build()
+    def client = configureSqsClient(builder.build())
 
     client.createQueue(createQueueRequest)
 
@@ -48,6 +71,40 @@ class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest implements LibraryTe
 
     then:
     resp.messages().size() == 1
+    resp.messages.each {message -> runWithSpan("process child") {}}
     assertSqsTraces()
+  }
+}
+
+class Aws2SqsW3CPropagatorTest extends Aws2SqsTracingTest {
+
+  @Override
+  void configure(AwsSdkTelemetryBuilder telemetryBuilder) {
+    telemetryBuilder.setUseConfiguredPropagatorForMessaging(isSqsAttributeInjectionEnabled()) // Difference to main test
+      .setUseXrayPropagator(isXrayInjectionEnabled()) // Disable to confirm messaging propagator actually works
+  }
+
+  @Override
+  boolean isSqsAttributeInjectionEnabled() {
+    true
+  }
+
+  @Override
+  boolean isXrayInjectionEnabled() {
+    false
+  }
+}
+
+/** We want to test the combination of W3C + Xray, as that's what you'll get in prod if you enable W3C. */
+class Aws2SqsW3CPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
+
+  @Override
+  void configure(AwsSdkTelemetryBuilder telemetryBuilder) {
+    telemetryBuilder.setUseConfiguredPropagatorForMessaging(isSqsAttributeInjectionEnabled()) // Difference to main test
+  }
+
+  @Override
+  boolean isSqsAttributeInjectionEnabled() {
+    true
   }
 }

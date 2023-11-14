@@ -14,12 +14,16 @@ import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilde
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class DubboInstrumentationModule extends InstrumentationModule {
+public class DubboInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public DubboInstrumentationModule() {
     super("apache-dubbo", "apache-dubbo-2.7");
   }
@@ -37,8 +41,11 @@ public class DubboInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    return false;
+  public void injectClasses(ClassInjector injector) {
+    injector
+        .proxyBuilder(
+            "io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7.OpenTelemetryFilter")
+        .inject(InjectionMode.CLASS_ONLY);
   }
 
   @Override

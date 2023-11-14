@@ -39,6 +39,8 @@ public final class Slf4jSimpleLoggingCustomizer implements LoggingCustomizer {
     if (earlyConfig.getBoolean("otel.javaagent.debug", false)) {
       setSystemPropertyDefault(SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY, "DEBUG");
       setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "okhttp3.internal.http2", "INFO");
+      setSystemPropertyDefault(
+          SIMPLE_LOGGER_PREFIX + "okhttp3.internal.concurrent.TaskRunner", "INFO");
     }
 
     // trigger loading the provider from the agent CL

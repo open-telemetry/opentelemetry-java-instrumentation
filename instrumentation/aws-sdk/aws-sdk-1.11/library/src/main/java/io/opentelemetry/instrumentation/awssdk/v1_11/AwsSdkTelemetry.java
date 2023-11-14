@@ -11,6 +11,7 @@ import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.util.List;
 
 /**
  * Entrypoint for instrumenting AWS SDK v1 clients.
@@ -45,19 +46,25 @@ public class AwsSdkTelemetry {
   }
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
-  private final Instrumenter<Request<?>, Response<?>> consumerInstrumenter;
+  private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
+  private final Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
 
-  AwsSdkTelemetry(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
-    requestInstrumenter =
-        AwsSdkInstrumenterFactory.requestInstrumenter(
-            openTelemetry, captureExperimentalSpanAttributes);
-    consumerInstrumenter =
-        AwsSdkInstrumenterFactory.consumerInstrumenter(
-            openTelemetry, captureExperimentalSpanAttributes);
-    producerInstrumenter =
-        AwsSdkInstrumenterFactory.producerInstrumenter(
-            openTelemetry, captureExperimentalSpanAttributes);
+  AwsSdkTelemetry(
+      OpenTelemetry openTelemetry,
+      List<String> capturedHeaders,
+      boolean captureExperimentalSpanAttributes,
+      boolean messagingReceiveInstrumentationEnabled) {
+    AwsSdkInstrumenterFactory instrumenterFactory =
+        new AwsSdkInstrumenterFactory(
+            openTelemetry,
+            capturedHeaders,
+            captureExperimentalSpanAttributes,
+            messagingReceiveInstrumentationEnabled);
+    requestInstrumenter = instrumenterFactory.requestInstrumenter();
+    consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();
+    consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();
+    producerInstrumenter = instrumenterFactory.producerInstrumenter();
   }
 
   /**
@@ -66,6 +73,9 @@ public class AwsSdkTelemetry {
    */
   public RequestHandler2 newRequestHandler() {
     return new TracingRequestHandler(
-        requestInstrumenter, consumerInstrumenter, producerInstrumenter);
+        requestInstrumenter,
+        consumerReceiveInstrumenter,
+        consumerProcessInstrumenter,
+        producerInstrumenter);
   }
 }

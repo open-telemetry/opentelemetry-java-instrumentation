@@ -27,14 +27,14 @@ subprojects {
   ext {
     versions = [
       // this line is managed by .github/scripts/update-sdk-version.sh
-      opentelemetrySdk           : "1.31.0",
+      opentelemetrySdk           : "1.32.0",
 
       // these lines are managed by .github/scripts/update-version.sh
       opentelemetryJavaagent     : "1.32.0-SNAPSHOT",
       opentelemetryJavaagentAlpha: "1.32.0-alpha-SNAPSHOT",
 
       autoservice                : "1.1.1",
-      junit                      : "5.10.0"
+      junit                      : "5.10.1"
     ]
 
     deps = [
@@ -68,7 +68,7 @@ subprojects {
     implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:${versions.opentelemetryJavaagent}"))
     implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${versions.opentelemetryJavaagentAlpha}"))
 
-    testImplementation("org.mockito:mockito-core:5.6.0")
+    testImplementation("org.mockito:mockito-core:5.7.0")
     testImplementation(enforcedPlatform("org.junit:junit-bom:${versions.junit}"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")

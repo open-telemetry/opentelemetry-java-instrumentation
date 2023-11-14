@@ -15,6 +15,7 @@ import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -24,7 +25,7 @@ import javax.annotation.Nullable;
 
 /**
  * {@link OperationListener} which keeps track of <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/specification/metrics/semantic_conventions/http-metrics.md#http-client">HTTP
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-metrics.md#http-client">HTTP
  * client metrics</a>.
  */
 public final class HttpClientMetrics implements OperationListener {
@@ -38,9 +39,10 @@ public final class HttpClientMetrics implements OperationListener {
   private static final Logger logger = Logger.getLogger(HttpClientMetrics.class.getName());
 
   /**
-   * Returns a {@link OperationMetrics} which can be used to enable recording of {@link
-   * HttpClientMetrics} on an {@link
-   * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
+   * Returns an {@link OperationMetrics} instance which can be used to enable recording of {@link
+   * HttpClientMetrics}.
+   *
+   * @see InstrumenterBuilder#addOperationMetrics(OperationMetrics)
    */
   public static OperationMetrics get() {
     return HttpClientMetrics::new;

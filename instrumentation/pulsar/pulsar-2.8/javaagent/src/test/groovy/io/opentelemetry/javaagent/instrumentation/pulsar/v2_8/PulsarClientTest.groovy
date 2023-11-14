@@ -587,6 +587,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.NET_PEER_NAME" brokerHost
         "$SemanticAttributes.NET_PEER_PORT" brokerPort
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destination
+        "$SemanticAttributes.MESSAGING_OPERATION" "publish"
         if (msgId == String) {
           "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
         } else if (msgId != null) {

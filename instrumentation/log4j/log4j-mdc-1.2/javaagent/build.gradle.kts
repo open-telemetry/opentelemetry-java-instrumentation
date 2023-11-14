@@ -30,3 +30,9 @@ configurations {
     exclude("javax.jms", "jms")
   }
 }
+
+tasks {
+  test {
+    jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
+  }
+}

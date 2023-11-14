@@ -9,28 +9,33 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ProxyInjectionBuilder;
-import java.util.HashMap;
-import java.util.Map;
+import io.opentelemetry.javaagent.tooling.HelperClassDefinition;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.pool.TypePool;
 
 public class ClassInjectorImpl implements ClassInjector {
 
   private final InstrumentationModule instrumentationModule;
 
-  private final Map<String, Function<ClassLoader, byte[]>> classesToInject;
+  private final List<Function<ClassLoader, HelperClassDefinition>> classesToInject;
 
   private final IndyProxyFactory proxyFactory;
 
   public ClassInjectorImpl(InstrumentationModule module) {
     instrumentationModule = module;
-    classesToInject = new HashMap<>();
+    classesToInject = new ArrayList<>();
     proxyFactory = IndyBootstrap.getProxyFactory(module);
   }
 
-  public Map<String, Function<ClassLoader, byte[]>> getClassesToInject() {
-    return classesToInject;
+  public List<HelperClassDefinition> getClassesToInject(ClassLoader instrumentedCl) {
+    return classesToInject.stream()
+        .map(generator -> generator.apply(instrumentedCl))
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -50,15 +55,12 @@ public class ClassInjectorImpl implements ClassInjector {
 
     @Override
     public void inject(InjectionMode mode) {
-      if (mode != InjectionMode.CLASS_ONLY) {
-        throw new UnsupportedOperationException("Not yet implemented");
-      }
-      classesToInject.put(
-          proxyClassName,
+      classesToInject.add(
           cl -> {
             TypePool typePool = IndyModuleTypePool.get(cl, instrumentationModule);
             TypeDescription proxiedType = typePool.describe(classToProxy).resolve();
-            return proxyFactory.generateProxy(proxiedType, proxyClassName).getBytes();
+            DynamicType.Unloaded<?> proxy = proxyFactory.generateProxy(proxiedType, proxyClassName);
+            return HelperClassDefinition.create(proxy, mode);
           });
     }
   }

@@ -90,4 +90,19 @@ public class Log4j1MdcTest {
     assertEquals(events.get(2).getMDC("span_id"), span2.getSpanContext().getSpanId());
     assertEquals(events.get(2).getMDC("trace_flags"), "01");
   }
+
+  @Test
+  void resourceAttributes() {
+    logger.info("log message 1");
+
+    List<LoggingEvent> events = ListAppender.getEvents();
+
+    assertEquals(1, events.size());
+    assertEquals("log message 1", events.get(0).getMessage());
+    assertNull(events.get(0).getMDC("trace_id"));
+    assertNull(events.get(0).getMDC("span_id"));
+    assertNull(events.get(0).getMDC("trace_flags"));
+    assertEquals("unknown_service:java", events.get(0).getMDC("service.name"));
+    assertEquals("java", events.get(0).getMDC("telemetry.sdk.language"));
+  }
 }

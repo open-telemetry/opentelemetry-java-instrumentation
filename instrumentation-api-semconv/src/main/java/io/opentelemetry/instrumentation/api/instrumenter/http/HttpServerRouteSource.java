@@ -25,7 +25,7 @@ public enum HttpServerRouteSource {
    * annotated sub-resource method. Since multiple nested controllers may match the same request,
    * the one with the longest (most detailed) route will be chosen.
    */
-  NESTED_CONTROLLER(4, false);
+  NESTED_CONTROLLER(4, /* useFirst= */ false);
 
   final int order;
   final boolean useFirst;
