@@ -132,7 +132,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     /**
      * Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with
      * an {@link OpenTelemetry} object. This setting allows you to modify the size of the cache used
-     * to replay the first logs.
+     * to replay the logs that were emitted prior to setting the OpenTelemetry instance into the Logback appender.
      */
     @CanIgnoreReturnValue
     public B setFirstLogsCacheSize(int firstLogsCacheSize) {
