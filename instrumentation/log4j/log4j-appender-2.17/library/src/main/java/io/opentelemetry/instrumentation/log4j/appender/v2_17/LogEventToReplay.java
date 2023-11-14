@@ -33,42 +33,6 @@ class LogEventToReplay implements LogEvent {
   private final String threadName;
   private final long threadId;
 
-  private static class MessageCopy implements Message {
-
-    private static final long serialVersionUID = 1L;
-    private final String formattedMessage;
-    private final String format;
-    private final Object[] parameters;
-    private final Throwable throwable;
-
-    public MessageCopy(Message message) {
-      this.formattedMessage = message.getFormattedMessage();
-      this.format = message.getFormat();
-      this.parameters = message.getParameters();
-      this.throwable = message.getThrowable();
-    }
-
-    @Override
-    public String getFormattedMessage() {
-      return formattedMessage;
-    }
-
-    @Override
-    public String getFormat() {
-      return format;
-    }
-
-    @Override
-    public Object[] getParameters() {
-      return parameters;
-    }
-
-    @Override
-    public Throwable getThrowable() {
-      return throwable;
-    }
-  }
-
   // Log4j 2 reuses LogEvent object, so we make a copy to be able to
   // replay the log event later.
   LogEventToReplay(LogEvent logEvent) {
@@ -205,5 +169,41 @@ class LogEventToReplay implements LogEvent {
   @Override
   public long getNanoTime() {
     return 0;
+  }
+
+  private static class MessageCopy implements Message {
+
+    private static final long serialVersionUID = 1L;
+    private final String formattedMessage;
+    private final String format;
+    private final Object[] parameters;
+    private final Throwable throwable;
+
+    public MessageCopy(Message message) {
+      this.formattedMessage = message.getFormattedMessage();
+      this.format = message.getFormat();
+      this.parameters = message.getParameters();
+      this.throwable = message.getThrowable();
+    }
+
+    @Override
+    public String getFormattedMessage() {
+      return formattedMessage;
+    }
+
+    @Override
+    public String getFormat() {
+      return format;
+    }
+
+    @Override
+    public Object[] getParameters() {
+      return parameters;
+    }
+
+    @Override
+    public Throwable getThrowable() {
+      return throwable;
+    }
   }
 }

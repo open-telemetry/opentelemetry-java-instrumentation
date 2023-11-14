@@ -70,7 +70,7 @@ public final class Log4jHelper {
     Map<String, String> contextData = ThreadContext.getImmutableContext();
 
     String threadName = null;
-    long  threadId = -1;
+    long threadId = -1;
     if (captureExperimentalAttributes) {
       Thread currentThread = Thread.currentThread();
       threadName = currentThread.getName();
