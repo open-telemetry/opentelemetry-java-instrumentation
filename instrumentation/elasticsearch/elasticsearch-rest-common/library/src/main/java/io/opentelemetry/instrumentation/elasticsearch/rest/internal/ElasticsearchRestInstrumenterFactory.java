@@ -23,7 +23,7 @@ public final class ElasticsearchRestInstrumenterFactory {
   private ElasticsearchRestInstrumenterFactory() {}
 
   public static Instrumenter<ElasticsearchRestRequest, Response> create(
-      OpenTelemetry opentelemetry,
+      OpenTelemetry openTelemetry,
       String instrumentationName,
       List<AttributesExtractor<ElasticsearchRestRequest, Response>> attributesExtractors,
       Set<String> knownMethods,
@@ -36,7 +36,7 @@ public final class ElasticsearchRestInstrumenterFactory {
         new ElasticsearchSpanNameExtractor(dbClientAttributesGetter);
 
     return Instrumenter.<ElasticsearchRestRequest, Response>builder(
-            opentelemetry, instrumentationName, nameExtractor)
+            openTelemetry, instrumentationName, nameExtractor)
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
         .addAttributesExtractor(esClientAtrributesExtractor)
         .addAttributesExtractors(attributesExtractors)
