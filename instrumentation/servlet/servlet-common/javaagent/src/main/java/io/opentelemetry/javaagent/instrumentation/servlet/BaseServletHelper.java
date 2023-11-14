@@ -136,7 +136,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
    * created by servlet instrumentation we call this method on exit from the last servlet or filter.
    */
   private void captureEnduserId(Span serverSpan, REQUEST request) {
-    if (!CommonConfig.get().shouldCaptureEnduser()) {
+    if (!CommonConfig.get().getEnduserConfig().isIdEnabled()) {
       return;
     }
 
