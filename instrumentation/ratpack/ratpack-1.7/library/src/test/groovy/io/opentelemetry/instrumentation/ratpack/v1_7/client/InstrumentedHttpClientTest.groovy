@@ -311,15 +311,15 @@ class InstrumentedHttpClientTest extends Specification {
 class BarService implements Service {
   private final String url
   private final CountDownLatch latch
-  private final OpenTelemetry opentelemetry
+  private final OpenTelemetry openTelemetry
 
-  BarService(CountDownLatch latch, String url, OpenTelemetry opentelemetry) {
+  BarService(CountDownLatch latch, String url, OpenTelemetry openTelemetry) {
     this.latch = latch
     this.url = url
-    this.opentelemetry = opentelemetry
+    this.openTelemetry = openTelemetry
   }
 
-  private Tracer tracer = opentelemetry.tracerProvider.tracerBuilder("testing").build()
+  private Tracer tracer = openTelemetry.tracerProvider.tracerBuilder("testing").build()
 
   void onStart(StartEvent event) {
     def parentContext = Context.current()
@@ -345,15 +345,15 @@ class BarService implements Service {
 class BarForkService implements Service {
   private final String url
   private final CountDownLatch latch
-  private final OpenTelemetry opentelemetry
+  private final OpenTelemetry openTelemetry
 
-  BarForkService(CountDownLatch latch, String url, OpenTelemetry opentelemetry) {
+  BarForkService(CountDownLatch latch, String url, OpenTelemetry openTelemetry) {
     this.latch = latch
     this.url = url
-    this.opentelemetry = opentelemetry
+    this.openTelemetry = openTelemetry
   }
 
-  private Tracer tracer = opentelemetry.tracerProvider.tracerBuilder("testing").build()
+  private Tracer tracer = openTelemetry.tracerProvider.tracerBuilder("testing").build()
 
   void onStart(StartEvent event) {
     Execution.fork().start {
