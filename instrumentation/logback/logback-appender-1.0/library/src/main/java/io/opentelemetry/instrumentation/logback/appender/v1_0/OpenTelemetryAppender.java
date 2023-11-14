@@ -160,13 +160,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    */
   public void setOpenTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
-    while (!eventsToReplay.isEmpty()) {
-      try {
-        LoggingEventToReplay eventToReplay = eventsToReplay.poll(10, TimeUnit.MILLISECONDS);
-        mapper.emit(openTelemetry.getLogsBridge(), eventToReplay, -1);
-      } catch (InterruptedException e) {
-        // Ignore
-      }
+    LoggingEventToReplay eventToReplay;
+    while ((eventToReplay = eventsToReplay.poll()) != null) {
+      mapper.emit(openTelemetry.getLogsBridge(), eventToReplay, -1);
     }
   }
 
