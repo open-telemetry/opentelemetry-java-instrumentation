@@ -69,20 +69,14 @@ public final class Log4jHelper {
             .logRecordBuilder();
     Map<String, String> contextData = ThreadContext.getImmutableContext();
 
+    String threadName = null;
+    int threadId = -1;
     if (captureExperimentalAttributes) {
       Thread currentThread = Thread.currentThread();
-      mapper.mapLogEvent(
-          builder,
-          message,
-          level,
-          marker,
-          throwable,
-          contextData,
-          currentThread.getName(),
-          currentThread.getId());
-    } else {
-      mapper.mapLogEvent(builder, message, level, marker, throwable, contextData, null, -1);
+      threadName = currentThread.getName();
+      threadId = currentThread.getId();
     }
+    mapper.mapLogEvent(builder, message, level, marker, throwable, contextData, threadName, threadId);
     builder.setTimestamp(Instant.now());
     builder.emit();
   }
