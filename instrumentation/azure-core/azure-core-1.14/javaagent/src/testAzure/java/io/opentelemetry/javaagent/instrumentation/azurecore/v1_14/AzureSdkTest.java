@@ -3,14 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.azurecore.v1_14;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.azure.core.http.policy.HttpPipelinePolicy;
+import com.azure.core.http.policy.HttpPolicyProviders;
 import com.azure.core.util.Context;
+import com.azure.core.util.tracing.TracerProxy;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -21,20 +28,25 @@ class AzureSdkTest {
 
   @Test
   void testHelperClassesInjected() {
-    com.azure.core.util.tracing.Tracer azTracer = createAzTracer();
-    assertThat(azTracer.isEnabled()).isTrue();
 
-    assertThat(azTracer.getClass().getName())
-        .isEqualTo(
-            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.shaded"
-                + ".com.azure.core.tracing.opentelemetry.OpenTelemetryTracer");
+    assertThat(TracerProxy.isTracingEnabled()).isTrue();
+
+    List<HttpPipelinePolicy> list = new ArrayList<>();
+    HttpPolicyProviders.addAfterRetryPolicies(list);
+
+    assertThat(list)
+        .satisfiesExactly(
+            item ->
+                assertThat(item.getClass().getName())
+                    .isEqualTo(
+                        "io.opentelemetry.javaagent.instrumentation.azurecore.v1_14.shaded"
+                            + ".com.azure.core.tracing.opentelemetry.OpenTelemetryHttpPolicy"));
   }
 
   @Test
   void testSpan() {
-    com.azure.core.util.tracing.Tracer azTracer = createAzTracer();
-    Context context = azTracer.start("hello", Context.NONE);
-    azTracer.end(null, null, context);
+    Context context = TracerProxy.start("hello", Context.NONE);
+    TracerProxy.end(200, null, context);
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace ->
@@ -42,13 +54,7 @@ class AzureSdkTest {
                 span ->
                     span.hasName("hello")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasStatus(StatusData.unset())
+                        .hasStatus(StatusData.ok())
                         .hasAttributesSatisfying(Attributes::isEmpty)));
-  }
-
-  private static com.azure.core.util.tracing.Tracer createAzTracer() {
-    com.azure.core.util.tracing.TracerProvider azProvider =
-        com.azure.core.util.tracing.TracerProvider.getDefaultProvider();
-    return azProvider.createTracer("test-lib", "test-version", "otel.tests", null);
   }
 }

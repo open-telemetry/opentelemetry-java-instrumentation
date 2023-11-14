@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.azurecore.v1_36;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.azure.core.util.Context;

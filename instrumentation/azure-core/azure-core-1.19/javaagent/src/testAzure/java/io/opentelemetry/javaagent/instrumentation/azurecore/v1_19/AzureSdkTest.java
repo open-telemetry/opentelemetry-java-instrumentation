@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.azurecore.v1_19;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.azure.core.http.policy.HttpPipelinePolicy;
@@ -37,7 +39,7 @@ class AzureSdkTest {
             item ->
                 assertThat(item.getClass().getName())
                     .isEqualTo(
-                        "io.opentelemetry.javaagent.instrumentation.azurecore.v1_14.shaded"
+                        "io.opentelemetry.javaagent.instrumentation.azurecore.v1_19.shaded"
                             + ".com.azure.core.tracing.opentelemetry.OpenTelemetryHttpPolicy"));
   }
 
