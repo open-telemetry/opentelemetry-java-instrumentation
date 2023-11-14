@@ -84,6 +84,7 @@ class LogEventToReplay implements LogEvent {
               structuredDataMessage.getType(),
               structuredDataMessage.getData());
     } else if (messageOrigin instanceof StringMapMessage) {
+      // StringMapMessage objects are not reused by Log4j 2
       this.message = messageOrigin;
     } else {
       this.message = new MessageCopy(logEvent.getMessage());
