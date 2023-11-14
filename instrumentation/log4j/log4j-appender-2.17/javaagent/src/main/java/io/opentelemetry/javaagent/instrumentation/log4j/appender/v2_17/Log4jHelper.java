@@ -76,7 +76,8 @@ public final class Log4jHelper {
       threadName = currentThread.getName();
       threadId = currentThread.getId();
     }
-    mapper.mapLogEvent(builder, message, level, marker, throwable, contextData, threadName, threadId);
+    mapper.mapLogEvent(
+        builder, message, level, marker, throwable, contextData, threadName, threadId);
     builder.setTimestamp(Instant.now());
     builder.emit();
   }
