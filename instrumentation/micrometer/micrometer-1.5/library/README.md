@@ -1,6 +1,6 @@
 # Micrometer Instrumentation for Micrometer version 1.5 and higher
 
-This module provides a Micrometer [registry](https://logback.qos.ch/manual/appenders.html) which
+This module provides a [Micrometer registry](https://micrometer.io/docs/concepts#_registry) which
 sends Micrometer metrics to the
 [OpenTelemetry Metrics SDK](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk/metrics).
 
@@ -14,7 +14,6 @@ release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20
 For Maven, add to your `pom.xml` dependencies:
 
 ```xml
-
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
@@ -35,7 +34,5 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-micrometer-1.5:OP
 The instrumentation library provides an implementation of `MeterRegistry` to bridge Micrometer API to OpenTelemetry Metrics.
 
 ```java
-void addOpenTelemetryMeterRegistry(OpenTelemetry openTelemetry) {
-    MeterRegistry meterRegistry = OpenTelemetryMeterRegistry.builder(openTelemetry).build();
-    Metrics.addRegistry(meterRegistry);
-}
+MeterRegistry meterRegistry = OpenTelemetryMeterRegistry.builder(openTelemetry).build();
+```
