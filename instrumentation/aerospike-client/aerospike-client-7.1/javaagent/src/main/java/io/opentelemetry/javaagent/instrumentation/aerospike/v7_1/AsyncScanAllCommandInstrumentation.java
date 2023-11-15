@@ -15,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import com.aerospike.client.async.AsyncScanPartitionExecutor;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -49,9 +48,6 @@ public class AsyncScanAllCommandInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This AsyncScanPartitionExecutor asyncScanPartitionExecutor,
-        @Advice.Local("otelAerospikeRequest") AerospikeRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
         @Advice.Argument(4) String namespace,
         @Advice.Argument(5) String setName) {
       VirtualField<AsyncScanPartitionExecutor, AerospikeRequestContext> virtualField =
@@ -61,7 +57,7 @@ public class AsyncScanAllCommandInstrumentation implements TypeInstrumentation {
         return;
       }
       Context parentContext = currentContext();
-      request =
+      AerospikeRequest request =
           AerospikeRequest.create(
               asyncScanPartitionExecutor.getClass().getSimpleName().toUpperCase(Locale.ROOT),
               namespace,
@@ -69,15 +65,11 @@ public class AsyncScanAllCommandInstrumentation implements TypeInstrumentation {
       if (!AersopikeSingletons.instrumenter().shouldStart(parentContext, request)) {
         return;
       }
-      context = AersopikeSingletons.instrumenter().start(parentContext, request);
+      Context context = AersopikeSingletons.instrumenter().start(parentContext, request);
       AerospikeRequestContext aerospikeRequestContext =
           AerospikeRequestContext.attach(request, context);
-      scope = context.makeCurrent();
 
       virtualField.set(asyncScanPartitionExecutor, aerospikeRequestContext);
-      if (scope != null) {
-        scope.close();
-      }
     }
   }
 
@@ -101,10 +93,6 @@ public class AsyncScanAllCommandInstrumentation implements TypeInstrumentation {
           request.setStatus(Status.FAILURE);
         }
         requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
-        Scope scope = context.makeCurrent();
-        if (null != scope) {
-          scope.close();
-        }
       }
     }
   }
@@ -125,10 +113,6 @@ public class AsyncScanAllCommandInstrumentation implements TypeInstrumentation {
         Context context = requestContext.getContext();
         request.setStatus(Status.FAILURE);
         requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
-        Scope scope = context.makeCurrent();
-        if (null != scope) {
-          scope.close();
-        }
       }
     }
   }

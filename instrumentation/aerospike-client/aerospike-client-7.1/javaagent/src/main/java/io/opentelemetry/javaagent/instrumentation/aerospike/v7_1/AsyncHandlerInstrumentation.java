@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.aerospike.v7_1;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperClass;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -13,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import com.aerospike.client.command.Command;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -22,6 +22,11 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class AsyncHandlerInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("com.aerospike.client.command.Command");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -58,10 +63,6 @@ public class AsyncHandlerInstrumentation implements TypeInstrumentation {
           request.setStatus(Status.FAILURE);
         }
         requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
-        Scope scope = context.makeCurrent();
-        if (null != scope) {
-          scope.close();
-        }
       }
     }
   }
@@ -80,10 +81,6 @@ public class AsyncHandlerInstrumentation implements TypeInstrumentation {
         Context context = requestContext.getContext();
         request.setStatus(Status.FAILURE);
         requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
-        Scope scope = context.makeCurrent();
-        if (null != scope) {
-          scope.close();
-        }
       }
     }
   }

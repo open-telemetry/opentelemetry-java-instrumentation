@@ -11,11 +11,12 @@ muzzle {
 }
 
 dependencies {
+  implementation(project(":instrumentation:aerospike-client:aerospike-client-7.1:library"))
   library("com.aerospike:aerospike-client:7.1.0")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
-  testInstrumentation(project(":instrumentation:aerospike-client:aerospike-client-7.1:javaagent"))
+  testImplementation(project(":instrumentation:aerospike-client:aerospike-client-7.1:library"))
 }
 
 tasks {

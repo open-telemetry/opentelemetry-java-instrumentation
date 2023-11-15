@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter.db;
+package io.opentelemetry.instrumentation.aerospike.v7_1;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.db.DbMessageSizeUtil.getMessageSize;
+import static io.opentelemetry.instrumentation.aerospike.v7_1.AerospikeMessageSizeUtil.getMessageSize;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;

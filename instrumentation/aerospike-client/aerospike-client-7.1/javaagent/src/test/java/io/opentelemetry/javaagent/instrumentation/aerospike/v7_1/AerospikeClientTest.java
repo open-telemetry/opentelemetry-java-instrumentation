@@ -19,7 +19,7 @@ import com.aerospike.client.async.EventPolicy;
 import com.aerospike.client.async.NioEventLoops;
 import com.aerospike.client.policy.ClientPolicy;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.instrumenter.db.AerospikeSemanticAttributes;
+import io.opentelemetry.instrumentation.aerospike.v7_1.AerospikeSemanticAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;

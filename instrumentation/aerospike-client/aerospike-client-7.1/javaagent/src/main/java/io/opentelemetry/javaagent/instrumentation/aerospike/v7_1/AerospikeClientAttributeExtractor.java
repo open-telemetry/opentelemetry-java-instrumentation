@@ -9,8 +9,8 @@ import com.aerospike.client.AerospikeException;
 import com.aerospike.client.ResultCode;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.aerospike.v7_1.AerospikeSemanticAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.AerospikeSemanticAttributes;
 import javax.annotation.Nullable;
 
 public class AerospikeClientAttributeExtractor
