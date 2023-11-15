@@ -45,6 +45,20 @@ import javax.annotation.Nullable;
  *   process.runtime.jvm.threads.count{daemon=true} 2
  *   process.runtime.jvm.threads.count{daemon=false} 5
  * </pre>
+ *
+ * <p>In case you enable the preview of stable JVM semantic conventions (e.g. by setting the {@code
+ * otel.semconv-stability.opt-in} system property to {@code jvm}), the metrics being exported will
+ * follow <a
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md">the
+ * most recent JVM semantic conventions</a>. This is how the example above looks when stable JVM
+ * semconv is enabled:
+ *
+ * <pre>
+ *   jvm.thread.count{jvm.thread.daemon=true,jvm.thread.state="waiting"} 1
+ *   jvm.thread.count{jvm.thread.daemon=true,jvm.thread.state="runnable"} 2
+ *   jvm.thread.count{jvm.thread.daemon=false,jvm.thread.state="waiting"} 2
+ *   jvm.thread.count{jvm.thread.daemon=false,jvm.thread.state="runnable"} 3
+ * </pre>
  */
 public final class Threads {
 
@@ -73,11 +87,11 @@ public final class Threads {
               .setUnit("{thread}")
               .buildWithCallback(
                   observableMeasurement -> {
+                    int daemonThreadCount = threadBean.getDaemonThreadCount();
                     observableMeasurement.record(
-                        threadBean.getDaemonThreadCount(),
-                        Attributes.builder().put(DAEMON, true).build());
+                        daemonThreadCount, Attributes.builder().put(DAEMON, true).build());
                     observableMeasurement.record(
-                        threadBean.getThreadCount() - threadBean.getDaemonThreadCount(),
+                        threadBean.getThreadCount() - daemonThreadCount,
                         Attributes.builder().put(DAEMON, false).build());
                   }));
     }
@@ -117,11 +131,11 @@ public final class Threads {
 
   private static Consumer<ObservableLongMeasurement> java8Callback(ThreadMXBean threadBean) {
     return measurement -> {
+      int daemonThreadCount = threadBean.getDaemonThreadCount();
       measurement.record(
-          threadBean.getDaemonThreadCount(),
-          Attributes.builder().put(JVM_THREAD_DAEMON, true).build());
+          daemonThreadCount, Attributes.builder().put(JVM_THREAD_DAEMON, true).build());
       measurement.record(
-          threadBean.getThreadCount() - threadBean.getDaemonThreadCount(),
+          threadBean.getThreadCount() - daemonThreadCount,
           Attributes.builder().put(JVM_THREAD_DAEMON, false).build());
     };
   }
