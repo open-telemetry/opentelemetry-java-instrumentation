@@ -24,7 +24,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
     return testing;
   }
 
-  private static ContextPropagationOperator tracingOperator = ContextPropagationOperator.create();
+  static final ContextPropagationOperator tracingOperator = ContextPropagationOperator.create();
 
   @Override
   protected RedisClient createClient(String uri) {
