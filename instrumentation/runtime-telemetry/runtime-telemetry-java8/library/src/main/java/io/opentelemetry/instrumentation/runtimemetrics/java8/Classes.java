@@ -31,7 +31,7 @@ import java.util.List;
  *   process.runtime.jvm.classes.current_loaded 98
  * </pre>
  *
- * In case you enable the preview of stable JVM semantic conventions (e.g. by setting the {@code
+ * <p>In case you enable the preview of stable JVM semantic conventions (e.g. by setting the {@code
  * otel.semconv-stability.opt-in} system property to {@code jvm}), the metrics being exported will
  * follow <a
  * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md">the
