@@ -23,6 +23,9 @@ class LogEventToReplay implements LogEvent {
 
   private static final long serialVersionUID = 1L;
 
+  // Log4j 2 reuses LogEvent object, so we make a copy of all the fields that are used during export
+  // in order to be able to replay the log event later.
+
   private final String loggerName;
   private final Message message;
   private final Level level;
