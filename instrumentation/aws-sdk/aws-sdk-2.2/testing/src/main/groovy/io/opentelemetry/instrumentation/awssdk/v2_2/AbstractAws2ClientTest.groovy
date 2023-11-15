@@ -44,6 +44,8 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 @Unroll
 abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
+  static final String QUEUE_URL = "http://xxx/somequeue"
+
   void assumeSupportedConfig(service, operation) {
     Assumptions.assumeFalse(
         service == "Sqs"
@@ -81,7 +83,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "$service.$operation"
+          name operation != "SendMessage" ? "$service.$operation" : "somequeue publish"
           kind operation != "SendMessage" ? CLIENT : PRODUCER
           hasNoParent()
           attributes {
@@ -99,7 +101,6 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "$SemanticAttributes.HTTP_METHOD" "$method"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
@@ -112,7 +113,11 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             } else if (service == "Sqs" && operation == "CreateQueue") {
               "aws.queue.name" "somequeue"
             } else if (service == "Sqs" && operation == "SendMessage") {
-              "aws.queue.url" "someurl"
+              "aws.queue.url" QUEUE_URL
+              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "somequeue"
+              "$SemanticAttributes.MESSAGING_OPERATION" "publish"
+              "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+              "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
             }
@@ -135,7 +140,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
         </CreateQueueResponse>
         """
-    "Sqs"     | "SendMessage"       | "POST" | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsClient.builder()     | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) } | """
+    "Sqs"     | "SendMessage"       | "POST" | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsClient.builder()     | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl(QUEUE_URL).messageBody("").build()) } | """
         <SendMessageResponse>
             <SendMessageResult>
                 <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
@@ -181,7 +186,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "$service.$operation"
+          name operation != "SendMessage" ? "$service.$operation" : "somequeue publish"
           kind operation != "SendMessage" ? CLIENT : PRODUCER
           hasNoParent()
           attributes {
@@ -199,7 +204,6 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "$SemanticAttributes.HTTP_METHOD" "$method"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
@@ -212,7 +216,11 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             } else if (service == "Sqs" && operation == "CreateQueue") {
               "aws.queue.name" "somequeue"
             } else if (service == "Sqs" && operation == "SendMessage") {
-              "aws.queue.url" "someurl"
+              "aws.queue.url" QUEUE_URL
+              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "somequeue"
+              "$SemanticAttributes.MESSAGING_OPERATION" "publish"
+              "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+              "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
             }
@@ -247,7 +255,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
         </CreateQueueResponse>
         """
-    "Sqs"   | "SendMessage"       | "POST" | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsAsyncClient.builder() | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) }                                 | """
+    "Sqs"   | "SendMessage"       | "POST" | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsAsyncClient.builder() | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl(QUEUE_URL).messageBody("").build()) }                                 | """
         <SendMessageResponse>
             <SendMessageResult>
                 <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
@@ -325,7 +333,6 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "S3"
             "$SemanticAttributes.RPC_METHOD" "GetObject"
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "somebucket"
           }

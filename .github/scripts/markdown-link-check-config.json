@@ -16,6 +16,9 @@
     },
     {
       "pattern": "^http(s)?://logback\\.qos\\.ch"
+    },
+    {
+      "pattern": "^https://micrometer\\.io"
     }
   ]
 }

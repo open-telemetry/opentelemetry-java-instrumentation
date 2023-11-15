@@ -83,18 +83,6 @@ public class UndertowHttpAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(HttpServerExchange exchange) {
-    return exchange.getHostName();
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(HttpServerExchange exchange) {
-    return exchange.getHostPort();
-  }
-
   @Override
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(

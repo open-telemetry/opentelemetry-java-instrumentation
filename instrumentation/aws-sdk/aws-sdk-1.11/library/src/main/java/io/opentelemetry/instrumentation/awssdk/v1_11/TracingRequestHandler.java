@@ -11,12 +11,13 @@ import com.amazonaws.Response;
 import com.amazonaws.handlers.HandlerContextKey;
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import java.time.Instant;
+import io.opentelemetry.instrumentation.api.internal.Timer;
 import javax.annotation.Nullable;
 
 /** Tracing Request Handler. */
@@ -24,19 +25,27 @@ final class TracingRequestHandler extends RequestHandler2 {
 
   static final HandlerContextKey<Context> CONTEXT =
       new HandlerContextKey<>(Context.class.getName());
-  private static final ContextKey<Instant> REQUEST_START_KEY =
-      ContextKey.named(TracingRequestHandler.class.getName() + ".RequestStart");
   private static final ContextKey<Context> PARENT_CONTEXT_KEY =
       ContextKey.named(TracingRequestHandler.class.getName() + ".ParentContext");
+  private static final ContextKey<Timer> REQUEST_TIMER_KEY =
+      ContextKey.named(TracingRequestHandler.class.getName() + ".Timer");
+  private static final ContextKey<Boolean> REQUEST_SPAN_SUPPRESSED_KEY =
+      ContextKey.named(TracingRequestHandler.class.getName() + ".RequestSpanSuppressed");
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
-  private final Instrumenter<Request<?>, Response<?>> consumerInstrumenter;
+  private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
+  private final Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter;
+  private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
 
   TracingRequestHandler(
       Instrumenter<Request<?>, Response<?>> requestInstrumenter,
-      Instrumenter<Request<?>, Response<?>> consumerInstrumenter) {
+      Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter,
+      Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter,
+      Instrumenter<Request<?>, Response<?>> producerInstrumenter) {
     this.requestInstrumenter = requestInstrumenter;
-    this.consumerInstrumenter = consumerInstrumenter;
+    this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
+    this.consumerProcessInstrumenter = consumerProcessInstrumenter;
+    this.producerInstrumenter = producerInstrumenter;
   }
 
   @Override
@@ -50,8 +59,10 @@ final class TracingRequestHandler extends RequestHandler2 {
       return;
     }
 
+    Instrumenter<Request<?>, Response<?>> instrumenter = getInstrumenter(request);
+
     Context parentContext = Context.current();
-    if (!requestInstrumenter.shouldStart(parentContext, request)) {
+    if (!instrumenter.shouldStart(parentContext, request)) {
       return;
     }
 
@@ -59,17 +70,20 @@ final class TracingRequestHandler extends RequestHandler2 {
     // also suppress the span from the underlying http client. Request/http client span appears in a
     // separate trace from message producer/consumer spans if there is no parent span just having
     // a trace with only the request/http client span isn't useful.
-    if (Context.root() == parentContext
+    if (Span.fromContextOrNull(parentContext) == null
         && "com.amazonaws.services.sqs.model.ReceiveMessageRequest"
             .equals(request.getOriginalRequest().getClass().getName())) {
-      Context context = InstrumenterUtil.suppressSpan(requestInstrumenter, parentContext, request);
-      context = context.with(REQUEST_START_KEY, Instant.now());
+      Context context = InstrumenterUtil.suppressSpan(instrumenter, parentContext, request);
+      context = context.with(REQUEST_TIMER_KEY, Timer.start());
       context = context.with(PARENT_CONTEXT_KEY, parentContext);
+      context = context.with(REQUEST_SPAN_SUPPRESSED_KEY, Boolean.TRUE);
       request.addHandlerContext(CONTEXT, context);
       return;
     }
 
-    Context context = requestInstrumenter.start(parentContext, request);
+    Context context = instrumenter.start(parentContext, request);
+    context = context.with(REQUEST_TIMER_KEY, Timer.start());
+    context = context.with(PARENT_CONTEXT_KEY, parentContext);
 
     AwsXrayPropagator.getInstance().inject(context, request, HeaderSetter.INSTANCE);
 
@@ -85,9 +99,26 @@ final class TracingRequestHandler extends RequestHandler2 {
     return request;
   }
 
+  Instrumenter<SqsReceiveRequest, Response<?>> getConsumerReceiveInstrumenter() {
+    return consumerReceiveInstrumenter;
+  }
+
+  Instrumenter<SqsProcessRequest, Void> getConsumerProcessInstrumenter() {
+    return consumerProcessInstrumenter;
+  }
+
   @Override
   public void afterResponse(Request<?> request, Response<?> response) {
-    SqsAccess.afterResponse(request, response, consumerInstrumenter);
+    Context context = request.getHandlerContext(CONTEXT);
+    if (context == null) {
+      return;
+    }
+    Timer timer = context.get(REQUEST_TIMER_KEY);
+    // javaagent instrumentation activates scope for the request span, we need to use the context
+    // we stored before creating the request span to avoid making request span the parent of the
+    // sqs receive span
+    Context parentContext = context.get(PARENT_CONTEXT_KEY);
+    SqsAccess.afterResponse(request, response, timer, parentContext, this);
     finish(request, response, null);
   }
 
@@ -104,24 +135,31 @@ final class TracingRequestHandler extends RequestHandler2 {
     }
     request.addHandlerContext(CONTEXT, null);
 
-    // see beforeRequest, requestStart is only set when we skip creating request span for sqs
+    Instrumenter<Request<?>, Response<?>> instrumenter = getInstrumenter(request);
+
+    // see beforeRequest, request suppressed is only set when we skip creating request span for sqs
     // AmazonSQSClient.receiveMessage calls
-    Instant requestStart = context.get(REQUEST_START_KEY);
-    if (requestStart != null) {
+    if (Boolean.TRUE.equals(context.get(REQUEST_SPAN_SUPPRESSED_KEY))) {
+      Context parentContext = context.get(PARENT_CONTEXT_KEY);
+      Timer timer = context.get(REQUEST_TIMER_KEY);
       // create request span if there was an error
-      if (error != null) {
+      if (error != null
+          && parentContext != null
+          && timer != null
+          && requestInstrumenter.shouldStart(parentContext, request)) {
         InstrumenterUtil.startAndEnd(
-            requestInstrumenter,
-            context.get(PARENT_CONTEXT_KEY),
-            request,
-            response,
-            error,
-            requestStart,
-            Instant.now());
+            instrumenter, parentContext, request, response, error, timer.startTime(), timer.now());
       }
       return;
     }
 
-    requestInstrumenter.end(context, request, response, error);
+    instrumenter.end(context, request, response, error);
+  }
+
+  private Instrumenter<Request<?>, Response<?>> getInstrumenter(Request<?> request) {
+    boolean isSqsProducer =
+        "com.amazonaws.services.sqs.model.SendMessageRequest"
+            .equals(request.getOriginalRequest().getClass().getName());
+    return isSqsProducer ? producerInstrumenter : requestInstrumenter;
   }
 }

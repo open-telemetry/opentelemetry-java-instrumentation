@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HeaderParsingHelper.notFound;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HeaderParsingHelper.setPort;
 
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import java.util.Locale;
@@ -92,12 +91,6 @@ final class ForwardedForAddressAndPortExtractor<REQUEST>
       }
       sink.setAddress(forwarded.substring(start + 1, ipv6End));
 
-      int portStart = ipv6End + 1;
-      if (portStart < end && forwarded.charAt(portStart) == ':') {
-        int portEnd = findPortEnd(forwarded, portStart + 1, end);
-        setPort(sink, forwarded, portStart + 1, portEnd);
-      }
-
       return true;
     }
 
@@ -120,13 +113,6 @@ final class ForwardedForAddressAndPortExtractor<REQUEST>
         }
 
         sink.setAddress(forwarded.substring(start, i));
-
-        if (isIpv4PortSeparator) {
-          int portStart = i;
-          int portEnd = findPortEnd(forwarded, portStart + 1, end);
-          setPort(sink, forwarded, portStart + 1, portEnd);
-        }
-
         return true;
       }
     }
@@ -134,13 +120,5 @@ final class ForwardedForAddressAndPortExtractor<REQUEST>
     // just an address without a port
     sink.setAddress(forwarded.substring(start, end));
     return true;
-  }
-
-  private static int findPortEnd(String header, int start, int end) {
-    int numberEnd = start;
-    while (numberEnd < end && Character.isDigit(header.charAt(numberEnd))) {
-      ++numberEnd;
-    }
-    return numberEnd;
   }
 }

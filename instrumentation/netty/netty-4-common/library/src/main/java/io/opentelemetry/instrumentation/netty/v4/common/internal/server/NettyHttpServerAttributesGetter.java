@@ -91,18 +91,6 @@ final class NettyHttpServerAttributesGetter
     return version.majorVersion() + "." + version.minorVersion();
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(HttpRequestAndChannel requestAndChannel) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(HttpRequestAndChannel requestAndChannel) {
-    return null;
-  }
-
   @Override
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(

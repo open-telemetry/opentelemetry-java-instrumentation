@@ -103,18 +103,6 @@ class HttpServerAttributesExtractorBothSemconvTest {
         Map<String, Object> request, Map<String, Object> response) {
       return (String) request.get("protocolVersion");
     }
-
-    @Nullable
-    @Override
-    public String getServerAddress(Map<String, Object> request) {
-      return (String) request.get("serverAddress");
-    }
-
-    @Nullable
-    @Override
-    public Integer getServerPort(Map<String, Object> request) {
-      return (Integer) request.get("serverPort");
-    }
   }
 
   @Test
@@ -170,6 +158,9 @@ class HttpServerAttributesExtractorBothSemconvTest {
             entry(SemanticAttributes.CLIENT_ADDRESS, "1.1.1.1"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
+                asList("123", "456")),
+            entry(
+                AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
                 asList("123", "456")));
 
     AttributesBuilder endAttributes = Attributes.builder();
@@ -178,17 +169,17 @@ class HttpServerAttributesExtractorBothSemconvTest {
         .containsOnly(
             entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0"),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
-            entry(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
-            entry(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
+                asList("654", "321")),
+            entry(
+                AttributeKey.stringArrayKey("http.response.header.custom-response-header"),
                 asList("654", "321")));
   }
 }

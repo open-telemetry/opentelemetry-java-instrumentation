@@ -22,7 +22,6 @@ import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import static org.junit.jupiter.api.Assumptions.assumeFalse
 import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
@@ -131,7 +130,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
       optionsBuilder.setHttpAttributes(HttpClientTest.this.&httpAttributes)
       optionsBuilder.setResponseCodeOnRedirectError(responseCodeOnRedirectError())
-      optionsBuilder.setUserAgent(HttpClientTest.this.userAgent())
       optionsBuilder.setClientSpanErrorMapper(HttpClientTest.this.&clientSpanError)
       optionsBuilder.setSingleConnectionFactory(HttpClientTest.this.&createSingleConnection)
       optionsBuilder.setExpectedClientSpanNameMapper(HttpClientTest.this.&expectedClientSpanName)
@@ -146,7 +144,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
       optionsBuilder.setTestHttps(HttpClientTest.this.testHttps())
       optionsBuilder.setTestCallback(HttpClientTest.this.testCallback())
       optionsBuilder.setTestCallbackWithParent(HttpClientTest.this.testCallbackWithParent())
-      optionsBuilder.setTestCallbackWithImplicitParent(HttpClientTest.this.testCallbackWithImplicitParent())
       optionsBuilder.setTestErrorWithCallback(HttpClientTest.this.testErrorWithCallback())
       optionsBuilder.setTestNonStandardHttpMethod(HttpClientTest.this.testNonStandardHttpMethod())
     }
@@ -229,19 +226,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   def "trace request with callback and no parent"() {
     assumeTrue(testCallback())
-    assumeFalse(testCallbackWithImplicitParent())
     expect:
     try {
       junitTest.requestWithCallbackAndNoParent()
     } catch (Exception ignored) {
     }
-  }
-
-  def "trace request with callback and implicit parent"() {
-    assumeTrue(testCallback())
-    assumeTrue(testCallbackWithImplicitParent())
-    expect:
-    junitTest.requestWithCallbackAndImplicitParent()
   }
 
   def "basic request with 1 redirect"() {
@@ -381,10 +370,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     return 302
   }
 
-  String userAgent() {
-    return null
-  }
-
   /** A list of additional HTTP client span attributes extracted by the instrumentation per URI. */
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES)
@@ -445,13 +430,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     // FIXME: this hack is here because callback with parent is broken in play-ws when the stream()
     // function is used.  There is no way to stop a test from a derived class hence the flag
     true
-  }
-
-  boolean testCallbackWithImplicitParent() {
-    // depending on async behavior callback can be executed within
-    // parent span scope or outside of the scope, e.g. in reactor-netty or spring
-    // callback is correlated.
-    false
   }
 
   boolean testErrorWithCallback() {

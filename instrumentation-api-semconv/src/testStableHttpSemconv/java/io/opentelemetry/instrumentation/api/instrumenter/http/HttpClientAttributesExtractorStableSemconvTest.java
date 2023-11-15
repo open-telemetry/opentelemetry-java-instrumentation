@@ -149,7 +149,7 @@ class HttpClientAttributesExtractorStableSemconvTest {
     request.put("networkPeerAddress", "4.3.2.1");
     request.put("networkPeerPort", "456");
     request.put("serverAddress", "github.com");
-    request.put("serverPort", "123");
+    request.put("serverPort", "80");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
@@ -171,25 +171,21 @@ class HttpClientAttributesExtractorStableSemconvTest {
         .containsOnly(
             entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(SemanticAttributes.URL_FULL, "http://github.com"),
-            entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(
-                AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
+                AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
                 asList("123", "456")),
             entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
-            entry(SemanticAttributes.SERVER_PORT, 123L),
+            entry(SemanticAttributes.SERVER_PORT, 80L),
             entry(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, 2L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
             entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
-            entry(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
             entry(
-                AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
+                AttributeKey.stringArrayKey("http.response.header.custom-response-header"),
                 asList("654", "321")),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
             entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),
             entry(NetworkAttributes.NETWORK_PEER_PORT, 456L));
@@ -372,7 +368,7 @@ class HttpClientAttributesExtractorStableSemconvTest {
   }
 
   @Test
-  void shouldNotExtractDuplicatePeerAddress() {
+  void shouldExtractPeerAddressEvenIfItDuplicatesServerAddress() {
     Map<String, String> request = new HashMap<>();
     request.put("networkPeerAddress", "1.2.3.4");
     request.put("networkPeerPort", "456");
@@ -395,6 +391,34 @@ class HttpClientAttributesExtractorStableSemconvTest {
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+        .containsOnly(
+            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4"),
+            entry(NetworkAttributes.NETWORK_PEER_PORT, 456L));
+  }
+
+  @Test
+  void shouldExtractProtocolNameDifferentFromHttp() {
+    Map<String, String> request = new HashMap<>();
+    request.put("networkProtocolName", "spdy");
+    request.put("networkProtocolVersion", "3.1");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "200");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build()).isEmpty();
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "spdy"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "3.1"));
   }
 }

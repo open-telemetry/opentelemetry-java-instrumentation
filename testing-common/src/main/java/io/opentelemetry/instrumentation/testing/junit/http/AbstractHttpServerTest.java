@@ -757,6 +757,13 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
           if (attrs.get(netHostPortKey) != null) {
             assertThat(attrs).containsEntry(netHostPortKey, port);
           }
+
+          AttributeKey<String> netSockPeerAddrKey =
+              getAttributeKey(SemanticAttributes.NET_SOCK_PEER_ADDR);
+          if (attrs.get(netSockPeerAddrKey) != null) {
+            assertThat(attrs)
+                .containsEntry(netSockPeerAddrKey, options.sockPeerAddr.apply(endpoint));
+          }
           AttributeKey<Long> netSockPeerPortKey =
               getAttributeKey(SemanticAttributes.NET_SOCK_PEER_PORT);
           if (attrs.get(netSockPeerPortKey) != null) {
@@ -768,17 +775,6 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                             .isInstanceOf(Long.class)
                             .isNotEqualTo(Long.valueOf(port)));
           }
-          AttributeKey<String> netSockPeerAddrKey =
-              getAttributeKey(SemanticAttributes.NET_SOCK_PEER_ADDR);
-          if (attrs.get(netSockPeerAddrKey) != null) {
-            assertThat(attrs)
-                .containsEntry(netSockPeerAddrKey, options.sockPeerAddr.apply(endpoint));
-          }
-          AttributeKey<String> netSockHostAddrKey =
-              getAttributeKey(SemanticAttributes.NET_SOCK_PEER_ADDR);
-          if (attrs.get(netSockHostAddrKey) != null) {
-            assertThat(attrs).containsEntry(netSockHostAddrKey, "127.0.0.1");
-          }
 
           assertThat(attrs)
               .hasEntrySatisfying(
@@ -788,11 +784,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                           .satisfiesAnyOf(
                               value -> assertThat(value).isNull(),
                               value -> assertThat(value).isEqualTo(TEST_CLIENT_IP)));
-          if (SemconvStability.emitStableHttpSemconv()
-              && attrs.get(SemanticAttributes.CLIENT_PORT) != null) {
-            assertThat(attrs)
-                .hasEntrySatisfying(
-                    SemanticAttributes.CLIENT_PORT, port -> assertThat(port).isGreaterThan(0));
+          if (SemconvStability.emitStableHttpSemconv()) {
+            // client.port is opt-in
+            assertThat(attrs).doesNotContainKey(SemanticAttributes.CLIENT_PORT);
           }
           assertThat(attrs).containsEntry(getAttributeKey(SemanticAttributes.HTTP_METHOD), method);
 
@@ -804,7 +798,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
           AttributeKey<String> netProtocolKey =
               getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME);
-          if (attrs.get(netProtocolKey) != null) {
+          if (SemconvStability.emitStableHttpSemconv()) {
+            // only protocol names different from "http" are emitted
+            assertThat(attrs).doesNotContainKey(netProtocolKey);
+          } else if (attrs.get(netProtocolKey) != null) {
             assertThat(attrs).containsEntry(netProtocolKey, "http");
           }
           AttributeKey<String> netProtocolVersionKey =
@@ -854,15 +851,30 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
           }
 
           if (endpoint == CAPTURE_HEADERS) {
-            assertThat(attrs)
-                .containsEntry("http.request.header.x_test_request", new String[] {"test"});
-            assertThat(attrs)
-                .containsEntry("http.response.header.x_test_response", new String[] {"test"});
+            if (SemconvStability.emitOldHttpSemconv()) {
+              assertThat(attrs)
+                  .containsEntry("http.request.header.x_test_request", new String[] {"test"});
+              assertThat(attrs)
+                  .containsEntry("http.response.header.x_test_response", new String[] {"test"});
+            }
+            if (SemconvStability.emitStableHttpSemconv()) {
+              assertThat(attrs)
+                  .containsEntry("http.request.header.x-test-request", new String[] {"test"});
+              assertThat(attrs)
+                  .containsEntry("http.response.header.x-test-response", new String[] {"test"});
+            }
           }
           if (endpoint == CAPTURE_PARAMETERS) {
-            assertThat(attrs)
-                .containsEntry(
-                    "servlet.request.parameter.test_parameter", new String[] {"test value õäöü"});
+            if (SemconvStability.emitOldHttpSemconv()) {
+              assertThat(attrs)
+                  .containsEntry(
+                      "servlet.request.parameter.test_parameter", new String[] {"test value õäöü"});
+            }
+            if (SemconvStability.emitStableHttpSemconv()) {
+              assertThat(attrs)
+                  .containsEntry(
+                      "servlet.request.parameter.test-parameter", new String[] {"test value õäöü"});
+            }
           }
         });
 

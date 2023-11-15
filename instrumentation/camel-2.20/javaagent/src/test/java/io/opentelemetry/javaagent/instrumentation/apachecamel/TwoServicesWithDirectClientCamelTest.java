@@ -153,6 +153,9 @@ class TwoServicesWithDirectClientCamelTest
                             equalTo(
                                 SemanticAttributes.USER_AGENT_ORIGINAL,
                                 "Jakarta Commons-HttpClient/3.1"),
+                            satisfies(
+                                SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
+                                val -> val.isInstanceOf(Long.class)),
                             equalTo(SemanticAttributes.HTTP_ROUTE, "/serviceTwo"),
                             equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
                             equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
@@ -160,10 +163,11 @@ class TwoServicesWithDirectClientCamelTest
                             equalTo(SemanticAttributes.NET_HOST_PORT, portTwo),
                             equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                             satisfies(
-                                SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
-                                val -> val.isInstanceOf(Long.class)),
-                            satisfies(
                                 SemanticAttributes.NET_SOCK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1"),
+                            satisfies(
+                                SemanticAttributes.NET_SOCK_HOST_PORT,
                                 val -> val.isInstanceOf(Long.class))),
                 span ->
                     span.hasName("POST /serviceTwo")

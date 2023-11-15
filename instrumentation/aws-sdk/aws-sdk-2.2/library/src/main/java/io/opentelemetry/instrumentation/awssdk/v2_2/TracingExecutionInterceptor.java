@@ -16,6 +16,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -23,7 +24,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -47,6 +47,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   // instrumentation, and won't conflict with usage outside javaagent instrumentation
   private static final ExecutionAttribute<io.opentelemetry.context.Context> CONTEXT_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Context");
+  private static final ExecutionAttribute<io.opentelemetry.context.Context>
+      PARENT_CONTEXT_ATTRIBUTE =
+          new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".ParentContext");
   private static final ExecutionAttribute<Scope> SCOPE_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Scope");
   private static final ExecutionAttribute<AwsSdkRequest> AWS_SDK_REQUEST_ATTRIBUTE =
@@ -57,17 +60,25 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".SdkRequest");
   private static final ExecutionAttribute<RequestSpanFinisher> REQUEST_FINISHER_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".RequestFinisher");
+  static final ExecutionAttribute<TracingList> TRACING_MESSAGES_ATTRIBUTE =
+      new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".TracingMessages");
 
-  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter;
-  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> requestInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> consumerReceiveInstrumenter;
+  private final Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
 
   static final AttributeKey<String> HTTP_ERROR_MSG =
       AttributeKey.stringKey("aws.http.error_message");
   static final String HTTP_FAILURE_EVENT = "HTTP request failure";
 
-  Instrumenter<ExecutionAttributes, SdkHttpResponse> getConsumerInstrumenter() {
-    return consumerInstrumenter;
+  Instrumenter<ExecutionAttributes, Response> getConsumerReceiveInstrumenter() {
+    return consumerReceiveInstrumenter;
+  }
+
+  Instrumenter<SqsProcessRequest, Void> getConsumerProcessInstrumenter() {
+    return consumerProcessInstrumenter;
   }
 
   @Nullable
@@ -85,14 +96,18 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final FieldMapper fieldMapper;
 
   TracingExecutionInterceptor(
-      Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter,
-      Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter,
+      Instrumenter<ExecutionAttributes, Response> requestInstrumenter,
+      Instrumenter<ExecutionAttributes, Response> consumerReceiveInstrumenter,
+      Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter,
+      Instrumenter<ExecutionAttributes, Response> producerInstrumenter,
       boolean captureExperimentalSpanAttributes,
       TextMapPropagator messagingPropagator,
       boolean useXrayPropagator,
       boolean recordIndividualHttpError) {
     this.requestInstrumenter = requestInstrumenter;
-    this.consumerInstrumenter = consumerInstrumenter;
+    this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
+    this.consumerProcessInstrumenter = consumerProcessInstrumenter;
+    this.producerInstrumenter = producerInstrumenter;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingPropagator = messagingPropagator;
     this.useXrayPropagator = useXrayPropagator;
@@ -118,8 +133,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
 
     executionAttributes.putAttribute(SDK_REQUEST_ATTRIBUTE, request);
+    Instrumenter<ExecutionAttributes, Response> instrumenter = getInstrumenter(request);
 
-    if (!requestInstrumenter.shouldStart(parentOtelContext, executionAttributes)) {
+    if (!instrumenter.shouldStart(parentOtelContext, executionAttributes)) {
       // NB: We also skip injection in case we don't start.
       return request;
     }
@@ -131,20 +147,20 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     // suppress the span from the underlying http client. Request/http client span appears in a
     // separate trace from message producer/consumer spans if there is no parent span just having
     // a trace with only the request/http client span isn't useful.
-    if (parentOtelContext == io.opentelemetry.context.Context.root()
+    if (Span.fromContextOrNull(parentOtelContext) == null
         && "software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest"
             .equals(request.getClass().getName())) {
       otelContext =
-          InstrumenterUtil.suppressSpan(
-              requestInstrumenter, parentOtelContext, executionAttributes);
+          InstrumenterUtil.suppressSpan(instrumenter, parentOtelContext, executionAttributes);
       requestFinisher =
-          (otelContext12, executionAttributes12, response, exception) -> {
+          (finisherOtelContext, finisherExecutionAttributes, response, exception) -> {
             // generate request span when there was an error
-            if (exception != null) {
+            if (exception != null
+                && instrumenter.shouldStart(finisherOtelContext, finisherExecutionAttributes)) {
               InstrumenterUtil.startAndEnd(
-                  requestInstrumenter,
-                  parentOtelContext,
-                  executionAttributes12,
+                  instrumenter,
+                  finisherOtelContext,
+                  finisherExecutionAttributes,
                   response,
                   exception,
                   requestStart,
@@ -152,10 +168,11 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
             }
           };
     } else {
-      otelContext = requestInstrumenter.start(parentOtelContext, executionAttributes);
-      requestFinisher = requestInstrumenter::end;
+      otelContext = instrumenter.start(parentOtelContext, executionAttributes);
+      requestFinisher = instrumenter::end;
     }
 
+    executionAttributes.putAttribute(PARENT_CONTEXT_ATTRIBUTE, parentOtelContext);
     executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, otelContext);
     executionAttributes.putAttribute(REQUEST_FINISHER_ATTRIBUTE, requestFinisher);
     if (executionAttributes
@@ -237,7 +254,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     // For the httpAttributesExtractor dance, see afterMarshalling
     AttributesBuilder builder = Attributes.builder(); // NB: UnsafeAttributes are package-private
     AwsSdkInstrumenterFactory.httpAttributesExtractor.onEnd(
-        builder, otelContext, executionAttributes, httpResponse, null);
+        builder, otelContext, executionAttributes, new Response(httpResponse), null);
     span.setAllAttributes(builder.build());
   }
 
@@ -309,7 +326,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (executionAttributes.getAttribute(SDK_HTTP_REQUEST_ATTRIBUTE) != null) {
       // Other special handling could be shortcut-&&ed after this (false is returned if not
       // handled).
-      SqsAccess.afterReceiveMessageExecution(context, executionAttributes, this);
+      Timer timer = Timer.start();
+      SqsAccess.afterReceiveMessageExecution(context, executionAttributes, this, timer);
     }
 
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
@@ -318,7 +336,6 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       executionAttributes.putAttribute(SDK_HTTP_REQUEST_ATTRIBUTE, context.httpRequest());
 
       Span span = Span.fromContext(otelContext);
-      onUserAgentHeaderAvailable(span, executionAttributes);
       onSdkResponse(span, context.response(), executionAttributes);
 
       SdkHttpResponse httpResponse = context.httpResponse();
@@ -326,18 +343,10 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       onHttpResponseAvailable(
           executionAttributes, otelContext, Span.fromContext(otelContext), httpResponse);
       RequestSpanFinisher finisher = executionAttributes.getAttribute(REQUEST_FINISHER_ATTRIBUTE);
-      finisher.finish(otelContext, executionAttributes, httpResponse, null);
+      finisher.finish(
+          otelContext, executionAttributes, new Response(httpResponse, context.response()), null);
     }
     clearAttributes(executionAttributes);
-  }
-
-  // Certain headers in the request like User-Agent are only available after execution.
-  private static void onUserAgentHeaderAvailable(Span span, ExecutionAttributes request) {
-    List<String> userAgent =
-        AwsSdkInstrumenterFactory.httpAttributesGetter.getHttpRequestHeader(request, "User-Agent");
-    if (!userAgent.isEmpty()) {
-      span.setAttribute(SemanticAttributes.USER_AGENT_ORIGINAL, userAgent.get(0));
-    }
   }
 
   private void onSdkResponse(
@@ -401,9 +410,11 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       scope.close();
     }
     executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, null);
+    executionAttributes.putAttribute(PARENT_CONTEXT_ATTRIBUTE, null);
     executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, null);
     executionAttributes.putAttribute(SDK_HTTP_REQUEST_ATTRIBUTE, null);
     executionAttributes.putAttribute(REQUEST_FINISHER_ATTRIBUTE, null);
+    executionAttributes.putAttribute(TRACING_MESSAGES_ATTRIBUTE, null);
   }
 
   /**
@@ -414,11 +425,19 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     return attributes.getAttribute(CONTEXT_ATTRIBUTE);
   }
 
+  static io.opentelemetry.context.Context getParentContext(ExecutionAttributes attributes) {
+    return attributes.getAttribute(PARENT_CONTEXT_ATTRIBUTE);
+  }
+
+  private Instrumenter<ExecutionAttributes, Response> getInstrumenter(SdkRequest request) {
+    return SqsAccess.isSqsProducerRequest(request) ? producerInstrumenter : requestInstrumenter;
+  }
+
   private interface RequestSpanFinisher {
     void finish(
         io.opentelemetry.context.Context otelContext,
         ExecutionAttributes executionAttributes,
-        SdkHttpResponse response,
+        Response response,
         Throwable exception);
   }
 }

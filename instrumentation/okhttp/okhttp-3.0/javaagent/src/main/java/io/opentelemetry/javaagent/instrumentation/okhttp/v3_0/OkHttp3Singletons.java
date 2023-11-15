@@ -37,7 +37,7 @@ public final class OkHttp3Singletons {
           singletonList(
               HttpClientPeerServiceAttributesExtractor.create(
                   OkHttpAttributesGetter.INSTANCE, CommonConfig.get().getPeerServiceResolver())),
-          CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
+          CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
 
   public static final Interceptor CONTEXT_INTERCEPTOR =
       chain -> {

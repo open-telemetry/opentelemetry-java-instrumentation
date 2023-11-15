@@ -27,6 +27,7 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
         io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
             REQUEST, RESPONSE>,
         NetworkAttributesGetter<REQUEST, RESPONSE>,
+        // TODO remove ServerAttributesGetter from here
         ServerAttributesGetter<REQUEST, RESPONSE>,
         ClientAttributesGetter<REQUEST, RESPONSE> {
 
@@ -46,13 +47,41 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
   String getUrlQuery(REQUEST request);
 
   /**
-   * Returns the matched route (path template in the format used by the respective server
-   * framework).
+   * Returns the matched route, that is, the path template in the format used by the respective
+   * server framework.
    *
    * <p>Examples: {@code /users/:userID?}, {@code {controller}/{action}/{id?}}
    */
   @Nullable
   default String getHttpRoute(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * Returns the name of the local HTTP server that received the request.
+   *
+   * @deprecated This method is deprecated and will be removed without replacement. The {@link
+   *     HttpServerAttributesExtractor} now extracts the server address and port from the received
+   *     HTTP request's headers.
+   */
+  @Deprecated
+  @Nullable
+  @Override
+  default String getServerAddress(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * Returns the port of the local HTTP server that received the request.
+   *
+   * @deprecated This method is deprecated and will be removed without replacement. The {@link
+   *     HttpServerAttributesExtractor} now extracts the server address and port from the received
+   *     HTTP request's headers.
+   */
+  @Deprecated
+  @Nullable
+  @Override
+  default Integer getServerPort(REQUEST request) {
     return null;
   }
 }

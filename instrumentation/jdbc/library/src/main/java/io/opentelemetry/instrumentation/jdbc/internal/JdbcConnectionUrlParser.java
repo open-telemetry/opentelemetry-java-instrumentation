@@ -322,7 +322,7 @@ public enum JdbcConnectionUrlParser {
       int clusterSepLoc = jdbcUrl.indexOf(",");
       int ipv6End = jdbcUrl.startsWith("[") ? jdbcUrl.indexOf("]") : -1;
       int portLoc = jdbcUrl.indexOf(":", Math.max(0, ipv6End));
-      portLoc = clusterSepLoc < portLoc ? -1 : portLoc;
+      portLoc = clusterSepLoc != -1 && clusterSepLoc < portLoc ? -1 : portLoc;
       int dbLoc = jdbcUrl.indexOf("/", Math.max(portLoc, clusterSepLoc));
 
       int paramLoc = jdbcUrl.indexOf("?", dbLoc);

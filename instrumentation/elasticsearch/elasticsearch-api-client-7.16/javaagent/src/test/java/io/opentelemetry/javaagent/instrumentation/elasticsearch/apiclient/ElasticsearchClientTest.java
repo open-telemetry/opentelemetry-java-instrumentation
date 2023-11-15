@@ -14,7 +14,6 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.InfoResponse;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
-import co.elastic.clients.transport.Version;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -76,10 +75,6 @@ class ElasticsearchClientTest {
     elasticsearch.stop();
   }
 
-  private static String userAgent() {
-    return "elastic-java/" + Version.VERSION + " (Java/" + System.getProperty("java.version") + ")";
-  }
-
   @Test
   public void elasticsearchStatus() throws IOException {
     InfoResponse response = client.info();
@@ -111,7 +106,6 @@ class ElasticsearchClientTest {
                             equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.HTTP_URL, httpHost.toURI() + "/"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
-                            equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, userAgent()),
                             satisfies(
                                 SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
                                 AbstractLongAssert::isPositive))));
@@ -162,7 +156,6 @@ class ElasticsearchClientTest {
                                 SemanticAttributes.HTTP_URL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 201L),
-                            equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, userAgent()),
                             satisfies(
                                 SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
                                 AbstractLongAssert::isPositive))));
@@ -218,7 +211,6 @@ class ElasticsearchClientTest {
                             equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.HTTP_URL, httpHost.toURI() + "/"),
                             equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
-                            equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, userAgent()),
                             satisfies(
                                 SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
                                 AbstractLongAssert::isPositive)),

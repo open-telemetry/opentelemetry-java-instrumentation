@@ -121,7 +121,8 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                     equalTo(
                                         MESSAGING_MESSAGE_ID,
                                         sendReceipt.getMessageId().toString()),
-                                    equalTo(MESSAGING_DESTINATION_NAME, topic)),
+                                    equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                    equalTo(MESSAGING_OPERATION, "publish")),
                         span ->
                             span.hasKind(SpanKind.CONSUMER)
                                 .hasName(topic + " process")

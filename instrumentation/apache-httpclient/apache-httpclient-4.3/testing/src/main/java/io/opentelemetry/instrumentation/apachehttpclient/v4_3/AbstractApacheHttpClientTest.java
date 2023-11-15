@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
@@ -90,11 +89,6 @@ public abstract class AbstractApacheHttpClientTest {
         httpClientResult.complete(t);
       }
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
@@ -136,11 +130,6 @@ public abstract class AbstractApacheHttpClientTest {
         httpClientResult.complete(t);
       }
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
@@ -176,11 +165,6 @@ public abstract class AbstractApacheHttpClientTest {
       } catch (Throwable t) {
         httpClientResult.complete(t);
       }
-    }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
     }
   }
 
@@ -223,11 +207,6 @@ public abstract class AbstractApacheHttpClientTest {
         httpClientResult.complete(t);
       }
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
@@ -258,11 +237,6 @@ public abstract class AbstractApacheHttpClientTest {
       } catch (Throwable t) {
         httpClientResult.complete(t);
       }
-    }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
     }
   }
 
@@ -295,11 +269,6 @@ public abstract class AbstractApacheHttpClientTest {
         httpClientResult.complete(t);
       }
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   static <T extends HttpRequest> T configureRequest(T request, Map<String, String> headers) {
@@ -329,10 +298,6 @@ public abstract class AbstractApacheHttpClientTest {
       }
       return response;
     };
-  }
-
-  static void configureTest(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.setUserAgent("apachehttpclient");
   }
 
   static String fullPathFromUri(URI uri) {

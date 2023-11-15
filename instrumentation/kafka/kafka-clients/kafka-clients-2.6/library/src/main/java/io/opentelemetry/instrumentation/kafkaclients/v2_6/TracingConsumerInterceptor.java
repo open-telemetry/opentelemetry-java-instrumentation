@@ -7,6 +7,11 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContextUtil;
 import java.util.Map;
 import java.util.Objects;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -22,7 +27,12 @@ import org.apache.kafka.common.TopicPartition;
  */
 public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 
-  private static final KafkaTelemetry telemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());
+  private static final KafkaTelemetry telemetry =
+      KafkaTelemetry.builder(GlobalOpenTelemetry.get())
+          .setMessagingReceiveInstrumentationEnabled(
+              ConfigPropertiesUtil.getBoolean(
+                  "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
+          .build();
 
   private String consumerGroup;
   private String clientId;
@@ -30,8 +40,15 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
   @Override
   @CanIgnoreReturnValue
   public ConsumerRecords<K, V> onConsume(ConsumerRecords<K, V> records) {
-    telemetry.buildAndFinishSpan(records, consumerGroup, clientId);
-    return records;
+    // timer should be started before fetching ConsumerRecords, but there is no callback for that
+    Timer timer = Timer.start();
+    Context receiveContext = telemetry.buildAndFinishSpan(records, consumerGroup, clientId, timer);
+    if (receiveContext == null) {
+      receiveContext = Context.current();
+    }
+    KafkaConsumerContext consumerContext =
+        KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId);
+    return telemetry.addTracing(records, consumerContext);
   }
 
   @Override

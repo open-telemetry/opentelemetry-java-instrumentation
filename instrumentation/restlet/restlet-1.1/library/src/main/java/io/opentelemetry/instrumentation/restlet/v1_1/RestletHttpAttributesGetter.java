@@ -106,20 +106,6 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
     return (String) request.getAttributes().get("org.restlet.http.version");
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(Request request) {
-    HttpCall call = httpCall(request);
-    return call == null ? null : call.getHostDomain();
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(Request request) {
-    HttpCall call = httpCall(request);
-    return call == null ? null : call.getServerPort();
-  }
-
   @Override
   @Nullable
   public String getNetworkPeerAddress(Request request, @Nullable Response response) {

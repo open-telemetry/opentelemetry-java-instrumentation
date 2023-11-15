@@ -145,19 +145,6 @@ class HttpServerAttributesExtractorStableSemconvTest {
 
     @Nullable
     @Override
-    public String getServerAddress(Map<String, String> request) {
-      return request.get("serverAddress");
-    }
-
-    @Nullable
-    @Override
-    public Integer getServerPort(Map<String, String> request) {
-      String value = request.get("serverPort");
-      return value == null ? null : Integer.parseInt(value);
-    }
-
-    @Nullable
-    @Override
     public String getErrorType(
         Map<String, String> request,
         @Nullable Map<String, String> respobse,
@@ -177,7 +164,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("header.content-length", "10");
     request.put("route", "/repositories/{id}");
     request.put("header.user-agent", "okhttp 3.x");
-    request.put("header.host", "www.github.com:456");
+    request.put("header.host", "github.com:443");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
     request.put("networkTransport", "udp");
@@ -188,8 +175,6 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("networkLocalPort", "42");
     request.put("networkPeerAddress", "4.3.2.1");
     request.put("networkPeerPort", "456");
-    request.put("serverAddress", "github.com");
-    request.put("serverPort", "123");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
@@ -210,7 +195,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
-            entry(SemanticAttributes.SERVER_PORT, 123L),
+            entry(SemanticAttributes.SERVER_PORT, 443L),
             entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(SemanticAttributes.URL_SCHEME, "https"),
             entry(SemanticAttributes.URL_PATH, "/repositories/1"),
@@ -219,23 +204,20 @@ class HttpServerAttributesExtractorStableSemconvTest {
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
             entry(SemanticAttributes.CLIENT_ADDRESS, "1.1.1.1"),
             entry(
-                AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
+                AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
                 asList("123", "456")));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
             entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
             entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),
             entry(NetworkAttributes.NETWORK_PEER_PORT, 456L),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
-            entry(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 10L),
             entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
-            entry(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 20L),
             entry(
-                AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
+                AttributeKey.stringArrayKey("http.response.header.custom-response-header"),
                 asList("654", "321")));
   }
 
@@ -419,6 +401,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     request.put("header.forwarded", "host=example.com:42");
     request.put("header.x-forwarded-host", "opentelemetry.io:987");
     request.put("header.host", "github.com:123");
+    request.put("header.:authority", "opentelemetry.io:42");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "200");
@@ -445,6 +428,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
     Map<String, String> request = new HashMap<>();
     request.put("header.x-forwarded-host", "opentelemetry.io:987");
     request.put("header.host", "github.com:123");
+    request.put("header.:authority", "opentelemetry.io:42");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "200");
@@ -459,6 +443,32 @@ class HttpServerAttributesExtractorStableSemconvTest {
         .containsOnly(
             entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"),
             entry(SemanticAttributes.SERVER_PORT, 987L));
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+  }
+
+  @Test
+  void shouldExtractServerAddressAndPortFromAuthorityPseudoHeader() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.:authority", "opentelemetry.io:42");
+    request.put("header.host", "github.com:123");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "200");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"),
+            entry(SemanticAttributes.SERVER_PORT, 42L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
@@ -492,7 +502,7 @@ class HttpServerAttributesExtractorStableSemconvTest {
   }
 
   @Test
-  void shouldNotExtractDuplicatePeerAddress() {
+  void shouldExtractPeerAddressEvenIfItDuplicatesClientAddress() {
     Map<String, String> request = new HashMap<>();
     request.put("networkPeerAddress", "1.2.3.4");
     request.put("networkPeerPort", "456");
@@ -507,13 +517,39 @@ class HttpServerAttributesExtractorStableSemconvTest {
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.CLIENT_ADDRESS, "1.2.3.4"),
-            entry(SemanticAttributes.CLIENT_PORT, 123L));
+        .containsOnly(entry(SemanticAttributes.CLIENT_ADDRESS, "1.2.3.4"));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+        .containsOnly(
+            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4"),
+            entry(NetworkAttributes.NETWORK_PEER_PORT, 456L));
+  }
+
+  @Test
+  void shouldExtractProtocolNameDifferentFromHttp() {
+    Map<String, String> request = new HashMap<>();
+    request.put("networkProtocolName", "spdy");
+    request.put("networkProtocolVersion", "3.1");
+
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "200");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build()).isEmpty();
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, Context.root(), request, response, null);
+    assertThat(endAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "spdy"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "3.1"));
   }
 }

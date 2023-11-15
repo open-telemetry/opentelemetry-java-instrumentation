@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
@@ -93,11 +92,6 @@ class ApacheHttpAsyncClientTest {
         HttpClientResult httpClientResult) {
       getClient(uri).execute(request, responseCallback(httpClientResult));
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
@@ -132,11 +126,6 @@ class ApacheHttpAsyncClientTest {
               request,
               responseCallback(httpClientResult));
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
@@ -169,11 +158,6 @@ class ApacheHttpAsyncClientTest {
               new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
               request,
               responseCallback(httpClientResult));
-    }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
     }
   }
 
@@ -218,10 +202,6 @@ class ApacheHttpAsyncClientTest {
         httpClientResult.complete(new CancellationException());
       }
     };
-  }
-
-  void configureTest(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.setUserAgent("httpasyncclient");
   }
 
   static String fullPathFromUri(URI uri) {

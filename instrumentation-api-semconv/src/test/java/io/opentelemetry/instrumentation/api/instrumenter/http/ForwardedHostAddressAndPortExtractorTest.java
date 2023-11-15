@@ -96,10 +96,26 @@ class ForwardedHostAddressAndPortExtractorTest {
 
   @ParameterizedTest
   @ArgumentsSource(HostArgs.class)
+  void shouldParsePseudoAuthority(
+      List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
+    doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
+    doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "x-forwarded-host");
+    doReturn(headers).when(getter).getHttpRequestHeader(REQUEST, ":authority");
+
+    AddressAndPort sink = new AddressAndPort();
+    underTest.extract(sink, REQUEST);
+
+    assertThat(sink.getAddress()).isEqualTo(expectedAddress);
+    assertThat(sink.getPort()).isEqualTo(expectedPort);
+  }
+
+  @ParameterizedTest
+  @ArgumentsSource(HostArgs.class)
   void shouldParseHost(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
     doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
     doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "x-forwarded-host");
+    doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, ":authority");
     doReturn(headers).when(getter).getHttpRequestHeader(REQUEST, "host");
 
     AddressAndPort sink = new AddressAndPort();

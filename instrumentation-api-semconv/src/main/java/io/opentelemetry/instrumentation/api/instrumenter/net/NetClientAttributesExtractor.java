@@ -50,16 +50,14 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,
-            AddressAndPortExtractor.noop(),
             serverAddressAndPortExtractor,
-            /* captureNetworkTransportAndType= */ true,
+            /* captureProtocolAttributes= */ true,
             /* captureLocalSocketAttributes= */ false,
             /* captureOldPeerDomainAttribute= */ true,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
     internalServerExtractor =
         new InternalServerAttributesExtractor<>(
-            (port, request) -> true,
             serverAddressAndPortExtractor,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),

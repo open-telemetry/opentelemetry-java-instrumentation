@@ -12,7 +12,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.Assume.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -23,6 +22,7 @@ import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -222,7 +222,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   @Test
   void requestWithCallbackAndNoParent() throws Throwable {
     assumeTrue(options.getTestCallback());
-    assumeFalse(options.getTestCallbackWithImplicitParent());
 
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -241,29 +240,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
-  }
-
-  @Test
-  void requestWithCallbackAndImplicitParent() throws Throwable {
-    assumeTrue(options.getTestCallbackWithImplicitParent());
-
-    String method = "GET";
-    URI uri = resolveAddress("/success");
-
-    HttpClientResult result =
-        doRequestWithCallback(method, uri, () -> testing.runWithSpan("callback", () -> {}));
-
-    assertThat(result.get()).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, uri, method, 200, null).hasNoParent(),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -538,13 +514,28 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
           trace.hasSpansSatisfyingExactly(
               span -> {
                 assertClientSpan(span, uri, method, responseCode, null).hasNoParent();
-                span.hasAttributesSatisfying(
-                    equalTo(
-                        AttributeKey.stringArrayKey("http.request.header.x_test_request"),
-                        singletonList("test")),
-                    equalTo(
-                        AttributeKey.stringArrayKey("http.response.header.x_test_response"),
-                        singletonList("test")));
+                List<AttributeAssertion> attributeAssertions = new ArrayList<>();
+                if (SemconvStability.emitOldHttpSemconv()) {
+                  attributeAssertions.add(
+                      equalTo(
+                          AttributeKey.stringArrayKey("http.request.header.x_test_request"),
+                          singletonList("test")));
+                  attributeAssertions.add(
+                      equalTo(
+                          AttributeKey.stringArrayKey("http.response.header.x_test_response"),
+                          singletonList("test")));
+                }
+                if (SemconvStability.emitStableHttpSemconv()) {
+                  attributeAssertions.add(
+                      equalTo(
+                          AttributeKey.stringArrayKey("http.request.header.x-test-request"),
+                          singletonList("test")));
+                  attributeAssertions.add(
+                      equalTo(
+                          AttributeKey.stringArrayKey("http.response.header.x-test-response"),
+                          singletonList("test")));
+                }
+                span.hasAttributesSatisfying(attributeAssertions);
               },
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
@@ -1008,9 +999,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                     .doesNotContainKey(SemanticAttributes.NETWORK_TRANSPORT)
                     .doesNotContainKey(SemanticAttributes.NETWORK_TYPE);
               }
+
               AttributeKey<String> netProtocolKey =
                   getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME);
-              if (httpClientAttributes.contains(netProtocolKey)) {
+              if (SemconvStability.emitStableHttpSemconv()) {
+                // only protocol names different from "http" are emitted
+                assertThat(attrs).doesNotContainKey(netProtocolKey);
+              } else if (attrs.get(netProtocolKey) != null) {
                 assertThat(attrs).containsEntry(netProtocolKey, "http");
               }
               AttributeKey<String> netProtocolVersionKey =
@@ -1027,9 +1022,12 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               AttributeKey<Long> netPeerPortKey = getAttributeKey(SemanticAttributes.NET_PEER_PORT);
               if (httpClientAttributes.contains(netPeerPortKey)) {
                 int uriPort = uri.getPort();
-                // default values are ignored
-                if (uriPort <= 0 || uriPort == 80 || uriPort == 443) {
-                  assertThat(attrs).doesNotContainKey(netPeerPortKey);
+                if (uriPort <= 0) {
+                  if (attrs.get(netPeerPortKey) != null) {
+                    int effectivePort = "https".equals(uri.getScheme()) ? 443 : 80;
+                    assertThat(attrs).containsEntry(netPeerPortKey, effectivePort);
+                  }
+                  // alternatively, peer port is not emitted -- and that's fine too
                 } else {
                   assertThat(attrs).containsEntry(netPeerPortKey, uriPort);
                 }
@@ -1071,22 +1069,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (httpClientAttributes.contains(httpMethodKey)) {
                 assertThat(attrs).containsEntry(httpMethodKey, method);
               }
-              if (httpClientAttributes.contains(SemanticAttributes.USER_AGENT_ORIGINAL)) {
-                String userAgent = options.getUserAgent();
-                if (userAgent != null
-                    || attrs.get(SemanticAttributes.USER_AGENT_ORIGINAL) != null) {
-                  assertThat(attrs)
-                      .hasEntrySatisfying(
-                          SemanticAttributes.USER_AGENT_ORIGINAL,
-                          actual -> {
-                            if (userAgent != null) {
-                              assertThat(actual).startsWith(userAgent);
-                            } else {
-                              assertThat(actual).isNull();
-                            }
-                          });
-                }
-              }
+              // opt-in, not collected by default
+              assertThat(attrs).doesNotContainKey(SemanticAttributes.USER_AGENT_ORIGINAL);
+
               AttributeKey<Long> httpRequestLengthKey =
                   getAttributeKey(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
               if (attrs.get(httpRequestLengthKey) != null) {

@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.semconv.SemanticAttributes;
-import java.util.function.BiPredicate;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -18,19 +17,16 @@ import java.util.function.BiPredicate;
  */
 public final class InternalServerAttributesExtractor<REQUEST> {
 
-  private final BiPredicate<Integer, REQUEST> captureServerPortCondition;
   private final AddressAndPortExtractor<REQUEST> addressAndPortExtractor;
   private final boolean emitStableUrlAttributes;
   private final boolean emitOldHttpAttributes;
   private final Mode oldSemconvMode;
 
   public InternalServerAttributesExtractor(
-      BiPredicate<Integer, REQUEST> captureServerPortCondition,
       AddressAndPortExtractor<REQUEST> addressAndPortExtractor,
       boolean emitStableUrlAttributes,
       boolean emitOldHttpAttributes,
       Mode oldSemconvMode) {
-    this.captureServerPortCondition = captureServerPortCondition;
     this.addressAndPortExtractor = addressAndPortExtractor;
     this.emitStableUrlAttributes = emitStableUrlAttributes;
     this.emitOldHttpAttributes = emitOldHttpAttributes;
@@ -40,21 +36,21 @@ public final class InternalServerAttributesExtractor<REQUEST> {
   public void onStart(AttributesBuilder attributes, REQUEST request) {
     AddressAndPort serverAddressAndPort = addressAndPortExtractor.extract(request);
 
-    if (emitStableUrlAttributes) {
-      internalSet(attributes, SemanticAttributes.SERVER_ADDRESS, serverAddressAndPort.address);
-    }
-    if (emitOldHttpAttributes) {
-      internalSet(attributes, oldSemconvMode.address, serverAddressAndPort.address);
-    }
-
-    if (serverAddressAndPort.port != null
-        && serverAddressAndPort.port > 0
-        && captureServerPortCondition.test(serverAddressAndPort.port, request)) {
+    if (serverAddressAndPort.address != null) {
       if (emitStableUrlAttributes) {
-        internalSet(attributes, SemanticAttributes.SERVER_PORT, (long) serverAddressAndPort.port);
+        internalSet(attributes, SemanticAttributes.SERVER_ADDRESS, serverAddressAndPort.address);
       }
       if (emitOldHttpAttributes) {
-        internalSet(attributes, oldSemconvMode.port, (long) serverAddressAndPort.port);
+        internalSet(attributes, oldSemconvMode.address, serverAddressAndPort.address);
+      }
+
+      if (serverAddressAndPort.port != null && serverAddressAndPort.port > 0) {
+        if (emitStableUrlAttributes) {
+          internalSet(attributes, SemanticAttributes.SERVER_PORT, (long) serverAddressAndPort.port);
+        }
+        if (emitOldHttpAttributes) {
+          internalSet(attributes, oldSemconvMode.port, (long) serverAddressAndPort.port);
+        }
       }
     }
   }

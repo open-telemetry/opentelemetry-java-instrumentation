@@ -27,8 +27,4 @@ public interface HttpRequestMessage {
   String getVersion();
 
   List<String> getAllHeaderNames();
-
-  String getURLHost();
-
-  int getURLPort();
 }

@@ -22,9 +22,8 @@ import javax.annotation.Nullable;
 public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
 
   private final NetworkAttributesGetter<REQUEST, RESPONSE> getter;
-  private final AddressAndPortExtractor<REQUEST> logicalLocalAddressAndPortExtractor;
   private final AddressAndPortExtractor<REQUEST> logicalPeerAddressAndPortExtractor;
-  private final boolean captureNetworkTransportAndType;
+  private final boolean captureProtocolAttributes;
   private final boolean captureLocalSocketAttributes;
   private final boolean captureOldPeerDomainAttribute;
   private final boolean emitStableUrlAttributes;
@@ -32,17 +31,15 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
 
   public InternalNetworkAttributesExtractor(
       NetworkAttributesGetter<REQUEST, RESPONSE> getter,
-      AddressAndPortExtractor<REQUEST> logicalLocalAddressAndPortExtractor,
       AddressAndPortExtractor<REQUEST> logicalPeerAddressAndPortExtractor,
-      boolean captureNetworkTransportAndType,
+      boolean captureProtocolAttributes,
       boolean captureLocalSocketAttributes,
       boolean captureOldPeerDomainAttribute,
       boolean emitStableUrlAttributes,
       boolean emitOldHttpAttributes) {
     this.getter = getter;
-    this.logicalLocalAddressAndPortExtractor = logicalLocalAddressAndPortExtractor;
     this.logicalPeerAddressAndPortExtractor = logicalPeerAddressAndPortExtractor;
-    this.captureNetworkTransportAndType = captureNetworkTransportAndType;
+    this.captureProtocolAttributes = captureProtocolAttributes;
     this.captureLocalSocketAttributes = captureLocalSocketAttributes;
     this.captureOldPeerDomainAttribute = captureOldPeerDomainAttribute;
     this.emitStableUrlAttributes = emitStableUrlAttributes;
@@ -54,15 +51,13 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
     String protocolName = lowercase(getter.getNetworkProtocolName(request, response));
     String protocolVersion = lowercase(getter.getNetworkProtocolVersion(request, response));
 
-    if (emitStableUrlAttributes) {
+    if (emitStableUrlAttributes && captureProtocolAttributes) {
       String transport = lowercase(getter.getNetworkTransport(request, response));
-      if (captureNetworkTransportAndType) {
-        internalSet(attributes, SemanticAttributes.NETWORK_TRANSPORT, transport);
-        internalSet(
-            attributes,
-            SemanticAttributes.NETWORK_TYPE,
-            lowercase(getter.getNetworkType(request, response)));
-      }
+      internalSet(attributes, SemanticAttributes.NETWORK_TRANSPORT, transport);
+      internalSet(
+          attributes,
+          SemanticAttributes.NETWORK_TYPE,
+          lowercase(getter.getNetworkType(request, response)));
       internalSet(attributes, SemanticAttributes.NETWORK_PROTOCOL_NAME, protocolName);
       internalSet(attributes, SemanticAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
     }
@@ -74,8 +69,7 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
     }
 
     String localAddress = getter.getNetworkLocalAddress(request, response);
-    String logicalLocalAddress = logicalLocalAddressAndPortExtractor.extract(request).address;
-    if (localAddress != null && !localAddress.equals(logicalLocalAddress)) {
+    if (localAddress != null) {
       if (emitStableUrlAttributes && captureLocalSocketAttributes) {
         internalSet(attributes, NetworkAttributes.NETWORK_LOCAL_ADDRESS, localAddress);
       }
@@ -95,8 +89,7 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
     }
 
     String peerAddress = getter.getNetworkPeerAddress(request, response);
-    String logicalPeerAddress = logicalPeerAddressAndPortExtractor.extract(request).address;
-    if (peerAddress != null && !peerAddress.equals(logicalPeerAddress)) {
+    if (peerAddress != null) {
       if (emitStableUrlAttributes) {
         internalSet(attributes, NetworkAttributes.NETWORK_PEER_ADDRESS, peerAddress);
       }
@@ -119,6 +112,7 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
             getter.getNetworkPeerInetSocketAddress(request, response);
         if (peerSocketAddress != null) {
           String peerSocketDomain = InetSocketAddressUtil.getDomainName(peerSocketAddress);
+          String logicalPeerAddress = logicalPeerAddressAndPortExtractor.extract(request).address;
           if (peerSocketDomain != null && !peerSocketDomain.equals(logicalPeerAddress)) {
             internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_NAME, peerSocketDomain);
           }

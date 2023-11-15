@@ -52,16 +52,14 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,
-            serverAddressAndPortExtractor,
             clientAddressAndPortExtractor,
-            /* captureNetworkTransportAndType= */ true,
+            /* captureProtocolAttributes= */ true,
             /* captureLocalSocketAttributes= */ true,
             /* captureOldPeerDomainAttribute= */ false,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
     internalServerExtractor =
         new InternalServerAttributesExtractor<>(
-            (port, request) -> true,
             serverAddressAndPortExtractor,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv(),
@@ -69,6 +67,7 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
     internalClientExtractor =
         new InternalClientAttributesExtractor<>(
             clientAddressAndPortExtractor,
+            /* capturePort= */ true,
             SemconvStability.emitStableHttpSemconv(),
             SemconvStability.emitOldHttpSemconv());
   }

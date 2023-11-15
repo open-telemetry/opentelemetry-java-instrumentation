@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.extension.instrumentation.internal;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
+import java.util.List;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -25,4 +28,12 @@ public interface ExperimentalInstrumentationModule {
    * @param injector the builder for injecting classes
    */
   default void injectClasses(ClassInjector injector) {}
+
+  /**
+   * Returns a list of helper classes that will be defined in the class loader of the instrumented
+   * library.
+   */
+  default List<String> injectedClassNames() {
+    return emptyList();
+  }
 }

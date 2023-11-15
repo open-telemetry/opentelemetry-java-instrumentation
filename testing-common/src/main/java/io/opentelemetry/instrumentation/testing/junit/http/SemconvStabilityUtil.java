@@ -34,14 +34,6 @@ public class SemconvStabilityUtil {
     addKey(oldToNewMap, SemanticAttributes.HTTP_METHOD, SemanticAttributes.HTTP_REQUEST_METHOD);
     addKey(
         oldToNewMap,
-        SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
-        SemanticAttributes.HTTP_REQUEST_BODY_SIZE);
-    addKey(
-        oldToNewMap,
-        SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-        SemanticAttributes.HTTP_RESPONSE_BODY_SIZE);
-    addKey(
-        oldToNewMap,
         SemanticAttributes.HTTP_STATUS_CODE,
         SemanticAttributes.HTTP_RESPONSE_STATUS_CODE);
     addKey(oldToNewMap, SemanticAttributes.NET_HOST_NAME, SemanticAttributes.SERVER_ADDRESS);

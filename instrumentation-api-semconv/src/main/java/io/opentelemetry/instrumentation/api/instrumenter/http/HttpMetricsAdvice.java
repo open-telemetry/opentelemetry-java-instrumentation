@@ -31,8 +31,7 @@ final class HttpMetricsAdvice {
                 SemanticAttributes.NETWORK_PROTOCOL_NAME,
                 SemanticAttributes.NETWORK_PROTOCOL_VERSION,
                 SemanticAttributes.SERVER_ADDRESS,
-                SemanticAttributes.SERVER_PORT,
-                SemanticAttributes.URL_SCHEME));
+                SemanticAttributes.SERVER_PORT));
   }
 
   @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
@@ -68,7 +67,6 @@ final class HttpMetricsAdvice {
                 SemanticAttributes.NETWORK_PROTOCOL_VERSION,
                 SemanticAttributes.SERVER_ADDRESS,
                 SemanticAttributes.SERVER_PORT,
-                SemanticAttributes.URL_SCHEME,
                 // old attributes
                 SemanticAttributes.HTTP_METHOD,
                 SemanticAttributes.HTTP_STATUS_CODE,
@@ -153,7 +151,7 @@ final class HttpMetricsAdvice {
                 SemanticAttributes.HTTP_SCHEME,
                 SemanticAttributes.NET_HOST_NAME,
                 SemanticAttributes.NET_HOST_PORT,
-                // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserveractive_requests
+                // https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-metrics.md#metric-httpserveractive_requests
                 SemanticAttributes.HTTP_REQUEST_METHOD,
                 SemanticAttributes.URL_SCHEME));
   }

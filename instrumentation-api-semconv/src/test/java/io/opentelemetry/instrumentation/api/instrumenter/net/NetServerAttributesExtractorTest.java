@@ -164,36 +164,6 @@ class NetServerAttributesExtractorTest {
   }
 
   @Test
-  void doesNotSetDuplicatesSocketAddress() {
-    // given
-    Map<String, String> map = new HashMap<>();
-    map.put("netTransport", IP_TCP);
-    map.put("hostName", "4:3:2:1::");
-    map.put("hostPort", "80");
-    map.put("sockFamily", "inet6");
-    map.put("sockHostAddr", "4:3:2:1::");
-    map.put("sockHostPort", "8080");
-
-    Context context = Context.root();
-
-    // when
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, context, map);
-
-    AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, null, null);
-
-    // then
-    assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-            entry(SemanticAttributes.NET_HOST_NAME, "4:3:2:1::"),
-            entry(SemanticAttributes.NET_HOST_PORT, 80L));
-
-    assertThat(endAttributes.build()).isEmpty();
-  }
-
-  @Test
   void doesNotSetNegativePort() {
     // given
     Map<String, String> map = new HashMap<>();

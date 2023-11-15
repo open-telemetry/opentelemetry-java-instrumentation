@@ -103,17 +103,6 @@ enum SpringWebMvcHttpAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(HttpServletRequest request) {
-    return request.getServerName();
-  }
-
-  @Override
-  public Integer getServerPort(HttpServletRequest request) {
-    return request.getServerPort();
-  }
-
   @Override
   @Nullable
   public String getNetworkPeerAddress(

@@ -38,14 +38,12 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  static final String USER_AGENT = "test-user-agent";
-
   AsyncHttpClient client;
 
   @BeforeEach
   void setUp() throws Exception {
     AsyncHttpClientConfig.Builder builder =
-        new AsyncHttpClientConfig.Builder().setUserAgent(USER_AGENT);
+        new AsyncHttpClientConfig.Builder().setUserAgent("test-user-agent");
 
     Method setConnectTimeout;
     try {
@@ -141,8 +139,6 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
     optionsBuilder.disableTestRedirects();
     optionsBuilder.disableTestHttps();
     optionsBuilder.disableTestReadTimeout();
-
-    optionsBuilder.setUserAgent(USER_AGENT);
 
     optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {

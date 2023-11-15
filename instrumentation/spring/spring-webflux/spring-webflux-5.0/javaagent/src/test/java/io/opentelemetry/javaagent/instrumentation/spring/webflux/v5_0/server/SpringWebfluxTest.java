@@ -860,7 +860,6 @@ public class SpringWebfluxTest {
     } catch (ExecutionException ignore) {
       // ignore
     }
-    SpringWebFluxTestApplication.resumeSlowRequest();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -907,6 +906,8 @@ public class SpringWebfluxTest {
                                 value ->
                                     value.startsWith(
                                         "server.SpringWebFluxTestApplication$$Lambda")))));
+
+    SpringWebFluxTestApplication.resumeSlowRequest();
   }
 
   private static class Parameter {

@@ -65,12 +65,12 @@ dependencies {
   // When updating, also update dependencyManagement/build.gradle.kts
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.14.9")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.0")
-  implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.1")
+  implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.2")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:3.1.0")
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:1.6.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.2")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.0"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.1"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testImplementation("org.assertj:assertj-core:3.24.2")

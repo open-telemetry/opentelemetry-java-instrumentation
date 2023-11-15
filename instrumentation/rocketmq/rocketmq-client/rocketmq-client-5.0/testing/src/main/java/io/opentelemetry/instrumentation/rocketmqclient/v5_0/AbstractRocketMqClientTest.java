@@ -418,7 +418,8 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
-                equalTo(MESSAGING_DESTINATION_NAME, topic)));
+                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                equalTo(MESSAGING_OPERATION, "publish")));
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
@@ -446,7 +447,8 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
-                equalTo(MESSAGING_DESTINATION_NAME, topic)));
+                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                equalTo(MESSAGING_OPERATION, "publish")));
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
@@ -474,7 +476,8 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
-                equalTo(MESSAGING_DESTINATION_NAME, topic)));
+                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                equalTo(MESSAGING_OPERATION, "publish")));
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)

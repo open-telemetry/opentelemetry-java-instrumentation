@@ -17,14 +17,17 @@ import io.opentelemetry.semconv.SemanticAttributes;
 public final class InternalClientAttributesExtractor<REQUEST> {
 
   private final AddressAndPortExtractor<REQUEST> addressAndPortExtractor;
+  private final boolean capturePort;
   private final boolean emitStableUrlAttributes;
   private final boolean emitOldHttpAttributes;
 
   public InternalClientAttributesExtractor(
       AddressAndPortExtractor<REQUEST> addressAndPortExtractor,
+      boolean capturePort,
       boolean emitStableUrlAttributes,
       boolean emitOldHttpAttributes) {
     this.addressAndPortExtractor = addressAndPortExtractor;
+    this.capturePort = capturePort;
     this.emitStableUrlAttributes = emitStableUrlAttributes;
     this.emitOldHttpAttributes = emitOldHttpAttributes;
   }
@@ -33,14 +36,16 @@ public final class InternalClientAttributesExtractor<REQUEST> {
   public void onStart(AttributesBuilder attributes, REQUEST request) {
     AddressAndPort clientAddressAndPort = addressAndPortExtractor.extract(request);
 
-    if (emitStableUrlAttributes) {
-      internalSet(attributes, SemanticAttributes.CLIENT_ADDRESS, clientAddressAndPort.address);
-      if (clientAddressAndPort.port != null && clientAddressAndPort.port > 0) {
-        internalSet(attributes, SemanticAttributes.CLIENT_PORT, (long) clientAddressAndPort.port);
+    if (clientAddressAndPort.address != null) {
+      if (emitStableUrlAttributes) {
+        internalSet(attributes, SemanticAttributes.CLIENT_ADDRESS, clientAddressAndPort.address);
+        if (capturePort && clientAddressAndPort.port != null && clientAddressAndPort.port > 0) {
+          internalSet(attributes, SemanticAttributes.CLIENT_PORT, (long) clientAddressAndPort.port);
+        }
       }
-    }
-    if (emitOldHttpAttributes) {
-      internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientAddressAndPort.address);
+      if (emitOldHttpAttributes) {
+        internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientAddressAndPort.address);
+      }
     }
   }
 }

@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
@@ -234,7 +235,9 @@ public final class SpringWebfluxTelemetryBuilder {
             .addContextCustomizer(httpServerRouteBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get());
     if (emitExperimentalHttpServerMetrics) {
-      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+      builder
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(getter))
+          .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
     return builder.buildServerInstrumenter(WebfluxTextMapGetter.INSTANCE);
   }

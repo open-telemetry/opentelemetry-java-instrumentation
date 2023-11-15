@@ -16,8 +16,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
 
-  private static final String USER_AGENT = "Jodd HTTP";
-
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
@@ -30,7 +28,7 @@ public class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
             .followRedirects(true)
             .connectionKeepAlive(true)
             .connectionTimeout((int) CONNECTION_TIMEOUT.toMillis())
-            .header("user-agent", USER_AGENT);
+            .header("user-agent", "Jodd HTTP");
     for (Map.Entry<String, String> header : headers.entrySet()) {
       request.headerOverwrite(header.getKey(), header.getValue());
     }
@@ -54,6 +52,5 @@ public class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
     optionsBuilder.disableTestCallback();
     // Circular Redirects are not explicitly handled by jodd-http
     optionsBuilder.disableTestCircularRedirects();
-    optionsBuilder.setUserAgent(USER_AGENT);
   }
 }

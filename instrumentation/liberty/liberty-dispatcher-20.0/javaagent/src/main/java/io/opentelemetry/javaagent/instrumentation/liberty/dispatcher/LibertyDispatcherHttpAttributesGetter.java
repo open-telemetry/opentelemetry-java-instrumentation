@@ -76,17 +76,6 @@ public class LibertyDispatcherHttpAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(LibertyRequest request) {
-    return request.request().getURLHost();
-  }
-
-  @Override
-  public Integer getServerPort(LibertyRequest request) {
-    return request.request().getURLPort();
-  }
-
   @Override
   @Nullable
   public String getNetworkPeerAddress(LibertyRequest request, @Nullable LibertyResponse response) {

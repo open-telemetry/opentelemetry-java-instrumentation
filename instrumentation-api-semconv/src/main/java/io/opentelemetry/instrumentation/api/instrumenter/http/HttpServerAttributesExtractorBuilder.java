@@ -10,13 +10,13 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ClientAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ServerAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -55,19 +55,17 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
     clientAddressPortExtractor =
         new ClientAddressAndPortExtractor<>(
             netAttributesGetter, new ForwardedForAddressAndPortExtractor<>(httpAttributesGetter));
-    serverAddressPortExtractor =
-        new ServerAddressAndPortExtractor<>(
-            netAttributesGetter, new ForwardedHostAddressAndPortExtractor<>(httpAttributesGetter));
+    serverAddressPortExtractor = new ForwardedHostAddressAndPortExtractor<>(httpAttributesGetter);
   }
 
   /**
-   * Configures the HTTP request headers that will be captured as span attributes as described in <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#common-attributes">HTTP
+   * Configures the HTTP response headers that will be captured as span attributes as described in
+   * <a
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#http-server-semantic-conventions">HTTP
    * semantic conventions</a>.
    *
-   * <p>The HTTP request header values will be captured under the {@code http.request.header.<name>}
-   * attribute key. The {@code <name>} part in the attribute key is the normalized header name:
-   * lowercase, with dashes replaced by underscores.
+   * <p>The HTTP request header values will be captured under the {@code http.request.header.<key>}
+   * attribute key. The {@code <key>} part in the attribute key is the lowercase header name.
    *
    * @param requestHeaders A list of HTTP header names.
    */
@@ -81,12 +79,12 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   /**
    * Configures the HTTP response headers that will be captured as span attributes as described in
    * <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#common-attributes">HTTP
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#common-attributes">HTTP
    * semantic conventions</a>.
    *
    * <p>The HTTP response header values will be captured under the {@code
-   * http.response.header.<name>} attribute key. The {@code <name>} part in the attribute key is the
-   * normalized header name: lowercase, with dashes replaced by underscores.
+   * http.response.header.<key>} attribute key. The {@code <key>} part in the attribute key is the
+   * lowercase header name.
    *
    * @param responseHeaders A list of HTTP header names.
    */
@@ -130,6 +128,8 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   /**
    * Returns a new {@link HttpServerAttributesExtractor} with the settings of this {@link
    * HttpServerAttributesExtractorBuilder}.
+   *
+   * @see InstrumenterBuilder#addAttributesExtractor(AttributesExtractor)
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new HttpServerAttributesExtractor<>(this);
@@ -151,9 +151,10 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   InternalNetworkAttributesExtractor<REQUEST, RESPONSE> buildNetworkExtractor() {
     return new InternalNetworkAttributesExtractor<>(
         netAttributesGetter,
-        serverAddressPortExtractor,
         clientAddressPortExtractor,
-        /* captureNetworkTransportAndType= */ false,
+        // network.{transport,type} are opt-in, network.protocol.* have HTTP-specific logic
+        /* captureProtocolAttributes= */ false,
+        // network.local.* are opt-in
         /* captureLocalSocketAttributes= */ false,
         /* captureOldPeerDomainAttribute= */ false,
         SemconvStability.emitStableHttpSemconv(),
@@ -162,7 +163,6 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   InternalServerAttributesExtractor<REQUEST> buildServerExtractor() {
     return new InternalServerAttributesExtractor<>(
-        new ServerSideServerPortCondition<>(httpAttributesGetter),
         serverAddressPortExtractor,
         SemconvStability.emitStableHttpSemconv(),
         SemconvStability.emitOldHttpSemconv(),
@@ -172,6 +172,8 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   InternalClientAttributesExtractor<REQUEST> buildClientExtractor() {
     return new InternalClientAttributesExtractor<>(
         clientAddressPortExtractor,
+        // client.port is opt-in
+        /* capturePort= */ false,
         SemconvStability.emitStableHttpSemconv(),
         SemconvStability.emitOldHttpSemconv());
   }

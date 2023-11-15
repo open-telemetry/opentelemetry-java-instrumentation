@@ -138,7 +138,6 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
             "$SemanticAttributes.HTTP_METHOD" "$method"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
@@ -174,7 +173,6 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
             "$SemanticAttributes.HTTP_METHOD" "$method"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
@@ -209,7 +207,6 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
             "$SemanticAttributes.HTTP_METHOD" "$method"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"

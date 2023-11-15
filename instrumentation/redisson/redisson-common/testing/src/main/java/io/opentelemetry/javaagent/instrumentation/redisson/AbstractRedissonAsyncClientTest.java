@@ -42,16 +42,11 @@ import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public abstract class AbstractRedissonAsyncClientTest {
-
-  private static final Logger logger =
-      LoggerFactory.getLogger(AbstractRedissonAsyncClientTest.class);
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -94,8 +89,7 @@ public abstract class AbstractRedissonAsyncClientTest {
           .getClass()
           .getMethod("setPingConnectionInterval", int.class)
           .invoke(singleServerConfig, 0);
-    } catch (NoSuchMethodException e) {
-      logger.warn("no setPingConnectionInterval method", e);
+    } catch (NoSuchMethodException ignored) {
     }
     redisson = Redisson.create(config);
     testing.clearData();
