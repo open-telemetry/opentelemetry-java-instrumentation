@@ -68,7 +68,7 @@ class LogEventToReplay implements LogEvent {
     return null;
   }
 
-  @SuppressWarnings("deprecation") // Delegate
+  @SuppressWarnings("deprecation") // Override
   @Override
   public Map<String, String> getContextMap() {
     return Collections.emptyMap();
