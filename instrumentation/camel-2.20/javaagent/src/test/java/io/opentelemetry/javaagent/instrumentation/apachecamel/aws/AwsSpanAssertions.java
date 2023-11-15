@@ -111,8 +111,12 @@ class AwsSpanAssertions {
         attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"));
       } else if (spanName.endsWith("process")) {
         attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"));
+        attributeAssertions.add(
+            satisfies(SemanticAttributes.MESSAGING_MESSAGE_ID, val -> assertThat(val).isNotNull()));
       } else if (spanName.endsWith("publish")) {
         attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"));
+        attributeAssertions.add(
+            satisfies(SemanticAttributes.MESSAGING_MESSAGE_ID, val -> assertThat(val).isNotNull()));
       }
     }
 

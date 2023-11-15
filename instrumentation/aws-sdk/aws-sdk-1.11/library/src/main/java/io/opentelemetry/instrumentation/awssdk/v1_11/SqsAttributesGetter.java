@@ -54,7 +54,7 @@ enum SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Respon
   @Override
   @Nullable
   public String getMessageId(Request<?> request, @Nullable Response<?> response) {
-    return null;
+    return SqsAccess.getMessageId(response);
   }
 
   @Override
