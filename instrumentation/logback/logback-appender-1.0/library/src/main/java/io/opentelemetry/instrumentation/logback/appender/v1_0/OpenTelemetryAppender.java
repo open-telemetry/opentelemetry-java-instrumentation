@@ -78,6 +78,10 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   @SuppressWarnings("SystemOut")
   @Override
   protected void append(ILoggingEvent event) {
+    // TODO(jean): Race condition to fix
+    // time=1 append() thread gets the no-op instance
+    // time=2 install() thread updates the instance and flushes the queue
+    // time=3 append() thread adds the log event to the queue
     if (openTelemetry == OpenTelemetry.noop()) {
       if (eventsToReplay.remainingCapacity() > 0) {
         LoggingEventToReplay logEventToReplay =
