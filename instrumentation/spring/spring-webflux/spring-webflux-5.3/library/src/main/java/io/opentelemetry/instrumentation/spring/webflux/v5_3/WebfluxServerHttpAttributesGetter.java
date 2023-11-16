@@ -20,7 +20,7 @@ enum WebfluxServerHttpAttributesGetter
 
   @Override
   public String getHttpRequestMethod(ServerWebExchange request) {
-    return request.getRequest().getMethodValue();
+    return request.getRequest().getMethod().name();
   }
 
   @Override
