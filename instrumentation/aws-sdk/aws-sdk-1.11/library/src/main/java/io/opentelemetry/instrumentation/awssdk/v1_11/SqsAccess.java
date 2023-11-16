@@ -37,4 +37,9 @@ final class SqsAccess {
   static String getMessageAttribute(Request<?> request, String name) {
     return enabled ? SqsImpl.getMessageAttribute(request, name) : null;
   }
+
+  @NoMuzzle
+  static String getMessageId(Response<?> response) {
+    return enabled ? SqsImpl.getMessageId(response) : null;
+  }
 }

@@ -41,4 +41,9 @@ final class SqsMessageImpl implements SqsMessage {
     MessageAttributeValue value = message.getMessageAttributes().get(name);
     return value != null ? value.getStringValue() : null;
   }
+
+  @Override
+  public String getMessageId() {
+    return message.getMessageId();
+  }
 }

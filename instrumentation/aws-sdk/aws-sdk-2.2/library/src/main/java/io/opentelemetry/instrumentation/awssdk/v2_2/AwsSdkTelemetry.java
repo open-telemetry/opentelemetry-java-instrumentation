@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -44,7 +45,7 @@ public class AwsSdkTelemetry {
   }
 
   private final Instrumenter<ExecutionAttributes, Response> requestInstrumenter;
-  private final Instrumenter<ExecutionAttributes, Response> consumerReceiveInstrumenter;
+  private final Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
@@ -54,6 +55,7 @@ public class AwsSdkTelemetry {
 
   AwsSdkTelemetry(
       OpenTelemetry openTelemetry,
+      List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
       boolean useMessagingPropagator,
       boolean useXrayPropagator,
@@ -62,24 +64,20 @@ public class AwsSdkTelemetry {
     this.useXrayPropagator = useXrayPropagator;
     this.messagingPropagator =
         useMessagingPropagator ? openTelemetry.getPropagators().getTextMapPropagator() : null;
-    this.requestInstrumenter =
-        AwsSdkInstrumenterFactory.requestInstrumenter(
-            openTelemetry, captureExperimentalSpanAttributes);
-    this.consumerReceiveInstrumenter =
-        AwsSdkInstrumenterFactory.consumerReceiveInstrumenter(
-            openTelemetry,
-            captureExperimentalSpanAttributes,
-            messagingReceiveInstrumentationEnabled);
-    this.consumerProcessInstrumenter =
-        AwsSdkInstrumenterFactory.consumerProcessInstrumenter(
+
+    AwsSdkInstrumenterFactory instrumenterFactory =
+        new AwsSdkInstrumenterFactory(
             openTelemetry,
             messagingPropagator,
+            capturedHeaders,
             captureExperimentalSpanAttributes,
             messagingReceiveInstrumentationEnabled,
             useXrayPropagator);
-    this.producerInstrumenter =
-        AwsSdkInstrumenterFactory.producerInstrumenter(
-            openTelemetry, captureExperimentalSpanAttributes);
+
+    this.requestInstrumenter = instrumenterFactory.requestInstrumenter();
+    this.consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();
+    this.consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();
+    this.producerInstrumenter = instrumenterFactory.producerInstrumenter();
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.recordIndividualHttpError = recordIndividualHttpError;
   }

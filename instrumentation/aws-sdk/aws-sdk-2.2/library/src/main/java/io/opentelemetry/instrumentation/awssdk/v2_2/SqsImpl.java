@@ -68,16 +68,17 @@ final class SqsImpl {
 
     io.opentelemetry.context.Context parentContext =
         TracingExecutionInterceptor.getParentContext(executionAttributes);
-    Instrumenter<ExecutionAttributes, Response> consumerReceiveInstrumenter =
+    Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter =
         config.getConsumerReceiveInstrumenter();
     io.opentelemetry.context.Context receiveContext = null;
-    if (timer != null
-        && consumerReceiveInstrumenter.shouldStart(parentContext, executionAttributes)) {
+    SqsReceiveRequest receiveRequest =
+        SqsReceiveRequest.create(executionAttributes, SqsMessageImpl.wrap(response.messages()));
+    if (timer != null && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
       receiveContext =
           InstrumenterUtil.startAndEnd(
               consumerReceiveInstrumenter,
               parentContext,
-              executionAttributes,
+              receiveRequest,
               new Response(context.httpResponse(), response),
               null,
               timer.startTime(),
@@ -254,6 +255,14 @@ final class SqsImpl {
       return ((SendMessageBatchRequest) request).queueUrl();
     } else if (request instanceof ReceiveMessageRequest) {
       return ((ReceiveMessageRequest) request).queueUrl();
+    }
+    return null;
+  }
+
+  static String getMessageAttribute(SdkRequest request, String name) {
+    if (request instanceof SendMessageRequest) {
+      MessageAttributeValue value = ((SendMessageRequest) request).messageAttributes().get(name);
+      return value != null ? value.stringValue() : null;
     }
     return null;
   }

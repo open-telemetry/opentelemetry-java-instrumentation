@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
-final class SqsProcessRequest {
+final class SqsProcessRequest extends AbstractSqsRequest {
   private final ExecutionAttributes request;
   private final SqsMessage message;
 
@@ -20,6 +20,7 @@ final class SqsProcessRequest {
     return new SqsProcessRequest(request, message);
   }
 
+  @Override
   public ExecutionAttributes getRequest() {
     return request;
   }
