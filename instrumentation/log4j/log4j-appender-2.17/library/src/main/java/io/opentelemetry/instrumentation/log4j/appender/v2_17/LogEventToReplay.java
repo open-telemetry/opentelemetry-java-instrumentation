@@ -36,8 +36,6 @@ class LogEventToReplay implements LogEvent {
   private final String threadName;
   private final long threadId;
 
-  // Log4j 2 reuses LogEvent object, so we make a copy to be able to
-  // replay the log event later.
   LogEventToReplay(LogEvent logEvent) {
     this.loggerName = logEvent.getLoggerName();
     Message messageOrigin = logEvent.getMessage();
