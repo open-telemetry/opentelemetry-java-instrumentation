@@ -9,10 +9,10 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 final class SpanSuppressors {
@@ -90,12 +90,20 @@ final class SpanSuppressors {
 
   static class ByContextKey implements SpanSuppressor {
     private final SpanSuppressor delegate;
-    static final ContextKey<Boolean> SUPPRESS_INSTRUMENTATION =
-        ContextKey.named(
-            "suppress_instrumentation"); // todo must use the key defined in the Java SDK.
+    private final Method shouldSuppressInstrumentation;
 
     ByContextKey(SpanSuppressor delegate) {
       this.delegate = delegate;
+      Method shouldSuppressInstrumentation;
+      try {
+        Class<?> instrumentationUtil =
+            Class.forName("io.opentelemetry.exporter.internal.InstrumentationUtil");
+        shouldSuppressInstrumentation =
+            instrumentationUtil.getDeclaredMethod("shouldSuppressInstrumentation", Context.class);
+      } catch (ClassNotFoundException | NoSuchMethodException e) {
+        shouldSuppressInstrumentation = null;
+      }
+      this.shouldSuppressInstrumentation = shouldSuppressInstrumentation;
     }
 
     @Override
@@ -105,10 +113,22 @@ final class SpanSuppressors {
 
     @Override
     public boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
-      if (Objects.equals(parentContext.get(SUPPRESS_INSTRUMENTATION), true)) {
+      if (suppressByContextKey(parentContext)) {
         return true;
       }
       return delegate.shouldSuppress(parentContext, spanKind);
+    }
+
+    private boolean suppressByContextKey(Context context) {
+      if (shouldSuppressInstrumentation == null) {
+        return false;
+      }
+
+      try {
+        return (boolean) shouldSuppressInstrumentation.invoke(null, context);
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        return false;
+      }
     }
   }
 }
