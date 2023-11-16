@@ -53,7 +53,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
   private BlockingQueue<LogEventToReplay> eventsToReplay = new ArrayBlockingQueue<>(1000);
 
-  private final AtomicBoolean logCacheWarningDisplayed = new AtomicBoolean();
+  private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
 
   /**
    * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
@@ -231,7 +231,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       if (eventsToReplay.remainingCapacity() > 0) {
         LogEventToReplay logEventToReplay = new LogEventToReplay(event);
         eventsToReplay.offer(logEventToReplay);
-      } else if (!logCacheWarningDisplayed.getAndSet(true)) {
+      } else if (!replayLimitWarningLogged.getAndSet(true)) {
         System.err.println(
             "Log cache size of the OpenTelemetry appender is too small. firstLogsCacheSize value has to be increased");
       }
