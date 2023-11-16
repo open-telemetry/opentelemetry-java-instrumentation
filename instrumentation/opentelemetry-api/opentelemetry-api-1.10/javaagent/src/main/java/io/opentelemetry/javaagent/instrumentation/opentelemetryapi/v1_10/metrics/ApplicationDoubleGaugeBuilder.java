@@ -12,11 +12,12 @@ import application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.function.Consumer;
 
-final class ApplicationDoubleGaugeBuilder implements DoubleGaugeBuilder {
+public class ApplicationDoubleGaugeBuilder implements DoubleGaugeBuilder {
 
   private final io.opentelemetry.api.metrics.DoubleGaugeBuilder agentBuilder;
 
-  ApplicationDoubleGaugeBuilder(io.opentelemetry.api.metrics.DoubleGaugeBuilder agentBuilder) {
+  protected ApplicationDoubleGaugeBuilder(
+      io.opentelemetry.api.metrics.DoubleGaugeBuilder agentBuilder) {
     this.agentBuilder = agentBuilder;
   }
 
