@@ -26,6 +26,7 @@ class LoggingEventToReplay implements ILoggingEvent {
       boolean captureExperimentalAttributes,
       boolean captureCodeAttributes) {
     this.loggingEvent = loggingEvent;
+    // The values are copied because the current values are not more available when the log is replayed
     this.timeStamp = loggingEvent.getTimeStamp();
     if (captureExperimentalAttributes) {
       this.threadName = loggingEvent.getThreadName();
