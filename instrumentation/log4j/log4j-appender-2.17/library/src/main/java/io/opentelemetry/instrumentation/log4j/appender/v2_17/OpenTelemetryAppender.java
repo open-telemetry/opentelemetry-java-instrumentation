@@ -51,7 +51,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   private final LogEventMapper<ReadOnlyStringMap> mapper;
   private volatile OpenTelemetry openTelemetry;
 
-  private BlockingQueue<LogEventToReplay> eventsToReplay = new ArrayBlockingQueue<>(1000);
+  private final BlockingQueue<LogEventToReplay> eventsToReplay;
 
   private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
 
@@ -195,6 +195,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
     this.openTelemetry = openTelemetry;
     if (firstLogsCacheSize != 0) {
       this.eventsToReplay = new ArrayBlockingQueue<>(firstLogsCacheSize);
+    } else {
+      this.eventsToReplay = new ArrayBlockingQueue<>(1000);
     }
   }
 
