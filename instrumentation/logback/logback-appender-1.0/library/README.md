@@ -99,8 +99,8 @@ The available settings are:
 | `captureCodeAttributes`         | Boolean | `false` | Enable the capture of [source code attributes]. Note that capturing source code attributes at logging sites might add a performance overhead.                                                                                                     |
 | `captureMarkerAttribute`        | Boolean | `false` | Enable the capture of Logback markers as attributes.                                                                                                                                                                                              |
 | `captureKeyValuePairAttributes` | Boolean | `false` | Enable the capture of Logback key value pairs as attributes.                                                                                                                                                                                      |
+| `captureLoggerContext` | Boolean | `false` | Enable the capture of Logback logger context properties as attributes. |
 | `captureMdcAttributes`          | String  |         | Comma separated list of MDC attributes to capture. Use the wildcard character `*` to capture all attributes.                                                                                                                                      |
-| `otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes` | Boolean | `false` | Enable the capture of Logback logger context properties as attributes. |
 | `numLogsCapturedBeforeOtelInstall`| Integer | 1000    | Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. thread.id attribute is not captured. |
 
 
