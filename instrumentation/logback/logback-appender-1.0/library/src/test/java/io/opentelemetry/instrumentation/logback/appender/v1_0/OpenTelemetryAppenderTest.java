@@ -5,13 +5,12 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,9 +39,9 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(3);
-    OpenTelemetryAssertions.assertThat(logDataList.get(0)).hasSpanContext(span1.getSpanContext());
-    OpenTelemetryAssertions.assertThat(logDataList.get(1)).hasSpanContext(SpanContext.getInvalid());
-    OpenTelemetryAssertions.assertThat(logDataList.get(2)).hasSpanContext(span2.getSpanContext());
+    assertThat(logDataList.get(0)).hasSpanContext(span1.getSpanContext());
+    assertThat(logDataList.get(1)).hasSpanContext(SpanContext.getInvalid());
+    assertThat(logDataList.get(2)).hasSpanContext(span2.getSpanContext());
   }
 
   private static Span runWithSpan(String spanName, Runnable runnable) {
