@@ -38,8 +38,7 @@ public final class ApplicationOpenTelemetry127 implements OpenTelemetry {
     applicationContextPropagators =
         new ApplicationContextPropagators(agentOpenTelemetry.getPropagators());
     applicationMeterProvider =
-        new ApplicationMeterProvider(
-            getMeterFactory(), agentOpenTelemetry.getMeterProvider());
+        new ApplicationMeterProvider(getMeterFactory(), agentOpenTelemetry.getMeterProvider());
     applicationLoggerProvider = new ApplicationLoggerProvider(agentOpenTelemetry.getLogsBridge());
   }
 
@@ -71,10 +70,10 @@ public final class ApplicationOpenTelemetry127 implements OpenTelemetry {
               "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_31.metrics.ApplicationMeterFactory131");
       return (ApplicationMeterFactory) clazz.getConstructor().newInstance();
     } catch (ClassNotFoundException
-             | NoSuchMethodException
-             | InstantiationException
-             | IllegalAccessException
-             | InvocationTargetException exception) {
+        | NoSuchMethodException
+        | InstantiationException
+        | IllegalAccessException
+        | InvocationTargetException exception) {
       return new ApplicationMeterFactory115();
     }
   }
