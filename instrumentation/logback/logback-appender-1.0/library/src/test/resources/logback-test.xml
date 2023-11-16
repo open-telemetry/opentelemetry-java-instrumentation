@@ -15,7 +15,7 @@
     <captureMarkerAttribute>true</captureMarkerAttribute>
     <captureLoggerContext>true</captureLoggerContext>
     <captureMdcAttributes>*</captureMdcAttributes>
-    <firstLogsCacheSize>1</firstLogsCacheSize>
+    <numLogsCapturedBeforeOtelInstall>1</numLogsCapturedBeforeOtelInstall>
   </appender>
 
   <root level="INFO">

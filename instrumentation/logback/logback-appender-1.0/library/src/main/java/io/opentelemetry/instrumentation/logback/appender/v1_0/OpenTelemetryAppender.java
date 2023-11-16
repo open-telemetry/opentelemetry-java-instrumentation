@@ -164,7 +164,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * {@link OpenTelemetry} object. This setting allows you to modify the size of the cache used to
    * replay the first logs.
    */
-  public void setFirstLogsCacheSize(int size) {
+  public void setNumLogsCapturedBeforeOtelInstall(int size) {
     eventsToReplay = new ArrayBlockingQueue<>(size);
   }
 

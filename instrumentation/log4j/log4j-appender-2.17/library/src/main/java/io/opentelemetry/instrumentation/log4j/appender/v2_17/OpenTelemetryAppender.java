@@ -136,7 +136,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
      * Logback appender.
      */
     @CanIgnoreReturnValue
-    public B setFirstLogsCacheSize(int firstLogsCacheSize) {
+    public B setNumLogsCapturedBeforeOtelInstall(int firstLogsCacheSize) {
       this.firstLogsCacheSize = firstLogsCacheSize;
       return asBuilder();
     }
