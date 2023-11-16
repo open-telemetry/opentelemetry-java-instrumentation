@@ -567,7 +567,10 @@ class AdviceTransformer {
     Type returnType = Type.getReturnType(methodNode.desc);
 
     // currently we don't support rewriting enter advice returning a primitive type
-    if (isEnterAdvice && !(returnType.getSort() == Type.VOID || returnType.getSort() == Type.OBJECT || returnType.getSort() == Type.ARRAY)) {
+    if (isEnterAdvice
+        && !(returnType.getSort() == Type.VOID
+            || returnType.getSort() == Type.OBJECT
+            || returnType.getSort() == Type.ARRAY)) {
       context.disableReturnTypeChange();
     }
     // context is shared by enter and exit advice, if entry advice was rejected don't attempt to
@@ -769,9 +772,9 @@ class AdviceTransformer {
 
   /**
    * If method is annotated with {@link Advice.OnMethodEnter} or {@link Advice.OnMethodExit} set
-   * {@code inline} attribute on the annotation to {@code false}.
-   * If method is annotated with {@link Advice.OnMethodEnter} and has {@code skipOn} attribute set
-   * {@code skipOnIndex} attribute on the annotation to {@code 0}.
+   * {@code inline} attribute on the annotation to {@code false}. If method is annotated with {@link
+   * Advice.OnMethodEnter} and has {@code skipOn} attribute set {@code skipOnIndex} attribute on the
+   * annotation to {@code 0}.
    */
   private static MethodVisitor delegateAdvice(TransformationContext context, MethodVisitor target) {
     return new MethodVisitor(Opcodes.ASM9, target) {
