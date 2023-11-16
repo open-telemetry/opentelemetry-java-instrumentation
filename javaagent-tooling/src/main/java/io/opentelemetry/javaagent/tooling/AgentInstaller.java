@@ -26,6 +26,7 @@ import io.opentelemetry.javaagent.bootstrap.InstrumentedTaskClasses;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizer;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
+import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
@@ -41,6 +42,7 @@ import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
@@ -125,6 +127,8 @@ public class AgentInstaller {
     copyNecessaryConfigToSystemProperties(sdkConfig);
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
+    ConfiguredResourceAttributesHolder.initialize(
+        SdkAutoconfigureAccess.getResourceAttributes(autoConfiguredSdk));
 
     for (BeforeAgentListener agentListener :
         loadOrdered(BeforeAgentListener.class, extensionClassLoader)) {

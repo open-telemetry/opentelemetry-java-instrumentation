@@ -55,7 +55,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
 
   @Override
   public void injectClasses(ClassInjector injector) {
-    injector.proxyBuilder("indy.ProxyMe", "foo.bar.Proxy").inject(InjectionMode.CLASS_ONLY);
+    injector.proxyBuilder("indy.ProxyMe", "foo.bar.Proxy").inject(InjectionMode.CLASS_AND_RESOURCE);
   }
 
   public static class Instrumentation implements TypeInstrumentation {

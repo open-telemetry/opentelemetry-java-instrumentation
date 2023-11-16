@@ -8,6 +8,7 @@ muzzle {
     module.set("kafka-clients")
     versions.set("[0.11.0.0,)")
     assertInverse.set(true)
+    excludeInstrumentationName("kafka-clients-metrics")
   }
 }
 

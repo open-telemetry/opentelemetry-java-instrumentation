@@ -54,12 +54,12 @@ enum SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Respon
   @Override
   @Nullable
   public String getMessageId(Request<?> request, @Nullable Response<?> response) {
-    return null;
+    return SqsAccess.getMessageId(response);
   }
 
   @Override
   public List<String> getMessageHeader(Request<?> request, String name) {
-    String value = SqsAccess.getMessageAttributes(request).get(name);
+    String value = SqsAccess.getMessageAttribute(request, name);
     return value != null ? Collections.singletonList(value) : Collections.emptyList();
   }
 }

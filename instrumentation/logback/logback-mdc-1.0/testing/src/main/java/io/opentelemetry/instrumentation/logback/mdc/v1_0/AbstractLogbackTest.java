@@ -13,6 +13,7 @@ import ch.qos.logback.core.read.ListAppender;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractLogbackTest implements LogbackInstrumentationTest {
+public abstract class AbstractLogbackTest {
 
   protected static final Logger logger = LoggerFactory.getLogger("test");
 
@@ -48,6 +49,8 @@ public abstract class AbstractLogbackTest implements LogbackInstrumentationTest 
   void setUpData() {
     listAppender.list.clear();
   }
+
+  protected abstract InstrumentationExtension getInstrumentationExtension();
 
   @Test
   void testNoIdsWhenNoSpan() {

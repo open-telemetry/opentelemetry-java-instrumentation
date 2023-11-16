@@ -5,24 +5,37 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static java.util.Collections.emptyList;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.List;
 
 /** A builder of {@link AwsSdkTelemetry}. */
 public final class AwsSdkTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
 
+  private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes;
-
   private boolean useMessagingPropagator;
-
   private boolean recordIndividualHttpError;
-
   private boolean useXrayPropagator = true;
+  private boolean messagingReceiveInstrumentationEnabled;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
+  }
+
+  /**
+   * Configures the messaging headers that will be captured as span attributes.
+   *
+   * @param capturedHeaders A list of messaging header names.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setCapturedHeaders(List<String> capturedHeaders) {
+    this.capturedHeaders = capturedHeaders;
+    return this;
   }
 
   /**
@@ -88,14 +101,29 @@ public final class AwsSdkTelemetryBuilder {
   }
 
   /**
+   * Set whether to capture the consumer message receive telemetry in messaging instrumentation.
+   *
+   * <p>Note that this will cause the consumer side to start a new trace, with only a span link
+   * connecting it to the producer trace.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setMessagingReceiveInstrumentationEnabled(
+      boolean messagingReceiveInstrumentationEnabled) {
+    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
+    return this;
+  }
+
+  /**
    * Returns a new {@link AwsSdkTelemetry} with the settings of this {@link AwsSdkTelemetryBuilder}.
    */
   public AwsSdkTelemetry build() {
     return new AwsSdkTelemetry(
         openTelemetry,
+        capturedHeaders,
         captureExperimentalSpanAttributes,
         useMessagingPropagator,
         useXrayPropagator,
-        recordIndividualHttpError);
+        recordIndividualHttpError,
+        messagingReceiveInstrumentationEnabled);
   }
 }

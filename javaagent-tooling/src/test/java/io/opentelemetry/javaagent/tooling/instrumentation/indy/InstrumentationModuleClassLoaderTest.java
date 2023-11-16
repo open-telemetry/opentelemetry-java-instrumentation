@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.opentelemetry.javaagent.tooling.BytecodeWithUrl;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.dummies.Bar;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.dummies.Foo;
 import java.io.IOException;
@@ -36,9 +37,9 @@ class InstrumentationModuleClassLoaderTest {
 
   @Test
   void checkLookup() throws Throwable {
-    Map<String, ClassCopySource> toInject = new HashMap<>();
-    toInject.put(Foo.class.getName(), ClassCopySource.create(Foo.class));
-    toInject.put(Bar.class.getName(), ClassCopySource.create(Bar.class));
+    Map<String, BytecodeWithUrl> toInject = new HashMap<>();
+    toInject.put(Foo.class.getName(), BytecodeWithUrl.create(Foo.class));
+    toInject.put(Bar.class.getName(), BytecodeWithUrl.create(Bar.class));
 
     ClassLoader dummyParent = new URLClassLoader(new URL[] {}, null);
 
@@ -72,9 +73,9 @@ class InstrumentationModuleClassLoaderTest {
 
   @Test
   void checkInjectedClassesHavePackage() throws Throwable {
-    Map<String, ClassCopySource> toInject = new HashMap<>();
-    toInject.put(A.class.getName(), ClassCopySource.create(A.class));
-    toInject.put(B.class.getName(), ClassCopySource.create(B.class));
+    Map<String, BytecodeWithUrl> toInject = new HashMap<>();
+    toInject.put(A.class.getName(), BytecodeWithUrl.create(A.class));
+    toInject.put(B.class.getName(), BytecodeWithUrl.create(B.class));
     String packageName = A.class.getName().substring(0, A.class.getName().lastIndexOf('.'));
 
     ClassLoader dummyParent = new URLClassLoader(new URL[] {}, null);
@@ -116,8 +117,8 @@ class InstrumentationModuleClassLoaderTest {
     URLClassLoader moduleSourceCl = new URLClassLoader(new URL[] {moduleJar.toUri().toURL()}, null);
 
     try {
-      Map<String, ClassCopySource> toInject = new HashMap<>();
-      toInject.put(C.class.getName(), ClassCopySource.create(C.class.getName(), moduleSourceCl));
+      Map<String, BytecodeWithUrl> toInject = new HashMap<>();
+      toInject.put(C.class.getName(), BytecodeWithUrl.create(C.class.getName(), moduleSourceCl));
 
       InstrumentationModuleClassLoader moduleCl =
           new InstrumentationModuleClassLoader(appCl, agentCl, toInject, true);

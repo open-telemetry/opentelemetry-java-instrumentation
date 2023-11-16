@@ -32,14 +32,14 @@ runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-runtime-telemetry-ja
 Register observers for the desired runtime metrics:
 
 ```java
-OpenTelemetry opentelemetry = // OpenTelemetry instance configured elsewhere
+OpenTelemetry openTelemetry = // OpenTelemetry instance configured elsewhere
 
-BufferPools.registerObservers(opentelemetry);
-Classes.registerObservers(opentelemetry);
-Cpu.registerObservers(opentelemetry);
-MemoryPools.registerObservers(opentelemetry);
-Threads.registerObservers(opentelemetry);
-GarbageCollector.registerObservers(opentelemetry);
+BufferPools.registerObservers(openTelemetry);
+Classes.registerObservers(openTelemetry);
+Cpu.registerObservers(openTelemetry);
+MemoryPools.registerObservers(openTelemetry);
+Threads.registerObservers(openTelemetry);
+GarbageCollector.registerObservers(openTelemetry);
 ```
 
 ## Garbage Collector Dependent Metrics

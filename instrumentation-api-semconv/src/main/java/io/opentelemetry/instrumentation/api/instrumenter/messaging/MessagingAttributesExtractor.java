@@ -89,7 +89,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
         attributes,
         SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES,
         getter.getMessagePayloadCompressedSize(request));
-    if (operation == RECEIVE || operation == PROCESS) {
+    if (operation != null) {
       internalSet(attributes, SemanticAttributes.MESSAGING_OPERATION, operation.operationName());
     }
   }
@@ -120,6 +120,10 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
    */
   @Override
   public SpanKey internalGetSpanKey() {
+    if (operation == null) {
+      return null;
+    }
+
     switch (operation) {
       case PUBLISH:
         return SpanKey.PRODUCER;

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
@@ -44,8 +45,10 @@ public final class LibertyDispatcherSingletons {
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addOperationMetrics(HttpServerMetrics.get());
-    if (CommonConfig.get().shouldEmitExperimentalHttpServerMetrics()) {
-      builder.addOperationMetrics(HttpServerExperimentalMetrics.get());
+    if (CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
+      builder
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
     INSTRUMENTER = builder.buildServerInstrumenter(LibertyDispatcherRequestGetter.INSTANCE);
   }

@@ -8,20 +8,22 @@ package io.opentelemetry.instrumentation.api.instrumenter.url;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
 import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/common/url.md#attributes">URL
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/url/url.md">URL
  * attributes</a>.
  */
 public final class UrlAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   /**
-   * Returns a new {@link UrlAttributesExtractor} that will use the passed {@link
-   * UrlAttributesGetter}.
+   * Creates the URL attributes extractor.
+   *
+   * @see InstrumenterBuilder#addAttributesExtractor(AttributesExtractor)
    */
   public static <REQUEST, RESPONSE> UrlAttributesExtractor<REQUEST, RESPONSE> create(
       UrlAttributesGetter<REQUEST> getter) {

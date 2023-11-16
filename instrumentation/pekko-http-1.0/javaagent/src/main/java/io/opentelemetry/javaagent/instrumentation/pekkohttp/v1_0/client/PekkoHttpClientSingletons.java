@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
@@ -44,8 +45,10 @@ public class PekkoHttpClientSingletons {
                 PeerServiceAttributesExtractor.create(
                     httpAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
             .addOperationMetrics(HttpClientMetrics.get());
-    if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
-      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
+    if (CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry()) {
+      builder
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
     INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

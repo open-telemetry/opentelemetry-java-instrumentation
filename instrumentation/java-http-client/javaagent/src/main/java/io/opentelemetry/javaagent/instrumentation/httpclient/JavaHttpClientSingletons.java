@@ -38,7 +38,7 @@ public class JavaHttpClientSingletons {
                 HttpClientPeerServiceAttributesExtractor.create(
                     JavaHttpClientAttributesGetter.INSTANCE,
                     CommonConfig.get().getPeerServiceResolver())),
-            CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
+            CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
   }
 
   public static Instrumenter<HttpRequest, HttpResponse<?>> instrumenter() {

@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -152,14 +153,15 @@ public class ContextPropagationTest {
             trace -> {
               trace
                   .hasSize(5)
-                  .hasSpansSatisfyingExactly(
+                  .hasSpansSatisfyingExactlyInAnyOrder(
                       span -> span.hasName("parent"),
                       span ->
                           span.hasName("<default> publish")
                               .hasKind(SpanKind.PRODUCER)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  getAssertions("<default>", null, "127.0.0.1", true, testHeaders)),
+                                  getAssertions(
+                                      "<default>", "publish", "127.0.0.1", true, testHeaders)),
                       // spring-cloud-stream-binder-rabbit listener puts all messages into a
                       // BlockingQueue immediately after receiving
                       // that's why the rabbitmq CONSUMER span will never have any child span (and
@@ -177,7 +179,27 @@ public class ContextPropagationTest {
                               .hasParent(trace.getSpan(1))
                               .hasAttributesSatisfyingExactly(
                                   getAssertions("testQueue", "process", null, false, testHeaders)),
-                      span -> span.hasName("consumer").hasParent(trace.getSpan(3)));
+                      span -> {
+                        // occasionally "testQueue process" spans have their order swapped, usually
+                        // it would be
+                        // 0 - parent
+                        // 1 - <default> publish
+                        // 2 - testQueue process (<default>)
+                        // 3 - testQueue process (testQueue)
+                        // 4 - consumer
+                        // but it could also be
+                        // 0 - parent
+                        // 1 - <default> publish
+                        // 2 - testQueue process (testQueue)
+                        // 3 - consumer
+                        // 4 - testQueue process (<default>)
+                        // determine the correct parent span based on the span name
+                        SpanData parentSpan = trace.getSpan(3);
+                        if (!"testQueue process".equals(parentSpan.getName())) {
+                          parentSpan = trace.getSpan(2);
+                        }
+                        span.hasName("consumer").hasParent(parentSpan);
+                      });
             },
             trace -> {
               trace

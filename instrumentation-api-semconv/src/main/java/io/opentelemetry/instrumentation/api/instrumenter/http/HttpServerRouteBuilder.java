@@ -9,12 +9,13 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import java.util.HashSet;
 import java.util.Set;
 
-/** A builder of {@link HttpSpanNameExtractor}. */
+/** A builder of {@link HttpServerRoute}. */
 public final class HttpServerRouteBuilder<REQUEST> {
 
   final HttpServerAttributesGetter<REQUEST, ?> getter;
@@ -48,6 +49,8 @@ public final class HttpServerRouteBuilder<REQUEST> {
    * Returns a {@link ContextCustomizer} that initializes an {@link HttpServerRoute} in the {@link
    * Context} returned from {@link Instrumenter#start(Context, Object)}. The returned customizer is
    * configured with the settings of this {@link HttpServerRouteBuilder}.
+   *
+   * @see InstrumenterBuilder#addContextCustomizer(ContextCustomizer)
    */
   public ContextCustomizer<REQUEST> build() {
     Set<String> knownMethods = new HashSet<>(this.knownMethods);

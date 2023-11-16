@@ -60,7 +60,7 @@ dependencies {
   implementation("com.github.johnrengelman:shadow:8.1.1")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
   implementation("com.gradle.enterprise:com.gradle.enterprise.gradle.plugin:3.15.1")
-  implementation("org.owasp:dependency-check-gradle:8.4.2")
+  implementation("org.owasp:dependency-check-gradle:8.4.3")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.1")
   // When updating, also update dependencyManagement/build.gradle.kts
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.14.9")
@@ -70,7 +70,7 @@ dependencies {
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:1.6.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.2")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.0"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.1"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testImplementation("org.assertj:assertj-core:3.24.2")

@@ -10,10 +10,12 @@ import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder
+import com.amazonaws.services.sqs.model.MessageAttributeValue
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
 import com.amazonaws.services.sqs.model.SendMessageRequest
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
 import spock.lang.Shared
@@ -50,17 +52,28 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
     }
   }
 
-  def "simple sqs producer-consumer services"() {
+  def "simple sqs producer-consumer services #testCaptureHeaders"() {
     setup:
     client.createQueue("testSdkSqs")
 
     when:
-    SendMessageRequest send = new SendMessageRequest("http://localhost:$sqsPort/000000000000/testSdkSqs", "{\"type\": \"hello\"}")
-    client.sendMessage(send)
-    client.receiveMessage("http://localhost:$sqsPort/000000000000/testSdkSqs")
+    SendMessageRequest sendMessageRequest = new SendMessageRequest("http://localhost:$sqsPort/000000000000/testSdkSqs", "{\"type\": \"hello\"}")
+    if (testCaptureHeaders) {
+      sendMessageRequest.addMessageAttributesEntry("test-message-header", new MessageAttributeValue().withDataType("String").withStringValue("test"))
+    }
+    client.sendMessage(sendMessageRequest)
+    ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest("http://localhost:$sqsPort/000000000000/testSdkSqs")
+    if (testCaptureHeaders) {
+      receiveMessageRequest.withMessageAttributeNames("test-message-header")
+    }
+    def receiveMessageResult = client.receiveMessage(receiveMessageRequest)
+    receiveMessageResult.messages.each {message ->
+      runWithSpan("process child") {}
+    }
 
     then:
-    assertTraces(2) {
+    assertTraces(3) {
+      SpanData publishSpan
       trace(0, 1) {
 
         span(0) {
@@ -85,7 +98,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
           }
         }
       }
-      trace(1, 2) {
+      trace(1, 1) {
         span(0) {
           name "testSdkSqs publish"
           kind PRODUCER
@@ -104,15 +117,23 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "net.peer.port" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            if (testCaptureHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
           }
         }
-        span(1) {
+        publishSpan = span(0)
+      }
+      trace(2, 3) {
+        span(0) {
           name "testSdkSqs receive"
           kind CONSUMER
-          childOf span(0)
+          hasNoParent()
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
@@ -131,10 +152,47 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            if (testCaptureHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
+          }
+        }
+        span(1) {
+          name "testSdkSqs process"
+          kind CONSUMER
+          childOf span(0)
+          hasLink(publishSpan)
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" "http://localhost:$sqsPort"
+            "rpc.method" "ReceiveMessage"
+            "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
+            "http.method" "POST"
+            "http.url" "http://localhost:$sqsPort"
+            "net.peer.name" "localhost"
+            "net.peer.port" sqsPort
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+            if (testCaptureHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
+          }
+        }
+        span(2) {
+          name "process child"
+          childOf span(1)
+          attributes {
           }
         }
       }
     }
+
+    where:
+    testCaptureHeaders << [false, true]
   }
 
   def "simple sqs producer-consumer services with parent span"() {
@@ -145,11 +203,13 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
     SendMessageRequest send = new SendMessageRequest("http://localhost:$sqsPort/000000000000/testSdkSqs", "{\"type\": \"hello\"}")
     client.sendMessage(send)
     runWithSpan("parent") {
-      client.receiveMessage("http://localhost:$sqsPort/000000000000/testSdkSqs")
+      def receiveMessageResult = client.receiveMessage("http://localhost:$sqsPort/000000000000/testSdkSqs")
+      receiveMessageResult.messages.each {message ->  runWithSpan("process child") {}}
     }
 
     then:
     assertTraces(3) {
+      SpanData publishSpan
       trace(0, 1) {
 
         span(0) {
@@ -174,7 +234,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
           }
         }
       }
-      trace(1, 2) {
+      trace(1, 1) {
         span(0) {
           name "testSdkSqs publish"
           kind PRODUCER
@@ -193,41 +253,31 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "net.peer.port" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
-        span(1) {
-          name "testSdkSqs receive"
-          kind CONSUMER
-          childOf span(0)
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" "http://localhost:$sqsPort"
-            "rpc.method" "ReceiveMessage"
-            "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "rpc.system" "aws-api"
-            "rpc.service" "AmazonSQS"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" "http://localhost:$sqsPort"
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
-            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
-          }
-        }
+        publishSpan = span(0)
       }
-      /**
-       * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
-       * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
-       */
-      trace(2, 2) {
+      trace(2, 5) {
+        // sort spans with a ranking function
+        spans.sort({
+          // job span is first
+          if (it.name == "parent") {
+            return 0
+          }
+          if (it.name == "SQS.ReceiveMessage") {
+            return 1
+          }
+          if (it.name == "testSdkSqs receive") {
+            return 2
+          }
+          return 3
+        })
+
         span(0) {
           name "parent"
           hasNoParent()
@@ -251,6 +301,58 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+          }
+        }
+        span(2) {
+          name "testSdkSqs receive"
+          kind CONSUMER
+          childOf span(0)
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" "http://localhost:$sqsPort"
+            "rpc.method" "ReceiveMessage"
+            "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
+            "http.method" "POST"
+            "http.status_code" 200
+            "http.url" "http://localhost:$sqsPort"
+            "net.peer.name" "localhost"
+            "net.peer.port" sqsPort
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
+            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
+            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+          }
+        }
+        span(3) {
+          name "testSdkSqs process"
+          kind CONSUMER
+          childOf span(2)
+          hasLink(publishSpan)
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" "http://localhost:$sqsPort"
+            "rpc.method" "ReceiveMessage"
+            "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
+            "http.method" "POST"
+            "http.url" "http://localhost:$sqsPort"
+            "net.peer.name" "localhost"
+            "net.peer.port" sqsPort
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+          }
+        }
+        span(4) {
+          name "process child"
+          childOf span(3)
+          attributes {
           }
         }
       }

@@ -32,10 +32,10 @@ public final class CommonConfig {
   private final List<String> serverRequestHeaders;
   private final List<String> serverResponseHeaders;
   private final Set<String> knownHttpRequestMethods;
+  private final EnduserConfig enduserConfig;
   private final boolean statementSanitizationEnabled;
-  private final boolean emitExperimentalHttpClientMetrics;
-  private final boolean emitExperimentalHttpServerMetrics;
-  private final boolean captureEnduser;
+  private final boolean emitExperimentalHttpClientTelemetry;
+  private final boolean emitExperimentalHttpServerTelemetry;
 
   CommonConfig(InstrumentationConfig config) {
     peerServiceResolver =
@@ -70,11 +70,19 @@ public final class CommonConfig {
                 new ArrayList<>(HttpConstants.KNOWN_METHODS)));
     statementSanitizationEnabled =
         config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
-    emitExperimentalHttpClientMetrics =
-        config.getBoolean("otel.instrumentation.http.client.emit-experimental-metrics", false);
-    emitExperimentalHttpServerMetrics =
-        config.getBoolean("otel.instrumentation.http.server.emit-experimental-metrics", false);
-    captureEnduser = config.getBoolean("otel.instrumentation.common.enduser.id.enabled", false);
+    emitExperimentalHttpClientTelemetry =
+        DeprecatedConfigProperties.getBoolean(
+            config,
+            "otel.instrumentation.http.client.emit-experimental-metrics",
+            "otel.instrumentation.http.client.emit-experimental-telemetry",
+            false);
+    emitExperimentalHttpServerTelemetry =
+        DeprecatedConfigProperties.getBoolean(
+            config,
+            "otel.instrumentation.http.server.emit-experimental-metrics",
+            "otel.instrumentation.http.server.emit-experimental-telemetry",
+            false);
+    enduserConfig = new EnduserConfig(config);
   }
 
   public PeerServiceResolver getPeerServiceResolver() {
@@ -101,19 +109,19 @@ public final class CommonConfig {
     return knownHttpRequestMethods;
   }
 
+  public EnduserConfig getEnduserConfig() {
+    return enduserConfig;
+  }
+
   public boolean isStatementSanitizationEnabled() {
     return statementSanitizationEnabled;
   }
 
-  public boolean shouldEmitExperimentalHttpClientMetrics() {
-    return emitExperimentalHttpClientMetrics;
+  public boolean shouldEmitExperimentalHttpClientTelemetry() {
+    return emitExperimentalHttpClientTelemetry;
   }
 
-  public boolean shouldEmitExperimentalHttpServerMetrics() {
-    return emitExperimentalHttpServerMetrics;
-  }
-
-  public boolean shouldCaptureEnduser() {
-    return captureEnduser;
+  public boolean shouldEmitExperimentalHttpServerTelemetry() {
+    return emitExperimentalHttpServerTelemetry;
   }
 }
