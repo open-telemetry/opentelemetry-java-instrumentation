@@ -112,7 +112,7 @@ class AdviceTransformer {
   private static class OutputArgument {
     // index of the method argument with the annotation
     final int adviceIndex;
-    // value of the annotation or -1 if Advice.Return
+    // value of the annotation or -1 if Advice.Return or Advice.Enter
     final int methodIndex;
 
     OutputArgument(int adviceIndex, int methodIndex) {
