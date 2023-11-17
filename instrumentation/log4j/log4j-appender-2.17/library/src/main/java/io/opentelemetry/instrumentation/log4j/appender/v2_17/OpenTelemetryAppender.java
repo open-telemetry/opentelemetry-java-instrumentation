@@ -238,10 +238,17 @@ public class OpenTelemetryAppender extends AbstractAppender {
   @SuppressWarnings("SystemOut")
   @Override
   public void append(LogEvent event) {
+    OpenTelemetry openTelemetry = this.openTelemetry;
+    if (openTelemetry != null) {
+      // optimization to avoid locking after the OpenTelemetry instance is set
+      emit(openTelemetry, event);
+      return;
+    }
+
     Lock readLock = lock.readLock();
     readLock.lock();
     try {
-      OpenTelemetry openTelemetry = this.openTelemetry;
+      openTelemetry = this.openTelemetry;
       if (openTelemetry != null) {
         emit(openTelemetry, event);
         return;
