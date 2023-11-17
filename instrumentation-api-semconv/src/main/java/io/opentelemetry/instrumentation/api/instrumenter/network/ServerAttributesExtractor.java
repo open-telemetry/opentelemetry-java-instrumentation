@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.network;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ServerAddressAndPortExtractor;
@@ -16,15 +17,16 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/specification/trace/semantic_conventions/span-general.md#server-attributes">server
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/general/attributes.md#server-attributes">server
  * attributes</a>.
  */
 public final class ServerAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   /**
-   * Returns a new {@link ServerAttributesExtractor} that will use the passed {@link
-   * ServerAttributesGetter}.
+   * Creates the server attributes extractor.
+   *
+   * @see InstrumenterBuilder#addAttributesExtractor(AttributesExtractor)
    */
   public static <REQUEST, RESPONSE> ServerAttributesExtractor<REQUEST, RESPONSE> create(
       ServerAttributesGetter<REQUEST, RESPONSE> getter) {

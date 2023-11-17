@@ -36,6 +36,7 @@ public final class LoggingEventMapper {
   private static final boolean supportsKeyValuePairs = supportsKeyValuePairs();
   private static final boolean supportsMultipleMarkers = supportsMultipleMarkers();
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
+  private static final Cache<String, AttributeKey<String>> attributeKeys = Cache.bounded(100);
 
   private static final AttributeKey<List<String>> LOG_MARKER =
       AttributeKey.stringArrayKey("logback.marker");
@@ -46,18 +47,21 @@ public final class LoggingEventMapper {
   private final boolean captureCodeAttributes;
   private final boolean captureMarkerAttribute;
   private final boolean captureKeyValuePairAttributes;
+  private final boolean captureLoggerContext;
 
   public LoggingEventMapper(
       boolean captureExperimentalAttributes,
       List<String> captureMdcAttributes,
       boolean captureCodeAttributes,
       boolean captureMarkerAttribute,
-      boolean captureKeyValuePairAttributes) {
+      boolean captureKeyValuePairAttributes,
+      boolean captureLoggerContext) {
     this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureCodeAttributes = captureCodeAttributes;
     this.captureMdcAttributes = captureMdcAttributes;
     this.captureMarkerAttribute = captureMarkerAttribute;
     this.captureKeyValuePairAttributes = captureKeyValuePairAttributes;
+    this.captureLoggerContext = captureLoggerContext;
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }
@@ -148,6 +152,10 @@ public final class LoggingEventMapper {
       captureKeyValuePairAttributes(attributes, loggingEvent);
     }
 
+    if (captureLoggerContext) {
+      captureLoggerContext(attributes, loggingEvent.getLoggerContextVO().getPropertyMap());
+    }
+
     builder.setAllAttributes(attributes.build());
 
     // span context
@@ -156,7 +164,6 @@ public final class LoggingEventMapper {
 
   // visible for testing
   void captureMdcAttributes(AttributesBuilder attributes, Map<String, String> mdcProperties) {
-
     if (captureAllMdcAttributes) {
       for (Map.Entry<String, String> entry : mdcProperties.entrySet()) {
         attributes.put(getMdcAttributeKey(entry.getKey()), entry.getValue());
@@ -212,10 +219,21 @@ public final class LoggingEventMapper {
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
         if (keyValuePair.value != null) {
-          attributes.put(keyValuePair.key, keyValuePair.value.toString());
+          attributes.put(getAttributeKey(keyValuePair.key), keyValuePair.value.toString());
         }
       }
     }
+  }
+
+  private static void captureLoggerContext(
+      AttributesBuilder attributes, Map<String, String> loggerContextProperties) {
+    for (Map.Entry<String, String> entry : loggerContextProperties.entrySet()) {
+      attributes.put(getAttributeKey(entry.getKey()), entry.getValue());
+    }
+  }
+
+  public static AttributeKey<String> getAttributeKey(String key) {
+    return attributeKeys.computeIfAbsent(key, k -> AttributeKey.stringKey(k));
   }
 
   private static boolean supportsKeyValuePairs() {

@@ -12,7 +12,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.Assume.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -223,7 +222,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   @Test
   void requestWithCallbackAndNoParent() throws Throwable {
     assumeTrue(options.getTestCallback());
-    assumeFalse(options.getTestCallbackWithImplicitParent());
 
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -242,29 +240,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
-  }
-
-  @Test
-  void requestWithCallbackAndImplicitParent() throws Throwable {
-    assumeTrue(options.getTestCallbackWithImplicitParent());
-
-    String method = "GET";
-    URI uri = resolveAddress("/success");
-
-    HttpClientResult result =
-        doRequestWithCallback(method, uri, () -> testing.runWithSpan("callback", () -> {}));
-
-    assertThat(result.get()).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, uri, method, 200, null).hasNoParent(),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
   }
 
   @Test

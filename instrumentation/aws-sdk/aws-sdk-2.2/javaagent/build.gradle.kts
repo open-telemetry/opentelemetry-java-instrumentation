@@ -84,6 +84,9 @@ dependencies {
   testLibrary("software.amazon.awssdk:sqs:2.2.0")
   testLibrary("software.amazon.awssdk:sns:2.2.0")
   testLibrary("software.amazon.awssdk:ses:2.2.0")
+
+  // last version that does not use json protocol
+  latestDepTestLibrary("software.amazon.awssdk:sqs:2.21.17")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -105,13 +108,30 @@ testing {
 
 tasks {
   val testExperimentalSqs by registering(Test::class) {
-    group = "verification"
-
+    filter {
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    }
     systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
+    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+  }
+
+  val testReceiveSpansDisabled by registering(Test::class) {
+    filter {
+      includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    }
+    include("**/Aws2SqsSuppressReceiveSpansTest.*")
+  }
+
+  test {
+    filter {
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    }
+    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
   }
 
   check {
     dependsOn(testExperimentalSqs)
+    dependsOn(testReceiveSpansDisabled)
     dependsOn(testing.suites)
   }
 

@@ -14,6 +14,8 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.4.0")
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.4.0")
   testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.4.0")
+  // can be remove after starter is update to depend on spring 6.1
+  latestDepTestLibrary("org.springframework:spring-context:+")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean

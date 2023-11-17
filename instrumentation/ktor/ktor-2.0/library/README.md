@@ -35,7 +35,7 @@ Initialize instrumentation by installing the `KtorServerTracing` feature. You mu
 the feature.
 
 ```kotlin
-val openTelemetry: OpenTelemetry = initializeOpenTelemetryForMe()
+val openTelemetry: OpenTelemetry = ...
 
 embeddedServer(Netty, 8080) {
   install(KtorServerTracing) {
@@ -50,7 +50,7 @@ Initialize instrumentation by installing the `KtorClientTracing` feature. You mu
 the feature.
 
 ```kotlin
-val openTelemetry: OpenTelemetry = initializeOpenTelemetryForMe()
+val openTelemetry: OpenTelemetry = ...
 
 val client = HttpClient {
   install(KtorClientTracing) {

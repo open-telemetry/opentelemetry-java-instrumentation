@@ -44,7 +44,7 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> responseContext,
       @Nullable Throwable error) {
-    if (CommonConfig.get().shouldCaptureEnduser()) {
+    if (CommonConfig.get().getEnduserConfig().isIdEnabled()) {
       Principal principal = accessor.getRequestUserPrincipal(requestContext.request());
       if (principal != null) {
         String name = principal.getName();

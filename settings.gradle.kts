@@ -20,7 +20,7 @@ plugins {
   // in particular, these commands are failing (reproducible locally):
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
-  id("com.bmuschko.docker-remote-api") version "9.3.6" apply false
+  id("com.bmuschko.docker-remote-api") version "9.3.7" apply false
 }
 
 dependencyResolutionManagement {
@@ -513,6 +513,8 @@ include(":instrumentation:spring:spring-rabbit-1.0:javaagent")
 include(":instrumentation:spring:spring-rmi-4.0:javaagent")
 include(":instrumentation:spring:spring-scheduling-3.1:bootstrap")
 include(":instrumentation:spring:spring-scheduling-3.1:javaagent")
+include(":instrumentation:spring:spring-security-config-6.0:javaagent")
+include(":instrumentation:spring:spring-security-config-6.0:library")
 include(":instrumentation:spring:spring-web:spring-web-3.1:javaagent")
 include(":instrumentation:spring:spring-web:spring-web-3.1:library")
 include(":instrumentation:spring:spring-web:spring-web-3.1:testing")

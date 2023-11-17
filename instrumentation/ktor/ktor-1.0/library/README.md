@@ -33,7 +33,7 @@ Initialize instrumentation by installing the `KtorServerTracing` feature. You mu
 the feature.
 
 ```kotlin
-OpenTelemetry openTelemetry = initializeOpenTelemetryForMe()
+OpenTelemetry openTelemetry = ...
 
 embeddedServer(Netty, 8080) {
   install(KtorServerTracing) {

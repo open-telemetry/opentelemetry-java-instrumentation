@@ -47,8 +47,8 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
   String getUrlQuery(REQUEST request);
 
   /**
-   * Returns the matched route (path template in the format used by the respective server
-   * framework).
+   * Returns the matched route, that is, the path template in the format used by the respective
+   * server framework.
    *
    * <p>Examples: {@code /users/:userID?}, {@code {controller}/{action}/{id?}}
    */

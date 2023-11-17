@@ -9,7 +9,7 @@ plugins {
   id("org.gradle.playframework") version "0.14"
 }
 
-val playVer = "2.8.20"
+val playVer = "2.8.21"
 val scalaVer = "2.12"
 
 play {

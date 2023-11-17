@@ -8,10 +8,9 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
-import java.util.Collections;
-import java.util.Map;
 
 final class SqsAccess {
   private SqsAccess() {}
@@ -22,8 +21,11 @@ final class SqsAccess {
   static boolean afterResponse(
       Request<?> request,
       Response<?> response,
-      Instrumenter<Request<?>, Response<?>> consumerInstrumenter) {
-    return enabled && SqsImpl.afterResponse(request, response, consumerInstrumenter);
+      Timer timer,
+      Context parentContext,
+      TracingRequestHandler requestHandler) {
+    return enabled
+        && SqsImpl.afterResponse(request, response, timer, parentContext, requestHandler);
   }
 
   @NoMuzzle
@@ -32,7 +34,12 @@ final class SqsAccess {
   }
 
   @NoMuzzle
-  static Map<String, String> getMessageAttributes(Request<?> request) {
-    return enabled ? SqsImpl.getMessageAttributes(request) : Collections.emptyMap();
+  static String getMessageAttribute(Request<?> request, String name) {
+    return enabled ? SqsImpl.getMessageAttribute(request, name) : null;
+  }
+
+  @NoMuzzle
+  static String getMessageId(Response<?> response) {
+    return enabled ? SqsImpl.getMessageId(response) : null;
   }
 }

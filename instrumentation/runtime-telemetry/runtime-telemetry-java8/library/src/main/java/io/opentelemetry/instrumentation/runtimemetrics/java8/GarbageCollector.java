@@ -5,16 +5,18 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 
 import com.sun.management.GarbageCollectionNotificationInfo;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
 import javax.management.NotificationFilter;
@@ -38,6 +41,23 @@ import javax.management.openmbean.CompositeData;
  * <pre>{@code
  * GarbageCollector.registerObservers(GlobalOpenTelemetry.get());
  * }</pre>
+ *
+ * <p>Example metrics being exported:
+ *
+ * <pre>
+ *   process.runtime.jvm.gc.duration{gc="G1 Young Generation",action="end of minor GC"} 0.022
+ * </pre>
+ *
+ * <p>In case you enable the preview of stable JVM semantic conventions (e.g. by setting the {@code
+ * otel.semconv-stability.opt-in} system property to {@code jvm}), the metrics being exported will
+ * follow <a
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md">the
+ * most recent JVM semantic conventions</a>. This is how the example above looks when stable JVM
+ * semconv is enabled:
+ *
+ * <pre>
+ *   jvm.gc.duration{jvm.gc.name="G1 Young Generation",jvm.gc.action="end of minor GC"} 0.022
+ * </pre>
  */
 public final class GarbageCollector {
 
@@ -45,8 +65,13 @@ public final class GarbageCollector {
 
   private static final double MILLIS_PER_S = TimeUnit.SECONDS.toMillis(1);
 
-  private static final AttributeKey<String> GC_KEY = AttributeKey.stringKey("gc");
-  private static final AttributeKey<String> ACTION_KEY = AttributeKey.stringKey("action");
+  private static final AttributeKey<String> GC_KEY = stringKey("gc");
+  private static final AttributeKey<String> ACTION_KEY = stringKey("action");
+
+  // TODO: use the opentelemetry-semconv classes once we have metrics attributes there
+  private static final AttributeKey<String> JVM_GC_NAME = stringKey("jvm.gc.name");
+  private static final AttributeKey<String> JVM_GC_ACTION = stringKey("jvm.gc.action");
+  static final List<Double> GC_DURATION_BUCKETS = unmodifiableList(asList(0.01, 0.1, 1., 10.));
 
   private static final NotificationFilter GC_FILTER =
       notification ->
@@ -76,13 +101,27 @@ public final class GarbageCollector {
       Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor) {
     Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
 
-    DoubleHistogramBuilder gcDurationBuilder =
-        meter
-            .histogramBuilder("process.runtime.jvm.gc.duration")
-            .setDescription("Duration of JVM garbage collection actions")
-            .setUnit("s");
-    setGcDurationBuckets(gcDurationBuilder);
-    DoubleHistogram gcDuration = gcDurationBuilder.build();
+    DoubleHistogram oldGcDuration = null;
+    DoubleHistogram stableGcDuration = null;
+
+    if (SemconvStability.emitOldJvmSemconv()) {
+      oldGcDuration =
+          meter
+              .histogramBuilder("process.runtime.jvm.gc.duration")
+              .setDescription("Duration of JVM garbage collection actions")
+              .setUnit("s")
+              .setExplicitBucketBoundariesAdvice(emptyList())
+              .build();
+    }
+    if (SemconvStability.emitStableJvmSemconv()) {
+      stableGcDuration =
+          meter
+              .histogramBuilder("jvm.gc.duration")
+              .setDescription("Duration of JVM garbage collection actions.")
+              .setUnit("s")
+              .setExplicitBucketBoundariesAdvice(GC_DURATION_BUCKETS)
+              .build();
+    }
 
     List<AutoCloseable> result = new ArrayList<>();
     for (GarbageCollectorMXBean gcBean : gcBeans) {
@@ -91,31 +130,26 @@ public final class GarbageCollector {
       }
       NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
       GcNotificationListener listener =
-          new GcNotificationListener(gcDuration, notificationInfoExtractor);
+          new GcNotificationListener(oldGcDuration, stableGcDuration, notificationInfoExtractor);
       notificationEmitter.addNotificationListener(listener, GC_FILTER, null);
       result.add(() -> notificationEmitter.removeNotificationListener(listener));
     }
     return result;
   }
 
-  private static void setGcDurationBuckets(DoubleHistogramBuilder builder) {
-    if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
-      // that shouldn't really happen
-      return;
-    }
-    ((ExtendedDoubleHistogramBuilder) builder).setExplicitBucketBoundariesAdvice(emptyList());
-  }
-
   private static final class GcNotificationListener implements NotificationListener {
 
-    private final DoubleHistogram gcDuration;
+    @Nullable private final DoubleHistogram oldGcDuration;
+    @Nullable private final DoubleHistogram stableGcDuration;
     private final Function<Notification, GarbageCollectionNotificationInfo>
         notificationInfoExtractor;
 
     private GcNotificationListener(
-        DoubleHistogram gcDuration,
+        @Nullable DoubleHistogram oldGcDuration,
+        @Nullable DoubleHistogram stableGcDuration,
         Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor) {
-      this.gcDuration = gcDuration;
+      this.oldGcDuration = oldGcDuration;
+      this.stableGcDuration = stableGcDuration;
       this.notificationInfoExtractor = notificationInfoExtractor;
     }
 
@@ -123,10 +157,18 @@ public final class GarbageCollector {
     public void handleNotification(Notification notification, Object unused) {
       GarbageCollectionNotificationInfo notificationInfo =
           notificationInfoExtractor.apply(notification);
-      gcDuration.record(
-          notificationInfo.getGcInfo().getDuration() / MILLIS_PER_S,
-          Attributes.of(
-              GC_KEY, notificationInfo.getGcName(), ACTION_KEY, notificationInfo.getGcAction()));
+
+      String gcName = notificationInfo.getGcName();
+      String gcAction = notificationInfo.getGcAction();
+      double duration = notificationInfo.getGcInfo().getDuration() / MILLIS_PER_S;
+
+      if (oldGcDuration != null) {
+        oldGcDuration.record(duration, Attributes.of(GC_KEY, gcName, ACTION_KEY, gcAction));
+      }
+      if (stableGcDuration != null) {
+        stableGcDuration.record(
+            duration, Attributes.of(JVM_GC_NAME, gcName, JVM_GC_ACTION, gcAction));
+      }
     }
   }
 

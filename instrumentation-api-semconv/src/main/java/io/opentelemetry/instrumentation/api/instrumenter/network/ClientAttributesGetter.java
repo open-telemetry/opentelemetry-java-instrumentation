@@ -19,9 +19,10 @@ import javax.annotation.Nullable;
 public interface ClientAttributesGetter<REQUEST, RESPONSE> {
 
   /**
-   * Returns the client address - unix domain socket name, IPv4 or IPv6 address.
+   * Returns the client address - domain name if available without reverse DNS lookup; otherwise, IP
+   * address or Unix domain socket name.
    *
-   * <p>Examples: {@code /tmp/my.sock}, {@code 10.1.2.80}
+   * <p>Examples: {@code client.example.com}, {@code 10.1.2.80}, {@code /tmp/my.sock}
    */
   @Nullable
   default String getClientAddress(REQUEST request) {
