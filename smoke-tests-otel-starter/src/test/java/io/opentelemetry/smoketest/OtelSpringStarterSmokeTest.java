@@ -115,6 +115,7 @@ class OtelSpringStarterSmokeTest {
     LogRecordData firstLog = logs.get(0);
     assertThat(firstLog.getBody().asString())
         .as("Should instrument logs")
-        .isEqualTo("Initializing Spring DispatcherServlet 'dispatcherServlet'");
+        .startsWith("Starting ")
+        .contains(this.getClass().getSimpleName());
   }
 }

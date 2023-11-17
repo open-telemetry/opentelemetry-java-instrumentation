@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.runtimemetrics.java8.ScopeUtil.EXPECTED_SCOPE;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -14,7 +16,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -23,7 +24,6 @@ import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
@@ -98,16 +98,13 @@ class MemoryPoolsTest {
                                     point ->
                                         point
                                             .hasValue(10)
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("pool"), "heap_pool")
-                                            .hasAttribute(AttributeKey.stringKey("type"), "heap"),
+                                            .hasAttribute(stringKey("pool"), "heap_pool")
+                                            .hasAttribute(stringKey("type"), "heap"),
                                     point ->
                                         point
                                             .hasValue(14)
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("pool"), "non_heap_pool")
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("type"), "non_heap")))));
+                                            .hasAttribute(stringKey("pool"), "non_heap_pool")
+                                            .hasAttribute(stringKey("type"), "non_heap")))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
         "process.runtime.jvm.memory.usage",
@@ -124,16 +121,13 @@ class MemoryPoolsTest {
                                     point ->
                                         point
                                             .hasValue(11)
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("pool"), "heap_pool")
-                                            .hasAttribute(AttributeKey.stringKey("type"), "heap"),
+                                            .hasAttribute(stringKey("pool"), "heap_pool")
+                                            .hasAttribute(stringKey("type"), "heap"),
                                     point ->
                                         point
                                             .hasValue(15)
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("pool"), "non_heap_pool")
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("type"), "non_heap")))));
+                                            .hasAttribute(stringKey("pool"), "non_heap_pool")
+                                            .hasAttribute(stringKey("type"), "non_heap")))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
         "process.runtime.jvm.memory.committed",
@@ -150,16 +144,13 @@ class MemoryPoolsTest {
                                     point ->
                                         point
                                             .hasValue(12)
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("pool"), "heap_pool")
-                                            .hasAttribute(AttributeKey.stringKey("type"), "heap"),
+                                            .hasAttribute(stringKey("pool"), "heap_pool")
+                                            .hasAttribute(stringKey("type"), "heap"),
                                     point ->
                                         point
                                             .hasValue(16)
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("pool"), "non_heap_pool")
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("type"), "non_heap")))));
+                                            .hasAttribute(stringKey("pool"), "non_heap_pool")
+                                            .hasAttribute(stringKey("type"), "non_heap")))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
         "process.runtime.jvm.memory.limit",
@@ -176,16 +167,13 @@ class MemoryPoolsTest {
                                     point ->
                                         point
                                             .hasValue(13)
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("pool"), "heap_pool")
-                                            .hasAttribute(AttributeKey.stringKey("type"), "heap"),
+                                            .hasAttribute(stringKey("pool"), "heap_pool")
+                                            .hasAttribute(stringKey("type"), "heap"),
                                     point ->
                                         point
                                             .hasValue(17)
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("pool"), "non_heap_pool")
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("type"), "non_heap")))));
+                                            .hasAttribute(stringKey("pool"), "non_heap_pool")
+                                            .hasAttribute(stringKey("type"), "non_heap")))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
         "process.runtime.jvm.memory.usage_after_last_gc",
@@ -203,16 +191,13 @@ class MemoryPoolsTest {
                                     point ->
                                         point
                                             .hasValue(18)
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("pool"), "heap_pool")
-                                            .hasAttribute(AttributeKey.stringKey("type"), "heap"),
+                                            .hasAttribute(stringKey("pool"), "heap_pool")
+                                            .hasAttribute(stringKey("type"), "heap"),
                                     point ->
                                         point
                                             .hasValue(19)
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("pool"), "non_heap_pool")
-                                            .hasAttribute(
-                                                AttributeKey.stringKey("type"), "non_heap")))));
+                                            .hasAttribute(stringKey("pool"), "non_heap_pool")
+                                            .hasAttribute(stringKey("type"), "non_heap")))));
   }
 
   @Test
@@ -221,7 +206,12 @@ class MemoryPoolsTest {
     when(nonHeapUsage.getUsed()).thenReturn(2L);
 
     Consumer<ObservableLongMeasurement> callback =
-        MemoryPools.callback(beans, MemoryPoolMXBean::getUsage, MemoryUsage::getUsed);
+        MemoryPools.callback(
+            stringKey("pool"),
+            stringKey("type"),
+            beans,
+            MemoryPoolMXBean::getUsage,
+            MemoryUsage::getUsed);
     callback.accept(measurement);
 
     verify(measurement)
@@ -237,7 +227,12 @@ class MemoryPoolsTest {
     when(nonHeapUsage.getMax()).thenReturn(-1L);
 
     Consumer<ObservableLongMeasurement> callback =
-        MemoryPools.callback(beans, MemoryPoolMXBean::getUsage, MemoryUsage::getMax);
+        MemoryPools.callback(
+            stringKey("pool"),
+            stringKey("type"),
+            beans,
+            MemoryPoolMXBean::getUsage,
+            MemoryUsage::getMax);
     callback.accept(measurement);
 
     verify(measurement)
@@ -251,7 +246,9 @@ class MemoryPoolsTest {
 
     Consumer<ObservableLongMeasurement> callback =
         MemoryPools.callback(
-            Collections.singletonList(heapPoolBean),
+            stringKey("pool"),
+            stringKey("type"),
+            singletonList(heapPoolBean),
             MemoryPoolMXBean::getCollectionUsage,
             MemoryUsage::getUsed);
     callback.accept(measurement);

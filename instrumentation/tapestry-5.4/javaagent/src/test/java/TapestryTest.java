@@ -31,33 +31,26 @@ class TapestryTest extends AbstractHttpServerUsingTest<Server> {
       HttpServerInstrumentationExtension.forAgent();
 
   @Override
-  protected Server setupServer() {
+  protected Server setupServer() throws Exception {
     WebAppContext webAppContext = new WebAppContext();
     webAppContext.setContextPath(getContextPath());
     Server jettyServer = new Server(port);
 
     // set up test application
-    try {
-      webAppContext.setBaseResource(Resource.newResource("src/test/webapp"));
-      for (Connector connector : jettyServer.getConnectors()) {
-        connector.setHost("localhost");
-      }
-
-      jettyServer.setHandler(webAppContext);
-      jettyServer.start();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
+    webAppContext.setBaseResource(Resource.newResource("src/test/webapp"));
+    for (Connector connector : jettyServer.getConnectors()) {
+      connector.setHost("localhost");
     }
+
+    jettyServer.setHandler(webAppContext);
+    jettyServer.start();
+
     return jettyServer;
   }
 
   @Override
-  protected void stopServer(Server server) {
-    try {
-      server.stop();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+  protected void stopServer(Server server) throws Exception {
+    server.stop();
   }
 
   @Override

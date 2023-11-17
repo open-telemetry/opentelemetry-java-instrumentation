@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.exporter.internal.InstrumentationUtil;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.HashSet;
 import java.util.Set;
@@ -156,5 +157,25 @@ class SpanSuppressionStrategyTest {
             SpanKey.DB_CLIENT.storeInContext(Context.root(), span), span);
 
     assertFalse(suppressor.shouldSuppress(context, SpanKind.SERVER));
+  }
+
+  @Test
+  void context_shouldSuppressWhenKeyIsAvailableAndTrue() {
+    InstrumentationUtil.suppressInstrumentation(
+        () -> {
+          SpanSuppressor suppressor =
+              new SpanSuppressors.ByContextKey(SpanSuppressionStrategy.NONE.create(emptySet()));
+
+          assertTrue(suppressor.shouldSuppress(Context.current(), SpanKind.CLIENT));
+        });
+  }
+
+  @Test
+  void context_shouldNotSuppressWhenKeyIsNotAvailable() {
+    Context context = Context.current();
+    SpanSuppressor suppressor =
+        new SpanSuppressors.ByContextKey(SpanSuppressionStrategy.NONE.create(emptySet()));
+
+    assertFalse(suppressor.shouldSuppress(context, SpanKind.CLIENT));
   }
 }

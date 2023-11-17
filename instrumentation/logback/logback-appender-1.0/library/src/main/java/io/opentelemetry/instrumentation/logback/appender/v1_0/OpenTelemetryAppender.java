@@ -12,8 +12,15 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
@@ -30,6 +37,13 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
+
+  private int numLogsCapturedBeforeOtelInstall = 1000;
+  private BlockingQueue<LoggingEventToReplay> eventsToReplay =
+      new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
+  private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
+
+  private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
   public OpenTelemetryAppender() {}
 
@@ -65,15 +79,40 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             captureMarkerAttribute,
             captureKeyValuePairAttributes,
             captureLoggerContext);
-    if (openTelemetry == null) {
-      openTelemetry = OpenTelemetry.noop();
-    }
+    eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
   }
 
+  @SuppressWarnings("SystemOut")
   @Override
   protected void append(ILoggingEvent event) {
-    mapper.emit(openTelemetry.getLogsBridge(), event);
+    OpenTelemetry openTelemetry = this.openTelemetry;
+    if (openTelemetry != null) {
+      // optimization to avoid locking after the OpenTelemetry instance is set
+      emit(openTelemetry, event);
+      return;
+    }
+
+    Lock readLock = lock.readLock();
+    readLock.lock();
+    try {
+      openTelemetry = this.openTelemetry;
+      if (openTelemetry != null) {
+        emit(openTelemetry, event);
+        return;
+      }
+
+      LoggingEventToReplay logEventToReplay =
+          new LoggingEventToReplay(event, captureExperimentalAttributes, captureCodeAttributes);
+
+      if (!eventsToReplay.offer(logEventToReplay) && !replayLimitWarningLogged.getAndSet(true)) {
+        String message =
+            "numLogsCapturedBeforeOtelInstall value of the OpenTelemetry appender is too small.";
+        System.err.println(message);
+      }
+    } finally {
+      readLock.unlock();
+    }
   }
 
   /**
@@ -134,11 +173,37 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   }
 
   /**
+   * Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with an
+   * {@link OpenTelemetry} object. This setting allows you to modify the size of the cache used to
+   * replay the first logs.
+   */
+  public void setNumLogsCapturedBeforeOtelInstall(int size) {
+    this.numLogsCapturedBeforeOtelInstall = size;
+  }
+
+  /**
    * Configures the {@link OpenTelemetry} used to append logs. This MUST be called for the appender
    * to function. See {@link #install(OpenTelemetry)} for simple installation option.
    */
   public void setOpenTelemetry(OpenTelemetry openTelemetry) {
-    this.openTelemetry = openTelemetry;
+    List<LoggingEventToReplay> eventsToReplay = new ArrayList<>();
+    Lock writeLock = lock.writeLock();
+    writeLock.lock();
+    try {
+      // minimize scope of write lock
+      this.openTelemetry = openTelemetry;
+      this.eventsToReplay.drainTo(eventsToReplay);
+    } finally {
+      writeLock.unlock();
+    }
+    // now emit
+    for (LoggingEventToReplay eventToReplay : eventsToReplay) {
+      emit(openTelemetry, eventToReplay);
+    }
+  }
+
+  private void emit(OpenTelemetry openTelemetry, ILoggingEvent event) {
+    mapper.emit(openTelemetry.getLogsBridge(), event, -1);
   }
 
   // copied from SDK's DefaultConfigProperties

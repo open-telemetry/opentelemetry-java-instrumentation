@@ -37,6 +37,7 @@ public class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEnt
   static RestTemplate restTemplate;
 
   @BeforeAll
+  @SuppressWarnings("PreferJavaTimeOverload")
   static void setUp() {
     SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
     requestFactory.setConnectTimeout((int) CONNECTION_TIMEOUT.toMillis());

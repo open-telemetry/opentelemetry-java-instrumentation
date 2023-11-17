@@ -10,10 +10,14 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class KafkaMetricsInstrumentationModule extends InstrumentationModule {
+public class KafkaMetricsInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public KafkaMetricsInstrumentationModule() {
     super(
         "kafka-clients-metrics",
@@ -24,9 +28,11 @@ public class KafkaMetricsInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    // OpenTelemetryMetricsReporter is not available in app class loader
-    return false;
+  public void injectClasses(ClassInjector injector) {
+    injector
+        .proxyBuilder(
+            "io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter")
+        .inject(InjectionMode.CLASS_ONLY);
   }
 
   @Override

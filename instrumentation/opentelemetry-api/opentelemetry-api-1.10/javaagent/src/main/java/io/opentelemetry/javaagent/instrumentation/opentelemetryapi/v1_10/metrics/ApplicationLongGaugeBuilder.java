@@ -11,11 +11,12 @@ import application.io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.function.Consumer;
 
-final class ApplicationLongGaugeBuilder implements LongGaugeBuilder {
+public class ApplicationLongGaugeBuilder implements LongGaugeBuilder {
 
   private final io.opentelemetry.api.metrics.LongGaugeBuilder agentBuilder;
 
-  ApplicationLongGaugeBuilder(io.opentelemetry.api.metrics.LongGaugeBuilder agentBuilder) {
+  protected ApplicationLongGaugeBuilder(
+      io.opentelemetry.api.metrics.LongGaugeBuilder agentBuilder) {
     this.agentBuilder = agentBuilder;
   }
 
