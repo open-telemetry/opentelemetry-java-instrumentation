@@ -68,6 +68,7 @@ public final class GarbageCollector {
   private static final AttributeKey<String> GC_KEY = stringKey("gc");
   private static final AttributeKey<String> ACTION_KEY = stringKey("action");
 
+  // TODO: use the opentelemetry-semconv classes once we have metrics attributes there
   private static final AttributeKey<String> JVM_GC_NAME = stringKey("jvm.gc.name");
   private static final AttributeKey<String> JVM_GC_ACTION = stringKey("jvm.gc.action");
   static final List<Double> GC_DURATION_BUCKETS = unmodifiableList(asList(0.01, 0.1, 1., 10.));
