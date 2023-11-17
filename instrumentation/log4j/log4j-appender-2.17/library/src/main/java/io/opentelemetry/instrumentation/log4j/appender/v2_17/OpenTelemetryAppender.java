@@ -89,7 +89,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
     @PluginBuilderAttribute private String captureContextDataAttributes;
-    @PluginBuilderAttribute private int firstLogsCacheSize;
+    @PluginBuilderAttribute private int numLogsCapturedBeforeOtelInstall;
 
     @Nullable private OpenTelemetry openTelemetry;
 
@@ -136,8 +136,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
      * Logback appender.
      */
     @CanIgnoreReturnValue
-    public B setNumLogsCapturedBeforeOtelInstall(int firstLogsCacheSize) {
-      this.firstLogsCacheSize = firstLogsCacheSize;
+    public B setNumLogsCapturedBeforeOtelInstall(int numLogsCapturedBeforeOtelInstall) {
+      this.numLogsCapturedBeforeOtelInstall = numLogsCapturedBeforeOtelInstall;
       return asBuilder();
     }
 
@@ -164,7 +164,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
           captureMapMessageAttributes,
           captureMarkerAttribute,
           captureContextDataAttributes,
-          firstLogsCacheSize,
+          numLogsCapturedBeforeOtelInstall,
           openTelemetry);
     }
   }
