@@ -9,11 +9,12 @@ import application.io.opentelemetry.api.metrics.LongHistogram;
 import application.io.opentelemetry.api.metrics.LongHistogramBuilder;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 
-final class ApplicationLongHistogramBuilder implements LongHistogramBuilder {
+public class ApplicationLongHistogramBuilder implements LongHistogramBuilder {
 
   private final io.opentelemetry.api.metrics.LongHistogramBuilder agentBuilder;
 
-  ApplicationLongHistogramBuilder(io.opentelemetry.api.metrics.LongHistogramBuilder agentBuilder) {
+  protected ApplicationLongHistogramBuilder(
+      io.opentelemetry.api.metrics.LongHistogramBuilder agentBuilder) {
     this.agentBuilder = agentBuilder;
   }
 
