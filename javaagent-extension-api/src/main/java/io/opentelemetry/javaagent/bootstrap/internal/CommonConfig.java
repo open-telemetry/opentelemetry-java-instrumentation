@@ -27,15 +27,30 @@ public final class CommonConfig {
   }
 
   private final PeerServiceResolver peerServiceResolver;
+
   private final List<String> clientRequestHeaders;
+
   private final List<String> clientResponseHeaders;
+
   private final List<String> serverRequestHeaders;
+
   private final List<String> serverResponseHeaders;
+
   private final Set<String> knownHttpRequestMethods;
+
   private final EnduserConfig enduserConfig;
+
   private final boolean statementSanitizationEnabled;
+
   private final boolean emitExperimentalHttpClientTelemetry;
+
   private final boolean emitExperimentalHttpServerTelemetry;
+
+  private final String loggingKeysTraceId;
+
+  private final String loggingKeysSpanId;
+
+  private final String loggingKeysTraceFlags;
 
   CommonConfig(InstrumentationConfig config) {
     peerServiceResolver =
@@ -82,6 +97,12 @@ public final class CommonConfig {
             "otel.instrumentation.http.server.emit-experimental-metrics",
             "otel.instrumentation.http.server.emit-experimental-telemetry",
             false);
+    loggingKeysTraceId =
+        config.getString("otel.instrumentation.common.logging.keys.trace_id", "trace_id");
+    loggingKeysSpanId =
+        config.getString("otel.instrumentation.common.logging.keys.span_id", "span_id");
+    loggingKeysTraceFlags =
+        config.getString("otel.instrumentation.common.logging.keys.trace_flags", "trace_flags");
     enduserConfig = new EnduserConfig(config);
   }
 
@@ -123,5 +144,17 @@ public final class CommonConfig {
 
   public boolean shouldEmitExperimentalHttpServerTelemetry() {
     return emitExperimentalHttpServerTelemetry;
+  }
+
+  public String getLoggingKeysTraceId() {
+    return loggingKeysTraceId;
+  }
+
+  public String getLoggingKeysSpanId() {
+    return loggingKeysSpanId;
+  }
+
+  public String getLoggingKeysTraceFlags() {
+    return loggingKeysTraceFlags;
   }
 }
