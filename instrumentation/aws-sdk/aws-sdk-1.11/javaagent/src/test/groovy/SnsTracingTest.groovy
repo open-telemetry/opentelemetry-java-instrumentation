@@ -196,6 +196,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "snsToSqsTestQueue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
           }
         }
         span(2) {

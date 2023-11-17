@@ -12,7 +12,7 @@ dependencies {
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   testImplementation(project(":testing-common"))
-  testImplementation("org.springframework:spring-test:6.0.0")
+  testLibrary("org.springframework:spring-test:6.0.0")
 }
 
 otelJava {

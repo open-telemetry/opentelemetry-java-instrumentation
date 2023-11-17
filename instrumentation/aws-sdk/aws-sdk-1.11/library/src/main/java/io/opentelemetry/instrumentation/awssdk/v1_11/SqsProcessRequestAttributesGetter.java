@@ -53,7 +53,7 @@ enum SqsProcessRequestAttributesGetter
   @Override
   @Nullable
   public String getMessageId(SqsProcessRequest request, @Nullable Void response) {
-    return null;
+    return request.getMessage().getMessageId();
   }
 
   @Override
