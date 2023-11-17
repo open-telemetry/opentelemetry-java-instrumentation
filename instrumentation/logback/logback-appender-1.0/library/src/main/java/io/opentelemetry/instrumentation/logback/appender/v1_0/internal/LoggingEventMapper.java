@@ -66,14 +66,14 @@ public final class LoggingEventMapper {
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }
 
-  public void emit(LoggerProvider loggerProvider, ILoggingEvent event) {
+  public void emit(LoggerProvider loggerProvider, ILoggingEvent event, long threadId) {
     String instrumentationName = event.getLoggerName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }
     LogRecordBuilder builder =
         loggerProvider.loggerBuilder(instrumentationName).build().logRecordBuilder();
-    mapLoggingEvent(builder, event);
+    mapLoggingEvent(builder, event, threadId);
     builder.emit();
   }
 
@@ -87,7 +87,8 @@ public final class LoggingEventMapper {
    *   <li>Mapped diagnostic context - {@link ILoggingEvent#getMDCPropertyMap()}
    * </ul>
    */
-  private void mapLoggingEvent(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+  private void mapLoggingEvent(
+      LogRecordBuilder builder, ILoggingEvent loggingEvent, long threadId) {
     // message
     String message = loggingEvent.getFormattedMessage();
     if (message != null) {
@@ -122,9 +123,10 @@ public final class LoggingEventMapper {
     captureMdcAttributes(attributes, loggingEvent.getMDCPropertyMap());
 
     if (captureExperimentalAttributes) {
-      Thread currentThread = Thread.currentThread();
-      attributes.put(SemanticAttributes.THREAD_NAME, currentThread.getName());
-      attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
+      attributes.put(SemanticAttributes.THREAD_NAME, loggingEvent.getThreadName());
+      if (threadId != -1) {
+        attributes.put(SemanticAttributes.THREAD_ID, threadId);
+      }
     }
 
     if (captureCodeAttributes) {
