@@ -13,12 +13,16 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -54,6 +58,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
   private final BlockingQueue<LogEventToReplay> eventsToReplay;
 
   private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
+
+  private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
   /**
    * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
@@ -213,38 +219,54 @@ public class OpenTelemetryAppender extends AbstractAppender {
    * to function. See {@link #install(OpenTelemetry)} for simple installation option.
    */
   public void setOpenTelemetry(OpenTelemetry openTelemetry) {
-    this.openTelemetry = openTelemetry;
-    LogEventToReplay eventToReplay;
-    while ((eventToReplay = eventsToReplay.poll()) != null) {
-      append(eventToReplay);
+    List<LogEventToReplay> eventsToReplay = new ArrayList<>();
+    Lock writeLock = lock.writeLock();
+    writeLock.lock();
+    try {
+      // minimize scope of write lock
+      this.openTelemetry = openTelemetry;
+      this.eventsToReplay.drainTo(eventsToReplay);
+    } finally {
+      writeLock.unlock();
+    }
+    // now emit
+    for (LogEventToReplay eventToReplay : eventsToReplay) {
+      emit(openTelemetry, eventToReplay);
     }
   }
 
   @SuppressWarnings("SystemOut")
   @Override
   public void append(LogEvent event) {
-    // TODO(jean): Race condition to fix
-    // time=1 append() thread gets the no-op instance
-    // time=2 install() thread updates the instance and flushes the queue
-    // time=3 append() thread adds the log event to the queue
-    if (openTelemetry == OpenTelemetry.noop()) {
-      if (eventsToReplay.remainingCapacity() > 0) {
-        LogEventToReplay logEventToReplay = new LogEventToReplay(event);
-        eventsToReplay.offer(logEventToReplay);
-      } else if (!replayLimitWarningLogged.getAndSet(true)) {
-        System.err.println(
-            "numLogsCapturedBeforeOtelInstall value of the OpenTelemetry appender is too small.");
+    Lock readLock = lock.readLock();
+    readLock.lock();
+    try {
+      OpenTelemetry openTelemetry = this.openTelemetry;
+      if (openTelemetry != null) {
+        emit(openTelemetry, event);
+        return;
       }
-      return;
-    }
 
+      LogEventToReplay logEventToReplay = new LogEventToReplay(event);
+
+      if (!eventsToReplay.offer(logEventToReplay) && !replayLimitWarningLogged.getAndSet(true)) {
+        String message =
+            "numLogsCapturedBeforeOtelInstall value of the OpenTelemetry appender is too small.";
+        System.err.println(message);
+      }
+    } finally {
+      readLock.unlock();
+    }
+  }
+
+  private void emit(OpenTelemetry openTelemetry, LogEvent event) {
     String instrumentationName = event.getLoggerName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }
 
     LogRecordBuilder builder =
-        this.openTelemetry
+        openTelemetry
             .getLogsBridge()
             .loggerBuilder(instrumentationName)
             .build()

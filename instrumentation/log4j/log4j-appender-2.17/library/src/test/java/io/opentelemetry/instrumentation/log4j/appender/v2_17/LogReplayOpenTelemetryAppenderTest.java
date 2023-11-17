@@ -9,7 +9,6 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import java.util.List;
@@ -23,7 +22,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
   @BeforeEach
   void setup() {
     generalBeforeEachSetup();
-    OpenTelemetryAppender.install(OpenTelemetry.noop());
+    OpenTelemetryAppender.install(null);
   }
 
   @Override
