@@ -266,11 +266,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
 
     LogRecordBuilder builder =
-        openTelemetry
-            .getLogsBridge()
-            .loggerBuilder(instrumentationName)
-            .build()
-            .logRecordBuilder();
+        openTelemetry.getLogsBridge().loggerBuilder(instrumentationName).build().logRecordBuilder();
     ReadOnlyStringMap contextData = event.getContextData();
     mapper.mapLogEvent(
         builder,
