@@ -7,13 +7,15 @@ package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.CpuMethods;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -33,121 +35,131 @@ import javax.annotation.Nullable;
  *   process.runtime.jvm.system.cpu.utilization 0.15
  *   process.runtime.jvm.cpu.utilization 0.1
  * </pre>
+ *
+ * <p>In case you enable the preview of stable JVM semantic conventions (e.g. by setting the {@code
+ * otel.semconv-stability.opt-in} system property to {@code jvm}), the metrics being exported will
+ * follow <a
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md">the
+ * most recent JVM semantic conventions</a>. This is how the example above looks when stable JVM
+ * semconv is enabled:
+ *
+ * <pre>
+ *   jvm.cpu.time 20.42
+ *   jvm.cpu.count 8
+ *   jvm.cpu.recent_utilization 0.1
+ * </pre>
  */
 public final class Cpu {
 
   // Visible for testing
   static final Cpu INSTANCE = new Cpu();
 
-  private static final String OS_BEAN_J9 = "com.ibm.lang.management.OperatingSystemMXBean";
-  private static final String OS_BEAN_HOTSPOT = "com.sun.management.OperatingSystemMXBean";
-  private static final String METHOD_PROCESS_CPU_LOAD = "getProcessCpuLoad";
-  private static final String METHOD_CPU_LOAD = "getCpuLoad";
-  private static final String METHOD_SYSTEM_CPU_LOAD = "getSystemCpuLoad";
+  private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
 
-  @Nullable private static final Supplier<Double> processCpu;
-  @Nullable private static final Supplier<Double> systemCpu;
-
-  static {
-    OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
-    Supplier<Double> processCpuSupplier =
-        methodInvoker(osBean, OS_BEAN_HOTSPOT, METHOD_PROCESS_CPU_LOAD);
-    if (processCpuSupplier == null) {
-      // More users will be on hotspot than j9, so check for j9 second
-      processCpuSupplier = methodInvoker(osBean, OS_BEAN_J9, METHOD_PROCESS_CPU_LOAD);
-    }
-    processCpu = processCpuSupplier;
-
-    // As of java 14, com.sun.management.OperatingSystemMXBean#getCpuLoad() is preferred and
-    // #getSystemCpuLoad() is deprecated
-    Supplier<Double> systemCpuSupplier = methodInvoker(osBean, OS_BEAN_HOTSPOT, METHOD_CPU_LOAD);
-    if (systemCpuSupplier == null) {
-      systemCpuSupplier = methodInvoker(osBean, OS_BEAN_HOTSPOT, METHOD_SYSTEM_CPU_LOAD);
-    }
-    if (systemCpuSupplier == null) {
-      // More users will be on hotspot than j9, so check for j9 second
-      systemCpuSupplier = methodInvoker(osBean, OS_BEAN_J9, METHOD_SYSTEM_CPU_LOAD);
-    }
-    systemCpu = systemCpuSupplier;
-  }
-
-  /** Register observers for java runtime class metrics. */
+  /** Register observers for java runtime CPU metrics. */
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
     return INSTANCE.registerObservers(
-        openTelemetry, ManagementFactory.getOperatingSystemMXBean(), systemCpu, processCpu);
+        openTelemetry,
+        ManagementFactory.getOperatingSystemMXBean(),
+        Runtime.getRuntime()::availableProcessors,
+        CpuMethods.processCpuTime(),
+        CpuMethods.systemCpuUtilization(),
+        CpuMethods.processCpuUtilization());
   }
 
   // Visible for testing
   List<AutoCloseable> registerObservers(
       OpenTelemetry openTelemetry,
       OperatingSystemMXBean osBean,
-      @Nullable Supplier<Double> systemCpuUsage,
-      @Nullable Supplier<Double> processCpuUsage) {
+      IntSupplier availableProcessors,
+      @Nullable Supplier<Long> processCpuTime,
+      @Nullable Supplier<Double> systemCpuUtilization,
+      @Nullable Supplier<Double> processCpuUtilization) {
     Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
     List<AutoCloseable> observables = new ArrayList<>();
-    observables.add(
-        meter
-            .gaugeBuilder("process.runtime.jvm.system.cpu.load_1m")
-            .setDescription("Average CPU load of the whole system for the last minute")
-            .setUnit("{run_queue_item}")
-            .buildWithCallback(
-                observableMeasurement -> {
-                  double loadAverage = osBean.getSystemLoadAverage();
-                  if (loadAverage >= 0) {
-                    observableMeasurement.record(loadAverage);
-                  }
-                }));
 
-    if (systemCpuUsage != null) {
+    if (SemconvStability.emitOldJvmSemconv()) {
       observables.add(
           meter
-              .gaugeBuilder("process.runtime.jvm.system.cpu.utilization")
-              .setDescription("Recent cpu utilization for the whole system")
-              .setUnit("1")
+              .gaugeBuilder("process.runtime.jvm.system.cpu.load_1m")
+              .setDescription("Average CPU load of the whole system for the last minute")
+              .setUnit("{run_queue_item}")
               .buildWithCallback(
                   observableMeasurement -> {
-                    Double cpuUsage = systemCpuUsage.get();
-                    if (cpuUsage != null && cpuUsage >= 0) {
-                      observableMeasurement.record(cpuUsage);
+                    double loadAverage = osBean.getSystemLoadAverage();
+                    if (loadAverage >= 0) {
+                      observableMeasurement.record(loadAverage);
                     }
                   }));
+      if (systemCpuUtilization != null) {
+        observables.add(
+            meter
+                .gaugeBuilder("process.runtime.jvm.system.cpu.utilization")
+                .setDescription("Recent cpu utilization for the whole system")
+                .setUnit("1")
+                .buildWithCallback(
+                    observableMeasurement -> {
+                      Double cpuUsage = systemCpuUtilization.get();
+                      if (cpuUsage != null && cpuUsage >= 0) {
+                        observableMeasurement.record(cpuUsage);
+                      }
+                    }));
+      }
+      if (processCpuUtilization != null) {
+        observables.add(
+            meter
+                .gaugeBuilder("process.runtime.jvm.cpu.utilization")
+                .setDescription("Recent cpu utilization for the process")
+                .setUnit("1")
+                .buildWithCallback(
+                    observableMeasurement -> {
+                      Double cpuUsage = processCpuUtilization.get();
+                      if (cpuUsage != null && cpuUsage >= 0) {
+                        observableMeasurement.record(cpuUsage);
+                      }
+                    }));
+      }
     }
-
-    if (processCpuUsage != null) {
+    if (SemconvStability.emitStableJvmSemconv()) {
+      if (processCpuTime != null) {
+        observables.add(
+            meter
+                .counterBuilder("jvm.cpu.time")
+                .ofDoubles()
+                .setDescription("CPU time used by the process as reported by the JVM.")
+                .setUnit("s")
+                .buildWithCallback(
+                    observableMeasurement -> {
+                      Long cpuTimeNanos = processCpuTime.get();
+                      if (cpuTimeNanos != null && cpuTimeNanos >= 0) {
+                        observableMeasurement.record(cpuTimeNanos / NANOS_PER_S);
+                      }
+                    }));
+      }
       observables.add(
           meter
-              .gaugeBuilder("process.runtime.jvm.cpu.utilization")
-              .setDescription("Recent cpu utilization for the process")
-              .setUnit("1")
+              .upDownCounterBuilder("jvm.cpu.count")
+              .setDescription("Number of processors available to the Java virtual machine.")
+              .setUnit("{cpu}")
               .buildWithCallback(
-                  observableMeasurement -> {
-                    Double cpuUsage = processCpuUsage.get();
-                    if (cpuUsage != null && cpuUsage >= 0) {
-                      observableMeasurement.record(cpuUsage);
-                    }
-                  }));
+                  observableMeasurement ->
+                      observableMeasurement.record(availableProcessors.getAsInt())));
+      if (processCpuUtilization != null) {
+        observables.add(
+            meter
+                .gaugeBuilder("jvm.cpu.recent_utilization")
+                .setDescription("Recent CPU utilization for the process as reported by the JVM.")
+                .setUnit("1")
+                .buildWithCallback(
+                    observableMeasurement -> {
+                      Double cpuUsage = processCpuUtilization.get();
+                      if (cpuUsage != null && cpuUsage >= 0) {
+                        observableMeasurement.record(cpuUsage);
+                      }
+                    }));
+      }
     }
     return observables;
-  }
-
-  @Nullable
-  @SuppressWarnings("ReturnValueIgnored")
-  private static Supplier<Double> methodInvoker(
-      OperatingSystemMXBean osBean, String osBeanClassName, String methodName) {
-    try {
-      Class<?> osBeanClass = Class.forName(osBeanClassName);
-      osBeanClass.cast(osBean);
-      Method method = osBeanClass.getDeclaredMethod(methodName);
-      return () -> {
-        try {
-          return (double) method.invoke(osBean);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-          return null;
-        }
-      };
-    } catch (ClassNotFoundException | ClassCastException | NoSuchMethodException e) {
-      return null;
-    }
   }
 
   private Cpu() {}

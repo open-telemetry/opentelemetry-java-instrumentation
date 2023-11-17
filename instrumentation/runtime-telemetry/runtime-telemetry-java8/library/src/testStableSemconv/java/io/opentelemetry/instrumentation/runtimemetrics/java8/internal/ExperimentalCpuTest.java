@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.runtimemetrics.java8;
+package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
 import static io.opentelemetry.instrumentation.runtimemetrics.java8.ScopeUtil.EXPECTED_SCOPE;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -20,7 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class CpuTest {
+class ExperimentalCpuTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -30,47 +30,35 @@ class CpuTest {
   @Test
   void registerObservers() {
     when(osBean.getSystemLoadAverage()).thenReturn(2.2);
-    Supplier<Double> systemCpuUsage = () -> 0.11;
-    Supplier<Double> processCpuUsage = () -> 0.05;
+    Supplier<Double> systemCpuUtilization = () -> 0.11;
 
-    Cpu.INSTANCE.registerObservers(
-        testing.getOpenTelemetry(), osBean, () -> 0, () -> null, systemCpuUsage, processCpuUsage);
+    ExperimentalCpu.registerObservers(testing.getOpenTelemetry(), osBean, systemCpuUtilization);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "process.runtime.jvm.system.cpu.load_1m",
+        "jvm.system.cpu.load_1m",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription("Average CPU load of the whole system for the last minute")
+                        .hasDescription(
+                            "Average CPU load of the whole system for the last minute as reported by the JVM.")
                         .hasUnit("{run_queue_item}")
                         .hasDoubleGaugeSatisfying(
                             gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(2.2)))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "process.runtime.jvm.system.cpu.utilization",
+        "jvm.system.cpu.utilization",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription("Recent cpu utilization for the whole system")
+                        .hasDescription(
+                            "Recent CPU utilization for the whole system as reported by the JVM.")
                         .hasUnit("1")
                         .hasDoubleGaugeSatisfying(
                             gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(0.11)))));
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.runtime-telemetry-java8",
-        "process.runtime.jvm.cpu.utilization",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription("Recent cpu utilization for the process")
-                        .hasUnit("1")
-                        .hasDoubleGaugeSatisfying(
-                            gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(0.05)))));
   }
 }

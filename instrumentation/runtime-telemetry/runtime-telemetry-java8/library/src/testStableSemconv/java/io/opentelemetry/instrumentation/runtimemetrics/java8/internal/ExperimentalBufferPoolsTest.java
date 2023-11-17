@@ -3,23 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.runtimemetrics.java8;
+package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.runtimemetrics.java8.ScopeUtil.EXPECTED_SCOPE;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.management.BufferPoolMXBean;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +31,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class BufferPoolsTest {
+class ExperimentalBufferPoolsTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -43,7 +43,7 @@ class BufferPoolsTest {
   @BeforeEach
   void setup() {
     when(bufferPoolBean.getName()).thenReturn("buffer_pool_1");
-    beans = Arrays.asList(bufferPoolBean);
+    beans = singletonList(bufferPoolBean);
   }
 
   @Test
@@ -52,18 +52,17 @@ class BufferPoolsTest {
     when(bufferPoolBean.getTotalCapacity()).thenReturn(11L);
     when(bufferPoolBean.getCount()).thenReturn(12L);
 
-    BufferPools.registerObservers(testing.getOpenTelemetry(), beans);
+    ExperimentalBufferPools.registerObservers(testing.getOpenTelemetry(), beans);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "process.runtime.jvm.buffer.usage",
+        "jvm.buffer.memory.usage",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription(
-                            "Memory that the Java virtual machine is using for this buffer pool")
+                        .hasDescription("Measure of memory used by buffers.")
                         .hasUnit("By")
                         .hasLongSumSatisfying(
                             sum ->
@@ -72,17 +71,17 @@ class BufferPoolsTest {
                                         point
                                             .hasValue(10)
                                             .hasAttribute(
-                                                AttributeKey.stringKey("pool"),
+                                                stringKey("jvm.buffer.pool.name"),
                                                 "buffer_pool_1")))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "process.runtime.jvm.buffer.limit",
+        "jvm.buffer.memory.limit",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription("Total capacity of the buffers in this pool")
+                        .hasDescription("Measure of total memory capacity of buffers.")
                         .hasUnit("By")
                         .hasLongSumSatisfying(
                             sum ->
@@ -91,18 +90,18 @@ class BufferPoolsTest {
                                         point
                                             .hasValue(11)
                                             .hasAttribute(
-                                                AttributeKey.stringKey("pool"),
+                                                stringKey("jvm.buffer.pool.name"),
                                                 "buffer_pool_1")))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "process.runtime.jvm.buffer.count",
+        "jvm.buffer.count",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription("The number of buffers in the pool")
-                        .hasUnit("{buffers}")
+                        .hasDescription("Number of buffers in the pool.")
+                        .hasUnit("{buffer}")
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.hasPointsSatisfying(
@@ -110,7 +109,7 @@ class BufferPoolsTest {
                                         point
                                             .hasValue(12)
                                             .hasAttribute(
-                                                AttributeKey.stringKey("pool"),
+                                                stringKey("jvm.buffer.pool.name"),
                                                 "buffer_pool_1")))));
   }
 
@@ -118,16 +117,17 @@ class BufferPoolsTest {
   void callback_Records() {
     when(bufferPoolBean.getMemoryUsed()).thenReturn(1L);
     Consumer<ObservableLongMeasurement> callback =
-        BufferPools.callback(beans, BufferPoolMXBean::getMemoryUsed);
+        ExperimentalBufferPools.callback(beans, BufferPoolMXBean::getMemoryUsed);
     callback.accept(measurement);
-    verify(measurement).record(1, Attributes.builder().put("pool", "buffer_pool_1").build());
+    verify(measurement)
+        .record(1, Attributes.builder().put("jvm.buffer.pool.name", "buffer_pool_1").build());
   }
 
   @Test
   void callback_SkipRecord() {
     when(bufferPoolBean.getMemoryUsed()).thenReturn(-1L);
     Consumer<ObservableLongMeasurement> callback =
-        BufferPools.callback(beans, BufferPoolMXBean::getMemoryUsed);
+        ExperimentalBufferPools.callback(beans, BufferPoolMXBean::getMemoryUsed);
     callback.accept(measurement);
     verify(measurement, never()).record(eq(-1), any());
   }

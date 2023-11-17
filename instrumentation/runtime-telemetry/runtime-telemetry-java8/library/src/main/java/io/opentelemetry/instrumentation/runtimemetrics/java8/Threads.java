@@ -66,6 +66,8 @@ public final class Threads {
   static final Threads INSTANCE = new Threads();
 
   static final AttributeKey<Boolean> DAEMON = booleanKey("daemon");
+
+  // TODO: use the opentelemetry-semconv classes once we have metrics attributes there
   static final AttributeKey<Boolean> JVM_THREAD_DAEMON = booleanKey("jvm.thread.daemon");
   static final AttributeKey<String> JVM_THREAD_STATE = stringKey("jvm.thread.state");
 

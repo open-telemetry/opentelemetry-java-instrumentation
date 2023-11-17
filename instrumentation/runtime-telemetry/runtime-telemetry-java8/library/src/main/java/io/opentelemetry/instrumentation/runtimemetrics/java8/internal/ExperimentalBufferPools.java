@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.runtimemetrics.java8;
+package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
+
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -11,7 +13,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import java.lang.management.BufferPoolMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
@@ -21,24 +22,17 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * Registers measurements that generate metrics about buffer pools.
+ * Registers measurements that generate experimental metrics about buffer pools. These metrics will
+ * only be generated the preview of stable JVM semantic conventions (e.g. by setting the {@code
+ * otel.semconv-stability.opt-in} system property to {@code jvm}) is enabled.
  *
- * <p>Example usage:
- *
- * <pre>{@code
- * BufferPools.registerObservers(GlobalOpenTelemetry.get());
- * }</pre>
- *
- * <p>Example metrics being exported:
- *
- * <pre>
- *   process.runtime.jvm.buffer.usage.usage{pool="buffer_pool"} 500
- *   process.runtime.jvm.buffer.usage.max{pool="buffer_pool"} 1500
- *   process.runtime.jvm.buffer.usage.count{pool="buffer_pool"} 15
- * </pre>
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
-public final class BufferPools {
-  private static final AttributeKey<String> POOL_KEY = AttributeKey.stringKey("pool");
+public final class ExperimentalBufferPools {
+
+  private static final AttributeKey<String> JVM_BUFFER_POOL_NAME =
+      stringKey("jvm.buffer.pool.name");
 
   /** Register observers for java runtime buffer pool metrics. */
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
@@ -51,30 +45,28 @@ public final class BufferPools {
   static List<AutoCloseable> registerObservers(
       OpenTelemetry openTelemetry, List<BufferPoolMXBean> bufferBeans) {
 
-    // buffer pool metrics are experimental in the new semconv
-    if (!SemconvStability.emitOldJvmSemconv()) {
+    if (!SemconvStability.emitStableJvmSemconv()) {
       return Collections.emptyList();
     }
     List<AutoCloseable> observables = new ArrayList<>();
     Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
     observables.add(
         meter
-            .upDownCounterBuilder("process.runtime.jvm.buffer.usage")
-            .setDescription("Memory that the Java virtual machine is using for this buffer pool")
+            .upDownCounterBuilder("jvm.buffer.memory.usage")
+            .setDescription("Measure of memory used by buffers.")
             .setUnit("By")
             .buildWithCallback(callback(bufferBeans, BufferPoolMXBean::getMemoryUsed)));
-
     observables.add(
         meter
-            .upDownCounterBuilder("process.runtime.jvm.buffer.limit")
-            .setDescription("Total capacity of the buffers in this pool")
+            .upDownCounterBuilder("jvm.buffer.memory.limit")
+            .setDescription("Measure of total memory capacity of buffers.")
             .setUnit("By")
             .buildWithCallback(callback(bufferBeans, BufferPoolMXBean::getTotalCapacity)));
     observables.add(
         meter
-            .upDownCounterBuilder("process.runtime.jvm.buffer.count")
-            .setDescription("The number of buffers in the pool")
-            .setUnit("{buffers}")
+            .upDownCounterBuilder("jvm.buffer.count")
+            .setDescription("Number of buffers in the pool.")
+            .setUnit("{buffer}")
             .buildWithCallback(callback(bufferBeans, BufferPoolMXBean::getCount)));
     return observables;
   }
@@ -84,7 +76,7 @@ public final class BufferPools {
       List<BufferPoolMXBean> bufferPools, Function<BufferPoolMXBean, Long> extractor) {
     List<Attributes> attributeSets = new ArrayList<>(bufferPools.size());
     for (BufferPoolMXBean pool : bufferPools) {
-      attributeSets.add(Attributes.builder().put(POOL_KEY, pool.getName()).build());
+      attributeSets.add(Attributes.builder().put(JVM_BUFFER_POOL_NAME, pool.getName()).build());
     }
     return measurement -> {
       for (int i = 0; i < bufferPools.size(); i++) {
@@ -97,5 +89,5 @@ public final class BufferPools {
     };
   }
 
-  private BufferPools() {}
+  private ExperimentalBufferPools() {}
 }
