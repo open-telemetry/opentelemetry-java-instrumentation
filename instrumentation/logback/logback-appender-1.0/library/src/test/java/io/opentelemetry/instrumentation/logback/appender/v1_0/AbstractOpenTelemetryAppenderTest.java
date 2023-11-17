@@ -61,7 +61,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
     resetLoggerContext();
   }
 
-  private static void resetLoggerContext() {
+  static void resetLoggerContext() {
     try {
       LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
       Field field = ContextBase.class.getDeclaredField("propertyMap");

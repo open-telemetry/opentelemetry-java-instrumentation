@@ -12,11 +12,15 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
@@ -36,6 +40,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   private BlockingQueue<LoggingEventToReplay> eventsToReplay = new ArrayBlockingQueue<>(1000);
   private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
+
+  private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
   public OpenTelemetryAppender() {}
 
@@ -71,35 +77,32 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             captureMarkerAttribute,
             captureKeyValuePairAttributes,
             captureLoggerContext);
-    if (openTelemetry == null) {
-      openTelemetry = OpenTelemetry.noop();
-    }
     super.start();
   }
 
   @SuppressWarnings("SystemOut")
   @Override
   protected void append(ILoggingEvent event) {
-    // TODO(jean): Race condition to fix
-    // time=1 append() thread gets the no-op instance
-    // time=2 install() thread updates the instance and flushes the queue
-    // time=3 append() thread adds the log event to the queue
-    if (openTelemetry == OpenTelemetry.noop()) {
-      if (eventsToReplay.remainingCapacity() > 0) {
-        LoggingEventToReplay logEventToReplay =
-            new LoggingEventToReplay(event, captureExperimentalAttributes, captureCodeAttributes);
-        eventsToReplay.offer(logEventToReplay);
-      } else if (!replayLimitWarningLogged.getAndSet(true)) {
+    Lock readLock = lock.readLock();
+    readLock.lock();
+    try {
+      OpenTelemetry openTelemetry = this.openTelemetry;
+      if (openTelemetry != null) {
+        emit(openTelemetry, event);
+        return;
+      }
+
+      LoggingEventToReplay logEventToReplay =
+          new LoggingEventToReplay(event, captureExperimentalAttributes, captureCodeAttributes);
+
+      if (!eventsToReplay.offer(logEventToReplay) && !replayLimitWarningLogged.getAndSet(true)) {
         String message =
             "Log cache size of the OpenTelemetry appender is too small. firstLogsCacheSize value has to be increased;";
         System.err.println(message);
       }
-      return;
+    } finally {
+      readLock.unlock();
     }
-    mapper.emit(
-        openTelemetry.getLogsBridge(),
-        new LoggingEventToReplay(event, captureExperimentalAttributes, captureCodeAttributes),
-        -1);
   }
 
   /**
@@ -173,11 +176,24 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * to function. See {@link #install(OpenTelemetry)} for simple installation option.
    */
   public void setOpenTelemetry(OpenTelemetry openTelemetry) {
-    this.openTelemetry = openTelemetry;
-    LoggingEventToReplay eventToReplay;
-    while ((eventToReplay = eventsToReplay.poll()) != null) {
-      mapper.emit(openTelemetry.getLogsBridge(), eventToReplay, -1);
+    List<LoggingEventToReplay> eventsToReplay = new ArrayList<>();
+    Lock writeLock = lock.writeLock();
+    writeLock.lock();
+    try {
+      // minimize scope of write lock
+      this.openTelemetry = openTelemetry;
+      this.eventsToReplay.drainTo(eventsToReplay);
+    } finally {
+      writeLock.unlock();
     }
+    // now emit
+    for (LoggingEventToReplay eventToReplay : eventsToReplay) {
+      emit(openTelemetry, eventToReplay);
+    }
+  }
+
+  private void emit(OpenTelemetry openTelemetry, ILoggingEvent event) {
+    mapper.emit(openTelemetry.getLogsBridge(), event, -1);
   }
 
   // copied from SDK's DefaultConfigProperties
