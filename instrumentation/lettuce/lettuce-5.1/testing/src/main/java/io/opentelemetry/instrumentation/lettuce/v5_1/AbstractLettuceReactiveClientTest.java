@@ -261,7 +261,6 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
     } catch (NoSuchMethodException unused) {
       digestMethod = commandsClass.getMethod("digest", Object.class);
     }
-    digestMethod.setAccessible(true);
     String res = (String) digestMethod.invoke(reactiveCommands, "test");
 
     assertThat(res).isNotNull();
