@@ -183,15 +183,13 @@ public class OpenTelemetryAppender extends AbstractAppender {
       OpenTelemetry openTelemetry) {
 
     super(name, filter, layout, ignoreExceptions, properties);
-    List<String> captureContextDataAttributesAsList =
-        splitAndFilterBlanksAndNulls(captureContextDataAttributes);
     this.mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE,
             captureExperimentalAttributes,
             captureMapMessageAttributes,
             captureMarkerAttribute,
-            captureContextDataAttributesAsList);
+            splitAndFilterBlanksAndNulls(captureContextDataAttributes));
     this.openTelemetry = openTelemetry;
     if (numLogsCapturedBeforeOtelInstall != 0) {
       this.eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
