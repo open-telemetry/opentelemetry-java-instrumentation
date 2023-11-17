@@ -354,7 +354,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   SpanSuppressor buildSpanSuppressor() {
-    return spanSuppressionStrategy.create(getSpanKeysFromAttributesExtractors());
+    return new SpanSuppressors.ByContextKey(
+        spanSuppressionStrategy.create(getSpanKeysFromAttributesExtractors()));
   }
 
   private Set<SpanKey> getSpanKeysFromAttributesExtractors() {
