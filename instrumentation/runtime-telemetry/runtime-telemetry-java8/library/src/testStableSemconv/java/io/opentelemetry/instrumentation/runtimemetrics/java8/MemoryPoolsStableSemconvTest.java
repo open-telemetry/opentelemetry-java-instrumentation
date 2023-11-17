@@ -38,7 +38,7 @@ import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class MemoryPoolsTest {
+class MemoryPoolsStableSemconvTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -70,11 +70,9 @@ class MemoryPoolsTest {
 
   @Test
   void registerObservers() {
-    when(heapPoolUsage.getInit()).thenReturn(10L);
     when(heapPoolUsage.getUsed()).thenReturn(11L);
     when(heapPoolUsage.getCommitted()).thenReturn(12L);
     when(heapPoolUsage.getMax()).thenReturn(13L);
-    when(nonHeapUsage.getInit()).thenReturn(14L);
     when(nonHeapUsage.getUsed()).thenReturn(15L);
     when(nonHeapUsage.getCommitted()).thenReturn(16L);
     when(nonHeapUsage.getMax()).thenReturn(17L);
@@ -84,36 +82,13 @@ class MemoryPoolsTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "process.runtime.jvm.memory.init",
+        "jvm.memory.used",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription("Measure of initial memory requested")
-                        .hasUnit("By")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(10)
-                                            .hasAttribute(stringKey("pool"), "heap_pool")
-                                            .hasAttribute(stringKey("type"), "heap"),
-                                    point ->
-                                        point
-                                            .hasValue(14)
-                                            .hasAttribute(stringKey("pool"), "non_heap_pool")
-                                            .hasAttribute(stringKey("type"), "non_heap")))));
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.runtime-telemetry-java8",
-        "process.runtime.jvm.memory.usage",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription("Measure of memory used")
+                        .hasDescription("Measure of memory used.")
                         .hasUnit("By")
                         .hasLongSumSatisfying(
                             sum ->
@@ -121,22 +96,25 @@ class MemoryPoolsTest {
                                     point ->
                                         point
                                             .hasValue(11)
-                                            .hasAttribute(stringKey("pool"), "heap_pool")
-                                            .hasAttribute(stringKey("type"), "heap"),
+                                            .hasAttribute(
+                                                stringKey("jvm.memory.pool.name"), "heap_pool")
+                                            .hasAttribute(stringKey("jvm.memory.type"), "heap"),
                                     point ->
                                         point
                                             .hasValue(15)
-                                            .hasAttribute(stringKey("pool"), "non_heap_pool")
-                                            .hasAttribute(stringKey("type"), "non_heap")))));
+                                            .hasAttribute(
+                                                stringKey("jvm.memory.pool.name"), "non_heap_pool")
+                                            .hasAttribute(
+                                                stringKey("jvm.memory.type"), "non_heap")))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "process.runtime.jvm.memory.committed",
+        "jvm.memory.committed",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription("Measure of memory committed")
+                        .hasDescription("Measure of memory committed.")
                         .hasUnit("By")
                         .hasLongSumSatisfying(
                             sum ->
@@ -144,22 +122,25 @@ class MemoryPoolsTest {
                                     point ->
                                         point
                                             .hasValue(12)
-                                            .hasAttribute(stringKey("pool"), "heap_pool")
-                                            .hasAttribute(stringKey("type"), "heap"),
+                                            .hasAttribute(
+                                                stringKey("jvm.memory.pool.name"), "heap_pool")
+                                            .hasAttribute(stringKey("jvm.memory.type"), "heap"),
                                     point ->
                                         point
                                             .hasValue(16)
-                                            .hasAttribute(stringKey("pool"), "non_heap_pool")
-                                            .hasAttribute(stringKey("type"), "non_heap")))));
+                                            .hasAttribute(
+                                                stringKey("jvm.memory.pool.name"), "non_heap_pool")
+                                            .hasAttribute(
+                                                stringKey("jvm.memory.type"), "non_heap")))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "process.runtime.jvm.memory.limit",
+        "jvm.memory.limit",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription("Measure of max obtainable memory")
+                        .hasDescription("Measure of max obtainable memory.")
                         .hasUnit("By")
                         .hasLongSumSatisfying(
                             sum ->
@@ -167,23 +148,26 @@ class MemoryPoolsTest {
                                     point ->
                                         point
                                             .hasValue(13)
-                                            .hasAttribute(stringKey("pool"), "heap_pool")
-                                            .hasAttribute(stringKey("type"), "heap"),
+                                            .hasAttribute(
+                                                stringKey("jvm.memory.pool.name"), "heap_pool")
+                                            .hasAttribute(stringKey("jvm.memory.type"), "heap"),
                                     point ->
                                         point
                                             .hasValue(17)
-                                            .hasAttribute(stringKey("pool"), "non_heap_pool")
-                                            .hasAttribute(stringKey("type"), "non_heap")))));
+                                            .hasAttribute(
+                                                stringKey("jvm.memory.pool.name"), "non_heap_pool")
+                                            .hasAttribute(
+                                                stringKey("jvm.memory.type"), "non_heap")))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "process.runtime.jvm.memory.usage_after_last_gc",
+        "jvm.memory.used_after_last_gc",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription(
-                            "Measure of memory used after the most recent garbage collection event on this pool")
+                            "Measure of memory used, as measured after the most recent garbage collection event on this pool.")
                         .hasUnit("By")
                         .hasLongSumSatisfying(
                             sum ->
@@ -191,13 +175,16 @@ class MemoryPoolsTest {
                                     point ->
                                         point
                                             .hasValue(18)
-                                            .hasAttribute(stringKey("pool"), "heap_pool")
-                                            .hasAttribute(stringKey("type"), "heap"),
+                                            .hasAttribute(
+                                                stringKey("jvm.memory.pool.name"), "heap_pool")
+                                            .hasAttribute(stringKey("jvm.memory.type"), "heap"),
                                     point ->
                                         point
                                             .hasValue(19)
-                                            .hasAttribute(stringKey("pool"), "non_heap_pool")
-                                            .hasAttribute(stringKey("type"), "non_heap")))));
+                                            .hasAttribute(
+                                                stringKey("jvm.memory.pool.name"), "non_heap_pool")
+                                            .hasAttribute(
+                                                stringKey("jvm.memory.type"), "non_heap")))));
   }
 
   @Test
@@ -207,18 +194,27 @@ class MemoryPoolsTest {
 
     Consumer<ObservableLongMeasurement> callback =
         MemoryPools.callback(
-            stringKey("pool"),
-            stringKey("type"),
+            stringKey("jvm.memory.pool.name"),
+            stringKey("jvm.memory.type"),
             beans,
             MemoryPoolMXBean::getUsage,
             MemoryUsage::getUsed);
     callback.accept(measurement);
 
     verify(measurement)
-        .record(1, Attributes.builder().put("pool", "heap_pool").put("type", "heap").build());
+        .record(
+            1,
+            Attributes.builder()
+                .put("jvm.memory.pool.name", "heap_pool")
+                .put("jvm.memory.type", "heap")
+                .build());
     verify(measurement)
         .record(
-            2, Attributes.builder().put("pool", "non_heap_pool").put("type", "non_heap").build());
+            2,
+            Attributes.builder()
+                .put("jvm.memory.pool.name", "non_heap_pool")
+                .put("jvm.memory.type", "non_heap")
+                .build());
   }
 
   @Test
@@ -228,15 +224,20 @@ class MemoryPoolsTest {
 
     Consumer<ObservableLongMeasurement> callback =
         MemoryPools.callback(
-            stringKey("pool"),
-            stringKey("type"),
+            stringKey("jvm.memory.pool.name"),
+            stringKey("jvm.memory.type"),
             beans,
             MemoryPoolMXBean::getUsage,
             MemoryUsage::getMax);
     callback.accept(measurement);
 
     verify(measurement)
-        .record(1, Attributes.builder().put("pool", "heap_pool").put("type", "heap").build());
+        .record(
+            1,
+            Attributes.builder()
+                .put("jvm.memory.pool.name", "heap_pool")
+                .put("jvm.memory.type", "heap")
+                .build());
     verify(measurement, never()).record(eq(-1), any());
   }
 
@@ -246,8 +247,8 @@ class MemoryPoolsTest {
 
     Consumer<ObservableLongMeasurement> callback =
         MemoryPools.callback(
-            stringKey("pool"),
-            stringKey("type"),
+            stringKey("jvm.memory.pool.name"),
+            stringKey("jvm.memory.type"),
             singletonList(heapPoolBean),
             MemoryPoolMXBean::getCollectionUsage,
             MemoryUsage::getUsed);
