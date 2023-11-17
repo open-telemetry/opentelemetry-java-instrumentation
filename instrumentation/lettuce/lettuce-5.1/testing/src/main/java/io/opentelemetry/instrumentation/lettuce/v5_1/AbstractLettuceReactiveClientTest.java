@@ -13,18 +13,18 @@ import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.SemanticAttributes;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
+@SuppressWarnings({
+  "deprecation",
+  "InterruptedExceptionSwallowed"
+}) // until old http semconv are dropped in 2.0
 public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceClientTest {
 
   protected static String expectedHostAttributeValue;
@@ -62,8 +62,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
   }
 
   @Test
-  void testSetCommandWithSubscribeOnDefinedConsumer()
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void testSetCommandWithSubscribeOnDefinedConsumer() throws Exception {
     CompletableFuture<String> future = new CompletableFuture<>();
 
     Consumer<String> consumer =
@@ -109,8 +108,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
   }
 
   @Test
-  void testGetCommandWithLambdaFunction()
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void testGetCommandWithLambdaFunction() throws Exception {
     CompletableFuture<String> future = new CompletableFuture<>();
 
     reactiveCommands
@@ -146,8 +144,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
   // still recording spans
   @Test
-  void testGetNonExistentKeyCommand()
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void testGetNonExistentKeyCommand() throws Exception {
     CompletableFuture<String> future = new CompletableFuture<>();
     String defaultVal = "NOT THIS VALUE";
 
@@ -198,8 +195,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
   }
 
   @Test
-  void testCommandWithNoArguments()
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void testCommandWithNoArguments() throws Exception {
     CompletableFuture<String> future = new CompletableFuture<>();
 
     reactiveCommands
@@ -256,8 +252,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
   }
 
   @Test
-  void testNonReactiveCommandShouldNotProduceSpan()
-      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+  void testNonReactiveCommandShouldNotProduceSpan() throws Exception {
     Class<?> commandsClass = RedisReactiveCommands.class;
     java.lang.reflect.Method digestMethod;
     // The digest() signature changed between 5 -> 6
