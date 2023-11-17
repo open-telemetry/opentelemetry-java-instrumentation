@@ -38,7 +38,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
 
-  private BlockingQueue<LoggingEventToReplay> eventsToReplay = new ArrayBlockingQueue<>(1000);
+  private int numLogsCapturedBeforeOtelInstall = 1000;
+  private BlockingQueue<LoggingEventToReplay> eventsToReplay =
+      new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
   private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -77,6 +79,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             captureMarkerAttribute,
             captureKeyValuePairAttributes,
             captureLoggerContext);
+    eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
   }
 
@@ -97,7 +100,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
       if (!eventsToReplay.offer(logEventToReplay) && !replayLimitWarningLogged.getAndSet(true)) {
         String message =
-            "Log cache size of the OpenTelemetry appender is too small. firstLogsCacheSize value has to be increased;";
+            "numLogsCapturedBeforeOtelInstall value of the OpenTelemetry appender is too small.";
         System.err.println(message);
       }
     } finally {
@@ -168,7 +171,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * replay the first logs.
    */
   public void setNumLogsCapturedBeforeOtelInstall(int size) {
-    eventsToReplay = new ArrayBlockingQueue<>(size);
+    this.numLogsCapturedBeforeOtelInstall = size;
   }
 
   /**

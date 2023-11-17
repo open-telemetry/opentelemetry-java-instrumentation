@@ -179,7 +179,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
       String captureContextDataAttributes,
-      int firstLogsCacheSize,
+      int numLogsCapturedBeforeOtelInstall,
       OpenTelemetry openTelemetry) {
 
     super(name, filter, layout, ignoreExceptions, properties);
@@ -193,8 +193,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
             captureMarkerAttribute,
             captureContextDataAttributesAsList);
     this.openTelemetry = openTelemetry;
-    if (firstLogsCacheSize != 0) {
-      this.eventsToReplay = new ArrayBlockingQueue<>(firstLogsCacheSize);
+    if (numLogsCapturedBeforeOtelInstall != 0) {
+      this.eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     } else {
       this.eventsToReplay = new ArrayBlockingQueue<>(1000);
     }
@@ -235,7 +235,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
         eventsToReplay.offer(logEventToReplay);
       } else if (!replayLimitWarningLogged.getAndSet(true)) {
         System.err.println(
-            "Log cache size of the OpenTelemetry appender is too small. firstLogsCacheSize value has to be increased");
+            "numLogsCapturedBeforeOtelInstall value of the OpenTelemetry appender is too small.");
       }
       return;
     }
