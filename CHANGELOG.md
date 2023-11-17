@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.32.0 (2023-11-17)
+
 ## Version 1.31.0 (2023-10-12)
 
 ### 🌟 New javaagent instrumentation
