@@ -13,6 +13,7 @@ import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.SemanticAttributes;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -178,6 +179,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                                 equalTo(
@@ -254,8 +256,18 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
   }
 
   @Test
-  void testNonReactiveCommandShouldNotProduceSpan() {
-    String res = reactiveCommands.digest("test");
+  void testNonReactiveCommandShouldNotProduceSpan()
+      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    Class<?> commandsClass = RedisReactiveCommands.class;
+    java.lang.reflect.Method digestMethod;
+    // The digest() signature changed between 5 -> 6
+    try {
+      digestMethod = commandsClass.getMethod("digest", String.class);
+    } catch (NoSuchMethodException unused) {
+      digestMethod = commandsClass.getMethod("digest", Object.class);
+    }
+    digestMethod.setAccessible(true);
+    String res = (String) digestMethod.invoke(reactiveCommands, "test");
 
     assertThat(res).isNotNull();
     assertThat(getInstrumentationExtension().spans().size()).isEqualTo(0);

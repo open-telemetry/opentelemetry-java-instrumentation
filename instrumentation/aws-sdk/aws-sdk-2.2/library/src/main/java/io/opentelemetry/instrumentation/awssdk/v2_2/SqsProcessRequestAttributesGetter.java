@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import java.util.Collections;
+import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 
@@ -58,6 +60,12 @@ enum SqsProcessRequestAttributesGetter
   @Override
   @Nullable
   public String getMessageId(SqsProcessRequest request, @Nullable Void response) {
-    return null;
+    return request.getMessage().getMessageId();
+  }
+
+  @Override
+  public List<String> getMessageHeader(SqsProcessRequest request, String name) {
+    String value = request.getMessage().getMessageAttribute(name);
+    return value != null ? Collections.singletonList(value) : Collections.emptyList();
   }
 }

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
@@ -21,6 +23,14 @@ final class SqsMessageImpl implements SqsMessage {
     return new SqsMessageImpl(message);
   }
 
+  static List<SqsMessage> wrap(List<Message> messages) {
+    List<SqsMessage> result = new ArrayList<>();
+    for (Message message : messages) {
+      result.add(wrap(message));
+    }
+    return result;
+  }
+
   @Override
   public Map<String, MessageAttributeValue> messageAttributes() {
     return message.messageAttributes();
@@ -29,5 +39,16 @@ final class SqsMessageImpl implements SqsMessage {
   @Override
   public Map<String, String> attributesAsStrings() {
     return message.attributesAsStrings();
+  }
+
+  @Override
+  public String getMessageAttribute(String name) {
+    MessageAttributeValue value = message.messageAttributes().get(name);
+    return value != null ? value.stringValue() : null;
+  }
+
+  @Override
+  public String getMessageId() {
+    return message.messageId();
   }
 }

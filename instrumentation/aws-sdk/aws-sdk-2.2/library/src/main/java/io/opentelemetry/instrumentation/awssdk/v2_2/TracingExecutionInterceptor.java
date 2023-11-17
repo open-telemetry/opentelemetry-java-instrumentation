@@ -64,7 +64,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".TracingMessages");
 
   private final Instrumenter<ExecutionAttributes, Response> requestInstrumenter;
-  private final Instrumenter<ExecutionAttributes, Response> consumerReceiveInstrumenter;
+  private final Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
@@ -73,7 +73,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       AttributeKey.stringKey("aws.http.error_message");
   static final String HTTP_FAILURE_EVENT = "HTTP request failure";
 
-  Instrumenter<ExecutionAttributes, Response> getConsumerReceiveInstrumenter() {
+  Instrumenter<SqsReceiveRequest, Response> getConsumerReceiveInstrumenter() {
     return consumerReceiveInstrumenter;
   }
 
@@ -97,7 +97,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   TracingExecutionInterceptor(
       Instrumenter<ExecutionAttributes, Response> requestInstrumenter,
-      Instrumenter<ExecutionAttributes, Response> consumerReceiveInstrumenter,
+      Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter,
       Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter,
       Instrumenter<ExecutionAttributes, Response> producerInstrumenter,
       boolean captureExperimentalSpanAttributes,

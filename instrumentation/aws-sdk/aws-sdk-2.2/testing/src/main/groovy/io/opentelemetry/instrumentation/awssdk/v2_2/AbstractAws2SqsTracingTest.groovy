@@ -115,7 +115,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
     }
   }
 
-  void assertSqsTraces(withParent = false) {
+  void assertSqsTraces(withParent = false, captureHeaders = false) {
     assertTraces(3) {
       SpanData publishSpan
       trace(0, 1) {
@@ -164,6 +164,9 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            if (captureHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
           }
         }
         publishSpan = span(0)
@@ -225,6 +228,9 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            if (captureHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
           }
         }
         span(1 + offset) {
@@ -244,7 +250,11 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            if (captureHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
           }
         }
         span(2 + offset) {
@@ -274,6 +284,31 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
     resp.messages.size() == 1
     resp.messages.each {message -> runWithSpan("process child") {}}
     assertSqsTraces()
+  }
+
+  def "capture message header as span attribute"() {
+    setup:
+    def builder = SqsClient.builder()
+    configureSdkClient(builder)
+    def client = configureSqsClient(builder.build())
+
+    client.createQueue(createQueueRequest)
+
+    when:
+    SendMessageRequest newSendMessageRequest = sendMessageRequest.toBuilder().messageAttributes(
+      Collections.singletonMap("test-message-header",
+      MessageAttributeValue.builder().dataType("String").stringValue("test").build())
+    ).build()
+    client.sendMessage(newSendMessageRequest)
+
+    ReceiveMessageRequest newReceiveMessageRequest = receiveMessageRequest.toBuilder()
+      .messageAttributeNames("test-message-header").build()
+    def resp = client.receiveMessage(newReceiveMessageRequest)
+
+    then:
+    resp.messages.size() == 1
+    resp.messages.each {message -> runWithSpan("process child") {}}
+    assertSqsTraces(false, true)
   }
 
   def "simple sqs producer-consumer services with parent: sync"() {
@@ -420,6 +455,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
               "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
               "$SemanticAttributes.MESSAGING_OPERATION" "process"
+              "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
               "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             }
           }
