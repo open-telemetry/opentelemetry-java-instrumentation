@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.util.ContextInitializer;
-import ch.qos.logback.core.joran.spi.JoranException;
+import ch.qos.logback.core.spi.ContextAware;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import java.net.URL;
@@ -21,20 +21,31 @@ import org.slf4j.LoggerFactory;
 class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
 
   @BeforeEach
-  void setup() throws JoranException {
+  void setup() throws Exception {
     generalBeforeEachSetup();
     // to make sure we start fresh with a new OpenTelemetryAppender for each test
     reloadLoggerConfiguration();
   }
 
-  private static void reloadLoggerConfiguration() throws JoranException {
+  private static void reloadLoggerConfiguration() throws Exception {
     LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-    ContextInitializer ci = new ContextInitializer(loggerContext);
-    URL url = ci.findURLOfDefaultConfigurationFile(true);
     loggerContext.reset();
-    ci.configureByResource(url);
-    // by default LoggerContext contains HOSTNAME property we clear it to start with empty context
-    resetLoggerContext();
+    try {
+      Class<?> configuratorClass =
+          Class.forName("ch.qos.logback.classic.util.DefaultJoranConfigurator");
+      Object configurator = configuratorClass.getConstructor().newInstance();
+      ((ContextAware) configurator).setContext(loggerContext);
+      configuratorClass
+          .getMethod("configure", LoggerContext.class)
+          .invoke(configurator, loggerContext);
+    } catch (Exception e) {
+      // logback versions prior to 1.3.0
+      ContextInitializer ci = new ContextInitializer(loggerContext);
+      URL url = LogReplayOpenTelemetryAppenderTest.class.getResource("/logback-test.xml");
+      ContextInitializer.class.getMethod("configureByResource", URL.class).invoke(ci, url);
+      // by default LoggerContext contains HOSTNAME property we clear it to start with empty context
+      resetLoggerContext();
+    }
   }
 
   @Override
