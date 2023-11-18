@@ -15,10 +15,6 @@ dependencies {
   implementation(project(":instrumentation:apache-dubbo-2.7:library-autoconfigure"))
 
   library("org.apache.dubbo:dubbo:2.7.0")
-
-  testImplementation(project(":instrumentation:apache-dubbo-2.7:testing"))
-
-  testLibrary("org.apache.dubbo:dubbo-config-api:2.7.0")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean

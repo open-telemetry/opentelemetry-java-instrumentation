@@ -32,15 +32,27 @@ runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-runtime-telemetry-ja
 Register observers for the desired runtime metrics:
 
 ```java
-OpenTelemetry opentelemetry = // OpenTelemetry instance configured elsewhere
+OpenTelemetry openTelemetry = // OpenTelemetry instance configured elsewhere
 
-BufferPools.registerObservers(opentelemetry);
-Classes.registerObservers(opentelemetry);
-Cpu.registerObservers(opentelemetry);
-MemoryPools.registerObservers(opentelemetry);
-Threads.registerObservers(opentelemetry);
-GarbageCollector.registerObservers(opentelemetry);
+Classes.registerObservers(openTelemetry);
+Cpu.registerObservers(openTelemetry);
+MemoryPools.registerObservers(openTelemetry);
+Threads.registerObservers(openTelemetry);
+GarbageCollector.registerObservers(openTelemetry);
 ```
+
+## Stable JVM metrics preview
+
+If you want to enable the preview of the stable JVM semantic conventions, you need to set either
+the `otel.semconv-stability.opt-in` system property or the `OTEL_SEMCONV_STABILITY_OPT_IN`
+environment variable to one of the following values:
+
+- `jvm` - this will make the runtime metrics emit only the new, stable conventions, and stop
+  emitting the old experimental conventions that the instrumentation emitted previously.
+- `jvm/dup` - emit both the old and the stable JVM conventions, allowing for a seamless transition.
+
+Note that the `otel.semconv-stability.opt-in` setting is a comma-separated list, and you can specify
+more than one value, e.g. `-Dotel.semconv-stability.opt-in=http,jvm`.
 
 ## Garbage Collector Dependent Metrics
 

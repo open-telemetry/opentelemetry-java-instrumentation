@@ -29,6 +29,28 @@ dependencies {
   // Ensure no cross interference
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.14:javaagent"))
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.19:javaagent"))
+}
 
-  latestDepTestLibrary("com.azure:azure-core:1.36.0")
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+testing {
+  suites {
+    // using a test suite to ensure that classes from library-instrumentation-shaded that were
+    // extracted to the output directory are not available during tests
+    val testAzure by registering(JvmTestSuite::class) {
+      dependencies {
+        if (latestDepTest) {
+          implementation("com.azure:azure-core:+")
+        } else {
+          implementation("com.azure:azure-core:1.36.0")
+        }
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
 }

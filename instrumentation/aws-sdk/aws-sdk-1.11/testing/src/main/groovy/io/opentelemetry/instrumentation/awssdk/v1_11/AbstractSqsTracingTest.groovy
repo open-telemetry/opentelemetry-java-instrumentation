@@ -118,6 +118,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "publish"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
@@ -175,6 +176,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             if (testCaptureHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
             }
@@ -252,6 +254,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "publish"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
@@ -260,6 +263,21 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
         publishSpan = span(0)
       }
       trace(2, 5) {
+        // sort spans with a ranking function
+        spans.sort({
+          // job span is first
+          if (it.name == "parent") {
+            return 0
+          }
+          if (it.name == "SQS.ReceiveMessage") {
+            return 1
+          }
+          if (it.name == "testSdkSqs receive") {
+            return 2
+          }
+          return 3
+        })
+
         span(0) {
           name "parent"
           hasNoParent()
@@ -328,6 +346,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
           }
         }
         span(4) {

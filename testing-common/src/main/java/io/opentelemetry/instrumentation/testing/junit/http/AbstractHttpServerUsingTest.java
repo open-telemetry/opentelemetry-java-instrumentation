@@ -27,9 +27,9 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
   public int port;
   public URI address;
 
-  protected abstract SERVER setupServer();
+  protected abstract SERVER setupServer() throws Exception;
 
-  protected abstract void stopServer(SERVER server);
+  protected abstract void stopServer(SERVER server) throws Exception;
 
   protected final InstrumentationTestRunner testing() {
     return testing;
@@ -40,7 +40,11 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
       address = buildAddress();
     }
 
-    server = setupServer();
+    try {
+      server = setupServer();
+    } catch (Exception exception) {
+      throw new IllegalStateException("Failed to start server", exception);
+    }
     if (server != null) {
       logger.info(
           getClass().getName()
@@ -57,7 +61,11 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
       logger.info(getClass().getName() + " can't stop null server");
       return;
     }
-    stopServer(server);
+    try {
+      stopServer(server);
+    } catch (Exception exception) {
+      throw new IllegalStateException("Failed to stop server", exception);
+    }
     server = null;
     logger.info(getClass().getName() + " http server stopped at: http://localhost:" + port + "/");
   }

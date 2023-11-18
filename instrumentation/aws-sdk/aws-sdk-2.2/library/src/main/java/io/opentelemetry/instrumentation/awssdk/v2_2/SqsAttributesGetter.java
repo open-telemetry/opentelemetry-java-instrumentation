@@ -69,7 +69,8 @@ enum SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttribute
 
   @Override
   public List<String> getMessageHeader(ExecutionAttributes request, String name) {
-    // TODO: not implemented
-    return Collections.emptyList();
+    SdkRequest sdkRequest = request.getAttribute(TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
+    String value = SqsAccess.getMessageAttribute(sdkRequest, name);
+    return value != null ? Collections.singletonList(value) : Collections.emptyList();
   }
 }

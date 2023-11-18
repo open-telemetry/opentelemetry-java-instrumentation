@@ -13,6 +13,7 @@ import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.amazonaws.services.sqs.model.SendMessageResult;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
@@ -131,6 +132,13 @@ final class SqsImpl {
       if (value != null) {
         return value.getStringValue();
       }
+    }
+    return null;
+  }
+
+  static String getMessageId(Response<?> response) {
+    if (response.getAwsResponse() instanceof SendMessageResult) {
+      return ((SendMessageResult) response.getAwsResponse()).getMessageId();
     }
     return null;
   }

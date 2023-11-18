@@ -27,8 +27,8 @@ testing {
     // Regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2403
     val testDisableThreadLocals by registering(JvmTestSuite::class) {
       sources {
-        groovy {
-          setSrcDirs(listOf("src/test/groovy"))
+        java {
+          setSrcDirs(listOf("src/test/java"))
         }
       }
       dependencies {
@@ -40,6 +40,7 @@ testing {
           testTask.configure {
             jvmArgs("-Dlog4j2.is.webapp=false")
             jvmArgs("-Dlog4j2.enable.threadlocals=false")
+            jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
           }
         }
       }
@@ -47,8 +48,8 @@ testing {
 
     val testAddBaggage by registering(JvmTestSuite::class) {
       sources {
-        groovy {
-          setSrcDirs(listOf("src/testAddBaggage/groovy"))
+        java {
+          setSrcDirs(listOf("src/testAddBaggage/java"))
         }
       }
       dependencies {
@@ -74,6 +75,7 @@ tasks {
   test {
     jvmArgs("-Dlog4j2.is.webapp=false")
     jvmArgs("-Dlog4j2.enable.threadlocals=true")
+    jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
   }
 
   named("check") {

@@ -16,4 +16,6 @@ interface SqsMessage {
   Map<String, String> getAttributes();
 
   String getMessageAttribute(String name);
+
+  String getMessageId();
 }
