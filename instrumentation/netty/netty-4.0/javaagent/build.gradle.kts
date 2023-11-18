@@ -32,6 +32,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
+  testLibrary("com.ning:async-http-client:1.8.0")
   latestDepTestLibrary("io.netty:netty-codec-http:4.0.+") // see netty-4.1 module
 }
 
