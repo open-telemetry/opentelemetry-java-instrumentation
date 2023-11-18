@@ -2,8 +2,6 @@
 
 ## Unreleased
 
-## Unreleased
-
 ### Migration notes
 
 - Old server/client socket getter methods deprecated
