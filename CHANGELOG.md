@@ -93,6 +93,18 @@
   ([#9553](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9553))
 - Stable JVM semconv implementation: classes
   ([#9821](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9821))
+- Stable JVM semconv implementation: threads
+  ([#9839](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9839))
+- Stable JVM semconv implementation: GC
+  ([#9890](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9890))
+- Bridge incubator metrics apis
+  ([#9884](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9884))
+- Ability to instrument logs before OTel injection into OTel appenders
+  ([#9798](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9798))
+- Suppress instrumentation based on suppress Context key
+  ([#9739](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9739))
+- Stable JVM semconv implementation: the rest
+  ([#9896](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9896))
 
 ### 🛠️ Bug fixes
 
@@ -109,6 +121,8 @@
   ([#9715](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9715))
 - Allow injection of helper bytecode as resources
   ([#9752](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9752))
+- Rewrite @Advice.Enter for indy advice
+  ([#9887](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9887))
 
 ## Version 1.31.0 (2023-10-12)
 
