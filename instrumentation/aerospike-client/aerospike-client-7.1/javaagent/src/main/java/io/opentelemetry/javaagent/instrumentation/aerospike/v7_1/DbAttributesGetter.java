@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.aerospike.v7_1;
 
-
 import io.opentelemetry.instrumentation.aerospike.v7_1.AerospikeSemanticAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
 import javax.annotation.Nullable;

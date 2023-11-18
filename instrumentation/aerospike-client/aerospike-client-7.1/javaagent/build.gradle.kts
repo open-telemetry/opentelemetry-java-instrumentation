@@ -22,6 +22,7 @@ dependencies {
 tasks {
   test {
     jvmArgs("-Djava.net.preferIPv4Stack=true")
+    jvmArgs("-Dotel.instrumentation.aerospike.experimental-span-attributes=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }
