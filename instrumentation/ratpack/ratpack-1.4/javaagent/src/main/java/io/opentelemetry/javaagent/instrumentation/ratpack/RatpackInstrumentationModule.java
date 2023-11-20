@@ -20,8 +20,11 @@ public class RatpackInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean isIndyModule() {
-    // StartAdvice uses both @Advice.Argument(readOnly = false) and return value from an
-    // @OnMethodEnter advice
+    // java.lang.ClassCastException: class
+    // io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.AutoValue_ServerContext
+    // cannot be cast to class
+    // io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.ServerContext
+    // (io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.AutoValue_ServerContext is in unnamed module of loader 'app'; io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.ServerContext is in unnamed module of loader io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader @7f088b5c)
     return false;
   }
 
